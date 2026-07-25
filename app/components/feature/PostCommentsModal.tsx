@@ -39,7 +39,8 @@ function mapComment(c: any): PostComment {
     avatar: c.author.avatar,
     verified: c.author.verified ?? false,
     followers: 0,
-    rating: 5,
+    following: 0,
+    rating: c.author.rating ?? null,
     country: 'SA',
     bio: '',
   };

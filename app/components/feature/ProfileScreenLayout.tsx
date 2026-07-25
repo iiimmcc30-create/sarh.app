@@ -1,9 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useMemo, useState, type ReactNode } from 'react';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -16,7 +19,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getCountryInfo } from '@/services/types';
-import { rtlBackIcon, rtlRow } from '@/lib/rtl';
+import { rtlBackIcon, rtlRow, rtlText } from '@/lib/rtl';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -32,6 +35,8 @@ export type ProfileDisplayUser = {
   followersCount: number;
   followingCount: number;
   postsCount: number;
+  rating?: number | null;
+  reviewCount?: number;
 };
 
 type ProfileScreenLayoutProps = {
@@ -52,6 +57,7 @@ type ProfileScreenLayoutProps = {
   onFollowingPress?: () => void;
   onFollow?: () => void;
   onMessage?: () => void;
+  onRatePress?: () => void;
   followLoading?: boolean;
   isFollowing?: boolean;
   initialTab?: ProfileTabKey;
@@ -67,6 +73,38 @@ function formatStatCount(n: number): string {
     return `${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)} ألف`;
   }
   return n.toLocaleString('en-US');
+}
+
+function ProfileTabButton({
+  label,
+  active,
+  onPress,
+  styles,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(scale, {
+      toValue: active ? 1.04 : 1,
+      useNativeDriver: true,
+      speed: 18,
+      bounciness: 6,
+    }).start();
+  }, [active, scale]);
+
+  return (
+    <Pressable style={styles.tabItem} onPress={onPress}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
+      </Animated.View>
+      {active ? <View style={styles.tabIndicator} /> : null}
+    </Pressable>
+  );
 }
 
 export function ProfileScreenLayout({
@@ -87,6 +125,7 @@ export function ProfileScreenLayout({
   onFollowingPress,
   onFollow,
   onMessage,
+  onRatePress,
   followLoading = false,
   isFollowing = false,
   initialTab = 'posts',
@@ -95,9 +134,26 @@ export function ProfileScreenLayout({
   const { colors: themeColors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [activeTab, setActiveTab] = useState<ProfileTabKey>(initialTab);
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const headerTranslate = useRef(new Animated.Value(12)).current;
+  const tabOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(headerOpacity, { toValue: 1, duration: 420, useNativeDriver: true }),
+      Animated.spring(headerTranslate, { toValue: 0, useNativeDriver: true, speed: 14, bounciness: 4 }),
+    ]).start();
+  }, [headerOpacity, headerTranslate]);
+
+  useEffect(() => {
+    tabOpacity.setValue(0);
+    Animated.timing(tabOpacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+  }, [activeTab, tabOpacity]);
 
   const displayName = user.arabicName || user.displayName || user.username;
   const country = getCountryInfo(user.country);
+  const hasRating = user.rating != null && (user.reviewCount ?? 0) > 0;
+  const ratingLabel = hasRating ? user.rating!.toFixed(1) : '—';
 
   const stats = useMemo(
     () => [
@@ -146,180 +202,231 @@ export function ProfileScreenLayout({
           paddingBottom: Math.max(insets.bottom, 12) + 24,
         }}
       >
-        <View style={styles.headerBlock}>
-          <View style={[styles.toolbar, rtlRow]}>
-            <View style={[styles.toolbarStart, rtlRow]}>
-              {mode === 'own' && onEditProfile ? (
-                <Pressable onPress={onEditProfile} hitSlop={10} style={styles.iconBtn}>
-                  <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
-                </Pressable>
-              ) : null}
-              {mode === 'visitor' && onMenu ? (
-                <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
-                  <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
-                </Pressable>
-              ) : null}
-            </View>
-
-            <View style={[styles.toolbarEnd, rtlRow]}>
-              {mode === 'visitor' && onBack ? (
-                <Pressable onPress={onBack} hitSlop={10} style={styles.iconBtn}>
-                  <AppIcon name={rtlBackIcon} size={22} color={themeColors.textPrimary} />
-                </Pressable>
-              ) : null}
-              {onShare ? (
-                <Pressable onPress={onShare} hitSlop={10} style={styles.iconBtn}>
-                  <AppIcon name="share-social-outline" size={20} color={themeColors.textPrimary} />
-                </Pressable>
-              ) : null}
-              {mode === 'own' && onMenu ? (
-                <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
-                  <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
-
-          <View style={[styles.identityRow, rtlRow]}>
-            <View style={styles.infoCol}>
-              <View style={[styles.nameRow, rtlRow]}>
-                <Text style={styles.displayName} numberOfLines={2}>
-                  {displayName}
-                </Text>
-                {user.verified ? (
-                  <AppIcon name="checkmark-circle" size={18} color={themeColors.electricBright} />
+        <LinearGradient
+          colors={[
+            themeColors.electric + '18',
+            themeColors.electric + '08',
+            themeColors.bgDeep,
+          ]}
+          locations={[0, 0.45, 1]}
+          style={styles.headerBlock}
+        >
+          <Animated.View
+            style={{
+              opacity: headerOpacity,
+              transform: [{ translateY: headerTranslate }],
+            }}
+          >
+            <View style={[styles.toolbar, rtlRow]}>
+              <View style={[styles.toolbarStart, rtlRow]}>
+                {mode === 'own' && onEditProfile ? (
+                  <Pressable onPress={onEditProfile} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
+                {mode === 'visitor' && onMenu ? (
+                  <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
+                  </Pressable>
                 ) : null}
               </View>
 
-              <View style={styles.handlePill}>
-                <Text style={styles.handleText}>@{user.username}</Text>
-              </View>
-
-              <View style={[styles.statsRow, rtlRow]}>
-                {stats.map((stat, index) => (
-                  <View key={stat.key} style={[styles.statGroup, rtlRow]}>
-                    {index > 0 ? <View style={styles.statDivider} /> : null}
-                    {stat.onPress ? (
-                      <Pressable style={styles.statItem} onPress={stat.onPress}>
-                        <Text style={styles.statNum}>{stat.value}</Text>
-                        <Text style={styles.statLbl}>{stat.label}</Text>
-                      </Pressable>
-                    ) : (
-                      <View style={styles.statItem}>
-                        <Text style={styles.statNum}>{stat.value}</Text>
-                        <Text style={styles.statLbl}>{stat.label}</Text>
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-
-              {!!user.bio ? (
-                <Text style={styles.bio} numberOfLines={3}>
-                  {user.bio}
-                </Text>
-              ) : null}
-
-              <View style={[styles.locationRow, rtlRow]}>
-                <AppIcon name="map-marker-outline" size={14} color={themeColors.textMuted} />
-                <Text style={styles.locationText}>
-                  {country.flag} {country.ar}
-                </Text>
+              <View style={[styles.toolbarEnd, rtlRow]}>
+                {mode === 'visitor' && onBack ? (
+                  <Pressable onPress={onBack} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name={rtlBackIcon} size={22} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
+                {onShare ? (
+                  <Pressable onPress={onShare} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name="share-social-outline" size={20} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
+                {mode === 'own' && onMenu ? (
+                  <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
               </View>
             </View>
 
-            <Pressable
-              onPress={onAvatarPress}
-              disabled={!onAvatarPress}
-              style={styles.avatarCol}
-            >
-              <LinearGradient
-                colors={
-                  hasStoryRing
-                    ? [themeColors.electricBright, themeColors.cyan, '#34D399']
-                    : [themeColors.borderSoft, themeColors.borderSoft]
-                }
-                style={styles.avatarRing}
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <View style={styles.avatarClip}>
-                  <Image
-                    source={uriSource(user.avatar)}
-                    style={styles.avatarImg}
-                    contentFit="cover"
-                  />
-                </View>
-              </LinearGradient>
-              {mode === 'own' && onEditAvatar ? (
-                <Pressable style={styles.cameraBtn} onPress={onEditAvatar} hitSlop={8}>
-                  <AppIcon name="camera-outline" size={14} color="#fff" />
-                </Pressable>
-              ) : null}
-            </Pressable>
-          </View>
-
-          {mode === 'visitor' && (onFollow || onMessage) ? (
-            <View style={[styles.actionsRow, rtlRow]}>
-              {onMessage ? (
-                <Pressable style={styles.btnMessage} onPress={onMessage}>
-                  <Text style={styles.btnMessageText}>مراسلة</Text>
-                </Pressable>
-              ) : null}
-              {onFollow ? (
-                <Pressable
-                  onPress={onFollow}
-                  disabled={followLoading}
-                  style={[styles.btnFollow, isFollowing && styles.btnFollowing]}
-                >
-                  {followLoading ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={isFollowing ? themeColors.textPrimary : '#fff'}
-                    />
-                  ) : (
-                    <Text style={[styles.btnFollowText, isFollowing && styles.btnFollowingText]}>
-                      {isFollowing ? 'متابَع' : 'متابعة'}
+            <View style={[styles.identityRow, rtlRow]}>
+              <View style={styles.infoCol}>
+                <View style={styles.nameBlock}>
+                  <View style={[styles.nameRow, rtlRow]}>
+                    <Text style={styles.displayName} numberOfLines={2}>
+                      {displayName}
                     </Text>
-                  )}
-                </Pressable>
-              ) : null}
-            </View>
-          ) : null}
-        </View>
+                    {user.verified ? <VerificationBadge size={18} /> : null}
+                    <Pressable
+                      onPress={onRatePress}
+                      disabled={!onRatePress}
+                      style={({ pressed }) => [
+                        styles.ratingChip,
+                        pressed && onRatePress && styles.ratingChipPressed,
+                      ]}
+                    >
+                      <AppIcon name="star" size={13} color={themeColors.gold} />
+                      <Text style={styles.ratingText}>{ratingLabel}</Text>
+                      {(user.reviewCount ?? 0) > 0 ? (
+                        <Text style={styles.ratingCount}>({user.reviewCount})</Text>
+                      ) : null}
+                    </Pressable>
+                  </View>
+                  <Text style={styles.handleText}>@{user.username}</Text>
+                </View>
 
-        <View style={styles.tabsBar}>
-          <View style={[styles.tabsRow, rtlRow]}>
-            <Pressable style={styles.tabItem} onPress={() => setActiveTab('posts')}>
-              <Text style={[styles.tabLabel, activeTab === 'posts' && styles.tabLabelActive]}>
-                المنشورات
-              </Text>
-              {activeTab === 'posts' ? <View style={styles.tabIndicator} /> : null}
-            </Pressable>
-            <Pressable style={styles.tabItem} onPress={() => setActiveTab('ads')}>
-              <Text style={[styles.tabLabel, activeTab === 'ads' && styles.tabLabelActive]}>
-                الإعلانات
-              </Text>
-              {activeTab === 'ads' ? <View style={styles.tabIndicator} /> : null}
-            </Pressable>
+                <View style={styles.statsCard}>
+                  <View style={[styles.statsRow, rtlRow]}>
+                    {stats.map((stat, index) => (
+                      <View key={stat.key} style={[styles.statGroup, rtlRow]}>
+                        {index > 0 ? <View style={styles.statDivider} /> : null}
+                        {stat.onPress ? (
+                          <Pressable style={styles.statItem} onPress={stat.onPress}>
+                            <Text style={styles.statNum}>{stat.value}</Text>
+                            <Text style={styles.statLbl}>{stat.label}</Text>
+                          </Pressable>
+                        ) : (
+                          <View style={styles.statItem}>
+                            <Text style={styles.statNum}>{stat.value}</Text>
+                            <Text style={styles.statLbl}>{stat.label}</Text>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {!!user.bio ? (
+                  <Text style={styles.bio} numberOfLines={3}>
+                    {user.bio}
+                  </Text>
+                ) : null}
+
+                <View style={[styles.locationRow, rtlRow]}>
+                  <AppIcon name="map-marker-outline" size={14} color={themeColors.textMuted} />
+                  <Text style={styles.locationText}>
+                    {country.flag} {country.ar}
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={onAvatarPress}
+                disabled={!onAvatarPress}
+                style={styles.avatarCol}
+              >
+                {hasStoryRing ? (
+                  <LinearGradient
+                    colors={[themeColors.electricBright, themeColors.cyan, '#34D399']}
+                    style={styles.avatarRing}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <View style={styles.avatarClip}>
+                      <Image
+                        source={uriSource(user.avatar)}
+                        style={styles.avatarImg}
+                        contentFit="cover"
+                      />
+                    </View>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.avatarPlain}>
+                    <Image
+                      source={uriSource(user.avatar)}
+                      style={styles.avatarImg}
+                      contentFit="cover"
+                    />
+                  </View>
+                )}
+                {mode === 'own' && onEditAvatar ? (
+                  <Pressable style={styles.cameraBtn} onPress={onEditAvatar} hitSlop={8}>
+                    <AppIcon name="camera-outline" size={14} color="#fff" />
+                  </Pressable>
+                ) : null}
+              </Pressable>
+            </View>
+
+            {mode === 'visitor' && (onFollow || onMessage) ? (
+              <View style={[styles.actionsRow, rtlRow]}>
+                {onMessage ? (
+                  <Pressable style={styles.btnMessage} onPress={onMessage}>
+                    <Text style={styles.btnMessageText}>مراسلة</Text>
+                  </Pressable>
+                ) : null}
+                {onFollow ? (
+                  <Pressable
+                    onPress={onFollow}
+                    disabled={followLoading}
+                    style={[styles.btnFollow, isFollowing && styles.btnFollowing]}
+                  >
+                    {followLoading ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={isFollowing ? themeColors.textPrimary : '#fff'}
+                      />
+                    ) : (
+                      <Text style={[styles.btnFollowText, isFollowing && styles.btnFollowingText]}>
+                        {isFollowing ? 'متابَع' : 'متابعة'}
+                      </Text>
+                    )}
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
+          </Animated.View>
+        </LinearGradient>
+
+        <View style={styles.contentCardTop}>
+          <View style={styles.tabsBar}>
+            <View style={[styles.tabsRow, rtlRow]}>
+              <ProfileTabButton
+                label="المنشورات"
+                active={activeTab === 'posts'}
+                onPress={() => setActiveTab('posts')}
+                styles={styles}
+              />
+              <ProfileTabButton
+                label="الإعلانات"
+                active={activeTab === 'ads'}
+                onPress={() => setActiveTab('ads')}
+                styles={styles}
+              />
+            </View>
           </View>
         </View>
 
-        <View style={styles.body}>{activeTab === 'posts' ? postsContent : adsContent}</View>
+        <Animated.View
+          key={activeTab}
+          style={[styles.contentCardBottom, styles.body, { opacity: tabOpacity }]}
+        >
+          {activeTab === 'posts' ? postsContent : adsContent}
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
+  const cardShadow = Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+    },
+    android: { elevation: 3 },
+    default: {},
+  });
+
   return StyleSheet.create({
     root: {
       flex: 1,
       backgroundColor: colors.bgDeep,
     },
     headerBlock: {
-      backgroundColor: colors.bgDeep,
-      paddingBottom: spacing.sm,
+      paddingBottom: spacing.md,
     },
     toolbar: {
       alignItems: 'center',
@@ -352,11 +459,14 @@ function createStyles(colors: ThemeColors) {
     infoCol: {
       flex: 1,
       minWidth: 0,
-      gap: 6,
+      gap: 8,
+    },
+    nameBlock: {
+      gap: 2,
     },
     nameRow: {
       alignItems: 'center',
-      gap: 6,
+      gap: 8,
       flexWrap: 'wrap',
     },
     displayName: {
@@ -364,28 +474,50 @@ function createStyles(colors: ThemeColors) {
       fontSize: 22,
       fontWeight: '800',
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlText,
       flexShrink: 1,
     },
-    handlePill: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: 12,
-      paddingVertical: 5,
+    ratingChip: {
+      ...rtlRow,
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       borderRadius: radius.pill,
       backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+    },
+    ratingChipPressed: {
+      opacity: 0.75,
+    },
+    ratingText: {
+      ...typography.caption,
+      fontWeight: '800',
+      color: colors.textPrimary,
+      fontSize: 13,
+    },
+    ratingCount: {
+      ...typography.micro,
+      color: colors.textMuted,
+      fontSize: 11,
     },
     handleText: {
       ...typography.caption,
-      color: colors.textPrimary,
-      fontWeight: '600',
-      writingDirection: 'rtl',
+      color: colors.textMuted,
+      fontWeight: '500',
+      fontSize: 13,
+      ...rtlText,
+    },
+    statsCard: {
+      marginTop: 6,
+      backgroundColor: colors.borderSoft + '22',
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xs,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft + '55',
     },
     statsRow: {
       alignItems: 'stretch',
-      marginTop: 4,
       width: '100%',
     },
     statGroup: {
@@ -396,19 +528,18 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 6,
+      paddingVertical: 4,
       paddingHorizontal: 4,
-      gap: 2,
+      gap: 4,
     },
     statDivider: {
       width: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderMid,
-      marginVertical: 10,
+      marginVertical: 8,
       alignSelf: 'stretch',
     },
     statNum: {
-      ...typography.bodyStrong,
-      fontSize: 15,
+      fontSize: 20,
       fontWeight: '800',
       color: colors.textPrimary,
       textAlign: 'center',
@@ -418,14 +549,13 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontSize: 11,
       textAlign: 'center',
-      writingDirection: 'rtl',
+      ...rtlText,
     },
     bio: {
       ...typography.body,
       color: colors.textSecondary,
-      lineHeight: 20,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      lineHeight: 22,
+      ...rtlText,
       marginTop: 2,
     },
     locationRow: {
@@ -437,7 +567,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontSize: 12,
-      writingDirection: 'rtl',
+      ...rtlText,
     },
     avatarCol: {
       position: 'relative',
@@ -449,13 +579,18 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 46,
       padding: 2.5,
     },
+    avatarPlain: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      overflow: 'hidden',
+      backgroundColor: colors.bgElevated,
+    },
     avatarClip: {
       width: '100%',
       height: '100%',
       borderRadius: 44,
       overflow: 'hidden',
-      borderWidth: 3,
-      borderColor: colors.bgDeep,
       backgroundColor: colors.bgElevated,
     },
     avatarImg: {
@@ -517,8 +652,29 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '700',
     },
+    contentCardTop: {
+      marginHorizontal: spacing.md,
+      marginTop: spacing.sm,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: 0,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgSurface,
+      overflow: 'hidden',
+      ...cardShadow,
+    },
+    contentCardBottom: {
+      marginHorizontal: spacing.md,
+      borderBottomLeftRadius: radius.lg,
+      borderBottomRightRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderTopWidth: 0,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgSurface,
+    },
     tabsBar: {
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.bgSurface,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
     },
@@ -537,7 +693,7 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       fontWeight: '700',
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      ...rtlText,
     },
     tabLabelActive: {
       color: colors.electric,
@@ -552,8 +708,9 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     body: {
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.bgSurface,
       minHeight: 200,
+      paddingTop: spacing.xs,
     },
   });
 }

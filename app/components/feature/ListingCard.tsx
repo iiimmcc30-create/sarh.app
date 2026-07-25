@@ -77,27 +77,16 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
   if (variant === 'list') {
     const showNew = isNewListing(listing);
     const hasVideo = listingHasVideo(listing);
-    const views = listing.views ?? 0;
 
     return (
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [styles.listRow, rtlDirection, pressed && styles.pressed]}
       >
-        {/* المحتوى يمين (بداية RTL) ثم الصورة يسار */}
         <View style={styles.listContent}>
           <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
             {title}
           </Text>
-
-          {listing.price > 0 ? (
-            <View style={[styles.listPriceRow, rtlRow]}>
-              <Text style={styles.listPriceAmount}>
-                {listing.price.toLocaleString('ar-SA')}
-              </Text>
-              <Text style={styles.listPriceCurrency}>{listing.currency}</Text>
-            </View>
-          ) : null}
 
           <View style={[styles.listMetaRow, rtlRow]}>
             <View style={[styles.listMetaItem, rtlRow]}>
@@ -106,6 +95,24 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
                 {location}
               </Text>
             </View>
+
+            <View style={styles.listPriceTimeCol}>
+              {listing.price > 0 ? (
+                <View style={[styles.listPriceRow, rtlRow]}>
+                  <Text style={styles.listPriceAmount}>
+                    {listing.price.toLocaleString('ar-SA')}
+                  </Text>
+                  <Text style={styles.listPriceCurrency}>{listing.currency}</Text>
+                </View>
+              ) : null}
+              {timeLabel ? (
+                <View style={[styles.listMetaItem, rtlRow]}>
+                  <AppIcon name="time-outline" size={11} color={colors.textSubtle} />
+                  <Text style={styles.listStatText}>{timeLabel}</Text>
+                </View>
+              ) : null}
+            </View>
+
             {listing.featured ? (
               <Text style={styles.listStatusFeatured}>مميز</Text>
             ) : showNew ? (
@@ -113,32 +120,15 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
             ) : null}
           </View>
 
-          <View style={[styles.listBottomRow, rtlRow]}>
-            <UserProfileLink userId={sellerId} style={[styles.listSeller, rtlRow]}>
-              <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
-              <Text style={styles.listSellerName} numberOfLines={1}>
-                {sellerName}
-              </Text>
-              {seller?.verified ? (
-                <AppIcon name="shield-checkmark" size={12} color={colors.electricBright} />
-              ) : null}
-            </UserProfileLink>
-
-            <View style={[styles.listStats, rtlRow]}>
-              {timeLabel ? (
-                <View style={[styles.listMetaItem, rtlRow]}>
-                  <AppIcon name="time-outline" size={11} color={colors.textSubtle} />
-                  <Text style={styles.listStatText}>{timeLabel}</Text>
-                </View>
-              ) : null}
-              {views > 0 ? (
-                <View style={[styles.listMetaItem, rtlRow]}>
-                  <AppIcon name="eye" size={11} color={colors.textSubtle} />
-                  <Text style={styles.listStatText}>{formatCount(views)}</Text>
-                </View>
-              ) : null}
-            </View>
-          </View>
+          <UserProfileLink userId={sellerId} style={[styles.listSeller, rtlRow]}>
+            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
+            <Text style={styles.listSellerName} numberOfLines={1}>
+              {sellerName}
+            </Text>
+            {seller?.verified ? (
+              <AppIcon name="shield-checkmark" size={12} color={colors.electricBright} />
+            ) : null}
+          </UserProfileLink>
         </View>
 
         <View style={styles.listThumbWrap}>
@@ -309,8 +299,7 @@ function createStyles(colors: ThemeColors) {
   listRow: {
     ...rtlRow,
     alignItems: 'center',
-    minHeight: 100,
-    maxHeight: 116,
+    height: 116,
     paddingVertical: 10,
     paddingHorizontal: spacing.md,
     gap: spacing.md,
@@ -324,8 +313,8 @@ function createStyles(colors: ThemeColors) {
   listContent: {
     flex: 1,
     minWidth: 0,
-    justifyContent: 'center',
-    gap: 6,
+    height: 96,
+    justifyContent: 'space-between',
   },
   listTitle: {
     ...typography.bodyStrong,
@@ -339,7 +328,11 @@ function createStyles(colors: ThemeColors) {
   listPriceRow: {
     alignItems: 'baseline',
     gap: 5,
-    marginTop: 1,
+  },
+  listPriceTimeCol: {
+    alignItems: 'flex-end',
+    gap: 2,
+    flexShrink: 0,
   },
   listPriceAmount: {
     fontSize: 17,
@@ -362,6 +355,7 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+    marginTop: 2,
   },
   listMetaItem: {
     ...rtlRow,
@@ -386,18 +380,12 @@ function createStyles(colors: ThemeColors) {
     color: colors.gold,
     fontWeight: '700',
   },
-  listBottomRow: {
-    ...rtlRow,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
   listSeller: {
     ...rtlRow,
     alignItems: 'center',
     gap: 6,
-    flex: 1,
-    minWidth: 0,
+    alignSelf: 'flex-end',
+    maxWidth: '100%',
   },
   listAvatar: {
     width: 20,
@@ -412,12 +400,6 @@ function createStyles(colors: ThemeColors) {
     flexShrink: 1,
     textAlign: 'right',
     writingDirection: 'rtl',
-  },
-  listStats: {
-    ...rtlRow,
-    alignItems: 'center',
-    gap: spacing.sm,
-    flexShrink: 0,
   },
   listStatText: {
     ...typography.micro,

@@ -3,8 +3,9 @@ import Constants from 'expo-constants';
 import { resolveDevServiceUrl } from './devHost';
 
 function usesSameOriginWebApi(): boolean {
+  if (Platform.OS !== 'web') return false;
   if (process.env.EXPO_PUBLIC_WEB_SAME_ORIGIN === 'true') return true;
-  return Platform.OS === 'web' && !__DEV__;
+  return !__DEV__;
 }
 
 function resolveApiBase(): string {

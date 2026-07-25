@@ -16,11 +16,12 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchUserProfile, setFollowUser, type PublicUserProfile } from '@/services/users';
+import { fetchUserProfile, rateUser, setFollowUser, type PublicUserProfile } from '@/services/users';
 import { promptReport } from '@/services/reports';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/feature/ProfileScreenLayout';
+import { RatingModal } from '@/components/feature/RatingModal';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { presentActionSheet } from '@/lib/actionSheet';
@@ -46,6 +47,7 @@ export default function UserProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [ratingVisible, setRatingVisible] = useState(false);
 
   const isOwnProfile = !id || id === me.id;
 
@@ -161,6 +163,8 @@ export default function UserProfileScreen() {
     followersCount: profile.followersCount,
     followingCount: profile.followingCount,
     postsCount: profile.postsCount,
+    rating: profile.rating,
+    reviewCount: profile.reviewCount,
   };
 
   const openConnections = (t: 'followers' | 'following') => {
@@ -247,23 +251,56 @@ export default function UserProfileScreen() {
   };
 
   return (
-    <ProfileScreenLayout
-      mode="visitor"
-      user={profileUser}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      onBack={() => router.back()}
-      onShare={handleShareProfile}
-      onMenu={() => void handleMenu()}
-      onFollowersPress={() => openConnections('followers')}
-      onFollowingPress={() => openConnections('following')}
-      onFollow={handleFollow}
-      onMessage={handleChat}
-      followLoading={followLoading}
-      isFollowing={profile.isFollowing}
-      postsContent={renderPosts()}
-      adsContent={renderAds()}
-    />
+    <>
+      <ProfileScreenLayout
+        mode="visitor"
+        user={profileUser}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        onBack={() => router.back()}
+        onShare={handleShareProfile}
+        onMenu={() => void handleMenu()}
+        onFollowersPress={() => openConnections('followers')}
+        onFollowingPress={() => openConnections('following')}
+        onFollow={handleFollow}
+        onMessage={handleChat}
+        onRatePress={() => {
+          if (!accessToken) {
+            Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لتقييم الحساب');
+            return;
+          }
+          setRatingVisible(true);
+        }}
+        followLoading={followLoading}
+        isFollowing={profile.isFollowing}
+        postsContent={renderPosts()}
+        adsContent={renderAds()}
+      />
+
+      <RatingModal
+        visible={ratingVisible}
+        onClose={() => setRatingVisible(false)}
+        targetName={profile.arabicName || profile.displayName}
+        currentRating={profile.rating}
+        currentCount={profile.reviewCount}
+        myRating={profile.myRating ?? null}
+        onSubmit={async (rating) => {
+          const result = await rateUser(profile.id, rating);
+          if (!result) return false;
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  rating: result.rating,
+                  reviewCount: result.reviewCount,
+                  myRating: result.myRating,
+                }
+              : prev,
+          );
+          return true;
+        }}
+      />
+    </>
   );
 }
 

@@ -2,7 +2,7 @@
 // SAFAT — Profile Tab (حسابي)
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
@@ -86,6 +86,8 @@ export default function ProfileScreen() {
       followersCount: me.followers,
       followingCount: me.following,
       postsCount: me.postsCount ?? myPosts.length,
+      rating: me.rating,
+      reviewCount: me.reviewCount ?? 0,
     }),
     [me, myPosts.length],
   );

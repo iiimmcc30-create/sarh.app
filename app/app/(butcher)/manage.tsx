@@ -658,7 +658,7 @@ export default function ButcherManageScreen() {
     const nextTab = parseManageTab(tab);
     if (nextTab) setActiveTab(nextTab);
     if (action === 'add') {
-      if (nextTab === 'products') setShowAddProduct(true);
+      if (nextTab === 'products') setShowProductForm(true);
       if (nextTab === 'offers') setShowOfferForm(true);
     }
   }, [tab, action]);

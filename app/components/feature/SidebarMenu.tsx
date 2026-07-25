@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Pressable, StyleSheet, Text, View, type ReactNode } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { rtlRow } from '@/lib/rtl';
 

@@ -100,6 +100,7 @@ async function main() {
   const devClientUrl = buildDevClientUrl(lanIp);
   const expoGoUrl = buildExpoGoUrl(lanIp);
   const { apiUrl, socketUrl, mode } = resolveDevApiUrls(lanIp);
+  const webSameOrigin = mode === 'remote' ? 'false' : process.env.EXPO_PUBLIC_WEB_SAME_ORIGIN;
 
   await killPort(EXPO_PORT);
 
@@ -139,6 +140,7 @@ async function main() {
         ...process.env,
         EXPO_PUBLIC_API_URL: apiUrl,
         EXPO_PUBLIC_SOCKET_URL: socketUrl,
+        EXPO_PUBLIC_WEB_SAME_ORIGIN: webSameOrigin ?? 'false',
         EXPO_NO_DOTENV: '1',
       },
     },

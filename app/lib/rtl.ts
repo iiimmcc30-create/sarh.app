@@ -9,15 +9,22 @@ export function setupRtl(): void {
 
 export const isRTL = I18nManager.isRTL;
 
-// `direction` is native-only; React Native Web expects writingDirection on text nodes.
-const nativeRtlDirection = Platform.OS === 'web' ? {} : ({ direction: 'rtl' } as ViewStyle);
+// Native uses `direction`; web needs row-reverse for correct visual RTL order.
+const nativeRtlDirection = Platform.OS === 'web' ? ({} as ViewStyle) : ({ direction: 'rtl' } as ViewStyle);
 
-export const rtlDirection: ViewStyle = nativeRtlDirection;
+export const rtlDirection: ViewStyle =
+  Platform.OS === 'web' ? ({ direction: 'rtl' } as ViewStyle) : nativeRtlDirection;
 
-/** صف أفقي متوافق مع RTL — لا تستخدم row-reverse مع forceRTL */
-export const rtlRow: ViewStyle = {
-  flexDirection: 'row',
-  ...nativeRtlDirection,
+/** صف أفقي متوافق مع RTL */
+export const rtlRow: ViewStyle =
+  Platform.OS === 'web'
+    ? { flexDirection: 'row-reverse' }
+    : { flexDirection: 'row', ...nativeRtlDirection };
+
+/** نص عربي — محاذاة يمين دائماً */
+export const rtlText: TextStyle = {
+  textAlign: 'right',
+  writingDirection: 'rtl',
 };
 
 export function inlineStart(offset: number): ViewStyle {

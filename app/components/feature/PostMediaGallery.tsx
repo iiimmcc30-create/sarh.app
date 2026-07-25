@@ -19,7 +19,7 @@ import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { radius, type ThemeColors } from '@/constants/theme';
 
-const ASPECT_RATIO = 4 / 3;
+const ASPECT_RATIO = 16 / 11;
 
 const ABS_FILL: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
 
@@ -212,6 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
+    maxHeight: 340,
   },
   countBadge: {
     position: 'absolute',
