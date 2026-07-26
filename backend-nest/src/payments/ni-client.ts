@@ -2,7 +2,7 @@
  * Network International (N-Genius) API client.
  * Flow: access-token (Basic) → create order (Bearer) → payment page URL.
  */
-import axios from 'axios';
+import axios, { type AxiosError } from 'axios';
 
 export type NiCheckoutInput = {
   amount: number;
@@ -17,6 +17,55 @@ export type NiCheckoutInput = {
   customData?: Record<string, unknown>;
 };
 
+export type NiLogFn = (
+  event: string,
+  data: Record<string, unknown>,
+) => void;
+
+export type NiOrderVerification = {
+  valid: boolean;
+  reason?: string;
+  state?: string;
+  checkoutUrl?: string;
+  niOrderReference?: string;
+  httpStatus?: number;
+  errorBody?: unknown;
+};
+
+export class NiGatewayError extends Error {
+  readonly httpStatus?: number;
+  readonly niBody?: unknown;
+  readonly phase: 'config' | 'auth' | 'create_order' | 'fetch_order';
+
+  constructor(
+    message: string,
+    phase: NiGatewayError['phase'],
+    httpStatus?: number,
+    niBody?: unknown,
+  ) {
+    super(message);
+    this.name = 'NiGatewayError';
+    this.phase = phase;
+    this.httpStatus = httpStatus;
+    this.niBody = niBody;
+  }
+}
+
+const NI_SUCCESS_STATES = new Set([
+  'CAPTURED',
+  'AUTHORISED',
+  'PURCHASED',
+  'PAID',
+]);
+
+const NI_FAILURE_STATES = new Set([
+  'FAILED',
+  'REVERSED',
+  'CANCELLED',
+  'EXPIRED',
+  'CLOSED',
+]);
+
 /** True only when NI credentials are missing / placeholders — not based on NODE_ENV. */
 export function isNiSandboxMockMode(): boolean {
   const key = process.env.NI_API_KEY?.trim() ?? '';
@@ -27,17 +76,59 @@ function gatewayBase(): string {
   const raw =
     process.env.NI_BASE_URL?.trim() ||
     'https://api-gateway.ksa.ngenius-payments.com';
-  // Support both ".../networkapi/" legacy values and clean gateway roots
   return raw
     .replace(/\/+$/, '')
     .replace(/\/networkapi$/i, '')
     .replace(/\/transactions$/i, '');
 }
 
+export function detectNiEnvironment(): 'sandbox' | 'production' {
+  const base = gatewayBase().toLowerCase();
+  return /sandbox|uat|test/.test(base) ? 'sandbox' : 'production';
+}
+
 /**
- * Portal API keys are often already Base64. UUID keys need `base64(key:)`.
- * Also supports NI_BASIC_AUTH as a full pre-encoded Basic credential.
+ * Ensure NI_BASE_URL, NI_OUTLET_ID and NI_API_KEY belong to the same environment.
  */
+export function validateNiEnvironment(log?: NiLogFn): void {
+  if (isNiSandboxMockMode()) return;
+
+  const baseUrl = gatewayBase();
+  const env = detectNiEnvironment();
+  const apiKey = process.env.NI_API_KEY?.trim() ?? '';
+  const outletId = process.env.NI_OUTLET_ID?.trim() ?? '';
+
+  log?.('environment_check', {
+    niBaseUrl: baseUrl,
+    niEnvironment: env,
+    niOutletId: outletId ? `${outletId.slice(0, 4)}…` : 'missing',
+    hasApiKey: Boolean(apiKey),
+    niRealm: process.env.NI_REALM?.trim() || 'default',
+  });
+
+  if (!outletId) {
+    throw new NiGatewayError(
+      'NI_OUTLET_ID is not configured',
+      'config',
+    );
+  }
+
+  if (!apiKey) {
+    throw new NiGatewayError('NI_API_KEY is not configured', 'config');
+  }
+
+  const keyLooksSandbox =
+    apiKey.startsWith('test_') ||
+    apiKey.toLowerCase().includes('sandbox');
+
+  if (env === 'production' && keyLooksSandbox) {
+    throw new NiGatewayError(
+      'NI environment mismatch: production NI_BASE_URL with sandbox-style NI_API_KEY',
+      'config',
+    );
+  }
+}
+
 function basicAuthHeader(): string {
   const preencoded = process.env.NI_BASIC_AUTH?.trim();
   if (preencoded) {
@@ -47,24 +138,68 @@ function basicAuthHeader(): string {
   }
 
   const key = process.env.NI_API_KEY?.trim() ?? '';
-  // Already looks like Base64 (no UUID dashes pattern alone)
   const looksBase64 =
     /^[A-Za-z0-9+/]+=*$/.test(key) && key.length >= 40 && !key.includes('-');
 
   if (looksBase64) return `Basic ${key}`;
 
-  // Standard N-Genius: encode "apiKey:"
   return `Basic ${Buffer.from(`${key}:`).toString('base64')}`;
 }
 
-async function getAccessToken(): Promise<string> {
+function extractCheckoutUrl(data: Record<string, unknown>): string | undefined {
+  const links = (data?._links ?? {}) as Record<string, { href?: string }>;
+  return (
+    links.payment?.href ||
+    links['payment:card']?.href ||
+    links['cnp:payment-link']?.href ||
+    (data.paymentLink as string | undefined) ||
+    (data.url as string | undefined)
+  );
+}
+
+function extractNiOrderReference(
+  data: Record<string, unknown>,
+  fallback?: string,
+): string {
+  const id = data?._id as string | undefined;
+  return (
+    (data.reference as string | undefined) ||
+    (id?.replace?.(/^urn:order:/, '') ?? '') ||
+    (data.orderReference as string | undefined) ||
+    fallback ||
+    ''
+  );
+}
+
+function logHttpError(
+  log: NiLogFn | undefined,
+  event: string,
+  status: number,
+  body: unknown,
+  extra?: Record<string, unknown>,
+) {
+  log?.(event, {
+    httpStatus: status,
+    niResponseBody: body,
+    ...extra,
+  });
+}
+
+async function getAccessToken(log?: NiLogFn): Promise<string> {
+  validateNiEnvironment(log);
+
   const url = `${gatewayBase()}/identity/auth/access-token`;
   const auth = basicAuthHeader();
   const realm =
     process.env.NI_REALM?.trim() ||
     (gatewayBase().includes('sandbox') ? 'ni' : 'ni');
 
-  // KSA portal succeeds with: { grant_type, realm: 'ni' }
+  log?.('auth_request', {
+    url,
+    realm,
+    niEnvironment: detectNiEnvironment(),
+  });
+
   const attempts: Array<{ body: unknown; contentType: string }> = [
     {
       body: { grant_type: 'client_credentials', realm },
@@ -89,6 +224,9 @@ async function getAccessToken(): Promise<string> {
   ];
 
   let lastDetail = '';
+  let lastStatus = 0;
+  let lastBody: unknown = null;
+
   for (const attempt of attempts) {
     const { data, status } = await axios.post(url, attempt.body, {
       headers: {
@@ -100,30 +238,50 @@ async function getAccessToken(): Promise<string> {
       validateStatus: () => true,
     });
 
-    if (data?.access_token) return data.access_token as string;
+    log?.('auth_response', {
+      httpStatus: status,
+      attemptBody: attempt.body,
+      niResponseBody: data,
+    });
 
+    if (data?.access_token) {
+      log?.('auth_success', { httpStatus: status });
+      return data.access_token as string;
+    }
+
+    lastStatus = status;
+    lastBody = data;
     lastDetail =
       data?.errors?.[0]?.message ||
       data?.message ||
       JSON.stringify(data || { status }).slice(0, 300);
   }
 
-  throw new Error(
-    `NI access token failed — تحقق من NI_API_KEY / NI_BASIC_AUTH / NI_CHAIN_ID وبيئة الـ Sandbox. (${lastDetail})`,
+  logHttpError(log, 'auth_failed', lastStatus, lastBody);
+  throw new NiGatewayError(
+    `NI access token failed — تحقق من NI_API_KEY / NI_BASIC_AUTH / NI_REALM. (${lastDetail})`,
+    'auth',
+    lastStatus,
+    lastBody,
   );
 }
 
 /**
  * Create an NI hosted payment order and return the checkout URL + NI order ref.
  */
-export async function createNiCheckout(input: NiCheckoutInput): Promise<{
+export async function createNiCheckout(
+  input: NiCheckoutInput,
+  log?: NiLogFn,
+): Promise<{
   checkoutUrl: string;
   niOrderReference: string;
 }> {
   const outletId = process.env.NI_OUTLET_ID?.trim();
-  if (!outletId) throw new Error('NI_OUTLET_ID is not configured');
+  if (!outletId) {
+    throw new NiGatewayError('NI_OUTLET_ID is not configured', 'config');
+  }
 
-  const token = await getAccessToken();
+  const token = await getAccessToken(log);
   const url = `${gatewayBase()}/transactions/outlets/${outletId}/orders`;
 
   const body = {
@@ -149,6 +307,16 @@ export async function createNiCheckout(input: NiCheckoutInput): Promise<{
       : {}),
   };
 
+  log?.('create_order_request', {
+    url,
+    merchantOrderReference: input.orderReference,
+    amount: input.amount,
+    currency: input.currency,
+    redirectUrl: input.redirectUrl,
+    cancelUrl: input.cancelUrl,
+    requestBody: body,
+  });
+
   const { data, status } = await axios.post(url, body, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -159,45 +327,83 @@ export async function createNiCheckout(input: NiCheckoutInput): Promise<{
     validateStatus: () => true,
   });
 
+  log?.('create_order_response', {
+    httpStatus: status,
+    niResponseBody: data,
+    merchantOrderReference: input.orderReference,
+  });
+
   if (status >= 400) {
     const detail =
       data?.errors?.[0]?.localizedMessage ||
       data?.errors?.[0]?.message ||
       data?.message ||
       JSON.stringify(data || {}).slice(0, 400);
-    throw new Error(`NI create order failed (${status}): ${detail}`);
+    throw new NiGatewayError(
+      `NI create order failed (${status}): ${detail}`,
+      'create_order',
+      status,
+      data,
+    );
   }
 
-  const links = (data?._links ?? {}) as Record<string, { href?: string }>;
-  const checkoutUrl =
-    links.payment?.href ||
-    links['payment:card']?.href ||
-    links['cnp:payment-link']?.href ||
-    data?.paymentLink ||
-    data?.url;
-
+  const checkoutUrl = extractCheckoutUrl((data ?? {}) as Record<string, unknown>);
   if (!checkoutUrl) {
-    throw new Error('NI returned no payment link');
+    throw new NiGatewayError(
+      'NI returned no payment link',
+      'create_order',
+      status,
+      data,
+    );
   }
 
-  const niOrderReference =
-    data?.reference ||
-    data?._id?.replace?.(/^urn:order:/, '') ||
-    data?.orderReference ||
-    input.orderReference;
+  const niOrderReference = extractNiOrderReference(
+    (data ?? {}) as Record<string, unknown>,
+    input.orderReference,
+  );
+
+  log?.('create_order_success', {
+    httpStatus: status,
+    paymentUrl: checkoutUrl,
+    orderReference: niOrderReference,
+    merchantOrderReference: input.orderReference,
+  });
 
   return { checkoutUrl, niOrderReference };
 }
 
 /**
- * Fetch order status from NI (for sync / webhook fallback).
+ * Fetch order status from NI (for sync / verification).
  */
-export async function fetchNiOrder(orderRef: string): Promise<unknown> {
-  const outletId = process.env.NI_OUTLET_ID?.trim();
-  if (!outletId) throw new Error('NI_OUTLET_ID is not configured');
+export async function fetchNiOrder(
+  orderRef: string,
+  log?: NiLogFn,
+): Promise<unknown> {
+  const { data, status } = await fetchNiOrderRaw(orderRef, log);
+  if (status >= 400) {
+    throw new NiGatewayError(
+      `NI order fetch failed (${status})`,
+      'fetch_order',
+      status,
+      data,
+    );
+  }
+  return data;
+}
 
-  const token = await getAccessToken();
-  const url = `${gatewayBase()}/transactions/outlets/${outletId}/orders/${orderRef}`;
+async function fetchNiOrderRaw(
+  orderRef: string,
+  log?: NiLogFn,
+): Promise<{ data: unknown; status: number }> {
+  const outletId = process.env.NI_OUTLET_ID?.trim();
+  if (!outletId) {
+    throw new NiGatewayError('NI_OUTLET_ID is not configured', 'config');
+  }
+
+  const token = await getAccessToken(log);
+  const url = `${gatewayBase()}/transactions/outlets/${outletId}/orders/${encodeURIComponent(orderRef)}`;
+
+  log?.('fetch_order_request', { url, orderReference: orderRef });
 
   const { data, status } = await axios.get(url, {
     headers: {
@@ -208,9 +414,143 @@ export async function fetchNiOrder(orderRef: string): Promise<unknown> {
     validateStatus: () => true,
   });
 
-  if (status >= 400) {
-    throw new Error(`NI order fetch failed (${status})`);
+  log?.('fetch_order_response', {
+    httpStatus: status,
+    orderReference: orderRef,
+    niResponseBody: data,
+    orderState: (data as Record<string, unknown>)?.state,
+  });
+
+  return { data, status };
+}
+
+/**
+ * Verify an existing NI order is still valid for hosted checkout reuse.
+ */
+export async function verifyNiOrderForCheckout(
+  params: {
+    niOrderRef: string;
+    storedCheckoutUrl?: string | null;
+    merchantOrderReference?: string | null;
+  },
+  log?: NiLogFn,
+): Promise<NiOrderVerification> {
+  const { niOrderRef, storedCheckoutUrl, merchantOrderReference } = params;
+
+  if (!niOrderRef?.trim()) {
+    return { valid: false, reason: 'missing_ni_order_ref' };
   }
 
-  return data;
+  if (!storedCheckoutUrl?.trim()) {
+    return { valid: false, reason: 'missing_checkout_url' };
+  }
+
+  try {
+    validateNiEnvironment(log);
+    const { data, status } = await fetchNiOrderRaw(niOrderRef.trim(), log);
+    const order = (data ?? {}) as Record<string, unknown>;
+    const state = String(order.state ?? order.status ?? '').toUpperCase();
+
+    if (status === 404) {
+      return {
+        valid: false,
+        reason: 'order_not_found',
+        httpStatus: status,
+        state,
+        errorBody: data,
+      };
+    }
+
+    if (status === 401 || status === 403) {
+      return {
+        valid: false,
+        reason: 'ni_unauthorized',
+        httpStatus: status,
+        state,
+        errorBody: data,
+      };
+    }
+
+    if (status >= 400) {
+      return {
+        valid: false,
+        reason: 'ni_fetch_error',
+        httpStatus: status,
+        state,
+        errorBody: data,
+      };
+    }
+
+    if (NI_SUCCESS_STATES.has(state)) {
+      return {
+        valid: false,
+        reason: 'already_paid',
+        state,
+        niOrderReference: extractNiOrderReference(order, niOrderRef),
+        errorBody: data,
+      };
+    }
+
+    if (NI_FAILURE_STATES.has(state)) {
+      return {
+        valid: false,
+        reason: 'order_not_usable',
+        state,
+        niOrderReference: extractNiOrderReference(order, niOrderRef),
+        errorBody: data,
+      };
+    }
+
+    const liveCheckoutUrl = extractCheckoutUrl(order);
+    if (!liveCheckoutUrl) {
+      return {
+        valid: false,
+        reason: 'no_payment_url_on_order',
+        state,
+        niOrderReference: extractNiOrderReference(order, niOrderRef),
+        errorBody: data,
+      };
+    }
+
+    log?.('verify_order_success', {
+      orderReference: extractNiOrderReference(order, niOrderRef),
+      merchantOrderReference,
+      paymentUrl: liveCheckoutUrl,
+      orderState: state,
+      httpStatus: status,
+    });
+
+    return {
+      valid: true,
+      state,
+      checkoutUrl: liveCheckoutUrl,
+      niOrderReference: extractNiOrderReference(order, niOrderRef),
+      httpStatus: status,
+    };
+  } catch (err: unknown) {
+    const axiosErr = err as AxiosError;
+    const status = axiosErr.response?.status;
+    const body = axiosErr.response?.data;
+    log?.('verify_order_error', {
+      orderReference: niOrderRef,
+      httpStatus: status,
+      error: err instanceof Error ? err.message : String(err),
+      niResponseBody: body,
+    });
+    return {
+      valid: false,
+      reason: 'verification_exception',
+      httpStatus: status,
+      errorBody: body ?? (err instanceof Error ? err.message : String(err)),
+    };
+  }
+}
+
+export function formatNiGatewayError(err: unknown): string {
+  if (err instanceof NiGatewayError) {
+    const statusPart = err.httpStatus ? ` (${err.httpStatus})` : '';
+    return `${err.message}${statusPart}`;
+  }
+  if (err instanceof Error) return err.message;
+  return String(err);
 }

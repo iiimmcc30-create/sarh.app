@@ -15,7 +15,12 @@ import { PaymentsRepository } from './repositories/payments.repository';
 import {
   createNiCheckout,
   fetchNiOrder,
+  formatNiGatewayError,
   isNiSandboxMockMode,
+  NiGatewayError,
+  validateNiEnvironment,
+  verifyNiOrderForCheckout,
+  type NiLogFn,
 } from './ni-client';
 
 function buildNIOrderReference(userId: string): string {
@@ -163,6 +168,253 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     throwApi(400, 'invalid_type', 'نوع الدفع غير صالح');
   }
 
+  private niLog: NiLogFn = (event, data) => {
+    this.logger.info({ niEvent: event, ...data }, `NI ${event}`);
+  };
+
+  private resolveNiOrderRef(payment: {
+    transactionId?: string | null;
+    orderId?: string | null;
+  }): string | null {
+    const tx = payment.transactionId?.trim();
+    if (tx && !tx.startsWith('DEV-')) return tx;
+    const orderId = payment.orderId?.trim();
+    return orderId || null;
+  }
+
+  private async tryReuseExistingPendingPayment(
+    existing: {
+      id: string;
+      checkoutUrl: string | null;
+      orderId: string | null;
+      transactionId: string | null;
+    },
+  ): Promise<{
+    paymentId: string;
+    orderId: string | null;
+    checkoutUrl: string;
+    status: 'pending';
+    devMode: boolean;
+  } | null> {
+    const isDev = isNiSandboxMockMode();
+
+    this.logger.info(
+      {
+        paymentId: existing.id,
+        orderId: existing.orderId,
+        transactionId: existing.transactionId,
+        hasCheckoutUrl: Boolean(existing.checkoutUrl),
+      },
+      'Evaluating existing pending payment for reuse',
+    );
+
+    if (!existing.checkoutUrl?.trim()) {
+      this.logger.warn(
+        { paymentId: existing.id, reason: 'missing_checkout_url' },
+        'Existing pending payment invalid — no checkout URL',
+      );
+      return null;
+    }
+
+    if (isDev) {
+      this.logger.info(
+        { paymentId: existing.id },
+        'Returning existing pending payment (dev mock)',
+      );
+      return {
+        paymentId: existing.id,
+        orderId: existing.orderId,
+        checkoutUrl: existing.checkoutUrl,
+        status: 'pending',
+        devMode: true,
+      };
+    }
+
+    const niOrderRef = this.resolveNiOrderRef(existing);
+    if (!niOrderRef) {
+      this.logger.warn(
+        { paymentId: existing.id, reason: 'missing_ni_order_ref' },
+        'Existing pending payment invalid — no NI order reference',
+      );
+      return null;
+    }
+
+    const verification = await verifyNiOrderForCheckout(
+      {
+        niOrderRef,
+        storedCheckoutUrl: existing.checkoutUrl,
+        merchantOrderReference: existing.orderId,
+      },
+      this.niLog,
+    );
+
+    this.logger.info(
+      {
+        paymentId: existing.id,
+        orderReference: niOrderRef,
+        paymentState: verification.state,
+        valid: verification.valid,
+        reason: verification.reason,
+        httpStatus: verification.httpStatus,
+        paymentUrl: verification.checkoutUrl,
+      },
+      'NI pending payment verification result',
+    );
+
+    if (!verification.valid) {
+      return null;
+    }
+
+    const checkoutUrl = verification.checkoutUrl ?? existing.checkoutUrl;
+    if (
+      checkoutUrl !== existing.checkoutUrl ||
+      verification.niOrderReference &&
+        verification.niOrderReference !== existing.transactionId
+    ) {
+      const full = await this.repo.findPaymentByIdFull(existing.id);
+      const prevMeta = (full?.metadata ?? {}) as Record<string, unknown>;
+      await this.repo.updatePaymentCheckout(existing.id, {
+        transactionId:
+          verification.niOrderReference ?? existing.transactionId ?? niOrderRef,
+        checkoutUrl,
+        metadata: {
+          ...prevMeta,
+          checkoutUrlRefreshedAt: new Date().toISOString(),
+          niOrderReference:
+            verification.niOrderReference ?? prevMeta.niOrderReference,
+        },
+      }).catch(() => {});
+    }
+
+    this.logger.info(
+      {
+        paymentId: existing.id,
+        orderReference: verification.niOrderReference ?? niOrderRef,
+        paymentUrl: checkoutUrl,
+        paymentState: verification.state,
+      },
+      'Returning verified existing pending payment',
+    );
+
+    return {
+      paymentId: existing.id,
+      orderId: existing.orderId,
+      checkoutUrl,
+      status: 'pending',
+      devMode: false,
+    };
+  }
+
+  private async createCheckoutForPayment(params: {
+    payment: { id: string; orderId: string };
+    orderReference: string;
+    amount: number;
+    currency: string;
+    method: string;
+    description?: string;
+    descriptionAr?: string;
+    paymentMetadata: Record<string, unknown>;
+    type: string;
+    referenceId?: string;
+    userId: string;
+    planId?: string;
+    billingCycle?: string;
+    contact?: { displayName?: string | null; arabicName?: string | null; email?: string | null } | null;
+  }) {
+    const {
+      payment,
+      orderReference,
+      amount,
+      currency,
+      method,
+      description,
+      descriptionAr,
+      paymentMetadata,
+      type,
+      referenceId,
+      userId,
+      planId,
+      billingCycle,
+      contact,
+    } = params;
+
+    const isDev = isNiSandboxMockMode();
+    let checkoutUrl: string;
+
+    if (isDev) {
+      await new Promise((r) => setTimeout(r, 300));
+      checkoutUrl = `https://sandbox.network.ae/demo/${orderReference}`;
+      await this.repo.updatePaymentCheckout(payment.id, {
+        transactionId: `DEV-${orderReference}`,
+        checkoutUrl,
+        metadata: { ...paymentMetadata, sandbox: true },
+      });
+    } else {
+      validateNiEnvironment(this.niLog);
+      const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
+      const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout(
+        {
+          amount,
+          currency,
+          orderReference,
+          description: descriptionAr || description || 'سرح Payment',
+          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}`,
+          cancelUrl: `${appUrl}/payment/cancel`,
+          firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
+          email: contact?.email ?? '',
+          paymentMethods: [mapMethodToNI(method)],
+          customData: {
+            paymentId: payment.id,
+            type,
+            referenceId,
+            userId,
+            ...(planId ? { targetPlanId: planId, billingCycle } : {}),
+          },
+        },
+        this.niLog,
+      );
+
+      checkoutUrl = niUrl;
+
+      await this.repo.updatePaymentCheckout(payment.id, {
+        transactionId: niOrderReference,
+        checkoutUrl,
+        metadata: { ...paymentMetadata, niOrderReference },
+      });
+
+      this.logger.info(
+        {
+          paymentId: payment.id,
+          orderReference: niOrderReference,
+          merchantOrderReference: orderReference,
+          paymentUrl: checkoutUrl,
+          paymentState: 'pending',
+        },
+        'NI checkout created for payment',
+      );
+    }
+
+    this.logger.info(
+      {
+        userId,
+        orderReference,
+        amount,
+        type,
+        paymentId: payment.id,
+        paymentUrl: checkoutUrl,
+      },
+      'NI Payment initiated',
+    );
+
+    return {
+      paymentId: payment.id,
+      orderId: orderReference,
+      checkoutUrl,
+      status: 'pending' as const,
+      devMode: isDev,
+    };
+  }
+
   async initiate(user: JwtPayload, dto: InitiatePaymentDto) {
     const {
       amount,
@@ -218,7 +470,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     };
 
     const referenceType = type as PaymentReferenceType;
-    const txResult = await this.repo.createPendingPaymentOrReturnExisting({
+    const pendingParams = {
       userId: user.userId,
       orderId: orderReference,
       amount,
@@ -231,96 +483,110 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       referenceType,
       subscriptionId: type === 'subscription' ? referenceId : undefined,
       feeId: type === 'fee' || type === 'listing_fee' ? referenceId : undefined,
-    });
+    };
+
+    const txResult = await this.repo.createPendingPaymentOrReturnExisting(
+      pendingParams,
+    );
 
     if ('existingPending' in txResult && txResult.existingPending) {
       const existingPending = txResult.existingPending;
-      this.logger.info(
-        { paymentId: existingPending.id },
-        'Returning existing pending payment',
+      const reused = await this.tryReuseExistingPendingPayment(existingPending);
+      if (reused) {
+        return reused;
+      }
+
+      const archiveReason =
+        'ni_order_invalid_or_expired';
+      await this.repo.archiveInvalidPendingPayment(
+        existingPending.id,
+        archiveReason,
+        { supersededBy: 'new_ni_order' },
       );
-      const isDev = isNiSandboxMockMode();
-      return {
-        paymentId: existingPending.id,
-        orderId: existingPending.orderId,
-        checkoutUrl: existingPending.checkoutUrl,
-        status: 'pending',
-        devMode: isDev,
-      };
+
+      this.logger.warn(
+        {
+          paymentId: existingPending.id,
+          orderId: existingPending.orderId,
+          transactionId: existingPending.transactionId,
+          reason: archiveReason,
+        },
+        'Archived invalid pending payment — creating fresh NI order',
+      );
+
+      const freshOrderReference = buildNIOrderReference(user.userId);
+      const payment = await this.repo.createPendingPayment({
+        ...pendingParams,
+        orderId: freshOrderReference,
+      });
+
+      try {
+        return await this.createCheckoutForPayment({
+          payment,
+          orderReference: freshOrderReference,
+          amount,
+          currency,
+          method,
+          description,
+          descriptionAr,
+          paymentMetadata,
+          type,
+          referenceId,
+          userId: user.userId,
+          planId,
+          billingCycle,
+          contact,
+        });
+      } catch (err: unknown) {
+        await this.repo.markPaymentFailed(payment.id).catch(() => {});
+        const message = formatNiGatewayError(err);
+        this.logger.error(
+          {
+            err: message,
+            paymentId: payment.id,
+            httpStatus:
+              err instanceof NiGatewayError ? err.httpStatus : undefined,
+            niResponseBody:
+              err instanceof NiGatewayError ? err.niBody : undefined,
+          },
+          'NI API error after archiving stale pending payment',
+        );
+        throwApi(502, 'payment_gateway_error', message);
+      }
     }
 
     const payment = txResult.payment!;
 
     try {
-      const isDev = isNiSandboxMockMode();
-
-      let checkoutUrl: string;
-
-      if (isDev) {
-        await new Promise((r) => setTimeout(r, 300));
-        checkoutUrl = `https://sandbox.network.ae/demo/${orderReference}`;
-        await this.repo.updatePaymentCheckout(payment.id, {
-          transactionId: `DEV-${orderReference}`,
-          checkoutUrl,
-          metadata: { ...paymentMetadata, sandbox: true },
-        });
-      } else {
-        const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
-        const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout({
-          amount,
-          currency,
-          orderReference,
-          description: descriptionAr || description || 'سرح Payment',
-          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}`,
-          cancelUrl: `${appUrl}/payment/cancel`,
-          firstName:
-            contact?.displayName ?? contact?.arabicName ?? 'Customer',
-          email: contact?.email ?? '',
-          paymentMethods: [mapMethodToNI(method)],
-          customData: {
-            paymentId: payment.id,
-            type,
-            referenceId,
-            userId: user.userId,
-            ...(planId ? { targetPlanId: planId, billingCycle } : {}),
-          },
-        });
-
-        checkoutUrl = niUrl;
-
-        await this.repo.updatePaymentCheckout(payment.id, {
-          transactionId: niOrderReference,
-          checkoutUrl,
-          metadata: { ...paymentMetadata, niOrderReference },
-        });
-      }
-
-      this.logger.info(
-        {
-          userId: user.userId,
-          orderReference,
-          amount,
-          type,
-          paymentId: payment.id,
-        },
-        'NI Payment initiated',
-      );
-
-      return {
-        paymentId: payment.id,
-        orderId: orderReference,
-        checkoutUrl,
-        status: 'pending',
-        devMode: isDev,
-      };
+      return await this.createCheckoutForPayment({
+        payment,
+        orderReference,
+        amount,
+        currency,
+        method,
+        description,
+        descriptionAr,
+        paymentMetadata,
+        type,
+        referenceId,
+        userId: user.userId,
+        planId,
+        billingCycle,
+        contact,
+      });
     } catch (err: unknown) {
       await this.repo.markPaymentFailed(payment.id).catch(() => {});
-      const message = err instanceof Error ? err.message : String(err);
+      const message = formatNiGatewayError(err);
       this.logger.error(
-        { err: message, paymentId: payment.id },
+        {
+          err: message,
+          paymentId: payment.id,
+          httpStatus: err instanceof NiGatewayError ? err.httpStatus : undefined,
+          niResponseBody: err instanceof NiGatewayError ? err.niBody : undefined,
+        },
         'NI API error',
       );
-      throwApi(502, 'payment_gateway_error', 'خطأ في بوابة الدفع، حاول مجدداً');
+      throwApi(502, 'payment_gateway_error', message);
     }
   }
 
@@ -679,7 +945,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           ? String(existing.transactionId)
           : orderRef;
 
-      const order = (await fetchNiOrder(niRef)) as Record<string, unknown>;
+      const order = (await fetchNiOrder(niRef, this.niLog)) as Record<string, unknown>;
       const state = String((order.state ?? order.status ?? '') as string).toUpperCase();
       const niTxId = String(order.reference ?? order.transactionId ?? niRef);
 

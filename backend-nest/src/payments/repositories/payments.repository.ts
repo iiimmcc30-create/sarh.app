@@ -70,7 +70,78 @@ export class PaymentsRepository {
         referenceType: where.referenceType,
       },
       orderBy: { createdAt: 'asc' },
-      select: { id: true, checkoutUrl: true, orderId: true },
+      select: {
+        id: true,
+        checkoutUrl: true,
+        orderId: true,
+        transactionId: true,
+        metadata: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  createPendingPayment(params: {
+    userId: string;
+    orderId: string;
+    amount: number;
+    currency: string;
+    method: string;
+    description?: string;
+    descriptionAr?: string;
+    metadata: Record<string, unknown>;
+    referenceId?: string;
+    referenceType: PaymentReferenceType;
+    subscriptionId?: string;
+    feeId?: string;
+  }) {
+    return this.prisma.payment.create({
+      data: {
+        userId: params.userId,
+        orderId: params.orderId,
+        amount: params.amount,
+        currency: params.currency,
+        method: params.method as Prisma.PaymentCreateInput['method'],
+        status: 'pending',
+        description: params.description,
+        descriptionAr: params.descriptionAr,
+        metadata: params.metadata as Prisma.InputJsonValue,
+        referenceId: params.referenceId,
+        referenceType: params.referenceType,
+        ...(params.subscriptionId ? { subscriptionId: params.subscriptionId } : {}),
+        ...(params.feeId ? { feeId: params.feeId } : {}),
+      },
+    });
+  }
+
+  archiveInvalidPendingPayment(
+    paymentId: string,
+    reason: string,
+    extraMetadata?: Record<string, unknown>,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.payment.findUnique({
+        where: { id: paymentId },
+        select: { metadata: true, checkoutUrl: true, transactionId: true, orderId: true },
+      });
+      if (!existing) return null;
+
+      const prevMeta = (existing.metadata ?? {}) as Record<string, unknown>;
+      return tx.payment.update({
+        where: { id: paymentId, status: 'pending' },
+        data: {
+          status: 'failed',
+          metadata: {
+            ...prevMeta,
+            ...extraMetadata,
+            archivedAt: new Date().toISOString(),
+            archiveReason: reason,
+            previousCheckoutUrl: existing.checkoutUrl,
+            previousTransactionId: existing.transactionId,
+            previousOrderId: existing.orderId,
+          } as Prisma.InputJsonValue,
+        },
+      });
     });
   }
 
@@ -100,7 +171,14 @@ export class PaymentsRepository {
         ? await tx.payment.findFirst({
             where: pendingWhere,
             orderBy: { createdAt: 'asc' },
-            select: { id: true, checkoutUrl: true, orderId: true },
+            select: {
+              id: true,
+              checkoutUrl: true,
+              orderId: true,
+              transactionId: true,
+              metadata: true,
+              createdAt: true,
+            },
           })
         : null;
       if (existingPending) return { existingPending };
@@ -138,7 +216,14 @@ export class PaymentsRepository {
           const racedPending = await tx.payment.findFirst({
             where: pendingWhere,
             orderBy: { createdAt: 'asc' },
-            select: { id: true, checkoutUrl: true, orderId: true },
+            select: {
+              id: true,
+              checkoutUrl: true,
+              orderId: true,
+              transactionId: true,
+              metadata: true,
+              createdAt: true,
+            },
           });
           if (racedPending) return { existingPending: racedPending };
         }
