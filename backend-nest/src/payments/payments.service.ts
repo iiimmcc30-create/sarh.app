@@ -14,10 +14,12 @@ import { InitiatePaymentDto } from './dto/payments.dto';
 import { PaymentsRepository } from './repositories/payments.repository';
 import {
   createNiCheckout,
+  classifyNiOrderState,
   fetchNiOrder,
   formatNiGatewayError,
   isNiSandboxMockMode,
   NiGatewayError,
+  niOrderStateLabelAr,
   validateNiEnvironment,
   verifyNiOrderForCheckout,
   type NiLogFn,
@@ -64,16 +66,12 @@ function verifyNISignature(
   }
 }
 
-// ── NI order state → local outcome ──────────────────────────────────────────
+// ── NI order state → local outcome (return URL / sync — confirmed capture only) ──
 function niStateIsSuccess(state: string): boolean {
-  return ['CAPTURED', 'AUTHORISED', 'PURCHASED', 'PAID'].includes(
-    state.toUpperCase(),
-  );
+  return classifyNiOrderState(state) === 'success';
 }
 function niStateIsFailure(state: string): boolean {
-  return ['FAILED', 'REVERSED', 'CANCELLED', 'EXPIRED'].includes(
-    state.toUpperCase(),
-  );
+  return classifyNiOrderState(state) === 'failed';
 }
 
 const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;  // every 5 min
@@ -755,14 +753,18 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     }
 
     const isSuccess =
-      ['ORDER.PAID', 'ORDER.CAPTURED', 'ORDER.AUTHORISED'].includes(
+      ['ORDER.PAID', 'ORDER.CAPTURED', 'ORDER.PURCHASED'].includes(
         eventType.toUpperCase(),
-      ) || ['CAPTURED', 'AUTHORISED', 'PURCHASED'].includes(orderState);
+      ) || niStateIsSuccess(orderState);
 
     const isFailure =
-      ['ORDER.FAILED', 'ORDER.REVERSED', 'ORDER.CANCELLED'].includes(
-        eventType.toUpperCase(),
-      ) || ['FAILED', 'REVERSED', 'CANCELLED'].includes(orderState);
+      [
+        'ORDER.FAILED',
+        'ORDER.REVERSED',
+        'ORDER.CANCELLED',
+        'ORDER.DECLINED',
+        'ORDER.EXPIRED',
+      ].includes(eventType.toUpperCase()) || niStateIsFailure(orderState);
 
     if (isSuccess) {
       const fulfillment = await this.repo.processSuccessfulPayment({
@@ -920,8 +922,33 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
   async syncPayment(user: JwtPayload, paymentId: string) {
     const payment = await this.repo.findPaymentOwnedByUser(paymentId, user.userId);
     if (!payment) throwApi(404, 'not_found', 'الدفعة غير موجودة');
+
+    if (payment.status === 'paid') {
+      return {
+        paymentId: payment.id,
+        status: 'paid',
+        outcome: 'success',
+        synced: false,
+        messageAr: niOrderStateLabelAr('success'),
+      };
+    }
+    if (payment.status === 'failed') {
+      return {
+        paymentId: payment.id,
+        status: 'failed',
+        outcome: 'failed',
+        synced: false,
+        messageAr: niOrderStateLabelAr('failed'),
+      };
+    }
     if (payment.status !== 'pending') {
-      return { paymentId: payment.id, status: payment.status, synced: false };
+      return {
+        paymentId: payment.id,
+        status: payment.status,
+        outcome: 'processing',
+        synced: false,
+        messageAr: niOrderStateLabelAr('processing'),
+      };
     }
 
     const orderRef = payment.orderId;
@@ -947,11 +974,37 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
 
       const order = (await fetchNiOrder(niRef, this.niLog)) as Record<string, unknown>;
       const state = String((order.state ?? order.status ?? '') as string).toUpperCase();
+      const outcome = classifyNiOrderState(state);
       const niTxId = String(order.reference ?? order.transactionId ?? niRef);
+
+      this.logger.info(
+        {
+          paymentId,
+          orderRef,
+          niOrderReference: niRef,
+          paymentState: state,
+          outcome,
+        },
+        'NI return-url sync: order status from N-Genius',
+      );
 
       const payment = existing;
       if (!payment || payment.status !== 'pending') {
-        return { paymentId, status: payment?.status ?? 'unknown', synced: false };
+        const terminalStatus = payment?.status ?? 'unknown';
+        const terminalOutcome =
+          terminalStatus === 'paid'
+            ? 'success'
+            : terminalStatus === 'failed'
+              ? 'failed'
+              : 'processing';
+        return {
+          paymentId,
+          status: terminalStatus,
+          outcome: terminalOutcome,
+          synced: false,
+          niState: state,
+          messageAr: niOrderStateLabelAr(terminalOutcome),
+        };
       }
 
       const storedMeta = (payment.metadata ?? {}) as Record<string, unknown>;
@@ -998,10 +1051,17 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
 
           this.logger.info({ paymentId, orderRef, state }, 'Payment synced → paid');
         }
-        return { paymentId, status: 'paid', synced: fulfillment.processed };
+        return {
+          paymentId,
+          status: 'paid',
+          outcome: 'success',
+          synced: fulfillment.processed,
+          niState: state,
+          messageAr: niOrderStateLabelAr('success'),
+        };
       }
 
-      if (niStateIsFailure(state)) {
+      if (outcome === 'failed') {
         await this.repo.markPaymentFailedById(paymentId);
         if (type === 'subscription' && targetPlanId) {
           await this.subscriptionLifecycle.notifyRenewalFailed(userId, targetPlanId);
@@ -1015,11 +1075,25 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           });
         }
         this.logger.warn({ paymentId, orderRef, state }, 'Payment synced → failed');
-        return { paymentId, status: 'failed', synced: true };
+        return {
+          paymentId,
+          status: 'failed',
+          outcome: 'failed',
+          synced: true,
+          niState: state,
+          messageAr: niOrderStateLabelAr('failed'),
+        };
       }
 
-      // Still pending on NI side
-      return { paymentId, status: 'pending', synced: false, niState: state };
+      // STARTED / PENDING / AUTHORISED — do not fulfill; wait for webhook or retry sync
+      return {
+        paymentId,
+        status: 'pending',
+        outcome: 'processing',
+        synced: false,
+        niState: state,
+        messageAr: niOrderStateLabelAr('processing'),
+      };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error({ err: message, paymentId, orderRef }, 'NI sync API error');

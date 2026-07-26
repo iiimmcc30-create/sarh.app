@@ -113,9 +113,9 @@ export class PaymentRedirectController {
       .type('html')
       .send(
         bridgeHtml({
-          title: 'اكتمل الدفع',
+          title: 'التحقق من الدفع',
           message:
-            'تمت معالجة الدفع. جارٍ إعادتك إلى تطبيق سرح لتأكيد الحالة.',
+            'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة العملية في N-Genius — لا يُفعَّل الاشتراك قبل التأكيد.',
           deepLink,
           intentLink,
         }),

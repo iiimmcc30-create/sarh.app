@@ -546,6 +546,28 @@ export async function verifyNiOrderForCheckout(
   }
 }
 
+export function classifyNiOrderState(state: string): 'success' | 'failed' | 'processing' {
+  const s = state.toUpperCase();
+  if (['CAPTURED', 'PURCHASED', 'PAID'].includes(s)) return 'success';
+  if (
+    ['FAILED', 'DECLINED', 'CANCELLED', 'EXPIRED', 'REVERSED', 'CLOSED'].includes(s)
+  ) {
+    return 'failed';
+  }
+  return 'processing';
+}
+
+export function niOrderStateLabelAr(outcome: ReturnType<typeof classifyNiOrderState>): string {
+  switch (outcome) {
+    case 'success':
+      return 'تم الدفع بنجاح';
+    case 'failed':
+      return 'فشلت عملية الدفع';
+    default:
+      return 'العملية قيد المعالجة';
+  }
+}
+
 export function formatNiGatewayError(err: unknown): string {
   if (err instanceof NiGatewayError) {
     const statusPart = err.httpStatus ? ` (${err.httpStatus})` : '';

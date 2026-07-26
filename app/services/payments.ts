@@ -40,23 +40,36 @@ export async function devCompletePayment(
   }
 }
 
+export type PaymentSyncResult = {
+  status: 'paid' | 'pending' | 'failed';
+  messageAr?: string;
+};
+
 export async function syncPaymentStatus(
   accessToken: string,
   paymentId: string,
-): Promise<'paid' | 'pending' | 'failed'> {
+): Promise<PaymentSyncResult> {
   try {
     const res = await fetch(`${API_BASE}/api/payments/${paymentId}/sync`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.success) return 'pending';
-    const status = String(json.data?.status ?? 'pending');
-    if (status === 'paid') return 'paid';
-    if (status === 'failed') return 'failed';
-    return 'pending';
+    if (!res.ok || !json.success) return { status: 'pending' };
+
+    const outcome = String(json.data?.outcome ?? '');
+    const messageAr =
+      typeof json.data?.messageAr === 'string' ? json.data.messageAr : undefined;
+
+    if (outcome === 'success' || json.data?.status === 'paid') {
+      return { status: 'paid', messageAr };
+    }
+    if (outcome === 'failed' || json.data?.status === 'failed') {
+      return { status: 'failed', messageAr };
+    }
+    return { status: 'pending', messageAr };
   } catch {
-    return 'pending';
+    return { status: 'pending' };
   }
 }
 
