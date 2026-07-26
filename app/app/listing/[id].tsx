@@ -179,6 +179,7 @@ export default function ListingDetailScreen() {
             bio: raw.seller?.bio || '',
           },
           featured: raw.featured ?? false,
+          pinned: raw.pinned ?? false,
           postedAt: new Date(raw.createdAt).toLocaleDateString('ar-SA'),
           createdAt: raw.createdAt,
         });
@@ -453,6 +454,12 @@ export default function ListingDetailScreen() {
                 <View style={[styles.priceRow, rtlRow]}>
                   <Text style={styles.price}>{listing.price.toLocaleString('ar-SA')}</Text>
                   <Text style={styles.currency}>{listing.currency}</Text>
+                  {listing.pinned ? (
+                    <View style={[styles.pinned, rtlRow]}>
+                      <AppIcon name="pin" size={11} color="#fff" />
+                      <Text style={styles.pinnedText}>مثبّت</Text>
+                    </View>
+                  ) : null}
                   {listing.featured ? (
                     <View style={[styles.featured, rtlRow]}>
                       <AppIcon name="star" size={11} color="#1A1300" />
@@ -885,6 +892,16 @@ function createStyles(colors: ThemeColors) {
       marginBottom: 4,
     },
     featuredText: { ...typography.micro, color: '#1A1300', fontWeight: '800' },
+    pinned: {
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: colors.electricBright,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      marginBottom: 4,
+    },
+    pinnedText: { ...typography.micro, color: '#fff', fontWeight: '800' },
     title: {
       fontSize: 20,
       lineHeight: 28,

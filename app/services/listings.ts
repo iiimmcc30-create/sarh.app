@@ -28,6 +28,7 @@ type BackendListing = {
   description: string;
   arabicDescription: string;
   featured?: boolean;
+  pinned?: boolean;
   views?: number;
   createdAt: string;
   seller: {
@@ -79,6 +80,7 @@ function mapListing(l: BackendListing): Listing {
       bio: '',
     },
     featured: l.featured ?? false,
+    pinned: l.pinned ?? false,
     postedAt: new Date(l.createdAt).toLocaleDateString('ar-SA'),
     createdAt: l.createdAt,
     views: typeof l.views === 'number' ? l.views : undefined,

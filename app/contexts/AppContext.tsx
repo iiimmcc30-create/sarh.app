@@ -149,6 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       arabicDescription: l.arabicDescription,
       seller: mapBackendUser(l.seller),
       featured: l.featured ?? false,
+      pinned: l.pinned ?? false,
       postedAt: new Date(l.createdAt).toLocaleDateString('ar-SA'),
       createdAt: l.createdAt,
       views: typeof l.views === 'number' ? l.views : undefined,

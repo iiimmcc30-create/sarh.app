@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { throwApi } from '../../common/exceptions/api.exception';
 import { LoggerService } from '../../common/services/logger.service';
 import { AppNotificationsService } from '../../queue/services/app-notifications.service';
+import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { createNiCheckout, isNiSandboxMockMode } from '../../payments/ni-client';
 
@@ -34,6 +35,7 @@ export class ListingBoostService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly notifications: AppNotificationsService,
+    private readonly cache: RedisCacheService,
   ) {}
 
   /** Return available boost plans for the frontend. */
@@ -135,7 +137,7 @@ export class ListingBoostService {
           currency,
           orderReference: orderRef,
           description: descriptionAr,
-          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&type=${referenceType}`,
+          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=boost&listingId=${listingId}`,
           cancelUrl: `${appUrl}/payment/cancel`,
           firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
           email: contact?.email ?? '',
@@ -213,6 +215,8 @@ export class ListingBoostService {
     });
 
     this.logger.info({ boostId, boostType: boost.boostType, listingId: boost.listingId }, 'Boost fulfilled');
+    await this.cache.delPattern('listings:v2:*').catch(() => {});
+    await this.cache.del(`listing:${boost.listingId}`).catch(() => {});
     return { processed: true, boost: { id: boostId, boostType: boost.boostType, listingId: boost.listingId, expiresAt: expires } };
   }
 

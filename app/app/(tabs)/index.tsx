@@ -28,6 +28,7 @@ import { HomeSectionHeader } from '@/components/feature/HomeSectionHeader';
 import { PostItem } from '@/components/feature/PostItem';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
+import { compareListingBoostPriority } from '@/lib/listingSort';
 import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
 
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
@@ -111,7 +112,7 @@ export default function HomeScreen() {
       activeCategory !== 'all'
         ? listings.filter((l) => l.category === activeCategory)
         : listings;
-    return filtered.slice().sort((a, b) => Number(b.featured) - Number(a.featured));
+    return filtered.slice().sort(compareListingBoostPriority);
   }, [listings, activeCategory]);
 
   const recentPosts = useMemo(() => {

@@ -28,7 +28,7 @@ class InitiateBoostDto {
   method: string;
 }
 
-@Controller('api/listings')
+@Controller('listings')
 export class ListingBoostController {
   constructor(private readonly boosts: ListingBoostService) {}
 

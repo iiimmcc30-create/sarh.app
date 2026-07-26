@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useApprovedButcherApplication } from '@/hooks/useApprovedButcherApplication';
+import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlDirection, rtlForwardIcon, rtlRow } from '@/lib/rtl';
@@ -30,10 +30,10 @@ const APPLICATION_ITEMS: SidebarRouteItem[] = [
 ];
 
 const OWNER_ITEMS: SidebarRouteItem[] = [
-  { icon: 'bar-chart-outline', arabic: 'لوحة التحليلات', route: '/butchers/dashboard', ownerOnly: true },
-  { icon: 'settings-outline', arabic: 'إدارة الملحمة', route: '/butchers/manage', ownerOnly: true },
+  { icon: 'bar-chart-outline', arabic: 'لوحة التحليلات', route: '/(butcher)', ownerOnly: true },
+  { icon: 'settings-outline', arabic: 'إدارة الملحمة', route: '/(butcher)/manage', ownerOnly: true },
   { icon: 'create-outline', arabic: 'تعديل بيانات الملحمة', route: '/butchers/edit', ownerOnly: true },
-  { icon: 'chatbubbles-outline', arabic: 'رسائل العملاء', route: '/(tabs)/messages', ownerOnly: true },
+  { icon: 'chatbubbles-outline', arabic: 'رسائل العملاء', route: '/(butcher)/messages', ownerOnly: true },
 ];
 
 export function ButchersSidebarEntry() {
@@ -41,16 +41,16 @@ export function ButchersSidebarEntry() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const {
-    hasApprovedApplication,
+    isButcherOwner,
     hasAnyApplication,
     hasPendingApplication,
     provisionedButcherId,
-  } = useApprovedButcherApplication();
+  } = useButcherOwnerAccess();
 
   const visibleItems = useMemo(() => {
     const items: SidebarRouteItem[] = [...PUBLIC_ITEMS];
 
-    if (hasApprovedApplication) {
+    if (isButcherOwner) {
       items.push(...OWNER_ITEMS);
       if (provisionedButcherId) {
         items.push({
@@ -75,7 +75,7 @@ export function ButchersSidebarEntry() {
 
     return items;
   }, [
-    hasApprovedApplication,
+    isButcherOwner,
     hasAnyApplication,
     hasPendingApplication,
     provisionedButcherId,

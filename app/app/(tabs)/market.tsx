@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
-import { countries, Country, Listing } from '@/services/types';
+import { compareListingBoostPriority } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { CountryChips } from '@/components/feature/CountryChips';
 import { useApp } from '@/hooks/useApp';
@@ -63,7 +63,7 @@ export default function MarketScreen() {
       );
     }
     return true;
-  }), [listings, activeCategory, activeCountry, showFeaturedOnly, search]);
+  }).sort(compareListingBoostPriority), [listings, activeCategory, activeCountry, showFeaturedOnly, search]);
 
   // ──────────────────────────────────────────────────────
   // FlatList — كل صف إعلان ضيق

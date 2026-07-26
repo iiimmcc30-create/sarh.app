@@ -113,7 +113,9 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
               ) : null}
             </View>
 
-            {listing.featured ? (
+            {listing.pinned ? (
+              <Text style={styles.listStatusPinned}>مثبّت</Text>
+            ) : listing.featured ? (
               <Text style={styles.listStatusFeatured}>مميز</Text>
             ) : showNew ? (
               <Text style={styles.listStatusNew}>جديد</Text>
@@ -378,6 +380,11 @@ function createStyles(colors: ThemeColors) {
   listStatusFeatured: {
     ...typography.micro,
     color: colors.gold,
+    fontWeight: '700',
+  },
+  listStatusPinned: {
+    ...typography.micro,
+    color: colors.electricBright,
     fontWeight: '700',
   },
   listSeller: {
@@ -703,6 +710,7 @@ export const ListingCard = memo(ListingCardInner, (prev, next) =>
   prev.listing.id === next.listing.id &&
   prev.listing.price === next.listing.price &&
   prev.listing.featured === next.listing.featured &&
+  prev.listing.pinned === next.listing.pinned &&
   prev.listing.images?.[0] === next.listing.images?.[0] &&
   prev.listing.arabicTitle === next.listing.arabicTitle &&
   prev.listing.views === next.listing.views,

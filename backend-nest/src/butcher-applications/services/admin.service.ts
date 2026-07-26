@@ -139,6 +139,11 @@ export class ButcherApplicationAdminService {
           buildButcherCreateInput(existing),
         );
 
+        await tx.user.update({
+          where: { id: existing.userId },
+          data: { role: 'BUTCHER' },
+        });
+
         await this.documents.approveUploadedDocuments(
           tx,
           applicationId,

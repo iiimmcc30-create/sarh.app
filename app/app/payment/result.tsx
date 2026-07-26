@@ -10,6 +10,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useApp } from '@/hooks/useApp';
 import { syncPaymentStatus } from '@/services/payments';
 import type { PaymentContext } from '@/services/payments';
 
@@ -100,6 +101,7 @@ export default function PaymentResultScreen() {
   const context = normalizeContext(rawContext);
   const copy = CONTEXT_COPY[context];
   const { refetchSubscription } = useSubscription();
+  const { refetchData } = useApp();
   const { accessToken } = useAuth();
   const [syncState, setSyncState] = useState<SyncState>('syncing');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -117,13 +119,16 @@ export default function PaymentResultScreen() {
     }
     if (result.status === 'paid') {
       await refetchSubscription();
+      if (context === 'boost') {
+        await refetchData();
+      }
       return 'paid';
     }
     if (result.status === 'failed') {
       return 'failed';
     }
     return 'pending';
-  }, [paymentId, accessToken, refetchSubscription]);
+  }, [paymentId, accessToken, refetchSubscription, context, refetchData]);
 
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {

@@ -1,9 +1,9 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   scrimColor,
@@ -17,10 +17,11 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { useApprovedButcherApplication } from '@/hooks/useApprovedButcherApplication';
+import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
+import { confirmSignOut } from '@/lib/confirmSignOut';
 import {
   SidebarLogoutButton,
   SidebarMenuRow,
@@ -32,17 +33,26 @@ type MenuItem = SidebarMenuItem;
 
 export default function SidebarScreen() {
   const router = useRouter();
-  const { me } = useApp();
+  const { me, refetchData } = useApp();
   const { signOut, accessToken } = useAuth();
   const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
   const { unreadCount: notificationsUnread } = useUnreadNotificationCount();
   const { threads } = useMessageThreads(accessToken, 'DIRECT');
   const {
-    hasApprovedApplication,
+    isButcherOwner,
     hasAnyApplication,
     hasPendingApplication,
-  } = useApprovedButcherApplication();
+    provisionedButcherId,
+    refresh,
+  } = useButcherOwnerAccess();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+      void refetchData();
+    }, [refresh, refetchData]),
+  );
 
   const messagesUnread = useMemo(
     () => threads.reduce((sum, thread) => sum + (thread.unread ?? 0), 0),
@@ -55,33 +65,16 @@ export default function SidebarScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert('تسجيل الخروج', 'هل أنت متأكد أنك تريد الخروج من حسابك؟', [
-      { text: 'إلغاء', style: 'cancel' },
-      {
-        text: 'خروج',
-        style: 'destructive',
-        onPress: async () => {
-          router.back();
-          await signOut();
-          setTimeout(() => router.replace('/auth/phone' as any), 300);
-        },
-      },
-    ]);
+    confirmSignOut(async () => {
+      router.back();
+      await signOut();
+      setTimeout(() => router.replace('/auth/phone' as any), 300);
+    });
   };
 
   const toggleTheme = () => {
     setPreference(preference === 'dark' ? 'light' : 'dark');
   };
-
-  const applyRoute = hasPendingApplication
-    ? '/butchers/my-application'
-    : hasAnyApplication
-      ? '/butchers/my-application'
-      : '/butchers/apply';
-
-  const ordersRoute = hasApprovedApplication
-    ? '/(butcher)/manage?tab=orders'
-    : '/butchers';
 
   const accountItems: MenuItem[] = [
     {
@@ -112,7 +105,7 @@ export default function SidebarScreen() {
     },
   ];
 
-  const serviceItems: MenuItem[] = [
+  const marketItems: MenuItem[] = [
     {
       key: 'butchers',
       icon: 'storefront-outline',
@@ -120,16 +113,97 @@ export default function SidebarScreen() {
       route: '/butchers',
     },
     {
+      key: 'map',
+      icon: 'map-outline',
+      label: 'خريطة الملاحم',
+      route: '/butchers/map',
+    },
+  ];
+
+  const ownerItems: MenuItem[] = useMemo(() => {
+    if (!isButcherOwner) return [];
+
+    const items: MenuItem[] = [
+      {
+        key: 'dashboard',
+        icon: 'bar-chart-outline',
+        label: 'لوحة التحليلات',
+        route: '/(butcher)',
+      },
+      {
+        key: 'manage',
+        icon: 'settings-outline',
+        label: 'إدارة الملحمة',
+        route: '/(butcher)/manage',
+      },
+      {
+        key: 'edit',
+        icon: 'create-outline',
+        label: 'تعديل بيانات الملحمة',
+        route: '/butchers/edit',
+      },
+      {
+        key: 'butcher-messages',
+        icon: 'chatbubbles-outline',
+        label: 'رسائل العملاء',
+        route: '/(butcher)/messages',
+      },
+    ];
+
+    if (provisionedButcherId) {
+      items.push({
+        key: 'my-page',
+        icon: 'storefront-outline',
+        label: 'صفحة ملحمتي',
+        route: `/butchers/${provisionedButcherId}`,
+      });
+    }
+
+    return items;
+  }, [isButcherOwner, provisionedButcherId]);
+
+  const applicationItems: MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [];
+
+    if (isButcherOwner) {
+      if (hasAnyApplication) {
+        items.push({
+          key: 'my-application',
+          icon: 'folder-open-outline',
+          label: 'طلبي',
+          route: '/butchers/my-application',
+        });
+      }
+      return items;
+    }
+
+    if (!hasPendingApplication) {
+      items.push({
+        key: 'apply',
+        icon: 'document-text-outline',
+        label: 'طلب تسجيل ملحمة',
+        route: '/butchers/apply',
+      });
+    }
+
+    if (hasAnyApplication) {
+      items.push({
+        key: 'my-application',
+        icon: 'folder-open-outline',
+        label: 'طلبي',
+        route: '/butchers/my-application',
+      });
+    }
+
+    return items;
+  }, [isButcherOwner, hasAnyApplication, hasPendingApplication]);
+
+  const serviceItems: MenuItem[] = [
+    {
       key: 'orders',
       icon: 'bag-outline',
       label: 'طلباتي',
-      route: ordersRoute,
-    },
-    {
-      key: 'apply',
-      icon: 'document-text-outline',
-      label: 'طلب تسجيل ملحمة',
-      route: applyRoute,
+      route: isButcherOwner ? '/(butcher)/manage?tab=orders' : '/butchers',
     },
   ];
 
@@ -161,6 +235,7 @@ export default function SidebarScreen() {
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, rtlDirection]}
+          keyboardShouldPersistTaps="handled"
         >
           <SidebarSection title="الحساب" colors={colors}>
             {accountItems.map((item) => (
@@ -172,6 +247,43 @@ export default function SidebarScreen() {
               />
             ))}
           </SidebarSection>
+
+          <SidebarSection title="سوق الملاحم" colors={colors}>
+            {marketItems.map((item) => (
+              <SidebarMenuRow
+                key={item.key}
+                item={item}
+                colors={colors}
+                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
+              />
+            ))}
+          </SidebarSection>
+
+          {ownerItems.length > 0 ? (
+            <SidebarSection title="إدارة ملحمتي" colors={colors}>
+              {ownerItems.map((item) => (
+                <SidebarMenuRow
+                  key={item.key}
+                  item={item}
+                  colors={colors}
+                  onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
+                />
+              ))}
+            </SidebarSection>
+          ) : null}
+
+          {applicationItems.length > 0 ? (
+            <SidebarSection title="التسجيل والطلبات" colors={colors}>
+              {applicationItems.map((item) => (
+                <SidebarMenuRow
+                  key={item.key}
+                  item={item}
+                  colors={colors}
+                  onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
+                />
+              ))}
+            </SidebarSection>
+          ) : null}
 
           <SidebarSection title="الخدمات" colors={colors}>
             {serviceItems.map((item) => (

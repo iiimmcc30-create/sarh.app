@@ -91,13 +91,15 @@ export class ListingsService {
       where,
       take: PAGE_SIZE + 1,
       cursor,
-      orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ pinned: 'desc' }, { featured: 'desc' }, { createdAt: 'desc' }],
     });
 
     const hasMore = listings.length > PAGE_SIZE;
     const items = hasMore ? listings.slice(0, -1) : listings;
 
     const sorted = [...items].sort((a, b) => {
+      const pinnedDiff = Number(b.pinned) - Number(a.pinned);
+      if (pinnedDiff !== 0) return pinnedDiff;
       const featuredDiff = Number(b.featured) - Number(a.featured);
       if (featuredDiff !== 0) return featuredDiff;
       const aPlan = (a.seller as {

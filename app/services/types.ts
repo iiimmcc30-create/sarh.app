@@ -79,6 +79,7 @@ export interface Listing {
   arabicDescription: string;
   seller: User;
   featured: boolean;
+  pinned: boolean;
   postedAt: string;
   /** ISO timestamp for relative time (Haraj-style: قبل ٢٤ دقيقة) */
   createdAt?: string;

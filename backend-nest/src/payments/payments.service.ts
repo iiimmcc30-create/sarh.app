@@ -8,6 +8,7 @@ import { AppNotificationsService } from '../queue/services/app-notifications.ser
 import { SubscriptionCacheService } from '../subscriptions/services/subscription-cache.service';
 import { SubscriptionLifecycleService } from '../subscriptions/services/subscription-lifecycle.service';
 import { SubscriptionEntitlementService } from '../subscriptions/services/subscription-entitlement.service';
+import { RedisCacheService } from '../redis/services/redis-cache.service';
 import { PlansService } from '../plans/plans.service';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import { InitiatePaymentDto } from './dto/payments.dto';
@@ -87,7 +88,15 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     private readonly subscriptionLifecycle: SubscriptionLifecycleService,
     private readonly entitlements: SubscriptionEntitlementService,
     private readonly plans: PlansService,
+    private readonly cache: RedisCacheService,
   ) {}
+
+  private async invalidateListingCaches(listingId?: string) {
+    await this.cache.delPattern('listings:v2:*').catch(() => {});
+    if (listingId) {
+      await this.cache.del(`listing:${listingId}`).catch(() => {});
+    }
+  }
 
   private async resolveAudience(userId: string): Promise<PlanAudience> {
     return this.entitlements.getAudienceForUser(userId);
@@ -781,6 +790,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       if (fulfillment.processed) {
         await this.subscriptionCache.invalidate(userId);
 
+        if (fulfillment.boost) {
+          await this.invalidateListingCaches(fulfillment.boost.listingId);
+        }
+
         if (fulfillment.subscription) {
           await this.subscriptionLifecycle.notifyRenewalSuccess(
             userId,
@@ -1030,6 +1043,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           await this.subscriptionCache.invalidate(userId);
 
           if (fulfillment.boost) {
+            await this.invalidateListingCaches(fulfillment.boost.listingId);
             const b = fulfillment.boost;
             const isFeatured = b.boostType === 'featured';
             await this.notifications.notifyUser({

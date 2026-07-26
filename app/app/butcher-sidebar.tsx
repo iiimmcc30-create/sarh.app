@@ -2,9 +2,9 @@
 // SAFAT — Butcher sidebar (same design as main sidebar + butcher sections)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   scrimColor,
@@ -18,10 +18,11 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { useApprovedButcherApplication } from '@/hooks/useApprovedButcherApplication';
+import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
+import { confirmSignOut } from '@/lib/confirmSignOut';
 import {
   SidebarLogoutButton,
   SidebarMenuRow,
@@ -40,11 +41,18 @@ export default function ButcherSidebarScreen() {
   const { unreadCount: notificationsUnread } = useUnreadNotificationCount();
   const { threads } = useMessageThreads(accessToken, 'BUTCHER');
   const {
-    hasApprovedApplication,
+    isButcherOwner,
     hasAnyApplication,
     hasPendingApplication,
     provisionedButcherId,
-  } = useApprovedButcherApplication();
+    refresh,
+  } = useButcherOwnerAccess();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
 
   const messagesUnread = useMemo(
     () => threads.reduce((sum, thread) => sum + (thread.unread ?? 0), 0),
@@ -57,18 +65,11 @@ export default function ButcherSidebarScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert('تسجيل الخروج', 'هل أنت متأكد أنك تريد الخروج من حسابك؟', [
-      { text: 'إلغاء', style: 'cancel' },
-      {
-        text: 'خروج',
-        style: 'destructive',
-        onPress: async () => {
-          router.back();
-          await signOut();
-          setTimeout(() => router.replace('/auth/phone' as any), 300);
-        },
-      },
-    ]);
+    confirmSignOut(async () => {
+      router.back();
+      await signOut();
+      setTimeout(() => router.replace('/auth/phone' as any), 300);
+    });
   };
 
   const toggleTheme = () => {
@@ -114,7 +115,7 @@ export default function ButcherSidebarScreen() {
   ];
 
   const ownerItems: MenuItem[] = useMemo(() => {
-    if (!hasApprovedApplication) return [];
+    if (!isButcherOwner) return [];
 
     const items: MenuItem[] = [
       {
@@ -147,12 +148,12 @@ export default function ButcherSidebarScreen() {
     }
 
     return items;
-  }, [hasApprovedApplication, provisionedButcherId]);
+  }, [isButcherOwner, provisionedButcherId]);
 
   const applicationItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [];
 
-    if (hasApprovedApplication) {
+    if (isButcherOwner) {
       if (hasAnyApplication) {
         items.push({
           key: 'my-application',
@@ -183,7 +184,7 @@ export default function ButcherSidebarScreen() {
     }
 
     return items;
-  }, [hasApprovedApplication, hasAnyApplication, hasPendingApplication]);
+  }, [isButcherOwner, hasAnyApplication, hasPendingApplication]);
 
   return (
     <View style={[styles.backdrop, rtlRow]}>
@@ -213,6 +214,7 @@ export default function ButcherSidebarScreen() {
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, rtlDirection]}
+          keyboardShouldPersistTaps="handled"
         >
           <SidebarSection title="الحساب" colors={colors}>
             {accountItems.map((item) => (
