@@ -56,6 +56,7 @@ const NI_SUCCESS_STATES = new Set([
   'AUTHORISED',
   'PURCHASED',
   'PAID',
+  'SUCCESS',
 ]);
 
 const NI_FAILURE_STATES = new Set([
@@ -449,7 +450,7 @@ export async function verifyNiOrderForCheckout(
     validateNiEnvironment(log);
     const { data, status } = await fetchNiOrderRaw(niOrderRef.trim(), log);
     const order = (data ?? {}) as Record<string, unknown>;
-    const state = String(order.state ?? order.status ?? '').toUpperCase();
+    const state = resolveNiOrderState(order);
 
     if (status === 404) {
       return {
@@ -546,9 +547,88 @@ export async function verifyNiOrderForCheckout(
   }
 }
 
+export function extractNiPaymentStates(order: Record<string, unknown>): string[] {
+  const states: string[] = [];
+  const push = (value: unknown) => {
+    if (value == null || value === '') return;
+    states.push(String(value).toUpperCase());
+  };
+
+  push(order.paymentState);
+  push(order.state);
+  push(order.status);
+
+  const embedded = order._embedded as Record<string, unknown> | undefined;
+  const payments = embedded?.payment;
+  if (Array.isArray(payments)) {
+    for (const row of payments) {
+      const payment = row as Record<string, unknown>;
+      push(payment.state);
+      push(payment.paymentState);
+    }
+  } else if (payments && typeof payments === 'object') {
+    const payment = payments as Record<string, unknown>;
+    push(payment.state);
+    push(payment.paymentState);
+  }
+
+  return states;
+}
+
+/**
+ * Resolve the effective NI state: prefer payment-level CAPTURED/PURCHASED/PAID/SUCCESS
+ * over order-level STARTED/OPEN when NI returns nested payment objects.
+ */
+export function resolveNiOrderState(order: Record<string, unknown>): string {
+  const states = extractNiPaymentStates(order);
+  const fulfillmentSuccess = ['CAPTURED', 'PURCHASED', 'PAID', 'SUCCESS'];
+
+  for (const state of states) {
+    if (fulfillmentSuccess.includes(state)) return state;
+  }
+  for (const state of states) {
+    if (classifyNiOrderState(state) === 'failed') return state;
+  }
+  return states[0] ?? '';
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Fetch NI order and poll until terminal state or max attempts (post-return-url sync).
+ */
+export async function fetchNiOrderResolved(
+  orderRef: string,
+  log?: NiLogFn,
+  options?: { maxAttempts?: number; delayMs?: number },
+): Promise<{ order: Record<string, unknown>; state: string }> {
+  const maxAttempts = options?.maxAttempts ?? 4;
+  const delayMs = options?.delayMs ?? 2000;
+  let order: Record<string, unknown> = {};
+  let state = '';
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    order = (await fetchNiOrder(orderRef, log)) as Record<string, unknown>;
+    state = resolveNiOrderState(order);
+    const outcome = classifyNiOrderState(state);
+    if (outcome !== 'processing' || attempt >= maxAttempts - 1) break;
+    log?.('fetch_order_poll', {
+      orderReference: orderRef,
+      attempt: attempt + 1,
+      paymentState: state,
+      orderState: order.state,
+    });
+    await sleep(delayMs);
+  }
+
+  return { order, state };
+}
+
 export function classifyNiOrderState(state: string): 'success' | 'failed' | 'processing' {
   const s = state.toUpperCase();
-  if (['CAPTURED', 'PURCHASED', 'PAID'].includes(s)) return 'success';
+  if (['CAPTURED', 'PURCHASED', 'PAID', 'SUCCESS'].includes(s)) return 'success';
   if (
     ['FAILED', 'DECLINED', 'CANCELLED', 'EXPIRED', 'REVERSED', 'CLOSED'].includes(s)
   ) {

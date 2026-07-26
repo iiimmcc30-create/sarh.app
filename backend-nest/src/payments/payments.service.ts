@@ -16,11 +16,13 @@ import { PaymentsRepository } from './repositories/payments.repository';
 import {
   createNiCheckout,
   classifyNiOrderState,
-  fetchNiOrder,
+  extractNiPaymentStates,
+  fetchNiOrderResolved,
   formatNiGatewayError,
   isNiSandboxMockMode,
   NiGatewayError,
   niOrderStateLabelAr,
+  resolveNiOrderState,
   validateNiEnvironment,
   verifyNiOrderForCheckout,
   type NiLogFn,
@@ -697,9 +699,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       (customData?.billingCycle as string | undefined) ??
       'monthly';
 
-    const orderState = String(
-      (order?.state as string | undefined) ?? '',
-    ).toUpperCase();
+    const orderState = resolveNiOrderState(order);
 
     const niTransactionId = String(
       order?.reference ?? order?.transactionId ?? merchantOrderRef,
@@ -762,9 +762,12 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     }
 
     const isSuccess =
-      ['ORDER.PAID', 'ORDER.CAPTURED', 'ORDER.PURCHASED'].includes(
-        eventType.toUpperCase(),
-      ) || niStateIsSuccess(orderState);
+      [
+        'ORDER.PAID',
+        'ORDER.CAPTURED',
+        'ORDER.PURCHASED',
+        'ORDER.SUCCESS',
+      ].includes(eventType.toUpperCase()) || niStateIsSuccess(orderState);
 
     const isFailure =
       [
@@ -985,9 +988,9 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           ? String(existing.transactionId)
           : orderRef;
 
-      const order = (await fetchNiOrder(niRef, this.niLog)) as Record<string, unknown>;
-      const state = String((order.state ?? order.status ?? '') as string).toUpperCase();
+      const { order, state } = await fetchNiOrderResolved(niRef, this.niLog);
       const outcome = classifyNiOrderState(state);
+      const paymentStates = extractNiPaymentStates(order);
       const niTxId = String(order.reference ?? order.transactionId ?? niRef);
 
       this.logger.info(
@@ -996,6 +999,8 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           orderRef,
           niOrderReference: niRef,
           paymentState: state,
+          orderState: order.state,
+          paymentStates,
           outcome,
         },
         'NI return-url sync: order status from N-Genius',
@@ -1021,7 +1026,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       }
 
       const storedMeta = (payment.metadata ?? {}) as Record<string, unknown>;
-      const type       = payment.referenceType ?? (storedMeta.type as string | undefined);
+      const type =
+        payment.referenceType ??
+        (storedMeta.referenceType as string | undefined) ??
+        (storedMeta.type as string | undefined);
       const referenceId = payment.referenceId ?? (storedMeta.referenceId as string | undefined);
       const userId     = payment.userId ?? (storedMeta.userId as string | undefined) ?? '';
       const targetPlanId = (storedMeta.targetPlanId as string | undefined);
