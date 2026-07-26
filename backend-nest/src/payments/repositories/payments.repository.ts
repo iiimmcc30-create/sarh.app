@@ -516,7 +516,14 @@ export class PaymentsRepository {
             data:
               existing.boostType === 'featured'
                 ? { featured: true, featuredUntil: expires }
-                : { pinned: true, pinnedUntil: expires },
+                : existing.boostType === 'pinned'
+                  ? { pinned: true, pinnedUntil: expires }
+                  : {
+                      featured: true,
+                      featuredUntil: expires,
+                      pinned: true,
+                      pinnedUntil: expires,
+                    },
           });
 
           boost = { id: existing.id, boostType: existing.boostType, listingId: existing.listingId, expiresAt: expires };

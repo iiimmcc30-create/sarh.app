@@ -144,6 +144,20 @@ export class ButcherApplicationAdminService {
           data: { role: 'BUTCHER' },
         });
 
+        const freeButcherPlan = await tx.plan.findUnique({
+          where: { slug_audience: { slug: 'free', audience: 'BUTCHER' } },
+          select: { id: true },
+        });
+
+        await tx.subscription.updateMany({
+          where: { userId: existing.userId, planAudience: 'USER' },
+          data: {
+            planAudience: 'BUTCHER',
+            planId: 'free',
+            planDbId: freeButcherPlan?.id ?? null,
+          },
+        });
+
         await this.documents.approveUploadedDocuments(
           tx,
           applicationId,

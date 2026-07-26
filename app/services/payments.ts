@@ -43,6 +43,11 @@ export async function devCompletePayment(
 export type PaymentSyncResult = {
   status: 'paid' | 'pending' | 'failed';
   messageAr?: string;
+  boost?: {
+    boostType: string;
+    expiresAt?: string;
+    listingId?: string;
+  };
 };
 
 export async function syncPaymentStatus(
@@ -62,7 +67,22 @@ export async function syncPaymentStatus(
       typeof json.data?.messageAr === 'string' ? json.data.messageAr : undefined;
 
     if (outcome === 'success' || json.data?.status === 'paid') {
-      return { status: 'paid', messageAr };
+      const boostRaw = json.data?.boost;
+      const boost =
+        boostRaw && typeof boostRaw === 'object'
+          ? {
+              boostType: String((boostRaw as Record<string, unknown>).boostType ?? ''),
+              expiresAt:
+                typeof (boostRaw as Record<string, unknown>).expiresAt === 'string'
+                  ? (boostRaw as Record<string, unknown>).expiresAt as string
+                  : undefined,
+              listingId:
+                typeof (boostRaw as Record<string, unknown>).listingId === 'string'
+                  ? (boostRaw as Record<string, unknown>).listingId as string
+                  : undefined,
+            }
+          : undefined;
+      return { status: 'paid', messageAr, boost };
     }
     if (outcome === 'failed' || json.data?.status === 'failed') {
       return { status: 'failed', messageAr };

@@ -36,18 +36,21 @@ export const PLAN_ICONS: Record<string, string> = {
   free: 'gift-outline',
   'sarh-pro': 'diamond-outline',
   growth: 'trending-up-outline',
+  'nom-pro': 'trending-up-outline',
 };
 
 export const PLAN_NAMES_AR: Record<string, string> = {
   free: 'مجاني',
   'sarh-pro': 'سرح برو',
   growth: 'نمو',
+  'nom-pro': 'نمو',
 };
 
 export const PLAN_DESC_AR: Record<string, string> = {
   free: 'ابدأ التداول في سرح مجاناً',
   'sarh-pro': 'الباقة المميزة للمتداولين والمربين النشطين',
   growth: 'باقة النمو للملاحم والمتاجر الموثّقة',
+  'nom-pro': 'باقة النمو للملاحم والمتاجر الموثّقة',
 };
 
 /** Plan features hidden from user-facing UI */

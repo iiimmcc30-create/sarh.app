@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { usePlans } from '@/hooks/usePlans';
+import { useSubscriptionAudience } from '@/hooks/useSubscriptionAudience';
 import { formatPlanFeatureText, planDisplayName, planGradientColors, planIcon, type PlanSlug, type SubscriptionPlan } from '@/services/subscriptionPlans';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -26,9 +27,11 @@ export default function SubscriptionScreen() {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router = useRouter();
   const { subscription } = useSubscription();
-  const { plans, getPlanBySlug } = usePlans(subscription.planAudience);
+  const planAudience = useSubscriptionAudience();
+  const { plans, getPlanBySlug } = usePlans(planAudience);
   const [cycle, setCycle] = useState<Cycle>('monthly');
-  const paidDefault = plans.find((p) => p.monthlyPrice > 0)?.slug ?? 'sarh-pro';
+  const paidFallback = planAudience === 'BUTCHER' ? 'nom-pro' : 'sarh-pro';
+  const paidDefault = plans.find((p) => p.monthlyPrice > 0)?.slug ?? paidFallback;
   const [selected, setSelected] = useState<PlanSlug>(
     subscription.planSlug === 'free' ? paidDefault : subscription.planSlug,
   );

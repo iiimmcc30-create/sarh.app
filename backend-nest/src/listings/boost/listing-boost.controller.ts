@@ -21,7 +21,7 @@ class InitiateBoostDto {
   @IsEnum(BoostType)
   boostType: BoostType;
 
-  @IsIn([3, 7, 30, 60])
+  @IsIn([3, 7])
   durationDays: number;
 
   @IsString()

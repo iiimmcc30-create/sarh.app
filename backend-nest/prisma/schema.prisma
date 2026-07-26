@@ -944,6 +944,7 @@ enum PaymentReferenceType {
 enum BoostType {
   featured
   pinned
+  both
 }
 
 enum OrderPaymentStatus {

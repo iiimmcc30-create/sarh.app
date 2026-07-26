@@ -11,8 +11,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { syncPaymentStatus } from '@/services/payments';
-import type { PaymentContext } from '@/services/payments';
+import { syncPaymentStatus, type PaymentContext } from '@/services/payments';
+import { boostSuccessMessage } from '@/services/listingBoost';
 
 type SyncState = 'syncing' | 'paid' | 'pending' | 'failed';
 
@@ -96,8 +96,19 @@ export default function PaymentResultScreen() {
     orderId?: string;
     orderNumber?: string;
     butcherId?: string;
+    boostType?: string;
+    durationDays?: string;
   }>();
-  const { paymentId, context: rawContext, listingId, orderId, orderNumber, butcherId } = params;
+  const {
+    paymentId,
+    context: rawContext,
+    listingId,
+    orderId,
+    orderNumber,
+    butcherId,
+    boostType: paramBoostType,
+    durationDays: paramDurationDays,
+  } = params;
   const context = normalizeContext(rawContext);
   const copy = CONTEXT_COPY[context];
   const { refetchSubscription } = useSubscription();
@@ -105,6 +116,8 @@ export default function PaymentResultScreen() {
   const { accessToken } = useAuth();
   const [syncState, setSyncState] = useState<SyncState>('syncing');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [boostExpiry, setBoostExpiry] = useState<string | null>(null);
+  const [resolvedBoostType, setResolvedBoostType] = useState<string | null>(null);
   const pollCountRef = useRef(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -121,6 +134,12 @@ export default function PaymentResultScreen() {
       await refetchSubscription();
       if (context === 'boost') {
         await refetchData();
+        if (result.boost?.expiresAt) {
+          setBoostExpiry(result.boost.expiresAt);
+        }
+        if (result.boost?.boostType) {
+          setResolvedBoostType(result.boost.boostType);
+        }
       }
       return 'paid';
     }
@@ -241,6 +260,12 @@ export default function PaymentResultScreen() {
   }
 
   if (syncState === 'paid') {
+    const effectiveBoostType = resolvedBoostType ?? paramBoostType ?? 'pinned';
+    const boostSubtitle =
+      context === 'boost'
+        ? boostSuccessMessage(effectiveBoostType, boostExpiry ?? undefined)
+        : copy.successSubtitle;
+
     return (
       <View style={styles.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
@@ -249,7 +274,12 @@ export default function PaymentResultScreen() {
             <AppIcon name="checkmark-circle" size={52} color={colors.emerald} />
           </View>
           <Text style={styles.title}>{copy.successTitle}</Text>
-          <Text style={styles.subtitle}>{copy.successSubtitle}</Text>
+          <Text style={styles.subtitle}>{boostSubtitle}</Text>
+          {context === 'boost' && paramDurationDays ? (
+            <Text style={styles.metaLine}>
+              مدة الترقية: {paramDurationDays === '7' ? '٧ أيام' : '٣ أيام'}
+            </Text>
+          ) : null}
           <Pressable style={styles.primaryBtn} onPress={goPrimary}>
             <Text style={styles.primaryBtnText}>{copy.primaryLabel}</Text>
           </Pressable>
@@ -341,6 +371,12 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'center',
       lineHeight: 24,
       marginBottom: spacing.md,
+    },
+    metaLine: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
     },
     primaryBtn: {
       backgroundColor: colors.electricBright,

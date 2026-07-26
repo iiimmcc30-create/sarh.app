@@ -11,17 +11,47 @@ import { createNiCheckout, isNiSandboxMockMode } from '../../payments/ni-client'
 // ─── Pricing table ────────────────────────────────────────────────────────────
 
 export const BOOST_PLANS = {
-  featured: [
-    { durationDays: 7,  amount: 25,  labelAr: '٧ أيام'   },
-    { durationDays: 30, amount: 75,  labelAr: '٣٠ يوماً'  },
-    { durationDays: 60, amount: 130, labelAr: '٦٠ يوماً'  },
-  ],
   pinned: [
-    { durationDays: 3,  amount: 15,  labelAr: '٣ أيام'    },
-    { durationDays: 7,  amount: 30,  labelAr: '٧ أيام'    },
-    { durationDays: 30, amount: 80,  labelAr: '٣٠ يوماً'  },
+    { durationDays: 3, amount: 29, labelAr: '٣ أيام' },
+    { durationDays: 7, amount: 59, labelAr: '٧ أيام' },
+  ],
+  featured: [
+    { durationDays: 3, amount: 25, labelAr: '٣ أيام' },
+    { durationDays: 7, amount: 49, labelAr: '٧ أيام' },
+  ],
+  both: [
+    { durationDays: 3, amount: 45, labelAr: '٣ أيام' },
+    { durationDays: 7, amount: 95, labelAr: '٧ أيام' },
   ],
 } as const;
+
+function boostNotificationCopy(boostType: BoostType) {
+  if (boostType === 'both') {
+    return {
+      titleAr: '🚀 تم تثبيت وتمييز إعلانك',
+      actionAr: 'مثبّت ومميز',
+    };
+  }
+  if (boostType === 'featured') {
+    return { titleAr: '⭐ تم تمييز إعلانك', actionAr: 'مميز' };
+  }
+  return { titleAr: '📌 تم تثبيت إعلانك', actionAr: 'مثبّت' };
+}
+
+function listingBoostListingUpdate(boostType: BoostType, expires: Date) {
+  if (boostType === 'featured') {
+    return { featured: true, featuredUntil: expires };
+  }
+  if (boostType === 'pinned') {
+    return { pinned: true, pinnedUntil: expires };
+  }
+  return {
+    featured: true,
+    featuredUntil: expires,
+    pinned: true,
+    pinnedUntil: expires,
+  };
+}
 
 function buildOrderRef(prefix: string, userId: string): string {
   const ts  = Date.now().toString(36).toUpperCase();
@@ -40,7 +70,11 @@ export class ListingBoostService {
 
   /** Return available boost plans for the frontend. */
   getBoostPlans() {
-    return { featured: BOOST_PLANS.featured, pinned: BOOST_PLANS.pinned };
+    return {
+      featured: BOOST_PLANS.featured,
+      pinned: BOOST_PLANS.pinned,
+      both: BOOST_PLANS.both,
+    };
   }
 
   /**
@@ -60,20 +94,27 @@ export class ListingBoostService {
     });
     if (!listing) throwApi(404, 'listing_not_found', 'الإعلان غير موجود');
 
-    const plans = BOOST_PLANS[boostType];
+    const plans = BOOST_PLANS[boostType as keyof typeof BOOST_PLANS];
+    if (!plans) throwApi(400, 'invalid_boost_type', 'نوع الترقية غير صالح');
+
     const plan = (plans as readonly { durationDays: number; amount: number; labelAr: string }[])
       .find((p) => p.durationDays === durationDays);
     if (!plan) throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
 
     const amount      = plan.amount;
     const currency    = 'SAR';
-    const referenceType = boostType === 'featured' ? 'featured_ad' : 'pinned_ad';
-    const orderRef    = buildOrderRef(boostType === 'featured' ? 'FTR' : 'PIN', user.userId);
+    const referenceType =
+      boostType === 'pinned' ? 'pinned_ad' : 'featured_ad';
+    const orderPrefix =
+      boostType === 'pinned' ? 'PIN' : boostType === 'both' ? 'BOTH' : 'FTR';
+    const orderRef    = buildOrderRef(orderPrefix, user.userId);
 
     const descriptionAr =
       boostType === 'featured'
         ? `إعلان مميز: ${listing.arabicTitle} لمدة ${durationDays} يوم`
-        : `تثبيت إعلان: ${listing.arabicTitle} لمدة ${durationDays} يوم`;
+        : boostType === 'pinned'
+          ? `تثبيت إعلان: ${listing.arabicTitle} لمدة ${durationDays} يوم`
+          : `تثبيت وتمييز: ${listing.arabicTitle} لمدة ${durationDays} يوم`;
 
     const niMethod = this.mapMethod(method);
 
@@ -197,15 +238,11 @@ export class ListingBoostService {
       }),
       this.prisma.listing.update({
         where: { id: boost.listingId },
-        data:
-          boost.boostType === 'featured'
-            ? { featured: true, featuredUntil: expires }
-            : { pinned: true, pinnedUntil: expires },
+        data: listingBoostListingUpdate(boost.boostType, expires),
       }),
     ]);
 
-    const titleAr  = boost.boostType === 'featured' ? '✅ تم تمييز إعلانك' : '✅ تم تثبيت إعلانك';
-    const actionAr = boost.boostType === 'featured' ? 'مميز'               : 'مثبّت';
+    const { titleAr, actionAr } = boostNotificationCopy(boost.boostType);
     await this.notifications.notifyUser({
       userId: boost.userId,
       type: 'system',

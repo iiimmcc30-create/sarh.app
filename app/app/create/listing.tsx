@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Create Listing Screen (إنشاء إعلان)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { PublishSuccessModal } from '@/components/ui/PublishSuccessModal';
+import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -94,7 +94,8 @@ export default function CreateListingScreen() {
   const [featured, setFeatured] = useState(false);
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [showPublishSuccess, setShowPublishSuccess] = useState(false);
+  const [showBoostUpsell, setShowBoostUpsell] = useState(false);
+  const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
 
   const selectedCountry = GCC_COUNTRIES.find((c) => c.code === country)!;
 
@@ -234,8 +235,11 @@ export default function CreateListingScreen() {
         featured,
       });
 
-      if (result.ok) {
-        setShowPublishSuccess(true);
+      if (result.ok && result.listingId) {
+        setPublishedListingId(result.listingId);
+        setShowBoostUpsell(true);
+      } else if (result.ok) {
+        router.replace('/(tabs)/market');
       } else {
         Alert.alert(
           'خطأ',
@@ -619,26 +623,21 @@ export default function CreateListingScreen() {
           </Pressable>
         </View>
 
-        <PublishSuccessModal
-          visible={showPublishSuccess}
-          primaryAction={{
-            label: 'عرض السوق',
-            icon: 'storefront-outline',
-            onPress: () => {
-              setShowPublishSuccess(false);
+        {publishedListingId ? (
+          <ListingBoostSheet
+            visible={showBoostUpsell}
+            listingId={publishedListingId}
+            showPublishBanner
+            onClose={() => {
+              setShowBoostUpsell(false);
               router.replace('/(tabs)/market');
-            },
-          }}
-          secondaryAction={{
-            label: 'حسابي',
-            icon: 'person-outline',
-            onPress: () => {
-              setShowPublishSuccess(false);
-              router.replace('/(tabs)/profile');
-            },
-          }}
-          onRequestClose={() => setShowPublishSuccess(false)}
-        />
+            }}
+            onSkip={() => {
+              setShowBoostUpsell(false);
+              router.replace('/(tabs)/market');
+            }}
+          />
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

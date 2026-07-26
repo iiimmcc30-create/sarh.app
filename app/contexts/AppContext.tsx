@@ -14,7 +14,7 @@ import { uploadImageFromUri } from '@/services/upload';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 
-export type ActionResult = { ok: boolean; error?: string };
+export type ActionResult = { ok: boolean; error?: string; listingId?: string };
 
 const DEFAULT_USER: User = {
   id: '',
@@ -390,7 +390,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (json.success && json.data) {
           const mapped = mapBackendListing(json.data);
           if (mapped) setListingsState((prev) => [mapped, ...prev]);
-          return mapped ? { ok: true } : { ok: false, error: 'استجابة غير صالحة' };
+          return mapped ? { ok: true, listingId: mapped.id } : { ok: false, error: 'استجابة غير صالحة' };
         }
       }
       return { ok: false, error: await parseApiError(res) };

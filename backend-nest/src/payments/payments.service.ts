@@ -834,12 +834,17 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           ]);
         } else if (fulfillment.boost) {
           const b = fulfillment.boost;
-          const isFeatured = b.boostType === 'featured';
+          const boostCopy =
+            b.boostType === 'both'
+              ? { titleAr: '🚀 تم تثبيت وتمييز إعلانك', actionAr: 'مثبّت ومميز' }
+              : b.boostType === 'featured'
+                ? { titleAr: '⭐ تم تمييز إعلانك', actionAr: 'مميز' }
+                : { titleAr: '📌 تم تثبيت إعلانك', actionAr: 'مثبّت' };
           await this.notifications.notifyUser({
             userId,
             type: 'system',
-            titleAr: isFeatured ? '⭐ تم تمييز إعلانك' : '📌 تم تثبيت إعلانك',
-            bodyAr: `إعلانك ${isFeatured ? 'مميز' : 'مثبّت'} حتى ${b.expiresAt.toLocaleDateString('ar-SA')}.`,
+            titleAr: boostCopy.titleAr,
+            bodyAr: `إعلانك ${boostCopy.actionAr} حتى ${b.expiresAt.toLocaleDateString('ar-SA')}.`,
             data: { boostId: b.id, listingId: b.listingId, boostType: b.boostType },
           });
         } else if (type === 'commission') {
@@ -1053,12 +1058,17 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           if (fulfillment.boost) {
             await this.invalidateListingCaches(fulfillment.boost.listingId);
             const b = fulfillment.boost;
-            const isFeatured = b.boostType === 'featured';
+            const boostCopy =
+              b.boostType === 'both'
+                ? { titleAr: '🚀 تم تثبيت وتمييز إعلانك', actionAr: 'مثبّت ومميز' }
+                : b.boostType === 'featured'
+                  ? { titleAr: '⭐ تم تمييز إعلانك', actionAr: 'مميز' }
+                  : { titleAr: '📌 تم تثبيت إعلانك', actionAr: 'مثبّت' };
             await this.notifications.notifyUser({
               userId,
               type: 'system',
-              titleAr: isFeatured ? '⭐ تم تمييز إعلانك' : '📌 تم تثبيت إعلانك',
-              bodyAr: `إعلانك ${isFeatured ? 'مميز' : 'مثبّت'} حتى ${b.expiresAt.toLocaleDateString('ar-SA')}.`,
+              titleAr: boostCopy.titleAr,
+              bodyAr: `إعلانك ${boostCopy.actionAr} حتى ${b.expiresAt.toLocaleDateString('ar-SA')}.`,
               data: { boostId: b.id, listingId: b.listingId, boostType: b.boostType },
             });
           } else {
@@ -1080,6 +1090,13 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           synced: fulfillment.processed,
           niState: state,
           messageAr: niOrderStateLabelAr('success'),
+          boost: fulfillment.boost
+            ? {
+                boostType: fulfillment.boost.boostType,
+                expiresAt: fulfillment.boost.expiresAt.toISOString(),
+                listingId: fulfillment.boost.listingId,
+              }
+            : undefined,
         };
       }
 
