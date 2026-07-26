@@ -191,14 +191,10 @@ export class RateLimitService {
       }
 
       const rateRes = rejRes as { msBeforeNext: number };
+      const retryAfterSec = Math.round(rateRes.msBeforeNext / 1000);
       this.logger.warn({ ip, type }, 'Rate limit exceeded');
-      res.setHeader('Retry-After', Math.round(rateRes.msBeforeNext / 1000));
-      res.status(429).json({
-        error: 'too_many_requests',
-        messageAr: 'طلبات كثيرة جداً، حاول لاحقاً',
-        message: 'Too many requests, please try again later',
-        retryAfter: Math.round(rateRes.msBeforeNext / 1000),
-      });
+      res.setHeader('Retry-After', retryAfterSec);
+      // Response body is sent once by GlobalExceptionFilter (RateLimitGuard throws).
       return false;
     }
   }
