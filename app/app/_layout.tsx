@@ -11,6 +11,7 @@ import { AppProvider } from '@/contexts/AppContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { ButcherOwnerProvider } from '@/contexts/ButcherOwnerContext';
 import { NotificationManager } from '@/components/NotificationManager';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
@@ -139,10 +140,12 @@ function RootLayoutBody() {
           <AppProvider>
             <AuthGuard>
               <NotificationManager />
-              <SubscriptionProvider>
-                <RootNavigator />
-                <ActionSheetHost />
-              </SubscriptionProvider>
+              <ButcherOwnerProvider>
+                <SubscriptionProvider>
+                  <RootNavigator />
+                  <ActionSheetHost />
+                </SubscriptionProvider>
+              </ButcherOwnerProvider>
             </AuthGuard>
           </AppProvider>
         </OnboardingProvider>

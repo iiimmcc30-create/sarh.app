@@ -1,52 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { listApplications } from '@/services/butcherApplications';
-import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
+import { useButcherOwnerContext } from '@/contexts/ButcherOwnerContext';
 
+/** Reads butcher application state from the shared ButcherOwnerProvider. */
 export function useApprovedButcherApplication() {
-  const { isAuthenticated, accessToken } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [applications, setApplications] = useState<ApplicationSummary[]>([]);
-
-  const refresh = useCallback(async () => {
-    if (!isAuthenticated || !accessToken) {
-      setApplications([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await listApplications({ limit: 10 });
-      setApplications(result.applications);
-    } catch {
-      setApplications([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated, accessToken]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  const approvedApplication =
-    applications.find((application) => application.status === 'APPROVED') ?? null;
-
-  const hasApprovedApplication = approvedApplication !== null;
-  const hasAnyApplication = applications.length > 0;
-  const hasPendingApplication = applications.some(
-    (application) => application.status === 'DRAFT' || application.status === 'SUBMITTED',
-  );
-
+  const ctx = useButcherOwnerContext();
   return {
-    loading,
-    applications,
-    approvedApplication,
-    hasApprovedApplication,
-    hasAnyApplication,
-    hasPendingApplication,
-    provisionedButcherId: approvedApplication?.provisionedButcherId ?? null,
-    refresh,
+    loading: ctx.loading,
+    applications: ctx.applications,
+    approvedApplication: ctx.approvedApplication,
+    hasApprovedApplication: ctx.hasApprovedApplication,
+    hasAnyApplication: ctx.hasAnyApplication,
+    hasPendingApplication: ctx.hasPendingApplication,
+    provisionedButcherId: ctx.provisionedButcherId,
+    refresh: ctx.refresh,
   };
 }

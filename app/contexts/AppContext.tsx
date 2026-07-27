@@ -157,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mapBackendUser]);
 
   const fetchUserData = useCallback(async () => {
-    if (!isAuthenticated || !accessToken || !user) return;
+    if (!isAuthenticated || !accessToken || !user?.id) return;
     try {
       const res = await authFetch(`${API_BASE}/api/users/${user.id}`);
       if (res.ok) {
@@ -169,7 +169,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.warn('[AppContext] Failed to fetch user profile:', err);
     }
-  }, [isAuthenticated, accessToken, user, mapBackendUser]);
+  }, [isAuthenticated, accessToken, user?.id, mapBackendUser]);
 
   const fetchListings = useCallback(async () => {
     try {
