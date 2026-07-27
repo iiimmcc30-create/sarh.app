@@ -41,7 +41,7 @@ export async function devCompletePayment(
 }
 
 export type PaymentSyncResult = {
-  status: 'paid' | 'pending' | 'failed';
+  status: 'paid' | 'pending' | 'failed' | 'cancelled' | 'not_found' | 'rate_limited';
   messageAr?: string;
   boost?: {
     boostType: string;
@@ -50,47 +50,79 @@ export type PaymentSyncResult = {
   };
 };
 
+const PAYMENT_CANCEL_MESSAGE_AR = 'تم إلغاء عملية الدفع.';
+
+const syncInflight = new Map<string, Promise<PaymentSyncResult>>();
+
+function mapSyncResponse(res: Response, json: Record<string, unknown>): PaymentSyncResult {
+  if (res.status === 429) {
+    return {
+      status: 'rate_limited',
+      messageAr: 'طلبات كثيرة. انتظر قليلاً ثم أعد التحقق.',
+    };
+  }
+  if (res.status === 404) {
+    return { status: 'not_found', messageAr: PAYMENT_CANCEL_MESSAGE_AR };
+  }
+  if (!res.ok || !json.success) {
+    return { status: 'cancelled', messageAr: PAYMENT_CANCEL_MESSAGE_AR };
+  }
+
+  const data = (json.data ?? {}) as Record<string, unknown>;
+  const outcome = String(data.outcome ?? '');
+  const messageAr =
+    typeof data.messageAr === 'string' ? data.messageAr : undefined;
+
+  if (outcome === 'success' || data.status === 'paid') {
+    const boostRaw = data.boost;
+    const boost =
+      boostRaw && typeof boostRaw === 'object'
+        ? {
+            boostType: String((boostRaw as Record<string, unknown>).boostType ?? ''),
+            expiresAt:
+              typeof (boostRaw as Record<string, unknown>).expiresAt === 'string'
+                ? (boostRaw as Record<string, unknown>).expiresAt as string
+                : undefined,
+            listingId:
+              typeof (boostRaw as Record<string, unknown>).listingId === 'string'
+                ? (boostRaw as Record<string, unknown>).listingId as string
+                : undefined,
+          }
+        : undefined;
+    return { status: 'paid', messageAr, boost };
+  }
+
+  if (outcome === 'failed' || data.status === 'failed') {
+    return { status: 'cancelled', messageAr: PAYMENT_CANCEL_MESSAGE_AR };
+  }
+
+  return { status: 'pending', messageAr };
+}
+
 export async function syncPaymentStatus(
   accessToken: string,
   paymentId: string,
 ): Promise<PaymentSyncResult> {
-  try {
-    const res = await fetch(`${API_BASE}/api/payments/${paymentId}/sync`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.success) return { status: 'pending' };
+  const inflight = syncInflight.get(paymentId);
+  if (inflight) return inflight;
 
-    const outcome = String(json.data?.outcome ?? '');
-    const messageAr =
-      typeof json.data?.messageAr === 'string' ? json.data.messageAr : undefined;
+  const promise = (async (): Promise<PaymentSyncResult> => {
+    try {
+      const res = await fetch(`${API_BASE}/api/payments/${paymentId}/sync`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      return mapSyncResponse(res, json);
+    } catch {
+      return { status: 'cancelled', messageAr: PAYMENT_CANCEL_MESSAGE_AR };
+    }
+  })().finally(() => {
+    syncInflight.delete(paymentId);
+  });
 
-    if (outcome === 'success' || json.data?.status === 'paid') {
-      const boostRaw = json.data?.boost;
-      const boost =
-        boostRaw && typeof boostRaw === 'object'
-          ? {
-              boostType: String((boostRaw as Record<string, unknown>).boostType ?? ''),
-              expiresAt:
-                typeof (boostRaw as Record<string, unknown>).expiresAt === 'string'
-                  ? (boostRaw as Record<string, unknown>).expiresAt as string
-                  : undefined,
-              listingId:
-                typeof (boostRaw as Record<string, unknown>).listingId === 'string'
-                  ? (boostRaw as Record<string, unknown>).listingId as string
-                  : undefined,
-            }
-          : undefined;
-      return { status: 'paid', messageAr, boost };
-    }
-    if (outcome === 'failed' || json.data?.status === 'failed') {
-      return { status: 'failed', messageAr };
-    }
-    return { status: 'pending', messageAr };
-  } catch {
-    return { status: 'pending' };
-  }
+  syncInflight.set(paymentId, promise);
+  return promise;
 }
 
 type LaunchPaymentOptions = {
@@ -107,14 +139,44 @@ function goToPaymentResult(
   context: PaymentContext,
   returnParams?: Record<string, string>,
 ) {
-  router.push({
+  router.replace({
     pathname: '/payment/result',
     params: {
       paymentId,
       context,
+      gatewayReturn: '1',
       ...returnParams,
     },
   } as never);
+}
+
+function navigateAfterPaymentCancelled(
+  context: PaymentContext,
+  returnParams?: Record<string, string>,
+) {
+  Alert.alert('تم إلغاء عملية الدفع', 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.');
+
+  switch (context) {
+    case 'boost':
+      if (returnParams?.listingId) {
+        router.replace({
+          pathname: '/listing/[id]',
+          params: { id: returnParams.listingId },
+        } as never);
+      } else {
+        router.back();
+      }
+      break;
+    case 'subscription':
+    case 'listing_fee':
+    case 'commission':
+      router.replace('/subscription' as never);
+      break;
+    case 'butcher_order':
+      break;
+    default:
+      router.replace('/(tabs)/profile' as never);
+  }
 }
 
 /** Unified checkout: dev test payment or NI hosted page. */
@@ -161,11 +223,32 @@ export async function launchPaymentCheckout(
 
   if (!checkoutUrl) return 'failed';
 
-  await openPaymentCheckout(checkoutUrl, paymentId);
+  const resultParams: Record<string, string> = {
+    paymentId: paymentId ?? '',
+    context,
+    gatewayReturn: '1',
+    ...returnParams,
+  };
 
-  if (paymentId) {
-    goToPaymentResult(paymentId, context, returnParams);
+  const sessionResult = await openPaymentCheckout(checkoutUrl, resultParams);
+
+  if (!paymentId) {
+    return sessionResult === 'success' ? 'opened' : 'cancelled';
   }
 
-  return 'opened';
+  if (sessionResult === 'success') {
+    goToPaymentResult(paymentId, context, returnParams);
+    return 'opened';
+  }
+
+  const sync = await syncPaymentStatus(accessToken, paymentId);
+  if (sync.status === 'paid') {
+    goToPaymentResult(paymentId, context, returnParams);
+    return 'paid';
+  }
+
+  if (context !== 'butcher_order') {
+    navigateAfterPaymentCancelled(context, returnParams);
+  }
+  return 'cancelled';
 }

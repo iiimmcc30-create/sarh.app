@@ -130,6 +130,58 @@ export class SubscriptionEntitlementService {
     return ctx.planSlug;
   }
 
+  async assertCanApplyListingPromotion(
+    userId: string,
+    params: { featured?: boolean; pinned?: boolean },
+  ): Promise<void> {
+    if (!params.featured && !params.pinned) {
+      throwApi(400, 'invalid_request', 'حدد نوع الترقية المطلوبة');
+    }
+
+    let row = await this.repo.findByUserId(userId);
+    if (!row) {
+      await this.subscriptionsRepo.upsertFree(userId);
+      row = await this.repo.findByUserId(userId);
+    }
+    if (!row) throwApi(404, 'ref_not_found', 'الاشتراك غير موجود');
+
+    await this.lifecycle.expireIfNeeded(row);
+    row = (await this.repo.findByUserId(userId))!;
+
+    const ctx = await this.permissions.resolveEffective(
+      getEffectivePlanSlug(row),
+      row.planAudience,
+      hasPaidAccess(row),
+    );
+    const perms = ctx.permissions;
+
+    if (params.featured) {
+      const featuredLimit = this.permissions.monthlyFeaturedAds(perms);
+      if (featuredLimit <= 0) {
+        throwApi(403, 'plan_required', 'الإعلانات المميزة غير متاحة في باقتك');
+      }
+      if (row.featuredAdsUsed >= featuredLimit) {
+        throw Object.assign(new Error(`featured_limit:${featuredLimit}`), {
+          code: 'featured_limit',
+          limit: featuredLimit,
+        });
+      }
+    }
+
+    if (params.pinned) {
+      const pinnedLimit = this.permissions.monthlyPinnedAds(perms);
+      if (pinnedLimit <= 0) {
+        throwApi(403, 'plan_required', 'تثبيت الإعلانات غير متاح في باقتك');
+      }
+      if (row.pinnedAdsUsed >= pinnedLimit) {
+        throw Object.assign(new Error(`pinned_limit:${pinnedLimit}`), {
+          code: 'pinned_limit',
+          limit: pinnedLimit,
+        });
+      }
+    }
+  }
+
   async assertCanCreateLiveStream(userId: string) {
     const row = await this.repo.findByUserId(userId);
     if (!row) {

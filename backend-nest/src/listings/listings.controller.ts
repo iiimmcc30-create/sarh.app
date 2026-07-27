@@ -15,6 +15,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { successResponse } from '../common/utils/response.util';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import {
+  ApplyPlanPromoteDto,
   CreateListingDto,
   CreateListingCommentDto,
   ListListingsQueryDto,
@@ -66,6 +67,17 @@ export class ListingsController {
   @HttpCode(HttpStatus.OK)
   async getById(@Param('id') id: string) {
     return successResponse(await this.listings.getById(id));
+  }
+
+  @RateLimit('api')
+  @Post(':id/plan-promote')
+  @HttpCode(HttpStatus.OK)
+  async applyPlanPromotion(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: ApplyPlanPromoteDto,
+  ) {
+    return successResponse(await this.listings.applyPlanPromotion(user, id, dto));
   }
 
   @RateLimit('api')

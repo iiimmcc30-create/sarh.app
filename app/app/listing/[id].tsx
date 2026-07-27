@@ -68,69 +68,67 @@ export default function ListingDetailScreen() {
   const [boostModalVisible, setBoostModalVisible] = useState(false);
   const [initialBoostType, setInitialBoostType] = useState<BoostTypeKey>('pinned');
 
+  const loadListing = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await (accessToken
+        ? authFetch(`${API_BASE}/api/listings/${id}`)
+        : fetch(`${API_BASE}/api/listings/${id}`));
+      if (!res.ok) return;
+      const json = await res.json();
+      if (!json.success || !json.data) return;
+      const raw = json.data;
+      setListing({
+        id: raw.id,
+        title: raw.title,
+        arabicTitle: raw.arabicTitle,
+        price: raw.price,
+        currency: raw.currency || 'SAR',
+        category: raw.category,
+        breed: raw.breed || '',
+        age: raw.age || '',
+        location: raw.location,
+        arabicLocation: raw.arabicLocation,
+        country: raw.country,
+        contactPhone: raw.contactPhone || undefined,
+        images: raw.images?.length ? raw.images : [],
+        description: raw.description,
+        arabicDescription: raw.arabicDescription,
+        seller: {
+          id: raw.seller?.id,
+          username: raw.seller?.username || '',
+          displayName: raw.seller?.displayName || '',
+          arabicName: raw.seller?.arabicName || '',
+          avatar: raw.seller?.avatar,
+          verified: raw.seller?.verified ?? false,
+          followers: raw.seller?.followersCount ?? raw.seller?.followers ?? 0,
+          following: raw.seller?.followingCount ?? 0,
+          rating: typeof raw.seller?.rating === 'number' ? raw.seller.rating : null,
+          reviewCount: raw.seller?.reviewCount ?? 0,
+          country: raw.seller?.country || 'SA',
+          bio: raw.seller?.bio || '',
+        },
+        featured: raw.featured ?? false,
+        pinned: raw.pinned ?? false,
+        postedAt: new Date(raw.createdAt).toLocaleDateString('ar-SA'),
+        createdAt: raw.createdAt,
+      });
+    } catch {
+      /* keep cache */
+    } finally {
+      setLoading(false);
+    }
+  }, [id, accessToken]);
+
   useEffect(() => {
     if (cached) setListing(cached);
   }, [cached]);
 
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      if (!id) return;
-      if (!cached) setLoading(true);
-      try {
-        const res = await (accessToken
-          ? authFetch(`${API_BASE}/api/listings/${id}`)
-          : fetch(`${API_BASE}/api/listings/${id}`));
-        if (!res.ok) return;
-        const json = await res.json();
-        if (!json.success || !json.data || cancelled) return;
-        const raw = json.data;
-        setListing({
-          id: raw.id,
-          title: raw.title,
-          arabicTitle: raw.arabicTitle,
-          price: raw.price,
-          currency: raw.currency || 'SAR',
-          category: raw.category,
-          breed: raw.breed || '',
-          age: raw.age || '',
-          location: raw.location,
-          arabicLocation: raw.arabicLocation,
-          country: raw.country,
-          contactPhone: raw.contactPhone || undefined,
-          images: raw.images?.length ? raw.images : [],
-          description: raw.description,
-          arabicDescription: raw.arabicDescription,
-          seller: {
-            id: raw.seller?.id,
-            username: raw.seller?.username || '',
-            displayName: raw.seller?.displayName || '',
-            arabicName: raw.seller?.arabicName || '',
-            avatar: raw.seller?.avatar,
-            verified: raw.seller?.verified ?? false,
-            followers: raw.seller?.followersCount ?? raw.seller?.followers ?? 0,
-            following: raw.seller?.followingCount ?? 0,
-            rating: typeof raw.seller?.rating === 'number' ? raw.seller.rating : null,
-            reviewCount: raw.seller?.reviewCount ?? 0,
-            country: raw.seller?.country || 'SA',
-            bio: raw.seller?.bio || '',
-          },
-          featured: raw.featured ?? false,
-          pinned: raw.pinned ?? false,
-          postedAt: new Date(raw.createdAt).toLocaleDateString('ar-SA'),
-          createdAt: raw.createdAt,
-        });
-      } catch {
-        // keep cache if any
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, accessToken, cached]);
+    if (!id) return;
+    if (!cached) setLoading(true);
+    void loadListing();
+  }, [id, cached, loadListing]);
 
   const refreshSellerFollowState = useCallback(async () => {
     if (
@@ -593,7 +591,10 @@ export default function ListingDetailScreen() {
           visible={boostModalVisible}
           listingId={listing.id}
           initialBoostType={initialBoostType}
+          listingFeatured={listing.featured}
+          listingPinned={listing.pinned}
           onClose={() => setBoostModalVisible(false)}
+          onPlanPromoteSuccess={() => void loadListing()}
         />
       ) : null}
     </View>

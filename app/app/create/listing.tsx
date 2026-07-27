@@ -2,6 +2,7 @@
 // SAFAT — Create Listing Screen (إنشاء إعلان)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
+import { PlanPromotionOptions } from '@/components/listing/PlanPromotionOptions';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -92,6 +93,7 @@ export default function CreateListingScreen() {
   const [lng, setLng] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
   const [featured, setFeatured] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showBoostUpsell, setShowBoostUpsell] = useState(false);
@@ -233,6 +235,7 @@ export default function CreateListingScreen() {
             : undefined,
         images: uploadedUrls,
         featured,
+        pinned,
       });
 
       if (result.ok && result.listingId) {
@@ -533,19 +536,12 @@ export default function CreateListingScreen() {
                 </Text>
               </View>
 
-              {/* Featured toggle */}
-              <Pressable
-                style={styles.featuredToggle}
-                onPress={() => setFeatured(!featured)}
-              >
-                <View style={styles.featuredInfo}>
-                  <Text style={styles.featuredTitle}>⭐ إعلان مميز</Text>
-                  <Text style={styles.featuredSub}>يظهر في أعلى نتائج البحث</Text>
-                </View>
-                <View style={[styles.toggle, featured && styles.toggleOn]}>
-                  <View style={[styles.toggleThumb, featured && styles.toggleThumbOn]} />
-                </View>
-              </Pressable>
+              <PlanPromotionOptions
+                featured={featured}
+                pinned={pinned}
+                onFeaturedChange={setFeatured}
+                onPinnedChange={setPinned}
+              />
             </View>
           )}
 
@@ -586,6 +582,10 @@ export default function CreateListingScreen() {
                 <View style={styles.reviewRow}>
                   <Text style={styles.reviewLabel}>مميز</Text>
                   <Text style={styles.reviewValue}>{featured ? '✅ نعم' : '❌ لا'}</Text>
+                </View>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>مثبّت</Text>
+                  <Text style={styles.reviewValue}>{pinned ? '✅ نعم' : '❌ لا'}</Text>
                 </View>
               </View>
 
@@ -628,6 +628,8 @@ export default function CreateListingScreen() {
             visible={showBoostUpsell}
             listingId={publishedListingId}
             showPublishBanner
+            listingFeatured={featured}
+            listingPinned={pinned}
             onClose={() => {
               setShowBoostUpsell(false);
               router.replace('/(tabs)/market');

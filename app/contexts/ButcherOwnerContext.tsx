@@ -170,7 +170,8 @@ export function ButcherOwnerProvider({ children }: { children: ReactNode }) {
       applicationsInflight = null;
     }
     void load(true);
-  }, [load, isAuthenticated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load tracks auth/token/role internally
+  }, [isAuthenticated, accessToken, user?.role]);
 
   const refresh = useCallback(async () => {
     const now = Date.now();

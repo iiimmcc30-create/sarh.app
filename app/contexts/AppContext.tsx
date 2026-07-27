@@ -13,6 +13,11 @@ import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
+const REFETCH_TTL_MS = 60_000;
+
+let userFetchInflight: Promise<void> | null = null;
+let listingsFetchInflight: Promise<void> | null = null;
+const postsFetchInflight = new Map<string, Promise<void>>();
 
 export type ActionResult = { ok: boolean; error?: string; listingId?: string };
 
@@ -49,7 +54,7 @@ interface AppContextValue {
   toggleBookmark: (postId: string) => void;
   addComment: (postId: string, content: string) => Promise<boolean>;
   removeListing: (listingId: string) => Promise<ActionResult>;
-  refetchData: () => Promise<void>;
+  refetchData: (force?: boolean) => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);
@@ -158,52 +163,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = useCallback(async () => {
     if (!isAuthenticated || !accessToken || !user?.id) return;
-    try {
-      const res = await authFetch(`${API_BASE}/api/users/${user.id}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data) {
-          setMe(mapBackendUser(json.data));
-        }
-      }
-    } catch (err) {
-      console.warn('[AppContext] Failed to fetch user profile:', err);
+    if (userFetchInflight) {
+      await userFetchInflight;
+      return;
     }
+    userFetchInflight = (async () => {
+      try {
+        const res = await authFetch(`${API_BASE}/api/users/${user.id}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setMe(mapBackendUser(json.data));
+          }
+        }
+      } catch (err) {
+        console.warn('[AppContext] Failed to fetch user profile:', err);
+      }
+    })().finally(() => {
+      userFetchInflight = null;
+    });
+    await userFetchInflight;
   }, [isAuthenticated, accessToken, user?.id, mapBackendUser]);
 
   const fetchListings = useCallback(async () => {
-    try {
-      const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      const fetchList = async (url: string) => {
-        const res = await (accessToken
-          ? authFetch(url, { headers })
-          : fetchWithTimeout(url, { headers }));
-        if (!res.ok) return [] as Listing[];
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data?.listings)) {
-          return json.data.listings
-            .map(mapBackendListing)
-            .filter((listing: Listing | null): listing is Listing =>
-              Boolean(listing && listing.country !== 'EG'),
-            );
-        }
-        return [] as Listing[];
-      };
-
-      const marketPromise = fetchList(`${API_BASE}/api/listings`);
-      const minePromise =
-        accessToken && user?.id
-          ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(user.id)}`)
-          : Promise.resolve([] as Listing[]);
-
-      const [market, mine] = await Promise.all([marketPromise, minePromise]);
-
-      const byId = new Map<string, Listing>();
-      for (const l of [...mine, ...market]) byId.set(l.id, l);
-      setListingsState(Array.from(byId.values()));
-    } catch (err) {
-      console.warn('[AppContext] Failed to fetch listings:', err);
+    if (listingsFetchInflight) {
+      await listingsFetchInflight;
+      return;
     }
+    listingsFetchInflight = (async () => {
+      try {
+        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+        const fetchList = async (url: string) => {
+          const res = await (accessToken
+            ? authFetch(url, { headers })
+            : fetchWithTimeout(url, { headers }));
+          if (!res.ok) return [] as Listing[];
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data?.listings)) {
+            return json.data.listings
+              .map(mapBackendListing)
+              .filter((listing: Listing | null): listing is Listing =>
+                Boolean(listing && listing.country !== 'EG'),
+              );
+          }
+          return [] as Listing[];
+        };
+
+        const marketPromise = fetchList(`${API_BASE}/api/listings`);
+        const minePromise =
+          accessToken && user?.id
+            ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(user.id)}`)
+            : Promise.resolve([] as Listing[]);
+
+        const [market, mine] = await Promise.all([marketPromise, minePromise]);
+
+        const byId = new Map<string, Listing>();
+        for (const l of [...mine, ...market]) byId.set(l.id, l);
+        setListingsState(Array.from(byId.values()));
+      } catch (err) {
+        console.warn('[AppContext] Failed to fetch listings:', err);
+      }
+    })().finally(() => {
+      listingsFetchInflight = null;
+    });
+    await listingsFetchInflight;
   }, [accessToken, user?.id, mapBackendListing]);
 
   // Keep ownership checks working even before profile fetch finishes
@@ -225,38 +248,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const fetchPosts = useCallback(async (feed: 'for_you' | 'following' = 'for_you') => {
-    try {
-      const qs = feed === 'following' ? '?feed=following' : '';
-      const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      const res = await (accessToken
-        ? authFetch(`${API_BASE}/api/posts${qs}`, { headers })
-        : fetchWithTimeout(`${API_BASE}/api/posts${qs}`, { headers }));
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data?.posts) {
-          const fetchedPosts = (json.data.posts as unknown[])
-            .map(mapBackendPost)
-            .filter((p: Post | null): p is Post => Boolean(p?.id));
-          setPosts(fetchedPosts);
-
-          // Initialize liked / reposted sets
-          const liked = new Set<string>();
-          const reposted = new Set<string>();
-          fetchedPosts.forEach((p: Post) => {
-            if (p.liked) liked.add(p.id);
-            if (p.reposted) reposted.add(p.id);
-          });
-          setLikedPosts(liked);
-          setRepostedPosts(reposted);
-        }
-      }
-    } catch (err) {
-      console.warn('[AppContext] Failed to fetch posts:', err);
+    const inflightKey = `${accessToken ?? 'guest'}:${feed}`;
+    const inflight = postsFetchInflight.get(inflightKey);
+    if (inflight) {
+      await inflight;
+      return;
     }
+
+    const promise = (async () => {
+      try {
+        const qs = feed === 'following' ? '?feed=following' : '';
+        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+        const res = await (accessToken
+          ? authFetch(`${API_BASE}/api/posts${qs}`, { headers })
+          : fetchWithTimeout(`${API_BASE}/api/posts${qs}`, { headers }));
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data?.posts) {
+            const fetchedPosts = (json.data.posts as unknown[])
+              .map(mapBackendPost)
+              .filter((p: Post | null): p is Post => Boolean(p?.id));
+            setPosts(fetchedPosts);
+
+            const liked = new Set<string>();
+            const reposted = new Set<string>();
+            fetchedPosts.forEach((p: Post) => {
+              if (p.liked) liked.add(p.id);
+              if (p.reposted) reposted.add(p.id);
+            });
+            setLikedPosts(liked);
+            setRepostedPosts(reposted);
+          }
+        }
+      } catch (err) {
+        console.warn('[AppContext] Failed to fetch posts:', err);
+      }
+    })().finally(() => {
+      postsFetchInflight.delete(inflightKey);
+    });
+
+    postsFetchInflight.set(inflightKey, promise);
+    await promise;
   }, [accessToken, mapBackendPost]);
 
-  const refetchData = useCallback(async () => {
-    await Promise.all([fetchUserData(), fetchListings(), fetchPosts()]);
+  const lastRefetchAtRef = useRef(0);
+  const refetchInflightRef = useRef<Promise<void> | null>(null);
+
+  const refetchData = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastRefetchAtRef.current < REFETCH_TTL_MS) {
+      return;
+    }
+    if (refetchInflightRef.current && !force) {
+      await refetchInflightRef.current;
+      return;
+    }
+    lastRefetchAtRef.current = now;
+    const promise = Promise.all([fetchUserData(), fetchListings(), fetchPosts()]).then(
+      () => undefined,
+    );
+    refetchInflightRef.current = promise;
+    await promise.finally(() => {
+      if (refetchInflightRef.current === promise) {
+        refetchInflightRef.current = null;
+      }
+    });
   }, [fetchUserData, fetchListings, fetchPosts]);
 
   const publicBootstrapped = useRef(false);

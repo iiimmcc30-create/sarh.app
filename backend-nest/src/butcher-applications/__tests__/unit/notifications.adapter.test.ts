@@ -1,15 +1,7 @@
-import {
-  notifyApplicationSubmitted,
-  notifyAfterApplicationSubmit,
-} from '../../notifications';
-import { notifyUser, notifyUsers } from '@/lib/notifications';
-import { findAllAdminUserIds } from '../../repositories/application.repository';
+import { ButcherApplicationNotificationsService } from '../../services/butcher-application-notifications.service';
+import { AppNotificationsService } from '../../../queue/services/app-notifications.service';
+import { ApplicationRepository } from '../../repositories/application.repository';
 import { TEST_APP_ID, TEST_USER_ID } from '../helpers/testUtils';
-
-jest.mock('@/lib/notifications');
-jest.mock('../../repositories/application.repository', () => ({
-  findAllAdminUserIds: jest.fn().mockResolvedValue(['admin-1', 'admin-2']),
-}));
 
 const app = {
   id: TEST_APP_ID,
@@ -44,16 +36,30 @@ const app = {
   timeline: [],
 };
 
-describe('butcher-applications/notifications adapter', () => {
+describe('ButcherApplicationNotificationsService', () => {
+  const notifications = {
+    notifyUser: jest.fn().mockResolvedValue(undefined),
+    notifyUsers: jest.fn().mockResolvedValue(undefined),
+  } as unknown as AppNotificationsService;
+
+  const applications = {
+    findAllAdminUserIds: jest.fn().mockResolvedValue(['admin-1', 'admin-2']),
+  } as unknown as ApplicationRepository;
+
+  const service = new ButcherApplicationNotificationsService(
+    notifications,
+    applications,
+  );
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('notifyApplicationSubmitted fans out to admins with system event', async () => {
-    await notifyApplicationSubmitted(app, TEST_USER_ID);
+  it('notifyApplicationSubmitted fans out to admins', async () => {
+    await service.notifyApplicationSubmitted(app as never, TEST_USER_ID);
 
-    expect(findAllAdminUserIds).toHaveBeenCalled();
-    expect(notifyUsers).toHaveBeenCalledWith(
+    expect(applications.findAllAdminUserIds).toHaveBeenCalled();
+    expect(notifications.notifyUsers).toHaveBeenCalledWith(
       ['admin-1', 'admin-2'],
       expect.objectContaining({
         type: 'system',
@@ -68,11 +74,9 @@ describe('butcher-applications/notifications adapter', () => {
   });
 
   it('notifyAfterApplicationSubmit notifies admins and applicant', async () => {
-    const allSettled = jest.spyOn(Promise, 'allSettled');
-    await notifyAfterApplicationSubmit(app, TEST_USER_ID);
-    expect(allSettled).toHaveBeenCalled();
-    expect(notifyUsers).toHaveBeenCalled();
-    expect(notifyUser).toHaveBeenCalledWith(
+    await service.notifyAfterApplicationSubmit(app as never, TEST_USER_ID);
+    expect(notifications.notifyUsers).toHaveBeenCalled();
+    expect(notifications.notifyUser).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: TEST_USER_ID,
         data: expect.objectContaining({
@@ -80,6 +84,5 @@ describe('butcher-applications/notifications adapter', () => {
         }),
       }),
     );
-    allSettled.mockRestore();
   });
 });

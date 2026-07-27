@@ -168,6 +168,20 @@ export class CreateListingDto {
   @IsOptional()
   @IsBoolean()
   featured?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pinned?: boolean;
+}
+
+export class ApplyPlanPromoteDto {
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pinned?: boolean;
 }
 
 export class UpdateListingDto {

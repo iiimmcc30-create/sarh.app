@@ -4,9 +4,12 @@ import * as WebBrowser from 'expo-web-browser';
 const APP_SCHEME = 'safat';
 
 /** Return deep link used after Network International hosted checkout. */
-export function paymentResultDeepLink(paymentId?: string): string {
+export function paymentResultDeepLink(params: Record<string, string> = {}): string {
   const base = `${APP_SCHEME}://payment/result`;
-  return paymentId ? `${base}?paymentId=${encodeURIComponent(paymentId)}` : base;
+  const entries = Object.entries(params).filter(([, value]) => value.length > 0);
+  if (entries.length === 0) return base;
+  const qs = new URLSearchParams(Object.fromEntries(entries)).toString();
+  return `${base}?${qs}`;
 }
 
 /**
@@ -15,9 +18,9 @@ export function paymentResultDeepLink(paymentId?: string): string {
  */
 export async function openPaymentCheckout(
   checkoutUrl: string,
-  paymentId?: string,
+  returnParams: Record<string, string> = {},
 ): Promise<'success' | 'cancel' | 'dismiss'> {
-  const returnUrl = paymentResultDeepLink(paymentId);
+  const returnUrl = paymentResultDeepLink({ ...returnParams, gatewayReturn: '1' });
   try {
     const result = await WebBrowser.openAuthSessionAsync(checkoutUrl, returnUrl);
     if (result.type === 'success') return 'success';

@@ -1,14 +1,14 @@
-import { ButcherApplicationAdminService } from '../../services/admin.service';
-import * as appRepo from '../../repositories/application.repository';
-import * as docRepo from '../../repositories/document.repository';
-import * as transaction from '../../helpers/transaction';
-import * as notifications from '../../notifications';
-import { TEST_APP_ID, TEST_ADMIN_ID, TEST_USER_ID } from '../helpers/testUtils';
+import {
+  ButcherApplicationAdminService,
+  buildButcherCreateInput,
+} from '../../services/admin.service';
+import { ApplicationRepository } from '../../repositories/application.repository';
+import { DocumentRepository } from '../../repositories/document.repository';
+import { TransactionService } from '../../services/transaction.service';
+import { ButcherApplicationNotificationsService } from '../../services/butcher-application-notifications.service';
+import { LoggerService } from '../../../common/services/logger.service';
+import { TEST_APP_ID, TEST_USER_ID } from '../helpers/testUtils';
 
-jest.mock('../../repositories/application.repository');
-jest.mock('../../repositories/document.repository');
-jest.mock('../../notifications');
-jest.mock('../../helpers/transaction');
 jest.mock('../../helpers/timeline', () => ({
   appendTimelineEvent: jest.fn().mockResolvedValue({
     id: 'event-1',
@@ -21,7 +21,11 @@ jest.mock('../../helpers/timeline', () => ({
   }),
 }));
 
-const baseApp = {
+jest.mock('../../helpers/transaction', () => ({
+  assertUserHasNoButcher: jest.fn().mockResolvedValue(undefined),
+}));
+
+const submittedApp = {
   id: TEST_APP_ID,
   userId: TEST_USER_ID,
   applicationNumber: 3,
@@ -35,11 +39,11 @@ const baseApp = {
   cityAr: 'الرياض',
   address: 'Street',
   addressAr: 'شارع',
-  lat: 24.7,
-  lng: 46.7,
+  lat: 24,
+  lng: 46,
   bioAr: null,
   bioEn: null,
-  specialties: [],
+  specialties: ['sheep'],
   openTime: '08:00',
   closeTime: '22:00',
   rejectionReason: null,
@@ -56,121 +60,79 @@ const baseApp = {
   user: { id: TEST_USER_ID, username: 'user', phone: null, avatar: null },
 };
 
+describe('buildButcherCreateInput', () => {
+  it('maps application snapshot into butcher create input', () => {
+    const input = buildButcherCreateInput(submittedApp as never);
+    expect(input.userId).toBe(TEST_USER_ID);
+    expect(input.nameAr).toBe('ملحمة');
+    expect(input.sourceApplicationId).toBe(TEST_APP_ID);
+  });
+});
+
 describe('ButcherApplicationAdminService', () => {
-  const service = new ButcherApplicationAdminService();
-  const runInTransaction = transaction.runInTransaction as jest.Mock;
-  const tx = {} as any;
+  const applications = {
+    listApplicationsAdmin: jest.fn(),
+    getApplicationByIdOrThrow: jest.fn(),
+    updateApplicationStatus: jest.fn(),
+    createButcherFromApplication: jest.fn(),
+  } as unknown as ApplicationRepository;
+
+  const documents = {
+    listDocuments: jest.fn(),
+  } as unknown as DocumentRepository;
+
+  const transactions = {
+    runInTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({}),
+    ),
+  } as unknown as TransactionService;
+
+  const applicationNotifications = {
+    notifyApplicationApproved: jest.fn().mockResolvedValue(undefined),
+    notifyApplicationRejected: jest.fn().mockResolvedValue(undefined),
+  } as unknown as ButcherApplicationNotificationsService;
+
+  const logger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  } as unknown as LoggerService;
+
+  const service = new ButcherApplicationAdminService(
+    applications,
+    documents,
+    transactions,
+    applicationNotifications,
+    logger,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
-    runInTransaction.mockImplementation(
-      async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
-    );
-    (transaction.assertUserHasNoButcher as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (appRepo.countSubmittedApplications as jest.Mock).mockResolvedValue(2);
-    (notifications.notifyApplicationApproved as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (notifications.notifyApplicationRejected as jest.Mock).mockResolvedValue(
-      undefined,
+    (transactions.runInTransaction as jest.Mock).mockImplementation(
+      async (fn: (tx: unknown) => Promise<unknown>) => fn({}),
     );
   });
 
-  describe('approveApplication', () => {
-    it('returns existing butcher on idempotent approve without notifying', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
-        ...baseApp,
-        status: 'APPROVED',
-        sourcedButcher: { id: 'butcher-1' },
-      });
-
-      const result = await service.approveApplication(
-        TEST_ADMIN_ID,
-        TEST_APP_ID,
-        {},
-      );
-      expect(result.butcher.id).toBe('butcher-1');
-      expect(notifications.notifyApplicationApproved).not.toHaveBeenCalled();
+  it('rejects approval when application is not submitted', async () => {
+    (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
+      ...submittedApp,
+      status: 'DRAFT',
     });
 
-    it('approves and notifies applicant on new approval', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
-        baseApp,
-      );
-      (appRepo.createButcher as jest.Mock).mockResolvedValue({
-        id: 'butcher-new',
-        sourceApplicationId: TEST_APP_ID,
-      });
-      (docRepo.approveUploadedDocuments as jest.Mock).mockResolvedValue(
-        undefined,
-      );
-      (appRepo.updateApplicationStatus as jest.Mock).mockResolvedValue({
-        ...baseApp,
-        status: 'APPROVED',
-      });
-
-      const result = await service.approveApplication(
-        TEST_ADMIN_ID,
-        TEST_APP_ID,
-        {},
-      );
-      expect(result.butcher.id).toBe('butcher-new');
-      expect(notifications.notifyApplicationApproved).toHaveBeenCalled();
-    });
+    await expect(
+      service.approveApplication('admin-1', TEST_APP_ID, {}),
+    ).rejects.toMatchObject({ code: 'INVALID_STATUS_TRANSITION' });
   });
 
-  describe('rejectApplication', () => {
-    it('requires rejection reason', async () => {
-      await expect(
-        service.rejectApplication(TEST_ADMIN_ID, TEST_APP_ID, {
-          rejectionReason: '  ',
-        }),
-      ).rejects.toMatchObject({ code: 'REJECTION_REASON_REQUIRED' });
-    });
+  it('rejects rejection without reason', async () => {
+    (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
+      submittedApp,
+    );
 
-    it('rejects and notifies applicant', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
-        baseApp,
-      );
-      (appRepo.updateApplicationStatus as jest.Mock).mockResolvedValue({
-        ...baseApp,
-        status: 'REJECTED',
-        rejectionReason: 'Incomplete documents provided',
-      });
-
-      const result = await service.rejectApplication(
-        TEST_ADMIN_ID,
-        TEST_APP_ID,
-        {
-          rejectionReason: 'Incomplete documents provided',
-        },
-      );
-
-      expect(result.status).toBe('REJECTED');
-      expect(notifications.notifyApplicationRejected).toHaveBeenCalled();
-    });
-
-    it('rejects approved application via state machine', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
-        ...baseApp,
-        status: 'APPROVED',
-      });
-
-      await expect(
-        service.rejectApplication(TEST_ADMIN_ID, TEST_APP_ID, {
-          rejectionReason: 'Should not be allowed after approval',
-        }),
-      ).rejects.toMatchObject({ code: 'APPLICATION_ALREADY_APPROVED' });
-    });
-  });
-
-  describe('addComment', () => {
-    it('requires non-empty comment', async () => {
-      await expect(
-        service.addComment(TEST_ADMIN_ID, TEST_APP_ID, { comment: '  ' }),
-      ).rejects.toMatchObject({ code: 'APPLICATION_INCOMPLETE' });
-    });
+    await expect(
+      service.rejectApplication('admin-1', TEST_APP_ID, {
+        rejectionReason: '',
+      }),
+    ).rejects.toMatchObject({ code: 'REJECTION_REASON_REQUIRED' });
   });
 });

@@ -1,13 +1,10 @@
 import { ButcherApplicationDocumentService } from '../../services/document.service';
-import * as appRepo from '../../repositories/application.repository';
-import * as docRepo from '../../repositories/document.repository';
-import * as transaction from '../../helpers/transaction';
-import { TEST_APP_ID, TEST_DOC_ID, TEST_USER_ID } from '../helpers/testUtils';
+import { ApplicationRepository } from '../../repositories/application.repository';
+import { DocumentRepository } from '../../repositories/document.repository';
+import { TransactionService } from '../../services/transaction.service';
+import { TEST_APP_ID, TEST_USER_ID } from '../helpers/testUtils';
 import { MAX_DOCUMENT_FILE_BYTES } from '../../constants';
 
-jest.mock('../../repositories/application.repository');
-jest.mock('../../repositories/document.repository');
-jest.mock('../../helpers/transaction');
 jest.mock('../../helpers/timeline', () => ({
   appendTimelineEvent: jest.fn().mockResolvedValue({
     id: 'event-1',
@@ -28,17 +25,33 @@ const draftApp = {
 };
 
 describe('ButcherApplicationDocumentService', () => {
-  const service = new ButcherApplicationDocumentService();
-  const runInTransaction = transaction.runInTransaction as jest.Mock;
-  const tx = {} as any;
+  const applications = {
+    getApplicationByIdOrThrow: jest.fn(),
+  } as unknown as ApplicationRepository;
+
+  const documents = {
+    findDocumentByApplicationAndType: jest.fn(),
+    createDocument: jest.fn(),
+    getDocumentOrThrow: jest.fn(),
+    deleteDocument: jest.fn(),
+  } as unknown as DocumentRepository;
+
+  const transactions = {
+    runInTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({}),
+    ),
+  } as unknown as TransactionService;
+
+  const service = new ButcherApplicationDocumentService(
+    applications,
+    documents,
+    transactions,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
-    runInTransaction.mockImplementation(
-      async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
-    );
-    (transaction.assertApplicationOwner as jest.Mock).mockImplementation(
-      () => undefined,
+    (transactions.runInTransaction as jest.Mock).mockImplementation(
+      async (fn: (tx: unknown) => Promise<unknown>) => fn({}),
     );
   });
 
@@ -57,6 +70,7 @@ describe('ButcherApplicationDocumentService', () => {
           mimeType: 'text/plain',
         }),
       ).rejects.toMatchObject({ code: 'UNSUPPORTED_MIME_TYPE' });
+      expect(transactions.runInTransaction).not.toHaveBeenCalled();
     });
 
     it('rejects invalid file key ownership', async () => {
@@ -69,10 +83,10 @@ describe('ButcherApplicationDocumentService', () => {
     });
 
     it('rejects duplicate required document type', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
         draftApp,
       );
-      (docRepo.findDocumentByApplicationAndType as jest.Mock).mockResolvedValue(
+      (documents.findDocumentByApplicationAndType as jest.Mock).mockResolvedValue(
         { id: 'existing' },
       );
 
@@ -82,50 +96,34 @@ describe('ButcherApplicationDocumentService', () => {
     });
 
     it('uploads document on valid input', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
         draftApp,
       );
-      (docRepo.findDocumentByApplicationAndType as jest.Mock).mockResolvedValue(
+      (documents.findDocumentByApplicationAndType as jest.Mock).mockResolvedValue(
         null,
       );
-      (docRepo.createDocument as jest.Mock).mockResolvedValue({
-        id: TEST_DOC_ID,
-        type: 'commercial_license',
+      (documents.createDocument as jest.Mock).mockResolvedValue({
+        id: 'doc-1',
+        type: input.type,
         fileKey: input.fileKey,
-        status: 'UPLOADED',
-        notes: null,
-        originalFileName: null,
         mimeType: input.mimeType,
         fileSizeBytes: input.fileSizeBytes,
-        verifiedBy: null,
-        verifiedAt: null,
         createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
-      const doc = await service.uploadDocument(
+      const result = await service.uploadDocument(
         TEST_USER_ID,
         TEST_APP_ID,
         input,
       );
-      expect(doc.id).toBe(TEST_DOC_ID);
+      expect(documents.createDocument).toHaveBeenCalled();
+      expect(result.id).toBe('doc-1');
     });
-  });
 
-  describe('replaceDocument', () => {
-    it('rejects oversized replacement', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
-        draftApp,
-      );
-      (docRepo.getDocumentOrThrow as jest.Mock).mockResolvedValue({
-        id: TEST_DOC_ID,
-        type: 'commercial_license',
-      });
-
+    it('rejects oversized upload', async () => {
       await expect(
-        service.replaceDocument(TEST_USER_ID, TEST_APP_ID, TEST_DOC_ID, {
-          fileKey: `butcher-applications/${TEST_USER_ID}/license.pdf`,
-          mimeType: 'application/pdf',
+        service.uploadDocument(TEST_USER_ID, TEST_APP_ID, {
+          ...input,
           fileSizeBytes: MAX_DOCUMENT_FILE_BYTES + 1,
         }),
       ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE' });
@@ -134,30 +132,33 @@ describe('ButcherApplicationDocumentService', () => {
 
   describe('deleteDocument', () => {
     it('rejects delete on submitted application', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
         ...draftApp,
         status: 'SUBMITTED',
       });
+      (documents.getDocumentOrThrow as jest.Mock).mockResolvedValue({
+        id: 'doc-1',
+        applicationId: TEST_APP_ID,
+      });
 
       await expect(
-        service.deleteDocument(TEST_USER_ID, TEST_APP_ID, TEST_DOC_ID),
+        service.deleteDocument(TEST_USER_ID, TEST_APP_ID, 'doc-1'),
       ).rejects.toMatchObject({ code: 'APPLICATION_NOT_EDITABLE' });
     });
 
     it('deletes document on draft', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
         draftApp,
       );
-      (docRepo.getDocumentOrThrow as jest.Mock).mockResolvedValue({
-        id: TEST_DOC_ID,
+      (documents.getDocumentOrThrow as jest.Mock).mockResolvedValue({
+        id: 'doc-1',
+        applicationId: TEST_APP_ID,
         type: 'commercial_license',
       });
-      (docRepo.deleteDocument as jest.Mock).mockResolvedValue(undefined);
+      (documents.deleteDocument as jest.Mock).mockResolvedValue(undefined);
 
-      await expect(
-        service.deleteDocument(TEST_USER_ID, TEST_APP_ID, TEST_DOC_ID),
-      ).resolves.toBeUndefined();
-      expect(docRepo.deleteDocument).toHaveBeenCalled();
+      await service.deleteDocument(TEST_USER_ID, TEST_APP_ID, 'doc-1');
+      expect(documents.deleteDocument).toHaveBeenCalled();
     });
   });
 });

@@ -109,7 +109,7 @@ export default function ProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadStories(), refetchData()]);
+    await Promise.all([loadStories(), refetchData(true)]);
     setRefreshing(false);
   }, [loadStories, refetchData]);
 

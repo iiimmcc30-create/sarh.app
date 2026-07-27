@@ -60,7 +60,14 @@ export class ListingsRepository {
   findOwnerMeta(id: string) {
     return this.prisma.listing.findUnique({
       where: { id },
-      select: { sellerId: true, category: true, country: true, weightKg: true },
+      select: {
+        sellerId: true,
+        category: true,
+        country: true,
+        weightKg: true,
+        pinned: true,
+        featured: true,
+      },
     });
   }
 
@@ -170,6 +177,45 @@ export class ListingsRepository {
       });
 
       return created;
+    });
+  }
+
+  applyPlanPromotion(params: {
+    userId: string;
+    listingId: string;
+    setFeatured?: boolean;
+    setPinned?: boolean;
+  }) {
+    return this.prisma.$transaction(async (tx) => {
+      const usageUpdate: Prisma.SubscriptionUpdateInput = {};
+      if (params.setFeatured) {
+        usageUpdate.featuredAdsUsed = { increment: 1 };
+      }
+      if (params.setPinned) {
+        usageUpdate.pinnedAdsUsed = { increment: 1 };
+      }
+
+      const listingUpdate: Prisma.ListingUpdateInput = {};
+      if (params.setFeatured) listingUpdate.featured = true;
+      if (params.setPinned) listingUpdate.pinned = true;
+
+      const updated = await tx.listing.update({
+        where: { id: params.listingId },
+        data: listingUpdate,
+        include: {
+          seller: { select: SELLER_SELECT },
+          fee: { select: { status: true, commission: true, dueDate: true } },
+        },
+      });
+
+      if (Object.keys(usageUpdate).length > 0) {
+        await tx.subscription.update({
+          where: { userId: params.userId },
+          data: usageUpdate,
+        });
+      }
+
+      return updated;
     });
   }
 

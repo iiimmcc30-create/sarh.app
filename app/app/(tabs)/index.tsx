@@ -75,11 +75,21 @@ export default function HomeScreen() {
     setCanShowLive(canStream);
   }, [accessToken, isAuthenticated]);
 
+  const lastPostsFocusAt = useRef(0);
+
   useFocusEffect(
     useCallback(() => {
       void refreshLiveAccess();
+    }, [refreshLiveAccess]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const now = Date.now();
+      if (now - lastPostsFocusAt.current < HOME_REFRESH_TTL_MS) return;
+      lastPostsFocusAt.current = now;
       void fetchPosts('for_you');
-    }, [refreshLiveAccess, fetchPosts]),
+    }, [fetchPosts]),
   );
 
   const fetchStories = useCallback(async (force = false) => {

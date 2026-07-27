@@ -19,6 +19,8 @@
     "web:railway": "node scripts/start-web-railway.js",
     "export:web": "expo export --platform web",
     "lint": "expo lint",
+    "test": "jest --config jest.config.js --forceExit",
+    "test:cov": "jest --config jest.config.js --coverage --forceExit",
     "sync:icons": "python scripts/generate-circular-branding.py",
     "build:flaticon": "node scripts/build-flaticon-icons.js",
     "migrate:icons": "node scripts/migrate-to-flaticon.js",
@@ -66,9 +68,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
     "eslint": "^9.39.4",
     "eslint-config-expo": "^57.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.3.3"
   },
   "expo": {

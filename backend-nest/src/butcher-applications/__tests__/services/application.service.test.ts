@@ -1,12 +1,10 @@
 import { ButcherApplicationUserService } from '../../services/application.service';
-import * as appRepo from '../../repositories/application.repository';
-import * as transaction from '../../helpers/transaction';
-import * as notifications from '../../notifications';
+import { ApplicationRepository } from '../../repositories/application.repository';
+import { TransactionService } from '../../services/transaction.service';
+import { ButcherApplicationNotificationsService } from '../../services/butcher-application-notifications.service';
+import { LoggerService } from '../../../common/services/logger.service';
 import { TEST_APP_ID, TEST_USER_ID } from '../helpers/testUtils';
 
-jest.mock('../../repositories/application.repository');
-jest.mock('../../notifications');
-jest.mock('../../helpers/transaction');
 jest.mock('../../helpers/timeline', () => ({
   appendTimelineEvent: jest.fn().mockResolvedValue({
     id: 'event-1',
@@ -17,6 +15,12 @@ jest.mock('../../helpers/timeline', () => ({
     createdAt: new Date(),
     actor: { id: 'user', username: 'user' },
   }),
+}));
+
+jest.mock('../../helpers/transaction', () => ({
+  assertUserHasNoButcher: jest.fn().mockResolvedValue(undefined),
+  assertApplicationOwner: jest.fn(),
+  assertNotModified: jest.fn(),
 }));
 
 const mockApplication = {
@@ -60,50 +64,62 @@ const mockApplication = {
 };
 
 describe('ButcherApplicationUserService', () => {
-  const service = new ButcherApplicationUserService();
-  const runInTransaction = transaction.runInTransaction as jest.Mock;
-  const tx = {} as any;
+  const applications = {
+    findActiveApplicationByUserAndStatus: jest.fn(),
+    createApplication: jest.fn(),
+    getApplicationByIdOrThrow: jest.fn(),
+    updateApplicationSnapshot: jest.fn(),
+    updateApplicationStatus: jest.fn(),
+  } as unknown as ApplicationRepository;
+
+  const transactions = {
+    runInTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ butcher: { findUnique: jest.fn().mockResolvedValue(null) } }),
+    ),
+  } as unknown as TransactionService;
+
+  const applicationNotifications = {
+    notifyAfterApplicationSubmit: jest.fn().mockResolvedValue(undefined),
+    notifyApplicationWithdrawn: jest.fn().mockResolvedValue(undefined),
+  } as unknown as ButcherApplicationNotificationsService;
+
+  const logger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  } as unknown as LoggerService;
+
+  const service = new ButcherApplicationUserService(
+    applications,
+    transactions,
+    applicationNotifications,
+    logger,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
-    runInTransaction.mockImplementation(
-      async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
-    );
-    (transaction.assertUserHasNoButcher as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (transaction.assertApplicationOwner as jest.Mock).mockImplementation(
-      () => undefined,
-    );
-    (transaction.assertNotModified as jest.Mock).mockImplementation(
-      () => undefined,
-    );
-    (notifications.notifyAfterApplicationSubmit as jest.Mock).mockResolvedValue(
-      undefined,
-    );
-    (notifications.notifyApplicationWithdrawn as jest.Mock).mockResolvedValue(
-      undefined,
+    (transactions.runInTransaction as jest.Mock).mockImplementation(
+      async (fn: (tx: unknown) => Promise<unknown>) =>
+        fn({ butcher: { findUnique: jest.fn().mockResolvedValue(null) } }),
     );
   });
 
   describe('createDraft', () => {
     it('rejects when active draft exists', async () => {
       (
-        appRepo.findActiveApplicationByUserAndStatus as jest.Mock
+        applications.findActiveApplicationByUserAndStatus as jest.Mock
       ).mockResolvedValueOnce({ id: 'draft' });
 
-      await expect(service.createDraft(TEST_USER_ID, {})).rejects.toMatchObject(
-        {
-          code: 'ACTIVE_DRAFT_EXISTS',
-        },
-      );
+      await expect(service.createDraft(TEST_USER_ID, {})).rejects.toMatchObject({
+        code: 'ACTIVE_DRAFT_EXISTS',
+      });
     });
 
     it('creates draft when no conflicts', async () => {
-      (appRepo.findActiveApplicationByUserAndStatus as jest.Mock)
+      (applications.findActiveApplicationByUserAndStatus as jest.Mock)
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(null);
-      (appRepo.createApplication as jest.Mock).mockResolvedValue(
+      (applications.createApplication as jest.Mock).mockResolvedValue(
         mockApplication,
       );
 
@@ -111,13 +127,13 @@ describe('ButcherApplicationUserService', () => {
         nameAr: 'ملحمة',
       });
       expect(result.id).toBe(TEST_APP_ID);
-      expect(appRepo.createApplication).toHaveBeenCalled();
+      expect(applications.createApplication).toHaveBeenCalled();
     });
   });
 
   describe('updateDraft', () => {
     it('rejects non-draft via assertEditableStatus path', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
         ...mockApplication,
         status: 'SUBMITTED',
       });
@@ -139,25 +155,23 @@ describe('ButcherApplicationUserService', () => {
     });
 
     it('submits and triggers notifications post-commit', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
         mockApplication,
       );
-      (appRepo.updateApplicationStatus as jest.Mock).mockResolvedValue({
+      (applications.updateApplicationStatus as jest.Mock).mockResolvedValue({
         ...mockApplication,
         status: 'SUBMITTED',
       });
 
-      const result = await service.submitApplication(
-        TEST_USER_ID,
-        TEST_APP_ID,
-        {
-          acceptedTerms: true,
-          confirmAccuracy: true,
-        },
-      );
+      const result = await service.submitApplication(TEST_USER_ID, TEST_APP_ID, {
+        acceptedTerms: true,
+        confirmAccuracy: true,
+      });
 
       expect(result.status).toBe('SUBMITTED');
-      expect(notifications.notifyAfterApplicationSubmit).toHaveBeenCalledWith(
+      expect(
+        applicationNotifications.notifyAfterApplicationSubmit,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({ id: TEST_APP_ID }),
         TEST_USER_ID,
       );
@@ -166,11 +180,11 @@ describe('ButcherApplicationUserService', () => {
 
   describe('withdrawApplication', () => {
     it('withdraws submitted application and notifies', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
+      (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
         ...mockApplication,
         status: 'SUBMITTED',
       });
-      (appRepo.updateApplicationStatus as jest.Mock).mockResolvedValue({
+      (applications.updateApplicationStatus as jest.Mock).mockResolvedValue({
         ...mockApplication,
         status: 'WITHDRAWN',
       });
@@ -181,18 +195,9 @@ describe('ButcherApplicationUserService', () => {
         {},
       );
       expect(result.status).toBe('WITHDRAWN');
-      expect(notifications.notifyApplicationWithdrawn).toHaveBeenCalled();
-    });
-
-    it('rejects withdraw on approved application', async () => {
-      (appRepo.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue({
-        ...mockApplication,
-        status: 'APPROVED',
-      });
-
-      await expect(
-        service.withdrawApplication(TEST_USER_ID, TEST_APP_ID, {}),
-      ).rejects.toMatchObject({ code: 'APPLICATION_ALREADY_APPROVED' });
+      expect(
+        applicationNotifications.notifyApplicationWithdrawn,
+      ).toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-// Payment result screen — polls N-Genius via backend after NI redirect.
+// Payment result screen — single NI sync after gateway redirect (no auto-polling).
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,10 +11,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { syncPaymentStatus, type PaymentContext } from '@/services/payments';
+import {
+  syncPaymentStatus,
+  type PaymentContext,
+  type PaymentSyncResult,
+} from '@/services/payments';
 import { boostSuccessMessage } from '@/services/listingBoost';
 
-type SyncState = 'syncing' | 'paid' | 'pending' | 'failed';
+type SyncState = 'syncing' | 'paid' | 'pending' | 'cancelled';
 
 type ContextCopy = {
   successTitle: string;
@@ -29,46 +33,43 @@ const CONTEXT_COPY: Record<PaymentContext, ContextCopy> = {
     successTitle: 'تم تفعيل الاشتراك!',
     successSubtitle: 'تم تأكيد الدفع من N-Genius واشتراكك أصبح نشطاً.',
     pendingSubtitle:
-      'العملية قيد المعالجة في N-Genius. سيُفعَّل اشتراكك تلقائياً عند التأكيد، أو اضغط «إعادة التحقق».',
+      'العملية قيد المعالجة في N-Genius. اضغط «إعادة التحقق» إذا لم يُحدَّث الحساب بعد.',
     primaryLabel: 'الملف الشخصي',
     secondaryLabel: 'عرض الباقات',
   },
   listing_fee: {
     successTitle: 'تم الدفع بنجاح',
     successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
-    pendingSubtitle: 'العملية قيد المعالجة. سيُحدَّث الطلب عند تأكيد N-Genius.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُحدَّث الطلب.',
     primaryLabel: 'الاشتراك',
   },
   commission: {
     successTitle: 'تم الدفع بنجاح',
     successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
-    pendingSubtitle: 'العملية قيد المعالجة. سيظهر في السجل عند التأكيد.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يظهر في السجل.',
     primaryLabel: 'الاشتراك',
   },
   boost: {
     successTitle: 'تم تفعيل الترقية!',
     successSubtitle: 'تم تأكيد الدفع من N-Genius.',
-    pendingSubtitle: 'العملية قيد المعالجة. ستُفعَّل الترقية عند تأكيد N-Genius.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم تُفعَّل الترقية.',
     primaryLabel: 'عرض الإعلان',
   },
   butcher_order: {
     successTitle: 'تم الدفع وإرسال الطلب!',
     successSubtitle: 'تم تأكيد الدفع من N-Genius ووصل طلبك للملحمة.',
-    pendingSubtitle: 'العملية قيد المعالجة. سيصل طلبك عند تأكيد N-Genius.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُؤكَّد الطلب.',
     primaryLabel: 'تفاصيل الطلب',
     secondaryLabel: 'قسم الملاحم',
   },
   generic: {
     successTitle: 'تم الدفع بنجاح!',
     successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
-    pendingSubtitle: 'العملية قيد المعالجة. انتظر قليلاً أو أعد التحقق.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُحدَّث الحساب.',
     primaryLabel: 'الملف الشخصي',
     secondaryLabel: 'عرض الباقات',
   },
 };
-
-const POLL_INTERVAL_MS = 3500;
-const MAX_POLL_ATTEMPTS = 6;
 
 function normalizeContext(raw?: string): PaymentContext {
   const allowed: PaymentContext[] = [
@@ -85,6 +86,18 @@ function normalizeContext(raw?: string): PaymentContext {
   return 'generic';
 }
 
+function mapSyncToState(result: PaymentSyncResult): SyncState {
+  if (result.status === 'paid') return 'paid';
+  if (
+    result.status === 'cancelled' ||
+    result.status === 'failed' ||
+    result.status === 'not_found'
+  ) {
+    return 'cancelled';
+  }
+  return 'pending';
+}
+
 export default function PaymentResultScreen() {
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
@@ -98,6 +111,7 @@ export default function PaymentResultScreen() {
     butcherId?: string;
     boostType?: string;
     durationDays?: string;
+    gatewayReturn?: string;
   }>();
   const {
     paymentId,
@@ -118,19 +132,12 @@ export default function PaymentResultScreen() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [boostExpiry, setBoostExpiry] = useState<string | null>(null);
   const [resolvedBoostType, setResolvedBoostType] = useState<string | null>(null);
-  const pollCountRef = useRef(0);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const syncInflightRef = useRef(false);
+  const initialSyncDoneRef = useRef(false);
 
-  const runSync = useCallback(async (): Promise<SyncState> => {
-    if (!paymentId || !accessToken) {
-      return 'pending';
-    }
-
-    const result = await syncPaymentStatus(accessToken, paymentId);
-    if (result.messageAr) {
-      setStatusMessage(result.messageAr);
-    }
-    if (result.status === 'paid') {
+  const applyPaidSideEffects = useCallback(
+    async (result: PaymentSyncResult) => {
       await refetchSubscription();
       if (context === 'boost') {
         await refetchData();
@@ -141,64 +148,65 @@ export default function PaymentResultScreen() {
           setResolvedBoostType(result.boost.boostType);
         }
       }
-      return 'paid';
-    }
-    if (result.status === 'failed') {
-      return 'failed';
-    }
-    return 'pending';
-  }, [paymentId, accessToken, refetchSubscription, context, refetchData]);
+    },
+    [refetchSubscription, context, refetchData],
+  );
 
-  const stopPolling = useCallback(() => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
+  const runSyncOnce = useCallback(async (): Promise<SyncState> => {
+    if (!paymentId || !accessToken) {
+      return 'cancelled';
     }
-  }, []);
+    if (syncInflightRef.current) {
+      return 'pending';
+    }
 
-  const startPolling = useCallback(() => {
-    stopPolling();
-    pollCountRef.current = 0;
-    pollingRef.current = setInterval(() => {
-      pollCountRef.current += 1;
-      if (pollCountRef.current > MAX_POLL_ATTEMPTS) {
-        stopPolling();
-        return;
+    syncInflightRef.current = true;
+    try {
+      const result = await syncPaymentStatus(accessToken, paymentId);
+      if (result.messageAr) {
+        setStatusMessage(result.messageAr);
       }
-      void runSync().then((state) => {
-        if (state === 'paid' || state === 'failed') {
-          setSyncState(state);
-          stopPolling();
-        }
-      });
-    }, POLL_INTERVAL_MS);
-  }, [runSync, stopPolling]);
+      const state = mapSyncToState(result);
+      if (state === 'paid') {
+        await applyPaidSideEffects(result);
+      }
+      return state;
+    } finally {
+      syncInflightRef.current = false;
+    }
+  }, [paymentId, accessToken, applyPaidSideEffects]);
 
   useEffect(() => {
-    void (async () => {
-      setSyncState('syncing');
-      const state = await runSync();
-      setSyncState(state);
-      if (state === 'pending') {
-        startPolling();
-      }
-    })();
+    if (!paymentId || !accessToken) {
+      setSyncState('cancelled');
+      setStatusMessage('تم إلغاء عملية الدفع.');
+      return;
+    }
+    if (initialSyncDoneRef.current) return;
+    initialSyncDoneRef.current = true;
 
-    return () => stopPolling();
-  }, [runSync, startPolling, stopPolling]);
-
-  const retrySync = useCallback(() => {
+    let alive = true;
     setSyncState('syncing');
     void (async () => {
-      const state = await runSync();
-      setSyncState(state);
-      if (state === 'pending') {
-        startPolling();
-      } else {
-        stopPolling();
-      }
+      const state = await runSyncOnce();
+      if (alive) setSyncState(state);
     })();
-  }, [runSync, startPolling, stopPolling]);
+
+    return () => {
+      alive = false;
+    };
+  }, [paymentId, accessToken, runSyncOnce]);
+
+  const retrySync = useCallback(() => {
+    if (retrying || syncInflightRef.current) return;
+    setRetrying(true);
+    void (async () => {
+      setSyncState('syncing');
+      const state = await runSyncOnce();
+      setSyncState(state);
+      setRetrying(false);
+    })();
+  }, [runSyncOnce, retrying]);
 
   const goPrimary = useCallback(() => {
     switch (context) {
@@ -293,7 +301,7 @@ export default function PaymentResultScreen() {
     );
   }
 
-  if (syncState === 'failed') {
+  if (syncState === 'cancelled') {
     return (
       <View style={styles.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
@@ -301,18 +309,12 @@ export default function PaymentResultScreen() {
           <View style={[styles.iconWrap, { backgroundColor: `${colors.rose}22` }]}>
             <AppIcon name="close-circle" size={52} color={colors.rose} />
           </View>
-          <Text style={styles.title}>فشلت عملية الدفع</Text>
+          <Text style={styles.title}>تم إلغاء عملية الدفع</Text>
           <Text style={styles.subtitle}>
-            لم يُؤكَّد الدفع من N-Genius. يمكنك المحاولة مجدداً.
+            {statusMessage ?? 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
           </Text>
-          <Pressable
-            style={[styles.primaryBtn, { backgroundColor: colors.rose }]}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.primaryBtnText}>حاول مجدداً</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryBtn} onPress={goPrimary}>
-            <Text style={styles.secondaryBtnText}>{copy.primaryLabel}</Text>
+          <Pressable style={styles.primaryBtn} onPress={goPrimary}>
+            <Text style={styles.primaryBtnText}>{copy.primaryLabel}</Text>
           </Pressable>
         </SafeAreaView>
       </View>
@@ -330,8 +332,14 @@ export default function PaymentResultScreen() {
         <Text style={styles.subtitle}>
           {statusMessage ?? copy.pendingSubtitle}
         </Text>
-        <Pressable style={styles.primaryBtn} onPress={retrySync}>
-          <Text style={styles.primaryBtnText}>إعادة التحقق</Text>
+        <Pressable
+          style={[styles.primaryBtn, retrying && styles.primaryBtnDisabled]}
+          onPress={retrySync}
+          disabled={retrying}
+        >
+          <Text style={styles.primaryBtnText}>
+            {retrying ? 'جارٍ التحقق...' : 'إعادة التحقق'}
+          </Text>
         </Pressable>
         <Pressable style={styles.secondaryBtn} onPress={goPrimary}>
           <Text style={styles.secondaryBtnText}>{copy.primaryLabel}</Text>
@@ -386,6 +394,7 @@ function createStyles(colors: ThemeColors) {
       minWidth: 220,
       alignItems: 'center',
     },
+    primaryBtnDisabled: { opacity: 0.6 },
     primaryBtnText: { ...typography.bodyStrong, color: '#fff' },
     secondaryBtn: { paddingVertical: spacing.sm },
     secondaryBtnText: { ...typography.body, color: colors.textMuted },

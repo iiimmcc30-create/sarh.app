@@ -341,6 +341,8 @@ type CurrentPlanCardProps = {
     usageCounters: {
       dailyAdsUsed: number;
       liveMinutesUsed: number;
+      featuredAdsUsed: number;
+      pinnedAdsUsed: number;
     };
     plan: SubscriptionPlan;
   };
@@ -363,6 +365,12 @@ function CurrentPlanCard({ plan, subscription, styles }: CurrentPlanCardProps) {
       : typeof liveHours === 'number'
         ? liveHours * 60
         : null;
+
+  const featuredLimit = Number(subscription.permissions.monthlyFeaturedAds ?? 0);
+  const pinnedLimit = Number(subscription.permissions.monthlyPinnedAds ?? 0);
+  const featuredUsed = subscription.usageCounters.featuredAdsUsed ?? 0;
+  const pinnedUsed = subscription.usageCounters.pinnedAdsUsed ?? 0;
+  const hasPromoQuota = featuredLimit > 0 || pinnedLimit > 0;
 
   return (
     <LinearGradient
@@ -448,6 +456,74 @@ function CurrentPlanCard({ plan, subscription, styles }: CurrentPlanCardProps) {
           </View>
         </View>
       </View>
+
+      {hasPromoQuota ? (
+        <View style={styles.promoQuotaGrid}>
+          {featuredLimit > 0 ? (
+            <View style={styles.promoQuotaCard}>
+              <View style={[styles.promoQuotaTop, rtlRow]}>
+                <View style={[styles.promoQuotaIcon, styles.promoQuotaIconGold]}>
+                  <Text style={styles.promoQuotaEmoji}>⭐</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.promoQuotaLabel}>إعلانات مميزة</Text>
+                  <Text style={styles.promoQuotaVal}>
+                    {featuredUsed}/{featuredLimit} مستخدم
+                  </Text>
+                </View>
+                <Text style={styles.promoQuotaRemain}>
+                  {Math.max(0, featuredLimit - featuredUsed)} متبقي
+                </Text>
+              </View>
+              <View style={styles.usageTrack}>
+                <View
+                  style={[
+                    styles.usageFillGold,
+                    {
+                      width: `${Math.min((featuredUsed / featuredLimit) * 100, 100)}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          ) : null}
+          {pinnedLimit > 0 ? (
+            <View style={styles.promoQuotaCard}>
+              <View style={[styles.promoQuotaTop, rtlRow]}>
+                <View style={[styles.promoQuotaIcon, styles.promoQuotaIconPin]}>
+                  <Text style={styles.promoQuotaEmoji}>📌</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.promoQuotaLabel}>تثبيت إعلانات</Text>
+                  <Text style={styles.promoQuotaVal}>
+                    {pinnedUsed}/{pinnedLimit} مستخدم
+                  </Text>
+                </View>
+                <Text style={styles.promoQuotaRemain}>
+                  {Math.max(0, pinnedLimit - pinnedUsed)} متبقي
+                </Text>
+              </View>
+              <View style={styles.usageTrack}>
+                <View
+                  style={[
+                    styles.usageFillPin,
+                    {
+                      width: `${Math.min((pinnedUsed / pinnedLimit) * 100, 100)}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {subscription.permissions.prioritySearch ? (
+        <View style={[styles.priorityChip, rtlRow]}>
+          <AppIcon name="trending-up-outline" size={14} color="#fff" />
+          <Text style={styles.priorityChipText}>أولوية في البحث والصفحة الرئيسية مفعّلة</Text>
+        </View>
+      ) : null}
 
       {features.length > 0 ? (
         <>
@@ -593,6 +669,82 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 3,
     backgroundColor: 'rgba(255,255,255,0.9)',
     alignSelf: 'flex-end',
+  },
+  promoQuotaGrid: {
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  promoQuotaCard: {
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(0,0,0,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  promoQuotaTop: {
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  promoQuotaIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoQuotaIconGold: {
+    backgroundColor: 'rgba(255,215,0,0.22)',
+  },
+  promoQuotaIconPin: {
+    backgroundColor: 'rgba(96,165,250,0.22)',
+  },
+  promoQuotaEmoji: {
+    fontSize: 16,
+  },
+  promoQuotaLabel: {
+    ...typography.caption,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'right',
+  },
+  promoQuotaVal: {
+    ...typography.micro,
+    color: 'rgba(255,255,255,0.65)',
+    textAlign: 'right',
+  },
+  promoQuotaRemain: {
+    ...typography.caption,
+    color: '#fff',
+    fontWeight: '800',
+  },
+  usageFillGold: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: '#FFD700',
+    alignSelf: 'flex-end',
+  },
+  usageFillPin: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: '#60A5FA',
+    alignSelf: 'flex-end',
+  },
+  priorityChip: {
+    marginTop: spacing.sm,
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(16,185,129,0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.35)',
+  },
+  priorityChipText: {
+    ...typography.caption,
+    color: '#fff',
+    fontWeight: '600',
+    flex: 1,
   },
   currentPlanDivider: {
     height: 1,

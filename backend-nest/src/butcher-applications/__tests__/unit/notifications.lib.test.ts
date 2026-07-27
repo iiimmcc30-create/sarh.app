@@ -1,15 +1,20 @@
-import {
-  stringifyNotificationData,
-  notifyUser,
-  notifyUsers,
-} from '@/lib/notifications';
-import { addNotification } from '@/lib/queue';
+import { AppNotificationsService } from '../../../queue/services/app-notifications.service';
+import { NotificationQueueService } from '../../../queue/services/notification-queue.service';
+import { LoggerService } from '../../../common/services/logger.service';
 
-jest.mock('@/lib/queue', () => ({
-  addNotification: jest.fn().mockResolvedValue({ id: 'job-1' }),
-}));
+describe('AppNotificationsService', () => {
+  const queue = {
+    addNotification: jest.fn().mockResolvedValue({ id: 'job-1' }),
+  } as unknown as NotificationQueueService;
 
-describe('lib/notifications', () => {
+  const logger = {
+    warn: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
+  } as unknown as LoggerService;
+
+  const service = new AppNotificationsService(queue, logger);
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -17,7 +22,7 @@ describe('lib/notifications', () => {
   describe('stringifyNotificationData', () => {
     it('stringifies values and omits nullish', () => {
       expect(
-        stringifyNotificationData({
+        service.stringifyNotificationData({
           event: 'butcher_application_received',
           applicationNumber: 12,
           skipped: null,
@@ -31,8 +36,8 @@ describe('lib/notifications', () => {
   });
 
   describe('notifyUser', () => {
-    it('delegates to addNotification with system type', async () => {
-      await notifyUser({
+    it('delegates to queue with system type', async () => {
+      await service.notifyUser({
         userId: 'user-1',
         type: 'system',
         titleAr: 'عنوان',
@@ -40,7 +45,7 @@ describe('lib/notifications', () => {
         data: { event: 'butcher_application_received', applicationId: 'app-1' },
       });
 
-      expect(addNotification).toHaveBeenCalledWith({
+      expect(queue.addNotification).toHaveBeenCalledWith({
         userId: 'user-1',
         type: 'system',
         titleAr: 'عنوان',
@@ -53,31 +58,32 @@ describe('lib/notifications', () => {
     });
 
     it('swallows queue errors', async () => {
-      (addNotification as jest.Mock).mockRejectedValueOnce(
+      (queue.addNotification as jest.Mock).mockRejectedValueOnce(
         new Error('redis down'),
       );
       await expect(
-        notifyUser({
+        service.notifyUser({
           userId: 'user-1',
           type: 'system',
           titleAr: 't',
           bodyAr: 'b',
         }),
       ).resolves.toBeUndefined();
+      expect(logger.warn).toHaveBeenCalled();
     });
   });
 
   describe('notifyUsers', () => {
     it('uses Promise.allSettled for fan-out', async () => {
       const spy = jest.spyOn(Promise, 'allSettled');
-      await notifyUsers(['a', 'b'], {
+      await service.notifyUsers(['a', 'b'], {
         type: 'system',
         titleAr: 't',
         bodyAr: 'b',
         data: { event: 'butcher_application_submitted' },
       });
       expect(spy).toHaveBeenCalled();
-      expect(addNotification).toHaveBeenCalledTimes(2);
+      expect(queue.addNotification).toHaveBeenCalledTimes(2);
       spy.mockRestore();
     });
   });

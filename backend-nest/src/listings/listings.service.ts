@@ -8,6 +8,7 @@ import { FeeCheckQueueService } from '../queue/services/fee-check-queue.service'
 import { AppNotificationsService } from '../queue/services/app-notifications.service';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import {
+  ApplyPlanPromoteDto,
   CreateListingDto,
   CreateListingCommentDto,
   ListListingsQueryDto,
@@ -16,6 +17,7 @@ import {
 import { ListingsRepository } from './repositories/listings.repository';
 import { SubscriptionEntitlementService } from '../subscriptions/services/subscription-entitlement.service';
 import { PlanResolverService } from '../plans/plan-resolver.service';
+import { PlanPermissionService } from '../plans/plan-permission.service';
 import { notDeleted } from '../common/utils/soft-delete.util';
 import { isLivestockCategory } from './listing-categories';
 
@@ -31,7 +33,23 @@ export class ListingsService {
     private readonly notifications: AppNotificationsService,
     private readonly entitlements: SubscriptionEntitlementService,
     private readonly planResolver: PlanResolverService,
+    private readonly planPermissions: PlanPermissionService,
   ) {}
+
+  private sellerPriorityBoost(
+    seller?: {
+      subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
+      verified?: boolean;
+    } | null,
+  ): number {
+    const planId = seller?.subscription?.planId ?? 'free';
+    const audience = seller?.subscription?.planAudience ?? 'USER';
+    const resolved = this.planResolver.resolveSync(planId, audience);
+    if (resolved) {
+      return this.planPermissions.priorityBoost(resolved.permissions);
+    }
+    return seller?.verified ? 1 : 0;
+  }
 
   private assertWeightForCategory(category: string, weightKg?: number | null) {
     if (isLivestockCategory(category)) {
@@ -102,22 +120,20 @@ export class ListingsService {
       if (pinnedDiff !== 0) return pinnedDiff;
       const featuredDiff = Number(b.featured) - Number(a.featured);
       if (featuredDiff !== 0) return featuredDiff;
-      const aPlan = (a.seller as {
-        subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
-      })?.subscription;
-      const bPlan = (b.seller as {
-        subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
-      })?.subscription;
-      const tierDiff =
-        this.planResolver.planTier(
-          bPlan?.planId ?? 'free',
-          bPlan?.planAudience ?? 'USER',
+      const priorityDiff =
+        this.sellerPriorityBoost(
+          b.seller as {
+            subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
+            verified?: boolean;
+          },
         ) -
-        this.planResolver.planTier(
-          aPlan?.planId ?? 'free',
-          aPlan?.planAudience ?? 'USER',
+        this.sellerPriorityBoost(
+          a.seller as {
+            subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
+            verified?: boolean;
+          },
         );
-      if (tierDiff !== 0) return tierDiff;
+      if (priorityDiff !== 0) return priorityDiff;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
@@ -151,10 +167,11 @@ export class ListingsService {
     const quantity = dto.quantity ?? 1;
     const currency = dto.currency ?? 'SAR';
     const featured = dto.featured ?? false;
+    const pinned = dto.pinned ?? false;
 
     const effectivePlanSlug = await this.entitlements.assertCanCreateListing(
       user.userId,
-      { images: dto.images, featured },
+      { images: dto.images, featured, pinned },
     );
 
     const permissions = await this.entitlements.getPermissionsForUser(user.userId);
@@ -179,6 +196,7 @@ export class ListingsService {
       const listing = await this.repo.createListingWithFee({
         userId: user.userId,
         featured,
+        pinned,
         createFee,
         data: {
           title: dto.title,
@@ -198,6 +216,7 @@ export class ListingsService {
           weightKg: isLivestockCategory(dto.category) ? dto.weightKg : null,
           images: dto.images,
           featured,
+          pinned,
         },
         commission,
         dueDate,
@@ -243,13 +262,15 @@ export class ListingsService {
       return listing;
     } catch (err: unknown) {
       const e = err as { code?: string; limit?: number; message?: string };
-      if (e.code === 'listing_limit' || e.code === 'featured_limit') {
+      if (e.code === 'listing_limit' || e.code === 'featured_limit' || e.code === 'pinned_limit') {
         throwApi(
           403,
           e.code,
           e.code === 'featured_limit'
             ? `وصلت للحد الأقصى للإعلانات المميزة (${e.limit}).`
-            : `وصلت للحد الأقصى (${e.limit} إعلانات). يرجى ترقية الباقة.`,
+            : e.code === 'pinned_limit'
+              ? `وصلت للحد الأقصى للإعلانات المثبتة (${e.limit}).`
+              : `وصلت للحد الأقصى (${e.limit} إعلانات). يرجى ترقية الباقة.`,
         );
       }
       this.logger.error({ err }, 'Create listing error');
@@ -297,6 +318,60 @@ export class ListingsService {
     await this.cache.del(`listing:${id}`);
     await this.cache.delPattern('listings:v2:*');
     return updated;
+  }
+
+  async applyPlanPromotion(
+    user: JwtPayload,
+    id: string,
+    dto: ApplyPlanPromoteDto,
+  ) {
+    const listing = await this.repo.findOwnerMeta(id);
+    if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+    if (listing.sellerId !== user.userId && user.role !== 'ADMIN') {
+      throwApi(403, 'forbidden', 'غير مسموح');
+    }
+
+    const wantsFeatured = Boolean(dto.featured) && !listing.featured;
+    const wantsPinned = Boolean(dto.pinned) && !listing.pinned;
+
+    if (!wantsFeatured && !wantsPinned) {
+      throwApi(400, 'already_promoted', 'الإعلان مُفعَّل بالفعل أو لم تُحدَّد ترقية جديدة');
+    }
+
+    await this.entitlements.assertCanApplyListingPromotion(user.userId, {
+      featured: wantsFeatured,
+      pinned: wantsPinned,
+    });
+
+    try {
+      const updated = await this.repo.applyPlanPromotion({
+        userId: user.userId,
+        listingId: id,
+        setFeatured: wantsFeatured,
+        setPinned: wantsPinned,
+      });
+
+      await this.cache.del(`listing:${id}`);
+      await this.cache.delPattern('listings:v2:*');
+
+      this.logger.info(
+        { listingId: id, userId: user.userId, featured: wantsFeatured, pinned: wantsPinned },
+        'Listing plan promotion applied',
+      );
+      return updated;
+    } catch (err: unknown) {
+      const e = err as { code?: string; limit?: number };
+      if (e.code === 'featured_limit' || e.code === 'pinned_limit') {
+        throwApi(
+          403,
+          e.code,
+          e.code === 'featured_limit'
+            ? `وصلت للحد الأقصى للإعلانات المميزة (${e.limit}).`
+            : `وصلت للحد الأقصى للإعلانات المثبتة (${e.limit}).`,
+        );
+      }
+      throw err;
+    }
   }
 
   async remove(user: JwtPayload, id: string) {

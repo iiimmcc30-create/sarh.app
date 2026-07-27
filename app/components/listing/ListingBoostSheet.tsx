@@ -15,7 +15,10 @@ import {
   type BoostTypeKey,
   fetchBoostPlans,
 } from '@/services/listingBoost';
+import { applyListingPlanPromotion, type PlanPromoteType } from '@/services/listingPlanPromote';
 import { launchPaymentCheckout } from '@/services/payments';
+import { usePlanPromotionQuota } from '@/hooks/usePlanPromotionQuota';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -44,6 +47,9 @@ type ListingBoostSheetProps = {
   initialBoostType?: BoostTypeKey;
   showPublishBanner?: boolean;
   onSkip?: () => void;
+  listingFeatured?: boolean;
+  listingPinned?: boolean;
+  onPlanPromoteSuccess?: () => void;
 };
 
 export function ListingBoostSheet({
@@ -53,17 +59,47 @@ export function ListingBoostSheet({
   initialBoostType = 'pinned',
   showPublishBanner = false,
   onSkip,
+  listingFeatured = false,
+  listingPinned = false,
+  onPlanPromoteSuccess,
 }: ListingBoostSheetProps) {
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { accessToken } = useAuth();
+  const quota = usePlanPromotionQuota();
+  const { refetchSubscription } = useSubscription();
 
   const [plans, setPlans] = useState<BoostPlansMap>(FALLBACK_BOOST_PLANS);
   const [boostType, setBoostType] = useState<BoostTypeKey>(initialBoostType);
   const [durationDays, setDurationDays] = useState(3);
   const [method, setMethod] = useState<'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay'>('mada');
   const [processing, setProcessing] = useState(false);
+  const [planApplying, setPlanApplying] = useState<PlanPromoteType | null>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const canPlanFeature = quota.canFeature && !listingFeatured;
+  const canPlanPin = quota.canPin && !listingPinned;
+  const showPlanSection = canPlanFeature || canPlanPin;
+
+  const handlePlanPromote = async (type: PlanPromoteType) => {
+    if (planApplying) return;
+    setPlanApplying(type);
+    try {
+      const result = await applyListingPlanPromotion(listingId, type);
+      if (result.ok) {
+        await refetchSubscription();
+        Alert.alert('تم التفعيل', 'تم تطبيق ميزة الباقة على إعلانك بنجاح.');
+        onPlanPromoteSuccess?.();
+        if (type === 'featured' && !canPlanPin) onClose();
+        if (type === 'pinned' && !canPlanFeature) onClose();
+        if (type === 'both') onClose();
+      } else {
+        Alert.alert('تعذّر التفعيل', result.error ?? 'حاول مجدداً لاحقاً');
+      }
+    } finally {
+      setPlanApplying(null);
+    }
+  };
 
   const typePlans = plans[boostType] ?? FALLBACK_BOOST_PLANS[boostType];
   const selectedPlan =
@@ -217,7 +253,78 @@ export function ListingBoostSheet({
               </LinearGradient>
             ) : null}
 
-            <Text style={styles.sectionLabel}>اختر الخدمة</Text>
+            {showPlanSection ? (
+              <View style={styles.planSection}>
+                <View style={[styles.planSectionHeader, rtlRow]}>
+                  <LinearGradient
+                    colors={[colors.electric, colors.electricBright]}
+                    style={styles.planSectionIcon}
+                  >
+                    <AppIcon name="gift-outline" size={16} color="#fff" />
+                  </LinearGradient>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.planSectionTitle}>من حصة باقتك — مجاناً</Text>
+                    <Text style={styles.planSectionSub}>
+                      استخدم تثبيت أو تمييز شهري بدون دفع إضافي
+                    </Text>
+                  </View>
+                </View>
+                <View style={[styles.planActions, rtlRow]}>
+                  {canPlanPin ? (
+                    <Pressable
+                      style={[
+                        styles.planActionBtn,
+                        planApplying === 'pinned' && styles.planActionBtnBusy,
+                      ]}
+                      disabled={planApplying !== null}
+                      onPress={() => void handlePlanPromote('pinned')}
+                    >
+                      <Text style={styles.planActionEmoji}>📌</Text>
+                      <Text style={styles.planActionLabel}>تثبيت</Text>
+                      <Text style={styles.planActionQuota}>
+                        {quota.pinnedRemaining}/{quota.pinnedLimit}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  {canPlanFeature ? (
+                    <Pressable
+                      style={[
+                        styles.planActionBtn,
+                        styles.planActionBtnGold,
+                        planApplying === 'featured' && styles.planActionBtnBusy,
+                      ]}
+                      disabled={planApplying !== null}
+                      onPress={() => void handlePlanPromote('featured')}
+                    >
+                      <Text style={styles.planActionEmoji}>⭐</Text>
+                      <Text style={styles.planActionLabel}>تمييز</Text>
+                      <Text style={styles.planActionQuota}>
+                        {quota.featuredRemaining}/{quota.featuredLimit}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  {canPlanFeature && canPlanPin ? (
+                    <Pressable
+                      style={[
+                        styles.planActionBtn,
+                        styles.planActionBtnBoth,
+                        planApplying === 'both' && styles.planActionBtnBusy,
+                      ]}
+                      disabled={planApplying !== null}
+                      onPress={() => void handlePlanPromote('both')}
+                    >
+                      <Text style={styles.planActionEmoji}>🚀</Text>
+                      <Text style={styles.planActionLabel}>كلاهما</Text>
+                      <Text style={styles.planActionQuota}>من الباقة</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
+
+            <Text style={styles.sectionLabel}>
+              {showPlanSection ? 'أو ترقية مدفوعة لمدة محددة' : 'اختر الخدمة'}
+            </Text>
             <View style={styles.serviceGrid}>
               {BOOST_TYPE_ORDER.map((key) => {
                 const meta = BOOST_TYPE_META[key];
@@ -443,6 +550,74 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: 'rgba(255,255,255,0.88)',
       marginTop: 2,
+    },
+    planSection: {
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgGlass,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
+    },
+    planSectionHeader: {
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    planSectionIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    planSectionTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+    },
+    planSectionSub: {
+      ...typography.caption,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    planActions: {
+      gap: spacing.sm,
+      flexWrap: 'wrap',
+    },
+    planActionBtn: {
+      flex: 1,
+      minWidth: 96,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: `${colors.electricBright}44`,
+      backgroundColor: `${colors.electric}12`,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      gap: 2,
+    },
+    planActionBtnGold: {
+      borderColor: `${colors.gold}55`,
+      backgroundColor: `${colors.gold}14`,
+    },
+    planActionBtnBoth: {
+      borderColor: `${colors.electricBright}55`,
+      backgroundColor: `${colors.electricBright}10`,
+    },
+    planActionBtnBusy: {
+      opacity: 0.6,
+    },
+    planActionEmoji: {
+      fontSize: 18,
+    },
+    planActionLabel: {
+      ...typography.caption,
+      color: colors.textPrimary,
+      fontWeight: '700',
+    },
+    planActionQuota: {
+      ...typography.micro,
+      color: colors.textMuted,
     },
     sectionLabel: {
       ...typography.caption,

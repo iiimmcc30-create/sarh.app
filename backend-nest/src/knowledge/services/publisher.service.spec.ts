@@ -14,6 +14,7 @@ describe('PublisherService', () => {
 
   const cache = {
     del: jest.fn().mockResolvedValue(undefined),
+    delPattern: jest.fn().mockResolvedValue(0),
   } as unknown as RedisCacheService;
 
   const logger = {
