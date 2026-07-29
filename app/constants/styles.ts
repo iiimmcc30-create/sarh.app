@@ -1,5 +1,7 @@
 // SAFAT — Common Styles (v2)
 import { StyleSheet } from 'react-native';
+import { rtlRow } from '@/lib/rtl';
+import { ds } from './designSystem';
 import { colors, radius, spacing, shadow } from './theme';
 
 export const commonStyles = StyleSheet.create({
@@ -9,54 +11,54 @@ export const commonStyles = StyleSheet.create({
   },
   glassPanel: {
     backgroundColor: colors.bgGlass,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.borderSoft,
-    borderRadius: radius.lg,
+    borderRadius: ds.radius.lg,
   },
   glassPanelElevated: {
-    backgroundColor: colors.bgGlassStrong,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    borderRadius: radius.xl,
+    backgroundColor: colors.bgSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderSoft,
+    borderRadius: ds.radius.xl,
     ...shadow.card,
   },
   pill: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1,
+    backgroundColor: colors.bgSurface,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.borderSoft,
   },
   pillActive: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
+    backgroundColor: colors.electric,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.electric,
   },
   centerRow: {
-    flexDirection: 'row',
+    ...rtlRow,
     alignItems: 'center',
   },
   spaceBetween: {
-    flexDirection: 'row',
+    ...rtlRow,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   divider: {
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: colors.borderHairline,
     marginVertical: spacing.lg,
   },
   iconBubble: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
+    width: ds.iconBtn.md,
+    height: ds.iconBtn.md,
+    borderRadius: ds.radius.pill,
+    backgroundColor: colors.bgSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },

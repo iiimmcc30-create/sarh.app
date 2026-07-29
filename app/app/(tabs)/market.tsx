@@ -1,13 +1,13 @@
 // Powered by OnSpace.AI
 // SAFAT — Market Tab (السوق)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,40 +15,31 @@ import {
   ListRenderItemInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow, ds } from '@/constants/designSystem';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
 import { compareListingBoostPriority } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
-import { CountryChips } from '@/components/feature/CountryChips';
+import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
 import { useApp } from '@/hooks/useApp';
+import { Country, countries, Listing } from '@/services/types';
 
-const CATEGORIES = [
-  { id: 'all', ar: 'الكل', icon: '🔘' },
-  { id: 'camels', ar: 'إبل', icon: '🐪' },
-  { id: 'sheep', ar: 'أغنام', icon: '🐑' },
-  { id: 'horses', ar: 'خيول', icon: '🐎' },
-  { id: 'goats', ar: 'معز', icon: '🐐' },
-  { id: 'cows', ar: 'بقر', icon: '🐄' },
-  { id: 'birds', ar: 'طيور', icon: '🦅' },
-  { id: 'feed', ar: 'علف', icon: '🌾' },
-  { id: 'equipment', ar: 'معدات', icon: '⚙️' },
-];
-
-const LISTING_ROW_HEIGHT = 126;
+const LISTING_ROW_HEIGHT = 156;
+const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 export default function MarketScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(({ colors }) => createMarketStyles(colors));
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createMarketStyles(theme.colors, theme.scheme),
+    colors: theme.colors,
+  }));
   const { listings } = useApp();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
-  // ──────────────────────────────────────────────────────
-  // منطق الفلترة — لم يتغير
-  // ──────────────────────────────────────────────────────
   const filtered = useMemo(() => listings.filter((l) => {
     if (l.country === 'EG') return false;
     if (activeCategory !== 'all' && l.category !== activeCategory) return false;
@@ -65,14 +56,12 @@ export default function MarketScreen() {
     return true;
   }).sort(compareListingBoostPriority), [listings, activeCategory, activeCountry, showFeaturedOnly, search]);
 
-  // ──────────────────────────────────────────────────────
-  // FlatList — كل صف إعلان ضيق
-  // ──────────────────────────────────────────────────────
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Listing>) => (
       <ListingCard
         listing={item}
         variant="list"
+        listMode="market"
         onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
       />
     ),
@@ -90,8 +79,6 @@ export default function MarketScreen() {
     [],
   );
 
-  const ItemSeparator = useCallback(() => null, []);
-
   const ListEmpty = useMemo(
     () => (
       <View style={styles.empty}>
@@ -104,73 +91,85 @@ export default function MarketScreen() {
 
   const ListHeader = useCallback(
     () => (
-    <View>
-      <View style={styles.pageHeader}>
-        <View>
-          <Text style={styles.pageTitle}>السوق</Text>
-          <Text style={styles.pageSubtitle}>اكتشف أحدث الإعلانات من مجتمع سرح</Text>
-        </View>
-        <View style={styles.marketIcon}>
-          <AppIcon name="tags" size={22} color={colors.electricBright} />
-        </View>
-      </View>
-
-      {/* شريط البحث */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <AppIcon name="search" size={16} color={colors.textMuted} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="ابحث عن حيوانات، أعلاف..."
-            placeholderTextColor={colors.textMuted}
-            style={styles.searchInput}
-          />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
-              <AppIcon name="close-circle" size={16} color={colors.textMuted} />
+      <View>
+        <View style={[styles.pageHeader, rtlRow]}>
+          <View style={styles.pageTitleBlock}>
+            <Text style={styles.pageTitle}>السوق</Text>
+            <Text style={styles.pageSubtitle}>اكتشف أحدث الإعلانات من مجتمع سرح</Text>
+          </View>
+          <View style={[styles.headerActions, rtlRow]}>
+            <NotificationBellButton size={ds.iconBtn.md} iconSize={ds.icon.md} style={styles.headerIconBtn} />
+            <Pressable
+              style={styles.headerIconBtn}
+              hitSlop={8}
+              onPress={() => router.push('/search')}
+            >
+              <AppIcon name="search" size={20} color={colors.textPrimary} />
             </Pressable>
-          )}
+          </View>
         </View>
-        <Pressable
-          style={[styles.filterBtn, showFeaturedOnly && styles.filterBtnActive]}
-          onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
-        >
-          <AppIcon name="star" size={16} color={showFeaturedOnly ? colors.gold : colors.textMuted} />
-        </Pressable>
-      </View>
 
-      {/* أقسام الفئات */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.catRow, rtlDirection]}
-      >
-        {CATEGORIES.map((cat) => (
+        <View style={[styles.searchRow, rtlRow]}>
           <Pressable
-            key={cat.id}
-            onPress={() => setActiveCategory(cat.id)}
-            style={[styles.catChip, activeCategory === cat.id && styles.catChipActive]}
+            style={[styles.filterStarBtn, showFeaturedOnly && styles.filterStarBtnActive]}
+            onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
           >
-            <Text style={styles.catIcon}>{cat.icon}</Text>
-            <Text style={[styles.catLabel, activeCategory === cat.id && styles.catLabelActive]}>
-              {cat.ar}
+            <AppIcon
+              name="star"
+              size={18}
+              color={showFeaturedOnly ? colors.gold : colors.textMuted}
+              variant={showFeaturedOnly ? 'sr' : 'rr'}
+            />
+          </Pressable>
+          <View style={[styles.searchBox, rtlRow]}>
+            <AppIcon name="search" size={18} color={colors.textMuted} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="ابحث عن حيوانات، أعلاف، منتجات..."
+              placeholderTextColor={colors.textMuted}
+              style={styles.searchInput}
+            />
+            {search.length > 0 ? (
+              <Pressable onPress={() => setSearch('')} hitSlop={8}>
+                <AppIcon name="close-circle" size={16} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+
+        <MarketCategoryTiles value={activeCategory} onChange={setActiveCategory} />
+
+        <View style={[styles.filterRow, rtlRow]}>
+          <Pressable
+            style={styles.filterChip}
+            onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
+          >
+            <AppIcon name="settings-sliders" size={16} color={colors.textPrimary} />
+          </Pressable>
+          <Pressable style={[styles.filterChip, rtlRow]}>
+            <AppIcon name="map-marker-outline" size={14} color={colors.textSecondary} />
+            <Text style={styles.filterChipText}>الموقع</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.filterChip, rtlRow, activeCountry === 'SA' && styles.filterChipActive]}
+            onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
+          >
+            <Text style={styles.filterFlag}>{countries.SA.flag}</Text>
+            <Text style={[styles.filterChipText, activeCountry === 'SA' && styles.filterChipTextActive]}>
+              السعودية
             </Text>
           </Pressable>
-        ))}
-      </ScrollView>
+          <View style={[styles.filterChip, rtlRow]}>
+            <Text style={styles.filterChipText}>الأحدث</Text>
+            <AppIcon name="sort-alt" size={14} color={colors.textSecondary} />
+          </View>
+        </View>
 
-      {/* فلتر الدولة */}
-      <CountryChips value={activeCountry} onChange={setActiveCountry} />
-
-      {/* رأس القائمة */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          {showFeaturedOnly ? '⭐ المميزة' : 'جميع الإعلانات'}
-        </Text>
-        <Text style={styles.count}>{filtered.length} إعلان</Text>
+        <View style={[styles.countRow, rtlRow]}>
+          <Text style={styles.count}>{filtered.length} إعلان</Text>
+        </View>
       </View>
-    </View>
     ),
     [
       activeCategory,
@@ -179,9 +178,8 @@ export default function MarketScreen() {
       search,
       showFeaturedOnly,
       styles,
-      colors.electricBright,
-      colors.gold,
-      colors.textMuted,
+      colors,
+      router,
     ],
   );
 
@@ -192,10 +190,9 @@ export default function MarketScreen() {
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         getItemLayout={getItemLayout}
-        ItemSeparatorComponent={ItemSeparator}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
-        ListFooterComponent={<View style={{ height: 80 }} />}
+        ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews
         initialNumToRender={12}
@@ -206,100 +203,137 @@ export default function MarketScreen() {
   );
 }
 
-function createMarketStyles(colors: ThemeColors) {
+function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.bgDeep },
     pageHeader: {
-      ...rtlRow,
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
-      paddingBottom: spacing.sm,
-    },
-    pageTitle: { ...typography.h1, color: colors.textPrimary },
-    pageSubtitle: {
-      ...typography.caption,
-      color: colors.textMuted,
-      marginTop: spacing.xs,
-    },
-    marketIcon: {
-      width: 46,
-      height: 46,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgGlass,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderMid,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-
-    searchRow: {
-      ...rtlRow,
-      gap: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
-      marginBottom: spacing.sm,
-    },
-    searchBox: {
-      flex: 1,
-      ...rtlRow,
-      alignItems: 'center',
-      gap: spacing.sm,
-      backgroundColor: colors.bgGlassStrong,
-      borderRadius: radius.xl,
-      paddingHorizontal: spacing.md,
-      minHeight: 52,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    searchInput: {
-      flex: 1,
-      ...typography.body,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    filterBtn: {
-      width: 52, height: 52, borderRadius: radius.lg,
-      backgroundColor: colors.bgGlassStrong,
-      alignItems: 'center', justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderSoft,
-    },
-    filterBtnActive: { borderColor: colors.gold, backgroundColor: `${colors.gold}15` },
-
-    catRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm },
-    catChip: {
-      ...rtlRow,
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: spacing.md, minHeight: 38,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgGlassStrong,
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderSoft,
-    },
-    catChipActive: { backgroundColor: colors.royal, borderColor: colors.electric },
-    catIcon: { fontSize: 14 },
-    catLabel: { ...typography.caption, color: colors.textMuted },
-    catLabelActive: { color: colors.textBrandStrong },
-
-    sectionHeader: {
-      ...rtlRow,
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
+      gap: spacing.md,
     },
-    sectionTitle: { ...typography.h3, color: colors.textPrimary },
-    count: { ...typography.caption, color: colors.textMuted },
-
-    separator: {
-      height: 1,
-      backgroundColor: colors.borderHairline,
-      marginHorizontal: spacing.md,
+    pageTitleBlock: {
+      flex: 1,
+      minWidth: 0,
+      gap: 4,
     },
-
+    pageTitle: {
+      ...typography.h1,
+      fontWeight: '800',
+      color: colors.electricBright,
+      writingDirection: 'rtl',
+    },
+    pageSubtitle: {
+      ...typography.caption,
+      fontSize: 13,
+      lineHeight: 18,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+    },
+    headerActions: {
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    headerIconBtn: {
+      width: ds.iconBtn.md,
+      height: ds.iconBtn.md,
+      borderRadius: ds.radius.pill,
+      backgroundColor: tokens.glass,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
+      ...ambientShadow(scheme, 'soft'),
+    },
+    searchRow: {
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+      alignItems: 'center',
+    },
+    filterStarBtn: {
+      width: ds.iconBtn.md,
+      height: ds.iconBtn.md,
+      borderRadius: ds.radius.pill,
+      backgroundColor: tokens.glass,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
+      ...ambientShadow(scheme, 'soft'),
+    },
+    filterStarBtnActive: {
+      borderColor: colors.gold,
+      backgroundColor: `${colors.gold}12`,
+    },
+    searchBox: {
+      flex: 1,
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.bgSurface,
+      borderRadius: ds.radius.lg,
+      paddingHorizontal: spacing.md,
+      minHeight: 44,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
+      ...ambientShadow(scheme, 'soft'),
+    },
+    searchInput: {
+      flex: 1,
+      ...typography.body,
+      fontSize: 14,
+      color: colors.textPrimary,
+      writingDirection: 'rtl',
+    },
+    filterRow: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
+      alignItems: 'center',
+    },
+    filterChip: {
+      ...rtlRow,
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      minHeight: 36,
+      borderRadius: radius.pill,
+      backgroundColor: colors.bgSurface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
+    },
+    filterChipActive: {
+      backgroundColor: colors.electric,
+      borderColor: colors.electric,
+    },
+    filterChipText: {
+      ...typography.caption,
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: '600',
+      writingDirection: 'rtl',
+    },
+    filterChipTextActive: {
+      color: '#fff',
+    },
+    filterFlag: {
+      fontSize: 14,
+    },
+    countRow: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+      justifyContent: 'flex-end',
+    },
+    count: {
+      ...typography.caption,
+      fontSize: 12,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+    },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
     emptyIcon: { fontSize: 40 },
     emptyText: { ...typography.body, color: colors.textMuted },

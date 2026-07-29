@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -190,7 +191,7 @@ export default function PostsScreen() {
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={ListEmpty}
-            ListFooterComponent={<View style={{ height: 100 }} />}
+            ListFooterComponent={<View style={{ height: ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16 }} />}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}

@@ -10,6 +10,13 @@ export async function fetchWithTimeout(
 
   try {
     return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      const timeoutErr = new Error('Request timed out');
+      timeoutErr.name = 'TimeoutError';
+      throw timeoutErr;
+    }
+    throw err;
   } finally {
     clearTimeout(timeoutId);
   }

@@ -13,6 +13,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { rtlRow, rtlText } from '@/lib/rtl';
@@ -23,7 +24,7 @@ import { PostMediaGallery } from '@/components/feature/PostMediaGallery';
 
 interface PostItemProps {
   post: Post;
-  variant?: 'feed' | 'detail';
+  variant?: 'feed' | 'detail' | 'profile';
   onPress?: () => void;
   onLike: () => void;
   onComment: () => void;
@@ -73,7 +74,7 @@ function PostBody({ text, style, lines }: { text: string; style: TextStyle; line
     <Text style={style} numberOfLines={lines}>
       {parts.map((p, i) =>
         p.isTag ? (
-          <Text key={i} style={[style, { color: '#1D9BF0' }]}>
+          <Text key={i} style={[style, { color: '#8A9A94', opacity: 0.9 }]}>
             {p.text}
           </Text>
         ) : (
@@ -88,6 +89,7 @@ function ActionBtn({
   icon,
   iconColor,
   count,
+  label,
   textColor,
   onPress,
   style,
@@ -97,6 +99,7 @@ function ActionBtn({
   icon: string;
   iconColor: string;
   count?: number;
+  label?: string;
   textColor: string;
   onPress: () => void;
   style: ViewStyle;
@@ -122,8 +125,11 @@ function ActionBtn({
 
   return (
     <Pressable style={style} onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} hitSlop={10}>
-      <Animated.View style={[{ transform: [{ scale }], opacity }, rtlRow, { alignItems: 'center', gap: 5 }]}>
+      <Animated.View style={[{ transform: [{ scale }], opacity }, rtlRow, { alignItems: 'center', gap: 4 }]}>
         <AppIcon name={icon} size={size} color={iconColor} />
+        {label ? (
+          <Text style={[countStyle, { color: textColor }]}>{label}</Text>
+        ) : null}
         {count !== undefined && count > 0 ? (
           <Text style={[countStyle, { color: textColor }]}>{formatCount(count)}</Text>
         ) : null}
@@ -143,7 +149,7 @@ function PostItemComponent({
   onBookmark,
 }: PostItemProps) {
   const { styles, colors, scheme } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
+    styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
     scheme: theme.scheme,
   }));
@@ -166,7 +172,7 @@ function PostItemComponent({
     typeof post.author.rating === 'number' ? post.author.rating.toFixed(1) : null;
 
   return (
-    <View style={[styles.card, variant === 'detail' && styles.cardDetail]}>
+    <View style={[styles.card, variant === 'detail' && styles.cardDetail, variant === 'profile' && styles.cardProfile]}>
       <View style={[styles.row, rtlRow]}>
         <UserProfileLink userId={post.author.id}>
           <Image source={uriSource(post.author.avatar)} style={styles.avatar} contentFit="cover" />
@@ -244,6 +250,7 @@ function PostItemComponent({
               iconColor={colors.textSubtle}
               textColor={colors.textSubtle}
               count={post.comments}
+              label="تعليق"
               onPress={onComment}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
@@ -253,14 +260,16 @@ function PostItemComponent({
               iconColor={post.liked ? colors.rose : colors.textSubtle}
               textColor={post.liked ? colors.rose : colors.textSubtle}
               count={post.likes}
+              label="إعجاب"
               onPress={onLike}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
             <ActionBtn
               icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}
-              iconColor={post.bookmarked ? colors.electricBright : colors.textSubtle}
+              iconColor={post.bookmarked ? colors.electric : colors.textSubtle}
               textColor={colors.textSubtle}
+              label="حفظ"
               onPress={onBookmark ?? (() => {})}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
@@ -269,6 +278,7 @@ function PostItemComponent({
               icon="paper-plane-outline"
               iconColor={colors.textSubtle}
               textColor={colors.textSubtle}
+              label="مشاركة"
               onPress={onShare}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
@@ -309,26 +319,15 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
 
 export const PostItem = memo(PostItemComponent, arePropsEqual);
 
-function createStyles(colors: ThemeColors) {
-  const cardShadow = Platform.select({
-    ios: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
-      shadowRadius: 10,
-    },
-    android: { elevation: 2 },
-    default: {},
-  });
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const cardShadow = ambientShadow(scheme, 'soft');
 
   return StyleSheet.create({
     card: {
       marginHorizontal: spacing.md,
       marginTop: spacing.sm,
-      borderRadius: radius.lg,
+      borderRadius: ds.radius.xl,
       backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
       ...cardShadow,
       overflow: 'hidden',
     },
@@ -336,19 +335,24 @@ function createStyles(colors: ThemeColors) {
       marginHorizontal: 0,
       marginTop: 0,
       borderRadius: 0,
-      borderWidth: 0,
       shadowOpacity: 0,
       elevation: 0,
     },
+    cardProfile: {
+      marginHorizontal: 0,
+      marginTop: spacing.md,
+      backgroundColor: colors.bgSurface,
+      ...cardShadow,
+    },
     row: {
       alignItems: 'flex-start',
-      padding: spacing.md,
-      gap: 12,
+      padding: spacing.lg,
+      gap: 14,
     },
     avatar: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       backgroundColor: colors.bgElevated,
       flexShrink: 0,
     },
@@ -369,8 +373,8 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     name: {
-      fontSize: 15,
-      fontWeight: '700',
+      fontSize: 16,
+      fontWeight: '800',
       color: colors.textPrimary,
       flexShrink: 1,
       ...rtlText,
@@ -438,10 +442,14 @@ function createStyles(colors: ThemeColors) {
     },
     showMore: {
       fontSize: 14,
-      color: colors.electricBright,
+      color: colors.electric,
       fontWeight: '600',
       marginTop: 4,
       ...rtlText,
+    },
+    tagText: {
+      color: colors.textMuted,
+      opacity: 0.85,
     },
     mediaWrap: {
       marginTop: 14,
@@ -452,16 +460,17 @@ function createStyles(colors: ThemeColors) {
     actions: {
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginTop: 14,
-      paddingTop: 4,
+      marginTop: 16,
+      paddingTop: spacing.sm,
       paddingHorizontal: 2,
+      gap: spacing.xs,
     },
     actionSlot: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 38,
-      paddingHorizontal: 4,
+      minHeight: 40,
+      paddingHorizontal: 2,
     },
     actionCount: {
       fontSize: 12,

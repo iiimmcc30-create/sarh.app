@@ -22,7 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon, marginEnd } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { Country, countries } from '@/services/types';
 
@@ -118,7 +118,7 @@ export default function EditProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>تعديل الملف الشخصي</Text>
           <Pressable
@@ -353,14 +353,14 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1, borderColor: colors.borderSoft,
   },
   inputMultiline: { alignItems: 'flex-start', paddingVertical: spacing.sm },
-  atSign: { ...typography.body, color: colors.textMuted, marginRight: 4 },
+  atSign: { ...typography.body, color: colors.textMuted, ...marginEnd(4) },
   input: {
     flex: 1, ...typography.body, color: colors.textPrimary,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
   },
   inputRtl: { textAlign: 'right' },
   fieldHint: { ...typography.micro, color: colors.textSubtle },
-  charCount: { ...typography.micro, color: colors.textSubtle, textAlign: 'left' },
+  charCount: { ...typography.micro, color: colors.textSubtle, alignSelf: 'flex-start' },
   countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   countryChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,

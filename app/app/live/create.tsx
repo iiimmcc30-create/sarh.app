@@ -271,7 +271,7 @@ export default function CreateStreamScreen() {
       >
         <View style={styles.topBar}>
           <Pressable onPress={() => { destroy(); router.back(); }} hitSlop={8} style={styles.backBtn}>
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <Text style={styles.topTitle}>إعداد البث المباشر</Text>
           <View style={{ width: 38 }} />

@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { usePlanPromotionQuota } from '@/hooks/usePlanPromotionQuota';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -17,7 +16,7 @@ type PlanPromotionOptionsProps = {
 
 type OptionKey = 'featured' | 'pinned';
 
-function UsagePill({
+function UsageChip({
   used,
   limit,
   styles,
@@ -27,14 +26,10 @@ function UsagePill({
   styles: ReturnType<typeof createStyles>;
 }) {
   const remaining = limit > 0 ? Math.max(0, limit - used) : 0;
-  const ratio = limit > 0 ? Math.min(used / limit, 1) : 0;
 
   return (
-    <View style={styles.pillWrap}>
-      <View style={styles.pillTrack}>
-        <View style={[styles.pillFill, { width: `${ratio * 100}%` }]} />
-      </View>
-      <Text style={styles.pillText}>
+    <View style={styles.usageChip}>
+      <Text style={styles.usageChipText}>
         {remaining} متبقي من {limit}
       </Text>
     </View>
@@ -55,63 +50,52 @@ export function PlanPromotionOptions({
   const options: Array<{
     key: OptionKey;
     icon: string;
-    emoji: string;
     title: string;
     subtitle: string;
     active: boolean;
     enabled: boolean;
     used: number;
     limit: number;
-    gradient: [string, string];
     onToggle: () => void;
   }> = [
     {
       key: 'pinned',
       icon: 'pin',
-      emoji: '📌',
       title: 'تثبيت من باقتي',
       subtitle: 'يظهر في أعلى قائمة الإعلانات',
       active: pinned,
       enabled: quota.canPin,
       used: quota.pinnedUsed,
       limit: quota.pinnedLimit,
-      gradient: [colors.electric, colors.electricBright],
       onToggle: () => onPinnedChange(!pinned),
     },
     {
       key: 'featured',
       icon: 'star',
-      emoji: '⭐',
       title: 'تمييز من باقتي',
       subtitle: 'شارة مميزة وأولوية في البحث',
       active: featured,
       enabled: quota.canFeature,
       used: quota.featuredUsed,
       limit: quota.featuredLimit,
-      gradient: [colors.gold, '#FFE566'],
       onToggle: () => onFeaturedChange(!featured),
     },
   ];
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact, rtlDirection]}>
-      <View style={[styles.headerRow, rtlRow]}>
-        <LinearGradient colors={gradientsHeader(colors)} style={styles.headerIcon}>
-          <AppIcon name="diamond-outline" size={18} color="#fff" />
-        </LinearGradient>
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>مميزات باقتك</Text>
-          <Text style={styles.headerSub}>
-            {quota.isPaid
-              ? 'استخدم حصتك الشهرية بدون دفع إضافي'
-              : 'ترقِّ باقتك لتفعيل التثبيت والتمييز'}
-          </Text>
-        </View>
+      <View style={styles.headerBlock}>
+        <Text style={styles.headerTitle}>مميزات باقتك</Text>
+        <Text style={styles.headerSub}>
+          {quota.isPaid
+            ? 'استخدم حصتك الشهرية بدون دفع إضافي'
+            : 'ترقِّ باقتك لتفعيل التثبيت والتمييز'}
+        </Text>
       </View>
 
       {quota.hasPrioritySearch ? (
         <View style={[styles.priorityBanner, rtlRow]}>
-          <AppIcon name="trending-up-outline" size={16} color={colors.emerald} />
+          <AppIcon name="trending-up-outline" size={16} color={colors.electric} />
           <Text style={styles.priorityText}>
             أولوية في البحث والصفحة الرئيسية مفعّلة لباقتك
           </Text>
@@ -134,16 +118,14 @@ export function PlanPromotionOptions({
                 pressed && !disabled && { opacity: 0.92 },
               ]}
             >
-              {opt.active ? (
-                <LinearGradient
-                  colors={[`${opt.gradient[0]}33`, `${opt.gradient[1]}18`]}
-                  style={StyleSheet.absoluteFill}
-                />
-              ) : null}
               <View style={[styles.cardTop, rtlRow]}>
-                <LinearGradient colors={opt.gradient} style={styles.cardIcon}>
-                  <Text style={styles.cardEmoji}>{opt.emoji}</Text>
-                </LinearGradient>
+                <View style={[styles.cardIcon, opt.active && styles.cardIconActive]}>
+                  <AppIcon
+                    name={opt.icon}
+                    size={20}
+                    color={opt.active ? colors.electric : colors.textMuted}
+                  />
+                </View>
                 <View style={styles.cardInfo}>
                   <Text style={styles.cardTitle}>{opt.title}</Text>
                   {!compact ? (
@@ -153,7 +135,7 @@ export function PlanPromotionOptions({
                 <View
                   style={[
                     styles.toggle,
-                    opt.active && { backgroundColor: opt.gradient[0] },
+                    opt.active && styles.toggleActive,
                     disabled && styles.toggleDisabled,
                   ]}
                 >
@@ -163,7 +145,7 @@ export function PlanPromotionOptions({
                 </View>
               </View>
               {opt.limit > 0 ? (
-                <UsagePill used={opt.used} limit={opt.limit} styles={styles} />
+                <UsageChip used={opt.used} limit={opt.limit} styles={styles} />
               ) : (
                 <Text style={styles.unavailable}>غير متاح في باقتك الحالية</Text>
               )}
@@ -175,10 +157,6 @@ export function PlanPromotionOptions({
   );
 }
 
-function gradientsHeader(colors: ThemeColors): [string, string] {
-  return [colors.electric, colors.electricBright];
-}
-
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
@@ -188,26 +166,19 @@ function createStyles(colors: ThemeColors) {
     wrapCompact: {
       marginTop: 0,
     },
-    headerRow: {
-      alignItems: 'center',
-      gap: spacing.md,
+    headerBlock: {
+      gap: 4,
     },
-    headerIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerText: { flex: 1, gap: 2 },
     headerTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
+      textAlign: 'right',
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
+      textAlign: 'right',
     },
     priorityBanner: {
       alignItems: 'center',
@@ -215,29 +186,25 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
       borderRadius: radius.lg,
-      backgroundColor: `${colors.emerald}14`,
-      borderWidth: 1,
-      borderColor: `${colors.emerald}30`,
+      backgroundColor: `${colors.electric}10`,
     },
     priorityText: {
       ...typography.caption,
-      color: colors.emerald,
+      color: colors.electric,
       flex: 1,
       lineHeight: 18,
+      textAlign: 'right',
     },
     grid: {
       gap: spacing.sm,
     },
     card: {
       borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
       backgroundColor: colors.bgGlass,
       padding: spacing.md,
-      overflow: 'hidden',
     },
     cardActive: {
-      borderColor: colors.electricBright,
+      backgroundColor: `${colors.electric}08`,
     },
     cardDisabled: {
       opacity: 0.55,
@@ -249,57 +216,58 @@ function createStyles(colors: ThemeColors) {
     cardIcon: {
       width: 44,
       height: 44,
-      borderRadius: 14,
+      borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.bgElevated,
     },
-    cardEmoji: { fontSize: 20 },
+    cardIconActive: {
+      backgroundColor: `${colors.electric}14`,
+    },
     cardInfo: { flex: 1, gap: 2 },
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
+      textAlign: 'right',
     },
     cardSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
+      textAlign: 'right',
     },
     toggle: {
       width: 28,
       height: 28,
       borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
       backgroundColor: colors.bgDeep,
       alignItems: 'center',
       justifyContent: 'center',
     },
+    toggleActive: {
+      backgroundColor: colors.electric,
+    },
     toggleDisabled: {
-      borderColor: colors.borderSoft,
+      opacity: 0.5,
     },
-    pillWrap: {
+    usageChip: {
+      alignSelf: 'flex-start',
       marginTop: spacing.sm,
-      gap: spacing.xs,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      backgroundColor: colors.bgElevated,
     },
-    pillTrack: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.borderSoft,
-      overflow: 'hidden',
-    },
-    pillFill: {
-      height: '100%',
-      borderRadius: 2,
-      backgroundColor: colors.electricBright,
-    },
-    pillText: {
+    usageChipText: {
       ...typography.micro,
       color: colors.textMuted,
+      fontWeight: '600',
     },
     unavailable: {
       ...typography.caption,
       color: colors.textMuted,
       marginTop: spacing.sm,
+      textAlign: 'right',
     },
   });
 }

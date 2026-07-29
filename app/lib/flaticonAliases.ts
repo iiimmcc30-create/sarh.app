@@ -201,6 +201,17 @@ export const FLATICON_ALIASES: Record<string, string> = {
   bird: 'bird',
   paw: 'paw',
 
+  pin: 'pin',
+  'rocket-outline': 'rocket',
+  play: 'play',
+  'settings-sliders': 'settings-sliders',
+  'sort-alt': 'sort-alt',
+  'menu-dots-vertical': 'menu-dots-vertical',
+  'card-outline': 'card-outline',
+  'bicycle-outline': 'bicycle-outline',
+  'help-circle-outline': 'help-circle-outline',
+  'signal-stream': 'signal-stream',
+
   // Misc legacy
 };
 

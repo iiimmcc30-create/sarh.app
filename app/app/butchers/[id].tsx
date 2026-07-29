@@ -575,7 +575,7 @@ export default function ButcherProfileScreen() {
             hitSlop={12}
             style={styles.backBtn}
           >
-            <AppIcon name={rtlBackIcon} size={22} color="#fff" />
+            <AppIcon name={rtlBackIcon()} size={22} color="#fff" />
           </Pressable>
           <View style={styles.coverActions}>
             <Pressable style={styles.coverAction}>

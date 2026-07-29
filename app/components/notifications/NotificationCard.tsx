@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow, ds } from '@/constants/designSystem';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { formatApplicationDateTime } from '@/lib/butcherApplicationLabels';
 import { rtlRow } from '@/lib/rtl';
@@ -13,7 +14,7 @@ type NotificationCardProps = {
 
 export function NotificationCard({ notification, onPress }: NotificationCardProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
+    styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
   }));
 
@@ -39,21 +40,23 @@ export function NotificationCard({ notification, onPress }: NotificationCardProp
           </Text>
           <Text style={styles.time}>{formatApplicationDateTime(notification.createdAt)}</Text>
         </View>
-        <AppIcon name="chevron-back" size={18} color={colors.textMuted} style={styles.chevron} />
+        <AppIcon name="chevron-back" size={ds.icon.sm} color={colors.textMuted} style={styles.chevron} />
       </View>
     </Pressable>
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
     card: {
       backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderRadius: ds.radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
       padding: spacing.lg,
       marginBottom: spacing.md,
+      ...ambientShadow(scheme, 'soft'),
     },
     unreadCard: {
       borderColor: colors.borderMid,

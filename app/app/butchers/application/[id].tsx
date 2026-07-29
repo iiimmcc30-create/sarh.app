@@ -175,7 +175,7 @@ export default function ButcherApplicationDetailScreen() {
 
       <View style={s.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle} numberOfLines={1}>
           طلب #{application.applicationNumber}

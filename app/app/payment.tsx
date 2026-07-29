@@ -389,7 +389,7 @@ export default function PaymentScreen() {
           onPress={() => step === 'card_details' ? setStep('method') : router.back()}
           style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.65 }]}
         >
-          <AppIcon name={rtlBackIcon} size={20} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>الدفع الآمن</Text>

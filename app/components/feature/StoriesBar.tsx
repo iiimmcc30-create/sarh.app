@@ -10,8 +10,9 @@ import { resolveMediaUrl } from '@/services/media';
 import { StoryGroup } from '@/services/stories';
 import { StoryViewer } from '@/components/feature/StoryViewer';
 
-const CIRCLE = 72;
-const INNER = CIRCLE - 6;
+const CIRCLE = 64;
+const INNER = CIRCLE - 8;
+const RING_BORDER = 2;
 
 const STORY_GRADIENT = ['#F58529', '#DD2A7B', '#8134AF', '#515BD4'] as const;
 
@@ -201,19 +202,21 @@ function createBarStyles(colors: ThemeColors) {
     wrap: {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
+      paddingBottom: spacing.sm,
     },
     row: {
       flexDirection: 'row',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm + 2,
-      gap: spacing.sm + 2,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xs,
+      gap: spacing.md,
     },
-    itemWrap: { alignItems: 'center', gap: 5, width: CIRCLE + 4 },
+    itemWrap: { alignItems: 'center', gap: spacing.xs, width: CIRCLE + spacing.sm },
     ringGradient: {
       width: CIRCLE,
       height: CIRCLE,
       borderRadius: CIRCLE / 2,
-      padding: 2.5,
+      padding: RING_BORDER,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -222,7 +225,7 @@ function createBarStyles(colors: ThemeColors) {
       height: INNER,
       borderRadius: INNER / 2,
       backgroundColor: colors.bgDeep,
-      padding: 2,
+      padding: RING_BORDER,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -230,26 +233,26 @@ function createBarStyles(colors: ThemeColors) {
       width: CIRCLE,
       height: CIRCLE,
       borderRadius: CIRCLE / 2,
-      padding: 2.5,
+      padding: RING_BORDER,
       alignItems: 'center',
       justifyContent: 'center',
     },
     ringSeen: {
-      borderWidth: 2,
+      borderWidth: RING_BORDER,
       borderColor: colors.borderMid,
       backgroundColor: colors.bgDeep,
-      padding: 2,
+      padding: RING_BORDER,
     },
     ringEmpty: {
-      borderWidth: 2,
+      borderWidth: RING_BORDER,
       borderColor: colors.borderSoft,
       borderStyle: 'dashed',
       backgroundColor: colors.bgElevated,
     },
     avatar: {
-      width: INNER - 4,
-      height: INNER - 4,
-      borderRadius: (INNER - 4) / 2,
+      width: INNER - RING_BORDER * 2,
+      height: INNER - RING_BORDER * 2,
+      borderRadius: (INNER - RING_BORDER * 2) / 2,
       backgroundColor: colors.bgElevated,
     },
     addIcon: {
@@ -285,15 +288,15 @@ function createBarStyles(colors: ThemeColors) {
       fontWeight: '800',
     },
     label: {
-      ...typography.micro,
+      ...typography.caption,
+      lineHeight: 16,
       color: colors.textMuted,
       textAlign: 'center',
-      width: CIRCLE + 4,
-      fontSize: 11,
+      width: CIRCLE + spacing.sm,
     },
     labelUnseen: {
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     skeleton: {
       backgroundColor: colors.bgElevated,

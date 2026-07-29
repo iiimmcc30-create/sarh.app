@@ -108,8 +108,8 @@ export function ListingBoostSheet({
   const accentFor = (key: BoostTypeKey) => {
     const meta = BOOST_TYPE_META[key];
     if (meta.accent === 'gold') return { main: colors.gold, bright: colors.gold };
-    if (meta.accent === 'royal') return { main: colors.electric, bright: colors.electricBright };
-    return { main: colors.electric, bright: colors.electricBright };
+    if (meta.accent === 'royal') return { main: colors.electric, bright: colors.electric };
+    return { main: colors.electric, bright: colors.electric };
   };
 
   const currentAccent = accentFor(boostType);
@@ -117,7 +117,7 @@ export function ListingBoostSheet({
   const payGradient = (): [string, string, string] => {
     if (boostType === 'featured') return ['#B8860B', '#FFD700', '#B8860B'];
     if (boostType === 'both') return gradients.royal as [string, string, string];
-    return [colors.electric, colors.electricBright, colors.electric];
+    return [colors.electric, colors.electric, colors.electric];
   };
 
   useEffect(() => {
@@ -279,7 +279,7 @@ export function ListingBoostSheet({
                       disabled={planApplying !== null}
                       onPress={() => void handlePlanPromote('pinned')}
                     >
-                      <Text style={styles.planActionEmoji}>📌</Text>
+                      <AppIcon name="pin" size={20} color={colors.electric} />
                       <Text style={styles.planActionLabel}>تثبيت</Text>
                       <Text style={styles.planActionQuota}>
                         {quota.pinnedRemaining}/{quota.pinnedLimit}
@@ -296,7 +296,7 @@ export function ListingBoostSheet({
                       disabled={planApplying !== null}
                       onPress={() => void handlePlanPromote('featured')}
                     >
-                      <Text style={styles.planActionEmoji}>⭐</Text>
+                      <AppIcon name="star" size={20} color={colors.gold} />
                       <Text style={styles.planActionLabel}>تمييز</Text>
                       <Text style={styles.planActionQuota}>
                         {quota.featuredRemaining}/{quota.featuredLimit}
@@ -313,7 +313,7 @@ export function ListingBoostSheet({
                       disabled={planApplying !== null}
                       onPress={() => void handlePlanPromote('both')}
                     >
-                      <Text style={styles.planActionEmoji}>🚀</Text>
+                      <AppIcon name="rocket-outline" size={20} color={colors.electric} />
                       <Text style={styles.planActionLabel}>كلاهما</Text>
                       <Text style={styles.planActionQuota}>من الباقة</Text>
                     </Pressable>
@@ -343,22 +343,23 @@ export function ListingBoostSheet({
                       },
                     ]}
                   >
-                    <View style={[styles.serviceIconWrap, selected && { backgroundColor: `${accent.main}22` }]}>
+                    <View style={[styles.serviceIconWrap, selected && { backgroundColor: `${accent.main}18` }]}>
                       <AppIcon
                         name={meta.icon}
-                        size={22}
+                        size={20}
                         color={selected ? accent.bright : colors.textMuted}
                       />
                     </View>
-                    <Text style={[styles.serviceEmoji]}>{meta.emoji}</Text>
                     <Text style={[styles.serviceTitle, selected && { color: accent.bright }]}>
                       {meta.title}
                     </Text>
                     <Text style={styles.serviceDesc} numberOfLines={2}>{meta.desc}</Text>
                     {minPrice != null ? (
-                      <Text style={[styles.servicePrice, selected && { color: accent.bright }]}>
-                        من {minPrice} ر.س
-                      </Text>
+                      <View style={[styles.servicePriceChip, selected && { backgroundColor: `${accent.main}14` }]}>
+                        <Text style={[styles.servicePrice, selected && { color: accent.bright }]}>
+                          من {minPrice} ر.س
+                        </Text>
+                      </View>
                     ) : null}
                   </Pressable>
                 );
@@ -553,8 +554,6 @@ function createStyles(colors: ThemeColors) {
     },
     planSection: {
       borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
       backgroundColor: colors.bgGlass,
       padding: spacing.md,
       marginBottom: spacing.sm,
@@ -588,27 +587,20 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 96,
       borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: `${colors.electricBright}44`,
-      backgroundColor: `${colors.electric}12`,
-      paddingVertical: spacing.sm,
+      backgroundColor: `${colors.electric}10`,
+      paddingVertical: spacing.md,
       paddingHorizontal: spacing.sm,
       alignItems: 'center',
-      gap: 2,
+      gap: 4,
     },
     planActionBtnGold: {
-      borderColor: `${colors.gold}55`,
-      backgroundColor: `${colors.gold}14`,
+      backgroundColor: `${colors.gold}12`,
     },
     planActionBtnBoth: {
-      borderColor: `${colors.electricBright}55`,
-      backgroundColor: `${colors.electricBright}10`,
+      backgroundColor: `${colors.electric}08`,
     },
     planActionBtnBusy: {
       opacity: 0.6,
-    },
-    planActionEmoji: {
-      fontSize: 18,
     },
     planActionLabel: {
       ...typography.caption,
@@ -630,12 +622,10 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     serviceCard: {
-      borderWidth: 1.5,
-      borderColor: colors.borderSoft,
-      borderRadius: radius.lg,
+      borderRadius: radius.xl,
       padding: spacing.md,
       backgroundColor: colors.bgGlass,
-      gap: 4,
+      gap: 6,
     },
     serviceIconWrap: {
       width: 40,
@@ -646,32 +636,36 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
       marginBottom: 4,
     },
-    serviceEmoji: {
-      fontSize: 16,
-    },
     serviceTitle: {
       ...typography.body,
       fontWeight: '800',
       color: colors.textPrimary,
+      textAlign: 'right',
     },
     serviceDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
+      textAlign: 'right',
+    },
+    servicePriceChip: {
+      alignSelf: 'flex-start',
+      marginTop: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      backgroundColor: colors.bgElevated,
     },
     servicePrice: {
       ...typography.caption,
       color: colors.textSecondary,
       fontWeight: '700',
-      marginTop: 4,
     },
     durationRow: {
       gap: spacing.sm,
     },
     durationChip: {
       flex: 1,
-      borderWidth: 1.5,
-      borderColor: colors.borderSoft,
       borderRadius: radius.lg,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.sm,

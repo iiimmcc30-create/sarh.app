@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { pp } from '@/constants/pixelPerfect';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { rtlRow } from '@/lib/rtl';
 
@@ -50,8 +51,8 @@ export function SidebarMenuRow({
       style={({ pressed }) => [rowStyles.row, rtlRow, pressed && rowStyles.rowPressed]}
     >
       <View style={[rowStyles.leading, rtlRow]}>
-        <AppIcon name={item.icon} size={22} color={tint} />
         <Text style={[rowStyles.label, { color: colors.textPrimary }]}>{item.label}</Text>
+        <AppIcon name={item.icon} size={22} color={tint} />
       </View>
       {item.badge && item.badge > 0 ? (
         <View style={[rowStyles.badge, { backgroundColor: colors.electric }]}>
@@ -80,14 +81,14 @@ export function SidebarLogoutButton({
         logoutStyles.btn,
         rtlRow,
         {
-          backgroundColor: `${colors.rose}14`,
-          borderColor: `${colors.rose}28`,
+          backgroundColor: pp.chipInactiveBg,
+          borderColor: pp.border,
         },
         pressed && { opacity: 0.88 },
       ]}
     >
-      <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
-      <AppIcon name="log-out-outline" size={20} color={colors.rose} />
+      <Text style={[logoutStyles.text, { color: colors.textSecondary }]}>تسجيل الخروج</Text>
+      <AppIcon name="log-out-outline" size={20} color={colors.textSecondary} />
     </Pressable>
   );
 }
@@ -124,6 +125,7 @@ const rowStyles = StyleSheet.create({
   },
   leading: {
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacing.md,
     flex: 1,
     minWidth: 0,

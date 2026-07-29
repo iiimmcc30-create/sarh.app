@@ -270,7 +270,7 @@ export default function CreateListingScreen() {
             style={styles.backBtn}
             hitSlop={8}
           >
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>إنشاء إعلان</Text>
           <View style={{ width: 38 }} />

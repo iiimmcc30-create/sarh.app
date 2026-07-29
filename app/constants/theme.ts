@@ -73,114 +73,115 @@ const sharedAccents = {
 };
 
 const darkColors: BaseThemeColors = {
-  bgDeep: '#000000',
-  bgPrimary: '#050505',
-  bgSurface: '#0D0D0D',
-  bgElevated: '#161616',
-  bgGlass: 'rgba(0, 77, 44, 0.35)',
-  bgGlassStrong: 'rgba(0, 0, 0, 0.88)',
-  bgOverlay: 'rgba(0, 0, 0, 0.72)',
-  royal: '#002818',
-  royalDeep: '#001A10',
-  electric: '#006B3C',
-  electricBright: '#008F4C',
-  glow: '#10B981',
-  cyan: '#34D399',
-  silver: '#D1D5DB',
-  silverBright: '#F3F4F6',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#D1D5DB',
-  textMuted: '#9CA3AF',
-  textSubtle: '#6B7280',
-  borderSoft: 'rgba(16, 185, 129, 0.12)',
-  borderMid: 'rgba(16, 185, 129, 0.24)',
-  borderStrong: 'rgba(16, 185, 129, 0.45)',
-  borderHairline: 'rgba(255, 255, 255, 0.08)',
+  bgDeep: '#081E18',
+  bgPrimary: '#081E18',
+  bgSurface: '#113126',
+  bgElevated: '#17392D',
+  bgGlass: 'rgba(17, 49, 38, 0.72)',
+  bgGlassStrong: 'rgba(17, 49, 38, 0.92)',
+  bgOverlay: 'rgba(8, 30, 24, 0.78)',
+  royal: '#0F2A22',
+  royalDeep: '#081E18',
+  electric: '#74C96A',
+  electricBright: '#97E082',
+  glow: '#97E082',
+  cyan: '#B8F0A8',
+  silver: '#C8E6C4',
+  silverBright: '#E8F5E6',
+  textPrimary: '#F4FAF6',
+  textSecondary: '#C8E0D4',
+  textMuted: '#8FB89E',
+  textSubtle: '#6A9A82',
+  borderSoft: 'rgba(255, 255, 255, 0.08)',
+  borderMid: 'rgba(255, 255, 255, 0.12)',
+  borderStrong: 'rgba(151, 224, 130, 0.35)',
+  borderHairline: 'rgba(255, 255, 255, 0.06)',
   ...sharedAccents,
 };
 
 const lightColors: BaseThemeColors = {
-  bgDeep: '#FFFFFF',
-  bgPrimary: '#F8FAF9',
-  bgSurface: '#F0F4F2',
-  bgElevated: '#E8EEEB',
-  bgGlass: 'rgba(0, 77, 44, 0.08)',
-  bgGlassStrong: 'rgba(255, 255, 255, 0.92)',
+  bgDeep: '#FAFBF8',
+  bgPrimary: '#FAFBF8',
+  bgSurface: '#FFFFFF',
+  bgElevated: '#FFFFFF',
+  bgGlass: 'rgba(255, 255, 255, 0.88)',
+  bgGlassStrong: 'rgba(255, 255, 255, 0.94)',
   bgOverlay: 'rgba(0, 0, 0, 0.45)',
   royal: '#E8F5EF',
   royalDeep: '#D4EDE0',
-  electric: '#004D2C',
-  electricBright: '#006B3C',
-  glow: '#008F4C',
+  electric: '#0B6B3A',
+  electricBright: '#0B6B3A',
+  glow: '#0D7A44',
   cyan: '#10B981',
   silver: '#374151',
   silverBright: '#1F2937',
-  textPrimary: '#0A0A0A',
-  textSecondary: '#374151',
-  textMuted: '#6B7280',
-  textSubtle: '#9CA3AF',
-  borderSoft: 'rgba(0, 77, 44, 0.10)',
-  borderMid: 'rgba(0, 77, 44, 0.20)',
-  borderStrong: 'rgba(0, 77, 44, 0.38)',
+  textPrimary: '#0A0F0C',
+  textSecondary: '#3D4A42',
+  textMuted: '#6B7A72',
+  textSubtle: '#9CA8A0',
+  borderSoft: 'rgba(0, 0, 0, 0.06)',
+  borderMid: 'rgba(11, 107, 58, 0.14)',
+  borderStrong: 'rgba(11, 107, 58, 0.32)',
   borderHairline: 'rgba(0, 0, 0, 0.06)',
   ...sharedAccents,
 };
 
 const darkGradients: ThemeGradients = {
-  hero: ['#000000', '#050505', '#0D0D0D'],
-  royal: ['#001A10', '#002818', '#006B3C'],
-  glass: ['rgba(0,107,60,0.32)', 'rgba(0,0,0,0.78)'],
-  liveOverlay: ['transparent', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.96)'],
-  card: ['rgba(0,107,60,0.18)', 'rgba(0,0,0,0.85)'],
-  cardHover: ['rgba(0,107,60,0.30)', 'rgba(0,0,0,0.92)'],
+  hero: ['#081E18', '#0F2A22', '#113126'],
+  royal: ['#081E18', '#113126', '#74C96A'],
+  glass: ['rgba(17,49,38,0.85)', 'rgba(8,30,24,0.92)'],
+  liveOverlay: ['transparent', 'rgba(8,30,24,0.45)', 'rgba(8,30,24,0.96)'],
+  card: ['rgba(23,57,45,0.95)', 'rgba(17,49,38,0.98)'],
+  cardHover: ['rgba(23,57,45,1)', 'rgba(17,49,38,1)'],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
-  electric: ['#006B3C', '#008F4C', '#10B981'],
-  primary: ['#008F4C', '#006B3C', '#002818'],
-  rim: ['rgba(16,185,129,0.45)', 'rgba(16,185,129,0)'],
+  electric: ['#74C96A', '#97E082', '#B8F0A8'],
+  primary: ['#97E082', '#74C96A', '#113126'],
+  rim: ['rgba(151,224,130,0.35)', 'rgba(151,224,130,0)'],
 };
 
 const lightGradients: ThemeGradients = {
-  hero: ['#FFFFFF', '#F8FAF9', '#F0F4F2'],
-  royal: ['#D4EDE0', '#B8E0CC', '#006B3C'],
-  glass: ['rgba(0,107,60,0.14)', 'rgba(255,255,255,0.92)'],
-  liveOverlay: ['transparent', 'rgba(255,255,255,0.35)', 'rgba(255,255,255,0.96)'],
-  card: ['rgba(0,107,60,0.10)', 'rgba(255,255,255,0.95)'],
-  cardHover: ['rgba(0,107,60,0.18)', 'rgba(240,244,242,0.98)'],
+  hero: ['#FAFBF8', '#F5F8F5', '#FFFFFF'],
+  royal: ['#E8F5EF', '#D4EDE0', '#0B6B3A'],
+  glass: ['rgba(255,255,255,0.95)', 'rgba(250,251,248,0.88)'],
+  liveOverlay: ['transparent', 'rgba(255,255,255,0.35)', 'rgba(250,251,248,0.96)'],
+  card: ['#FFFFFF', '#F8FAF7'],
+  cardHover: ['#FFFFFF', '#F0F4F2'],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
-  electric: ['#004D2C', '#006B3C', '#008F4C'],
-  primary: ['#006B3C', '#004D2C', '#E8F5EF'],
-  rim: ['rgba(0,107,60,0.35)', 'rgba(0,107,60,0)'],
+  electric: ['#0B6B3A', '#0D7A44', '#10B981'],
+  primary: ['#0D7A44', '#0B6B3A', '#E8F5EF'],
+  rim: ['rgba(11,107,58,0.2)', 'rgba(11,107,58,0)'],
 };
 
 export function createShadow(palette: BaseThemeColors) {
+  const isLight = palette === lightColors;
   return {
     glow: {
       shadowColor: palette.glow,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.24,
-      shadowRadius: 16,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isLight ? 0.2 : 0.32,
+      shadowRadius: 12,
+      elevation: 6,
     },
     soft: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: palette === lightColors ? 0.08 : 0.24,
-      shadowRadius: 12,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isLight ? 0.04 : 0.18,
+      shadowRadius: 8,
+      elevation: 2,
     },
     card: {
-      shadowColor: palette === lightColors ? '#000000' : '#000408',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: palette === lightColors ? 0.07 : 0.3,
-      shadowRadius: 20,
-      elevation: 7,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: isLight ? 0.06 : 0.22,
+      shadowRadius: 14,
+      elevation: 5,
     },
     pressed: {
       shadowColor: palette.electric,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
+      elevation: 3,
     },
   };
 }
@@ -219,8 +220,8 @@ export function applyThemeScheme(scheme: ColorScheme) {
 /** Gradients that must react to light/dark at runtime (not frozen in StyleSheet). */
 export function headerFadeGradient(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
-    ? ['rgba(248, 250, 249, 0.98)', 'rgba(248, 250, 249, 0)']
-    : ['rgba(0, 0, 0, 0.98)', 'rgba(0, 0, 0, 0)'];
+    ? ['rgba(250, 251, 248, 0.98)', 'rgba(250, 251, 248, 0)']
+    : ['rgba(8, 30, 24, 0.98)', 'rgba(8, 30, 24, 0)'];
 }
 
 export function imageCardOverlay(scheme: ColorScheme): readonly [string, string] {
@@ -237,8 +238,8 @@ export function imageCardOverlayStrong(scheme: ColorScheme): readonly [string, s
 
 export function scrimColor(scheme: ColorScheme, opacity = 0.85): string {
   return scheme === 'light'
-    ? `rgba(248, 250, 249, ${opacity})`
-    : `rgba(0, 0, 0, ${opacity})`;
+    ? `rgba(250, 251, 248, ${opacity})`
+    : `rgba(8, 30, 24, ${opacity})`;
 }
 
 /** Raised panel surface — darker gray in dark mode, softer tint in light (sidebar, posts, etc.). */
@@ -260,28 +261,28 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 22,
+  sm: 12,
+  md: 16,
+  lg: 24,
+  xl: 26,
   xxl: 28,
   pill: 999,
 };
 
-const rtlText = {
+/** Text direction follows I18nManager — no hardcoded textAlign (avoids RTL mirror bugs). */
+const directionalText = {
   writingDirection: 'rtl' as const,
-  textAlign: 'right' as const,
 };
 
 export const typography = {
-  display: { fontSize: 34, fontWeight: '800' as const, letterSpacing: -0.6, ...rtlText },
-  h1: { fontSize: 26, fontWeight: '700' as const, letterSpacing: -0.3, ...rtlText },
-  h2: { fontSize: 22, fontWeight: '700' as const, ...rtlText },
-  h3: { fontSize: 18, fontWeight: '600' as const, ...rtlText },
-  body: { fontSize: 15, fontWeight: '400' as const, ...rtlText },
-  bodyStrong: { fontSize: 15, fontWeight: '600' as const, ...rtlText },
-  caption: { fontSize: 13, fontWeight: '500' as const, ...rtlText },
-  micro: { fontSize: 11, fontWeight: '700' as const, letterSpacing: 0.6, ...rtlText },
+  display: { fontSize: 36, fontWeight: '800' as const, letterSpacing: -0.6, ...directionalText },
+  h1: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.4, ...directionalText },
+  h2: { fontSize: 24, fontWeight: '700' as const, ...directionalText },
+  h3: { fontSize: 20, fontWeight: '600' as const, ...directionalText },
+  body: { fontSize: 15, fontWeight: '400' as const, ...directionalText },
+  bodyStrong: { fontSize: 15, fontWeight: '600' as const, ...directionalText },
+  caption: { fontSize: 13, fontWeight: '500' as const, ...directionalText },
+  micro: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.3, ...directionalText },
 };
 
 /** Shared 2026 layout metrics. Keep screens visually consistent across device sizes. */
@@ -296,8 +297,8 @@ export const layout = {
 export const controls = {
   heightSm: 40,
   heightMd: 48,
-  heightLg: 54,
-  iconButton: 42,
+  heightLg: 52,
+  iconButton: 40,
   minTouchTarget: 44,
 };
 

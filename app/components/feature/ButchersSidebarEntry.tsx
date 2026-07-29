@@ -102,7 +102,7 @@ export function ButchersSidebarEntry() {
             <AppIcon name={item.icon} size={22} color={colors.textPrimary} />
             <Text style={styles.label}>{item.arabic}</Text>
           </View>
-          <AppIcon name={rtlForwardIcon} size={18} color={colors.textMuted} />
+          <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
         </Pressable>
       ))}
     </View>

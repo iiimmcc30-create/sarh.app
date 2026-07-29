@@ -4,7 +4,15 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, imageCardOverlay, imageCardOverlayStrong, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import {
+  imageCardOverlay,
+  imageCardOverlayStrong,
+  radius,
+  spacing,
+  typography,
+  type ThemeColors,
+} from '@/constants/theme';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
@@ -16,6 +24,8 @@ interface ListingCardProps {
   listing: Listing;
   onPress?: () => void;
   variant?: 'grid' | 'feature' | 'profile' | 'list';
+  /** Feed list layout variant for home vs market screens. */
+  listMode?: 'home' | 'market';
   compact?: boolean;
 }
 
@@ -58,11 +68,17 @@ function formatCount(n: number): string {
   return n.toLocaleString('ar-SA');
 }
 
-function ListingCardInner({ listing, onPress, variant = 'grid', compact = false }: ListingCardProps) {
+function ListingCardInner({
+  listing,
+  onPress,
+  variant = 'grid',
+  listMode = 'home',
+  compact = false,
+}: ListingCardProps) {
   const country = getCountryInfo(listing.country);
   const thumbUri = listingImageUri(listing);
-  const { scheme } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { scheme, colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c, scheme: s }) => createStyles(c, s));
   const cardOverlay = imageCardOverlay(scheme);
   const cardOverlayStrong = imageCardOverlayStrong(scheme);
   const desc = listing.arabicDescription || listing.description;
@@ -77,6 +93,7 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
   if (variant === 'list') {
     const showNew = isNewListing(listing);
     const hasVideo = listingHasVideo(listing);
+    const isMarket = listMode === 'market';
 
     return (
       <Pressable
@@ -84,43 +101,45 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
         style={({ pressed }) => [styles.listRow, rtlDirection, pressed && styles.pressed]}
       >
         <View style={styles.listContent}>
-          <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
-            {title}
-          </Text>
-
-          <View style={[styles.listMetaRow, rtlRow]}>
-            <View style={[styles.listMetaItem, rtlRow]}>
-              <AppIcon name="map-marker-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.listMetaText} numberOfLines={1}>
-                {location}
-              </Text>
+          <View style={[styles.listTitleRow, rtlRow]}>
+            <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
+              {title}
+            </Text>
+            <View style={styles.listMenuDots}>
+              <AppIcon name="menu-dots-vertical" size={16} color={colors.textMuted} />
             </View>
-
-            <View style={styles.listPriceTimeCol}>
-              {listing.price > 0 ? (
-                <View style={[styles.listPriceRow, rtlRow]}>
-                  <Text style={styles.listPriceAmount}>
-                    {listing.price.toLocaleString('ar-SA')}
-                  </Text>
-                  <Text style={styles.listPriceCurrency}>{listing.currency}</Text>
-                </View>
-              ) : null}
-              {timeLabel ? (
-                <View style={[styles.listMetaItem, rtlRow]}>
-                  <AppIcon name="time-outline" size={11} color={colors.textSubtle} />
-                  <Text style={styles.listStatText}>{timeLabel}</Text>
-                </View>
-              ) : null}
-            </View>
-
-            {listing.pinned ? (
-              <Text style={styles.listStatusPinned}>مثبّت</Text>
-            ) : listing.featured ? (
-              <Text style={styles.listStatusFeatured}>مميز</Text>
-            ) : showNew ? (
-              <Text style={styles.listStatusNew}>جديد</Text>
-            ) : null}
           </View>
+
+          <View style={[styles.listMetaItem, rtlRow]}>
+            <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
+            <Text style={styles.listMetaText} numberOfLines={1}>
+              {location}
+            </Text>
+          </View>
+
+          {listing.price > 0 ? (
+            <View style={[styles.listPriceRow, rtlRow]}>
+              <Text style={styles.listPriceAmount}>
+                {listing.price.toLocaleString('ar-SA')}
+              </Text>
+              <Text style={styles.listPriceCurrency}>{listing.currency}</Text>
+            </View>
+          ) : null}
+
+          {timeLabel ? (
+            <View style={[styles.listMetaItem, rtlRow]}>
+              <AppIcon name="time-outline" size={12} color={colors.textSubtle} />
+              <Text style={styles.listStatText}>{timeLabel}</Text>
+            </View>
+          ) : null}
+
+          {listing.pinned ? (
+            <Text style={styles.listStatusPinned}>مثبّت</Text>
+          ) : listing.featured ? (
+            <Text style={styles.listStatusFeatured}>مميز</Text>
+          ) : showNew ? (
+            <Text style={styles.listStatusNew}>جديد</Text>
+          ) : null}
 
           <UserProfileLink userId={sellerId} style={[styles.listSeller, rtlRow]}>
             <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
@@ -135,12 +154,23 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
 
         <View style={styles.listThumbWrap}>
           {thumbUri ? (
-            <Image source={uriSource(thumbUri)} style={styles.listThumb} contentFit="cover" transition={0} priority="low" />
+            <Image
+              source={uriSource(thumbUri)}
+              style={styles.listThumb}
+              contentFit="cover"
+              transition={0}
+              priority="low"
+            />
           ) : (
             <View style={styles.listThumbPlaceholder}>
               <Text style={styles.listThumbIcon}>{CATEGORY_ICONS[listing.category] || '📦'}</Text>
             </View>
           )}
+          {isMarket ? (
+            <View style={styles.listHeartOverlay}>
+              <AppIcon name="heart-outline" size={16} color="#fff" />
+            </View>
+          ) : null}
           {hasVideo ? (
             <View style={styles.listVideoBadge}>
               <AppIcon name="play" size={10} color="#fff" variant="sr" />
@@ -291,65 +321,72 @@ function ListingCardInner({ listing, onPress, variant = 'grid', compact = false 
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
   pressed: {
     opacity: 0.92,
   },
 
-  // قائمة السوق المضغوطة — بطاقة صف مع ظل خفيف
+  // قائمة السوق — بطاقة بيضاء مع ظل خفيف
   listRow: {
     ...rtlRow,
     alignItems: 'center',
-    height: 116,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.md,
-    gap: spacing.md,
-    backgroundColor: colors.bgElevated,
-    borderRadius: 14,
-    marginHorizontal: spacing.md,
-    marginVertical: 5,
+    minHeight: 140,
+    paddingVertical: ds.space.md,
+    paddingHorizontal: ds.space.md,
+    gap: ds.space.md,
+    backgroundColor: colors.bgSurface,
+    borderRadius: ds.radius.xl,
+    marginHorizontal: ds.space.md,
+    marginVertical: ds.space.xs,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.borderHairline,
+    borderColor: tokens.stroke,
+    ...ambientShadow(scheme, 'card'),
   },
   listContent: {
     flex: 1,
     minWidth: 0,
-    height: 96,
+    gap: 4,
+  },
+  listTitleRow: {
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    gap: ds.space.sm,
+  },
+  listMenuDots: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   listTitle: {
     ...typography.bodyStrong,
     fontSize: 15,
-    lineHeight: 21,
+    lineHeight: 20,
     color: colors.textPrimary,
     fontWeight: '700',
-    textAlign: 'right',
     writingDirection: 'rtl',
+    flex: 1,
   },
   listPriceRow: {
     alignItems: 'baseline',
     gap: 5,
-  },
-  listPriceTimeCol: {
-    alignItems: 'flex-end',
-    gap: 2,
-    flexShrink: 0,
+    marginTop: 2,
   },
   listPriceAmount: {
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.textBrandStrong,
+    fontSize: 18,
+    lineHeight: 24,
+    color: colors.electricBright,
     fontWeight: '800',
-    textAlign: 'right',
     writingDirection: 'rtl',
   },
   listPriceCurrency: {
-    fontSize: 12,
-    lineHeight: 16,
+    ...typography.caption,
+    lineHeight: 18,
     color: colors.textMuted,
     fontWeight: '600',
-    textAlign: 'right',
     writingDirection: 'rtl',
   },
   listMetaRow: {
@@ -364,10 +401,11 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center',
     gap: 4,
     flexShrink: 1,
+    marginTop: 2,
   },
   listMetaText: {
     ...typography.caption,
-    fontSize: 12,
+    lineHeight: 16,
     color: colors.textSecondary,
     writingDirection: 'rtl',
     flexShrink: 1,
@@ -384,8 +422,9 @@ function createStyles(colors: ThemeColors) {
   },
   listStatusPinned: {
     ...typography.micro,
-    color: colors.electricBright,
+    color: colors.electric,
     fontWeight: '700',
+    marginTop: 2,
   },
   listSeller: {
     ...rtlRow,
@@ -402,25 +441,35 @@ function createStyles(colors: ThemeColors) {
   },
   listSellerName: {
     ...typography.caption,
-    fontSize: 12,
+    lineHeight: 16,
     color: colors.textPrimary,
     flexShrink: 1,
-    textAlign: 'right',
     writingDirection: 'rtl',
   },
   listStatText: {
-    ...typography.micro,
-    fontSize: 11,
+    ...typography.caption,
+    lineHeight: 16,
     color: colors.textSubtle,
     writingDirection: 'rtl',
   },
   listThumbWrap: {
-    width: 90,
-    height: 90,
-    borderRadius: 12,
+    width: ds.listingThumb,
+    height: ds.listingThumb,
+    borderRadius: ds.radius.md,
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
     flexShrink: 0,
+  },
+  listHeartOverlay: {
+    position: 'absolute',
+    top: 8,
+    start: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listThumb: {
     width: '100%',

@@ -128,6 +128,7 @@ export default function ProfileScreen() {
     return myPosts.map((post) => (
       <PostItem
         key={post.id}
+        variant="profile"
         post={{
           ...post,
           liked: likedPosts.has(post.id),

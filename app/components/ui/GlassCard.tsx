@@ -1,9 +1,10 @@
-// SAFAT — Premium Glass Card (v2) with rim-light & elevated variant
+// SAFAT — Premium glass-lite card surface
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { ReactNode } from 'react';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 
 interface GlassCardProps {
   children: ReactNode;
@@ -13,19 +14,32 @@ interface GlassCardProps {
   padding?: number;
 }
 
-export function GlassCard({ children, style, glow = false, elevated = false, padding = 18 }: GlassCardProps) {
-  const { styles, gradients, shadow } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
+export function GlassCard({
+  children,
+  style,
+  glow = false,
+  elevated = false,
+  padding = ds.space.md,
+}: GlassCardProps) {
+  const { styles, gradients, scheme } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors, theme.scheme),
     gradients: theme.gradients,
-    shadow: theme.shadow,
+    scheme: theme.scheme,
   }));
 
   return (
-    <View style={[styles.wrap, elevated && shadow.card, glow && shadow.glow, style]}>
+    <View
+      style={[
+        styles.wrap,
+        elevated && ambientShadow(scheme, 'card'),
+        glow && ambientShadow(scheme, 'fab'),
+        style,
+      ]}
+    >
       <LinearGradient
         colors={glow ? gradients.cardHover : gradients.card}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={styles.card}
       >
         <LinearGradient
@@ -40,15 +54,16 @@ export function GlassCard({ children, style, glow = false, elevated = false, pad
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
     wrap: {
-      borderRadius: radius.xl,
+      borderRadius: ds.radius.xl,
     },
     card: {
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderRadius: ds.radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
       overflow: 'hidden',
       position: 'relative',
     },
@@ -60,7 +75,7 @@ function createStyles(colors: ThemeColors) {
       height: 1,
     },
     inner: {
-      padding: 18,
+      padding: ds.space.md,
     },
   });
 }

@@ -1,3 +1,4 @@
+import React, { memo, useCallback, useRef } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import {
   StyleSheet,
@@ -8,7 +9,6 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { useState } from 'react';
 import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ltrInputText, marginStart, rtlInputText, rtlRow } from '@/lib/rtl';
@@ -23,7 +23,7 @@ interface AppTextInputProps extends TextInputProps {
   ltr?: boolean;
 }
 
-export function AppTextInput({
+function AppTextInputComponent({
   label,
   error,
   hint,
@@ -42,25 +42,60 @@ export function AppTextInput({
     colors: theme.colors,
   }));
   const inputStyle = ltr ? ltrInputText : rtlInputText;
-  const [focused, setFocused] = useState(false);
+  const focusedRef = useRef(false);
+  const wrapRef = useRef<View>(null);
+
+  const applyFocusVisual = useCallback(
+    (focused: boolean) => {
+      focusedRef.current = focused;
+      wrapRef.current?.setNativeProps({
+        style: focused
+          ? {
+              borderColor: colors.electric,
+              backgroundColor: colors.bgSurface,
+            }
+          : {
+              borderColor: colors.borderSoft,
+              backgroundColor: colors.bgElevated,
+            },
+      });
+    },
+    [colors.bgElevated, colors.bgSurface, colors.borderSoft, colors.electric],
+  );
+
+  const handleFocus = useCallback(
+    (event: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
+      applyFocusVisual(true);
+      onFocus?.(event);
+    },
+    [applyFocusVisual, onFocus],
+  );
+
+  const handleBlur = useCallback(
+    (event: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
+      applyFocusVisual(false);
+      onBlur?.(event);
+    },
+    [applyFocusVisual, onBlur],
+  );
 
   return (
     <View style={containerStyle}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View
+        ref={wrapRef}
         style={[
           styles.wrap,
-          focused && styles.wrapFocused,
           error ? styles.wrapError : null,
           !editable && styles.wrapDisabled,
         ]}
       >
         {icon ? (
-          <View style={[styles.iconBubble, focused && styles.iconBubbleFocused]}>
+          <View style={styles.iconBubble}>
             <AppIcon
               name={icon}
-              size={17}
-              color={focused ? colors.electricBright : colors.textMuted}
+              size={18}
+              color={colors.textMuted}
             />
           </View>
         ) : null}
@@ -68,14 +103,8 @@ export function AppTextInput({
           placeholderTextColor={placeholderTextColor ?? colors.textSubtle}
           style={[styles.input, inputStyle, style]}
           editable={editable}
-          onFocus={(event) => {
-            setFocused(true);
-            onFocus?.(event);
-          }}
-          onBlur={(event) => {
-            setFocused(false);
-            onBlur?.(event);
-          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           {...props}
         />
       </View>
@@ -84,6 +113,8 @@ export function AppTextInput({
     </View>
   );
 }
+
+export const AppTextInput = memo(AppTextInputComponent);
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
@@ -104,15 +135,6 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.sm,
       minHeight: controls.heightLg,
     },
-    wrapFocused: {
-      borderColor: colors.electricBright,
-      backgroundColor: colors.bgSurface,
-      shadowColor: colors.electric,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 2,
-    },
     wrapError: {
       borderColor: colors.danger,
     },
@@ -125,9 +147,6 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       ...marginStart(spacing.sm),
-    },
-    iconBubbleFocused: {
-      backgroundColor: colors.bgGlass,
     },
     input: {
       flex: 1,

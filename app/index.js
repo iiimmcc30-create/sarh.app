@@ -48,4 +48,12 @@ if (__DEV__) {
   };
 }
 
+// Configure RTL before any app module loads (Arabic default).
+const { I18nManager, Platform } = require('react-native');
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
+if (Platform.OS !== 'web') {
+  I18nManager.swapLeftAndRightInRTL(true);
+}
+
 require('expo-router/entry');

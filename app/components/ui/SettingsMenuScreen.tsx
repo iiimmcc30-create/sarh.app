@@ -72,7 +72,7 @@ export function SettingsMenuScreen({
                 <Text style={styles.label}>{item.label}</Text>
                 {item.subtitle ? <Text style={styles.subtitle}>{item.subtitle}</Text> : null}
               </View>
-              <AppIcon name={rtlForwardIcon} size={16} color={colors.textSubtle} />
+              <AppIcon name={rtlForwardIcon()} size={16} color={colors.textSubtle} />
             </Pressable>
           ))}
         </View>

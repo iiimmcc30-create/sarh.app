@@ -10,6 +10,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { ds } from '@/constants/designSystem';
 import { controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 
@@ -121,11 +122,11 @@ export function PrimaryButton({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     shell: {
-      borderRadius: radius.lg,
+      borderRadius: ds.radius.lg,
     },
     btn: {
       paddingHorizontal: spacing.xl,
-      borderRadius: radius.lg,
+      borderRadius: ds.radius.lg,
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: controls.heightLg,
@@ -142,7 +143,7 @@ function createStyles(colors: ThemeColors) {
     ghost: {
       paddingHorizontal: spacing.xl,
       minHeight: controls.heightLg,
-      borderRadius: radius.lg,
+      borderRadius: ds.radius.lg,
       backgroundColor: colors.bgSurface,
       borderWidth: 1,
       borderColor: colors.borderSoft,
@@ -152,7 +153,7 @@ function createStyles(colors: ThemeColors) {
     outline: {
       paddingHorizontal: spacing.xl,
       minHeight: controls.heightLg,
-      borderRadius: radius.lg,
+      borderRadius: ds.radius.lg,
       backgroundColor: 'transparent',
       borderWidth: 1,
       borderColor: colors.borderStrong,

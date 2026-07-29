@@ -57,7 +57,7 @@ export default function SettingsScreen() {
       {/* Header */}
       <View style={[styles.header, rtlRow]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>الإعدادات والخصوصية</Text>
         <View style={styles.headerSpacer} />
@@ -90,7 +90,7 @@ export default function SettingsScreen() {
                 <AppIcon name={section.icon} size={20} color={colors.electricBright} />
               </View>
               <Text style={styles.sectionTitle}>{section.title}</Text>
-              <AppIcon name={rtlForwardIcon} size={18} color={colors.textMuted} />
+              <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
             </Pressable>
 
             {/* Sub-items preview */}
@@ -109,7 +109,7 @@ export default function SettingsScreen() {
                     <AppIcon name={item.icon} size={17} color={colors.textSecondary} />
                   </View>
                   <Text style={styles.subLabel}>{item.label}</Text>
-                  <AppIcon name={rtlForwardIcon} size={14} color={colors.textSubtle} />
+                  <AppIcon name={rtlForwardIcon()} size={14} color={colors.textSubtle} />
                 </Pressable>
               ))}
             </View>

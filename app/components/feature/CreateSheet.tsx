@@ -98,7 +98,7 @@ export function CreateSheet({ visible, onClose, onSelect }: CreateSheetProps) {
                     <Text style={styles.optTitle}>{opt.arabic}</Text>
                     <Text style={styles.optDesc}>{opt.description}</Text>
                   </View>
-                  <AppIcon name={rtlForwardIcon} size={20} color={colors.textMuted} />
+                  <AppIcon name={rtlForwardIcon()} size={20} color={colors.textMuted} />
                 </Pressable>
               ))}
             </View>

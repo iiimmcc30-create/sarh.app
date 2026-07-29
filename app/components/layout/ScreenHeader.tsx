@@ -2,6 +2,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { controls, layout, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { rtlBackIcon, rtlDirection, rtlRow } from '@/lib/rtl';
@@ -27,7 +28,7 @@ export function ScreenHeader({
 }: ScreenHeaderProps) {
   const router = useRouter();
   const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
+    styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
   }));
 
@@ -42,7 +43,7 @@ export function ScreenHeader({
             hitSlop={12}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
           >
-            <AppIcon name={rtlBackIcon} size={24} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
           </Pressable>
         ) : showSidebar ? (
           <Pressable
@@ -52,7 +53,7 @@ export function ScreenHeader({
             hitSlop={12}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
           >
-            <AppIcon name="menu-burger" size={24} color={colors.textPrimary} />
+            <AppIcon name="menu-burger" size={ds.icon.md} color={colors.textPrimary} />
           </Pressable>
         ) : null}
       </View>
@@ -70,7 +71,7 @@ export function ScreenHeader({
             hitSlop={12}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
           >
-            <AppIcon name={rightIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rightIcon} size={ds.icon.md} color={colors.textPrimary} />
           </Pressable>
         ) : null}
       </View>
@@ -78,16 +79,15 @@ export function ScreenHeader({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
     container: {
       ...rtlRow,
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       minHeight: layout.headerHeight,
-      backgroundColor: colors.bgGlassStrong,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
+      backgroundColor: colors.bgDeep,
     },
     side: {
       width: controls.iconButton,
@@ -99,7 +99,7 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      lineHeight: 24,
+      lineHeight: 26,
     },
     arabic: {
       ...typography.micro,
@@ -109,12 +109,13 @@ function createStyles(colors: ThemeColors) {
     iconBtn: {
       width: controls.iconButton,
       height: controls.iconButton,
-      borderRadius: radius.md,
+      borderRadius: ds.radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgSurface,
+      backgroundColor: tokens.glass,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderColor: tokens.stroke,
+      ...ambientShadow(scheme, 'soft'),
     },
     iconBtnPressed: {
       transform: [{ scale: 0.94 }],

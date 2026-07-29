@@ -310,7 +310,7 @@ export default function EditButcherScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>تعديل حساب الملحمة</Text>
           <View style={{ width: 38 }} />
@@ -333,7 +333,7 @@ export default function EditButcherScreen() {
       >
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>تعديل حساب الملحمة</Text>
           <Pressable

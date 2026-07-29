@@ -172,7 +172,7 @@ export default function ProfileConnectionsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>{title}</Text>
         <View style={{ width: 38 }} />

@@ -3,6 +3,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
@@ -13,7 +14,6 @@ import {
   type ThemeColors,
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlForwardIcon } from '@/lib/rtl';
 import { gccCurrencies } from '@/services/butcherData';
 import { countries } from '@/services/types';
 import { useButcher } from '@/hooks/useButcher';
@@ -54,17 +54,11 @@ export function ButcherMiniSection({
   return (
     <View style={[s.wrapper, isHero && s.wrapperHero]}>
 
-      {/* ── Section header ─────────────────────────────────────────── */}
-      <View style={s.header}>
-        <View style={s.headerLeft}>
-          <Text style={s.title}>الملاحم</Text>
-          {!isHero ? <Text style={s.subtitle}>لحوم طازجة قريبة منك</Text> : null}
-        </View>
-        <Pressable style={s.seeAllBtn} onPress={() => router.push('/butchers')}>
-          <Text style={s.seeAllText}>عرض الكل</Text>
-          <AppIcon name={rtlForwardIcon} size={13} color={colors.electricBright} />
-        </Pressable>
-      </View>
+      <SectionHeader
+        title="الملاحم"
+        subtitle={!isHero ? 'لحوم طازجة قريبة منك' : undefined}
+        onSeeAll={() => router.push('/butchers')}
+      />
 
       {/* ── Stories strip ──────────────────────────────────────────── */}
       {showStories && stories.length > 0 && (
@@ -296,32 +290,8 @@ export function ButcherMiniSection({
 // ─── Styles ──────────────────────────────────────────────────────────────────
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    wrapper: { marginVertical: spacing.lg },
-    wrapperHero: { marginTop: spacing.sm, marginBottom: spacing.md },
-
-    // Header
-    header: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      marginBottom: spacing.md,
-    },
-    headerLeft: { gap: 2 },
-    title:      { ...typography.h3, color: colors.textPrimary, fontWeight: '800' },
-    subtitle:   { ...typography.micro, color: colors.textBrand },
-    seeAllBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 3,
-      paddingHorizontal: 11,
-      paddingVertical: 5,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electric + '14',
-      borderWidth: 1,
-      borderColor: colors.electricBright + '40',
-    },
-    seeAllText: { ...typography.micro, color: colors.textBrandStrong, fontWeight: '700' },
+    wrapper: { marginTop: spacing.sm, marginBottom: spacing.md },
+    wrapperHero: { marginTop: spacing.md, marginBottom: spacing.md },
 
     // Stories
     storiesRow: {
@@ -378,7 +348,8 @@ function createStyles(colors: ThemeColors) {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
       gap: spacing.md,
-      paddingBottom: 4,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.xs,
     },
 
     // Card
@@ -386,12 +357,12 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xl,
       overflow: 'hidden',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.borderSoft,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.12,
-      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
       elevation: 4,
     },
     cardHero: {
@@ -551,10 +522,10 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'flex-start',
     },
     heroName: {
-      fontSize: 18,
-      fontWeight: '800',
+      ...typography.h3,
+      lineHeight: 24,
+      fontWeight: '700',
       color: '#fff',
-      textAlign: 'right',
     },
     heroMetaRow: {
       flexDirection: 'row',
@@ -564,8 +535,8 @@ function createStyles(colors: ThemeColors) {
     },
     heroMetaText: {
       ...typography.caption,
+      lineHeight: 18,
       color: 'rgba(255,255,255,0.92)',
-      fontSize: 12,
     },
     metaDotLight: {
       width: 4,
@@ -576,20 +547,19 @@ function createStyles(colors: ThemeColors) {
 
     // Info section
     info: {
-      padding: spacing.sm,
-      paddingHorizontal: 12,
-      gap: 4,
+      padding: spacing.md,
+      gap: spacing.xs,
     },
     name: {
-      ...typography.caption,
+      ...typography.bodyStrong,
+      lineHeight: 20,
       color: colors.textPrimary,
-      fontWeight: '800',
-      fontSize: 14,
+      fontWeight: '700',
     },
     tagLine: {
-      ...typography.micro,
+      ...typography.caption,
+      lineHeight: 18,
       color: colors.textSecondary,
-      fontSize: 11,
     },
     metaRow: {
       flexDirection: 'row',

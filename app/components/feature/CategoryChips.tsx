@@ -1,7 +1,8 @@
 // Powered by OnSpace.AI
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { rtlRow } from '@/lib/rtl';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 export type CategoryKey =
@@ -19,19 +20,18 @@ interface CategoryDef {
   key: CategoryKey;
   label: string;
   arabic: string;
-  icon: string;
 }
 
 const categories: CategoryDef[] = [
-  { key: 'all', label: 'All', arabic: 'الكل', icon: 'view-grid-outline' },
-  { key: 'camels', label: 'Camels', arabic: 'إبل', icon: 'horse' },
-  { key: 'sheep', label: 'Sheep', arabic: 'أغنام', icon: 'sheep' },
-  { key: 'goats', label: 'Goats', arabic: 'ماعز', icon: 'paw' },
-  { key: 'cows', label: 'Cows', arabic: 'أبقار', icon: 'cow' },
-  { key: 'horses', label: 'Horses', arabic: 'خيول', icon: 'horse-variant' },
-  { key: 'birds', label: 'Birds', arabic: 'طيور', icon: 'bird' },
-  { key: 'feed', label: 'Feed', arabic: 'علف', icon: 'food-apple-outline' },
-  { key: 'equipment', label: 'Equipment', arabic: 'معدات', icon: 'tools' },
+  { key: 'all', label: 'All', arabic: 'الكل' },
+  { key: 'camels', label: 'Camels', arabic: 'إبل' },
+  { key: 'sheep', label: 'Sheep', arabic: 'أغنام' },
+  { key: 'goats', label: 'Goats', arabic: 'ماعز' },
+  { key: 'cows', label: 'Cows', arabic: 'أبقار' },
+  { key: 'horses', label: 'Horses', arabic: 'خيول' },
+  { key: 'birds', label: 'Birds', arabic: 'طيور' },
+  { key: 'feed', label: 'Feed', arabic: 'علف' },
+  { key: 'equipment', label: 'Equipment', arabic: 'معدات' },
 ];
 
 interface Props {
@@ -40,10 +40,7 @@ interface Props {
 }
 
 export function CategoryChips({ value, onChange }: Props) {
-  const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
-    colors: theme.colors,
-  }));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
 
   return (
     <View style={styles.wrap}>
@@ -64,11 +61,6 @@ export function CategoryChips({ value, onChange }: Props) {
                 pressed && { opacity: 0.85 },
               ]}
             >
-              <AppIcon
-                name={c.icon}
-                size={16}
-                color={isSelected ? '#fff' : colors.glow}
-              />
               <Text style={[styles.text, isSelected && styles.textSelected]}>{c.arabic}</Text>
             </Pressable>
           );
@@ -78,41 +70,39 @@ export function CategoryChips({ value, onChange }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const chipBg = scheme === 'light' ? '#ECEFF1' : ds.dark.elevated;
   return StyleSheet.create({
     wrap: {
-      minHeight: 50,
       paddingVertical: spacing.sm,
     },
     content: {
-      flexDirection: 'row',
+      ...rtlRow,
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       gap: spacing.sm,
     },
     chip: {
-      flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      justifyContent: 'center',
       paddingHorizontal: spacing.lg,
-      paddingVertical: 8,
-      height: 38,
+      paddingVertical: spacing.sm,
+      height: 36,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgGlass,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      backgroundColor: chipBg,
     },
     chipSelected: {
       backgroundColor: colors.electric,
-      borderColor: colors.electricBright,
     },
     text: {
       ...typography.caption,
-      color: colors.textSecondary,
+      lineHeight: 18,
+      color: colors.textPrimary,
+      fontWeight: '500',
     },
     textSelected: {
       color: '#fff',
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

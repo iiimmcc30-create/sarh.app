@@ -49,7 +49,7 @@ export default function RefundScreen() {
       {/* Header */}
       <View style={[styles.header, rtlRow]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>سياسة الاسترداد</Text>
         <View style={styles.backBtn} />

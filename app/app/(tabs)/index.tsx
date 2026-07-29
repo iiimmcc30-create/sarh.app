@@ -1,47 +1,39 @@
 // Powered by OnSpace.AI
 // SAFAT — Home Tab (الصفاة)
 
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, useRef } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/contexts/AuthContext';
-import { colors, headerFadeGradient, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ds } from '@/constants/designSystem';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
+import { useAuth } from '@/contexts/AuthContext';
 import { StoriesBar } from '@/components/feature/StoriesBar';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
 import { ButcherMiniSection } from '@/components/feature/ButcherMiniSection';
-import { CategoryChips, CategoryKey } from '@/components/feature/CategoryChips';
 import { ListingCard } from '@/components/feature/ListingCard';
-import { HomeSectionHeader } from '@/components/feature/HomeSectionHeader';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { PostItem } from '@/components/feature/PostItem';
+import { HomeAppBar } from '@/components/ui/HomeAppBar';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { compareListingBoostPriority } from '@/lib/listingSort';
 import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
 
-import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { BRAND_DISPLAY_NAME } from '@/constants/brandCopy';
-
 const HOME_REFRESH_TTL_MS = 60_000;
 const HOME_POSTS_LIMIT = 6;
+const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { scheme } = useTheme();
   const styles = useThemedStyles(({ colors }) => createHomeStyles(colors));
-  const headerFade = headerFadeGradient(scheme);
   const {
     me,
     listings,
@@ -54,7 +46,6 @@ export default function HomeScreen() {
     fetchPosts,
   } = useApp();
   const { accessToken, isAuthenticated } = useAuth();
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
   const [storiesFeed, setStoriesFeed] = useState<StoryGroup[]>([]);
   const [myStories, setMyStories] = useState<StoryGroup | null>(null);
   const [storiesLoading, setStoriesLoading] = useState(false);
@@ -118,12 +109,8 @@ export default function HomeScreen() {
   );
 
   const displayedListings = useMemo(() => {
-    const filtered =
-      activeCategory !== 'all'
-        ? listings.filter((l) => l.category === activeCategory)
-        : listings;
-    return filtered.slice().sort(compareListingBoostPriority);
-  }, [listings, activeCategory]);
+    return listings.slice().sort(compareListingBoostPriority);
+  }, [listings]);
 
   const recentPosts = useMemo(() => {
     return posts
@@ -139,39 +126,12 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
-        <LinearGradient colors={headerFade} style={styles.headerGradient} pointerEvents="none" />
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => router.push('/sidebar')}
-            style={styles.avatarBtn}
-            hitSlop={8}
-          >
-            <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-            <View style={styles.avatarDot} />
-          </Pressable>
-
-          <Text style={styles.appName}>{BRAND_DISPLAY_NAME}</Text>
-
-          <View style={styles.headerRight}>
-            {canShowLive ? (
-              <Pressable
-                style={[styles.iconBtn, styles.liveBtn]}
-                hitSlop={8}
-                onPress={() => router.push('/(tabs)/live')}
-              >
-                <AppIcon name="signal-stream" size={20} color={colors.liveRed} />
-              </Pressable>
-            ) : null}
-            <Pressable
-              style={styles.iconBtn}
-              hitSlop={8}
-              onPress={() => router.push('/search')}
-            >
-              <AppIcon name="search" size={22} color={colors.textPrimary} />
-            </Pressable>
-            <NotificationBellButton />
-          </View>
-        </View>
+        <HomeAppBar
+          onMenu={() => router.push('/sidebar')}
+          onSearch={() => router.push('/search')}
+          onLive={() => router.push('/(tabs)/live')}
+          showLive={canShowLive}
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -191,11 +151,9 @@ export default function HomeScreen() {
             onRefresh={() => void fetchStories(true)}
           />
 
-          <CategoryChips value={activeCategory} onChange={setActiveCategory} />
-
           <ButcherMiniSection size="hero" showStories={false} limit={8} />
 
-          <HomeSectionHeader
+          <SectionHeader
             title="الإعلانات"
             onSeeAll={() => router.push('/(tabs)/market')}
           />
@@ -211,13 +169,14 @@ export default function HomeScreen() {
                   key={item.id}
                   listing={item}
                   variant="list"
+                  listMode="home"
                   onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
                 />
               ))
             )}
           </View>
 
-          <HomeSectionHeader
+          <SectionHeader
             title="المنشورات"
             onSeeAll={() => router.push('/(tabs)/posts')}
           />
@@ -249,7 +208,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: TAB_BAR_CLEARANCE }} />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -263,58 +222,11 @@ function createHomeStyles(colors: ThemeColors) {
     scrollContent: {
       paddingBottom: spacing.md,
     },
-    headerGradient: {
-      position: 'absolute', top: 0, left: 0, right: 0, height: 100, zIndex: 1,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      minHeight: 64,
-      zIndex: 2,
-    },
-    avatarBtn: {
-      position: 'relative',
-      width: 44,
-      height: 44,
-      borderRadius: 15,
-      backgroundColor: colors.bgGlassStrong,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    avatar: {
-      width: 40, height: 40, borderRadius: 14,
-      borderWidth: 2, borderColor: colors.electric,
-    },
-    avatarDot: {
-      position: 'absolute', bottom: 0, right: 0,
-      width: 10, height: 10, borderRadius: 5,
-      backgroundColor: colors.emerald,
-      borderWidth: 2, borderColor: colors.bgDeep,
-    },
-    appName: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      letterSpacing: -0.5,
-    },
-    headerRight: { flexDirection: 'row', gap: spacing.sm },
-    iconBtn: {
-      width: 42, height: 42, borderRadius: 14,
-      backgroundColor: colors.bgGlassStrong,
-      alignItems: 'center', justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderSoft,
-    },
-    liveBtn: {
-      borderColor: `${colors.liveRed}40`,
-      backgroundColor: `${colors.liveRed}15`,
-    },
     listingsSection: {
-      gap: 0,
+      gap: spacing.sm,
     },
     postsSection: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderHairline,
+      marginTop: spacing.sm,
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.md },
     emptyIcon: { fontSize: 36 },

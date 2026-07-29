@@ -258,7 +258,16 @@ export default function ButcherApplicationEditScreen() {
   const patchForm = useCallback((patch: Partial<WizardForm>) => {
     setForm((prev) => ({ ...prev, ...patch }));
     setDirty(true);
-    setFieldErrors({});
+    const keys = Object.keys(patch);
+    if (keys.length > 0) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        for (const key of keys) {
+          delete next[key];
+        }
+        return next;
+      });
+    }
   }, []);
 
   const loadApplication = useCallback(async () => {
@@ -755,7 +764,7 @@ export default function ButcherApplicationEditScreen() {
 
       <View style={s.header}>
         <Pressable onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={s.headerCenter}>
           <Text style={s.headerTitle}>إكمال الطلب</Text>

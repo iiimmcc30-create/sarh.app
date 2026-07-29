@@ -575,7 +575,7 @@ export default function ButcherChatScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <UserProfileLink userId={receiverUserId} style={styles.headerCenter}>
             <Image source={uriSource(headerAvatar)} style={styles.headerAvatar} contentFit="cover" />

@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Root Layout
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
@@ -16,7 +17,7 @@ import { NotificationManager } from '@/components/NotificationManager';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { useFlaticonFonts } from '@/hooks/useFlaticonFonts';
-import { setupRtl, rtlDirection } from '@/lib/rtl';
+import { setupRtl, rtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
 setupRtl();
 
@@ -76,7 +77,7 @@ function RootNavigator() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: themeColors.bgDeep, ...rtlDirection },
-          animation: 'slide_from_left',
+          animation: stackSlideAnimation(),
         }}
       >
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
@@ -86,8 +87,8 @@ function RootNavigator() {
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="search" />
         <Stack.Screen name="users/[id]" />
-        <Stack.Screen name="sidebar" options={{ animation: 'slide_from_right', presentation: 'transparentModal' }} />
-        <Stack.Screen name="butcher-sidebar" options={{ animation: 'slide_from_right', presentation: 'transparentModal' }} />
+        <Stack.Screen name="sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
+        <Stack.Screen name="butcher-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="notifications/index" />
         <Stack.Screen name="subscription" />
         <Stack.Screen name="payment" />
@@ -96,7 +97,7 @@ function RootNavigator() {
         <Stack.Screen name="profile/connections" />
         <Stack.Screen name="create/listing" />
         <Stack.Screen name="create/post" />
-        <Stack.Screen name="create/story" options={{ animation: 'slide_from_left' }} />
+        <Stack.Screen name="create/story" options={{ animation: stackSlideAnimation() }} />
         <Stack.Screen name="stories/view" options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
         <Stack.Screen name="info/about" />
         <Stack.Screen name="info/privacy" />
@@ -109,9 +110,9 @@ function RootNavigator() {
         <Stack.Screen name="settings/support" />
         <Stack.Screen name="onboarding/index" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="auth/phone" options={{ animation: 'fade' }} />
-        <Stack.Screen name="auth/otp" options={{ animation: 'slide_from_left' }} />
-        <Stack.Screen name="auth/register" options={{ animation: 'slide_from_left' }} />
-        <Stack.Screen name="auth/forgot-password" options={{ animation: 'slide_from_left' }} />
+        <Stack.Screen name="auth/otp" options={{ animation: stackSlideAnimation() }} />
+        <Stack.Screen name="auth/register" options={{ animation: stackSlideAnimation() }} />
+        <Stack.Screen name="auth/forgot-password" options={{ animation: stackSlideAnimation() }} />
         <Stack.Screen name="expo-auth-session" options={{ animation: 'none', headerShown: false }} />
         <Stack.Screen name="live/create" />
         <Stack.Screen name="live/broadcast" />
@@ -123,6 +124,10 @@ function RootNavigator() {
 
 function RootLayoutBody() {
   useFlaticonFonts();
+
+  useEffect(() => {
+    void setupRtlFromStorage(AsyncStorage.getItem);
+  }, []);
 
   const hideSplash = useCallback(() => {
     SplashScreen.hideAsync().catch(() => {});

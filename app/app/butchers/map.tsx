@@ -333,7 +333,7 @@ export default function ButchersMapScreen() {
       {/* Header */}
       <View style={s.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={s.headerTitle}>خريطة الملاحم</Text>

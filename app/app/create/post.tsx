@@ -24,7 +24,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
-import { authFetch } from '@/services/authFetch';
+import { rtlInputText, ltrInputText } from '@/lib/rtl';
 
 const POST_TYPES = [
   { id: 'text', icon: 'document-text-outline', label: 'نص', iconLib: 'ionicons' },
@@ -334,8 +334,8 @@ function createStyles(colors: ThemeColors) {
     minHeight: 60, maxHeight: 200,
     paddingTop: 0,
   },
-  textInputAr: { textAlign: 'right', fontSize: 17, lineHeight: 26 },
-  textInputEn: { textAlign: 'left', fontSize: 14, color: colors.textSecondary },
+  textInputAr: { ...rtlInputText, fontSize: 17, lineHeight: 26 },
+  textInputEn: { ...ltrInputText, fontSize: 14, color: colors.textSecondary },
   audienceRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     marginHorizontal: spacing.lg, marginTop: spacing.md,
@@ -367,7 +367,7 @@ function createStyles(colors: ThemeColors) {
   previewAvatar: { width: 32, height: 32, borderRadius: 16 },
   previewName: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
   previewHandle: { ...typography.micro, color: colors.textMuted },
-  previewText: { ...typography.body, color: colors.textPrimary, textAlign: 'right', lineHeight: 24 },
+  previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, writingDirection: 'rtl' },
   previewSubText: { ...typography.caption, color: colors.textSecondary },
   toolbar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

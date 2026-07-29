@@ -1,7 +1,5 @@
 // SAFAT — Notification Center (مركز الإشعارات)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -17,6 +15,7 @@ import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { NotificationCard } from '@/components/notifications/NotificationCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -27,8 +26,8 @@ import { rtlBackIcon } from '@/lib/rtl';
 import type { AppNotification } from '@/services/notifications';
 
 export default function NotificationsScreen() {
-  const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const router = useRouter();
   const { user } = useAuth();
   const {
@@ -72,7 +71,6 @@ export default function NotificationsScreen() {
   if (loading && notifications.length === 0) {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
-        <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <LoadingState message="جاري تحميل الإشعارات..." />
       </SafeAreaView>
     );
@@ -80,11 +78,10 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.iconBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>الإشعارات</Text>
@@ -104,7 +101,7 @@ export default function NotificationsScreen() {
         >
           <AppIcon
             name="checkmark-done-outline"
-            size={22}
+            size={ds.icon.md}
             color={unreadCount > 0 ? colors.glow : colors.textSubtle}
           />
         </Pressable>
@@ -169,7 +166,8 @@ export default function NotificationsScreen() {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
   screen: {
     flex: 1,
@@ -182,10 +180,15 @@ function createStyles(colors: ThemeColors) {
     paddingVertical: spacing.md,
   },
   iconBtn: {
-    width: 40,
-    height: 40,
+    width: ds.iconBtn.md,
+    height: ds.iconBtn.md,
+    borderRadius: ds.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: tokens.glass,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: tokens.stroke,
+    ...ambientShadow(scheme, 'soft'),
   },
   headerCenter: {
     flex: 1,
@@ -195,7 +198,7 @@ function createStyles(colors: ThemeColors) {
     gap: spacing.sm,
   },
   headerTitle: {
-    ...typography.h3,
+    ...typography.h2,
     color: colors.textPrimary,
   },
   badge: {
@@ -238,7 +241,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: 'rgba(244, 63, 94, 0.12)',
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    borderRadius: 12,
+    borderRadius: ds.radius.md,
   },
   inlineErrorText: {
     ...typography.caption,

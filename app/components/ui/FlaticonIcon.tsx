@@ -1,34 +1,37 @@
-import React from 'react';
+import React, { memo } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
-import { getFlaticonIconSet } from '@/lib/flaticonIconSets';
-import { resolveFlaticonIcon } from '@/lib/flaticonAliases';
-import type { FlaticonStyle } from '@/constants/flaticon-glyphs';
+import {
+  DEFAULT_ICON_SIZE,
+  ICON_STROKE,
+  resolveLucideIcon,
+} from '@/lib/lucideIconMap';
 
 export type FlaticonIconProps = {
-  /** Icon name (Flaticon or legacy Ionicons/MaterialCommunityIcons — auto-mapped) */
+  /** Icon name (legacy aliases supported) */
   name: string;
-  /** rr = regular rounded, sr = solid rounded, br = bold rounded */
-  variant?: FlaticonStyle;
+  /** Ignored — Lucide stroke icons only */
+  variant?: string;
   size?: number;
   color?: string;
   style?: StyleProp<TextStyle>;
 };
 
-/**
- * Flaticon Uicons (icon font) — https://www.flaticon.com/uicons
- * Browse names: fi-rr-{name}, fi-sr-{name}, fi-br-{name}
- */
-export function FlaticonIcon({
+function FlaticonIconComponent({
   name,
-  variant = 'rr',
-  size = 24,
+  size = DEFAULT_ICON_SIZE,
   color,
   style,
 }: FlaticonIconProps) {
-  const Icon = getFlaticonIconSet(variant);
-  const resolved = resolveFlaticonIcon(name);
-  return <Icon name={resolved} size={size} color={color} style={style} />;
+  const Icon = resolveLucideIcon(name);
+  return (
+    <Icon
+      size={size}
+      color={color}
+      strokeWidth={ICON_STROKE}
+      style={style}
+    />
+  );
 }
 
-/** Same as FlaticonIcon — preferred import for new UI. */
+export const FlaticonIcon = memo(FlaticonIconComponent);
 export const AppIcon = FlaticonIcon;

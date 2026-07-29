@@ -3,7 +3,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, radius, type ThemeColors } from '@/constants/theme';
+import { inlineStart } from '@/lib/rtl';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 
@@ -14,8 +15,8 @@ type NotificationBellButtonProps = {
 };
 
 export function NotificationBellButton({
-  size = 36,
-  iconSize = 22,
+  size = 48,
+  iconSize = 20,
   style,
 }: NotificationBellButtonProps) {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function NotificationBellButton({
 
   return (
     <Pressable
-      style={[styles.iconBtn, { width: size, height: size, borderRadius: size / 2 }, style]}
+      style={[styles.iconBtn, { width: size, height: size }, style]}
       hitSlop={8}
       onPress={() => router.push('/notifications')}
       accessibilityLabel="الإشعارات"
@@ -48,7 +49,8 @@ export function NotificationBellButton({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     iconBtn: {
-      backgroundColor: colors.bgGlass,
+      borderRadius: radius.md,
+      backgroundColor: colors.bgGlassStrong,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
@@ -57,7 +59,7 @@ function createStyles(colors: ThemeColors) {
     badge: {
       position: 'absolute',
       top: -2,
-      left: -2,
+      ...inlineStart(-2),
       minWidth: 18,
       height: 18,
       paddingHorizontal: spacing.xs,

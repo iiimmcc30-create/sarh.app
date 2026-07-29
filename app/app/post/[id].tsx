@@ -159,7 +159,7 @@ export default function PostDetailScreen() {
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={[styles.topBar, rtlRow]}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.screenTitle}>منشور</Text>
         <View style={styles.backBtn} />

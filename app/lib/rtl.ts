@@ -1,73 +1,123 @@
 import { I18nManager, Platform, type TextStyle, type ViewStyle } from 'react-native';
+import {
+  DEFAULT_LOCALE,
+  type AppLocale,
+  localeUsesRtl,
+  LOCALE_STORAGE_KEY,
+  normalizeAppLocale,
+} from '@/lib/locale';
 
-export function setupRtl(): void {
-  if (!I18nManager.isRTL) {
-    I18nManager.allowRTL(true);
-    I18nManager.forceRTL(true);
+/** Read layout direction from React Native (always fresh). */
+export function isAppRtl(): boolean {
+  return I18nManager.isRTL;
+}
+
+/** @deprecated Use `isAppRtl()` — kept for existing imports. */
+export const isRTL = I18nManager.isRTL;
+
+/**
+ * Configure RTL/LTR via official I18nManager.
+ * Call once before the app bundle renders (see `index.js`).
+ */
+export function setupRtl(locale: AppLocale = DEFAULT_LOCALE): void {
+  const rtl = localeUsesRtl(locale);
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(rtl);
+  if (Platform.OS !== 'web') {
+    I18nManager.swapLeftAndRightInRTL(rtl);
   }
 }
 
-export const isRTL = I18nManager.isRTL;
+/** Apply stored locale on cold start (async). May require reload if direction changes. */
+export async function setupRtlFromStorage(
+  getItem: (key: string) => Promise<string | null>,
+): Promise<AppLocale> {
+  const stored = normalizeAppLocale(await getItem(LOCALE_STORAGE_KEY));
+  setupRtl(stored);
+  return stored;
+}
 
-// Native uses `direction`; web needs row-reverse for correct visual RTL order.
-const nativeRtlDirection = Platform.OS === 'web' ? ({} as ViewStyle) : ({ direction: 'rtl' } as ViewStyle);
+const nativeRtlDirection =
+  Platform.OS === 'web' ? ({ direction: 'rtl' } as ViewStyle) : ({ direction: 'rtl' } as ViewStyle);
 
-export const rtlDirection: ViewStyle =
-  Platform.OS === 'web' ? ({ direction: 'rtl' } as ViewStyle) : nativeRtlDirection;
+const nativeLtrDirection =
+  Platform.OS === 'web' ? ({ direction: 'ltr' } as ViewStyle) : ({} as ViewStyle);
 
-/** صف أفقي متوافق مع RTL */
-export const rtlRow: ViewStyle =
-  Platform.OS === 'web'
+/** Root / screen layout direction for the active locale. */
+export const rtlDirection: ViewStyle = isAppRtl()
+  ? Platform.OS === 'web'
+    ? { direction: 'rtl' }
+    : nativeRtlDirection
+  : Platform.OS === 'web'
+    ? { direction: 'ltr' }
+    : nativeLtrDirection;
+
+/** Horizontal row that respects layout direction (RTL Arabic vs LTR English). */
+export const rtlRow: ViewStyle = isAppRtl()
+  ? Platform.OS === 'web'
     ? { flexDirection: 'row-reverse' }
-    : { flexDirection: 'row', ...nativeRtlDirection };
+    : { flexDirection: 'row', ...nativeRtlDirection }
+  : { flexDirection: 'row', ...nativeLtrDirection };
 
-/** نص عربي — محاذاة يمين دائماً */
+/** Primary body text — writing direction only; alignment follows I18nManager layout. */
 export const rtlText: TextStyle = {
-  textAlign: 'right',
-  writingDirection: 'rtl',
+  writingDirection: isAppRtl() ? 'rtl' : 'ltr',
 };
 
 export function inlineStart(offset: number): ViewStyle {
-  return isRTL ? { right: offset } : { left: offset };
+  return isAppRtl() ? { right: offset } : { left: offset };
 }
 
 export function inlineEnd(offset: number): ViewStyle {
-  return isRTL ? { left: offset } : { right: offset };
+  return isAppRtl() ? { left: offset } : { right: offset };
 }
 
 export function marginStart(value: number): { marginLeft?: number; marginRight?: number } {
-  return isRTL ? { marginRight: value } : { marginLeft: value };
+  return isAppRtl() ? { marginRight: value } : { marginLeft: value };
 }
 
 export function marginEnd(value: number): { marginLeft?: number; marginRight?: number } {
-  return isRTL ? { marginLeft: value } : { marginRight: value };
+  return isAppRtl() ? { marginLeft: value } : { marginRight: value };
 }
 
 export function paddingStart(value: number): ViewStyle {
-  return isRTL ? { paddingRight: value } : { paddingLeft: value };
+  return isAppRtl() ? { paddingRight: value } : { paddingLeft: value };
 }
 
 export function paddingEnd(value: number): ViewStyle {
-  return isRTL ? { paddingLeft: value } : { paddingRight: value };
+  return isAppRtl() ? { paddingLeft: value } : { paddingRight: value };
 }
 
-/** أيقونة الرجوع — في RTL تُشير لليمين */
-export const rtlBackIcon = isRTL ? 'angle-right' : 'angle-left';
-export const rtlForwardIcon = isRTL ? 'angle-left' : 'angle-right';
+export function rtlBackIcon(): string {
+  return isAppRtl() ? 'angle-right' : 'angle-left';
+}
 
-/** أنماط افتراضية لحقول الإدخال العربية */
+export function rtlForwardIcon(): string {
+  return isAppRtl() ? 'angle-left' : 'angle-right';
+}
+
+/** Arabic / RTL input fields */
 export const rtlInputText: TextStyle = {
-  textAlign: 'right',
   writingDirection: 'rtl',
+  textAlign: 'right',
 };
 
-/** حقول إنجليزية/أرقام فقط */
+/** English-only or numeric fields */
 export const ltrInputText: TextStyle = {
-  textAlign: 'left',
   writingDirection: 'ltr',
+  textAlign: 'left',
 };
 
 export const rtlTextInputProps = {
   textAlign: 'right' as const,
   writingDirection: 'rtl' as const,
 };
+
+/** Stack / modal slide animation for the active layout direction. */
+export function stackSlideAnimation(): 'slide_from_left' | 'slide_from_right' {
+  return isAppRtl() ? 'slide_from_right' : 'slide_from_left';
+}
+
+export function stackSlideBackAnimation(): 'slide_from_left' | 'slide_from_right' {
+  return isAppRtl() ? 'slide_from_left' : 'slide_from_right';
+}

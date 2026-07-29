@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon, rtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { CUT_LABELS, CutType } from '@/services/butcherData';
@@ -97,7 +97,7 @@ export default function OrderDetailsScreen() {
 
       <View style={s.header}>
         <Pressable onPress={() => router.back()} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={s.headerTitle}>تفاصيل الطلب</Text>
         <View style={{ width: 40 }} />
@@ -178,7 +178,7 @@ function Row({ label, value }: { label: string; value: string }) {
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgDeep },
   header: {
-    flexDirection: 'row',
+    ...rtlRow,
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -204,11 +204,10 @@ const s = StyleSheet.create({
   orderNumber: {
     ...typography.h2,
     color: colors.textPrimary,
-    textAlign: 'right',
     writingDirection: 'rtl',
   },
   badge: {
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.pill,
@@ -218,21 +217,20 @@ const s = StyleSheet.create({
   sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
-    textAlign: 'right',
     writingDirection: 'rtl',
     marginBottom: spacing.sm,
   },
   timelineRow: {
-    flexDirection: 'row-reverse',
+    ...rtlRow,
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: 6,
   },
-  timelineLabel: { ...typography.body, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
+  timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl' },
   timelineDone: { color: colors.textBrandSuccess, fontWeight: '600' },
-  timelineNote: { ...typography.caption, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
+  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
   row: {
-    flexDirection: 'row-reverse',
+    ...rtlRow,
     justifyContent: 'space-between',
     gap: spacing.md,
     paddingVertical: 4,
@@ -243,7 +241,6 @@ const s = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '600',
     flex: 1,
-    textAlign: 'left',
     writingDirection: 'rtl',
   },
   errorText: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },

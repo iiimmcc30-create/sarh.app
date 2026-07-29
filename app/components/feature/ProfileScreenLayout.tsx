@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Animated,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -15,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -132,7 +132,7 @@ export function ProfileScreenLayout({
 }: ProfileScreenLayoutProps) {
   const insets = useSafeAreaInsets();
   const { colors: themeColors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const [activeTab, setActiveTab] = useState<ProfileTabKey>(initialTab);
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const headerTranslate = useRef(new Animated.Value(12)).current;
@@ -158,16 +158,16 @@ export function ProfileScreenLayout({
   const stats = useMemo(
     () => [
       {
-        key: 'following',
-        value: formatStatCount(user.followingCount),
-        label: 'المتابَعون',
-        onPress: onFollowingPress,
-      },
-      {
         key: 'followers',
         value: formatStatCount(user.followersCount),
         label: 'المتابعون',
         onPress: onFollowersPress,
+      },
+      {
+        key: 'following',
+        value: formatStatCount(user.followingCount),
+        label: 'المتابَعون',
+        onPress: onFollowingPress,
       },
       {
         key: 'posts',
@@ -199,18 +199,10 @@ export function ProfileScreenLayout({
           ) : undefined
         }
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom, 12) + 24,
+          paddingBottom: Math.max(insets.bottom, 12) + ds.tabBar.height + ds.tabBar.fabLift,
         }}
       >
-        <LinearGradient
-          colors={[
-            themeColors.electric + '18',
-            themeColors.electric + '08',
-            themeColors.bgDeep,
-          ]}
-          locations={[0, 0.45, 1]}
-          style={styles.headerBlock}
-        >
+        <View style={styles.headerBlock}>
           <Animated.View
             style={{
               opacity: headerOpacity,
@@ -218,6 +210,19 @@ export function ProfileScreenLayout({
             }}
           >
             <View style={[styles.toolbar, rtlRow]}>
+              <View style={[styles.toolbarEnd, rtlRow]}>
+                {mode === 'own' && onMenu ? (
+                  <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
+                {mode === 'visitor' && onBack ? (
+                  <Pressable onPress={onBack} hitSlop={10} style={styles.iconBtn}>
+                    <AppIcon name={rtlBackIcon()} size={22} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
+              </View>
+
               <View style={[styles.toolbarStart, rtlRow]}>
                 {mode === 'own' && onEditProfile ? (
                   <Pressable onPress={onEditProfile} hitSlop={10} style={styles.iconBtn}>
@@ -229,22 +234,9 @@ export function ProfileScreenLayout({
                     <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
-              </View>
-
-              <View style={[styles.toolbarEnd, rtlRow]}>
-                {mode === 'visitor' && onBack ? (
-                  <Pressable onPress={onBack} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name={rtlBackIcon} size={22} color={themeColors.textPrimary} />
-                  </Pressable>
-                ) : null}
-                {onShare ? (
+                {onShare && mode === 'visitor' ? (
                   <Pressable onPress={onShare} hitSlop={10} style={styles.iconBtn}>
                     <AppIcon name="share-social-outline" size={20} color={themeColors.textPrimary} />
-                  </Pressable>
-                ) : null}
-                {mode === 'own' && onMenu ? (
-                  <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
               </View>
@@ -376,7 +368,7 @@ export function ProfileScreenLayout({
               </View>
             ) : null}
           </Animated.View>
-        </LinearGradient>
+        </View>
 
         <View style={styles.contentCardTop}>
           <View style={styles.tabsBar}>
@@ -397,10 +389,7 @@ export function ProfileScreenLayout({
           </View>
         </View>
 
-        <Animated.View
-          key={activeTab}
-          style={[styles.contentCardBottom, styles.body, { opacity: tabOpacity }]}
-        >
+        <Animated.View style={[styles.postsFeed, { opacity: tabOpacity }]}>
           {activeTab === 'posts' ? postsContent : adsContent}
         </Animated.View>
       </ScrollView>
@@ -408,17 +397,9 @@ export function ProfileScreenLayout({
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  const cardShadow = Platform.select({
-    ios: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-    },
-    android: { elevation: 3 },
-    default: {},
-  });
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
+  const cardShadow = ambientShadow(scheme, 'card');
 
   return StyleSheet.create({
     root: {
@@ -445,11 +426,15 @@ function createStyles(colors: ThemeColors) {
       gap: 4,
     },
     iconBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: ds.iconBtn.md,
+      height: ds.iconBtn.md,
+      borderRadius: ds.radius.pill,
+      backgroundColor: tokens.glass,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.stroke,
+      ...ambientShadow(scheme, 'soft'),
     },
     identityRow: {
       alignItems: 'flex-start',
@@ -509,12 +494,13 @@ function createStyles(colors: ThemeColors) {
     },
     statsCard: {
       marginTop: 6,
-      backgroundColor: colors.borderSoft + '22',
-      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+      borderRadius: ds.radius.lg,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.xs,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft + '55',
+      borderColor: tokens.stroke,
+      ...cardShadow,
     },
     statsRow: {
       alignItems: 'stretch',
@@ -653,30 +639,22 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '700',
     },
     contentCardTop: {
-      marginHorizontal: spacing.md,
+      marginHorizontal: spacing.lg,
       marginTop: spacing.sm,
-      borderTopLeftRadius: radius.lg,
-      borderTopRightRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderBottomWidth: 0,
-      borderColor: colors.borderSoft,
+      borderRadius: ds.radius.lg,
       backgroundColor: colors.bgSurface,
       overflow: 'hidden',
-      ...cardShadow,
+      ...ambientShadow(scheme, 'soft'),
     },
-    contentCardBottom: {
-      marginHorizontal: spacing.md,
-      borderBottomLeftRadius: radius.lg,
-      borderBottomRightRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderTopWidth: 0,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgSurface,
+    postsFeed: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.xl,
+      minHeight: 200,
+      gap: spacing.sm,
     },
     tabsBar: {
       backgroundColor: colors.bgSurface,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderSoft,
     },
     tabsRow: {
       paddingHorizontal: spacing.lg,
@@ -701,16 +679,11 @@ function createStyles(colors: ThemeColors) {
     tabIndicator: {
       position: 'absolute',
       bottom: 0,
-      left: spacing.md,
-      right: spacing.md,
+      left: spacing.lg,
+      right: spacing.lg,
       height: 3,
       borderRadius: 2,
       backgroundColor: colors.electric,
-    },
-    body: {
-      backgroundColor: colors.bgSurface,
-      minHeight: 200,
-      paddingTop: spacing.xs,
     },
   });
 }

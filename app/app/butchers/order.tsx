@@ -336,7 +336,7 @@ export default function ButcherOrderScreen() {
 
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.iconBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>طلب جديد</Text>
@@ -921,7 +921,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       flex: 1,
-      textAlign: 'left',
+      writingDirection: 'rtl',
     },
     summaryDivider: {
       height: StyleSheet.hairlineWidth,

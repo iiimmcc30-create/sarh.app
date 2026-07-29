@@ -16,7 +16,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow, ds } from '@/constants/designSystem';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, rtlRow } from '@/lib/rtl';
@@ -29,7 +30,7 @@ type SearchFilter = 'all' | 'listings' | 'users' | 'live';
 
 export default function SearchScreen() {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const router = useRouter();
   const { listings } = useApp();
   const [query, setQuery] = useState('');
@@ -136,7 +137,7 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.searchBar}>
         <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.inputWrap}>
           <AppIcon name="search" size={16} color={colors.textMuted} />
@@ -314,25 +315,27 @@ export default function SearchScreen() {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgDeep },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    backgroundColor: colors.bgGlassStrong,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderHairline,
+    backgroundColor: colors.bgDeep,
   },
   backBtn: {
-    width: 46, height: 46, borderRadius: radius.lg,
-    backgroundColor: colors.bgSurface, alignItems: 'center', justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderSoft,
+    width: ds.iconBtn.md, height: ds.iconBtn.md, borderRadius: ds.radius.pill,
+    backgroundColor: tokens.glass, alignItems: 'center', justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth, borderColor: tokens.stroke,
+    ...ambientShadow(scheme, 'soft'),
   },
   inputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    minHeight: 46, backgroundColor: colors.bgSurface, borderRadius: radius.lg,
+    minHeight: 44, backgroundColor: colors.bgSurface, borderRadius: ds.radius.lg,
     paddingHorizontal: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderSoft,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: tokens.stroke,
+    ...ambientShadow(scheme, 'soft'),
   },
   input: {
     flex: 1, ...typography.body, color: colors.textPrimary,
@@ -340,26 +343,26 @@ function createStyles(colors: ThemeColors) {
   },
   filterRow: {
     paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm,
-    backgroundColor: colors.bgGlassStrong,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderHairline,
+    backgroundColor: colors.bgDeep,
   },
   filterChip: {
-    paddingHorizontal: spacing.lg, minHeight: 38, justifyContent: 'center',
-    borderRadius: radius.pill, backgroundColor: colors.bgSurface,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderSoft,
+    paddingHorizontal: spacing.lg, minHeight: 36, justifyContent: 'center',
+    borderRadius: ds.radius.pill, backgroundColor: colors.bgSurface,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: tokens.stroke,
   },
-  filterChipActive: { backgroundColor: colors.royal, borderColor: colors.electric },
+  filterChipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
   filterLabel: { ...typography.caption, color: colors.textMuted },
-  filterLabelActive: { color: colors.textBrandStrong },
+  filterLabelActive: { color: '#fff' },
   scroll: { paddingBottom: 20 },
   section: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.lg,
     padding: spacing.lg,
-    borderRadius: radius.xl,
-    backgroundColor: colors.bgGlassStrong,
+    borderRadius: ds.radius.xl,
+    backgroundColor: colors.bgSurface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.borderSoft,
+    borderColor: tokens.stroke,
+    ...ambientShadow(scheme, 'card'),
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
   sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
@@ -372,10 +375,10 @@ function createStyles(colors: ThemeColors) {
   trendingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   trendingChip: {
     paddingHorizontal: spacing.md, paddingVertical: 7,
-    borderRadius: radius.pill, backgroundColor: `${colors.electric}15`,
-    borderWidth: 1, borderColor: `${colors.electric}30`,
+    borderRadius: ds.radius.pill, backgroundColor: tokens.primaryMuted,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderMid,
   },
-  trendingText: { ...typography.caption, color: colors.textBrandStrong },
+  trendingText: { ...typography.caption, color: colors.electricBright },
   userRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
@@ -391,7 +394,7 @@ function createStyles(colors: ThemeColors) {
     flexDirection: 'row', gap: spacing.md,
     paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
-  liveThumbnail: { width: 80, height: 60, borderRadius: radius.md },
+  liveThumbnail: { width: 88, height: 66, borderRadius: ds.radius.md },
   liveInfo: { flex: 1, gap: 4 },
   liveTitle: { ...typography.caption, color: colors.textPrimary, textAlign: 'right', lineHeight: 18 },
   liveHost: { ...typography.micro, color: colors.textMuted },

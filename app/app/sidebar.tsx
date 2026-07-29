@@ -12,6 +12,7 @@ import {
   panelSurfaceBg,
   type ThemeColors,
 } from '@/constants/theme';
+import { pp } from '@/constants/pixelPerfect';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
@@ -210,26 +211,38 @@ export default function SidebarScreen() {
   return (
     <View style={[styles.backdrop, rtlRow]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        <View style={[styles.header, rtlRow]}>
+        <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
             <AppIcon name="close" size={22} color={colors.textPrimary} />
           </Pressable>
+        </View>
 
-          <Pressable
-            onPress={() => {
-              router.back();
-              setTimeout(() => router.push('/(tabs)/profile'), 100);
-            }}
-            style={styles.profileCenter}
-          >
+        <Pressable
+          onPress={() => {
+            router.back();
+            setTimeout(() => router.push('/(tabs)/profile'), 100);
+          }}
+          style={[styles.profileRow, rtlRow]}
+        >
+          <View style={styles.avatarWrap}>
             <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
+            <View style={styles.onlineDot} />
+          </View>
+          <View style={styles.profileText}>
+            <Text style={styles.displayName} numberOfLines={1}>
+              {me.arabicName || me.displayName || me.username}
+            </Text>
             <Text style={styles.usernameText} numberOfLines={1}>
               @{me.username || 'user'}
             </Text>
-          </Pressable>
-
-          <View style={styles.headerSpacer} />
-        </View>
+            {me.verified ? (
+              <View style={styles.verifiedPill}>
+                <AppIcon name="shield-checkmark" size={12} color={pp.verifiedText} />
+                <Text style={styles.verifiedText}>عضو موثق</Text>
+              </View>
+            ) : null}
+          </View>
+        </Pressable>
 
         <ScrollView
           style={styles.scroll}
@@ -345,11 +358,10 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       elevation: 10,
     },
     header: {
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
+      alignItems: 'flex-end',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
+      paddingBottom: spacing.xs,
     },
     closeBtn: {
       width: 36,
@@ -357,34 +369,71 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    profileCenter: {
-      flex: 1,
+    profileRow: {
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingHorizontal: spacing.sm,
-      minWidth: 0,
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
     },
-    headerSpacer: {
-      width: 36,
-      height: 36,
+    avatarWrap: {
+      position: 'relative',
     },
     avatar: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      width: 64,
+      height: 64,
+      borderRadius: 32,
       borderWidth: 2,
       borderColor: colors.electric,
       backgroundColor: colors.bgElevated,
     },
-    usernameText: {
-      ...typography.bodyStrong,
-      fontSize: 17,
-      fontWeight: '700',
+    onlineDot: {
+      position: 'absolute',
+      bottom: 2,
+      right: 2,
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: colors.emerald,
+      borderWidth: 2,
+      borderColor: panelBg,
+    },
+    profileText: {
+      flex: 1,
+      minWidth: 0,
+      gap: 4,
+      alignItems: 'flex-start',
+    },
+    displayName: {
+      ...typography.h3,
+      fontSize: 18,
+      fontWeight: '800',
       color: colors.textPrimary,
-      textAlign: 'center',
       writingDirection: 'rtl',
-      maxWidth: '100%',
+      textAlign: 'right',
+    },
+    usernameText: {
+      ...typography.caption,
+      fontSize: 14,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+      textAlign: 'right',
+    },
+    verifiedPill: {
+      ...rtlRow,
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: pp.verifiedBg,
+    },
+    verifiedText: {
+      ...typography.micro,
+      fontSize: 11,
+      fontWeight: '700',
+      color: pp.verifiedText,
+      writingDirection: 'rtl',
     },
     scroll: {
       flex: 1,

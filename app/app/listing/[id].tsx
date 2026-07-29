@@ -22,6 +22,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -34,6 +35,11 @@ import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 import type { BoostTypeKey } from '@/services/listingBoost';
+import {
+  BOOST_TYPE_META,
+  BOOST_TYPE_ORDER,
+  FALLBACK_BOOST_PLANS,
+} from '@/services/listingBoost';
 import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -331,7 +337,7 @@ export default function ListingDetailScreen() {
       <SafeAreaView edges={['top']} style={styles.topSafe}>
         <View style={[styles.topBar, rtlRow]}>
           <Pressable onPress={() => router.back()} hitSlop={8} style={styles.topBarBtn}>
-            <AppIcon name={rtlBackIcon} size={22} color={colors.textPrimary} />
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <View style={[styles.topBarActions, rtlRow]}>
             {isOwner ? (
@@ -511,41 +517,71 @@ export default function ListingDetailScreen() {
         ) : null}
 
         {isOwner ? (
-          <View style={styles.ownerCard}>
-              <View style={[styles.ownerHeader, rtlRow]}>
-                <AppIcon name="settings-outline" size={15} color={colors.textBrandStrong} />
-                <Text style={styles.ownerLabel}>إدارة الإعلان</Text>
-              </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.ownerRow}
-              >
-                {ownerActions.map((a) => (
+          <View style={styles.promoSection}>
+            <Text style={styles.promoHeading}>ترقية الإعلان</Text>
+            <Text style={styles.promoSub}>زِد ظهور إعلانك بخدمات مدفوعة أو من حصة باقتك</Text>
+            <View style={styles.promoGrid}>
+              {BOOST_TYPE_ORDER.map((key) => {
+                const meta = BOOST_TYPE_META[key];
+                const minPlan = FALLBACK_BOOST_PLANS[key][0];
+                const active =
+                  key === 'pinned'
+                    ? listing.pinned
+                    : key === 'featured'
+                      ? listing.featured
+                      : listing.pinned && listing.featured;
+                return (
+                  <Pressable
+                    key={key}
+                    onPress={() => {
+                      setInitialBoostType(key);
+                      setBoostModalVisible(true);
+                    }}
+                    style={[styles.promoCard, active && styles.promoCardActive]}
+                  >
+                    <View style={styles.promoIconWrap}>
+                      <AppIcon
+                        name={meta.icon}
+                        size={20}
+                        color={active ? colors.electric : colors.textMuted}
+                      />
+                    </View>
+                    <Text style={styles.promoCardTitle}>{meta.title}</Text>
+                    <Text style={styles.promoCardDesc} numberOfLines={2}>{meta.desc}</Text>
+                    <View style={styles.promoChipRow}>
+                      <View style={styles.promoChip}>
+                        <Text style={styles.promoChipText}>{minPlan.labelAr}</Text>
+                      </View>
+                      <View style={[styles.promoChip, styles.promoChipPrice]}>
+                        <Text style={styles.promoChipPriceText}>{minPlan.amount} ر.س</Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={[styles.ownerToolsRow, rtlRow]}>
+              {ownerActions
+                .filter((a) => a.key !== 'pin' && a.key !== 'feature')
+                .map((a) => (
                   <Pressable
                     key={a.key}
                     onPress={a.onPress}
                     style={({ pressed }) => [
-                      styles.ownerAction,
-                      a.danger && styles.ownerActionDanger,
+                      styles.ownerToolChip,
+                      a.danger && styles.ownerToolChipDanger,
                       pressed && styles.ownerActionPressed,
                     ]}
                   >
-                    {a.badge ? (
-                      <View style={styles.soonBadge}>
-                        <Text style={styles.soonBadgeText}>{a.badge}</Text>
-                      </View>
-                    ) : null}
-                    <View style={styles.ownerActionIcon}>
-                      <AppIcon
-                        name={a.icon}
-                        size={20}
-                        color={a.danger ? colors.rose : colors.textPrimary}
-                      />
-                    </View>
+                    <AppIcon
+                      name={a.icon}
+                      size={18}
+                      color={a.danger ? colors.rose : colors.textSecondary}
+                    />
                     <Text
                       style={[
-                        styles.ownerActionText,
+                        styles.ownerToolLabel,
                         a.danger && styles.ownerActionTextDanger,
                       ]}
                     >
@@ -553,9 +589,9 @@ export default function ListingDetailScreen() {
                     </Text>
                   </Pressable>
                 ))}
-              </ScrollView>
             </View>
-          ) : null}
+          </View>
+        ) : null}
 
           <ListingCommentsSection listingId={listing.id} />
       </ScrollView>
@@ -725,7 +761,7 @@ function createStyles(colors: ThemeColors) {
     pinned: {
       alignItems: 'center',
       gap: 4,
-      backgroundColor: colors.electricBright,
+      backgroundColor: colors.electric,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: radius.pill,
@@ -768,78 +804,121 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
 
-    // ─── Owner management (horizontal row) ────────────────────────────────
-    ownerCard: {
+    // ─── Owner promotion cards ───────────────────────────────────────────
+    promoSection: {
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    promoHeading: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      fontWeight: '800',
+      textAlign: 'right',
+    },
+    promoSub: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'right',
+      lineHeight: 18,
+    },
+    promoGrid: {
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    promoCard: {
       borderRadius: radius.xl,
       backgroundColor: colors.bgSurface,
+      padding: spacing.md,
+      gap: spacing.xs,
+      ...Platform.select({
+        ios: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.04,
+          shadowRadius: 8,
+        },
+        android: { elevation: 1 },
+        default: {},
+      }),
+    },
+    promoCardActive: {
       borderWidth: 1,
-      borderColor: colors.borderSoft,
-      paddingVertical: spacing.md,
-      gap: spacing.sm,
+      borderColor: `${colors.electric}55`,
+      backgroundColor: `${colors.electric}08`,
     },
-    ownerHeader: {
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.md,
-    },
-    ownerLabel: {
-      ...typography.caption,
-      color: colors.textBrandStrong,
-      fontWeight: '700',
-    },
-    ownerRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    ownerAction: {
+    promoIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      minWidth: 84,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.sm,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      marginBottom: 2,
+    },
+    promoCardTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      textAlign: 'right',
+    },
+    promoCardDesc: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'right',
+      lineHeight: 18,
+    },
+    promoChipRow: {
+      ...rtlRow,
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      marginTop: spacing.xs,
+    },
+    promoChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
       backgroundColor: colors.bgElevated,
     },
-    ownerActionDanger: {
-      borderColor: `${colors.rose}35`,
+    promoChipText: {
+      ...typography.micro,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    promoChipPrice: {
+      backgroundColor: `${colors.electric}14`,
+    },
+    promoChipPriceText: {
+      ...typography.micro,
+      color: colors.electric,
+      fontWeight: '800',
+    },
+    ownerToolsRow: {
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    ownerToolChip: {
+      ...rtlRow,
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
       backgroundColor: colors.bgSurface,
+    },
+    ownerToolChipDanger: {
+      backgroundColor: `${colors.rose}10`,
+    },
+    ownerToolLabel: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontWeight: '600',
     },
     ownerActionPressed: {
       opacity: 0.82,
     },
-    ownerActionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    ownerActionText: {
-      ...typography.micro,
-      fontWeight: '700',
-      color: colors.textPrimary,
-    },
     ownerActionTextDanger: {
       color: colors.rose,
     },
-    soonBadge: {
-      position: 'absolute',
-      top: 6,
-      left: 6,
-      backgroundColor: colors.gold,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: radius.pill,
-      zIndex: 2,
-    },
-    soonBadgeText: { fontSize: 8, color: '#1A1300', fontWeight: '800' },
 
     followPill: {
       paddingHorizontal: spacing.md,
