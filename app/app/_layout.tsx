@@ -2,7 +2,7 @@
 // SAFAT — Root Layout
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -15,8 +15,8 @@ import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { ButcherOwnerProvider } from '@/contexts/ButcherOwnerContext';
 import { NotificationManager } from '@/components/NotificationManager';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+import { BootSplashGate } from '@/components/ui/BootSplashGate';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
-import { useFlaticonFonts } from '@/hooks/useFlaticonFonts';
 import { setupRtl, rtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
 setupRtl();
@@ -123,36 +123,31 @@ function RootNavigator() {
 }
 
 function RootLayoutBody() {
-  useFlaticonFonts();
-
   useEffect(() => {
     void setupRtlFromStorage(AsyncStorage.getItem);
   }, []);
 
-  const hideSplash = useCallback(() => {
+  useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(hideSplash, 2500);
-    return () => clearTimeout(timer);
-  }, [hideSplash]);
-
   return (
-    <View style={styles.rtlRoot} onLayout={hideSplash}>
+    <View style={styles.rtlRoot}>
       <AuthProvider>
         <OnboardingProvider>
-          <AppProvider>
-            <AuthGuard>
-              <NotificationManager />
-              <ButcherOwnerProvider>
-                <SubscriptionProvider>
-                  <RootNavigator />
-                  <ActionSheetHost />
-                </SubscriptionProvider>
-              </ButcherOwnerProvider>
-            </AuthGuard>
-          </AppProvider>
+          <BootSplashGate>
+            <AppProvider>
+              <AuthGuard>
+                <NotificationManager />
+                <ButcherOwnerProvider>
+                  <SubscriptionProvider>
+                    <RootNavigator />
+                    <ActionSheetHost />
+                  </SubscriptionProvider>
+                </ButcherOwnerProvider>
+              </AuthGuard>
+            </AppProvider>
+          </BootSplashGate>
         </OnboardingProvider>
       </AuthProvider>
     </View>
@@ -172,7 +167,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   rtlRoot: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#163526',
     ...rtlDirection,
   },
 });
