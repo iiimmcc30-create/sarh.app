@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ARC ESPORTS — WE AIM. WE WIN. منظمة رياضية إلكترونية احترافية." />
+  <title>ARC ESPORTS | WE AIM. WE WIN.</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-pattern" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <nav class="nav container">
+      <a href="#" class="brand" aria-label="ARC ESPORTS الرئيسية">
+        <img src="assets/logo.svg" alt="شعار ARC ESPORTS" class="brand-logo" width="48" height="58" />
+        <span class="brand-text">
+          <span class="brand-arc">ARC</span>
+          <span class="brand-sub">ESPORTS</span>
+        </span>
+      </a>
+      <button class="nav-toggle" aria-label="فتح القائمة" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#home">الرئيسية</a></li>
+        <li><a href="#about">من نحن</a></li>
+        <li><a href="#teams">الفرق</a></li>
+        <li><a href="#voices-stars">الأصوات والنجوم</a></li>
+        <li><a href="#merch">المتجر</a></li>
+        <li><a href="#contact" class="btn btn-sm">تواصل معنا</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-v-lines" aria-hidden="true">
+        <div class="v-line v-left"></div>
+        <div class="v-line v-right"></div>
+      </div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Professional Esports Organization</p>
+          <h1>
+            <span class="slogan-white">WE AIM.</span>
+            <span class="slogan-orange">WE WIN.</span>
+          </h1>
+          <p class="hero-desc">
+            منظمة ARC ESPORTS تجمع بين الدقة والانضباط والأداء العالي. ننافس بثقة، ونمثل بفخر.
+          </p>
+          <div class="hero-actions">
+            <a href="#teams" class="btn btn-primary">تعرّف على الفرق</a>
+            <a href="#merch" class="btn btn-outline">تسوّق المنتجات</a>
+          </div>
+        </div>
+        <div class="hero-logo-wrap">
+          <div class="hero-logo-glow" aria-hidden="true"></div>
+          <img src="assets/logo.svg" alt="شعار ARC ESPORTS" class="hero-logo" width="280" height="336" />
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section about">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">About</span>
+          <h2>من نحن</h2>
+        </div>
+        <div class="about-grid">
+          <article class="card">
+            <div class="card-icon">🎯</div>
+            <h3>الدقة أولاً</h3>
+            <p>كل قرار، كل لقطة، كل مباراة — نلعب بهدف واضح وانضباط تام.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">⚡</div>
+            <h3>أداء احترافي</h3>
+            <p>تدريب منظم، تحليل مستمر، وروح فريق تدفعنا للأمام في كل بطولة.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🛡️</div>
+            <h3>هوية قوية</h3>
+            <p>هوية بصرية موحّدة تعكس قوة ARC ESPORTS داخل الملعب وخارجه.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="teams" class="section teams">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Teams</span>
+          <h2>فرقنا</h2>
+        </div>
+        <div class="teams-grid">
+          <article class="team-card">
+            <div class="team-badge">VALORANT</div>
+            <h3>ARC Valorant</h3>
+            <p>فريق تنافسي يمثل المنظمة في البطولات الإقليمية والدولية.</p>
+          </article>
+          <article class="team-card">
+            <div class="team-badge">FC</div>
+            <h3>ARC FC</h3>
+            <p>تمثيل قوي في مسابقات eFootball مع تركيز على اللعب الجماعي.</p>
+          </article>
+          <article class="team-card">
+            <div class="team-badge">CONTENT</div>
+            <h3>ARC Creators</h3>
+            <p>صناع محتوى يعكسون روح المنظمة ويتواصلون مع المجتمع.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="voices-stars" class="section voices-stars">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Voices &amp; Stars</span>
+          <h2>الأصوات والنجوم</h2>
+          <p class="section-desc">نجوم الفرق وصناع المحتوى — تواصل معهم عبر منصاتهم الرسمية.</p>
+        </div>
+
+        <div id="members-grid" class="members-grid" aria-live="polite"></div>
+
+        <details class="admin-panel">
+          <summary>إضافة عضو / رابط منصة</summary>
+          <form id="member-form" class="admin-form">
+            <div class="admin-grid">
+              <input id="member-name" type="text" placeholder="اسم العضو" required />
+              <select id="member-role">
+                <option value="star">نجم</option>
+                <option value="voice">صوت</option>
+              </select>
+              <input id="member-game" type="text" placeholder="اللعبة / التخصص" />
+              <input id="member-link" type="url" placeholder="رابط المنصة (مثال: https://twitch.tv/...)" dir="ltr" required />
+            </div>
+            <div class="admin-actions">
+              <button type="submit" class="btn btn-primary btn-sm">إضافة الرابط</button>
+              <button type="button" id="reset-members" class="btn btn-outline btn-sm">استعادة الافتراضي</button>
+            </div>
+            <p class="admin-hint">يُعرض أيقونة المنصة تلقائياً حسب الرابط (تويتر، تويتش، يوتيوب، ديسكورد...).</p>
+          </form>
+        </details>
+      </div>
+    </section>
+
+    <section id="merch" class="section merch">
+      <div class="container merch-inner">
+        <div class="merch-copy">
+          <span class="section-tag">Merch</span>
+          <h2>ارتدِ الهوية</h2>
+          <p>قمصان، هوديز، وإكسسوارات بتصميم ARC ESPORTS الرسمي — أسود، أزرق، وبرتقالي.</p>
+          <a href="#contact" class="btn btn-primary">اطلب الآن</a>
+        </div>
+        <div class="merch-visual" aria-hidden="true">
+          <div class="jersey-preview">
+            <div class="jersey-body">
+              <img src="assets/logo.svg" alt="" class="jersey-logo" width="80" height="96" />
+            </div>
+            <p class="jersey-slogan"><span>WE AIM.</span> <span class="orange">WE WIN.</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact">
+      <div class="container contact-box">
+        <img src="assets/logo.svg" alt="" class="contact-logo" width="72" height="86" aria-hidden="true" />
+        <h2>انضم إلى ARC ESPORTS</h2>
+        <p>للتعاون، الرعاية، أو الانضمام للفرق — تواصل معنا.</p>
+        <a href="mailto:contact@arcesports.gg" class="btn btn-primary">contact@arcesports.gg</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <a href="#" class="footer-brand">
+        <img src="assets/logo.svg" alt="ARC ESPORTS" width="36" height="43" />
+        <span>ARC ESPORTS</span>
+      </a>
+      <p class="footer-slogan"><span>WE AIM.</span> <span class="orange">WE WIN.</span></p>
+      <p class="footer-copy">&copy; 2026 ARC ESPORTS. جميع الحقوق محفوظة.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
