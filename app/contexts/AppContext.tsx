@@ -42,7 +42,7 @@ interface AppContextValue {
   posts: Post[];
   fetchPosts: (feed?: 'for_you' | 'following') => Promise<void>;
   addPost: (post: Omit<Post, 'id' | 'author' | 'likes' | 'reposts' | 'comments' | 'postedAt' | 'liked' | 'reposted'>) => Promise<boolean>;
-  updatePost: (postId: string, data: { content: string; arabicContent: string; image?: string | null }) => Promise<boolean>;
+  updatePost: (postId: string, data: { content: string; arabicContent: string; image?: string | null; images?: string[] }) => Promise<boolean>;
   deletePost: (postId: string) => Promise<ActionResult>;
   listings: Listing[];
   addListing: (listingData: any) => Promise<ActionResult>;
@@ -578,7 +578,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updatePost = useCallback(async (
     postId: string,
-    data: { content: string; arabicContent: string; image?: string | null },
+    data: { content: string; arabicContent: string; image?: string | null; images?: string[] },
   ): Promise<boolean> => {
     if (!isAuthenticated || !accessToken) return false;
     try {
@@ -598,6 +598,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     content: json.data.content,
                     arabicContent: json.data.arabicContent,
                     image: json.data.image ?? p.image,
+                    images:
+                      Array.isArray(json.data.images) && json.data.images.length > 0
+                        ? json.data.images
+                        : json.data.image
+                          ? [json.data.image]
+                          : p.images,
                   }
                 : p,
             ),

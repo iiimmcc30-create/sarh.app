@@ -63,7 +63,15 @@ export class UsersService {
 
     let isFollowing = false;
     let myRating: number | null = null;
+    let isBlocked = false;
     if (viewer?.userId && viewer.userId !== id) {
+      const blockedByViewer = await this.repo.findBlock(viewer.userId, id);
+      const blockedViewer = await this.repo.findBlock(id, viewer.userId);
+      if (blockedViewer) {
+        throwApi(403, 'blocked', 'لا يمكنك عرض هذا الملف');
+      }
+      isBlocked = !!blockedByViewer;
+
       const [follow, review] = await Promise.all([
         this.repo.findFollow(viewer.userId, id),
         this.repo.findUserRating(id, viewer.userId),
@@ -91,7 +99,7 @@ export class UsersService {
       );
     }
 
-    return { ...base, isFollowing, myRating };
+    return { ...base, isFollowing, myRating, isBlocked };
   }
 
   async updateUser(id: string, user: JwtPayload, dto: UpdateUserDto) {
@@ -166,6 +174,14 @@ export class UsersService {
     });
     if (!target) throwApi(404, 'not_found', 'المستخدم غير موجود');
 
+    const [blockedByFollower, blockedFollower] = await Promise.all([
+      this.repo.findBlock(followerId, targetId),
+      this.repo.findBlock(targetId, followerId),
+    ]);
+    if (blockedByFollower || blockedFollower) {
+      throwApi(403, 'blocked', 'لا يمكنك التفاعل مع هذا المستخدم');
+    }
+
     const existing = await this.repo.findFollow(followerId, targetId);
     if (!following) {
       if (existing) {
@@ -215,6 +231,57 @@ export class UsersService {
       'User follow state persisted and profile caches invalidated',
     );
     return { following: true };
+  }
+
+  async setBlock(targetId: string, blockerId: string, blocked: boolean) {
+    if (targetId === blockerId) {
+      throwApi(400, 'invalid_action', 'لا يمكنك حظر نفسك');
+    }
+
+    const target = await this.repo.findActiveUserId(targetId);
+    if (!target) throwApi(404, 'not_found', 'المستخدم غير موجود');
+
+    const existing = await this.repo.findBlock(blockerId, targetId);
+    if (!blocked) {
+      if (existing) {
+        await this.repo.deleteBlock(blockerId, targetId);
+      }
+      await this.invalidateBlockProfiles(blockerId, targetId);
+      return { blocked: false };
+    }
+
+    if (!existing) {
+      await this.repo.createBlock(blockerId, targetId);
+      await this.repo.deleteFollowIfExists(blockerId, targetId);
+      await this.repo.deleteFollowIfExists(targetId, blockerId);
+    }
+
+    await this.invalidateBlockProfiles(blockerId, targetId);
+    return { blocked: true };
+  }
+
+  async listBlocked(blockerId: string) {
+    const rows = await this.repo.findBlockedUsers(blockerId);
+    return {
+      users: rows.map((row) => ({
+        id: row.blocked.id,
+        username: row.blocked.username,
+        displayName: row.blocked.displayName,
+        arabicName: row.blocked.arabicName,
+        avatar: row.blocked.avatar,
+        verified: row.blocked.verified,
+        blockedAt: row.createdAt,
+      })),
+    };
+  }
+
+  private invalidateBlockProfiles(blockerId: string, targetId: string) {
+    return this.redis.cacheDel(
+      `user:${blockerId}`,
+      `user:${blockerId}:base`,
+      `user:${targetId}`,
+      `user:${targetId}:base`,
+    );
   }
 
   private invalidateFollowProfiles(followerId: string, targetId: string) {

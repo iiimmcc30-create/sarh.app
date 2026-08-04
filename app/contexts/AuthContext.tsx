@@ -103,11 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const refresh = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
       if (!refresh) return false;
 
-      const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/auth/refresh`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ refresh_token: refresh, refreshToken: refresh }),
-      });
+      }, 12_000);
 
       if (res.status === 401) {
         await clearSession();
@@ -143,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Restore session ────────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
+      let shouldRefresh = false;
       try {
         const [storedToken, storedUser, storedMode, storedRefresh] = await AsyncStorage.multiGet([
           STORAGE_KEYS.ACCESS_TOKEN,
@@ -163,15 +164,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (parsedUser.role === 'BUTCHER') {
             setActiveMode('USER');
           }
-          // Validate stored session and pick up rotated refresh tokens
-          if (refresh) {
-            await refreshSessionRef.current();
-          }
+          shouldRefresh = Boolean(refresh);
         }
       } catch {
         // Storage read failed — start fresh
       } finally {
         setIsLoading(false);
+      }
+      // Refresh in background — do not block boot splash on slow/hung network.
+      if (shouldRefresh) {
+        void refreshSessionRef.current();
       }
     })();
   }, []);

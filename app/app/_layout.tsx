@@ -17,6 +17,7 @@ import { NotificationManager } from '@/components/NotificationManager';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { BootSplashGate } from '@/components/ui/BootSplashGate';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
+import { ToastHost } from '@/components/ui/ToastHost';
 import { setupRtl, rtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
 setupRtl();
@@ -106,6 +107,7 @@ function RootNavigator() {
         <Stack.Screen name="info/refund" />
         <Stack.Screen name="settings/index" />
         <Stack.Screen name="settings/account" />
+        <Stack.Screen name="settings/blocked" />
         <Stack.Screen name="settings/info" />
         <Stack.Screen name="settings/support" />
         <Stack.Screen name="onboarding/index" options={{ animation: 'fade', gestureEnabled: false }} />
@@ -143,6 +145,7 @@ function RootLayoutBody() {
                   <SubscriptionProvider>
                     <RootNavigator />
                     <ActionSheetHost />
+                    <ToastHost />
                   </SubscriptionProvider>
                 </ButcherOwnerProvider>
               </AuthGuard>

@@ -17,17 +17,17 @@ export const ds = {
     glow: '#0B6B3A',
   },
   dark: {
-    page: '#081E18',
-    card: '#113126',
-    cardGradientEnd: '#0F2A22',
-    elevated: '#17392D',
-    primary: '#74C96A',
-    accent: '#97E082',
-    primaryMuted: '#74C96A22',
-    glass: 'rgba(17, 49, 38, 0.92)',
-    glassBorder: 'rgba(255, 255, 255, 0.08)',
-    stroke: 'rgba(255, 255, 255, 0.06)',
-    glow: '#74C96A',
+    page: '#090909',
+    card: '#151515',
+    cardGradientEnd: '#1C1C1C',
+    elevated: '#1C1C1C',
+    primary: '#69D84F',
+    accent: '#69D84F',
+    primaryMuted: 'rgba(105, 216, 79, 0.14)',
+    glass: 'rgba(9, 9, 9, 0.88)',
+    glassBorder: '#262626',
+    stroke: '#262626',
+    glow: '#69D84F',
   },
 
   /** 8pt grid */
@@ -44,8 +44,8 @@ export const ds = {
   radius: {
     sm: 12,
     md: 16,
-    lg: 24,
-    xl: 26,
+    lg: 22,
+    xl: 22,
     xxl: 28,
     pill: 999,
     fab: 28,
@@ -78,13 +78,13 @@ export const ds = {
     easing: 'ease-out' as const,
   },
 
-  listingThumb: 108,
+  listingThumb: 140,
   categoryTile: 56,
 };
 
 export function ambientShadow(scheme: 'light' | 'dark', level: 'soft' | 'card' | 'fab' = 'card'): ViewStyle {
   const isLight = scheme === 'light';
-  const green = isLight ? '#0B6B3A' : '#74C96A';
+  const green = isLight ? '#0B6B3A' : '#69D84F';
 
   if (level === 'fab') {
     return Platform.select({
@@ -104,7 +104,7 @@ export function ambientShadow(scheme: 'light' | 'dark', level: 'soft' | 'card' |
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: isLight ? 0.04 : 0.2,
+        shadowOpacity: isLight ? 0.04 : 0.12,
         shadowRadius: 8,
       },
       android: { elevation: 2 },
@@ -116,7 +116,7 @@ export function ambientShadow(scheme: 'light' | 'dark', level: 'soft' | 'card' |
     ios: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: isLight ? 0.06 : 0.25,
+      shadowOpacity: isLight ? 0.06 : 0.14,
       shadowRadius: 14,
     },
     android: { elevation: 6 },

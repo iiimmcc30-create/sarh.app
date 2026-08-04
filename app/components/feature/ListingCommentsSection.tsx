@@ -3,7 +3,6 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -17,6 +16,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
+import { deleteListingComment } from '@/services/comments';
+import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
+import { showToast } from '@/lib/toast';
+import { useApp } from '@/hooks/useApp';
 import { rtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
@@ -61,12 +64,34 @@ function mapComment(c: {
 export function ListingCommentsSection({ listingId }: ListingCommentsSectionProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { me } = useApp();
+  const ownerId = user?.id || me.id;
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (commentId: string) => {
+    const confirmed = await confirmDestructive(
+      'حذف التعليق',
+      'هل تريد حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء.',
+      'حذف التعليق',
+    );
+    if (!confirmed) return;
+
+    setDeletingId(commentId);
+    const result = await deleteListingComment(listingId, commentId);
+    setDeletingId(null);
+    if (!result.ok) {
+      await alertMessage('تعذّر الحذف', result.message, 'close-circle-outline');
+      return;
+    }
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    void showToast('تم حذف التعليق');
+  };
 
   const loadComments = useCallback(async () => {
     if (!listingId) return;
@@ -97,7 +122,7 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
 
   const handleSend = async () => {
     if (!isAuthenticated) {
-      Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لإضافة رد على الإعلان');
+      await alertMessage('تسجيل الدخول', 'يجب تسجيل الدخول لإضافة رد على الإعلان', 'log-in-outline');
       return;
     }
     if (!text.trim() || sending) return;
@@ -113,11 +138,12 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
       if (res.ok && json.success) {
         setText('');
         await loadComments();
+        void showToast('تم إرسال الرد');
       } else {
-        Alert.alert('تعذّر الإرسال', json.messageAr ?? json.message ?? 'حاول مرة أخرى');
+        await alertMessage('تعذّر الإرسال', json.messageAr ?? json.message ?? 'حاول مرة أخرى', 'alert-circle-outline');
       }
     } catch {
-      Alert.alert('خطأ', 'تعذّر إرسال الرد');
+      await alertMessage('خطأ', 'تعذّر إرسال الرد', 'close-circle-outline');
     } finally {
       setSending(false);
     }
@@ -149,18 +175,34 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
       ) : (
         <View style={styles.list}>
           {comments.map((c) => (
-            <View key={c.id} style={styles.commentRow}>
+            <View key={c.id} style={[styles.commentRow, rtlRow]}>
               <UserProfileLink userId={c.author.id}>
                 <Image source={uriSource(c.author.avatar)} style={styles.avatar} contentFit="cover" />
               </UserProfileLink>
-              <View style={styles.commentBody}>
-                <UserProfileLink userId={c.author.id} style={[styles.commentHeader, rtlRow]}>
-                  <Text style={styles.commentName}>{c.author.arabicName || c.author.displayName}</Text>
-                  {c.author.verified ? (
-                    <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
+              <View style={styles.commentBubble}>
+                <View style={[styles.commentHeader, rtlRow]}>
+                  <UserProfileLink userId={c.author.id} style={[styles.commentMeta, rtlRow]}>
+                    <Text style={styles.commentName}>{c.author.arabicName || c.author.displayName}</Text>
+                    {c.author.verified ? (
+                      <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
+                    ) : null}
+                    <Text style={styles.commentTime}>{c.createdAt}</Text>
+                  </UserProfileLink>
+                  {c.author.id === ownerId ? (
+                    <Pressable
+                      onPress={() => void handleDelete(c.id)}
+                      disabled={deletingId === c.id}
+                      hitSlop={8}
+                      style={styles.deleteBtn}
+                    >
+                      {deletingId === c.id ? (
+                        <ActivityIndicator size="small" color={colors.textMuted} />
+                      ) : (
+                        <AppIcon name="trash-outline" size={15} color={colors.textMuted} />
+                      )}
+                    </Pressable>
                   ) : null}
-                  <Text style={styles.commentTime}>{c.createdAt}</Text>
-                </UserProfileLink>
+                </View>
                 <Text style={styles.commentText}>{c.content}</Text>
               </View>
             </View>
@@ -277,25 +319,37 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
     },
     commentRow: {
-      flexDirection: 'row',
-      gap: spacing.md,
       alignItems: 'flex-start',
+      gap: spacing.sm,
     },
     avatar: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       borderWidth: 1,
       borderColor: colors.borderSoft,
       backgroundColor: colors.bgElevated,
     },
-    commentBody: {
+    commentBubble: {
       flex: 1,
-      gap: 4,
+      minWidth: 0,
+      gap: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgElevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
     },
     commentHeader: {
       alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    commentMeta: {
+      alignItems: 'center',
       gap: 4,
+      flex: 1,
       flexWrap: 'wrap',
     },
     commentName: {
@@ -313,6 +367,10 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'right',
       writingDirection: 'rtl',
       lineHeight: 22,
+    },
+    deleteBtn: {
+      padding: 2,
+      borderRadius: radius.pill,
     },
     inputRow: {
       alignItems: 'flex-end',

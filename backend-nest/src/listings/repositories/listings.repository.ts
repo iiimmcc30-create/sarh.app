@@ -270,4 +270,26 @@ export class ListingsRepository {
       return created;
     });
   }
+
+  findCommentMeta(commentId: string, listingId: string) {
+    return this.prisma.listingComment.findFirst({
+      where: { id: commentId, listingId },
+      select: { id: true, authorId: true, listingId: true },
+    });
+  }
+
+  deleteComment(commentId: string, listingId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const deleted = await tx.listingComment.deleteMany({
+        where: { id: commentId, listingId },
+      });
+      if (deleted.count === 0) return;
+
+      const commentsCount = await tx.listingComment.count({ where: { listingId } });
+      await tx.listing.update({
+        where: { id: listingId },
+        data: { commentsCount },
+      });
+    });
+  }
 }

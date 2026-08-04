@@ -25,6 +25,7 @@ import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
 import { GatewaySharedModule } from './gateway/gateway-shared.module';
 import { ReportsModule } from './reports/reports.module';
+import { OfficialServicesModule } from './official-services/official-services.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ReportsModule } from './reports/reports.module';
     SearchModule,
     HealthModule,
     ReportsModule,
+    OfficialServicesModule,
   ],
 })
 export class AppModule {}

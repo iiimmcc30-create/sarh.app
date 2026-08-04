@@ -183,4 +183,26 @@ export class PostsRepository {
       return created;
     });
   }
+
+  findCommentMeta(commentId: string, postId: string) {
+    return this.prisma.postComment.findFirst({
+      where: { id: commentId, postId },
+      select: { id: true, authorId: true, postId: true },
+    });
+  }
+
+  deleteComment(commentId: string, postId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const deleted = await tx.postComment.deleteMany({
+        where: { id: commentId, postId },
+      });
+      if (deleted.count === 0) return;
+
+      const commentsCount = await tx.postComment.count({ where: { postId } });
+      await tx.post.update({
+        where: { id: postId },
+        data: { commentsCount },
+      });
+    });
+  }
 }

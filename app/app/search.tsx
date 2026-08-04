@@ -227,7 +227,7 @@ export default function SearchScreen() {
                 <View style={styles.userInfo}>
                   <View style={styles.nameRow}>
                     <Text style={styles.userName}>{user.arabicName || user.displayName || user.username}</Text>
-                    {user.verified && <AppIcon name="checkmark-circle" size={13} color={colors.electricBright} />}
+                    {user.verified && <AppIcon name="checkmark-circle" size={13} color="#1D9BF0" />}
                   </View>
                   <Text style={styles.userHandle}>@{user.username}</Text>
                 </View>
@@ -268,7 +268,7 @@ export default function SearchScreen() {
                   <View style={styles.userInfo}>
                     <View style={styles.nameRow}>
                       <Text style={styles.userName}>{user.arabicName || user.displayName || user.username}</Text>
-                      {user.verified && <AppIcon name="checkmark-circle" size={13} color={colors.electricBright} />}
+                      {user.verified && <AppIcon name="checkmark-circle" size={13} color="#1D9BF0" />}
                     </View>
                     <Text style={styles.userHandle}>@{user.username}</Text>
                   </View>

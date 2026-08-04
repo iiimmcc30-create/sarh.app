@@ -22,6 +22,8 @@ import { Post } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { PostMediaGallery } from '@/components/feature/PostMediaGallery';
 
+const HASHTAG_BLUE = '#1D9BF0';
+
 interface PostItemProps {
   post: Post;
   variant?: 'feed' | 'detail' | 'profile';
@@ -74,7 +76,7 @@ function PostBody({ text, style, lines }: { text: string; style: TextStyle; line
     <Text style={style} numberOfLines={lines}>
       {parts.map((p, i) =>
         p.isTag ? (
-          <Text key={i} style={[style, { color: '#8A9A94', opacity: 0.9 }]}>
+          <Text key={i} style={[style, { color: HASHTAG_BLUE }]}>
             {p.text}
           </Text>
         ) : (
@@ -149,7 +151,7 @@ function PostItemComponent({
   onBookmark,
 }: PostItemProps) {
   const { styles, colors, scheme } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors, theme.scheme),
+    styles: createStyles(theme.colors, theme.scheme, theme.scheme === 'dark' && variant === 'feed'),
     colors: theme.colors,
     scheme: theme.scheme,
   }));
@@ -291,6 +293,7 @@ function PostItemComponent({
 }
 
 function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
+  if (prev.variant !== next.variant) return false;
   const a = prev.post;
   const b = next.post;
   return (
@@ -319,15 +322,26 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
 
 export const PostItem = memo(PostItemComponent, arePropsEqual);
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const cardShadow = ambientShadow(scheme, 'soft');
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = false) {
+  const cardShadow = feedCard
+    ? {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        elevation: 2,
+      }
+    : ambientShadow(scheme, 'soft');
 
   return StyleSheet.create({
     card: {
-      marginHorizontal: spacing.md,
-      marginTop: spacing.sm,
+      marginHorizontal: feedCard ? spacing.lg : spacing.md,
+      marginTop: feedCard ? spacing.md : spacing.sm,
+      marginBottom: feedCard ? spacing.xs : 0,
       borderRadius: ds.radius.xl,
       backgroundColor: colors.bgSurface,
+      borderWidth: feedCard ? 1 : 0,
+      borderColor: feedCard ? colors.borderSoft : 'transparent',
       ...cardShadow,
       overflow: 'hidden',
     },
@@ -346,8 +360,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     row: {
       alignItems: 'flex-start',
-      padding: spacing.lg,
-      gap: 14,
+      padding: feedCard ? spacing.xl : spacing.lg,
+      gap: feedCard ? 16 : 14,
     },
     avatar: {
       width: 48,

@@ -19,6 +19,7 @@ import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { inlineStart, rtlDirection, rtlRow } from '@/lib/rtl';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 interface ListingCardProps {
   listing: Listing;
@@ -72,7 +73,7 @@ function ListingCardInner({
   listing,
   onPress,
   variant = 'grid',
-  listMode = 'home',
+  listMode = 'market',
   compact = false,
 }: ListingCardProps) {
   const country = getCountryInfo(listing.country);
@@ -89,11 +90,13 @@ function ListingCardInner({
   const sellerName =
     seller?.arabicName || seller?.displayName || seller?.username || 'بائع';
   const sellerId = seller?.id;
+  const photoCount = (listing.images ?? []).filter(
+    (uri) => uri && uri.trim().length > 0 && !VIDEO_EXT.test(uri),
+  ).length;
 
   if (variant === 'list') {
     const showNew = isNewListing(listing);
     const hasVideo = listingHasVideo(listing);
-    const isMarket = listMode === 'market';
 
     return (
       <Pressable
@@ -146,9 +149,7 @@ function ListingCardInner({
             <Text style={styles.listSellerName} numberOfLines={1}>
               {sellerName}
             </Text>
-            {seller?.verified ? (
-              <AppIcon name="shield-checkmark" size={12} color={colors.electricBright} />
-            ) : null}
+            {seller?.verified ? <VerificationBadge size={14} /> : null}
           </UserProfileLink>
         </View>
 
@@ -166,14 +167,18 @@ function ListingCardInner({
               <Text style={styles.listThumbIcon}>{CATEGORY_ICONS[listing.category] || '📦'}</Text>
             </View>
           )}
-          {isMarket ? (
-            <View style={styles.listHeartOverlay}>
-              <AppIcon name="heart-outline" size={16} color="#fff" />
-            </View>
-          ) : null}
+          <View style={styles.listHeartOverlay}>
+            <AppIcon name="heart-outline" size={16} color="#fff" />
+          </View>
           {hasVideo ? (
             <View style={styles.listVideoBadge}>
               <AppIcon name="play" size={10} color="#fff" variant="sr" />
+            </View>
+          ) : null}
+          {photoCount > 1 ? (
+            <View style={styles.listPhotoCountBadge}>
+              <AppIcon name="image-outline" size={10} color="#fff" />
+              <Text style={styles.listPhotoCountText}>{photoCount}</Text>
             </View>
           ) : null}
         </View>
@@ -282,9 +287,7 @@ function ListingCardInner({
           <Text style={styles.harajSellerName} numberOfLines={1}>
             {sellerName}
           </Text>
-          {seller?.verified ? (
-            <AppIcon name="shield-checkmark" size={13} color={colors.electricBright} />
-          ) : null}
+          {seller?.verified ? <VerificationBadge size={14} /> : null}
         </UserProfileLink>
         {listing.featured ? (
           <View style={[styles.harajFeatured, rtlRow]}>
@@ -316,6 +319,12 @@ function ListingCardInner({
             </Text>
           </View>
         )}
+        {photoCount > 1 ? (
+          <View style={styles.harajPhotoCountBadge}>
+            <AppIcon name="image-outline" size={11} color="#fff" />
+            <Text style={styles.harajPhotoCountText}>{photoCount}</Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -328,26 +337,39 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     opacity: 0.92,
   },
 
-  // قائمة السوق — بطاقة بيضاء مع ظل خفيف
+  // قائمة السوق — بطاقة موحّدة في الرئيسية والملف والسوق
   listRow: {
     ...rtlRow,
-    alignItems: 'center',
-    minHeight: 140,
-    paddingVertical: ds.space.md,
-    paddingHorizontal: ds.space.md,
+    alignItems: 'stretch',
+    minHeight: 156,
+    paddingVertical: 0,
+    paddingStart: ds.space.md,
+    paddingEnd: 0,
     gap: ds.space.md,
     backgroundColor: colors.bgSurface,
     borderRadius: ds.radius.xl,
     marginHorizontal: ds.space.md,
     marginVertical: ds.space.xs,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.stroke,
-    ...ambientShadow(scheme, 'card'),
+    borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
+    borderColor: scheme === 'dark' ? colors.borderSoft : tokens.stroke,
+    overflow: 'hidden',
+  ...(scheme === 'dark'
+    ? {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        elevation: 2,
+      }
+    : ambientShadow(scheme, 'card')),
   },
   listContent: {
     flex: 1,
     minWidth: 0,
     gap: 4,
+    paddingVertical: ds.space.md,
+    paddingEnd: ds.space.xs,
+    justifyContent: 'center',
   },
   listTitleRow: {
     alignItems: 'flex-start',
@@ -454,11 +476,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   listThumbWrap: {
     width: ds.listingThumb,
-    height: ds.listingThumb,
-    borderRadius: ds.radius.md,
+    alignSelf: 'stretch',
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
     flexShrink: 0,
+    position: 'relative',
   },
   listHeartOverlay: {
     position: 'absolute',
@@ -472,8 +494,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     justifyContent: 'center',
   },
   listThumb: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
   listThumbPlaceholder: {
     width: '100%',
@@ -492,6 +513,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  listPhotoCountBadge: {
+    position: 'absolute',
+    bottom: 6,
+    end: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  listPhotoCountText: {
+    ...typography.micro,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 10,
   },
 
   profileCard: {
@@ -749,11 +788,30 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     justifyContent: 'center',
   },
   harajImgPlaceholderIcon: { fontSize: 40 },
+  harajPhotoCountBadge: {
+    position: 'absolute',
+    bottom: 8,
+    end: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  harajPhotoCountText: {
+    ...typography.micro,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 11,
+  },
   });
 }
 
 export const ListingCard = memo(ListingCardInner, (prev, next) =>
   prev.variant === next.variant &&
+  prev.listMode === next.listMode &&
   prev.compact === next.compact &&
   prev.onPress === next.onPress &&
   prev.listing.id === next.listing.id &&

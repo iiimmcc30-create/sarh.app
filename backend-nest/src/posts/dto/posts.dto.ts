@@ -4,8 +4,12 @@ import {
   IsUrl,
   MaxLength,
   MinLength,
+  IsArray,
+  ArrayMaxSize,
+  ArrayMinSize,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { MEDIA_URL_OPTS } from '../../shared/lib/media-url';
 
 export class ListPostsQueryDto {
   @IsOptional()
@@ -36,8 +40,15 @@ export class CreatePostDto {
   arabicContent!: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl(MEDIA_URL_OPTS)
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(4)
+  @IsUrl(MEDIA_URL_OPTS, { each: true })
+  images?: string[];
 }
 
 export class UpdatePostDto {
@@ -54,8 +65,14 @@ export class UpdatePostDto {
   arabicContent!: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl(MEDIA_URL_OPTS)
   image?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsUrl(MEDIA_URL_OPTS, { each: true })
+  images?: string[];
 }
 
 export class CreateCommentDto {

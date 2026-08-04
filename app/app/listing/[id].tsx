@@ -32,6 +32,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 import type { BoostTypeKey } from '@/services/listingBoost';
@@ -449,9 +450,7 @@ export default function ListingDetailScreen() {
                 <Text style={styles.sellerInlineName} numberOfLines={1}>
                   {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
                 </Text>
-                {listing.seller.verified ? (
-                  <AppIcon name="checkmark-circle" size={14} color={colors.electricBright} />
-                ) : null}
+                {listing.seller.verified ? <VerificationBadge size={16} /> : null}
                 <Image
                   source={uriSource(listing.seller.avatar)}
                   style={styles.sellerInlineAvatar}
@@ -496,6 +495,9 @@ export default function ListingDetailScreen() {
 
         {images.length > 0 ? (
           <View style={styles.galleryBlock}>
+            <Text style={styles.galleryHeading}>
+              الصور ({images.length.toLocaleString('ar-SA')})
+            </Text>
             {images.map((uri, index) => (
               <Pressable
                 key={`${uri}-${index}`}
@@ -715,6 +717,14 @@ function createStyles(colors: ThemeColors) {
     galleryBlock: {
       gap: spacing.xs,
       marginTop: -spacing.xs,
+    },
+    galleryHeading: {
+      ...typography.caption,
+      color: colors.textMuted,
+      fontWeight: '700',
+      writingDirection: 'rtl',
+      textAlign: 'right',
+      marginBottom: spacing.xs,
     },
     galleryImageWrap: {
       width: '100%',

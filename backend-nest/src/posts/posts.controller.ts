@@ -64,6 +64,17 @@ export class PostsController {
   }
 
   @RateLimit('api')
+  @Delete(':id/comments/:commentId')
+  @HttpCode(HttpStatus.OK)
+  async deleteComment(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return successResponse(await this.posts.deleteComment(user, id, commentId));
+  }
+
+  @RateLimit('api')
   @Post(':id/like')
   @HttpCode(HttpStatus.OK)
   async toggleLike(@CurrentUser() user: JwtPayload, @Param('id') id: string) {

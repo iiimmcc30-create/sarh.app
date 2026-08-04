@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ambientShadow, ds } from '@/constants/designSystem';
+import { luxuryDark } from '@/constants/homeLuxury';
 import { motion } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isAppRtl } from '@/lib/rtl';
@@ -23,6 +24,8 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const isLight = scheme === 'light';
   const tokens = isLight ? ds.light : ds.dark;
   const bottom = Math.max(insets.bottom, ds.tabBar.marginBottom);
+  const activeTint = isLight ? colors.electricBright : luxuryDark.accent;
+  const inactiveTint = isLight ? colors.textMuted : luxuryDark.textMuted;
 
   const activeRoute = state.routes[state.index]?.name;
 
@@ -45,17 +48,19 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
       <View
         style={[
           styles.bar,
-          {
-            backgroundColor: tokens.glass,
-            borderColor: tokens.glassBorder,
-          },
+          isLight
+            ? {
+                backgroundColor: tokens.glass,
+                borderColor: tokens.glassBorder,
+              }
+            : styles.barLuxury,
           ambientShadow(scheme, 'card'),
         ]}
       >
         <View style={styles.row}>
           {leftTabs.map((tab) => {
             const focused = activeRoute === tab.route;
-            const tint = focused ? colors.electricBright : colors.textMuted;
+            const tint = focused ? activeTint : inactiveTint;
             return (
               <Pressable
                 key={tab.route}
@@ -64,7 +69,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 onPress={() => onTabPress(tab.route, focused)}
                 style={({ pressed }) => [
                   styles.tabSlot,
-                  focused && { backgroundColor: tokens.primaryMuted },
+                  focused && !isLight && { backgroundColor: luxuryDark.accentSoft },
                   pressed && styles.pressed,
                 ]}
               >
@@ -76,9 +81,9 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 />
                 <Text
                   style={{
-                    color: focused ? colors.electricBright : colors.textMuted,
+                    color: tint,
                     fontSize: 10,
-                    fontWeight: '600',
+                    fontWeight: focused ? '700' : '600',
                     marginTop: 2,
                     writingDirection: isAppRtl() ? 'rtl' : 'ltr',
                   }}
@@ -96,22 +101,28 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
               onPress={() => router.push('/create/listing')}
               style={({ pressed }) => [pressed && styles.pressed]}
             >
-              <LinearGradient
-                colors={gradients.electric}
-                style={[
-                  styles.fab,
-                  { borderColor: tokens.page },
-                  ambientShadow(scheme, 'fab'),
-                ]}
-              >
-                <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
-              </LinearGradient>
+              {isLight ? (
+                <LinearGradient
+                  colors={gradients.electric}
+                  style={[
+                    styles.fab,
+                    { borderColor: tokens.page },
+                    ambientShadow(scheme, 'fab'),
+                  ]}
+                >
+                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
+                </LinearGradient>
+              ) : (
+                <View style={[styles.fab, styles.fabLuxury]}>
+                  <AppIcon name="plus" variant="sr" size={ds.icon.fab + 2} color="#fff" />
+                </View>
+              )}
             </Pressable>
           </View>
 
           {rightTabs.map((tab) => {
             const focused = activeRoute === tab.route;
-            const tint = focused ? colors.electricBright : colors.textMuted;
+            const tint = focused ? activeTint : inactiveTint;
             return (
               <Pressable
                 key={tab.route}
@@ -120,7 +131,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 onPress={() => onTabPress(tab.route, focused)}
                 style={({ pressed }) => [
                   styles.tabSlot,
-                  focused && { backgroundColor: tokens.primaryMuted },
+                  focused && !isLight && { backgroundColor: luxuryDark.accentSoft },
                   pressed && styles.pressed,
                 ]}
               >
@@ -132,9 +143,9 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 />
                 <Text
                   style={{
-                    color: focused ? colors.electricBright : colors.textMuted,
+                    color: tint,
                     fontSize: 10,
-                    fontWeight: '600',
+                    fontWeight: focused ? '700' : '600',
                     marginTop: 2,
                     writingDirection: isAppRtl() ? 'rtl' : 'ltr',
                   }}
@@ -161,8 +172,14 @@ const styles = StyleSheet.create({
   bar: {
     borderRadius: ds.radius.xxl,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+  },
+  barLuxury: {
+    backgroundColor: luxuryDark.tabGlass,
+    borderColor: luxuryDark.border,
+    borderRadius: 28,
+    borderWidth: 1,
   },
   row: {
     flexDirection: 'row',
@@ -178,18 +195,27 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   fabSlot: {
-    width: ds.tabBar.fabSize + 8,
+    width: ds.tabBar.fabSize + 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -ds.tabBar.fabLift,
+    marginTop: -ds.tabBar.fabLift - 2,
   },
   fab: {
-    width: ds.tabBar.fabSize,
-    height: ds.tabBar.fabSize,
+    width: ds.tabBar.fabSize + 4,
+    height: ds.tabBar.fabSize + 4,
     borderRadius: ds.radius.fab,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
+  },
+  fabLuxury: {
+    backgroundColor: luxuryDark.accent,
+    borderColor: luxuryDark.bg,
+    shadowColor: luxuryDark.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 8,
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],

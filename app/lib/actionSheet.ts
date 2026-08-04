@@ -72,10 +72,10 @@ export async function confirmDestructive(
   return key === 'confirm';
 }
 
-export async function alertMessage(title: string, message?: string) {
+export async function alertMessage(title: string, message?: string, icon = 'information-circle-outline') {
   await presentActionSheet({
     title,
     message,
-    items: [{ key: 'ok', label: 'حسناً', cancel: true }],
+    items: [{ key: 'ok', label: 'حسناً', cancel: true, icon }],
   });
 }

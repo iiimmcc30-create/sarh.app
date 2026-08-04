@@ -17,6 +17,7 @@ import {
   Layers,
   ReceiptText,
   BookOpen,
+  Briefcase,
   LogOut,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
@@ -27,6 +28,7 @@ const nav = [
   { href: '/users', label: 'المستخدمون', icon: Users },
   { href: '/posts', label: 'المنشورات', icon: FileText },
   { href: '/knowledge', label: 'مركز المعرفة', icon: BookOpen },
+  { href: '/official-services', label: 'خدمات سرح', icon: Briefcase },
   { href: '/listings', label: 'الإعلانات', icon: Tag },
   { href: '/reports', label: 'البلاغات', icon: Flag },
   { href: '/live', label: 'البث المباشر', icon: Radio },

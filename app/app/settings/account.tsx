@@ -13,6 +13,12 @@ const ITEMS: SettingsMenuItem[] = [
     subtitle: 'تحديث بيانات الدخول',
     route: '/auth/forgot-password',
   },
+  {
+    icon: 'block',
+    label: 'المحظورين',
+    subtitle: 'إدارة الحسابات التي حظرتها',
+    route: '/settings/blocked',
+  },
 ];
 
 export default function AccountSettingsScreen() {

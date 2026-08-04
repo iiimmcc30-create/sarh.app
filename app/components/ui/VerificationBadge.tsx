@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
-const BADGE_GREEN = '#0B5D3B';
+const VERIFIED_BLUE = '#1D9BF0';
 
 type VerificationBadgeProps = {
   size?: number;
@@ -18,7 +18,7 @@ export function VerificationBadge({ size = 18 }: VerificationBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: BADGE_GREEN,
+    backgroundColor: VERIFIED_BLUE,
     alignItems: 'center',
     justifyContent: 'center',
   },

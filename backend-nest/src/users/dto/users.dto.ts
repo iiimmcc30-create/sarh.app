@@ -94,3 +94,8 @@ export class SetFollowDto {
   @IsBoolean()
   following: boolean;
 }
+
+export class SetBlockDto {
+  @IsBoolean()
+  blocked: boolean;
+}

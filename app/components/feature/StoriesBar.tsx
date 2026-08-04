@@ -31,12 +31,14 @@ function StoryRing({
   unseen,
   children,
   empty,
+  scheme,
 }: {
   unseen: boolean;
   children: ReactNode;
   empty?: boolean;
+  scheme: 'light' | 'dark';
 }) {
-  const styles = useThemedStyles(({ colors }) => createBarStyles(colors));
+  const styles = useThemedStyles(({ colors }) => createBarStyles(colors, scheme));
 
   if (empty) {
     return (
@@ -79,8 +81,8 @@ export function StoriesBar({
   onAddStory,
   onRefresh,
 }: StoriesBarProps) {
-  const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors: c }) => createBarStyles(c));
+  const { scheme } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createBarStyles(c, scheme));
   const [viewer, setViewer] = useState<{ groups: StoryGroup[]; index: number } | null>(
     null,
   );
@@ -113,6 +115,7 @@ export function StoriesBar({
             <StoryRing
               unseen={!!myStories?.hasUnseen}
               empty={!hasMyStories}
+              scheme={scheme}
             >
               <Image
                 source={{
@@ -152,7 +155,7 @@ export function StoriesBar({
                     onPress={() => openGroup(group)}
                     style={styles.itemWrap}
                   >
-                    <StoryRing unseen={group.hasUnseen}>
+                    <StoryRing unseen={group.hasUnseen} scheme={scheme}>
                       <Image
                         source={{
                           uri: resolveMediaUrl(
@@ -197,18 +200,20 @@ export function StoriesBar({
   );
 }
 
-function createBarStyles(colors: ThemeColors) {
+function createBarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
     wrap: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: isDark ? 0 : StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
-      paddingBottom: spacing.sm,
+      paddingBottom: isDark ? spacing.xs : spacing.sm,
+      paddingTop: 0,
     },
     row: {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
+      paddingTop: spacing.xs,
+      paddingBottom: 0,
       gap: spacing.md,
     },
     itemWrap: { alignItems: 'center', gap: spacing.xs, width: CIRCLE + spacing.sm },

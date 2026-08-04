@@ -30,8 +30,9 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { rtlBackIcon, rtlDirection, rtlRow } from '@/lib/rtl';
 
 function yearlyDiscount(plan: { monthlyPrice: number; yearlyPrice: number }) {
-  if (plan.monthlyPrice <= 0) return 0;
-  return Math.round(100 - (plan.yearlyPrice / (plan.monthlyPrice * 12)) * 100);
+  if (plan.monthlyPrice <= 0 || plan.yearlyPrice <= 0) return 0;
+  const pct = Math.round(100 - (plan.yearlyPrice / (plan.monthlyPrice * 12)) * 100);
+  return pct > 0 ? pct : 0;
 }
 
 function recommendedSlug(

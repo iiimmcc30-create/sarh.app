@@ -24,6 +24,7 @@ import {
   ConnectionsQueryDto,
   ListUsersQueryDto,
   RateUserDto,
+  SetBlockDto,
   SetFollowDto,
   UpdateUserDto,
 } from './dto/users.dto';
@@ -38,6 +39,13 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async list(@Query() query: ListUsersQueryDto) {
     return successResponse(await this.users.listUsers(query));
+  }
+
+  @RateLimit('api')
+  @Get('blocked')
+  @HttpCode(HttpStatus.OK)
+  async listBlocked(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.users.listBlocked(user.userId));
   }
 
   @Public()
@@ -78,6 +86,19 @@ export class UsersController {
   ) {
     return successResponse(
       await this.users.setFollow(id, user.userId, dto.following),
+    );
+  }
+
+  @RateLimit('api')
+  @Post(':id/block')
+  @HttpCode(HttpStatus.OK)
+  async block(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: SetBlockDto,
+  ) {
+    return successResponse(
+      await this.users.setBlock(id, user.userId, dto.blocked),
     );
   }
 

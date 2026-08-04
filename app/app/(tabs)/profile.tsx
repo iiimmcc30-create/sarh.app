@@ -161,6 +161,7 @@ export default function ProfileScreen() {
         key={listing.id}
         listing={listing}
         variant="list"
+        listMode="market"
         onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
       />
     ));

@@ -15,6 +15,7 @@ import {
   UpdateListingDto,
 } from './dto/listings.dto';
 import { ListingsRepository } from './repositories/listings.repository';
+import { UsersRepository } from '../users/repositories/users.repository';
 import { SubscriptionEntitlementService } from '../subscriptions/services/subscription-entitlement.service';
 import { PlanResolverService } from '../plans/plan-resolver.service';
 import { PlanPermissionService } from '../plans/plan-permission.service';
@@ -27,6 +28,7 @@ const PAGE_SIZE = 20;
 export class ListingsService {
   constructor(
     private readonly repo: ListingsRepository,
+    private readonly usersRepo: UsersRepository,
     private readonly cache: RedisCacheService,
     private readonly logger: LoggerService,
     private readonly feeCheckQueue: FeeCheckQueueService,
@@ -67,7 +69,7 @@ export class ListingsService {
     }
   }
 
-  async list(query: ListListingsQueryDto) {
+  async list(query: ListListingsQueryDto, viewerId?: string) {
     const { cursor, category, country, search, featured, sellerId, minPrice, maxPrice } = query;
 
     const cacheKey = search || minPrice != null || maxPrice != null
@@ -88,6 +90,18 @@ export class ListingsService {
     if (country) where.country = country;
     if (featured) where.featured = true;
     if (sellerId) where.sellerId = sellerId;
+
+    if (viewerId) {
+      const blockedIds = await this.usersRepo.findBlockedRelationshipIds(viewerId);
+      if (blockedIds.length > 0) {
+        if (sellerId && blockedIds.includes(sellerId)) {
+          return { listings: [], nextCursor: null, hasMore: false };
+        }
+        where.sellerId = sellerId
+          ? sellerId
+          : { notIn: blockedIds };
+      }
+    }
 
     if (search && search.length >= 2) {
       where.OR = [
@@ -430,5 +444,25 @@ export class ListingsService {
     await this.cache.del(`listing:${listingId}`);
     await this.cache.delPattern('listings:v2:*');
     return comment;
+  }
+
+  async deleteComment(
+    user: JwtPayload,
+    listingId: string,
+    commentId: string,
+  ) {
+    if (!listingId || !commentId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+
+    const comment = await this.repo.findCommentMeta(commentId, listingId);
+    if (!comment) throwApi(404, 'not_found', 'التعليق غير موجود');
+
+    if (comment.authorId !== user.userId && user.role !== 'ADMIN') {
+      throwApi(403, 'forbidden', 'غير مسموح');
+    }
+
+    await this.repo.deleteComment(commentId, listingId);
+    await this.cache.del(`listing:${listingId}`);
+    await this.cache.delPattern('listings:v2:*');
+    return { deleted: true };
   }
 }

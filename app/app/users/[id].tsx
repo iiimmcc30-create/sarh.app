@@ -1,7 +1,7 @@
 // SAFAT — Public User Profile
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,7 +16,11 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchUserProfile, rateUser, setFollowUser, type PublicUserProfile } from '@/services/users';
+import { fetchUserProfile, rateUser, setFollowUser, setBlockUser, type PublicUserProfile } from '@/services/users';
+import { fetchUserPosts } from '@/services/posts';
+import { searchListings } from '@/services/listings';
+import type { Listing } from '@/services/types';
+import type { Post } from '@/services/types';
 import { promptReport } from '@/services/reports';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { PostItem } from '@/components/feature/PostItem';
@@ -24,15 +28,13 @@ import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/featu
 import { RatingModal } from '@/components/feature/RatingModal';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
-import { presentActionSheet } from '@/lib/actionSheet';
+import { presentActionSheet, confirmDestructive } from '@/lib/actionSheet';
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const {
     me,
-    listings,
-    posts,
     likedPosts,
     bookmarkedPosts,
     toggleLike,
@@ -44,6 +46,8 @@ export default function UserProfileScreen() {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [userListings, setUserListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,11 +66,23 @@ export default function UserProfileScreen() {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
-      await fetchAuthoritativeProfile();
+      const targetId = id || me.id;
+      const data = await fetchAuthoritativeProfile();
+      if (!data) {
+        setUserPosts([]);
+        setUserListings([]);
+        return;
+      }
+      const [postsData, listingsData] = await Promise.all([
+        fetchUserPosts(targetId),
+        searchListings({ sellerId: targetId }, accessToken),
+      ]);
+      setUserPosts(postsData);
+      setUserListings(listingsData);
     } finally {
       setLoading(false);
     }
-  }, [fetchAuthoritativeProfile]);
+  }, [accessToken, fetchAuthoritativeProfile, id, me.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -124,86 +140,6 @@ export default function UserProfileScreen() {
     } as never);
   };
 
-  const userPosts = useMemo(
-    () =>
-      profile
-        ? posts
-            .filter((p) => p.author.id === profile.id)
-            .slice()
-            .sort(
-              (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
-            )
-        : [],
-    [posts, profile],
-  );
-  const userListings = useMemo(
-    () => (profile ? listings.filter((l) => l.seller.id === profile.id) : []),
-    [listings, profile],
-  );
-
-  if (loading || !profile) {
-    return (
-      <SafeAreaView style={styles.root} edges={['top']}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={themeColors.electricBright} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const profileUser: ProfileDisplayUser = {
-    id: profile.id,
-    username: profile.username,
-    displayName: profile.displayName,
-    arabicName: profile.arabicName,
-    avatar: profile.avatar,
-    verified: profile.verified,
-    bio: profile.bio,
-    country: profile.country,
-    followersCount: profile.followersCount,
-    followingCount: profile.followingCount,
-    postsCount: profile.postsCount,
-    rating: profile.rating,
-    reviewCount: profile.reviewCount,
-  };
-
-  const openConnections = (t: 'followers' | 'following') => {
-    router.push({
-      pathname: '/profile/connections',
-      params: { userId: profile.id, tab: t, username: profile.username },
-    } as never);
-  };
-
-  const handleShareProfile = () => {
-    Share.share({
-      message: `تفقّد بروفايل ${profile.arabicName || profile.displayName} في تطبيق سرح 🐪\nhttps://alsfat.com/u/${profile.username}`,
-      title: 'سرح — المنصة الوطنية للثروة الحيوانية',
-    });
-  };
-
-  const handleMenu = async () => {
-    const key = await presentActionSheet({
-      title: 'خيارات',
-      message: profile.arabicName || profile.displayName,
-      items: [
-        {
-          key: 'share',
-          label: 'مشاركة الملف',
-          icon: 'share-social-outline',
-        },
-        {
-          key: 'report',
-          label: 'إبلاغ',
-          icon: 'flag-outline',
-          destructive: true,
-        },
-        { key: 'cancel', label: 'إلغاء', cancel: true },
-      ],
-    });
-    if (key === 'share') handleShareProfile();
-    if (key === 'report') promptReport('user', profile.id, !!accessToken);
-  };
-
   const renderPosts = () => {
     if (userPosts.length === 0) {
       return (
@@ -245,9 +181,105 @@ export default function UserProfileScreen() {
         key={listing.id}
         listing={listing}
         variant="list"
+        listMode="market"
         onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
       />
     ));
+  };
+
+  if (loading || !profile) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={themeColors.electricBright} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const profileUser: ProfileDisplayUser = {
+    id: profile.id,
+    username: profile.username,
+    displayName: profile.displayName,
+    arabicName: profile.arabicName,
+    avatar: profile.avatar,
+    verified: profile.verified,
+    bio: profile.bio,
+    country: profile.country,
+    followersCount: profile.followersCount,
+    followingCount: profile.followingCount,
+    postsCount: profile.postsCount,
+    rating: profile.rating,
+    reviewCount: profile.reviewCount,
+  };
+
+  const openConnections = (t: 'followers' | 'following') => {
+    router.push({
+      pathname: '/profile/connections',
+      params: { userId: profile.id, tab: t, username: profile.username },
+    } as never);
+  };
+
+  const handleShareProfile = () => {
+    Share.share({
+      message: `تفقّد بروفايل ${profile.arabicName || profile.displayName} في تطبيق سرح 🐪\nhttps://alsfat.com/u/${profile.username}`,
+      title: 'سرح — المنصة الوطنية للثروة الحيوانية',
+    });
+  };
+
+  const handleBlock = async () => {
+    if (!profile || !accessToken) {
+      Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لحظر الحساب');
+      return;
+    }
+    const confirmed = await confirmDestructive(
+      'حظر الحساب',
+      `لن ترى منشورات وإعلانات ${profile.arabicName || profile.displayName}، ولا يمكنه التواصل معك.`,
+      profile.isBlocked ? 'إلغاء الحظر' : 'حظر',
+    );
+    if (!confirmed) return;
+
+    const result = await setBlockUser(profile.id, !(profile.isBlocked ?? false));
+    if (!result) {
+      Alert.alert('خطأ', 'تعذّر تحديث الحظر، حاول مجدداً');
+      return;
+    }
+    if (result.blocked) {
+      Alert.alert('تم الحظر', 'تم حظر الحساب بنجاح');
+      router.back();
+      return;
+    }
+    await loadProfile();
+  };
+
+  const handleMenu = async () => {
+    const key = await presentActionSheet({
+      title: 'خيارات',
+      message: profile.arabicName || profile.displayName,
+      items: [
+        {
+          key: 'share',
+          label: 'مشاركة الملف',
+          icon: 'share-social-outline',
+        },
+        {
+          key: 'block',
+          label: profile.isBlocked ? 'إلغاء الحظر' : 'حظر الحساب',
+          icon: 'block',
+          destructive: true,
+        },
+        {
+          key: 'report',
+          label: 'إبلاغ',
+          icon: 'flag-outline',
+          destructive: true,
+        },
+        { key: 'cancel', label: 'إلغاء', cancel: true },
+      ],
+    });
+    if (key === 'share') handleShareProfile();
+    if (key === 'block') void handleBlock();
+    if (key === 'report') promptReport('user', profile.id, !!accessToken);
   };
 
   return (

@@ -233,4 +233,59 @@ export class UsersRepository {
       select: { id: true },
     });
   }
+
+  findBlock(blockerId: string, blockedId: string) {
+    return this.prisma.userBlock.findUnique({
+      where: { blockerId_blockedId: { blockerId, blockedId } },
+      select: { id: true },
+    });
+  }
+
+  createBlock(blockerId: string, blockedId: string) {
+    return this.prisma.userBlock.create({
+      data: { blockerId, blockedId },
+    });
+  }
+
+  deleteBlock(blockerId: string, blockedId: string) {
+    return this.prisma.userBlock.delete({
+      where: { blockerId_blockedId: { blockerId, blockedId } },
+    });
+  }
+
+  deleteFollowIfExists(followerId: string, followingId: string) {
+    return this.prisma.follow.deleteMany({
+      where: { followerId, followingId },
+    });
+  }
+
+  findBlockedUsers(blockerId: string) {
+    return this.prisma.userBlock.findMany({
+      where: { blockerId },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      include: {
+        blocked: { select: connectionUserSelect },
+      },
+    });
+  }
+
+  async findBlockedRelationshipIds(userId: string): Promise<string[]> {
+    const [initiated, received] = await Promise.all([
+      this.prisma.userBlock.findMany({
+        where: { blockerId: userId },
+        select: { blockedId: true },
+        take: 2000,
+      }),
+      this.prisma.userBlock.findMany({
+        where: { blockedId: userId },
+        select: { blockerId: true },
+        take: 2000,
+      }),
+    ]);
+    const ids = new Set<string>();
+    for (const row of initiated) ids.add(row.blockedId);
+    for (const row of received) ids.add(row.blockerId);
+    return [...ids];
+  }
 }

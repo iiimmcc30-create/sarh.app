@@ -20,6 +20,7 @@ const SECTIONS: Section[] = [
     items: [
       { icon: 'shield-check-outline', label: 'التحقق من الحساب والأمان', route: '/settings/account' },
       { icon: 'lock-outline', label: 'تغيير كلمة المرور والبريد', route: '/settings/account' },
+      { icon: 'block', label: 'المحظورين', route: '/settings/blocked' },
     ],
   },
   {

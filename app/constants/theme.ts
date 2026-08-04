@@ -1,6 +1,8 @@
 // SAFAT — Logo-aligned brand theme (forest green · white · black)
 // Supports dark + light palettes; apply via bootstrap before app modules load.
 
+import { luxuryDark } from './homeLuxury';
+
 export type ColorScheme = 'light' | 'dark';
 
 export type ThemeColors = {
@@ -73,29 +75,29 @@ const sharedAccents = {
 };
 
 const darkColors: BaseThemeColors = {
-  bgDeep: '#081E18',
-  bgPrimary: '#081E18',
-  bgSurface: '#113126',
-  bgElevated: '#17392D',
-  bgGlass: 'rgba(17, 49, 38, 0.72)',
-  bgGlassStrong: 'rgba(17, 49, 38, 0.92)',
-  bgOverlay: 'rgba(8, 30, 24, 0.78)',
-  royal: '#0F2A22',
-  royalDeep: '#081E18',
-  electric: '#74C96A',
-  electricBright: '#97E082',
-  glow: '#97E082',
-  cyan: '#B8F0A8',
-  silver: '#C8E6C4',
-  silverBright: '#E8F5E6',
-  textPrimary: '#F4FAF6',
-  textSecondary: '#C8E0D4',
-  textMuted: '#8FB89E',
-  textSubtle: '#6A9A82',
-  borderSoft: 'rgba(255, 255, 255, 0.08)',
-  borderMid: 'rgba(255, 255, 255, 0.12)',
-  borderStrong: 'rgba(151, 224, 130, 0.35)',
-  borderHairline: 'rgba(255, 255, 255, 0.06)',
+  bgDeep: luxuryDark.bg,
+  bgPrimary: luxuryDark.bg,
+  bgSurface: luxuryDark.card,
+  bgElevated: luxuryDark.surface,
+  bgGlass: luxuryDark.tabGlass,
+  bgGlassStrong: 'rgba(9, 9, 9, 0.95)',
+  bgOverlay: 'rgba(0, 0, 0, 0.78)',
+  royal: luxuryDark.surface,
+  royalDeep: luxuryDark.bg,
+  electric: luxuryDark.accent,
+  electricBright: luxuryDark.accent,
+  glow: luxuryDark.accent,
+  cyan: luxuryDark.accent,
+  silver: luxuryDark.textSecondary,
+  silverBright: luxuryDark.textPrimary,
+  textPrimary: luxuryDark.textPrimary,
+  textSecondary: luxuryDark.textSecondary,
+  textMuted: luxuryDark.textMuted,
+  textSubtle: luxuryDark.textMuted,
+  borderSoft: luxuryDark.border,
+  borderMid: luxuryDark.border,
+  borderStrong: luxuryDark.accentGlow,
+  borderHairline: luxuryDark.border,
   ...sharedAccents,
 };
 
@@ -127,16 +129,16 @@ const lightColors: BaseThemeColors = {
 };
 
 const darkGradients: ThemeGradients = {
-  hero: ['#081E18', '#0F2A22', '#113126'],
-  royal: ['#081E18', '#113126', '#74C96A'],
-  glass: ['rgba(17,49,38,0.85)', 'rgba(8,30,24,0.92)'],
-  liveOverlay: ['transparent', 'rgba(8,30,24,0.45)', 'rgba(8,30,24,0.96)'],
-  card: ['rgba(23,57,45,0.95)', 'rgba(17,49,38,0.98)'],
-  cardHover: ['rgba(23,57,45,1)', 'rgba(17,49,38,1)'],
+  hero: [luxuryDark.bg, luxuryDark.bg, luxuryDark.card],
+  royal: [luxuryDark.bg, luxuryDark.surface, luxuryDark.card],
+  glass: [luxuryDark.tabGlass, luxuryDark.bg],
+  liveOverlay: ['transparent', 'rgba(0,0,0,0.45)', 'rgba(9,9,9,0.96)'],
+  card: [luxuryDark.card, luxuryDark.surface],
+  cardHover: [luxuryDark.surface, luxuryDark.card],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
-  electric: ['#74C96A', '#97E082', '#B8F0A8'],
-  primary: ['#97E082', '#74C96A', '#113126'],
-  rim: ['rgba(151,224,130,0.35)', 'rgba(151,224,130,0)'],
+  electric: [luxuryDark.accent, luxuryDark.accent, luxuryDark.accent],
+  primary: [luxuryDark.accent, luxuryDark.accent, luxuryDark.surface],
+  rim: [luxuryDark.accentGlow, 'rgba(105, 216, 79, 0)'],
 };
 
 const lightGradients: ThemeGradients = {
@@ -165,16 +167,16 @@ export function createShadow(palette: BaseThemeColors) {
     soft: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isLight ? 0.04 : 0.18,
-      shadowRadius: 8,
+      shadowOpacity: isLight ? 0.04 : 0.12,
+      shadowRadius: isLight ? 8 : 6,
       elevation: 2,
     },
     card: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: isLight ? 0.06 : 0.22,
-      shadowRadius: 14,
-      elevation: 5,
+      shadowOffset: { width: 0, height: isLight ? 6 : 2 },
+      shadowOpacity: isLight ? 0.06 : 0.12,
+      shadowRadius: isLight ? 14 : 6,
+      elevation: isLight ? 5 : 2,
     },
     pressed: {
       shadowColor: palette.electric,
@@ -197,14 +199,14 @@ export function getActiveScheme(): ColorScheme {
 }
 
 function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeColors {
-  const whiteText = palette.textPrimary;
+  const accent = palette.electric;
   return {
     ...palette,
-    textBrand: scheme === 'dark' ? whiteText : palette.glow,
-    textBrandStrong: scheme === 'dark' ? whiteText : palette.electricBright,
-    textBrandSoft: scheme === 'dark' ? whiteText : palette.cyan,
-    textBrandAlt: scheme === 'dark' ? whiteText : palette.electric,
-    textBrandSuccess: scheme === 'dark' ? whiteText : palette.success,
+    textBrand: scheme === 'dark' ? accent : palette.glow,
+    textBrandStrong: scheme === 'dark' ? accent : palette.electricBright,
+    textBrandSoft: scheme === 'dark' ? palette.textSecondary : palette.cyan,
+    textBrandAlt: scheme === 'dark' ? accent : palette.electric,
+    textBrandSuccess: scheme === 'dark' ? accent : palette.success,
   };
 }
 
@@ -221,7 +223,7 @@ export function applyThemeScheme(scheme: ColorScheme) {
 export function headerFadeGradient(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
     ? ['rgba(250, 251, 248, 0.98)', 'rgba(250, 251, 248, 0)']
-    : ['rgba(8, 30, 24, 0.98)', 'rgba(8, 30, 24, 0)'];
+    : ['rgba(9, 9, 9, 0.98)', 'rgba(9, 9, 9, 0)'];
 }
 
 export function imageCardOverlay(scheme: ColorScheme): readonly [string, string] {
@@ -239,7 +241,7 @@ export function imageCardOverlayStrong(scheme: ColorScheme): readonly [string, s
 export function scrimColor(scheme: ColorScheme, opacity = 0.85): string {
   return scheme === 'light'
     ? `rgba(250, 251, 248, ${opacity})`
-    : `rgba(8, 30, 24, ${opacity})`;
+    : `rgba(9, 9, 9, ${opacity})`;
 }
 
 /** Raised panel surface — darker gray in dark mode, softer tint in light (sidebar, posts, etc.). */
@@ -263,8 +265,8 @@ export const spacing = {
 export const radius = {
   sm: 12,
   md: 16,
-  lg: 24,
-  xl: 26,
+  lg: 22,
+  xl: 22,
   xxl: 28,
   pill: 999,
 };

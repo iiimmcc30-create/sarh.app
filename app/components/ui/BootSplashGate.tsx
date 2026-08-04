@@ -2,20 +2,38 @@ import { AppBootSplash } from '@/components/ui/AppBootSplash';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useFlaticonFonts } from '@/hooks/useFlaticonFonts';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 type BootSplashGateProps = {
   children: ReactNode;
 };
 
+const IS_WEB = Platform.OS === 'web';
+const BOOT_FAILSAFE_MS = IS_WEB ? 3500 : 8000;
+
 /** Shows animated boot splash until fonts, auth, and onboarding are ready. */
 export function BootSplashGate({ children }: BootSplashGateProps) {
-  const { loaded: fontsLoaded } = useFlaticonFonts();
+  const { loaded: fontsLoaded, error: fontError } = useFlaticonFonts();
   const { isLoading: authLoading } = useAuth();
   const { isLoading: onboardingLoading } = useOnboarding();
   const [showBoot, setShowBoot] = useState(true);
 
-  const appReady = fontsLoaded && !authLoading && !onboardingLoading;
+  const fontsReady = IS_WEB ? true : fontsLoaded || Boolean(fontError);
+  const appReady = fontsReady && !authLoading && !onboardingLoading;
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowBoot(false), BOOT_FAILSAFE_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (appReady && IS_WEB) {
+      const t = setTimeout(() => setShowBoot(false), 1200);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [appReady]);
 
   return (
     <>

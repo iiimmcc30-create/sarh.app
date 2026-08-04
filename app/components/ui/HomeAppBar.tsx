@@ -1,12 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { ds } from '@/constants/designSystem';
 import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlRow } from '@/lib/rtl';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HomeAppBarProps = {
   onMenu: () => void;
@@ -54,14 +54,15 @@ export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarPro
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
     bar: {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.sm,
-      minHeight: 52,
+      paddingBottom: spacing.md,
+      minHeight: 56,
+      backgroundColor: isDark ? colors.bgDeep : 'transparent',
     },
     logoWrap: {
       ...rtlRow,
@@ -71,20 +72,20 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       minWidth: 0,
     },
     logoAr: {
-      fontSize: 22,
+      fontSize: 24,
       fontWeight: '800',
-      color: scheme === 'dark' ? '#FFFFFF' : colors.electric,
+      color: colors.textPrimary,
       writingDirection: 'rtl',
     },
     logoSep: {
       fontSize: 17,
       fontWeight: '500',
-      color: scheme === 'dark' ? 'rgba(255,255,255,0.55)' : colors.textMuted,
+      color: colors.textMuted,
     },
     logoEn: {
       fontSize: 17,
       fontWeight: '700',
-      color: scheme === 'dark' ? '#FFFFFF' : colors.textPrimary,
+      color: colors.textPrimary,
     },
     actions: {
       alignItems: 'center',
@@ -94,12 +95,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
       borderRadius: ds.radius.pill,
-      backgroundColor: tokens.glass,
+      backgroundColor: isDark ? colors.bgElevated : 'rgba(255,255,255,0.08)',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      borderColor: isDark ? colors.borderSoft : 'rgba(255,255,255,0.1)',
+      ...(Platform.OS === 'ios'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: isDark ? 0.18 : 0.18,
+            shadowRadius: 6,
+          }
+        : { elevation: 2 }),
     },
   });
 }

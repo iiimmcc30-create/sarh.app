@@ -115,7 +115,7 @@ export function localizePlan(plan: SubscriptionPlan): SubscriptionPlan {
 }
 
 export function mapApiPlan(raw: Record<string, unknown>): SubscriptionPlan {
-  const slug = String(raw.slug ?? raw.legacyId ?? raw.id ?? 'free');
+  const slug = normalizeSlug(String(raw.slug ?? raw.legacyId ?? raw.id ?? 'free'));
   const mapped: SubscriptionPlan = {
     id: String(raw.id ?? slug),
     slug,

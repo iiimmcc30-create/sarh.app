@@ -6,6 +6,7 @@ import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -24,7 +25,12 @@ import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
+import { authFetch } from '@/services/authFetch';
+import { uploadImageFromUri } from '@/services/upload';
 import { rtlInputText, ltrInputText } from '@/lib/rtl';
+
+const HASHTAG_BLUE = '#1D9BF0';
+const MAX_POST_IMAGES = 4;
 
 const POST_TYPES = [
   { id: 'text', icon: 'document-text-outline', label: 'نص', iconLib: 'ionicons' },
@@ -50,6 +56,7 @@ export default function CreatePostScreen() {
   const [arabicContent, setArabicContent] = useState('');
   const [selectedType, setSelectedType] = useState('text');
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
+  const [imageUris, setImageUris] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPost, setLoadingPost] = useState(!!editId);
 
@@ -95,23 +102,70 @@ export default function CreatePostScreen() {
     toggleHashtag(tag);
   };
 
+  const pickImages = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('إذن مطلوب', 'يرجى السماح بالوصول إلى الصور لإضافتها للمنشور');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      selectionLimit: MAX_POST_IMAGES - imageUris.length,
+      quality: 0.85,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      setImageUris((prev) =>
+        [...prev, ...result.assets.map((a) => a.uri)].slice(0, MAX_POST_IMAGES),
+      );
+      setSelectedType('image');
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImageUris((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handlePost = async () => {
-    if (!canPost) return;
+    if (!canPost || !accessToken) return;
     setSubmitting(true);
     const text = arabicContent.trim();
-    const payload = {
-      content: text,
-      arabicContent: text,
-    };
-    const success = isEditing && editId
-      ? await updatePost(editId, payload)
-      : await addPost(payload);
-    setSubmitting(false);
 
-    if (success) {
-      router.back();
-    } else {
-      Alert.alert('خطأ', isEditing ? 'فشل تحديث المنشور.' : 'فشل نشر المنشور. يرجى المحاولة لاحقاً.');
+    try {
+      const uploadedUrls: string[] = [];
+      for (const uri of imageUris) {
+        const url = await uploadImageFromUri(accessToken, uri, 'posts');
+        if (url) uploadedUrls.push(url);
+      }
+
+      if (imageUris.length > 0 && uploadedUrls.length === 0) {
+        Alert.alert('خطأ', 'فشل رفع الصور. حاول مجدداً.');
+        return;
+      }
+
+      const payload = {
+        content: text,
+        arabicContent: text,
+        ...(uploadedUrls.length > 0
+          ? { images: uploadedUrls, image: uploadedUrls[0] }
+          : {}),
+      };
+
+      const success = isEditing && editId
+        ? await updatePost(editId, payload)
+        : await addPost(payload);
+
+      if (success) {
+        router.back();
+      } else {
+        Alert.alert('خطأ', isEditing ? 'فشل تحديث المنشور.' : 'فشل نشر المنشور. يرجى المحاولة لاحقاً.');
+      }
+    } catch {
+      Alert.alert('خطأ', 'حدث خطأ أثناء النشر. حاول مجدداً.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -192,6 +246,29 @@ export default function CreatePostScreen() {
             </View>
           </View>
 
+          {/* Image previews */}
+          {imageUris.length > 0 && (
+            <View style={styles.imagePreviewRow}>
+              {imageUris.map((uri, index) => (
+                <View key={`${uri}-${index}`} style={styles.imagePreviewWrap}>
+                  <Image source={{ uri }} style={styles.imagePreview} contentFit="cover" />
+                  <Pressable
+                    style={styles.imageRemoveBtn}
+                    onPress={() => removeImage(index)}
+                    hitSlop={6}
+                  >
+                    <AppIcon name="close" size={14} color="#fff" />
+                  </Pressable>
+                </View>
+              ))}
+              {imageUris.length < MAX_POST_IMAGES && (
+                <Pressable style={styles.imageAddBtn} onPress={pickImages}>
+                  <AppIcon name="add" size={24} color={colors.textMuted} />
+                </Pressable>
+              )}
+            </View>
+          )}
+
           {/* Audience */}
           <Pressable style={styles.audienceRow}>
             <AppIcon name="earth" size={14} color={colors.electricBright} />
@@ -240,6 +317,18 @@ export default function CreatePostScreen() {
                 {arabicContent ? (
                   <Text style={styles.previewText}>{arabicContent}</Text>
                 ) : null}
+                {imageUris.length > 0 && (
+                  <View style={styles.previewImagesRow}>
+                    {imageUris.map((uri, index) => (
+                      <Image
+                        key={`${uri}-${index}`}
+                        source={{ uri }}
+                        style={styles.previewImageThumb}
+                        contentFit="cover"
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
           )}
@@ -256,12 +345,17 @@ export default function CreatePostScreen() {
         >
           <View style={styles.toolbarLeft}>
             {[
-              { icon: 'image-outline', label: 'صورة' },
+              { icon: 'image-outline', label: 'صورة', action: pickImages },
               { icon: 'location-outline', label: 'موقع' },
               { icon: 'at-outline', label: 'إشارة' },
               { icon: 'link-outline', label: 'رابط' },
             ].map((tool) => (
-              <Pressable key={tool.icon} style={styles.toolBtn} hitSlop={8}>
+              <Pressable
+                key={tool.icon}
+                style={styles.toolBtn}
+                hitSlop={8}
+                onPress={tool.action}
+              >
                 <AppIcon name={tool.icon} size={20} color={colors.electricBright} />
               </Pressable>
             ))}
@@ -353,9 +447,9 @@ function createStyles(colors: ThemeColors) {
     borderRadius: radius.pill, backgroundColor: colors.bgSurface,
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  hashtagChipActive: { backgroundColor: `${colors.electric}20`, borderColor: colors.electric },
+  hashtagChipActive: { backgroundColor: `${HASHTAG_BLUE}18`, borderColor: HASHTAG_BLUE },
   hashtagText: { ...typography.caption, color: colors.textMuted },
-  hashtagTextActive: { color: colors.textBrandStrong },
+  hashtagTextActive: { color: HASHTAG_BLUE },
   previewSection: { padding: spacing.lg, gap: spacing.sm },
   previewLabel: { ...typography.micro, color: colors.textMuted },
   previewCard: {
@@ -368,6 +462,62 @@ function createStyles(colors: ThemeColors) {
   previewName: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
   previewHandle: { ...typography.micro, color: colors.textMuted },
   previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, writingDirection: 'rtl' },
+  previewImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: radius.md,
+    marginTop: spacing.sm,
+  },
+  previewImagesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  previewImageThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.md,
+  },
+  imagePreviewRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  imagePreviewWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+  imageRemoveBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageAddBtn: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgSurface,
+  },
   previewSubText: { ...typography.caption, color: colors.textSecondary },
   toolbar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

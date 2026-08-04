@@ -32,7 +32,10 @@ export function CurrentPlanSummary({
   permissions,
   usageCounters,
 }: CurrentPlanSummaryProps) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+  }));
 
   const dailyLimit = permissions.maxAdsPer24Hours;
   const dailyUsed = usageCounters.dailyAdsUsed;

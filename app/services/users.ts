@@ -24,6 +24,7 @@ export type PublicUserProfile = {
   listingsCount: number;
   postsCount: number;
   isFollowing: boolean;
+  isBlocked?: boolean;
 };
 
 export async function fetchUserProfile(userId: string): Promise<PublicUserProfile | null> {
@@ -114,4 +115,40 @@ export async function rateUser(userId: string, rating: number): Promise<RateUser
   const json = await res.json();
   if (!json.success) return null;
   return json.data as RateUserResult;
+}
+
+export type BlockedUser = {
+  id: string;
+  username: string;
+  displayName: string;
+  arabicName: string;
+  avatar?: string;
+  verified: boolean;
+  blockedAt: string;
+};
+
+export async function fetchBlockedUsers(): Promise<BlockedUser[]> {
+  const res = await authFetch(`${API_BASE}/api/users/blocked`, {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' },
+  });
+  if (!res.ok) return [];
+  const json = await res.json();
+  if (!json.success || !Array.isArray(json.data?.users)) return [];
+  return json.data.users as BlockedUser[];
+}
+
+export async function setBlockUser(
+  userId: string,
+  blocked: boolean,
+): Promise<{ blocked: boolean } | null> {
+  const res = await authFetch(`${API_BASE}/api/users/${userId}/block`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ blocked }),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.success || typeof json.data?.blocked !== 'boolean') return null;
+  return json.data as { blocked: boolean };
 }

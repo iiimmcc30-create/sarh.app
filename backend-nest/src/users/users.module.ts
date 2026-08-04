@@ -9,5 +9,6 @@ import { GatewaySharedModule } from '../gateway/gateway-shared.module';
   imports: [RedisModule, GatewaySharedModule],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
+  exports: [UsersRepository],
 })
 export class UsersModule {}

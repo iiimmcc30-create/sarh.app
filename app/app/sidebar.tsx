@@ -201,6 +201,12 @@ export default function SidebarScreen() {
 
   const serviceItems: MenuItem[] = [
     {
+      key: 'sarh-services',
+      icon: 'briefcase-outline',
+      label: 'خدمات سرح',
+      route: '/sarh-services',
+    },
+    {
       key: 'orders',
       icon: 'bag-outline',
       label: 'طلباتي',

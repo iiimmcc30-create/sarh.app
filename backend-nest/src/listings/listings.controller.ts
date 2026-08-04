@@ -31,8 +31,11 @@ export class ListingsController {
   @RateLimit('api')
   @Get()
   @HttpCode(HttpStatus.OK)
-  async list(@Query() query: ListListingsQueryDto) {
-    return successResponse(await this.listings.list(query));
+  async list(
+    @Query() query: ListListingsQueryDto,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    return successResponse(await this.listings.list(query, user?.userId));
   }
 
   @RateLimit('api')
@@ -59,6 +62,19 @@ export class ListingsController {
     @Body() dto: CreateListingCommentDto,
   ) {
     return successResponse(await this.listings.createComment(user, id, dto));
+  }
+
+  @RateLimit('api')
+  @Delete(':id/comments/:commentId')
+  @HttpCode(HttpStatus.OK)
+  async deleteComment(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return successResponse(
+      await this.listings.deleteComment(user, id, commentId),
+    );
   }
 
   @OptionalAuth()

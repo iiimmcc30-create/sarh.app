@@ -8,6 +8,7 @@ export type ListingSearchParams = {
   minPrice?: number;
   maxPrice?: number;
   cursor?: string;
+  sellerId?: string;
 };
 
 type BackendListing = {
@@ -98,6 +99,7 @@ export async function searchListings(
   if (params.minPrice != null) qs.set('minPrice', String(params.minPrice));
   if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
   if (params.cursor) qs.set('cursor', params.cursor);
+  if (params.sellerId) qs.set('sellerId', params.sellerId);
 
   const headers: HeadersInit = accessToken
     ? { Authorization: `Bearer ${accessToken}` }

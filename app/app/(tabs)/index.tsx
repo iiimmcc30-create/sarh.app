@@ -169,7 +169,7 @@ export default function HomeScreen() {
                   key={item.id}
                   listing={item}
                   variant="list"
-                  listMode="home"
+                  listMode="market"
                   onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
                 />
               ))
@@ -220,15 +220,16 @@ function createHomeStyles(colors: ThemeColors) {
     root: { flex: 1, backgroundColor: colors.bgDeep },
     container: { flex: 1, backgroundColor: colors.bgDeep },
     scrollContent: {
-      paddingBottom: spacing.md,
+      paddingBottom: spacing.lg,
     },
     listingsSection: {
-      gap: spacing.sm,
+      gap: spacing.md,
     },
     postsSection: {
       marginTop: spacing.sm,
+      gap: spacing.md,
     },
-    empty: { alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.md },
+    empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
     emptyIcon: { fontSize: 36 },
     emptyText: { ...typography.body, color: colors.textMuted },
   });

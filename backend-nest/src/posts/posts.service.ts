@@ -11,6 +11,7 @@ import {
   UpdatePostDto,
 } from './dto/posts.dto';
 import { PostsRepository } from './repositories/posts.repository';
+import { UsersRepository } from '../users/repositories/users.repository';
 import { notDeleted } from '../common/utils/soft-delete.util';
 
 const PAGE_SIZE = 20;
@@ -21,6 +22,7 @@ type PostWithCount = Awaited<ReturnType<PostsRepository['findFeed']>>[number];
 export class PostsService {
   constructor(
     private readonly repo: PostsRepository,
+    private readonly usersRepo: UsersRepository,
     private readonly cache: RedisCacheService,
     private readonly notifications: AppNotificationsService,
   ) {}
@@ -62,12 +64,28 @@ export class PostsService {
       ? { authorId, ...notDeleted, isHidden: false }
       : { ...notDeleted, isHidden: false };
 
+    let blockedIds: string[] = [];
+    if (user?.userId) {
+      blockedIds = await this.usersRepo.findBlockedRelationshipIds(user.userId);
+      if (authorId && blockedIds.includes(authorId)) {
+        return { posts: [], nextCursor: null, hasMore: false };
+      }
+    }
+
     if (followingOnly && user?.userId) {
       const followingIds = await this.repo.findFollowingIds(user.userId);
-      const authorIds = [...followingIds, user.userId];
+      let authorIds = [...followingIds, user.userId];
+      if (blockedIds.length > 0) {
+        authorIds = authorIds.filter((id) => !blockedIds.includes(id));
+      }
       where = {
         ...where,
         authorId: { in: authorIds },
+      };
+    } else if (blockedIds.length > 0 && !authorId) {
+      where = {
+        ...where,
+        authorId: { notIn: blockedIds },
       };
     }
 
@@ -103,9 +121,19 @@ export class PostsService {
     return result;
   }
 
+  private normalizeImages(image?: string | null, images?: string[]): string[] {
+    if (images?.length) return images.slice(0, 4);
+    if (image) return [image];
+    return [];
+  }
+
   async createPost(user: JwtPayload, dto: CreatePostDto) {
+    const images = this.normalizeImages(dto.image, dto.images);
     const post = await this.repo.create({
-      ...dto,
+      content: dto.content,
+      arabicContent: dto.arabicContent,
+      image: images[0] ?? null,
+      images,
       author: { connect: { id: user.userId } },
     });
 
@@ -156,7 +184,21 @@ export class PostsService {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
-    const updated = await this.repo.update(id, dto);
+    const updated = await this.repo.update(id, {
+      content: dto.content,
+      arabicContent: dto.arabicContent,
+      ...(dto.images !== undefined
+        ? {
+            images: dto.images,
+            image: dto.images[0] ?? null,
+          }
+        : dto.image !== undefined
+          ? {
+              image: dto.image,
+              images: dto.image ? [dto.image] : [],
+            }
+          : {}),
+    });
     await this.invalidatePostCaches(id, post.authorId);
     return updated;
   }
@@ -267,6 +309,22 @@ export class PostsService {
     await this.cache.del(this.cache.keys.post(postId));
     await this.cache.del('posts:feed:first');
     return comment;
+  }
+
+  async deleteComment(user: JwtPayload, postId: string, commentId: string) {
+    if (!postId || !commentId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+
+    const comment = await this.repo.findCommentMeta(commentId, postId);
+    if (!comment) throwApi(404, 'not_found', 'التعليق غير موجود');
+
+    if (comment.authorId !== user.userId && user.role !== 'ADMIN') {
+      throwApi(403, 'forbidden', 'غير مسموح');
+    }
+
+    await this.repo.deleteComment(commentId, postId);
+    await this.cache.del(this.cache.keys.post(postId));
+    await this.cache.del('posts:feed:first');
+    return { deleted: true };
   }
 
   private async invalidatePostCaches(postId: string, authorId: string) {
