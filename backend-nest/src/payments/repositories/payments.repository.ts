@@ -357,17 +357,7 @@ export class PaymentsRepository {
               .catch(() => {});
           }
 
-          if (normalizedPlan !== 'free' && audience === 'BUTCHER') {
-            await tx.butcher
-              .updateMany({
-                where: { userId: params.userId },
-                data: {
-                  subscriptionActive: true,
-                  subscriptionExpiry: newRenewDate,
-                },
-              })
-              .catch(() => {});
-          }
+          // Butcher subscription payments no longer affect listing visibility.
         }
 
         const updateData: Prisma.SubscriptionUpdateInput = {

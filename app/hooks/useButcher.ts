@@ -10,7 +10,6 @@ import {
   ButcherStory,
   Country,
   mapButcherFromApi,
-  rankButchers,
 } from '@/services/butcherData';
 
 export type ButcherFilter = {
@@ -204,7 +203,7 @@ export function useButcher() {
   }, [selectedButcherId]);
 
   // ── Ranked list ────────────────────────────────────────────────────────────
-  const rankedAll = useMemo(() => rankButchers(butchers), [butchers]);
+  const rankedAll = useMemo(() => butchers, [butchers]);
 
   // ── Filtered list ──────────────────────────────────────────────────────────
   const filteredButchers = useMemo<ButcherProfile[]>(() => {

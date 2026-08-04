@@ -63,7 +63,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
             <Text style={c.name} numberOfLines={1}>
               {butcher.nameAr}
             </Text>
-            {butcher.subscriptionActive ? (
+            {butcher.type === 'verified' ? (
               <AppIcon name="shield-checkmark" size={12} color={colors.gold} />
             ) : null}
           </View>

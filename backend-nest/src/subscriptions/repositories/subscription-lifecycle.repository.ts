@@ -142,15 +142,7 @@ export class SubscriptionLifecycleRepository {
         true,
       );
 
-      await tx.butcher
-        .updateMany({
-          where: { userId },
-          data: {
-            subscriptionActive: false,
-            subscriptionExpiry: null,
-          },
-        })
-        .catch(() => {});
+      // Butcher visibility is earned through ranking only — not subscriptions.
 
       return { previousPlanId };
     });
@@ -205,20 +197,7 @@ export class SubscriptionLifecycleRepository {
           });
         }
 
-        const isButcherPaid =
-          params.planAudience === 'BUTCHER' && normalized !== 'free';
-
-        if (isButcherPaid) {
-          await tx.butcher
-            .updateMany({
-              where: { userId: params.userId },
-              data: {
-                subscriptionActive: true,
-                subscriptionExpiry: params.newRenewDate,
-              },
-            })
-            .catch(() => {});
-        }
+        // Butcher paid plans no longer affect search visibility or ranking.
       }
     });
   }

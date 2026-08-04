@@ -33,6 +33,7 @@ import type {
 } from '../types';
 import { LoggerService } from '../../common/services/logger.service';
 import { ButcherApplicationNotificationsService } from './butcher-application-notifications.service';
+import { ButcherRankingService } from '../../butchers/services/butcher-ranking.service';
 
 function resolveAdminLimit(limit?: number): number {
   if (!limit) return ADMIN_PAGE_SIZE_DEFAULT;
@@ -75,6 +76,7 @@ export class ButcherApplicationAdminService {
     private readonly transactions: TransactionService,
     private readonly applicationNotifications: ButcherApplicationNotificationsService,
     private readonly logger: LoggerService,
+    private readonly ranking: ButcherRankingService,
   ) {}
 
   async listApplications(query: AdminListQuery): Promise<
@@ -193,6 +195,7 @@ export class ButcherApplicationAdminService {
       });
 
       if (result.isNewApproval) {
+        void this.ranking.onButcherCreated(result.butcher.id);
         void this.applicationNotifications
           .notifyApplicationApproved(
             result.application,

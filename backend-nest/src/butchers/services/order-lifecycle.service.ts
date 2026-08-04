@@ -5,6 +5,7 @@ import { SocketEmitService } from '../../gateway/services/socket-emit.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { throwApi } from '../../common/exceptions/api.exception';
 import { OrderStateMachineService } from './order-state-machine.service';
+import { ButcherRankingService } from './butcher-ranking.service';
 
 type CreateOrderInput = {
   butcherId: string;
@@ -38,6 +39,7 @@ export class OrderLifecycleService {
     private readonly stateMachine: OrderStateMachineService,
     private readonly notifications: AppNotificationsService,
     private readonly sockets: SocketEmitService,
+    private readonly ranking: ButcherRankingService,
   ) {}
 
   private async nextOrderNumber(tx: Prisma.TransactionClient): Promise<string> {
@@ -382,6 +384,11 @@ export class OrderLifecycleService {
           orderNumber: updated.order.orderNumber,
         },
       );
+      void this.ranking.onOrderCancelled(updated.order.butcher.id);
+    }
+
+    if (updated.order.status === 'delivered') {
+      void this.ranking.onOrderDelivered(updated.order.butcher.id);
     }
 
     return updated.order;

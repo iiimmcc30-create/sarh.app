@@ -32,17 +32,21 @@ export class ButchersController {
   async list(
     @Query('cursor') cursor?: string,
     @Query('country') country?: string,
-    @Query('verified') verified?: string,
     @Query('search') search?: string,
     @Query('isOpen') isOpen?: string,
+    @Query('sort') sort?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
   ) {
     return successResponse(
       await this.butchers.listButchers({
         cursor,
         country,
-        verified,
         search,
         isOpen,
+        sort,
+        lat,
+        lng,
       }),
     );
   }
@@ -183,6 +187,36 @@ export class ButchersController {
   @HttpCode(HttpStatus.OK)
   async deleteStory(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return successResponse(await this.butchers.deleteStory(id, user));
+  }
+
+  @RateLimit('api')
+  @Post(':id/favorite')
+  @HttpCode(HttpStatus.OK)
+  async addFavorite(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(await this.butchers.addFavorite(id, user));
+  }
+
+  @RateLimit('api')
+  @Delete(':id/favorite')
+  @HttpCode(HttpStatus.OK)
+  async removeFavorite(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(await this.butchers.removeFavorite(id, user));
+  }
+
+  @RateLimit('api')
+  @Get(':id/favorite')
+  @HttpCode(HttpStatus.OK)
+  async favoriteStatus(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(await this.butchers.getFavoriteStatus(id, user));
   }
 
   @OptionalAuth()

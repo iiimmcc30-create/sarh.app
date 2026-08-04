@@ -15,6 +15,9 @@ import {
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import { OrderLifecycleService } from './services/order-lifecycle.service';
 import { OrderStateMachineService } from './services/order-state-machine.service';
+import { ButcherRankingService } from './services/butcher-ranking.service';
+import { REVIEW_EDIT_WINDOW_DAYS } from './lib/butcher-ranking.util';
+import type { ButcherListSort } from './repositories/butchers.repository';
 import { resolveProductAvailableQuantity } from './lib/product-inventory.util';
 
 const PAGE_SIZE = 20;
@@ -207,6 +210,7 @@ export class ButchersService {
     private readonly redis: RedisService,
     private readonly orderLifecycle: OrderLifecycleService,
     private readonly orderStateMachine: OrderStateMachineService,
+    private readonly ranking: ButcherRankingService,
   ) {}
 
   async listButchers(query: {
@@ -215,13 +219,18 @@ export class ButchersService {
     verified?: string;
     search?: string;
     isOpen?: string;
+    sort?: string;
+    lat?: string;
+    lng?: string;
   }) {
     const { cursor, country, search } = query;
-    const verified = query.verified === 'true';
     const isOpen = query.isOpen === 'true';
+    const sort = this.parseSort(query.sort);
+    const lat = query.lat ? Number(query.lat) : undefined;
+    const lng = query.lng ? Number(query.lng) : undefined;
 
     const cacheKey = !search
-      ? `butchers:v2:${JSON.stringify({ cursor, country, verified, isOpen })}`
+      ? `butchers:v3:${JSON.stringify({ cursor, country, isOpen, sort, lat, lng })}`
       : null;
 
     if (cacheKey) {
@@ -231,7 +240,6 @@ export class ButchersService {
 
     const where: Prisma.ButcherWhereInput = { ...notDeleted };
     if (country) where.country = country as Prisma.ButcherWhereInput['country'];
-    if (verified) where.subscriptionActive = true;
     if (isOpen) where.isOpen = true;
     if (search && search.length >= 2) {
       where.OR = [
@@ -246,6 +254,9 @@ export class ButchersService {
       where,
       cursor,
       take: PAGE_SIZE + 1,
+      sort,
+      lat,
+      lng,
     });
 
     const hasMore = butchers.length > PAGE_SIZE;
@@ -255,6 +266,21 @@ export class ButchersService {
 
     if (cacheKey) await this.redis.cacheSet(cacheKey, result, 180);
     return result;
+  }
+
+  private parseSort(raw?: string): ButcherListSort {
+    const allowed: ButcherListSort[] = [
+      'rank',
+      'rating',
+      'favorites',
+      'orders',
+      'distance',
+      'new',
+    ];
+    if (raw && allowed.includes(raw as ButcherListSort)) {
+      return raw as ButcherListSort;
+    }
+    return 'rank';
   }
 
   registerButcher() {
@@ -883,7 +909,63 @@ export class ButchersService {
     const butcher = await this.repo.findButcherOwner(butcherId);
     if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
 
-    return this.repo.findReviews(butcherId);
+    const [reviews, distribution] = await Promise.all([
+      this.repo.findReviews(butcherId),
+      this.repo.aggregateReviewDistribution(butcherId),
+    ]);
+
+    const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const row of distribution) {
+      dist[row.rating] = row._count.rating;
+    }
+
+    return { reviews, distribution: dist };
+  }
+
+  async addFavorite(butcherId: string, user: JwtPayload) {
+    const butcher = await this.repo.findButcherForReview(butcherId);
+    if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
+    if (butcher.userId === user.userId) {
+      throwApi(400, 'invalid_action', 'لا يمكنك إضافة ملحمتك للمفضلة');
+    }
+
+    try {
+      await this.repo.addFavorite(butcherId, user.userId);
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        (err as { code: string }).code === 'P2002'
+      ) {
+        return { favorited: true };
+      }
+      throw err;
+    }
+
+    await this.ranking.onFavoriteChanged(butcherId);
+    await this.redis.cacheDelPattern('butchers:v3:*');
+    return { favorited: true };
+  }
+
+  async removeFavorite(butcherId: string, user: JwtPayload) {
+    const butcher = await this.repo.findButcherForReview(butcherId);
+    if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
+
+    try {
+      await this.repo.removeFavorite(butcherId, user.userId);
+    } catch {
+      return { favorited: false };
+    }
+
+    await this.ranking.onFavoriteChanged(butcherId);
+    await this.redis.cacheDelPattern('butchers:v3:*');
+    return { favorited: false };
+  }
+
+  async getFavoriteStatus(butcherId: string, user: JwtPayload) {
+    const row = await this.repo.isFavorited(butcherId, user.userId);
+    return { favorited: !!row };
   }
 
   async submitReview(butcherId: string, user: JwtPayload, body: unknown) {
@@ -904,6 +986,30 @@ export class ButchersService {
       );
     }
 
+    const deliveredOrder = await this.repo.findDeliveredOrderForReview(
+      butcherId,
+      user.userId,
+    );
+    if (!deliveredOrder) {
+      throwApi(
+        403,
+        'order_required',
+        'يمكنك التقييم فقط بعد استلام طلب مكتمل من هذه الملحمة',
+      );
+    }
+
+    const existing = await this.repo.findReviewByButcherAndUser(
+      butcherId,
+      user.userId,
+    );
+    if (existing) {
+      const editDeadline = new Date(existing.createdAt);
+      editDeadline.setDate(editDeadline.getDate() + REVIEW_EDIT_WINDOW_DAYS);
+      if (new Date() > editDeadline) {
+        throwApi(403, 'edit_window_closed', 'انتهت مدة تعديل التقييم');
+      }
+    }
+
     const reviewInput = parsed.data;
 
     try {
@@ -921,7 +1027,9 @@ export class ButchersService {
         agg._count.rating,
       );
 
+      await this.ranking.onReviewChanged(butcherId);
       await this.redis.cacheDel(`butcher:${butcherId}`);
+      await this.redis.cacheDelPattern('butchers:v3:*');
 
       logger.info(
         { butcherId, reviewerId: user.userId },
@@ -929,14 +1037,6 @@ export class ButchersService {
       );
       return review;
     } catch (err: unknown) {
-      if (
-        typeof err === 'object' &&
-        err !== null &&
-        'code' in err &&
-        (err as { code: string }).code === 'P2002'
-      ) {
-        throwApi(409, 'already_reviewed', 'لقد قيّمت هذه الملحمة من قبل');
-      }
       logger.error({ err }, 'Submit review error');
       throwApi(500, 'server_error', 'خطأ في الخادم');
     }

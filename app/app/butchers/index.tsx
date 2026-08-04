@@ -6,6 +6,7 @@ import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
+import * as Location from 'expo-location';
 import {
   Pressable,
   ScrollView,
@@ -25,7 +26,9 @@ import {
   ButcherProfile,
   ButcherStory,
   Country,
-  rankButchers,
+  BUTCHER_RANKING_TABS,
+  type ButcherRankingCategory,
+  mapButcherFromApi,
 } from '@/services/butcherData';
 import { ButcherCard } from '@/components/feature/ButcherCard';
 
@@ -110,7 +113,8 @@ export default function ButchersScreen() {
   const [butchersList, setButchersList] = useState<ButcherProfile[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<Country | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [rankingTab, setRankingTab] = useState<ButcherRankingCategory>('rating');
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [seenStories, setSeenStories] = useState<Set<string>>(new Set());
   const [butcherStories, setButcherStories] = useState<ButcherStory[]>([]);
 
@@ -148,49 +152,35 @@ export default function ButchersScreen() {
   }, [accessToken]);
 
   useEffect(() => {
+    if (rankingTab !== 'distance') return;
+    void (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const pos = await Location.getCurrentPositionAsync({});
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      } catch {
+        // Location unavailable — distance tab falls back to server rank order.
+      }
+    })();
+  }, [rankingTab]);
+
+  useEffect(() => {
     const fetchButchers = async () => {
       try {
         const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const res = await fetch(`${API_BASE}/api/butchers`, { headers });
+        const params = new URLSearchParams({ sort: rankingTab });
+        if (rankingTab === 'distance' && userCoords) {
+          params.set('lat', String(userCoords.lat));
+          params.set('lng', String(userCoords.lng));
+        }
+        const res = await fetch(`${API_BASE}/api/butchers?${params.toString()}`, { headers });
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data?.butchers) {
             const mapped = json.data.butchers
               .filter((b: any) => (b.country || 'SA') !== 'EG')
-              .map((b: any) => ({
-              id: b.id,
-              name: b.nameAr || b.nameEn,
-              nameAr: b.nameAr,
-              logo: b.logo || undefined,
-              cover: b.cover || undefined,
-              type: b.type || 'regular',
-              country: b.country || 'SA',
-              city: b.city || '',
-              cityAr: b.cityAr || '',
-              address: b.address || '',
-              addressAr: b.addressAr || '',
-              lat: b.lat || 0,
-              lng: b.lng || 0,
-              phone: b.phone || '',
-              rating: b.rating ?? 5.0,
-              reviewCount: b.reviewCount ?? 0,
-              orderCompletionRate: b.orderCompletionRate ?? 100,
-              workingHours: {
-                open: b.openTime || '06:00',
-                close: b.closeTime || '22:00',
-                isOpen: b.isOpen ?? true,
-                closedOn: b.closedDays || [],
-              },
-              bio: b.bioAr || b.bioEn || '',
-              bioAr: b.bioAr || '',
-              specialties: b.specialties || [],
-              subscriptionActive: b.subscriptionActive ?? false,
-              subscriptionExpiry: b.subscriptionExpiry,
-              commercialReg: b.commercialReg,
-              activityScore: b.activityScore ?? 50,
-              totalOrders: b.totalOrders ?? 0,
-              joinedAt: b.createdAt || new Date().toISOString(),
-              }));
+              .map((b: any) => mapButcherFromApi(b));
             setButchersList(mapped);
           }
         }
@@ -199,24 +189,24 @@ export default function ButchersScreen() {
       }
     };
     fetchButchers();
-  }, [accessToken]);
+  }, [accessToken, rankingTab, userCoords]);
 
-  const ranked = rankButchers(butchersList);
-
-  const filtered = ranked.filter((b) => {
+  const filtered = butchersList.filter((b) => {
     if (selectedCountry !== 'all' && b.country !== selectedCountry) return false;
-    if (showVerifiedOnly && !b.subscriptionActive) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         b.nameAr.includes(q) ||
         b.name.toLowerCase().includes(q) ||
         b.cityAr.includes(q) ||
-        b.specialties.some((s) => s.includes(q))
+        b.specialties.some((sp) => sp.includes(q))
       );
     }
     return true;
   });
+
+  const activeTabLabel =
+    BUTCHER_RANKING_TABS.find((t) => t.id === rankingTab)?.label ?? 'الملاحم';
 
   const storiesWithSeen = butcherStories.map((s) => ({
     ...s,
@@ -249,19 +239,6 @@ export default function ButchersScreen() {
               <Text style={s.headerSub}>سوق الملاحم</Text>
             </View>
             <View style={s.headerActions}>
-              <Pressable
-                style={[s.filterBtn, showVerifiedOnly && s.filterBtnActive]}
-                onPress={() => setShowVerifiedOnly((v) => !v)}
-              >
-                <AppIcon
-                  name="shield-checkmark"
-                  size={16}
-                  color={showVerifiedOnly ? colors.gold : colors.textMuted}
-                />
-                <Text style={[s.filterBtnText, showVerifiedOnly && { color: colors.gold }]}>
-                  موثّق
-                </Text>
-              </Pressable>
               <Pressable
                 style={s.mapBtn}
                 onPress={() => router.push('/butchers/map')}
@@ -316,6 +293,28 @@ export default function ButchersScreen() {
               </Pressable>
             ))}
           </ScrollView>
+
+          {/* Ranking categories — text tabs only */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.rankingTabsRow}
+          >
+            {BUTCHER_RANKING_TABS.map((tab) => {
+              const active = rankingTab === tab.id;
+              return (
+                <Pressable
+                  key={tab.id}
+                  onPress={() => setRankingTab(tab.id)}
+                  style={[s.rankingTab, active && s.rankingTabActive]}
+                >
+                  <Text style={[s.rankingTabText, active && s.rankingTabTextActive]}>
+                    {tab.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* ── Stories ── */}
@@ -333,7 +332,7 @@ export default function ButchersScreen() {
         {/* ── Listing ── */}
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>الملاحم ({filtered.length})</Text>
+            <Text style={s.sectionTitle}>{activeTabLabel} ({filtered.length})</Text>
             <Pressable
               style={s.addBtn}
               onPress={() => {
@@ -455,6 +454,35 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.body,
     color: colors.textPrimary,
     textAlign: 'right',
+  },
+
+  rankingTabsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  rankingTab: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  rankingTabActive: {
+    backgroundColor: colors.electric + '18',
+    borderColor: colors.electric,
+  },
+  rankingTabText: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    writingDirection: 'rtl',
+  },
+  rankingTabTextActive: {
+    color: colors.electricBright,
+    fontWeight: '800',
   },
 
   // Country chips

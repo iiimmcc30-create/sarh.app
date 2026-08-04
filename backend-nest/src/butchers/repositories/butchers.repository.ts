@@ -3,9 +3,17 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { notDeleted, softDeleteFields } from '../../common/utils/soft-delete.util';
 
+export type ButcherListSort =
+  | 'rank'
+  | 'rating'
+  | 'favorites'
+  | 'orders'
+  | 'distance'
+  | 'new';
+
 const BUTCHER_LIST_INCLUDE = {
   user: { select: { id: true, username: true, avatar: true } },
-  _count: { select: { products: true, orders: true } },
+  _count: { select: { products: true, orders: true, favorites: true } },
 } as const;
 
 const BUTCHER_DETAIL_INCLUDE = {
@@ -31,21 +39,115 @@ export class ButchersRepository {
     where: Prisma.ButcherWhereInput;
     cursor?: string;
     take: number;
+    sort?: ButcherListSort;
+    lat?: number;
+    lng?: number;
   }) {
-    const { where, cursor, take } = params;
+    const { where, cursor, take, sort = 'rank', lat, lng } = params;
+
+    if (sort === 'distance' && lat != null && lng != null) {
+      return this.findManyButchersByDistance({ where, cursor, take, lat, lng });
+    }
+
+    const orderBy = this.buildOrderBy(sort);
+
     return this.prisma.butcher.findMany({
       where,
       take,
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0,
-      orderBy: [
-        { subscriptionActive: 'desc' },
-        { rating: 'desc' },
-        { activityScore: 'desc' },
-        { id: 'asc' },
-      ],
+      orderBy,
       include: BUTCHER_LIST_INCLUDE,
     });
+  }
+
+  private buildOrderBy(sort: ButcherListSort): Prisma.ButcherOrderByWithRelationInput[] {
+    const tieBreakers: Prisma.ButcherOrderByWithRelationInput[] = [
+      { completedOrdersCount: 'desc' },
+      { rating: 'desc' },
+      { favoritesCount: 'desc' },
+      { normalizedSpeed: 'desc' },
+      { createdAt: 'desc' },
+      { id: 'asc' },
+    ];
+
+    switch (sort) {
+      case 'rating':
+        return [{ rating: 'desc' }, { rankingScore: 'desc' }, ...tieBreakers];
+      case 'favorites':
+        return [{ favoritesCount: 'desc' }, { rankingScore: 'desc' }, ...tieBreakers];
+      case 'orders':
+        return [{ completedOrdersCount: 'desc' }, { rankingScore: 'desc' }, ...tieBreakers];
+      case 'new':
+        return [{ newButcherBoost: 'desc' }, { createdAt: 'desc' }, { rankingScore: 'desc' }];
+      case 'rank':
+      default:
+        return [{ rankingScore: 'desc' }, ...tieBreakers];
+    }
+  }
+
+  private async findManyButchersByDistance(params: {
+    where: Prisma.ButcherWhereInput;
+    cursor?: string;
+    take: number;
+    lat: number;
+    lng: number;
+  }) {
+    const { where, cursor, take, lat, lng } = params;
+    const ids = await this.prisma.butcher.findMany({
+      where,
+      select: { id: true },
+    });
+    if (ids.length === 0) return [];
+
+    const idList = ids.map((r) => r.id);
+    const rows = await this.prisma.$queryRaw<
+      { id: string; dist_km: number }[]
+    >`
+      SELECT b.id,
+        (
+          6371 * acos(
+            LEAST(1, GREATEST(-1,
+              cos(radians(${lat})) * cos(radians(b.lat)) *
+              cos(radians(b.lng) - radians(${lng})) +
+              sin(radians(${lat})) * sin(radians(b.lat))
+            ))
+          )
+        ) AS dist_km
+      FROM "Butcher" b
+      WHERE b.id = ANY(${idList}::text[])
+        AND b."deletedAt" IS NULL
+        AND b.lat IS NOT NULL
+        AND b.lng IS NOT NULL
+      ORDER BY dist_km ASC, b."rankingScore" DESC, b."completedOrdersCount" DESC
+      LIMIT ${take + 1}
+    `;
+
+    const orderedIds = rows.map((r) => r.id);
+    if (orderedIds.length === 0) {
+      return this.prisma.butcher.findMany({
+        where,
+        take,
+        cursor: cursor ? { id: cursor } : undefined,
+        skip: cursor ? 1 : 0,
+        orderBy: this.buildOrderBy('rank'),
+        include: BUTCHER_LIST_INCLUDE,
+      });
+    }
+
+    let startIdx = 0;
+    if (cursor) {
+      const idx = orderedIds.indexOf(cursor);
+      startIdx = idx >= 0 ? idx + 1 : 0;
+    }
+    const pageIds = orderedIds.slice(startIdx, startIdx + take + 1);
+
+    const butchers = await this.prisma.butcher.findMany({
+      where: { id: { in: pageIds } },
+      include: BUTCHER_LIST_INCLUDE,
+    });
+    const byId = new Map(butchers.map((b) => [b.id, b]));
+    return pageIds.map((id) => byId.get(id)).filter(Boolean) as typeof butchers;
   }
 
   findButcherById(id: string) {
@@ -371,5 +473,50 @@ export class ButchersRepository {
       where: { id: butcherId },
       data: { rating, reviewCount },
     });
+  }
+
+  findDeliveredOrderForReview(butcherId: string, customerId: string) {
+    return this.prisma.butcherOrder.findFirst({
+      where: { butcherId, customerId, status: 'delivered' },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    });
+  }
+
+  findReviewByButcherAndUser(butcherId: string, reviewerId: string) {
+    return this.prisma.butcherReview.findUnique({
+      where: { butcherId_reviewerId: { butcherId, reviewerId } },
+    });
+  }
+
+  aggregateReviewDistribution(butcherId: string) {
+    return this.prisma.butcherReview.groupBy({
+      by: ['rating'],
+      where: { butcherId },
+      _count: { rating: true },
+    });
+  }
+
+  addFavorite(butcherId: string, userId: string) {
+    return this.prisma.butcherFavorite.create({
+      data: { butcherId, userId },
+    });
+  }
+
+  removeFavorite(butcherId: string, userId: string) {
+    return this.prisma.butcherFavorite.delete({
+      where: { butcherId_userId: { butcherId, userId } },
+    });
+  }
+
+  isFavorited(butcherId: string, userId: string) {
+    return this.prisma.butcherFavorite.findUnique({
+      where: { butcherId_userId: { butcherId, userId } },
+      select: { id: true },
+    });
+  }
+
+  countFavorites(butcherId: string) {
+    return this.prisma.butcherFavorite.count({ where: { butcherId } });
   }
 }

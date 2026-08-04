@@ -41,6 +41,8 @@ model User {
   butcherOrders                       ButcherOrder[]
   following                           Follow[]                          @relation("Followers")
   followers                           Follow[]                          @relation("Following")
+  blocksInitiated                     UserBlock[]                       @relation("BlocksInitiated")
+  blocksReceived                      UserBlock[]                       @relation("BlocksReceived")
   listings                            Listing[]
   fees                                ListingFee[]
   listingBoosts                       ListingBoost[]
@@ -60,6 +62,7 @@ model User {
   subscription                        Subscription?
   sessions                            UserSession[]
   butcherReviews                      ButcherReview[]
+  butcherFavorites                    ButcherFavorite[]
   butcherApplications                 ButcherApplication[]
   butcherApplicationTimelineEvents    ButcherApplicationTimelineEvent[]
   verifiedButcherApplicationDocuments ButcherApplicationDocument[]      @relation("DocumentVerifiedBy")
@@ -97,6 +100,19 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model UserBlock {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   User     @relation("BlocksInitiated", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }
 
 model Plan {
@@ -306,6 +322,7 @@ model Post {
   content          String
   arabicContent    String
   image            String?
+  images           String[]          @default([])
   isHidden         Boolean           @default(false)
   likesCount       Int               @default(0)
   repostsCount     Int               @default(0)
@@ -576,6 +593,19 @@ model Butcher {
   activityScore       Int                 @default(50)
   profileViews        Int                 @default(0)
   totalOrders         Int                 @default(0)
+  completedOrdersCount Int                @default(0)
+  favoritesCount      Int                 @default(0)
+  avgAcceptMinutes    Float?
+  avgPrepMinutes      Float?
+  avgCompleteMinutes  Float?
+  rankingScore        Float               @default(0)
+  normalizedOrders    Float               @default(0)
+  normalizedRating    Float               @default(0)
+  normalizedFavorites Float               @default(0)
+  normalizedDistance  Float               @default(50)
+  normalizedSpeed     Float               @default(0)
+  newButcherBoost     Float               @default(0)
+  lastRankingUpdate   DateTime?
   openTime            String              @default("06:00")
   closeTime           String              @default("22:00")
   closedDays          String[]
@@ -592,12 +622,18 @@ model Butcher {
   reviews             ButcherReview[]
   stories             ButcherStory[]
   messageThreads      MessageThread[]
+  favorites           ButcherFavorite[]
 
   @@index([country])
   @@index([subscriptionActive])
   @@index([rating])
   @@index([country, subscriptionActive, rating])
   @@index([deletedAt])
+  @@index([rankingScore])
+  @@index([completedOrdersCount])
+  @@index([favoritesCount])
+  @@index([createdAt])
+  @@index([lat, lng])
 }
 
 model ButcherProduct {
@@ -761,15 +797,31 @@ model ButcherReview {
   id         String   @id @default(uuid())
   butcherId  String
   reviewerId String
+  orderId    String?
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   butcher    Butcher  @relation(fields: [butcherId], references: [id])
   reviewer   User     @relation(fields: [reviewerId], references: [id])
 
   @@unique([butcherId, reviewerId])
   @@index([butcherId])
   @@index([reviewerId])
+  @@index([orderId])
+}
+
+model ButcherFavorite {
+  id        String   @id @default(uuid())
+  butcherId String
+  userId    String
+  createdAt DateTime @default(now())
+  butcher   Butcher  @relation(fields: [butcherId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([butcherId, userId])
+  @@index([butcherId])
+  @@index([userId])
 }
 
 model ButcherApplication {
@@ -1069,6 +1121,23 @@ model AppSetting {
   category  String   @default("general")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Official MEWA / Naama services directory (informational links only)
+model Service {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  icon        String
+  externalUrl String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([category])
+  @@map("services")
 }
 
 model ContentSection {

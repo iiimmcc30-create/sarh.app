@@ -11,7 +11,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -381,6 +383,73 @@ function ChatTab({ butcherName, butcherId, currentUserId }: { butcherName: strin
 }
 
 // ─── Reviews Strip ────────────────────────────────────────────────────────────
+function RatingDistribution({
+  average,
+  total,
+  distribution,
+}: {
+  average: number;
+  total: number;
+  distribution: Record<number, number>;
+}) {
+  const { colors } = useTheme();
+  const distStyles = useThemedStyles(({ colors: c }) =>
+    StyleSheet.create({
+      wrap: { paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.md },
+      summaryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+      avg: { fontSize: 36, fontWeight: '800', color: c.textPrimary },
+      meta: { gap: 4 },
+      count: { ...typography.caption, color: c.textMuted },
+      barRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+      barLabel: { width: 14, ...typography.caption, color: c.textMuted, textAlign: 'center' },
+      barTrack: {
+        flex: 1,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: c.bgElevated,
+        overflow: 'hidden',
+      },
+      barFill: { height: '100%', borderRadius: 3, backgroundColor: c.electric },
+    }),
+  );
+
+  const max = Math.max(1, ...Object.values(distribution));
+
+  return (
+    <View style={distStyles.wrap}>
+      <View style={distStyles.summaryRow}>
+        <Text style={distStyles.avg}>{average.toFixed(1)}</Text>
+        <View style={distStyles.meta}>
+          <View style={{ flexDirection: 'row', gap: 2 }}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <AppIcon
+                key={i}
+                name="star"
+                size={14}
+                color={i <= Math.round(average) ? colors.gold : colors.borderSoft}
+              />
+            ))}
+          </View>
+          <Text style={distStyles.count}>{total.toLocaleString('ar-SA')} تقييم</Text>
+        </View>
+      </View>
+      {[5, 4, 3, 2, 1].map((star) => {
+        const count = distribution[star] ?? 0;
+        const pct = (count / max) * 100;
+        return (
+          <View key={star} style={distStyles.barRow}>
+            <Text style={distStyles.barLabel}>{star}</Text>
+            <View style={distStyles.barTrack}>
+              <View style={[distStyles.barFill, { width: `${pct}%` }]} />
+            </View>
+            <Text style={[distStyles.barLabel, { width: 28 }]}>{count}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function ReviewsStrip({ reviews }: { reviews: ButcherReview[] }) {
   const { colors } = useTheme();
   const reviewsStyles = useThemedStyles(({ colors }) => createReviewsStyles(colors));
@@ -425,6 +494,11 @@ export default function ButcherProfileScreen() {
   const [products, setProducts] = useState<ButcherProduct[]>([]);
   const [offers, setOffers] = useState<ButcherOffer[]>([]);
   const [reviews, setReviews] = useState<ButcherReview[]>([]);
+  const [reviewDistribution, setReviewDistribution] = useState<Record<number, number>>({
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+  });
+  const [reviewDraft, setReviewDraft] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [storiesList, setStoriesList] = useState<ButcherStory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -530,6 +604,81 @@ export default function ButcherProfileScreen() {
     };
     fetchButcherDetails();
   }, [id, accessToken]);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchReviews = async () => {
+      try {
+        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+        const res = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, { headers });
+        if (!res.ok) return;
+        const json = await res.json();
+        const payload = json.data;
+        const list = Array.isArray(payload) ? payload : payload?.reviews;
+        if (json.success && Array.isArray(list)) {
+          setReviews(
+            list.map((r: any) => ({
+              id: r.id,
+              butcherId: id,
+              authorName: r.reviewer?.displayName || r.reviewer?.arabicName || 'عميل',
+              authorNameAr: r.reviewer?.arabicName || r.reviewer?.displayName || 'عميل',
+              authorAvatar: r.reviewer?.avatar,
+              rating: r.rating,
+              comment: r.comment || '',
+              commentAr: r.comment || '',
+              postedAt: r.createdAt,
+            })),
+          );
+        }
+        if (payload?.distribution) {
+          setReviewDistribution(payload.distribution);
+        }
+      } catch {
+        // Reviews are optional on profile load.
+      }
+    };
+    void fetchReviews();
+  }, [id, accessToken]);
+
+  const submitReview = async () => {
+    if (!accessToken || !id) {
+      router.push('/auth/phone');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rating: reviewDraft.rating,
+          comment: reviewDraft.comment.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        Alert.alert('تعذر الإرسال', json.message || 'لا يمكنك التقييم حالياً');
+        return;
+      }
+      Alert.alert('شكراً لك', 'تم إرسال تقييمك بنجاح');
+      setReviewDraft({ rating: 5, comment: '' });
+      const refresh = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (refresh.ok) {
+        const rj = await refresh.json();
+        const payload = rj.data;
+        if (payload?.distribution) setReviewDistribution(payload.distribution);
+      }
+    } catch {
+      Alert.alert('خطأ', 'تعذر إرسال التقييم');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -717,14 +866,62 @@ export default function ButcherProfileScreen() {
           {activeTab === 'about' && (
             <>
               <AboutTab butcher={butcher} />
-              {reviews.length > 0 && (
-                <View style={{ marginTop: spacing.xl }}>
-                  <Text style={[styles.sectionTitle, { paddingHorizontal: spacing.lg }]}>
-                    آراء العملاء ({butcher.reviewCount})
-                  </Text>
-                  <ReviewsStrip reviews={reviews} />
-                </View>
-              )}
+              <View style={{ marginTop: spacing.xl }}>
+                <Text style={[styles.sectionTitle, { paddingHorizontal: spacing.lg }]}>
+                  آراء العملاء ({butcher.reviewCount})
+                </Text>
+                <RatingDistribution
+                  average={butcher.rating}
+                  total={butcher.reviewCount}
+                  distribution={reviewDistribution}
+                />
+                {accessToken ? (
+                  <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm, marginBottom: spacing.md }}>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Pressable key={star} onPress={() => setReviewDraft((d) => ({ ...d, rating: star }))}>
+                          <AppIcon
+                            name="star"
+                            size={22}
+                            color={star <= reviewDraft.rating ? colors.gold : colors.borderSoft}
+                          />
+                        </Pressable>
+                      ))}
+                    </View>
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: colors.borderSoft,
+                        borderRadius: radius.lg,
+                        padding: spacing.md,
+                        color: colors.textPrimary,
+                        textAlign: 'right',
+                        minHeight: 80,
+                      }}
+                      placeholder="تعليق اختياري..."
+                      placeholderTextColor={colors.textMuted}
+                      value={reviewDraft.comment}
+                      onChangeText={(t) => setReviewDraft((d) => ({ ...d, comment: t }))}
+                      multiline
+                    />
+                    <Pressable
+                      onPress={() => void submitReview()}
+                      disabled={submittingReview}
+                      style={{
+                        backgroundColor: colors.electric,
+                        borderRadius: radius.pill,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontWeight: '800' }}>
+                        {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+                {reviews.length > 0 ? <ReviewsStrip reviews={reviews} /> : null}
+              </View>
             </>
           )}
           {activeTab === 'chat' && <ChatTab butcherName={butcher.nameAr} butcherId={butcher.id} currentUserId={user?.id} />}

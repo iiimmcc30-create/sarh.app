@@ -4,6 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { homeLuxury } from '@/constants/homeLuxury';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
@@ -43,8 +44,8 @@ export function ButcherMiniSection({
 }: ButcherMiniSectionProps) {
   const router      = useRouter();
   const { width: screenWidth } = useWindowDimensions();
-  const s           = useThemedStyles(({ colors }) => createStyles(colors));
   const isHero = size === 'hero';
+  const s           = useThemedStyles(({ colors }) => createStyles(colors, isHero));
   const CARD_W = isHero ? Math.round(screenWidth * 0.84) : CARD_W_COMPACT;
   const COVER_H = isHero ? 210 : COVER_H_COMPACT;
 
@@ -55,6 +56,7 @@ export function ButcherMiniSection({
     <View style={[s.wrapper, isHero && s.wrapperHero]}>
 
       <SectionHeader
+        luxury={isHero}
         title="الملاحم"
         subtitle={!isHero ? 'لحوم طازجة قريبة منك' : undefined}
         onSeeAll={() => router.push('/butchers')}
@@ -132,7 +134,7 @@ export function ButcherMiniSection({
           ranked.map((butcher) => {
             const currency   = gccCurrencies[butcher.country];
             const country    = countries[butcher.country];
-            const isFeatured = butcher.subscriptionActive;
+            const isFeatured = butcher.type === 'verified';
             const isTopRated = butcher.rating >= 4.5;
             const isNew      = (butcher.totalOrders ?? 0) < 20;
 
@@ -195,7 +197,9 @@ export function ButcherMiniSection({
                       isHero && s.statusPillHero,
                       {
                         backgroundColor: butcher.workingHours.isOpen
-                          ? 'rgba(16,185,129,0.9)'
+                          ? isHero
+                            ? 'rgba(105, 216, 79, 0.92)'
+                            : 'rgba(16,185,129,0.9)'
                           : 'rgba(239,68,68,0.9)',
                       },
                     ]}
@@ -210,7 +214,7 @@ export function ButcherMiniSection({
                     <View style={s.heroOverlay}>
                       <View style={s.heroRatingRow}>
                         <View style={s.ratingChip}>
-                          <AppIcon name="star" size={12} color={colors.gold} />
+                          <AppIcon name="star" size={12} color={isHero ? homeLuxury.accent : colors.gold} />
                           <Text style={s.ratingText}>{butcher.rating.toFixed(1)}</Text>
                           <Text style={s.ratingCount}>
                             ({butcher.totalOrders > 999
@@ -288,10 +292,11 @@ export function ButcherMiniSection({
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, isHero = false) {
+  const luxury = isHero;
   return StyleSheet.create({
-    wrapper: { marginTop: spacing.sm, marginBottom: spacing.md },
-    wrapperHero: { marginTop: spacing.md, marginBottom: spacing.md },
+    wrapper: { marginTop: luxury ? spacing.md : spacing.sm, marginBottom: luxury ? spacing.lg : spacing.md },
+    wrapperHero: { marginTop: spacing.md, marginBottom: spacing.lg },
 
     // Stories
     storiesRow: {
@@ -347,29 +352,29 @@ function createStyles(colors: ThemeColors) {
     cardsRow: {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
-      gap: spacing.md,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.xs,
+      gap: luxury ? spacing.lg : spacing.md,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
     },
 
     // Card
     card: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.xl,
+      backgroundColor: luxury ? homeLuxury.card : colors.bgSurface,
+      borderRadius: luxury ? homeLuxury.radius : radius.xl,
       overflow: 'hidden',
       borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderColor: luxury ? homeLuxury.border : colors.borderSoft,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOffset: { width: 0, height: luxury ? 2 : 4 },
+      shadowOpacity: luxury ? 0.12 : 0.1,
+      shadowRadius: luxury ? 6 : 8,
+      elevation: luxury ? 2 : 4,
     },
     cardHero: {
-      borderRadius: radius.xxl,
-      shadowOpacity: 0.22,
-      shadowRadius: 10,
-      elevation: 6,
+      borderRadius: homeLuxury.radius,
+      shadowOpacity: 0.14,
+      shadowRadius: 8,
+      elevation: 3,
     },
 
     // Cover
@@ -412,10 +417,10 @@ function createStyles(colors: ThemeColors) {
       borderColor: 'rgba(255,255,255,0.2)',
     },
     newBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
       borderRadius: radius.pill,
-      backgroundColor: colors.success,
+      backgroundColor: luxury ? homeLuxury.accent : colors.success,
     },
     newBadgeText: {
       ...typography.micro,

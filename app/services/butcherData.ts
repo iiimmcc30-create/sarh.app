@@ -43,6 +43,9 @@ export interface ButcherProfile {
   subscriptionExpiry?: string;       // ISO date
   commercialReg?: string;
   activityScore: number;             // 0–100 for ranking
+  rankingScore?: number;
+  favoritesCount?: number;
+  completedOrdersCount?: number;
   totalOrders: number;
   joinedAt: string;
   user?: { id: string; username?: string; avatar?: string };
@@ -162,7 +165,21 @@ export interface ButcherReview {
   postedAt: string;
 }
 
-// ─── Ranking Utility ─────────────────────────────────────────────────────────
+export type ButcherRankingCategory =
+  | 'rank'
+  | 'rating'
+  | 'favorites'
+  | 'orders'
+  | 'distance'
+  | 'new';
+
+export const BUTCHER_RANKING_TABS: { id: ButcherRankingCategory; label: string }[] = [
+  { id: 'rating', label: 'الأعلى تقييماً' },
+  { id: 'favorites', label: 'الأكثر تفضيلاً' },
+  { id: 'orders', label: 'الأكثر طلباً' },
+  { id: 'distance', label: 'الأقرب إليك' },
+  { id: 'new', label: 'الملاحم الجديدة' },
+];
 export function mapButcherFromApi(b: Record<string, unknown>): ButcherProfile {
   const count = b._count as { orders?: number } | undefined;
   const user = b.user as { id?: string; username?: string; avatar?: string } | undefined;
@@ -198,7 +215,10 @@ export function mapButcherFromApi(b: Record<string, unknown>): ButcherProfile {
     subscriptionExpiry: b.subscriptionExpiry as string | undefined,
     commercialReg: b.commercialReg as string | undefined,
     activityScore: Number(b.activityScore ?? 50),
-    totalOrders: Number(count?.orders ?? b.totalOrders ?? 0),
+    rankingScore: Number(b.rankingScore ?? 0),
+    favoritesCount: Number(b.favoritesCount ?? (b._count as { favorites?: number })?.favorites ?? 0),
+    completedOrdersCount: Number(b.completedOrdersCount ?? count?.orders ?? b.totalOrders ?? 0),
+    totalOrders: Number(b.completedOrdersCount ?? count?.orders ?? b.totalOrders ?? 0),
     joinedAt: String(b.createdAt || new Date().toISOString()),
     user: user?.id
       ? {
@@ -212,16 +232,16 @@ export function mapButcherFromApi(b: Record<string, unknown>): ButcherProfile {
 
 export function rankButchers(butchers: ButcherProfile[]): ButcherProfile[] {
   return [...butchers].sort((a, b) => {
-    // 1. Verified first
-    if (a.subscriptionActive !== b.subscriptionActive) {
-      return a.subscriptionActive ? -1 : 1;
+    const scoreA = a.rankingScore ?? 0;
+    const scoreB = b.rankingScore ?? 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    if ((b.completedOrdersCount ?? 0) !== (a.completedOrdersCount ?? 0)) {
+      return (b.completedOrdersCount ?? 0) - (a.completedOrdersCount ?? 0);
     }
-    // 2. Rating
     if (b.rating !== a.rating) return b.rating - a.rating;
-    // 3. Order completion rate
-    if (b.orderCompletionRate !== a.orderCompletionRate)
-      return b.orderCompletionRate - a.orderCompletionRate;
-    // 4. Activity score
+    if ((b.favoritesCount ?? 0) !== (a.favoritesCount ?? 0)) {
+      return (b.favoritesCount ?? 0) - (a.favoritesCount ?? 0);
+    }
     return b.activityScore - a.activityScore;
   });
 }
