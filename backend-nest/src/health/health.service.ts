@@ -67,6 +67,12 @@ export class HealthService {
       uptime: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
+      build: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) || process.env.GIT_COMMIT || 'local',
+      apiFeatures: {
+        userBlock: true,
+        postCommentDelete: true,
+        listingCommentDelete: true,
+      },
       httpStatus: healthy ? 200 : 503,
     };
   }

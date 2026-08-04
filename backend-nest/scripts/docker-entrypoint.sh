@@ -46,7 +46,19 @@ then
   exit 1
 fi
 
-echo "Running prisma db push..."
+echo "Running prisma migrate deploy..."
+i=0
+until npx prisma migrate deploy; do
+  i=$((i + 1))
+  if [ "$i" -ge 5 ]; then
+    echo "ERROR: prisma migrate deploy failed after $i attempts."
+    exit 1
+  fi
+  echo "Migrate not ready yet (attempt $i/5). Retrying in 3s..."
+  sleep 3
+done
+
+echo "Syncing schema (db push)..."
 i=0
 until npx prisma db push --accept-data-loss; do
   i=$((i + 1))
