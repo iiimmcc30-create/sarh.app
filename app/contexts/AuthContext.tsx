@@ -7,6 +7,7 @@ import { registerAuthFetch } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { API_BASE } from '@/services/api';
 import { clearPushTokenOnLogout } from '@/lib/notifications';
+import { normalizeAuthUser } from '@/lib/currentUser';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface AuthUser {
@@ -157,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const refresh  = storedRefresh[1];
         if (token && userJson) {
           setAccessToken(token);
-          const parsedUser = JSON.parse(userJson);
+          const parsedUser = normalizeAuthUser(JSON.parse(userJson)) as AuthUser;
           setUser(parsedUser);
           if (mode === 'USER' || mode === 'BUTCHER') {
             setActiveMode('USER');
@@ -180,13 +181,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Helper: حفظ الجلسة ────────────────────────────────────────────────────
   const saveSession = useCallback(async (userData: AuthUser, access: string, refresh: string) => {
+    const normalized = normalizeAuthUser(userData) as AuthUser;
     await AsyncStorage.multiSet([
       [STORAGE_KEYS.ACCESS_TOKEN,  access],
       [STORAGE_KEYS.REFRESH_TOKEN, refresh],
-      [STORAGE_KEYS.USER,          JSON.stringify(userData)],
+      [STORAGE_KEYS.USER,          JSON.stringify(normalized)],
     ]);
     setAccessToken(access);
-    setUser(userData);
+    setUser(normalized);
 
     setActiveMode('USER');
     await AsyncStorage.setItem('safat_active_mode', 'USER');

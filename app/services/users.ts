@@ -1,5 +1,10 @@
 import { API_BASE } from '@/services/api';
+import { parseApiError } from '@/services/apiError';
 import { authFetch } from '@/services/authFetch';
+
+export type BlockResult =
+  | { ok: true; blocked: boolean }
+  | { ok: false; message: string };
 
 export type PublicUserProfile = {
   id: string;
@@ -141,14 +146,23 @@ export async function fetchBlockedUsers(): Promise<BlockedUser[]> {
 export async function setBlockUser(
   userId: string,
   blocked: boolean,
-): Promise<{ blocked: boolean } | null> {
-  const res = await authFetch(`${API_BASE}/api/users/${userId}/block`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ blocked }),
-  });
-  if (!res.ok) return null;
-  const json = await res.json();
-  if (!json.success || typeof json.data?.blocked !== 'boolean') return null;
-  return json.data as { blocked: boolean };
+): Promise<BlockResult> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/${userId}/block`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blocked }),
+    });
+    const json = await res.json().catch(() => ({} as Record<string, unknown>));
+    if (res.ok && json.success !== false && typeof json.data?.blocked === 'boolean') {
+      return { ok: true, blocked: json.data.blocked as boolean };
+    }
+    const message =
+      (typeof json.messageAr === 'string' && json.messageAr.trim()) ||
+      (typeof json.message === 'string' && json.message.trim()) ||
+      (res.status === 401 ? 'يجب تسجيل الدخول' : await parseApiError(res));
+    return { ok: false, message };
+  } catch {
+    return { ok: false, message: 'تعذّر تحديث الحظر — تحقق من الاتصال' };
+  }
 }

@@ -196,13 +196,16 @@ export class PostsRepository {
       const deleted = await tx.postComment.deleteMany({
         where: { id: commentId, postId },
       });
-      if (deleted.count === 0) return;
+      if (deleted.count === 0) {
+        throw new Error('COMMENT_NOT_FOUND');
+      }
 
       const commentsCount = await tx.postComment.count({ where: { postId } });
       await tx.post.update({
         where: { id: postId },
         data: { commentsCount },
       });
+      return true;
     });
   }
 }

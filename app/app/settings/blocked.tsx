@@ -6,13 +6,13 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
-import { confirmDestructive } from '@/lib/actionSheet';
+import { confirmDestructive, alertMessage } from '@/lib/actionSheet';
+import { showToast } from '@/lib/toast';
 import { fetchBlockedUsers, setBlockUser, type BlockedUser } from '@/services/users';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -52,11 +52,12 @@ export default function BlockedUsersScreen() {
     setActionId(user.id);
     const result = await setBlockUser(user.id, false);
     setActionId(null);
-    if (!result) {
-      Alert.alert('خطأ', 'تعذّر إلغاء الحظر، حاول مجدداً');
+    if (!result.ok) {
+      await alertMessage('تعذّر إلغاء الحظر', result.message, 'close-circle-outline');
       return;
     }
     setUsers((prev) => prev.filter((u) => u.id !== user.id));
+    void showToast('تم إلغاء الحظر');
   };
 
   return (

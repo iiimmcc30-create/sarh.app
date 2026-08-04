@@ -1,6 +1,6 @@
 -- User block relationships
 CREATE TABLE IF NOT EXISTS "UserBlock" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
     "blockerId" TEXT NOT NULL,
     "blockedId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

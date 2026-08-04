@@ -28,7 +28,8 @@ import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/featu
 import { RatingModal } from '@/components/feature/RatingModal';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
-import { presentActionSheet, confirmDestructive } from '@/lib/actionSheet';
+import { presentActionSheet, confirmDestructive, alertMessage } from '@/lib/actionSheet';
+import { showToast } from '@/lib/toast';
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -240,15 +241,16 @@ export default function UserProfileScreen() {
     if (!confirmed) return;
 
     const result = await setBlockUser(profile.id, !(profile.isBlocked ?? false));
-    if (!result) {
-      Alert.alert('خطأ', 'تعذّر تحديث الحظر، حاول مجدداً');
+    if (!result.ok) {
+      await alertMessage('تعذّر تحديث الحظر', result.message, 'close-circle-outline');
       return;
     }
     if (result.blocked) {
-      Alert.alert('تم الحظر', 'تم حظر الحساب بنجاح');
+      void showToast('تم حظر الحساب');
       router.back();
       return;
     }
+    void showToast('تم إلغاء الحظر');
     await loadProfile();
   };
 

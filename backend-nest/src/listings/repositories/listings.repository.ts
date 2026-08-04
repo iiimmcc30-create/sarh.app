@@ -283,13 +283,16 @@ export class ListingsRepository {
       const deleted = await tx.listingComment.deleteMany({
         where: { id: commentId, listingId },
       });
-      if (deleted.count === 0) return;
+      if (deleted.count === 0) {
+        throw new Error('COMMENT_NOT_FOUND');
+      }
 
       const commentsCount = await tx.listingComment.count({ where: { listingId } });
       await tx.listing.update({
         where: { id: listingId },
         data: { commentsCount },
       });
+      return true;
     });
   }
 }

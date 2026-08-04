@@ -10,7 +10,7 @@ import { parseApiError } from '@/services/apiError';
 import { authFetch } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { needsUpload } from '@/services/mediaUri';
-import { uploadImageFromUri } from '@/services/upload';
+import { resolveCurrentUserId } from '@/lib/currentUser';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 const REFETCH_TTL_MS = 60_000;
@@ -162,14 +162,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mapBackendUser]);
 
   const fetchUserData = useCallback(async () => {
-    if (!isAuthenticated || !accessToken || !user?.id) return;
+    const userId = resolveCurrentUserId(user);
+    if (!isAuthenticated || !accessToken || !userId) return;
     if (userFetchInflight) {
       await userFetchInflight;
       return;
     }
     userFetchInflight = (async () => {
       try {
-        const res = await authFetch(`${API_BASE}/api/users/${user.id}`);
+        const res = await authFetch(`${API_BASE}/api/users/${userId}`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
@@ -183,7 +184,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userFetchInflight = null;
     });
     await userFetchInflight;
-  }, [isAuthenticated, accessToken, user?.id, mapBackendUser]);
+  }, [isAuthenticated, accessToken, user, mapBackendUser]);
 
   const fetchListings = useCallback(async () => {
     if (listingsFetchInflight) {
@@ -211,8 +212,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const marketPromise = fetchList(`${API_BASE}/api/listings`);
         const minePromise =
-          accessToken && user?.id
-            ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(user.id)}`)
+          accessToken && resolveCurrentUserId(user, me)
+            ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(resolveCurrentUserId(user, me))}`)
             : Promise.resolve([] as Listing[]);
 
         const [market, mine] = await Promise.all([marketPromise, minePromise]);
@@ -227,7 +228,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       listingsFetchInflight = null;
     });
     await listingsFetchInflight;
-  }, [accessToken, user?.id, mapBackendListing]);
+  }, [accessToken, user, me, mapBackendListing]);
 
   // Keep ownership checks working even before profile fetch finishes
   useEffect(() => {
@@ -237,7 +238,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setMe((prev) => ({
       ...prev,
-      id: user.id || prev.id,
+      id: resolveCurrentUserId(user, prev) || prev.id,
       username: user.username || prev.username,
       displayName: user.displayName || prev.displayName,
       arabicName: user.arabicName || user.displayName || prev.arabicName,

@@ -18,6 +18,7 @@ import { authFetch } from '@/services/authFetch';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { deleteListingComment } from '@/services/comments';
 import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
+import { canManageAsOwner } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
 import { rtlRow } from '@/lib/rtl';
@@ -66,7 +67,6 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { isAuthenticated, user } = useAuth();
   const { me } = useApp();
-  const ownerId = user?.id || me.id;
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -188,7 +188,7 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
                     ) : null}
                     <Text style={styles.commentTime}>{c.createdAt}</Text>
                   </UserProfileLink>
-                  {c.author.id === ownerId ? (
+                  {canManageAsOwner(c.author.id, user, me) ? (
                     <Pressable
                       onPress={() => void handleDelete(c.id)}
                       disabled={deletingId === c.id}

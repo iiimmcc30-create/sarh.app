@@ -96,6 +96,7 @@ export class SetFollowDto {
 }
 
 export class SetBlockDto {
+  @Transform(({ value }) => value === true || value === 'true')
   @IsBoolean()
   blocked: boolean;
 }

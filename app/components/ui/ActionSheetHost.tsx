@@ -39,11 +39,9 @@ export function ActionSheetHost() {
       statusBarTranslucent
       onRequestClose={() => closeActionSheet(null)}
     >
-      <Pressable style={styles.backdrop} onPress={() => closeActionSheet(null)}>
-        <Pressable
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}
-          onPress={(e) => e.stopPropagation?.()}
-        >
+      <View style={styles.backdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => closeActionSheet(null)} />
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
           <LinearGradient
             colors={gradients.card}
             start={{ x: 0, y: 0 }}
@@ -122,8 +120,8 @@ export function ActionSheetHost() {
               ))}
             </View>
           </LinearGradient>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
