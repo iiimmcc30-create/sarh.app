@@ -191,6 +191,13 @@ export class PostsRepository {
     });
   }
 
+  findPostAuthorId(postId: string) {
+    return this.prisma.post.findFirst({
+      where: { id: postId, ...notDeleted },
+      select: { authorId: true },
+    });
+  }
+
   deleteComment(commentId: string, postId: string) {
     return this.prisma.$transaction(async (tx) => {
       const deleted = await tx.postComment.deleteMany({

@@ -192,6 +192,7 @@ export default function PostDetailScreen() {
           <PostCommentsSection
             ref={commentsRef}
             postId={enrichedPost.id}
+            postOwnerId={enrichedPost.author.id}
             onSubmitComment={(content) => addComment(enrichedPost.id, content)}
             onCommentAdded={() => {
               setPost((prev) => (prev ? { ...prev, comments: prev.comments + 1 } : prev));

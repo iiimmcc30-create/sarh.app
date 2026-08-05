@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { throwApi } from '../../common/exceptions/api.exception';
+import { throwApi } from '../common/exceptions/api.exception';
 import {
   CreateOfficialServiceDto,
   UpdateOfficialServiceDto,

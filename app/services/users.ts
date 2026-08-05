@@ -147,8 +147,12 @@ export async function setBlockUser(
   userId: string,
   blocked: boolean,
 ): Promise<BlockResult> {
+  if (!userId?.trim()) {
+    return { ok: false, message: 'معرّف المستخدم غير صالح' };
+  }
+
   try {
-    const res = await authFetch(`${API_BASE}/api/users/${userId}/block`, {
+    const res = await authFetch(`${API_BASE}/api/users/${encodeURIComponent(userId.trim())}/block`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ blocked }),
@@ -157,12 +161,16 @@ export async function setBlockUser(
     if (res.ok && json.success !== false && typeof json.data?.blocked === 'boolean') {
       return { ok: true, blocked: json.data.blocked as boolean };
     }
-    const message =
-      (typeof json.messageAr === 'string' && json.messageAr.trim()) ||
-      (typeof json.message === 'string' && json.message.trim()) ||
-      (res.status === 401 ? 'يجب تسجيل الدخول' : await parseApiError(res));
+
+    if (res.status === 401) {
+      return { ok: false, message: 'يجب تسجيل الدخول' };
+    }
+
+    const message = await parseApiError(
+      new Response(JSON.stringify(json), { status: res.status }),
+    );
     return { ok: false, message };
   } catch {
-    return { ok: false, message: 'تعذّر تحديث الحظر — تحقق من الاتصال' };
+    return { ok: false, message: 'تعذّر الاتصال بالخادم' };
   }
 }

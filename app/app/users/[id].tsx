@@ -242,16 +242,20 @@ export default function UserProfileScreen() {
 
     const result = await setBlockUser(profile.id, !(profile.isBlocked ?? false));
     if (!result.ok) {
-      await alertMessage('تعذّر تحديث الحظر', result.message, 'close-circle-outline');
+      await alertMessage(
+        profile.isBlocked ? 'تعذر إلغاء الحظر' : 'تعذر حظر المستخدم',
+        result.message,
+        'close-circle-outline',
+      );
       return;
     }
+    setProfile((prev) => (prev ? { ...prev, isBlocked: result.blocked, isFollowing: false } : prev));
     if (result.blocked) {
       void showToast('تم حظر الحساب');
       router.back();
       return;
     }
     void showToast('تم إلغاء الحظر');
-    await loadProfile();
   };
 
   const handleMenu = async () => {

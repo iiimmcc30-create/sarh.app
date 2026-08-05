@@ -67,6 +67,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           : typeof body.message === 'string'
             ? body.message
             : 'طلب غير صالح';
+
         sendJson(res, status, {
           success: false,
           error: body.error ?? (status === 400 ? 'validation_error' : 'http_error'),

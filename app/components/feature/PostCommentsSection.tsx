@@ -18,7 +18,7 @@ import { authFetch } from '@/services/authFetch';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { deletePostComment } from '@/services/comments';
 import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
-import { canManageAsOwner } from '@/lib/currentUser';
+import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
 import { rtlRow } from '@/lib/rtl';
@@ -27,6 +27,7 @@ import type { PostComment } from '@/services/types';
 
 type PostCommentsSectionProps = {
   postId: string;
+  postOwnerId?: string;
   showInput?: boolean;
   onCommentAdded?: () => void;
   onSubmitComment?: (content: string) => Promise<boolean>;
@@ -71,7 +72,7 @@ function mapComment(c: {
 }
 
 export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommentsSectionProps>(
-  function PostCommentsSection({ postId, showInput = true, onCommentAdded, onSubmitComment }, ref) {
+  function PostCommentsSection({ postId, postOwnerId, showInput = true, onCommentAdded, onSubmitComment }, ref) {
     const { colors } = useTheme();
     const styles = useThemedStyles(({ colors }) => createStyles(colors));
     const { isAuthenticated, user } = useAuth();
@@ -96,7 +97,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
       const result = await deletePostComment(postId, commentId);
       setDeletingId(null);
       if (!result.ok) {
-        await alertMessage('تعذّر الحذف', result.message, 'close-circle-outline');
+        await alertMessage('تعذر حذف التعليق', result.message, 'close-circle-outline');
         return;
       }
       setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -206,7 +207,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
                       ) : null}
                       <Text style={styles.commentTime}>{c.createdAt}</Text>
                     </UserProfileLink>
-                    {canManageAsOwner(c.author.id, user, me) ? (
+                    {canDeleteComment(c.author.id, postOwnerId, user, me) ? (
                       <Pressable
                         onPress={() => void handleDelete(c.id)}
                         disabled={deletingId === c.id}

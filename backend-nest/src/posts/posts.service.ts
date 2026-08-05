@@ -314,10 +314,17 @@ export class PostsService {
   async deleteComment(user: JwtPayload, postId: string, commentId: string) {
     if (!postId || !commentId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
+    const post = await this.repo.findPostAuthorId(postId);
+    if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+
     const comment = await this.repo.findCommentMeta(commentId, postId);
     if (!comment) throwApi(404, 'not_found', 'التعليق غير موجود');
 
-    if (comment.authorId !== user.userId && user.role !== 'ADMIN') {
+    const isCommentAuthor = comment.authorId === user.userId;
+    const isPostOwner = post.authorId === user.userId;
+    const isAdmin = user.role === 'ADMIN';
+
+    if (!isCommentAuthor && !isPostOwner && !isAdmin) {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
