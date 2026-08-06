@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  Patch,
   Query,
 } from '@nestjs/common';
 import { UsersService } from './services/users.service';
@@ -21,11 +22,14 @@ import {
 import { successResponse } from '../common/utils/response.util';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import {
+  ChangePhoneDto,
   ConnectionsQueryDto,
   ListUsersQueryDto,
   RateUserDto,
   SetBlockDto,
   SetFollowDto,
+  UpdateAccountSettingsDto,
+  UpdatePrivacySettingsDto,
   UpdateUserDto,
 } from './dto/users.dto';
 
@@ -46,6 +50,54 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async listBlocked(@CurrentUser() user: JwtPayload) {
     return successResponse(await this.users.listBlocked(user.userId));
+  }
+
+  @RateLimit('api')
+  @Get('me/account')
+  @HttpCode(HttpStatus.OK)
+  async getAccount(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.users.getAccountSettings(user.userId));
+  }
+
+  @RateLimit('api')
+  @Patch('me/account')
+  @HttpCode(HttpStatus.OK)
+  async updateAccount(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateAccountSettingsDto,
+  ) {
+    return successResponse(
+      await this.users.updateAccountSettings(user.userId, dto),
+    );
+  }
+
+  @RateLimit('api')
+  @Post('me/phone')
+  @HttpCode(HttpStatus.OK)
+  async changePhone(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ChangePhoneDto,
+  ) {
+    return successResponse(await this.users.changePhone(user.userId, dto));
+  }
+
+  @RateLimit('api')
+  @Get('me/privacy')
+  @HttpCode(HttpStatus.OK)
+  async getPrivacy(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.users.getPrivacySettings(user.userId));
+  }
+
+  @RateLimit('api')
+  @Patch('me/privacy')
+  @HttpCode(HttpStatus.OK)
+  async updatePrivacy(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePrivacySettingsDto,
+  ) {
+    return successResponse(
+      await this.users.updatePrivacySettings(user.userId, dto),
+    );
   }
 
   @Public()

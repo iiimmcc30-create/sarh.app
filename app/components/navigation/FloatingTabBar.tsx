@@ -6,7 +6,7 @@ import { motion } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isAppRtl } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { useRouter } from 'expo-router';
+import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,7 +19,6 @@ const VISIBLE_TABS: { route: string; icon: string; label: string }[] = [
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { colors, gradients, scheme } = useTheme();
   const isLight = scheme === 'light';
   const tokens = isLight ? ds.light : ds.dark;
@@ -98,7 +97,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="إضافة إعلان"
-              onPress={() => router.push('/create/listing')}
+              onPress={() => void navigateToCreateListing()}
               style={({ pressed }) => [pressed && styles.pressed]}
             >
               {isLight ? (

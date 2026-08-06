@@ -51,12 +51,13 @@ export function ProfileSettingsMenuScreen({
       >
         {sections.map((section) => (
           <SidebarSection key={section.title} title={section.title} colors={colors}>
-            {section.items.map((item) => (
+            {section.items.map((item, index) => (
               <SidebarMenuRow
                 key={item.key}
                 item={item}
                 colors={colors}
                 onPress={() => handleItemPress(item)}
+                isLast={index === section.items.length - 1}
               />
             ))}
           </SidebarSection>

@@ -9,6 +9,39 @@ export type MeatCategory = 'whole_livestock' | 'lamb' | 'beef' | 'camel' | 'chic
 export type CutType = 'whole' | 'half' | 'quarter' | 'ribs' | 'leg' | 'shoulder' | 'neck' | 'liver' | 'mixed' | 'custom';
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 export type DeliveryType = 'pickup' | 'delivery';
+export type OrderPaymentStatus = 'unpaid' | 'paid';
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  pending: 'قيد المراجعة',
+  confirmed: 'تم قبول الطلب',
+  preparing: 'جاري التجهيز',
+  ready: 'جاهز للاستلام',
+  delivered: 'تم التسليم',
+  cancelled: 'ملغي',
+};
+
+export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
+  pending: '#F59E0B',
+  confirmed: '#69D84F',
+  preparing: '#06B6D4',
+  ready: '#10B981',
+  delivered: '#22C55E',
+  cancelled: '#EF4444',
+};
+
+export const PAYMENT_STATUS_LABELS: Record<OrderPaymentStatus, string> = {
+  unpaid: 'غير مدفوع',
+  paid: 'مدفوع',
+};
+
+export function orderStatusLabel(
+  status: OrderStatus,
+  deliveryType?: DeliveryType,
+): string {
+  if (status === 'ready' && deliveryType === 'delivery') return 'جاري التوصيل';
+  if (status === 'delivered' && deliveryType === 'pickup') return 'تم الاستلام';
+  return ORDER_STATUS_LABELS[status] ?? status;
+}
 
 // ─── GCC Currencies ─────────────────────────────────────────────────────────
 export const gccCurrencies: Record<Country, { code: string; symbol: string; name: string; nameAr: string }> = {

@@ -30,6 +30,9 @@ type BackendListing = {
   arabicDescription: string;
   featured?: boolean;
   pinned?: boolean;
+  promoted?: boolean;
+  promotedUntil?: string;
+  promotionWeight?: number;
   views?: number;
   createdAt: string;
   seller: {
@@ -82,6 +85,9 @@ function mapListing(l: BackendListing): Listing {
     },
     featured: l.featured ?? false,
     pinned: l.pinned ?? false,
+    promoted: l.promoted ?? false,
+    promotedUntil: l.promotedUntil,
+    promotionWeight: l.promotionWeight,
     postedAt: new Date(l.createdAt).toLocaleDateString('ar-SA'),
     createdAt: l.createdAt,
     views: typeof l.views === 'number' ? l.views : undefined,

@@ -55,6 +55,16 @@ export class ListListingsQueryDto {
   featured?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  suggested?: boolean;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  promoted?: boolean;
+
+  @IsOptional()
   @IsString()
   sellerId?: string;
 

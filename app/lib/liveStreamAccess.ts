@@ -1,5 +1,6 @@
 import { Alert } from 'react-native';
 import type { Router } from 'expo-router';
+import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { API_BASE } from '@/services/api';
 
 export type LiveStreamEligibility = {
@@ -48,7 +49,7 @@ export function showListingRequiredAlert(router: Router) {
     'لا يمكن بدء بث مباشر إلا بعد نشر إعلان واحد على الأقل في السوق.',
     [
       { text: 'إلغاء', style: 'cancel' },
-      { text: 'إنشاء إعلان', onPress: () => router.push('/create/listing') },
+      { text: 'إنشاء إعلان', onPress: () => void navigateToCreateListing() },
     ],
   );
 }
@@ -65,11 +66,8 @@ export function showLiveStreamEligibilityDeniedAlert(
     case 'plan_required':
       Alert.alert(
         'البث المباشر غير متاح',
-        'البث المباشر متاح فقط للمشتركين في الباقات المدفوعة.\nقم بترقية اشتراكك لبدء البث.',
-        [
-          { text: 'إلغاء', style: 'cancel' },
-          { text: 'عرض الباقات', onPress: () => router.push('/subscription' as never) },
-        ],
+        eligibility.messageAr ?? 'البث المباشر غير متاح في الحساب المجاني حالياً.',
+        [{ text: 'حسناً' }],
       );
       return;
 

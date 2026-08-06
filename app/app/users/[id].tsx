@@ -122,6 +122,10 @@ export default function UserProfileScreen() {
 
   const handleChat = () => {
     if (!profile) return;
+    if (profile.allowPrivateMessages === false) {
+      Alert.alert('الرسائل الخاصة', 'هذا المستخدم لا يقبل الرسائل الخاصة');
+      return;
+    }
     if (!accessToken) {
       Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لبدء محادثة');
       return;
@@ -301,7 +305,7 @@ export default function UserProfileScreen() {
         onFollowersPress={() => openConnections('followers')}
         onFollowingPress={() => openConnections('following')}
         onFollow={handleFollow}
-        onMessage={handleChat}
+        onMessage={profile.allowPrivateMessages === false ? undefined : handleChat}
         onRatePress={() => {
           if (!accessToken) {
             Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لتقييم الحساب');

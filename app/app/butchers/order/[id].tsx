@@ -117,27 +117,47 @@ export default function OrderDetailsScreen() {
           <Text style={s.sectionTitle}>متابعة الطلب</Text>
           {order.status === 'cancelled' ? (
             timeline.map((event) => (
-              <View key={event.id} style={s.timelineRow}>
-                <AppIcon name="checkmark-circle" size={18} color={colors.danger} />
-                <View style={{ flex: 1 }}>
-                  <Text style={s.timelineLabel}>{STATUS_LABELS[event.status] ?? event.status}</Text>
+              <View key={event.id} style={s.timelineItem}>
+                <View style={s.timelineTrack}>
+                  <View style={[s.timelineDot, { backgroundColor: colors.danger, borderColor: colors.danger + '55' }]} />
+                </View>
+                <View style={s.timelineContent}>
+                  <Text style={[s.timelineLabel, s.timelineDone]}>
+                    {STATUS_LABELS[event.status] ?? event.status}
+                  </Text>
                   {event.note ? <Text style={s.timelineNote}>{event.note}</Text> : null}
                 </View>
               </View>
             ))
           ) : (
-            FLOW.map((step) => {
-              const done = reached.has(step) || order.status === step;
+            FLOW.map((step, index) => {
+              const done = reached.has(step) || FLOW.indexOf(order.status) >= index;
+              const active = order.status === step;
+              const stepColor = done ? colors.electric : colors.textSubtle;
               return (
-                <View key={step} style={s.timelineRow}>
-                  <AppIcon
-                    name={done ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={18}
-                    color={done ? colors.success : colors.textMuted}
-                  />
-                  <Text style={[s.timelineLabel, done && s.timelineDone]}>
-                    {STATUS_LABELS[step]}
-                  </Text>
+                <View key={step} style={s.timelineItem}>
+                  <View style={s.timelineTrack}>
+                    <View
+                      style={[
+                        s.timelineDot,
+                        done && s.timelineDotDone,
+                        active && s.timelineDotActive,
+                        { borderColor: stepColor + '66' },
+                      ]}
+                    >
+                      {done ? (
+                        <AppIcon name="checkmark" size={12} color="#fff" />
+                      ) : null}
+                    </View>
+                    {index < FLOW.length - 1 ? (
+                      <View style={[s.timelineLine, done && { backgroundColor: colors.electric + '55' }]} />
+                    ) : null}
+                  </View>
+                  <View style={s.timelineContent}>
+                    <Text style={[s.timelineLabel, done && s.timelineDone, active && s.timelineActive]}>
+                      {STATUS_LABELS[step]}
+                    </Text>
+                  </View>
                 </View>
               );
             })
@@ -220,15 +240,52 @@ const s = StyleSheet.create({
     writingDirection: 'rtl',
     marginBottom: spacing.sm,
   },
-  timelineRow: {
+  timelineItem: {
     ...rtlRow,
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    minHeight: 48,
+  },
+  timelineTrack: {
+    width: 28,
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: 6,
+  },
+  timelineDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.borderMid,
+    backgroundColor: colors.bgElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timelineDotDone: {
+    backgroundColor: colors.electric,
+    borderColor: colors.electric,
+  },
+  timelineDotActive: {
+    shadowColor: colors.electric,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    minHeight: 20,
+    backgroundColor: colors.borderSoft,
+    marginVertical: 2,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: spacing.sm,
   },
   timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl' },
-  timelineDone: { color: colors.textBrandSuccess, fontWeight: '600' },
-  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
+  timelineDone: { color: colors.textPrimary, fontWeight: '600' },
+  timelineActive: { color: colors.electricBright, fontWeight: '800' },
+  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
   row: {
     ...rtlRow,
     justifyContent: 'space-between',

@@ -1,5 +1,7 @@
 import {
   IsBoolean,
+  IsDateString,
+  IsEmail,
   IsEnum,
   IsInt,
   IsOptional,
@@ -81,6 +83,44 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(500)
   fcmToken?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  showInSearch?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  allowPrivateMessages?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  showFollowingList?: boolean;
+
+  @IsOptional()
+  @IsEnum(['everyone', 'followers'])
+  commentsAudience?: 'everyone' | 'followers';
+
+  @IsOptional()
+  @IsEnum(['everyone', 'following'])
+  privateMessagesAudience?: 'everyone' | 'following';
+
+  @IsOptional()
+  @IsBoolean()
+  notificationsEnabled?: boolean;
+
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsEmail()
+  @MaxLength(120)
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  email?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsDateString()
+  birthDate?: string | null;
 }
 
 export class RateUserDto {
@@ -99,4 +139,57 @@ export class SetBlockDto {
   @Transform(({ value }) => value === true || value === 'true')
   @IsBoolean()
   blocked: boolean;
+}
+
+export class UpdatePrivacySettingsDto {
+  @IsOptional()
+  @IsBoolean()
+  showInSearch?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  allowPrivateMessages?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  showFollowingList?: boolean;
+
+  @IsOptional()
+  @IsEnum(['everyone', 'followers'])
+  commentsAudience?: 'everyone' | 'followers';
+
+  @IsOptional()
+  @IsEnum(['everyone', 'following'])
+  privateMessagesAudience?: 'everyone' | 'following';
+
+  @IsOptional()
+  @IsBoolean()
+  notificationsEnabled?: boolean;
+}
+
+export class UpdateAccountSettingsDto {
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsEmail()
+  @MaxLength(120)
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  email?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsDateString()
+  birthDate?: string | null;
+}
+
+export class ChangePhoneDto {
+  @IsString()
+  @Matches(/^\+[1-9]\d{7,14}$/, {
+    message: 'رقم الجوال غير صالح',
+  })
+  phone!: string;
+
+  @IsString()
+  phone_token!: string;
 }

@@ -288,6 +288,20 @@ export class PostsService {
     const post = await this.repo.findOwnerMeta(postId);
     if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
 
+    if (post.authorId !== user.userId) {
+      const owner = await this.usersRepo.findUserCommentsAudience(post.authorId);
+      if (owner?.commentsAudience === 'followers') {
+        const follows = await this.usersRepo.findFollow(user.userId, post.authorId);
+        if (!follows) {
+          throwApi(
+            403,
+            'comments_restricted',
+            'صاحب المنشور يقبل التعليقات من المتابعين فقط',
+          );
+        }
+      }
+    }
+
     const comment = await this.repo.createComment(
       postId,
       user.userId,

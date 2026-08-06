@@ -30,6 +30,9 @@ const profileSelect = {
   role: true,
   rating: true,
   reviewCount: true,
+  showInSearch: true,
+  allowPrivateMessages: true,
+  showFollowingList: true,
   createdAt: true,
   lastSeenAt: true,
   butcherProfile: {
@@ -54,7 +57,10 @@ export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findActiveUsers(search?: string) {
-    const where: Prisma.UserWhereInput = { isActive: true };
+    const where: Prisma.UserWhereInput = {
+      isActive: true,
+      showInSearch: true,
+    };
     if (search) {
       where.OR = [
         { username: { contains: search, mode: 'insensitive' } },
@@ -107,6 +113,14 @@ export class UsersRepository {
       coverImage?: string;
       country?: Country;
       fcmToken?: string | null;
+      showInSearch?: boolean;
+      allowPrivateMessages?: boolean;
+      showFollowingList?: boolean;
+      commentsAudience?: string;
+      privateMessagesAudience?: string;
+      notificationsEnabled?: boolean;
+      email?: string | null;
+      birthDate?: Date | null;
     },
   ) {
     return this.prisma.user.update({
@@ -124,6 +138,14 @@ export class UsersRepository {
         country: true,
         rating: true,
         reviewCount: true,
+        showInSearch: true,
+        allowPrivateMessages: true,
+        showFollowingList: true,
+        commentsAudience: true,
+        privateMessagesAudience: true,
+        notificationsEnabled: true,
+        email: true,
+        birthDate: true,
         _count: {
           select: { followers: true, following: true },
         },
@@ -287,5 +309,114 @@ export class UsersRepository {
     for (const row of initiated) ids.add(row.blockedId);
     for (const row of received) ids.add(row.blockerId);
     return [...ids];
+  }
+
+  findPrivacySettings(userId: string) {
+    return this.prisma.user.findFirst({
+      where: { id: userId, isActive: true, deletedAt: null },
+      select: {
+        showInSearch: true,
+        allowPrivateMessages: true,
+        showFollowingList: true,
+        commentsAudience: true,
+        privateMessagesAudience: true,
+        notificationsEnabled: true,
+      },
+    });
+  }
+
+  findAccountSettings(userId: string) {
+    return this.prisma.user.findFirst({
+      where: { id: userId, isActive: true, deletedAt: null },
+      select: {
+        phone: true,
+        email: true,
+        birthDate: true,
+      },
+    });
+  }
+
+  updatePrivacySettings(
+    userId: string,
+    data: {
+      showInSearch?: boolean;
+      allowPrivateMessages?: boolean;
+      showFollowingList?: boolean;
+      commentsAudience?: string;
+      privateMessagesAudience?: string;
+      notificationsEnabled?: boolean;
+    },
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        showInSearch: true,
+        allowPrivateMessages: true,
+        showFollowingList: true,
+        commentsAudience: true,
+        privateMessagesAudience: true,
+        notificationsEnabled: true,
+      },
+    });
+  }
+
+  updateAccountSettings(
+    userId: string,
+    data: {
+      email?: string | null;
+      birthDate?: Date | null;
+      phone?: string;
+    },
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        phone: true,
+        email: true,
+        birthDate: true,
+      },
+    });
+  }
+
+  findUserByPhone(phone: string, excludeUserId?: string) {
+    return this.prisma.user.findFirst({
+      where: {
+        phone,
+        isActive: true,
+        ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+      },
+      select: { id: true },
+    });
+  }
+
+  findUserByEmail(email: string, excludeUserId?: string) {
+    return this.prisma.user.findFirst({
+      where: {
+        email,
+        isActive: true,
+        ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+      },
+      select: { id: true },
+    });
+  }
+
+  findUserCommentsAudience(userId: string) {
+    return this.prisma.user.findFirst({
+      where: { id: userId, isActive: true, deletedAt: null },
+      select: { commentsAudience: true },
+    });
+  }
+
+  findUserPrivacyFlags(userId: string) {
+    return this.prisma.user.findFirst({
+      where: { id: userId, isActive: true, deletedAt: null },
+      select: {
+        allowPrivateMessages: true,
+        showFollowingList: true,
+        privateMessagesAudience: true,
+      },
+    });
   }
 }

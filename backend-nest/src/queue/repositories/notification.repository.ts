@@ -8,7 +8,7 @@ export class NotificationRepository {
   findUserFcmToken(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
-      select: { fcmToken: true },
+      select: { fcmToken: true, notificationsEnabled: true },
     });
   }
 

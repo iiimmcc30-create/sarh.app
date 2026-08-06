@@ -31,8 +31,18 @@ import {
   mapButcherFromApi,
 } from '@/services/butcherData';
 import { ButcherCard } from '@/components/feature/ButcherCard';
+import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
+import { rtlRow } from '@/lib/rtl';
 
 const STORY_CIRCLE = 62;
+
+const RANKING_FILTER_ICONS: Record<ButcherRankingCategory, { icon: string; emoji: string }> = {
+  rating: { icon: 'star', emoji: '⭐' },
+  favorites: { icon: 'heart', emoji: '❤️' },
+  orders: { icon: 'flame', emoji: '🔥' },
+  distance: { icon: 'navigate-outline', emoji: '📍' },
+  new: { icon: 'sparkles-outline', emoji: '🆕' },
+};
 
 // ─── Story Type Colors ────────────────────────────────────────────────────────
 const STORY_TYPE_COLORS = {
@@ -106,7 +116,7 @@ const GCC_COUNTRIES: { code: Country; label: string; flag: string }[] = [
 ];
 
 export default function ButchersScreen() {
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
   const router = useRouter();
   const { accessToken, isAuthenticated } = useAuth();
@@ -117,6 +127,7 @@ export default function ButchersScreen() {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [seenStories, setSeenStories] = useState<Set<string>>(new Set());
   const [butcherStories, setButcherStories] = useState<ButcherStory[]>([]);
+  const [showCountryFilter, setShowCountryFilter] = useState(false);
 
   useEffect(() => {
     const fetchStories = async () => {
@@ -223,98 +234,139 @@ export default function ButchersScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-
       <ScrollView
         stickyHeaderIndices={[0]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.scroll}
       >
-        {/* ── Sticky Header ── */}
+        {/* ── Premium Header ── */}
         <View style={s.stickyHeader}>
-          <LinearGradient colors={[colors.bgDeep, colors.bgPrimary]} style={StyleSheet.absoluteFill} />
-          <View style={s.headerRow}>
-            <View>
-              <Text style={s.headerTitle}>الملاحم 🥩</Text>
-              <Text style={s.headerSub}>سوق الملاحم</Text>
-            </View>
-            <View style={s.headerActions}>
-              <Pressable
-                style={s.mapBtn}
-                onPress={() => router.push('/butchers/map')}
-              >
-                <AppIcon name="map-outline" size={20} color={colors.electricBright} />
+          <View style={[s.headerRow, rtlRow]}>
+            <View style={[s.headerActions, rtlRow]}>
+              <Pressable style={s.iconBtn} onPress={() => router.push('/butchers-market-sidebar')} hitSlop={8}>
+                <AppIcon name="menu" size={22} color={colors.textPrimary} />
               </Pressable>
+              <NotificationBellButton size={40} iconSize={20} style={s.iconBtn} />
             </View>
+
+            <View style={s.headerTextBlock}>
+              <Text style={s.headerTitle}>الملاحم</Text>
+              <Text style={s.headerSub}>ابحث عن أفضل الملاحم القريبة منك</Text>
+            </View>
+
+            <LinearGradient
+              colors={[colors.electric + '55', colors.electric + '18']}
+              style={s.headerIconBox}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={s.headerIconInner}>
+                <Text style={s.headerIconEmoji}>🥩</Text>
+              </View>
+            </LinearGradient>
           </View>
 
           {/* Search */}
-          <View style={s.searchWrap}>
-            <AppIcon name="search-outline" size={18} color={colors.textMuted} />
+          <View style={[s.searchWrap, rtlRow]}>
+            <Pressable
+              style={s.filterInlineBtn}
+              onPress={() => setShowCountryFilter((v) => !v)}
+              hitSlop={8}
+            >
+              <AppIcon
+                name="options-outline"
+                size={18}
+                color={showCountryFilter ? colors.electricBright : colors.textMuted}
+              />
+            </Pressable>
             <TextInput
               style={s.searchInput}
               placeholder="ابحث عن ملحمة، مدينة، أو نوع لحم..."
               placeholderTextColor={colors.textSubtle}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              textAlign="right"
             />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery('')}>
+            <AppIcon name="search-outline" size={20} color={colors.textMuted} />
+            {searchQuery.length > 0 ? (
+              <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
                 <AppIcon name="close-circle" size={18} color={colors.textMuted} />
               </Pressable>
-            )}
+            ) : null}
           </View>
 
-          {/* Country Filter */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.countryRow}
-          >
-            <Pressable
-              onPress={() => setSelectedCountry('all')}
-              style={[s.countryChip, selectedCountry === 'all' && s.countryChipActive]}
+          {showCountryFilter ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={s.countryRow}
             >
-              <Text style={s.countryChipFlag}>🌍</Text>
-              <Text style={[s.countryChipLabel, selectedCountry === 'all' && s.countryChipLabelActive]}>
-                الكل
-              </Text>
-            </Pressable>
-            {GCC_COUNTRIES.map((c) => (
               <Pressable
-                key={c.code}
-                onPress={() => setSelectedCountry(c.code)}
-                style={[s.countryChip, selectedCountry === c.code && s.countryChipActive]}
+                onPress={() => setSelectedCountry('all')}
+                style={[s.countryChip, selectedCountry === 'all' && s.countryChipActive]}
               >
-                <Text style={s.countryChipFlag}>{c.flag}</Text>
-                <Text style={[s.countryChipLabel, selectedCountry === c.code && s.countryChipLabelActive]}>
-                  {c.label}
+                <Text style={s.countryChipFlag}>🌍</Text>
+                <Text style={[s.countryChipLabel, selectedCountry === 'all' && s.countryChipLabelActive]}>
+                  الكل
                 </Text>
               </Pressable>
-            ))}
-          </ScrollView>
+              {GCC_COUNTRIES.map((c) => (
+                <Pressable
+                  key={c.code}
+                  onPress={() => setSelectedCountry(c.code)}
+                  style={[s.countryChip, selectedCountry === c.code && s.countryChipActive]}
+                >
+                  <Text style={s.countryChipFlag}>{c.flag}</Text>
+                  <Text style={[s.countryChipLabel, selectedCountry === c.code && s.countryChipLabelActive]}>
+                    {c.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : null}
 
-          {/* Ranking categories — text tabs only */}
+          {/* Quick filter cards */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.rankingTabsRow}
+            contentContainerStyle={s.quickFiltersRow}
           >
             {BUTCHER_RANKING_TABS.map((tab) => {
               const active = rankingTab === tab.id;
+              const meta = RANKING_FILTER_ICONS[tab.id];
               return (
                 <Pressable
                   key={tab.id}
                   onPress={() => setRankingTab(tab.id)}
-                  style={[s.rankingTab, active && s.rankingTabActive]}
+                  style={[s.quickFilterCard, active && s.quickFilterCardActive]}
                 >
-                  <Text style={[s.rankingTabText, active && s.rankingTabTextActive]}>
+                  <Text style={s.quickFilterEmoji}>{meta.emoji}</Text>
+                  <Text style={[s.quickFilterLabel, active && s.quickFilterLabelActive]}>
                     {tab.label}
                   </Text>
+                  {active ? <View style={s.quickFilterIndicator} /> : null}
                 </Pressable>
               );
             })}
+            <Pressable
+              style={s.showAllBtn}
+              onPress={() => {
+                setRankingTab('rating');
+                setSelectedCountry('all');
+                setSearchQuery('');
+              }}
+            >
+              <Text style={s.showAllText}>عرض الكل</Text>
+            </Pressable>
           </ScrollView>
+
+          <View style={[s.headerMetaRow, rtlRow]}>
+            <Pressable style={s.mapLinkBtn} onPress={() => router.push('/butchers/map')}>
+              <AppIcon name="map-outline" size={16} color={colors.electricBright} />
+              <Text style={s.mapLinkText}>الخريطة</Text>
+            </Pressable>
+            <Text style={s.resultsCount}>{filtered.length} ملحمة</Text>
+          </View>
         </View>
 
         {/* ── Stories ── */}
@@ -393,9 +445,9 @@ function createScreenStyles(colors: ThemeColors) {
   // Sticky header
   stickyHeader: {
     paddingBottom: spacing.sm,
+    backgroundColor: colors.bgDeep,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
-    overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
@@ -404,36 +456,58 @@ function createScreenStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+    gap: spacing.md,
   },
-  headerTitle: { ...typography.h1, color: colors.textPrimary },
-  headerSub: { ...typography.caption, color: colors.textBrand, marginTop: 1 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  filterBtn: {
+  headerTextBlock: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    ...typography.h1,
+    fontSize: 26,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  headerSub: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: spacing.xs,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: colors.bgGlass,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
-  },
-  filterBtnActive: {
-    borderColor: colors.gold,
-    backgroundColor: colors.gold + '22',
-  },
-  filterBtnText: { ...typography.caption, color: colors.textMuted },
-  mapBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    padding: 1.5,
+    borderWidth: 1,
+    borderColor: colors.electric + '66',
+  },
+  headerIconInner: {
+    flex: 1,
+    borderRadius: 14,
+    backgroundColor: colors.bgSurface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIconEmoji: { fontSize: 24 },
 
   // Search
   searchWrap: {
@@ -445,44 +519,121 @@ function createScreenStyles(colors: ThemeColors) {
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     paddingHorizontal: spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 14,
+    minHeight: 52,
+  },
+  filterInlineBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.bgElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchInput: {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
 
-  rankingTabsRow: {
+  quickFiltersRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.sm,
     gap: spacing.sm,
+    alignItems: 'flex-start',
   },
-  rankingTab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
+  quickFilterCard: {
+    minWidth: 88,
+    paddingHorizontal: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    borderRadius: 16,
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+    alignItems: 'center',
+    gap: 4,
+    position: 'relative',
   },
-  rankingTabActive: {
-    backgroundColor: colors.electric + '18',
+  quickFilterCardActive: {
+    backgroundColor: colors.electric + '14',
     borderColor: colors.electric,
+    shadowColor: colors.electric,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  rankingTabText: {
-    ...typography.caption,
+  quickFilterEmoji: { fontSize: 18 },
+  quickFilterLabel: {
+    ...typography.micro,
     fontWeight: '600',
+    color: colors.textMuted,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  quickFilterLabelActive: {
+    color: colors.electricBright,
+    fontWeight: '800',
+  },
+  quickFilterIndicator: {
+    position: 'absolute',
+    bottom: 6,
+    width: 20,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.electric,
+  },
+  showAllBtn: {
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
+    backgroundColor: colors.bgGlass,
+    alignSelf: 'center',
+  },
+  showAllText: {
+    ...typography.caption,
+    fontWeight: '700',
     color: colors.textSecondary,
     writingDirection: 'rtl',
   },
-  rankingTabTextActive: {
+  headerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  mapLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.electric + '12',
+    borderWidth: 1,
+    borderColor: colors.electric + '33',
+  },
+  mapLinkText: {
+    ...typography.micro,
+    fontWeight: '700',
     color: colors.electricBright,
-    fontWeight: '800',
+    writingDirection: 'rtl',
+  },
+  resultsCount: {
+    ...typography.caption,
+    color: colors.textMuted,
+    writingDirection: 'rtl',
   },
 
   // Country chips

@@ -80,6 +80,9 @@ export interface Listing {
   seller: User;
   featured: boolean;
   pinned: boolean;
+  promoted?: boolean;
+  promotedUntil?: string;
+  promotionWeight?: number;
   postedAt: string;
   /** ISO timestamp for relative time (Haraj-style: قبل ٢٤ دقيقة) */
   createdAt?: string;

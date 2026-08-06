@@ -31,6 +31,10 @@ export default function ButchersLayout() {
       <Stack.Screen name="dashboard" />
       <Stack.Screen name="manage" />
       <Stack.Screen name="map" />
+      <Stack.Screen name="my-orders" />
+      <Stack.Screen name="favorites" />
+      <Stack.Screen name="invoices" />
+      <Stack.Screen name="invoice/[id]" />
       <Stack.Screen
         name="story-viewer"
         options={{ animation: 'fade', presentation: 'transparentModal' }}

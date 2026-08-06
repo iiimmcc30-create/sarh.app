@@ -218,6 +218,12 @@ export default function PaymentScreen() {
   const successOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (planId) {
+      router.replace('/subscription' as never);
+    }
+  }, [planId, router]);
+
+  useEffect(() => {
     if (!subscription.id && accessToken) void refetchSubscription();
   }, [subscription.id, accessToken, refetchSubscription]);
 

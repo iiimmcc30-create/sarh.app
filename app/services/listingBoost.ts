@@ -1,6 +1,6 @@
 import { API_BASE } from '@/services/api';
 
-export type BoostTypeKey = 'pinned' | 'featured' | 'both';
+export type BoostTypeKey = 'pinned' | 'featured' | 'promotion';
 
 export type BoostPlanOption = {
   durationDays: number;
@@ -8,9 +8,10 @@ export type BoostPlanOption = {
   labelAr: string;
 };
 
-export type BoostPlansMap = Record<BoostTypeKey, BoostPlanOption[]>;
+export type BoostPlansMap = Record<'pinned' | 'featured' | 'both', BoostPlanOption[]>;
 
-export const BOOST_TYPE_ORDER: BoostTypeKey[] = ['pinned', 'featured', 'both'];
+/** UI service order — promotion is independent from pin/feature. */
+export const SERVICE_TYPE_ORDER: BoostTypeKey[] = ['pinned', 'featured', 'promotion'];
 
 export const BOOST_TYPE_META: Record<
   BoostTypeKey,
@@ -19,7 +20,7 @@ export const BOOST_TYPE_META: Record<
     emoji: string;
     title: string;
     desc: string;
-    accent: 'gold' | 'electric' | 'royal';
+    accent: 'gold' | 'electric' | 'promotion';
   }
 > = {
   pinned: {
@@ -36,25 +37,28 @@ export const BOOST_TYPE_META: Record<
     desc: 'شارة مميزة في نتائج البحث',
     accent: 'gold',
   },
-  both: {
+  promotion: {
     icon: 'rocket-outline',
     emoji: '🚀',
-    title: 'تثبيت + تمييز',
-    desc: 'أقصى ظهور في السوق',
-    accent: 'royal',
+    title: 'روّج إعلانك',
+    desc: 'زد وصول إعلانك ليظهر في أماكن متعددة داخل التطبيق ويحقق مشاهدات أكثر.',
+    accent: 'promotion',
   },
 };
 
 export const FALLBACK_BOOST_PLANS: BoostPlansMap = {
   pinned: [
+    { durationDays: 1, amount: 12, labelAr: 'يوم واحد' },
     { durationDays: 3, amount: 29, labelAr: '٣ أيام' },
     { durationDays: 7, amount: 59, labelAr: '٧ أيام' },
   ],
   featured: [
+    { durationDays: 1, amount: 10, labelAr: 'يوم واحد' },
     { durationDays: 3, amount: 25, labelAr: '٣ أيام' },
     { durationDays: 7, amount: 49, labelAr: '٧ أيام' },
   ],
   both: [
+    { durationDays: 1, amount: 20, labelAr: 'يوم واحد' },
     { durationDays: 3, amount: 45, labelAr: '٣ أيام' },
     { durationDays: 7, amount: 95, labelAr: '٧ أيام' },
   ],
@@ -64,7 +68,7 @@ function normalizePlans(raw: unknown): BoostPlansMap {
   const base = { ...FALLBACK_BOOST_PLANS };
   if (!raw || typeof raw !== 'object') return base;
   const obj = raw as Record<string, unknown>;
-  for (const key of BOOST_TYPE_ORDER) {
+  for (const key of ['pinned', 'featured', 'both'] as const) {
     const rows = obj[key];
     if (!Array.isArray(rows)) continue;
     const mapped = rows
@@ -111,11 +115,13 @@ export function formatBoostExpiry(iso: string): string {
   }
 }
 
-export function boostSuccessMessage(
-  boostType: string,
-  expiresAt?: string,
-): string {
+export function boostSuccessMessage(boostType: string, expiresAt?: string): string {
   const expiry = expiresAt ? formatBoostExpiry(expiresAt) : '';
+  if (boostType === 'promotion') {
+    return expiry
+      ? `تم تفعيل ترويج إعلانك بنجاح حتى ${expiry}.`
+      : 'تم تفعيل ترويج إعلانك بنجاح.';
+  }
   if (boostType === 'both') {
     return expiry
       ? `تم تثبيت وتمييز إعلانك بنجاح حتى ${expiry}.`
@@ -130,3 +136,6 @@ export function boostSuccessMessage(
     ? `تم تثبيت إعلانك بنجاح حتى ${expiry}.`
     : 'تم تثبيت إعلانك بنجاح.';
 }
+
+/** @deprecated use SERVICE_TYPE_ORDER */
+export const BOOST_TYPE_ORDER = SERVICE_TYPE_ORDER;

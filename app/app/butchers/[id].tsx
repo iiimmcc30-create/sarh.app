@@ -87,7 +87,13 @@ function ProductsTab({ products, currencySymbol, onOrder }: {
       </ScrollView>
 
       {filtered.map((product) => (
-        <View key={product.id} style={productsStyles.card}>
+        <Pressable
+          key={product.id}
+          style={({ pressed }) => [
+            productsStyles.card,
+            pressed && { opacity: 0.96, transform: [{ scale: 0.995 }] },
+          ]}
+        >
           <Image
             source={{ uri: product.images[0] }}
             style={productsStyles.productImg}
@@ -171,7 +177,7 @@ function ProductsTab({ products, currencySymbol, onOrder }: {
               </LinearGradient>
             </Pressable>
           </View>
-        </View>
+        </Pressable>
       ))}
     </View>
   );
@@ -1121,31 +1127,44 @@ function createProductsStyles(colors: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 16,
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  catChipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
+  catChipActive: {
+    backgroundColor: colors.electric + '18',
+    borderColor: colors.electric,
+    shadowColor: colors.electric,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   catIcon: { fontSize: 13 },
-  catLabel: { ...typography.caption, color: colors.textMuted },
-  catLabelActive: { color: '#fff', fontWeight: '600' },
+  catLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
+  catLabelActive: { color: colors.electricBright, fontWeight: '800' },
 
   card: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
-    borderRadius: radius.xl,
+    borderRadius: 22,
     overflow: 'hidden',
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  productImg: { width: '100%', height: 180 },
+  productImg: { width: '100%', height: 200 },
   productGrad: {
     position: 'absolute',
-    top: 100,
+    top: 120,
     left: 0,
     right: 0,
     height: 80,
@@ -1155,16 +1174,30 @@ function createProductsStyles(colors: ThemeColors) {
     top: spacing.md,
     right: spacing.md,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  freshnessText: { ...typography.micro, color: '#fff' },
+  freshnessText: { ...typography.micro, color: '#fff', fontWeight: '700' },
   productBody: { padding: spacing.lg },
   productHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-  productName: { ...typography.h3, color: colors.textPrimary, marginBottom: 4 },
-  productDesc: { ...typography.caption, color: colors.textMuted, lineHeight: 18 },
+  productName: {
+    ...typography.h3,
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: 4,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  productDesc: {
+    ...typography.caption,
+    color: colors.textMuted,
+    lineHeight: 20,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
   priceBlock: { alignItems: 'flex-end' },
-  price: { fontSize: 24, fontWeight: '800', color: colors.gold },
+  price: { fontSize: 22, fontWeight: '800', color: colors.electricBright },
   priceSub: { ...typography.micro, color: colors.textMuted },
   cutsRow: {
     flexDirection: 'row',
@@ -1174,23 +1207,29 @@ function createProductsStyles(colors: ThemeColors) {
   },
   cutChip: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: radius.pill,
     backgroundColor: colors.bgElevated,
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  cutLabel: { ...typography.micro, color: colors.textBrand },
-  weightNote: { ...typography.caption, color: colors.textMuted, marginTop: 6 },
-  orderBtn: { marginTop: spacing.md, borderRadius: radius.xl, overflow: 'hidden' },
+  cutLabel: { ...typography.micro, color: colors.textBrand, fontWeight: '600' },
+  weightNote: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 8,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  orderBtn: { marginTop: spacing.md, borderRadius: 18, overflow: 'hidden' },
   orderBtnGrad: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
-  orderBtnText: { ...typography.bodyStrong, color: '#fff' },
+  orderBtnText: { ...typography.bodyStrong, color: '#fff', fontWeight: '800' },
   });
 }
 

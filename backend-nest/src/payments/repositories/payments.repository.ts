@@ -294,6 +294,11 @@ export class PaymentsRepository {
       listingId: string;
       expiresAt: Date;
     };
+    promotion?: {
+      id: string;
+      listingId: string;
+      expiresAt: Date;
+    };
   }> {
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.payment.updateMany({
@@ -476,6 +481,9 @@ export class PaymentsRepository {
       let boost:
         | { id: string; boostType: string; listingId: string; expiresAt: Date }
         | undefined;
+      let promotion:
+        | { id: string; listingId: string; expiresAt: Date }
+        | undefined;
 
       if (
         (params.type === 'featured_ad' || params.type === 'pinned_ad') &&
@@ -520,11 +528,64 @@ export class PaymentsRepository {
         }
       }
 
+      if (params.type === 'promoted_ad' && params.referenceId) {
+        const existing = await tx.listingPromotion.findUnique({
+          where: { id: params.referenceId },
+          select: {
+            id: true,
+            listingId: true,
+            durationDays: true,
+            status: true,
+            tier: true,
+            weight: true,
+            baselineViews: true,
+          },
+        });
+
+        if (existing && existing.status !== 'paid') {
+          const now = new Date();
+          const expires = new Date(now.getTime() + existing.durationDays * 24 * 60 * 60 * 1000);
+          const listing = await tx.listing.findUnique({
+            where: { id: existing.listingId },
+            select: { views: true },
+          });
+
+          await tx.listingPromotion.update({
+            where: { id: params.referenceId },
+            data: {
+              status: 'paid',
+              paidAt: now,
+              transactionId: params.niTransactionId,
+              startsAt: now,
+              expiresAt: expires,
+              baselineViews: listing?.views ?? existing.baselineViews,
+            },
+          });
+
+          await tx.listing.update({
+            where: { id: existing.listingId },
+            data: {
+              promoted: true,
+              promotedUntil: expires,
+              promotionWeight: existing.weight,
+              promotionTier: existing.tier,
+            },
+          });
+
+          promotion = {
+            id: existing.id,
+            listingId: existing.listingId,
+            expiresAt: expires,
+          };
+        }
+      }
+
       return {
         processed: true,
         subscription: subscriptionResult,
         butcherOrder,
         boost,
+        promotion,
       };
     });
   }

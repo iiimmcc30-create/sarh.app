@@ -48,7 +48,7 @@
           "image": "./assets/images/splash-circle.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#163526"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       [

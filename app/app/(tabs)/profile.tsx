@@ -12,7 +12,7 @@ import { PostItem } from '@/components/feature/PostItem';
 import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/feature/ProfileScreenLayout';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
-import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
+import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -149,7 +149,7 @@ export default function ProfileScreen() {
       return (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => router.push('/create/listing')}>
+          <Pressable style={styles.emptyBtn} onPress={() => void navigateToCreateListing()}>
             <Text style={styles.emptyBtnText}>+ أضف إعلاناً</Text>
           </Pressable>
         </View>

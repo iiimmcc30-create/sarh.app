@@ -104,6 +104,22 @@ export class MessagesService {
       resolvedButcherId = butcher.id;
     }
 
+    if (type === 'DIRECT') {
+      if (receiver.allowPrivateMessages === false) {
+        throwApi(403, 'messages_disabled', 'هذا المستخدم لا يقبل الرسائل الخاصة');
+      }
+      if (receiver.privateMessagesAudience === 'following') {
+        const allowed = await this.repo.findFollow(receiverId, senderId);
+        if (!allowed) {
+          throwApi(
+            403,
+            'messages_restricted',
+            'هذا المستخدم يقبل الرسائل من الأشخاص الذين يتابعهم فقط',
+          );
+        }
+      }
+    }
+
     const [p1, p2] = [senderId, receiverId].sort();
     const thread = await this.repo.upsertThread({
       participant1: p1,

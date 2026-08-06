@@ -19,7 +19,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { rtlDirection, rtlRow } from '@/lib/rtl';
-import { compareListingBoostPriority } from '@/lib/listingSort';
+import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
 import { useApp } from '@/hooks/useApp';
@@ -40,21 +40,29 @@ export default function MarketScreen() {
   const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
-  const filtered = useMemo(() => listings.filter((l) => {
-    if (l.country === 'EG') return false;
-    if (activeCategory !== 'all' && l.category !== activeCategory) return false;
-    if (activeCountry !== 'ALL' && l.country !== activeCountry) return false;
-    if (showFeaturedOnly && !l.featured) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        l.title.toLowerCase().includes(q) ||
-        l.arabicTitle.includes(q) ||
-        l.arabicLocation.includes(q)
-      );
-    }
-    return true;
-  }).sort(compareListingBoostPriority), [listings, activeCategory, activeCountry, showFeaturedOnly, search]);
+  const filtered = useMemo(
+    () =>
+      interleavePromotedListings(
+        listings
+          .filter((l) => {
+            if (l.country === 'EG') return false;
+            if (activeCategory !== 'all' && l.category !== activeCategory) return false;
+            if (activeCountry !== 'ALL' && l.country !== activeCountry) return false;
+            if (showFeaturedOnly && !l.featured) return false;
+            if (search.trim()) {
+              const q = search.toLowerCase();
+              return (
+                l.title.toLowerCase().includes(q) ||
+                l.arabicTitle.includes(q) ||
+                l.arabicLocation.includes(q)
+              );
+            }
+            return true;
+          })
+          .sort(compareListingBoostPriority),
+      ),
+    [listings, activeCategory, activeCountry, showFeaturedOnly, search],
+  );
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Listing>) => (

@@ -16,6 +16,11 @@ import {
 } from './dto/listings.dto';
 import { ListingsRepository } from './repositories/listings.repository';
 import { UsersRepository } from '../users/repositories/users.repository';
+import { ListingPromotionService } from './promotion/listing-promotion.service';
+import {
+  interleavePromotedListings,
+  promotionSearchScore,
+} from './promotion/promotion-ranking.util';
 import { SubscriptionEntitlementService } from '../subscriptions/services/subscription-entitlement.service';
 import { PlanResolverService } from '../plans/plan-resolver.service';
 import { PlanPermissionService } from '../plans/plan-permission.service';
@@ -36,6 +41,7 @@ export class ListingsService {
     private readonly entitlements: SubscriptionEntitlementService,
     private readonly planResolver: PlanResolverService,
     private readonly planPermissions: PlanPermissionService,
+    private readonly promotions: ListingPromotionService,
   ) {}
 
   private sellerPriorityBoost(
@@ -70,9 +76,11 @@ export class ListingsService {
   }
 
   async list(query: ListListingsQueryDto, viewerId?: string) {
-    const { cursor, category, country, search, featured, sellerId, minPrice, maxPrice } = query;
+    await this.promotions.expireStalePromotions().catch(() => {});
 
-    const cacheKey = search || minPrice != null || maxPrice != null
+    const { cursor, category, country, search, featured, sellerId, minPrice, maxPrice, suggested, promoted } = query;
+
+    const cacheKey = search || minPrice != null || maxPrice != null || suggested || promoted
       ? null
       : `listings:v2:${JSON.stringify({ cursor, category, country, featured, sellerId })}`;
 
@@ -89,6 +97,7 @@ export class ListingsService {
     if (category) where.category = category;
     if (country) where.country = country;
     if (featured) where.featured = true;
+    if (suggested || promoted) where.promoted = true;
     if (sellerId) where.sellerId = sellerId;
 
     if (viewerId) {
@@ -134,6 +143,12 @@ export class ListingsService {
       if (pinnedDiff !== 0) return pinnedDiff;
       const featuredDiff = Number(b.featured) - Number(a.featured);
       if (featuredDiff !== 0) return featuredDiff;
+      if (search && search.length >= 2) {
+        const promoDiff =
+          promotionSearchScore(b.promotionWeight) -
+          promotionSearchScore(a.promotionWeight);
+        if (promoDiff !== 0) return promoDiff;
+      }
       const priorityDiff =
         this.sellerPriorityBoost(
           b.seller as {
@@ -148,12 +163,16 @@ export class ListingsService {
           },
         );
       if (priorityDiff !== 0) return priorityDiff;
+      const weightDiff = (b.promotionWeight ?? 0) - (a.promotionWeight ?? 0);
+      if (weightDiff !== 0) return weightDiff;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    const nextCursor = hasMore ? (sorted[sorted.length - 1]?.id ?? null) : null;
+    const ranked = suggested || promoted ? sorted : interleavePromotedListings(sorted);
 
-    const result = { listings: sorted, nextCursor, hasMore };
+    const nextCursor = hasMore ? (ranked[ranked.length - 1]?.id ?? null) : null;
+
+    const result = { listings: ranked, nextCursor, hasMore };
 
     if (cacheKey) await this.cache.set(cacheKey, result, 90);
     return result;
@@ -162,10 +181,15 @@ export class ListingsService {
   async getById(id: string) {
     if (!id) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
+    await this.promotions.expireStalePromotions().catch(() => {});
+
     const cacheKey = `listing:${id}`;
-    const cached = await this.cache.get<unknown>(cacheKey);
+    const cached = await this.cache.get<{ promoted?: boolean }>(cacheKey);
     if (cached) {
       this.repo.incrementViews(id).catch(() => {});
+      if (cached.promoted) {
+        void this.promotions.trackPromotionEvent(id, 'view');
+      }
       return cached;
     }
 
@@ -173,6 +197,9 @@ export class ListingsService {
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
 
     this.repo.incrementViews(id).catch(() => {});
+    if (listing.promoted) {
+      void this.promotions.trackPromotionEvent(id, 'view');
+    }
     await this.cache.set(cacheKey, listing, 300);
     return listing;
   }
@@ -423,6 +450,23 @@ export class ListingsService {
     const listing = await this.repo.findActiveListingMeta(listingId);
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
 
+    if (listing.sellerId !== user.userId) {
+      const owner = await this.usersRepo.findUserCommentsAudience(listing.sellerId);
+      if (owner?.commentsAudience === 'followers') {
+        const follows = await this.usersRepo.findFollow(
+          user.userId,
+          listing.sellerId,
+        );
+        if (!follows) {
+          throwApi(
+            403,
+            'comments_restricted',
+            'صاحب الإعلان يقبل التعليقات من المتابعين فقط',
+          );
+        }
+      }
+    }
+
     const comment = await this.repo.createComment(
       listingId,
       user.userId,
@@ -453,10 +497,17 @@ export class ListingsService {
   ) {
     if (!listingId || !commentId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
+    const listing = await this.repo.findActiveListingMeta(listingId);
+    if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+
     const comment = await this.repo.findCommentMeta(commentId, listingId);
     if (!comment) throwApi(404, 'not_found', 'التعليق غير موجود');
 
-    if (comment.authorId !== user.userId && user.role !== 'ADMIN') {
+    const isCommentAuthor = comment.authorId === user.userId;
+    const isListingOwner = listing.sellerId === user.userId;
+    const isAdmin = user.role === 'ADMIN';
+
+    if (!isCommentAuthor && !isListingOwner && !isAdmin) {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 

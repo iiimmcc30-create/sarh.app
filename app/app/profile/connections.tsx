@@ -23,7 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { rtlBackIcon } from '@/lib/rtl';
 import { openUserProfile } from '@/lib/openUserProfile';
 import {
-  fetchUserConnections,
+  fetchUserConnectionsWithMeta,
   setFollowUser,
   type ConnectionUser,
 } from '@/services/users';
@@ -50,6 +50,7 @@ export default function ProfileConnectionsScreen() {
     tabParam === 'following' ? 'following' : 'followers',
   );
   const [users, setUsers] = useState<ConnectionUser[]>([]);
+  const [listHidden, setListHidden] = useState(false);
   const [loading, setLoading] = useState(true);
   const [followLoadingId, setFollowLoadingId] = useState<string | null>(null);
 
@@ -60,8 +61,10 @@ export default function ProfileConnectionsScreen() {
   const loadConnections = useCallback(async () => {
     setLoading(true);
     setUsers([]);
-    const data = await fetchUserConnections(targetUserId, activeTab);
-    setUsers(data);
+    setListHidden(false);
+    const data = await fetchUserConnectionsWithMeta(targetUserId, activeTab);
+    setUsers(data.users);
+    setListHidden(data.hidden === true);
     setLoading(false);
   }, [targetUserId, activeTab]);
 
@@ -209,11 +212,15 @@ export default function ProfileConnectionsScreen() {
           contentContainerStyle={users.length === 0 ? styles.emptyList : styles.list}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>{activeTab === 'followers' ? '👥' : '🔍'}</Text>
+              <Text style={styles.emptyIcon}>
+                {listHidden ? '🔒' : activeTab === 'followers' ? '👥' : '🔍'}
+              </Text>
               <Text style={styles.emptyText}>
-                {activeTab === 'followers'
-                  ? 'لا يوجد متابعون بعد'
-                  : 'لا تتابع أحداً بعد'}
+                {listHidden
+                  ? 'قائمة «يتابع» خاصة بهذا الحساب'
+                  : activeTab === 'followers'
+                    ? 'لا يوجد متابعون بعد'
+                    : 'لا تتابع أحداً بعد'}
               </Text>
             </View>
           }

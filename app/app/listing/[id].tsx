@@ -35,6 +35,8 @@ import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
+import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
+import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import type { BoostTypeKey } from '@/services/listingBoost';
 import {
   BOOST_TYPE_META,
@@ -73,6 +75,7 @@ export default function ListingDetailScreen() {
 
   // ─── Boost state ──────────────────────────────────────────────────────────
   const [boostModalVisible, setBoostModalVisible] = useState(false);
+  const [feeModalVisible, setFeeModalVisible] = useState(false);
   const [initialBoostType, setInitialBoostType] = useState<BoostTypeKey>('pinned');
 
   const loadListing = useCallback(async () => {
@@ -241,7 +244,7 @@ export default function ListingDetailScreen() {
   };
 
   const handleEdit = () => {
-    router.push({ pathname: '/create/listing', params: { editId: listing.id } } as any);
+    void navigateToCreateListing({ editId: listing.id });
   };
 
   const handleDelete = async () => {
@@ -281,6 +284,13 @@ export default function ListingDetailScreen() {
       danger: false,
     },
     {
+      key: 'pay-fee',
+      icon: 'receipt-outline',
+      label: 'سداد الرسوم',
+      onPress: () => setFeeModalVisible(true),
+      danger: false,
+    },
+    {
       key: 'feature',
       icon: 'star',
       label: listing.featured ? 'مميز ⭐' : 'تمييز',
@@ -315,6 +325,7 @@ export default function ListingDetailScreen() {
       message: 'اختر الإجراء المطلوب',
       items: [
         { key: 'edit', label: 'تعديل الإعلان', icon: 'create-outline' },
+        { key: 'pay-fee', label: 'سداد الرسوم', icon: 'receipt-outline' },
         { key: 'feature', label: listing.featured ? 'إدارة التمييز' : 'تمييز الإعلان', icon: 'star' },
         { key: 'pin', label: 'تثبيت الإعلان', icon: 'pin' },
         { key: 'delete', label: 'حذف الإعلان', icon: 'trash-outline', destructive: true },
@@ -322,6 +333,7 @@ export default function ListingDetailScreen() {
       ],
     });
     if (key === 'edit') handleEdit();
+    if (key === 'pay-fee') setFeeModalVisible(true);
     if (key === 'feature') {
       setInitialBoostType('featured');
       setBoostModalVisible(true);
@@ -595,7 +607,7 @@ export default function ListingDetailScreen() {
           </View>
         ) : null}
 
-          <ListingCommentsSection listingId={listing.id} />
+          <ListingCommentsSection listingId={listing.id} listingOwnerId={listing.seller.id} />
       </ScrollView>
 
       {/* Bottom CTA for buyers */}
@@ -633,6 +645,15 @@ export default function ListingDetailScreen() {
           listingPinned={listing.pinned}
           onClose={() => setBoostModalVisible(false)}
           onPlanPromoteSuccess={() => void loadListing()}
+        />
+      ) : null}
+
+      {listing ? (
+        <ListingFeePaymentSheet
+          visible={feeModalVisible}
+          listingId={listing.id}
+          listingTitle={listing.arabicTitle || listing.title}
+          onClose={() => setFeeModalVisible(false)}
         />
       ) : null}
     </View>

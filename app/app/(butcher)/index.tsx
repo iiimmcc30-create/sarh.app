@@ -167,8 +167,8 @@ export default function ButcherDashboardScreen() {
       onPress: () => router.push('/(butcher)/messages'),
     },
     {
-      icon: 'shield-checkmark-outline',
-      label: 'إدارة الاشتراك',
+      icon: 'megaphone-outline',
+      label: 'الترويج',
       color: colors.gold,
       onPress: () => router.push('/subscription'),
     },
@@ -192,18 +192,13 @@ export default function ButcherDashboardScreen() {
         </Pressable>
       </View>
 
-      {/* Verified badge strip */}
+      {/* Status strip */}
       <View style={styles.verifiedStrip}>
-        <LinearGradient colors={[colors.gold + '22', colors.amber + '11']} style={StyleSheet.absoluteFill} />
-        <AppIcon name="shield-checkmark" size={16} color={colors.gold} />
+        <LinearGradient colors={[colors.electric + '18', colors.electric + '08']} style={StyleSheet.absoluteFill} />
+        <AppIcon name="storefront-outline" size={16} color={colors.electric} />
         <Text style={styles.verifiedStripText}>
-          {data.butcher.subscriptionActive
-            ? 'حساب موثّق نشط · مزايا الباقة مفعّلة'
-            : 'حساب ملحمة · ترقية الحساب متاحة الآن'}
+          {data.butcher.nameAr} · حساب ملحمة نشط
         </Text>
-        <Pressable onPress={() => router.push('/subscription')} style={styles.manageBtn}>
-          <Text style={styles.manageBtnText}>{data.butcher.subscriptionActive ? 'إدارة' : 'ترقية'}</Text>
-        </Pressable>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>

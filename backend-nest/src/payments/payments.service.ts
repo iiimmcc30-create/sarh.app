@@ -796,6 +796,9 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
         if (fulfillment.boost) {
           await this.invalidateListingCaches(fulfillment.boost.listingId);
         }
+        if (fulfillment.promotion) {
+          await this.invalidateListingCaches(fulfillment.promotion.listingId);
+        }
 
         if (fulfillment.subscription) {
           await this.subscriptionLifecycle.notifyRenewalSuccess(
@@ -1095,6 +1098,12 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
                 boostType: fulfillment.boost.boostType,
                 expiresAt: fulfillment.boost.expiresAt.toISOString(),
                 listingId: fulfillment.boost.listingId,
+              }
+            : undefined,
+          promotion: fulfillment.promotion
+            ? {
+                expiresAt: fulfillment.promotion.expiresAt.toISOString(),
+                listingId: fulfillment.promotion.listingId,
               }
             : undefined,
         };

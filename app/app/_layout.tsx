@@ -16,6 +16,7 @@ import { ButcherOwnerProvider } from '@/contexts/ButcherOwnerContext';
 import { NotificationManager } from '@/components/NotificationManager';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { BootSplashGate } from '@/components/ui/BootSplashGate';
+import { ListingCovenantHost } from '@/components/listing/ListingCovenantHost';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { setupRtl, rtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
@@ -90,6 +91,7 @@ function RootNavigator() {
         <Stack.Screen name="users/[id]" />
         <Stack.Screen name="sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="butcher-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
+        <Stack.Screen name="butchers-market-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="notifications/index" />
         <Stack.Screen name="subscription" />
         <Stack.Screen name="payment" />
@@ -145,6 +147,7 @@ function RootLayoutBody() {
                   <SubscriptionProvider>
                     <RootNavigator />
                     <ActionSheetHost />
+                    <ListingCovenantHost />
                     <ToastHost />
                   </SubscriptionProvider>
                 </ButcherOwnerProvider>

@@ -23,7 +23,7 @@ export class NotificationPersistService {
   }): Promise<void> {
     try {
       const user = await this.notifications.findUserFcmToken(params.userId);
-      if (!user?.fcmToken) return;
+      if (!user?.fcmToken || user.notificationsEnabled === false) return;
 
       await this.pushQueue.addPush({
         fcmToken: user.fcmToken,

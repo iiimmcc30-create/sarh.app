@@ -8,6 +8,7 @@ export type PaymentContext =
   | 'listing_fee'
   | 'commission'
   | 'boost'
+  | 'promotion'
   | 'butcher_order'
   | 'generic';
 
@@ -45,6 +46,10 @@ export type PaymentSyncResult = {
   messageAr?: string;
   boost?: {
     boostType: string;
+    expiresAt?: string;
+    listingId?: string;
+  };
+  promotion?: {
     expiresAt?: string;
     listingId?: string;
   };
@@ -89,7 +94,21 @@ function mapSyncResponse(res: Response, json: Record<string, unknown>): PaymentS
                 : undefined,
           }
         : undefined;
-    return { status: 'paid', messageAr, boost };
+    const promotionRaw = data.promotion;
+    const promotion =
+      promotionRaw && typeof promotionRaw === 'object'
+        ? {
+            expiresAt:
+              typeof (promotionRaw as Record<string, unknown>).expiresAt === 'string'
+                ? (promotionRaw as Record<string, unknown>).expiresAt as string
+                : undefined,
+            listingId:
+              typeof (promotionRaw as Record<string, unknown>).listingId === 'string'
+                ? (promotionRaw as Record<string, unknown>).listingId as string
+                : undefined,
+          }
+        : undefined;
+    return { status: 'paid', messageAr, boost, promotion };
   }
 
   if (outcome === 'failed' || data.status === 'failed') {
@@ -158,6 +177,7 @@ function navigateAfterPaymentCancelled(
 
   switch (context) {
     case 'boost':
+    case 'promotion':
       if (returnParams?.listingId) {
         router.replace({
           pathname: '/listing/[id]',
@@ -169,8 +189,17 @@ function navigateAfterPaymentCancelled(
       break;
     case 'subscription':
     case 'listing_fee':
-    case 'commission':
       router.replace('/subscription' as never);
+      break;
+    case 'commission':
+      if (returnParams?.listingId) {
+        router.replace({
+          pathname: '/listing/[id]',
+          params: { id: returnParams.listingId },
+        } as never);
+      } else {
+        router.replace('/subscription' as never);
+      }
       break;
     case 'butcher_order':
       break;

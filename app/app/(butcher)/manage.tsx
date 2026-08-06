@@ -389,25 +389,43 @@ function AddOfferForm({
   const { colors } = useTheme();
   const apf = useThemedStyles(({ colors }) => createProductFormStyles(colors));
   const [loading, setLoading] = useState(false);
+  const [imageUri, setImageUri] = useState<string>(offer?.image ?? '');
   const [form, setForm] = useState({
     titleAr: offer?.titleAr ?? '',
     descriptionAr: offer?.descriptionAr ?? '',
     originalPrice: offer?.originalPrice?.toString() ?? '',
     offerPrice: offer?.offerPrice?.toString() ?? '',
     discountPercent: offer?.discountPercent?.toString() ?? '',
-    image: offer?.image ?? '',
     validUntil: offer?.validUntil
       ? new Date(offer.validUntil).toISOString().slice(0, 10)
       : '',
   });
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('إذن مطلوب', 'يرجى السماح بالوصول إلى الصور لإرفاق صورة العرض');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: false,
+      quality: 0.85,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.titleAr.trim() || !form.descriptionAr.trim()) {
       Alert.alert('خطأ', 'يرجى إدخال عنوان ووصف العرض');
       return;
     }
-    if (!form.image.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال رابط صورة العرض');
+    if (!imageUri.trim()) {
+      Alert.alert('خطأ', 'يرجى إرفاق صورة العرض');
       return;
     }
     if (!form.validUntil.trim()) {
@@ -424,21 +442,25 @@ function AddOfferForm({
 
     const validUntil = new Date(`${form.validUntil}T23:59:59.000Z`).toISOString();
 
-    const payload = {
-      titleAr: form.titleAr,
-      titleEn: form.titleAr,
-      descriptionAr: form.descriptionAr,
-      descriptionEn: form.descriptionAr,
-      originalPrice,
-      offerPrice,
-      discountPercent,
-      image: form.image.trim(),
-      validUntil,
-      country: butcherCountry || 'SA',
-    };
-
     setLoading(true);
     try {
+      let imageUrl = imageUri.trim();
+      if (isLocalImageUri(imageUrl)) {
+        imageUrl = await uploadImageFromUri(accessToken!, imageUrl, 'butchers');
+      }
+
+      const payload = {
+        titleAr: form.titleAr,
+        titleEn: form.titleAr,
+        descriptionAr: form.descriptionAr,
+        descriptionEn: form.descriptionAr,
+        originalPrice,
+        offerPrice,
+        discountPercent,
+        image: imageUrl,
+        validUntil,
+        country: butcherCountry || 'SA',
+      };
       const url = offer
         ? `${API_BASE}/api/butchers/offers/${offer.id}`
         : `${API_BASE}/api/butchers/offers`;
@@ -531,16 +553,22 @@ function AddOfferForm({
         textAlign="center"
       />
 
-      <Text style={apf.label}>رابط الصورة</Text>
-      <TextInput
-        style={apf.input}
-        placeholder="https://..."
-        placeholderTextColor={colors.textSubtle}
-        value={form.image}
-        onChangeText={(v) => setForm({ ...form, image: v })}
-        textAlign="left"
-        autoCapitalize="none"
-      />
+      <Text style={apf.label}>صورة العرض</Text>
+      <Pressable onPress={pickImage} style={apf.uploadBoxWide}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={apf.previewImgWide} contentFit="cover" />
+        ) : (
+          <>
+            <AppIcon name="image-outline" size={28} color={colors.textMuted} />
+            <Text style={apf.uploadText}>إرفاق صورة</Text>
+          </>
+        )}
+      </Pressable>
+      {imageUri ? (
+        <Pressable onPress={() => setImageUri('')} style={apf.removeImageLink}>
+          <Text style={apf.removeImageText}>إزالة الصورة</Text>
+        </Pressable>
+      ) : null}
 
       <Text style={apf.label}>تاريخ الانتهاء (YYYY-MM-DD)</Text>
       <TextInput
@@ -942,18 +970,18 @@ export default function ButcherManageScreen() {
         </Pressable>
       </View>
 
-      {/* Verified status */}
-      {butcher?.subscriptionActive && (
+      {/* Status strip */}
+      {butcher ? (
         <View style={styles.verifiedStrip}>
-          <LinearGradient colors={[colors.gold + '22', colors.amber + '11']} style={StyleSheet.absoluteFill} />
-          <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
-          <Text style={styles.verifiedText}>حساب موثّق نشط</Text>
+          <LinearGradient colors={[colors.electric + '18', colors.electric + '08']} style={StyleSheet.absoluteFill} />
+          <AppIcon name="storefront-outline" size={14} color={colors.electric} />
+          <Text style={styles.verifiedText}>{butcher.nameAr}</Text>
           <View style={styles.onlineDot} />
           <Text style={styles.onlineText}>
             {butcher.isOpen ? 'مفتوح الآن' : 'مغلق'}
           </Text>
         </View>
-      )}
+      ) : null}
 
       {/* Tabs */}
       <View style={styles.tabsGrid}>
@@ -1389,21 +1417,6 @@ export default function ButcherManageScreen() {
               </Pressable>
             ))}
 
-            {!butcher?.subscriptionActive && (
-              <View style={sto.lockCard}>
-                <AppIcon name="lock-closed" size={24} color={colors.gold} />
-                <View>
-                  <Text style={sto.lockTitle}>ميزة القصص للحسابات الموثّقة</Text>
-                  <Text style={sto.lockSub}>اشترك بـ ٢٩٩ ر.س/شهر لنشر قصصك</Text>
-                </View>
-                <Pressable
-                  style={sto.lockBtn}
-                  onPress={() => router.push('/butchers/apply')}
-                >
-                  <Text style={sto.lockBtnText}>توثيق الحساب</Text>
-                </Pressable>
-              </View>
-            )}
           </View>
         )}
 
@@ -1709,6 +1722,34 @@ function createProductFormStyles(colors: ThemeColors) {
     borderColor: colors.electricBright + '55',
     borderStyle: 'dashed',
     backgroundColor: colors.electric + '08',
+  },
+  uploadBoxWide: {
+    width: '100%',
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: radius.xl,
+    borderWidth: 1.5,
+    borderColor: colors.electricBright + '55',
+    borderStyle: 'dashed',
+    backgroundColor: colors.electric + '08',
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+  },
+  previewImgWide: {
+    width: '100%',
+    height: '100%',
+  },
+  removeImageLink: {
+    alignSelf: 'flex-end',
+    marginBottom: spacing.md,
+  },
+  removeImageText: {
+    ...typography.caption,
+    color: colors.danger,
+    fontWeight: '600',
+    writingDirection: 'rtl',
   },
   uploadText: { ...typography.micro, color: colors.textBrandStrong, fontWeight: '600', textAlign: 'center' },
   uploadHint: { ...typography.micro, color: colors.textSubtle, textAlign: 'right', marginBottom: spacing.lg },

@@ -30,6 +30,9 @@ export type PublicUserProfile = {
   postsCount: number;
   isFollowing: boolean;
   isBlocked?: boolean;
+  allowPrivateMessages?: boolean;
+  showFollowingList?: boolean;
+  showInSearch?: boolean;
 };
 
 export async function fetchUserProfile(userId: string): Promise<PublicUserProfile | null> {
@@ -60,6 +63,254 @@ export type ConnectionUser = {
   isFollowing: boolean;
 };
 
+export type PrivacySettings = {
+  showInSearch: boolean;
+  allowPrivateMessages: boolean;
+  showFollowingList: boolean;
+  commentsAudience: 'everyone' | 'followers';
+  privateMessagesAudience: 'everyone' | 'following';
+  notificationsEnabled: boolean;
+};
+
+export const DEFAULT_PRIVACY_SETTINGS: PrivacySettings = {
+  showInSearch: true,
+  allowPrivateMessages: true,
+  showFollowingList: true,
+  commentsAudience: 'everyone',
+  privateMessagesAudience: 'everyone',
+  notificationsEnabled: true,
+};
+
+export type AccountSettings = {
+  phone: string | null;
+  email: string | null;
+  birthDate: string | null;
+};
+
+function parsePrivacySettings(data: unknown): PrivacySettings | null {
+  if (!data || typeof data !== 'object') return null;
+  const row = data as Record<string, unknown>;
+  const showInSearch =
+    typeof row.showInSearch === 'boolean' ? row.showInSearch : true;
+  const allowPrivateMessages =
+    typeof row.allowPrivateMessages === 'boolean' ? row.allowPrivateMessages : true;
+  const showFollowingList =
+    typeof row.showFollowingList === 'boolean' ? row.showFollowingList : true;
+  const commentsAudience =
+    row.commentsAudience === 'followers' ? 'followers' : 'everyone';
+  const privateMessagesAudience =
+    row.privateMessagesAudience === 'following' ? 'following' : 'everyone';
+  const notificationsEnabled =
+    typeof row.notificationsEnabled === 'boolean' ? row.notificationsEnabled : true;
+
+  if (
+    typeof row.showInSearch !== 'boolean' &&
+    typeof row.allowPrivateMessages !== 'boolean' &&
+    typeof row.showFollowingList !== 'boolean' &&
+    row.commentsAudience === undefined &&
+    row.privateMessagesAudience === undefined &&
+    row.notificationsEnabled === undefined
+  ) {
+    return null;
+  }
+
+  return {
+    showInSearch,
+    allowPrivateMessages,
+    showFollowingList,
+    commentsAudience,
+    privateMessagesAudience,
+    notificationsEnabled,
+  };
+}
+
+function mergePrivacySettings(
+  base: PrivacySettings,
+  patch?: Partial<PrivacySettings> | null,
+): PrivacySettings {
+  return { ...base, ...patch };
+}
+
+function parseAccountSettings(data: unknown): AccountSettings | null {
+  if (!data || typeof data !== 'object') return null;
+  const row = data as Record<string, unknown>;
+  return {
+    phone: typeof row.phone === 'string' ? row.phone : row.phone ?? null,
+    email: typeof row.email === 'string' ? row.email : row.email ?? null,
+    birthDate:
+      typeof row.birthDate === 'string' ? row.birthDate : row.birthDate ?? null,
+  };
+}
+
+export async function fetchPrivacySettings(
+  userId?: string,
+): Promise<PrivacySettings> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/me/privacy`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const parsed = parsePrivacySettings(json.data);
+      if (parsed) return mergePrivacySettings(DEFAULT_PRIVACY_SETTINGS, parsed);
+    }
+  } catch {
+    // fall through to profile fallback
+  }
+
+  if (userId) {
+    try {
+      const profile = await fetchUserProfile(userId);
+      const parsed = parsePrivacySettings(profile);
+      if (parsed) return mergePrivacySettings(DEFAULT_PRIVACY_SETTINGS, parsed);
+    } catch {
+      // ignore
+    }
+  }
+
+  return DEFAULT_PRIVACY_SETTINGS;
+}
+
+export async function updatePrivacySettings(
+  patch: Partial<PrivacySettings>,
+  userId?: string,
+  current: PrivacySettings = DEFAULT_PRIVACY_SETTINGS,
+): Promise<{ settings: PrivacySettings | null; message?: string }> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/me/privacy`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const parsed = parsePrivacySettings(json.data);
+      if (parsed) {
+        return { settings: mergePrivacySettings(current, parsed) };
+      }
+    }
+    if (!res.ok) {
+      return {
+        settings: null,
+        message: json.messageAr ?? json.message ?? 'تعذّr حفظ الإعدادات',
+      };
+    }
+  } catch {
+    // fall through to profile update fallback
+  }
+
+  if (!userId) {
+    return { settings: null, message: 'تعذّr الاتصال بالخادم' };
+  }
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        settings: null,
+        message: json.messageAr ?? json.message ?? 'تعذّr حفظ الإعدادات',
+      };
+    }
+    const parsed = parsePrivacySettings(json.data);
+    if (parsed) {
+      return { settings: mergePrivacySettings(current, parsed) };
+    }
+    return { settings: mergePrivacySettings(current, patch) };
+  } catch {
+    return { settings: null, message: 'تعذّr الاتصال بالخادم' };
+  }
+}
+
+export async function fetchAccountSettings(): Promise<AccountSettings | null> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/me/account`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return parseAccountSettings(json.data);
+  } catch {
+    return null;
+  }
+}
+
+export async function updateAccountSettings(
+  patch: Partial<Pick<AccountSettings, 'email' | 'birthDate'>>,
+  userId?: string,
+): Promise<{ account: AccountSettings | null; message?: string }> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/me/account`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    const json = await res.json().catch(() => ({}));
+    const account = parseAccountSettings(json.data);
+    if (res.ok && account) return { account };
+    if (!userId) {
+      return {
+        account: null,
+        message: json.messageAr ?? json.message ?? 'تعذّr حفظ البيانات',
+      };
+    }
+  } catch {
+    if (!userId) return { account: null, message: 'تعذّr الاتصال بالخادم' };
+  }
+
+  if (!userId) return { account: null, message: 'تعذّr حفظ البيانات' };
+
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    const json = await res.json().catch(() => ({}));
+    const account = parseAccountSettings(json.data);
+    if (res.ok && account) return { account };
+    return {
+      account: null,
+      message: json.messageAr ?? json.message ?? 'تعذّr حفظ البيانات',
+    };
+  } catch {
+    return { account: null, message: 'تعذّr الاتصال بالخادم' };
+  }
+}
+
+export async function changeAccountPhone(
+  phone: string,
+  phoneToken: string,
+): Promise<{ account: AccountSettings | null; message?: string }> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/users/me/phone`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, phone_token: phoneToken }),
+    });
+    const json = await res.json().catch(() => ({}));
+    const account = parseAccountSettings(json.data);
+    if (res.ok && account) return { account };
+    return {
+      account: null,
+      message: json.messageAr ?? json.message ?? 'تعذّr تحديث رقم الجوال',
+    };
+  } catch {
+    return { account: null, message: 'تعذّr الاتصال بالخادم' };
+  }
+}
+
+export type ConnectionsResult = {
+  users: ConnectionUser[];
+  hidden?: boolean;
+};
+
 export async function fetchUserConnections(
   userId: string,
   type: 'followers' | 'following',
@@ -82,6 +333,29 @@ export async function fetchUserConnections(
     return [];
   }
   return json.data.users as ConnectionUser[];
+}
+
+export async function fetchUserConnectionsWithMeta(
+  userId: string,
+  type: 'followers' | 'following',
+): Promise<ConnectionsResult> {
+  const res = await authFetch(`${API_BASE}/api/users/${userId}/connections?type=${type}`, {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' },
+  });
+  if (!res.ok) return { users: [] };
+  const json = await res.json();
+  if (!json.success || !json.data?.users) return { users: [] };
+  if (
+    !Array.isArray(json.data.users) ||
+    json.data.users.some((user: { isFollowing?: unknown }) => typeof user.isFollowing !== 'boolean')
+  ) {
+    return { users: [] };
+  }
+  return {
+    users: json.data.users as ConnectionUser[],
+    hidden: json.data.hidden === true,
+  };
 }
 
 export async function setFollowUser(
@@ -171,6 +445,6 @@ export async function setBlockUser(
     );
     return { ok: false, message };
   } catch {
-    return { ok: false, message: 'تعذّر الاتصال بالخادم' };
+    return { ok: false, message: 'تعذّr الاتصال بالخادم' };
   }
 }

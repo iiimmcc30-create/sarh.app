@@ -30,3 +30,17 @@ export function canManageAsOwner(
   const ownerId = resolveCurrentUserId(authUser, me);
   return Boolean(ownerId) && isSameUser(authorId, ownerId);
 }
+
+/** Comment author or resource owner (e.g. listing seller) may delete. */
+export function canDeleteComment(
+  commentAuthorId: string | undefined,
+  resourceOwnerId: string | undefined,
+  authUser?: AuthUser | null,
+  me?: Pick<User, 'id'> | null,
+): boolean {
+  const currentId = resolveCurrentUserId(authUser, me);
+  if (!currentId) return false;
+  return (
+    isSameUser(commentAuthorId, currentId) || isSameUser(resourceOwnerId, currentId)
+  );
+}

@@ -9,16 +9,18 @@ import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import {
   BOOST_TYPE_META,
-  BOOST_TYPE_ORDER,
+  SERVICE_TYPE_ORDER,
   FALLBACK_BOOST_PLANS,
   type BoostPlansMap,
   type BoostTypeKey,
   fetchBoostPlans,
 } from '@/services/listingBoost';
-import { applyListingPlanPromotion, type PlanPromoteType } from '@/services/listingPlanPromote';
+import {
+  FALLBACK_PROMOTION_PLANS,
+  type PromotionPlanOption,
+  fetchPromotionPlans,
+} from '@/services/listingPromotion';
 import { launchPaymentCheckout } from '@/services/payments';
-import { usePlanPromotionQuota } from '@/hooks/usePlanPromotionQuota';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -66,66 +68,51 @@ export function ListingBoostSheet({
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { accessToken } = useAuth();
-  const quota = usePlanPromotionQuota();
-  const { refetchSubscription } = useSubscription();
 
   const [plans, setPlans] = useState<BoostPlansMap>(FALLBACK_BOOST_PLANS);
+  const [promotionPlans, setPromotionPlans] = useState<PromotionPlanOption[]>(
+    FALLBACK_PROMOTION_PLANS,
+  );
   const [boostType, setBoostType] = useState<BoostTypeKey>(initialBoostType);
-  const [durationDays, setDurationDays] = useState(3);
+  const [durationDays, setDurationDays] = useState(1);
   const [method, setMethod] = useState<'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay'>('mada');
   const [processing, setProcessing] = useState(false);
-  const [planApplying, setPlanApplying] = useState<PlanPromoteType | null>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const canPlanFeature = quota.canFeature && !listingFeatured;
-  const canPlanPin = quota.canPin && !listingPinned;
-  const showPlanSection = canPlanFeature || canPlanPin;
-
-  const handlePlanPromote = async (type: PlanPromoteType) => {
-    if (planApplying) return;
-    setPlanApplying(type);
-    try {
-      const result = await applyListingPlanPromotion(listingId, type);
-      if (result.ok) {
-        await refetchSubscription();
-        Alert.alert('تم التفعيل', 'تم تطبيق ميزة الباقة على إعلانك بنجاح.');
-        onPlanPromoteSuccess?.();
-        if (type === 'featured' && !canPlanPin) onClose();
-        if (type === 'pinned' && !canPlanFeature) onClose();
-        if (type === 'both') onClose();
-      } else {
-        Alert.alert('تعذّر التفعيل', result.error ?? 'حاول مجدداً لاحقاً');
-      }
-    } finally {
-      setPlanApplying(null);
-    }
-  };
-
-  const typePlans = plans[boostType] ?? FALLBACK_BOOST_PLANS[boostType];
+  const typePlans =
+    boostType === 'promotion'
+      ? promotionPlans
+      : plans[boostType] ?? FALLBACK_BOOST_PLANS[boostType];
   const selectedPlan =
     typePlans.find((p) => p.durationDays === durationDays) ?? typePlans[0];
 
   const accentFor = (key: BoostTypeKey) => {
     const meta = BOOST_TYPE_META[key];
     if (meta.accent === 'gold') return { main: colors.gold, bright: colors.gold };
-    if (meta.accent === 'royal') return { main: colors.electric, bright: colors.electric };
-    return { main: colors.electric, bright: colors.electric };
+    if (meta.accent === 'promotion') {
+      return { main: '#7C3AED', bright: '#A78BFA' };
+    }
+    return { main: colors.electric, bright: colors.electricBright };
   };
 
   const currentAccent = accentFor(boostType);
 
   const payGradient = (): [string, string, string] => {
     if (boostType === 'featured') return ['#B8860B', '#FFD700', '#B8860B'];
-    if (boostType === 'both') return gradients.royal as [string, string, string];
-    return [colors.electric, colors.electric, colors.electric];
+    if (boostType === 'promotion') return ['#5B21B6', '#7C3AED', '#5B21B6'];
+    return [colors.electric, colors.electricBright, colors.electric];
   };
 
   useEffect(() => {
     if (!visible) return;
     setBoostType(initialBoostType);
-    const defaults = FALLBACK_BOOST_PLANS[initialBoostType];
-    setDurationDays(defaults[0]?.durationDays ?? 3);
+    const defaults =
+      initialBoostType === 'promotion'
+        ? FALLBACK_PROMOTION_PLANS
+        : FALLBACK_BOOST_PLANS[initialBoostType];
+    setDurationDays(defaults[0]?.durationDays ?? 1);
     void fetchBoostPlans().then(setPlans);
+    void fetchPromotionPlans().then(setPromotionPlans);
   }, [visible, initialBoostType]);
 
   useEffect(() => {
@@ -142,22 +129,31 @@ export function ListingBoostSheet({
 
   const handleSelectType = (key: BoostTypeKey) => {
     setBoostType(key);
-    const nextPlans = plans[key] ?? FALLBACK_BOOST_PLANS[key];
-    setDurationDays(nextPlans[0]?.durationDays ?? 3);
+    const nextPlans =
+      key === 'promotion'
+        ? promotionPlans
+        : plans[key] ?? FALLBACK_BOOST_PLANS[key];
+    setDurationDays(nextPlans[0]?.durationDays ?? 1);
   };
 
   const handlePay = async () => {
     if (!accessToken || !selectedPlan) return;
     setProcessing(true);
     try {
-      const res = await authFetch(`${API_BASE}/api/listings/${listingId}/boost`, {
+      const endpoint =
+        boostType === 'promotion'
+          ? `${API_BASE}/api/listings/${listingId}/promotion`
+          : `${API_BASE}/api/listings/${listingId}/boost`;
+
+      const body =
+        boostType === 'promotion'
+          ? { durationDays: selectedPlan.durationDays, method, tier: 'standard' }
+          : { boostType, durationDays: selectedPlan.durationDays, method };
+
+      const res = await authFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          boostType,
-          durationDays: selectedPlan.durationDays,
-          method,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success || !json.data) {
@@ -175,7 +171,7 @@ export function ListingBoostSheet({
         paymentId,
         checkoutUrl,
         devMode,
-        context: 'boost',
+        context: boostType === 'promotion' ? 'promotion' : 'boost',
         returnParams: {
           listingId,
           boostType,
@@ -253,84 +249,16 @@ export function ListingBoostSheet({
               </LinearGradient>
             ) : null}
 
-            {showPlanSection ? (
-              <View style={styles.planSection}>
-                <View style={[styles.planSectionHeader, rtlRow]}>
-                  <LinearGradient
-                    colors={[colors.electric, colors.electricBright]}
-                    style={styles.planSectionIcon}
-                  >
-                    <AppIcon name="gift-outline" size={16} color="#fff" />
-                  </LinearGradient>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.planSectionTitle}>من حصة باقتك — مجاناً</Text>
-                    <Text style={styles.planSectionSub}>
-                      استخدم تثبيت أو تمييز شهري بدون دفع إضافي
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.planActions, rtlRow]}>
-                  {canPlanPin ? (
-                    <Pressable
-                      style={[
-                        styles.planActionBtn,
-                        planApplying === 'pinned' && styles.planActionBtnBusy,
-                      ]}
-                      disabled={planApplying !== null}
-                      onPress={() => void handlePlanPromote('pinned')}
-                    >
-                      <AppIcon name="pin" size={20} color={colors.electric} />
-                      <Text style={styles.planActionLabel}>تثبيت</Text>
-                      <Text style={styles.planActionQuota}>
-                        {quota.pinnedRemaining}/{quota.pinnedLimit}
-                      </Text>
-                    </Pressable>
-                  ) : null}
-                  {canPlanFeature ? (
-                    <Pressable
-                      style={[
-                        styles.planActionBtn,
-                        styles.planActionBtnGold,
-                        planApplying === 'featured' && styles.planActionBtnBusy,
-                      ]}
-                      disabled={planApplying !== null}
-                      onPress={() => void handlePlanPromote('featured')}
-                    >
-                      <AppIcon name="star" size={20} color={colors.gold} />
-                      <Text style={styles.planActionLabel}>تمييز</Text>
-                      <Text style={styles.planActionQuota}>
-                        {quota.featuredRemaining}/{quota.featuredLimit}
-                      </Text>
-                    </Pressable>
-                  ) : null}
-                  {canPlanFeature && canPlanPin ? (
-                    <Pressable
-                      style={[
-                        styles.planActionBtn,
-                        styles.planActionBtnBoth,
-                        planApplying === 'both' && styles.planActionBtnBusy,
-                      ]}
-                      disabled={planApplying !== null}
-                      onPress={() => void handlePlanPromote('both')}
-                    >
-                      <AppIcon name="rocket-outline" size={20} color={colors.electric} />
-                      <Text style={styles.planActionLabel}>كلاهما</Text>
-                      <Text style={styles.planActionQuota}>من الباقة</Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-
-            <Text style={styles.sectionLabel}>
-              {showPlanSection ? 'أو ترقية مدفوعة لمدة محددة' : 'اختر الخدمة'}
-            </Text>
+            <Text style={styles.sectionLabel}>اختر الخدمة</Text>
             <View style={styles.serviceGrid}>
-              {BOOST_TYPE_ORDER.map((key) => {
+              {SERVICE_TYPE_ORDER.map((key) => {
                 const meta = BOOST_TYPE_META[key];
                 const accent = accentFor(key);
                 const selected = boostType === key;
-                const minPrice = (plans[key] ?? FALLBACK_BOOST_PLANS[key])[0]?.amount;
+                const minPrice =
+                  key === 'promotion'
+                    ? (promotionPlans[0]?.amount ?? FALLBACK_PROMOTION_PLANS[0]?.amount)
+                    : (plans[key] ?? FALLBACK_BOOST_PLANS[key])[0]?.amount;
                 return (
                   <Pressable
                     key={key}

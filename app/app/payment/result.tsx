@@ -35,7 +35,7 @@ const CONTEXT_COPY: Record<PaymentContext, ContextCopy> = {
     pendingSubtitle:
       'العملية قيد المعالجة في N-Genius. اضغط «إعادة التحقق» إذا لم يُحدَّث الحساب بعد.',
     primaryLabel: 'الملف الشخصي',
-    secondaryLabel: 'عرض الباقات',
+    secondaryLabel: 'خدمات الترويج',
   },
   listing_fee: {
     successTitle: 'تم الدفع بنجاح',
@@ -44,10 +44,17 @@ const CONTEXT_COPY: Record<PaymentContext, ContextCopy> = {
     primaryLabel: 'الاشتراك',
   },
   commission: {
-    successTitle: 'تم الدفع بنجاح',
-    successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
-    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يظهر في السجل.',
-    primaryLabel: 'الاشتراك',
+    successTitle: 'تم سداد الرسوم بنجاح',
+    successSubtitle: 'تم سداد الرسوم بنجاح، شكراً لك.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُسجَّل السداد.',
+    primaryLabel: 'عرض الإعلان',
+  },
+  promotion: {
+    successTitle: 'تم تفعيل الترويج!',
+    successSubtitle: 'تم تأكيد الدفع من N-Genius.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُفعَّل الترويج.',
+    primaryLabel: 'عرض الإعلان',
+    secondaryLabel: 'خدمات الترويج',
   },
   boost: {
     successTitle: 'تم تفعيل الترقية!',
@@ -67,7 +74,7 @@ const CONTEXT_COPY: Record<PaymentContext, ContextCopy> = {
     successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
     pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُحدَّث الحساب.',
     primaryLabel: 'الملف الشخصي',
-    secondaryLabel: 'عرض الباقات',
+    secondaryLabel: 'خدمات الترويج',
   },
 };
 
@@ -77,6 +84,7 @@ function normalizeContext(raw?: string): PaymentContext {
     'listing_fee',
     'commission',
     'boost',
+    'promotion',
     'butcher_order',
     'generic',
   ];
@@ -139,13 +147,18 @@ export default function PaymentResultScreen() {
   const applyPaidSideEffects = useCallback(
     async (result: PaymentSyncResult) => {
       await refetchSubscription();
-      if (context === 'boost') {
+      if (context === 'boost' || context === 'promotion') {
         await refetchData();
         if (result.boost?.expiresAt) {
           setBoostExpiry(result.boost.expiresAt);
         }
+        if (result.promotion?.expiresAt) {
+          setBoostExpiry(result.promotion.expiresAt);
+        }
         if (result.boost?.boostType) {
           setResolvedBoostType(result.boost.boostType);
+        } else if (context === 'promotion') {
+          setResolvedBoostType('promotion');
         }
       }
     },
@@ -214,14 +227,21 @@ export default function PaymentResultScreen() {
         router.replace('/(tabs)/profile' as never);
         break;
       case 'listing_fee':
-      case 'commission':
         router.replace('/subscription' as never);
         break;
-      case 'boost':
+      case 'commission':
         if (listingId) {
           router.replace({ pathname: '/listing/[id]', params: { id: listingId } } as never);
         } else {
-          router.replace('/(tabs)/' as never);
+          router.replace('/subscription' as never);
+        }
+        break;
+      case 'boost':
+      case 'promotion':
+        if (listingId) {
+          router.replace({ pathname: '/listing/[id]', params: { id: listingId } } as never);
+        } else {
+          router.replace('/subscription' as never);
         }
         break;
       case 'butcher_order':

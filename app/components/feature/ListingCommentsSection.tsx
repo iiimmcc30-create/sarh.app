@@ -18,7 +18,7 @@ import { authFetch } from '@/services/authFetch';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { deleteListingComment } from '@/services/comments';
 import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
-import { canManageAsOwner } from '@/lib/currentUser';
+import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
 import { rtlRow } from '@/lib/rtl';
@@ -27,6 +27,7 @@ import type { PostComment } from '@/services/types';
 
 type ListingCommentsSectionProps = {
   listingId: string;
+  listingOwnerId?: string;
 };
 
 function mapComment(c: {
@@ -62,7 +63,7 @@ function mapComment(c: {
   };
 }
 
-export function ListingCommentsSection({ listingId }: ListingCommentsSectionProps) {
+export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCommentsSectionProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { isAuthenticated, user } = useAuth();
@@ -86,7 +87,7 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
     const result = await deleteListingComment(listingId, commentId);
     setDeletingId(null);
     if (!result.ok) {
-      await alertMessage('تعذّر الحذف', result.message, 'close-circle-outline');
+      await alertMessage('تعذر حذف التعليق', result.message, 'close-circle-outline');
       return;
     }
     setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -188,7 +189,7 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
                     ) : null}
                     <Text style={styles.commentTime}>{c.createdAt}</Text>
                   </UserProfileLink>
-                  {canManageAsOwner(c.author.id, user, me) ? (
+                  {canDeleteComment(c.author.id, listingOwnerId, user, me) ? (
                     <Pressable
                       onPress={() => void handleDelete(c.id)}
                       disabled={deletingId === c.id}

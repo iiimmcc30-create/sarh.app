@@ -343,7 +343,15 @@ export function ProfileScreenLayout({
             {mode === 'visitor' && (onFollow || onMessage) ? (
               <View style={[styles.actionsRow, rtlRow]}>
                 {onMessage ? (
-                  <Pressable style={styles.btnMessage} onPress={onMessage}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.actionBtn,
+                      styles.btnMessage,
+                      pressed && styles.actionBtnPressed,
+                    ]}
+                    onPress={onMessage}
+                  >
+                    <AppIcon name="chatbubble-outline" size={18} color={themeColors.textPrimary} />
                     <Text style={styles.btnMessageText}>مراسلة</Text>
                   </Pressable>
                 ) : null}
@@ -351,7 +359,12 @@ export function ProfileScreenLayout({
                   <Pressable
                     onPress={onFollow}
                     disabled={followLoading}
-                    style={[styles.btnFollow, isFollowing && styles.btnFollowing]}
+                    style={({ pressed }) => [
+                      styles.actionBtn,
+                      styles.btnFollow,
+                      isFollowing && styles.btnFollowing,
+                      pressed && !followLoading && styles.actionBtnPressed,
+                    ]}
                   >
                     {followLoading ? (
                       <ActivityIndicator
@@ -359,9 +372,16 @@ export function ProfileScreenLayout({
                         color={isFollowing ? themeColors.textPrimary : '#fff'}
                       />
                     ) : (
-                      <Text style={[styles.btnFollowText, isFollowing && styles.btnFollowingText]}>
-                        {isFollowing ? 'متابَع' : 'متابعة'}
-                      </Text>
+                      <>
+                        <AppIcon
+                          name={isFollowing ? 'checkmark-circle-outline' : 'person-add-outline'}
+                          size={18}
+                          color={isFollowing ? themeColors.textPrimary : '#fff'}
+                        />
+                        <Text style={[styles.btnFollowText, isFollowing && styles.btnFollowingText]}>
+                          {isFollowing ? 'متابَع' : 'متابعة'}
+                        </Text>
+                      </>
                     )}
                   </Pressable>
                 ) : null}
@@ -597,18 +617,28 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: colors.bgDeep,
     },
     actionsRow: {
+      alignSelf: 'stretch',
+      width: '100%',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       gap: spacing.sm,
-      alignItems: 'center',
     },
-    btnFollow: {
-      flex: 1.4,
-      height: 42,
+    actionBtn: {
+      flex: 1,
+      minHeight: 44,
       borderRadius: radius.pill,
-      backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',
+      ...rtlRow,
+      gap: 6,
+      paddingHorizontal: spacing.md,
+    },
+    actionBtnPressed: {
+      opacity: 0.86,
+      transform: [{ scale: 0.99 }],
+    },
+    btnFollow: {
+      backgroundColor: colors.electric,
     },
     btnFollowing: {
       backgroundColor: colors.bgSurface,
@@ -619,24 +649,21 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.bodyStrong,
       color: '#fff',
       fontWeight: '700',
+      fontSize: 14,
     },
     btnFollowingText: {
       color: colors.textPrimary,
     },
     btnMessage: {
-      flex: 1,
-      height: 42,
-      borderRadius: radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderMid,
       backgroundColor: colors.bgSurface,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     btnMessageText: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '700',
+      fontSize: 14,
     },
     contentCardTop: {
       marginHorizontal: spacing.lg,

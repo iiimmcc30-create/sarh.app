@@ -27,6 +27,7 @@ import {
   SidebarLogoutButton,
   SidebarMenuRow,
   SidebarSection,
+  SidebarThemeToggle,
   type SidebarMenuItem,
 } from '@/components/feature/SidebarMenu';
 
@@ -40,13 +41,7 @@ export default function SidebarScreen() {
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
   const { unreadCount: notificationsUnread } = useUnreadNotificationCount();
   const { threads } = useMessageThreads(accessToken, 'DIRECT');
-  const {
-    isButcherOwner,
-    hasAnyApplication,
-    hasPendingApplication,
-    provisionedButcherId,
-    refresh,
-  } = useButcherOwnerAccess();
+  const { isButcherOwner, refresh } = useButcherOwnerAccess();
 
   useFocusEffect(
     useCallback(() => {
@@ -93,126 +88,60 @@ export default function SidebarScreen() {
       badge: notificationsUnread,
     },
     {
-      key: 'subscription',
-      icon: 'crown',
-      label: 'الباقات والاشتراك',
-      route: '/subscription',
-    },
-    {
       key: 'settings',
       icon: 'settings-outline',
-      label: 'الإعدادات',
+      label: 'الإعدادات والخصوصية',
       route: '/profile/settings',
     },
   ];
 
-  const marketItems: MenuItem[] = [
-    {
-      key: 'butchers',
-      icon: 'storefront-outline',
-      label: 'سوق الملاحم',
-      route: '/butchers',
-    },
-    {
-      key: 'map',
-      icon: 'map-outline',
-      label: 'خريطة الملاحم',
-      route: '/butchers/map',
-    },
-  ];
-
-  const ownerItems: MenuItem[] = useMemo(() => {
-    if (!isButcherOwner) return [];
-
+  const serviceItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [
       {
-        key: 'dashboard',
-        icon: 'bar-chart-outline',
-        label: 'لوحة التحليلات',
-        route: '/(butcher)',
-      },
-      {
-        key: 'manage',
-        icon: 'settings-outline',
-        label: 'إدارة الملحمة',
-        route: '/(butcher)/manage',
-      },
-      {
-        key: 'edit',
-        icon: 'create-outline',
-        label: 'تعديل بيانات الملحمة',
-        route: '/butchers/edit',
-      },
-      {
-        key: 'butcher-messages',
-        icon: 'chatbubbles-outline',
-        label: 'رسائل العملاء',
-        route: '/(butcher)/messages',
+        key: 'butchers',
+        icon: 'storefront-outline',
+        label: 'سوق الملاحم',
+        route: '/butchers',
       },
     ];
 
-    if (provisionedButcherId) {
-      items.push({
-        key: 'my-page',
-        icon: 'storefront-outline',
-        label: 'صفحة ملحمتي',
-        route: `/butchers/${provisionedButcherId}`,
-      });
-    }
-
-    return items;
-  }, [isButcherOwner, provisionedButcherId]);
-
-  const applicationItems: MenuItem[] = useMemo(() => {
-    const items: MenuItem[] = [];
-
     if (isButcherOwner) {
-      if (hasAnyApplication) {
-        items.push({
-          key: 'my-application',
-          icon: 'folder-open-outline',
-          label: 'طلبي',
-          route: '/butchers/my-application',
-        });
-      }
-      return items;
-    }
-
-    if (!hasPendingApplication) {
       items.push({
-        key: 'apply',
-        icon: 'document-text-outline',
-        label: 'طلب تسجيل ملحمة',
-        route: '/butchers/apply',
+        key: 'manage-butcher',
+        icon: 'grid-outline',
+        label: 'إدارة الملحمة',
+        route: '/(butcher)/manage',
       });
     }
 
-    if (hasAnyApplication) {
-      items.push({
-        key: 'my-application',
-        icon: 'folder-open-outline',
-        label: 'طلبي',
-        route: '/butchers/my-application',
-      });
-    }
+    items.push(
+      {
+        key: 'sarh-services',
+        icon: 'briefcase-outline',
+        label: 'خدمات سرح',
+        route: '/sarh-services',
+      },
+      {
+        key: 'promotion',
+        icon: 'megaphone-outline',
+        label: 'الترويج',
+        route: '/subscription',
+      },
+    );
 
     return items;
-  }, [isButcherOwner, hasAnyApplication, hasPendingApplication]);
+  }, [isButcherOwner]);
 
-  const serviceItems: MenuItem[] = [
-    {
-      key: 'sarh-services',
-      icon: 'briefcase-outline',
-      label: 'خدمات سرح',
-      route: '/sarh-services',
-    },
-    {
-      key: 'orders',
-      icon: 'bag-outline',
-      label: 'طلباتي',
-      route: isButcherOwner ? '/(butcher)/manage?tab=orders' : '/butchers',
-    },
-  ];
+  const renderSectionItems = (items: MenuItem[]) =>
+    items.map((item, index) => (
+      <SidebarMenuRow
+        key={item.key}
+        item={item}
+        colors={colors}
+        isLast={index === items.length - 1}
+        onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
+      />
+    ));
 
   return (
     <View style={[styles.backdrop, rtlRow]}>
@@ -228,12 +157,8 @@ export default function SidebarScreen() {
             router.back();
             setTimeout(() => router.push('/(tabs)/profile'), 100);
           }}
-          style={[styles.profileRow, rtlRow]}
+          style={[styles.profileRow, rtlRow, rtlDirection]}
         >
-          <View style={styles.avatarWrap}>
-            <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-            <View style={styles.onlineDot} />
-          </View>
           <View style={styles.profileText}>
             <Text style={styles.displayName} numberOfLines={1}>
               {me.arabicName || me.displayName || me.username}
@@ -248,6 +173,10 @@ export default function SidebarScreen() {
               </View>
             ) : null}
           </View>
+          <View style={styles.avatarWrap}>
+            <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
+            <View style={styles.onlineDot} />
+          </View>
         </Pressable>
 
         <ScrollView
@@ -257,75 +186,18 @@ export default function SidebarScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <SidebarSection title="الحساب" colors={colors}>
-            {accountItems.map((item) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
+            {renderSectionItems(accountItems)}
           </SidebarSection>
-
-          <SidebarSection title="سوق الملاحم" colors={colors}>
-            {marketItems.map((item) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
-          </SidebarSection>
-
-          {ownerItems.length > 0 ? (
-            <SidebarSection title="إدارة ملحمتي" colors={colors}>
-              {ownerItems.map((item) => (
-                <SidebarMenuRow
-                  key={item.key}
-                  item={item}
-                  colors={colors}
-                  onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-                />
-              ))}
-            </SidebarSection>
-          ) : null}
-
-          {applicationItems.length > 0 ? (
-            <SidebarSection title="التسجيل والطلبات" colors={colors}>
-              {applicationItems.map((item) => (
-                <SidebarMenuRow
-                  key={item.key}
-                  item={item}
-                  colors={colors}
-                  onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-                />
-              ))}
-            </SidebarSection>
-          ) : null}
 
           <SidebarSection title="الخدمات" colors={colors}>
-            {serviceItems.map((item) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
+            {renderSectionItems(serviceItems)}
           </SidebarSection>
 
-          <SidebarSection title="التفضيلات" colors={colors}>
-            <SidebarMenuRow
-              item={{
-                key: 'theme',
-                icon: preference === 'dark' ? 'weather-night' : 'sunny-outline',
-                label: 'الوضع النهاري / الداكن',
-              }}
-              colors={colors}
-              onPress={toggleTheme}
-            />
-          </SidebarSection>
+          <SidebarThemeToggle
+            preference={preference}
+            colors={colors}
+            onToggle={toggleTheme}
+          />
 
           <SidebarLogoutButton colors={colors} onPress={handleSignOut} />
 
@@ -407,7 +279,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       flex: 1,
       minWidth: 0,
       gap: 4,
-      alignItems: 'flex-start',
+      alignItems: 'flex-end',
     },
     displayName: {
       ...typography.h3,

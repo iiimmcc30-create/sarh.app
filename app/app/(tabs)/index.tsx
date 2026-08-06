@@ -24,7 +24,7 @@ import { PostItem } from '@/components/feature/PostItem';
 import { HomeAppBar } from '@/components/ui/HomeAppBar';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
-import { compareListingBoostPriority } from '@/lib/listingSort';
+import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
 
 const HOME_REFRESH_TTL_MS = 60_000;
@@ -109,7 +109,7 @@ export default function HomeScreen() {
   );
 
   const displayedListings = useMemo(() => {
-    return listings.slice().sort(compareListingBoostPriority);
+    return interleavePromotedListings(listings.slice().sort(compareListingBoostPriority));
   }, [listings]);
 
   const recentPosts = useMemo(() => {

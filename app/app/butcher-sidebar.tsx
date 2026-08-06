@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-// SAFAT — Butcher sidebar (same design as main sidebar + butcher sections)
+// SAFAT — Butcher sidebar (owner management + butcher services)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -76,48 +76,16 @@ export default function ButcherSidebarScreen() {
     setPreference(preference === 'dark' ? 'light' : 'dark');
   };
 
-  const accountItems: MenuItem[] = [
-    {
-      key: 'messages',
-      icon: 'chatbubble-outline',
-      label: 'رسائل العملاء',
-      route: '/(butcher)/messages',
-      badge: messagesUnread,
-    },
-    {
-      key: 'notifications',
-      icon: 'notifications-outline',
-      label: 'الإشعارات',
-      route: '/notifications',
-      badge: notificationsUnread,
-    },
-    {
-      key: 'subscription',
-      icon: 'crown',
-      label: 'الباقات والاشتراك',
-      route: '/subscription',
-    },
-  ];
-
-  const marketItems: MenuItem[] = [
-    {
-      key: 'butchers',
-      icon: 'storefront-outline',
-      label: 'سوق الملاحم',
-      route: '/butchers',
-    },
-    {
-      key: 'map',
-      icon: 'map-outline',
-      label: 'خريطة الملاحم',
-      route: '/butchers/map',
-    },
-  ];
-
   const ownerItems: MenuItem[] = useMemo(() => {
     if (!isButcherOwner) return [];
 
     const items: MenuItem[] = [
+      {
+        key: 'orders',
+        icon: 'bag-outline',
+        label: 'الطلبات',
+        route: '/(butcher)/manage?tab=orders',
+      },
       {
         key: 'dashboard',
         icon: 'bar-chart-outline',
@@ -131,10 +99,29 @@ export default function ButcherSidebarScreen() {
         route: '/(butcher)/manage',
       },
       {
+        key: 'products',
+        icon: 'cube-outline',
+        label: 'المنتجات',
+        route: '/(butcher)/manage?tab=products',
+      },
+      {
+        key: 'offers',
+        icon: 'pricetag-outline',
+        label: 'العروض',
+        route: '/(butcher)/manage?tab=offers',
+      },
+      {
         key: 'edit',
         icon: 'create-outline',
         label: 'تعديل بيانات الملحمة',
         route: '/butchers/edit',
+      },
+      {
+        key: 'butcher-messages',
+        icon: 'chatbubbles-outline',
+        label: 'رسائل العملاء',
+        route: '/(butcher)/messages',
+        badge: messagesUnread,
       },
     ];
 
@@ -148,7 +135,7 @@ export default function ButcherSidebarScreen() {
     }
 
     return items;
-  }, [isButcherOwner, provisionedButcherId]);
+  }, [isButcherOwner, provisionedButcherId, messagesUnread]);
 
   const applicationItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [];
@@ -186,6 +173,28 @@ export default function ButcherSidebarScreen() {
     return items;
   }, [isButcherOwner, hasAnyApplication, hasPendingApplication]);
 
+  const generalItems: MenuItem[] = [
+    {
+      key: 'butchers',
+      icon: 'storefront-outline',
+      label: 'سوق الملاحم',
+      route: '/butchers',
+    },
+    {
+      key: 'notifications',
+      icon: 'notifications-outline',
+      label: 'الإشعارات',
+      route: '/notifications',
+      badge: notificationsUnread,
+    },
+    {
+      key: 'promotion',
+      icon: 'megaphone-outline',
+      label: 'الترويج',
+      route: '/subscription',
+    },
+  ];
+
   return (
     <View style={[styles.backdrop, rtlRow]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
@@ -216,28 +225,6 @@ export default function ButcherSidebarScreen() {
           contentContainerStyle={[styles.scrollContent, rtlDirection]}
           keyboardShouldPersistTaps="handled"
         >
-          <SidebarSection title="الحساب" colors={colors}>
-            {accountItems.map((item) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
-          </SidebarSection>
-
-          <SidebarSection title="سوق الملاحم" colors={colors}>
-            {marketItems.map((item) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
-          </SidebarSection>
-
           {ownerItems.length > 0 ? (
             <SidebarSection title="إدارة ملحمتي" colors={colors}>
               {ownerItems.map((item) => (
@@ -250,6 +237,17 @@ export default function ButcherSidebarScreen() {
               ))}
             </SidebarSection>
           ) : null}
+
+          <SidebarSection title="عام" colors={colors}>
+            {generalItems.map((item) => (
+              <SidebarMenuRow
+                key={item.key}
+                item={item}
+                colors={colors}
+                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
+              />
+            ))}
+          </SidebarSection>
 
           {applicationItems.length > 0 ? (
             <SidebarSection title="التسجيل والطلبات" colors={colors}>
@@ -303,7 +301,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: scrimColor(scheme, 0.45),
+      backgroundColor: scrimColor(scheme, 0.55),
     },
     backdropTap: {
       flex: 1,
@@ -318,9 +316,9 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       overflow: 'hidden',
       shadowColor: '#000',
       shadowOffset: { width: scheme === 'dark' ? -4 : -2, height: 0 },
-      shadowOpacity: scheme === 'dark' ? 0.35 : 0.1,
-      shadowRadius: 16,
-      elevation: 10,
+      shadowOpacity: scheme === 'dark' ? 0.45 : 0.1,
+      shadowRadius: 20,
+      elevation: 12,
     },
     header: {
       alignItems: 'flex-start',
@@ -330,8 +328,12 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingBottom: spacing.md,
     },
     closeBtn: {
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: colors.bgGlass,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -344,13 +346,13 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       minWidth: 0,
     },
     headerSpacer: {
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
     },
     avatar: {
       width: 52,
       height: 52,
-      borderRadius: 26,
+      borderRadius: 16,
       borderWidth: 2,
       borderColor: colors.electric,
       backgroundColor: colors.bgElevated,

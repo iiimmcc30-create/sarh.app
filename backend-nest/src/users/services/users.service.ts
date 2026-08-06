@@ -1,14 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
 import { RedisService } from '../../redis/redis.service';
 import { LoggerService } from '../../common/services/logger.service';
 import { SocketDisconnectService } from '../../gateway/services/socket-disconnect.service';
-import { throwApi } from '../../common/exceptions/api.exception';
+import { throwApi, ApiException } from '../../common/exceptions/api.exception';
 import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { UsersRepository } from '../repositories/users.repository';
 import {
+  ChangePhoneDto,
   ConnectionsQueryDto,
   ListUsersQueryDto,
+  UpdateAccountSettingsDto,
+  UpdatePrivacySettingsDto,
   UpdateUserDto,
 } from '../dto/users.dto';
 
@@ -30,6 +35,7 @@ export class UsersService {
     private readonly logger: LoggerService,
     private readonly socketDisconnect: SocketDisconnectService,
     private readonly notifications: AppNotificationsService,
+    private readonly config: ConfigService,
   ) {}
 
   async listUsers(query: ListUsersQueryDto) {
@@ -99,7 +105,15 @@ export class UsersService {
       );
     }
 
-    return { ...base, isFollowing, myRating, isBlocked };
+    return {
+      ...base,
+      isFollowing,
+      myRating,
+      isBlocked,
+      ...(viewer?.userId === id
+        ? await this.repo.findPrivacySettings(id).then((privacy) => privacy ?? {})
+        : {}),
+    };
   }
 
   async updateUser(id: string, user: JwtPayload, dto: UpdateUserDto) {
@@ -114,10 +128,35 @@ export class UsersService {
       }
     }
 
+    if (dto.email) {
+      const conflict = await this.repo.findUserByEmail(dto.email, id);
+      if (conflict) {
+        throwApi(409, 'email_taken', 'البريد الإلكتروني مستخدم بالفعل');
+      }
+    }
+
+    let birthDate: Date | null | undefined;
+    if (dto.birthDate !== undefined) {
+      if (dto.birthDate === null) {
+        birthDate = null;
+      } else {
+        const parsed = new Date(dto.birthDate);
+        if (Number.isNaN(parsed.getTime())) {
+          throwApi(400, 'validation_error', 'تاريخ الميلاد غير صالح');
+        }
+        birthDate = parsed;
+      }
+    }
+
     try {
-      const { fcmToken, ...profileData } = dto;
+      const { fcmToken, birthDate: _bd, email, ...profileData } = dto;
       const updated = await this.repo.updateUser(id, {
         ...profileData,
+        ...(email !== undefined ? { email } : {}),
+        ...(birthDate !== undefined ? { birthDate } : {}),
+        ...(dto.privateMessagesAudience !== undefined
+          ? { allowPrivateMessages: true }
+          : {}),
         ...(fcmToken !== undefined ? { fcmToken } : {}),
       });
 
@@ -138,6 +177,14 @@ export class UsersService {
         reviewCount: updated.reviewCount,
         followersCount: updated._count.followers,
         followingCount: updated._count.following,
+        showInSearch: updated.showInSearch,
+        allowPrivateMessages: updated.allowPrivateMessages,
+        showFollowingList: updated.showFollowingList,
+        commentsAudience: updated.commentsAudience,
+        privateMessagesAudience: updated.privateMessagesAudience,
+        notificationsEnabled: updated.notificationsEnabled,
+        email: updated.email,
+        birthDate: updated.birthDate?.toISOString().slice(0, 10) ?? null,
       };
     } catch (err: unknown) {
       const prismaErr = err as { code?: string };
@@ -275,6 +322,124 @@ export class UsersService {
     };
   }
 
+  async getPrivacySettings(userId: string) {
+    const settings = await this.repo.findPrivacySettings(userId);
+    if (!settings) throwApi(404, 'not_found', 'المستخدم غير موجود');
+    return settings;
+  }
+
+  async getAccountSettings(userId: string) {
+    const account = await this.repo.findAccountSettings(userId);
+    if (!account) throwApi(404, 'not_found', 'المستخدم غير موجود');
+    return {
+      phone: account.phone,
+      email: account.email,
+      birthDate: account.birthDate?.toISOString().slice(0, 10) ?? null,
+    };
+  }
+
+  async updateAccountSettings(userId: string, dto: UpdateAccountSettingsDto) {
+    if (dto.email === undefined && dto.birthDate === undefined) {
+      throwApi(400, 'validation_error', 'لا توجد بيانات للتحديث');
+    }
+
+    if (dto.email) {
+      const conflict = await this.repo.findUserByEmail(dto.email, userId);
+      if (conflict) {
+        throwApi(409, 'email_taken', 'البريد الإلكتروني مستخدم بالفعل');
+      }
+    }
+
+    let birthDate: Date | null | undefined;
+    if (dto.birthDate !== undefined) {
+      if (dto.birthDate === null) {
+        birthDate = null;
+      } else {
+        const parsed = new Date(dto.birthDate);
+        if (Number.isNaN(parsed.getTime())) {
+          throwApi(400, 'validation_error', 'تاريخ الميلاد غير صالح');
+        }
+        birthDate = parsed;
+      }
+    }
+
+    const updated = await this.repo.updateAccountSettings(userId, {
+      ...(dto.email !== undefined ? { email: dto.email } : {}),
+      ...(birthDate !== undefined ? { birthDate } : {}),
+    });
+    await this.redis.cacheDel(`user:${userId}`, `user:${userId}:base`);
+    this.logger.info({ userId }, 'User account settings updated');
+    return {
+      phone: updated.phone,
+      email: updated.email,
+      birthDate: updated.birthDate?.toISOString().slice(0, 10) ?? null,
+    };
+  }
+
+  async changePhone(userId: string, dto: ChangePhoneDto) {
+    try {
+      const decoded = jwt.verify(
+        dto.phone_token,
+        this.config.get<string>('JWT_SECRET')!,
+      ) as { phone: string; verified: boolean };
+      if (!decoded.verified || decoded.phone !== dto.phone) {
+        throwApi(
+          400,
+          'invalid_phone_token',
+          'رمز تحقق الجوال غير صحيح أو لا يطابق رقم الجوال',
+        );
+      }
+    } catch (err) {
+      if (err instanceof ApiException) throw err;
+      throwApi(
+        400,
+        'invalid_phone_token',
+        'رمز تحقق الجوال منتهي الصلاحية أو غير صحيح',
+      );
+    }
+
+    const conflict = await this.repo.findUserByPhone(dto.phone, userId);
+    if (conflict) {
+      throwApi(409, 'phone_taken', 'رقم الجوال مسجّل بالفعل');
+    }
+
+    const updated = await this.repo.updateAccountSettings(userId, {
+      phone: dto.phone,
+    });
+    await this.redis.cacheDel(`user:${userId}`, `user:${userId}:base`);
+    this.logger.info({ userId }, 'User phone updated');
+    return {
+      phone: updated.phone,
+      email: updated.email,
+      birthDate: updated.birthDate?.toISOString().slice(0, 10) ?? null,
+    };
+  }
+
+  async updatePrivacySettings(userId: string, dto: UpdatePrivacySettingsDto) {
+    if (
+      dto.showInSearch === undefined &&
+      dto.allowPrivateMessages === undefined &&
+      dto.showFollowingList === undefined &&
+      dto.commentsAudience === undefined &&
+      dto.privateMessagesAudience === undefined &&
+      dto.notificationsEnabled === undefined
+    ) {
+      throwApi(400, 'validation_error', 'لا توجد إعدادات للتحديث');
+    }
+
+    const patch: Parameters<UsersRepository['updatePrivacySettings']>[1] = {
+      ...dto,
+    };
+    if (dto.privateMessagesAudience !== undefined) {
+      patch.allowPrivateMessages = true;
+    }
+
+    const updated = await this.repo.updatePrivacySettings(userId, patch);
+    await this.redis.cacheDel(`user:${userId}`, `user:${userId}:base`);
+    this.logger.info({ userId, ...dto }, 'User privacy settings updated');
+    return updated;
+  }
+
   private invalidateBlockProfiles(blockerId: string, targetId: string) {
     return this.redis.cacheDel(
       `user:${blockerId}`,
@@ -307,6 +472,14 @@ export class UsersService {
 
     const target = await this.repo.findActiveUserId(id);
     if (!target) throwApi(404, 'not_found', 'المستخدم غير موجود');
+
+    if (type === 'following') {
+      const privacy = await this.repo.findUserPrivacyFlags(id);
+      const isOwner = viewer?.userId === id;
+      if (privacy && !privacy.showFollowingList && !isOwner) {
+        return { type, users: [], hidden: true };
+      }
+    }
 
     const rows =
       type === 'followers'
@@ -371,6 +544,8 @@ export class UsersService {
       lastSeenAt: user.lastSeenAt,
       rating: user.reviewCount > 0 ? user.rating : null,
       reviewCount: user.reviewCount,
+      allowPrivateMessages: user.allowPrivateMessages,
+      showFollowingList: user.showFollowingList,
       followersCount: user._count.followers,
       followingCount: user._count.following,
       listingsCount: user._count.listings,

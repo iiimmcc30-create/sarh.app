@@ -30,6 +30,13 @@ model User {
   fcmToken                            String?
   rating                              Float                             @default(0)
   reviewCount                         Int                               @default(0)
+  showInSearch                        Boolean                           @default(true)
+  allowPrivateMessages                Boolean                           @default(true)
+  showFollowingList                   Boolean                           @default(true)
+  birthDate                           DateTime?
+  commentsAudience                    String                            @default("everyone")
+  privateMessagesAudience             String                            @default("everyone")
+  notificationsEnabled                Boolean                           @default(true)
   createdAt                           DateTime                          @default(now())
   updatedAt                           DateTime                          @updatedAt
   deletedAt                           DateTime?
@@ -46,6 +53,7 @@ model User {
   listings                            Listing[]
   fees                                ListingFee[]
   listingBoosts                       ListingBoost[]
+  listingPromotions                   ListingPromotion[]
   liveStreams                         LiveStream[]
   receivedMessages                    Message[]                         @relation("ReceivedMessages")
   sentMessages                        Message[]                         @relation("SentMessages")
@@ -228,6 +236,10 @@ model Listing {
   pinned            Boolean         @default(false)
   featuredUntil     DateTime?
   pinnedUntil       DateTime?
+  promoted          Boolean         @default(false)
+  promotedUntil     DateTime?
+  promotionWeight   Int             @default(0)
+  promotionTier     String?
   status            ListingStatus   @default(active)
   views             Int             @default(0)
   commentsCount     Int             @default(0)
@@ -238,6 +250,7 @@ model Listing {
   seller            User            @relation(fields: [sellerId], references: [id])
   fee               ListingFee?
   boosts            ListingBoost[]
+  promotions        ListingPromotion[]
   offers            ListingOffer[]
   stories           Story[]
   comments          ListingComment[]
@@ -248,6 +261,8 @@ model Listing {
   @@index([status])
   @@index([featured])
   @@index([pinned])
+  @@index([promoted])
+  @@index([promotionWeight])
   @@index([createdAt])
   @@index([status, createdAt])
   @@index([deletedAt])
@@ -276,6 +291,37 @@ model ListingBoost {
   @@index([userId])
   @@index([status])
   @@index([expiresAt])
+}
+
+model ListingPromotion {
+  id              String    @id @default(uuid())
+  listingId       String
+  userId          String
+  tier            String    @default("standard")
+  weight          Int       @default(100)
+  durationDays    Int
+  amount          Float
+  currency        String    @default("SAR")
+  status          FeeStatus @default(pending)
+  startsAt        DateTime?
+  expiresAt       DateTime?
+  transactionId   String?
+  paidAt          DateTime?
+  paymentId       String?
+  impressions     Int       @default(0)
+  clicks          Int       @default(0)
+  promotedViews   Int       @default(0)
+  baselineViews   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  listing         Listing   @relation(fields: [listingId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([listingId])
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([tier])
 }
 
 model ListingFee {
@@ -990,6 +1036,7 @@ enum PaymentReferenceType {
   butcher_order
   featured_ad
   pinned_ad
+  promoted_ad
   commission
 }
 

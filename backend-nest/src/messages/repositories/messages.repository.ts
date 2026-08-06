@@ -86,6 +86,17 @@ export class MessagesRepository {
   findUserById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        allowPrivateMessages: true,
+        privateMessagesAudience: true,
+      },
+    });
+  }
+
+  findFollow(followerId: string, followingId: string) {
+    return this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
       select: { id: true },
     });
   }
