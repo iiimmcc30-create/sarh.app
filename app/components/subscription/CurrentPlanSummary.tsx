@@ -188,17 +188,17 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h2,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     price: {
       ...typography.bodyStrong,
       color: colors.electric,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     renew: {
       ...typography.micro,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     usageGrid: {
       gap: spacing.sm,
@@ -244,7 +244,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       fontWeight: '600',
       flex: 1,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
   });
 }

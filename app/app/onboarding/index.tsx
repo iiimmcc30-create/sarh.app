@@ -17,7 +17,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { paddingStart, rtlDirection } from '@/lib/rtl';
+import { paddingStart, rtlDirection, rtlForwardIcon } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -176,7 +176,7 @@ export default function OnboardingScreen() {
             title={isLastSlide ? ONBOARDING_START_LABEL : ONBOARDING_NEXT_LABEL}
             onPress={handleNext}
             fullWidth
-            icon={isLastSlide ? 'checkmark' : 'angle-left'}
+            icon={isLastSlide ? 'checkmark' : rtlForwardIcon()}
           />
         </View>
       </SafeAreaView>

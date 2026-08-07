@@ -1,5 +1,6 @@
 // SAFAT — Forgot Password via OTP (نسيت كلمة المرور)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -152,7 +153,7 @@ export default function ForgotPasswordScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name="arrow-forward" size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
           </Pressable>
 
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -323,7 +324,7 @@ function createStyles(colors: ThemeColors) {
   safe: { flex: 1 },
   kav: { flex: 1 },
   backBtn: {
-    position: 'absolute', top: 16, right: spacing.xl, zIndex: 10,
+    position: 'absolute', top: 16, ...inlineEnd(spacing.xl), zIndex: 10,
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
     alignItems: 'center', justifyContent: 'center',
@@ -360,7 +361,7 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: '#fff', textAlign: 'right', marginHorizontal: 10 },
+  pickerLabel: { flex: 1, fontSize: 13, color: '#fff', ...rtlTextAlign(), marginHorizontal: 10 },
   pickerCode: { fontSize: 13, color: colors.textMuted },
   otpHint: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
   devHint: { fontSize: 12, color: '#f59e0b', textAlign: 'center' },
@@ -374,7 +375,7 @@ function createStyles(colors: ThemeColors) {
   otpInput: { fontSize: 20, fontWeight: 'bold', color: '#fff', width: '100%', height: '100%', textAlign: 'center' },
   resendText: { fontSize: 13, color: colors.textBrandStrong, textAlign: 'center', fontWeight: '600' },
   errorContainer: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 6,
+    ...getRtlRow(), alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
   },

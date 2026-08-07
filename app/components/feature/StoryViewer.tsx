@@ -41,6 +41,7 @@ import {
   setStoryReaction,
 } from '@/services/stories';
 import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
+import { rtlForwardIcon } from '@/lib/rtl';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -472,7 +473,7 @@ export function StoryViewer({
           <Text style={styles.listingBtnText}>
             {story.listing.arabicTitle || story.listing.title}
           </Text>
-          <AppIcon name="chevron-back" size={14} color="rgba(255,255,255,0.8)" />
+          <AppIcon name={rtlForwardIcon()} size={14} color="rgba(255,255,255,0.8)" />
         </Pressable>
       ) : null}
 

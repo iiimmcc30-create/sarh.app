@@ -17,6 +17,7 @@ import {
   getActionSheetState,
   subscribeActionSheet,
 } from '@/lib/actionSheet';
+import { alignInlineEnd, getRtlRow, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
 
 /** Global host — mount once in root layout so action sheets work on web + native. */
 export function ActionSheetHost() {
@@ -70,6 +71,7 @@ export function ActionSheetHost() {
                   key={item.key}
                   style={({ pressed }) => [
                     styles.item,
+                    getRtlRow(),
                     item.destructive && styles.itemDanger,
                     item.cancel && styles.itemCancel,
                     pressed && styles.itemPressed,
@@ -114,7 +116,7 @@ export function ActionSheetHost() {
                   </View>
 
                   {!item.cancel ? (
-                    <AppIcon name="chevron-back" size={16} color={styles.itemChevron.color} />
+                    <AppIcon name={rtlForwardIcon()} size={16} color={styles.itemChevron.color} />
                   ) : null}
                 </Pressable>
               ))}
@@ -184,7 +186,6 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      flexDirection: 'row-reverse',
       alignItems: 'center',
       gap: spacing.md,
     },
@@ -220,20 +221,20 @@ function createStyles(colors: ThemeColors) {
     },
     itemTextWrap: {
       flex: 1,
-      alignItems: 'flex-end',
+      ...alignInlineEnd(),
       gap: 2,
     },
     itemText: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     itemTextDanger: { color: colors.rose },
     itemTextCancel: { color: colors.textMuted },
     itemSubtitle: {
       ...typography.micro,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     itemChevron: {
       color: colors.textSubtle,

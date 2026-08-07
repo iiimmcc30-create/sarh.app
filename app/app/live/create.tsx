@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   errorBannerText: { color: '#fff', fontSize: 11, textAlign: 'center', lineHeight: 16 },
-  hint: { ...typography.caption, color: colors.textMuted, textAlign: 'right', lineHeight: 18 },
+  hint: { ...typography.caption, color: colors.textMuted, ...rtlTextAlign(), lineHeight: 18 },
   titleInput: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.lg,

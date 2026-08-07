@@ -1,5 +1,6 @@
 // SAFAT — Butcher location picker (map + GPS + reverse geocode)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlText, rtlTextAlign } from '@/lib/rtl';
 
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -183,13 +184,13 @@ function createStyles(colors: ThemeColors) {
   coordsText: {
     ...typography.caption,
     color: colors.textPrimary,
-    textAlign: 'right',
+    ...rtlTextAlign(),
     fontWeight: '600',
   },
   coordsSub: {
     ...typography.micro,
     color: colors.textMuted,
-    textAlign: 'right',
+    ...rtlTextAlign(),
     marginTop: 2,
   },
   hint: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },

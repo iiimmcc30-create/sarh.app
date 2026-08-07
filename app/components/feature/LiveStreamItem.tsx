@@ -264,7 +264,7 @@ function createStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.textSecondary,
     marginBottom: spacing.md,
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   commentsArea: {
     gap: 6,

@@ -889,7 +889,7 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontWeight: '600',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   countryFixed: {
     alignSelf: 'flex-start',
@@ -908,12 +908,12 @@ const s = StyleSheet.create({
   inlineError: {
     ...typography.caption,
     color: colors.danger,
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   syncNotice: {
     ...typography.caption,
     color: colors.textBrandSuccess,
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   footer: {
     padding: spacing.lg,
@@ -989,6 +989,6 @@ const rv = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 22,
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
 });

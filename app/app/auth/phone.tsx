@@ -365,7 +365,7 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: colors.bgGlass },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, textAlign: 'right', ...marginEnd(10) },
+  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...rtlTextAlign(), ...marginEnd(10) },
   pickerCode: { fontSize: 13, color: colors.textMuted },
 
   switchFlowBtn: { alignSelf: 'center', paddingVertical: 4 },
@@ -389,7 +389,7 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, textAlign: 'right', flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...rtlTextAlign(), flex: 1 },
 
   rememberRow: {
     ...rtlRow,

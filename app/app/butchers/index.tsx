@@ -467,15 +467,15 @@ function createScreenStyles(colors: ThemeColors) {
     fontSize: 26,
     fontWeight: '800',
     color: colors.textPrimary,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   headerSub: {
     ...typography.caption,
     color: colors.textMuted,
     marginTop: 2,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   headerActions: {
     flexDirection: 'row',
@@ -536,8 +536,8 @@ function createScreenStyles(colors: ThemeColors) {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
   },
 
   quickFiltersRow: {

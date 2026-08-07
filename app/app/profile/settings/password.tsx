@@ -10,6 +10,7 @@ import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { useState } from 'react';
 import {
+import { getRtlRow, getRtlText, rtlTextAlign } from '@/lib/rtl';
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -138,7 +139,7 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: spacing.xxxl,
     },
     hintCard: {
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
@@ -152,7 +153,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textSecondary,
       flex: 1,
-      textAlign: 'right',
+      ...rtlTextAlign(),
       lineHeight: 22,
     },
   });

@@ -6,7 +6,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlDirection } from '@/lib/rtl';
-import type { FlaticonStyle } from '@/constants/flaticon-glyphs';
 import { layout, radius } from '@/constants/theme';
 
 function TabBarIcon({
@@ -20,7 +19,7 @@ function TabBarIcon({
   size: number;
   focused?: boolean;
 }) {
-  const variant: FlaticonStyle = focused ? 'sr' : 'rr';
+  const variant = focused ? 'sr' : 'rr';
   return (
     <View style={[styles.iconWrap, focused && { backgroundColor: `${color}14` }]}>
       <AppIcon name={name} variant={variant} size={focused ? size + 1 : size} color={color} />

@@ -176,8 +176,8 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: '#fff',
       flex: 1,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     scrollContent: {
       padding: spacing.lg,

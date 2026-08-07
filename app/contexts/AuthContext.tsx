@@ -2,6 +2,7 @@
 // SAFAT — Auth Context (JWT + OTP + Google)
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { registerAuthFetch } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
@@ -66,6 +67,9 @@ const STORAGE_KEYS = {
   REFRESH_TOKEN: 'safat_refresh_token',
   USER:          'safat_user',
 } as const;
+
+/** Proactive refresh — keeps long-lived session alive while app is installed. */
+const SESSION_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // ── Context ───────────────────────────────────────────────────────────────────
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -144,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Restore session ────────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
-      let shouldRefresh = false;
       try {
         const [storedToken, storedUser, storedMode, storedRefresh] = await AsyncStorage.multiGet([
           STORAGE_KEYS.ACCESS_TOKEN,
@@ -165,19 +168,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (parsedUser.role === 'BUTCHER') {
             setActiveMode('USER');
           }
-          shouldRefresh = Boolean(refresh);
+          if (refresh) {
+            await refreshSessionRef.current();
+          }
         }
       } catch {
         // Storage read failed — start fresh
       } finally {
         setIsLoading(false);
       }
-      // Refresh in background — do not block boot splash on slow/hung network.
-      if (shouldRefresh) {
-        void refreshSessionRef.current();
-      }
     })();
   }, []);
+
+  // ── Keep session alive: refresh when app returns to foreground ─────────────
+  useEffect(() => {
+    const onAppStateChange = (next: AppStateStatus) => {
+      if (next === 'active') {
+        void refreshSessionRef.current();
+      }
+    };
+    const sub = AppState.addEventListener('change', onAppStateChange);
+    return () => sub.remove();
+  }, []);
+
+  // ── Periodic refresh while logged in (extends server session sliding window)
+  useEffect(() => {
+    if (!accessToken) return;
+    const timer = setInterval(() => {
+      void refreshSessionRef.current();
+    }, SESSION_REFRESH_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [accessToken]);
 
   // ── Helper: حفظ الجلسة ────────────────────────────────────────────────────
   const saveSession = useCallback(async (userData: AuthUser, access: string, refresh: string) => {

@@ -213,15 +213,15 @@ function createStyles(colors: ThemeColors) {
     noticeText: {
       ...typography.caption,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 20,
     },
     intro: {
       ...typography.body,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 24,
     },
     card: {

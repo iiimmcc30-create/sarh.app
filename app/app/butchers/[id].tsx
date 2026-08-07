@@ -901,7 +901,7 @@ export default function ButcherProfileScreen() {
                         borderRadius: radius.lg,
                         padding: spacing.md,
                         color: colors.textPrimary,
-                        textAlign: 'right',
+                        ...rtlTextAlign(),
                         minHeight: 80,
                       }}
                       placeholder="تعليق اختياري..."
@@ -1187,14 +1187,14 @@ function createProductsStyles(colors: ThemeColors) {
     color: colors.textPrimary,
     marginBottom: 4,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   productDesc: {
     ...typography.caption,
     color: colors.textMuted,
     lineHeight: 20,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   priceBlock: { alignItems: 'flex-end' },
   price: { fontSize: 22, fontWeight: '800', color: colors.electricBright },
@@ -1219,7 +1219,7 @@ function createProductsStyles(colors: ThemeColors) {
     color: colors.textMuted,
     marginTop: 8,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   orderBtn: { marginTop: spacing.md, borderRadius: 18, overflow: 'hidden' },
   orderBtnGrad: {

@@ -189,7 +189,7 @@ function navigateAfterPaymentCancelled(
       break;
     case 'subscription':
     case 'listing_fee':
-      router.replace('/subscription' as never);
+      router.replace('/promote' as never);
       break;
     case 'commission':
       if (returnParams?.listingId) {
@@ -198,7 +198,7 @@ function navigateAfterPaymentCancelled(
           params: { id: returnParams.listingId },
         } as never);
       } else {
-        router.replace('/subscription' as never);
+        router.replace('/promote' as never);
       }
       break;
     case 'butcher_order':

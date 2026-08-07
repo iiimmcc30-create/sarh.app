@@ -209,7 +209,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '800',
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
       marginBottom: spacing.xs,
       paddingBottom: spacing.xs,
       borderBottomWidth: StyleSheet.hairlineWidth,

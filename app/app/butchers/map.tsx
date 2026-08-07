@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { marginAutoStart, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 import { useEffect } from 'react';
 import {
   ButcherProfile,
@@ -214,7 +214,7 @@ function BottomCard({
         </Pressable>
         <Pressable style={bc.profileBtn} onPress={onProfile}>
           <Text style={bc.profileBtnText}>الملف الكامل</Text>
-          <AppIcon name="chevron-forward" size={14} color={colors.electricBright} />
+          <AppIcon name={rtlForwardIcon()} size={14} color={colors.electricBright} />
         </Pressable>
       </View>
     </View>
@@ -727,7 +727,7 @@ const bc = StyleSheet.create({
     borderWidth: 1, borderColor: colors.electricBright + '33',
   },
   completionText: { ...typography.micro, color: colors.textBrandStrong },
-  currencyText: { ...typography.caption, color: colors.textMuted, marginLeft: 'auto' as any },
+  currencyText: { ...typography.caption, color: colors.textMuted, ...marginAutoStart() },
   chipsRow: { flexDirection: 'row', gap: 6 },
   chip: {
     paddingHorizontal: 10, paddingVertical: 4,

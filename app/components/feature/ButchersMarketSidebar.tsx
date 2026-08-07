@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography } from '@/constants/theme';
 import { useApp } from '@/hooks/useApp';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { borderInlineEnd, getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 
 export type ButchersMarketMenuItem = {
   key: string;
@@ -95,7 +95,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.panel, borderInlineEnd(StyleSheet.hairlineWidth, SIDEBAR.border)]} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
           <AppIcon name="close" size={22} color={SIDEBAR.text} />
@@ -104,7 +104,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
 
       <Pressable
         onPress={() => handleNav('/(tabs)/profile')}
-        style={[styles.profileRow, rtlRow]}
+        style={[styles.profileRow, getRtlRow()]}
       >
         <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
         <View style={styles.profileText}>
@@ -123,7 +123,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, rtlDirection]}
+        contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
       >
         {BUTCHERS_MARKET_MENU.map((item) => {
           const active = isItemActive(item, currentPath);
@@ -133,7 +133,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
               onPress={() => handleNav(item.route)}
               style={({ pressed }) => [
                 styles.menuRow,
-                rtlRow,
+                getRtlRow(),
                 active && styles.menuRowActive,
                 pressed && styles.menuRowPressed,
               ]}
@@ -149,7 +149,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
               <Text style={[styles.menuLabel, active && styles.menuLabelActive]}>
                 {item.label}
               </Text>
-              <AppIcon name="chevron-back" size={16} color={SIDEBAR.textMuted} />
+              <AppIcon name={rtlForwardIcon()} size={16} color={SIDEBAR.textMuted} />
             </Pressable>
           );
         })}
@@ -168,8 +168,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignSelf: 'stretch',
     backgroundColor: SIDEBAR.bg,
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    borderLeftColor: SIDEBAR.border,
     shadowColor: '#000',
     shadowOffset: { width: -4, height: 0 },
     shadowOpacity: 0.12,
@@ -218,13 +216,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: SIDEBAR.text,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   usernameText: {
     ...typography.caption,
     color: SIDEBAR.textMuted,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   brandPill: {
     marginTop: 4,
@@ -241,7 +239,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    ...rtlDirection,
+    ...getRtlDirection(),
   },
   scrollContent: {
     paddingVertical: spacing.sm,
@@ -292,7 +290,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: SIDEBAR.text,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    ...rtlTextAlign(),
   },
   menuLabelActive: {
     color: SIDEBAR.electricDark,

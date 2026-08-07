@@ -1,6 +1,9 @@
 /**
- * Expo web dev with local /api proxy → Railway (avoids browser CORS).
+ * Expo web dev with local /api proxy (default) or Railway fallback.
  * Usage: npm run web
+ *
+ * Local (default): proxy → http://127.0.0.1:3001
+ * Railway only:    WEB_USE_LOCAL_API=false npm run web
  */
 const { spawn } = require('child_process');
 const http = require('http');
@@ -8,10 +11,20 @@ const https = require('https');
 const path = require('path');
 const { URL } = require('url');
 
-const BACKEND = (
+const RAILWAY_API = (
   process.env.RAILWAY_API_URL || 'https://sarh-app.up.railway.app'
 ).replace(/\/$/, '');
+const LOCAL_API = (process.env.LOCAL_API_URL || 'http://127.0.0.1:3001').replace(
+  /\/$/,
+  '',
+);
+const useLocal = process.env.WEB_USE_LOCAL_API !== 'false';
+const BACKEND = (useLocal ? LOCAL_API : RAILWAY_API).replace(/\/$/, '');
 const PROXY_PORT = Number(process.env.WEB_DEV_PROXY_PORT || 8787);
+const LOCAL_SOCKET = (process.env.LOCAL_SOCKET_URL || 'http://127.0.0.1:3002').replace(
+  /\/$/,
+  '',
+);
 
 function proxyRequest(clientReq, clientRes) {
   const target = new URL(clientReq.url || '/', BACKEND);
@@ -58,13 +71,18 @@ const proxy = http.createServer((req, res) => {
 
 proxy.listen(PROXY_PORT, '127.0.0.1', () => {
   console.log(`[web] API proxy http://127.0.0.1:${PROXY_PORT}/api → ${BACKEND}/api`);
+  if (useLocal) {
+    console.log('[web] Local backend mode (set WEB_USE_LOCAL_API=false for Railway)');
+  }
 });
 
 process.env.EXPO_PUBLIC_API_URL = `http://127.0.0.1:${PROXY_PORT}`;
-process.env.EXPO_PUBLIC_SOCKET_URL =
-  process.env.EXPO_PUBLIC_SOCKET_URL || BACKEND;
+process.env.EXPO_PUBLIC_SOCKET_URL = useLocal
+  ? LOCAL_SOCKET
+  : process.env.EXPO_PUBLIC_SOCKET_URL || RAILWAY_API;
+process.env.EXPO_PUBLIC_SKIP_ADB = 'true';
 
-const child = spawn('npx', ['expo', 'start', '--web'], {
+const child = spawn('npx', ['expo', 'start', '--web', '--clear'], {
   stdio: 'inherit',
   shell: true,
   env: process.env,

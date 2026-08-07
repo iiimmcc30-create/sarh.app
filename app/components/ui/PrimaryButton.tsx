@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { ds } from '@/constants/designSystem';
 import { controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 
 interface PrimaryButtonProps {
   title: string;
@@ -169,15 +169,15 @@ function createStyles(colors: ThemeColors) {
     pressed: { transform: [{ scale: motion.pressScale }], opacity: 0.9 },
     disabled: { opacity: 0.45 },
     content: {
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
     },
     label: {
       ...typography.bodyStrong,
+      ...getRtlText(),
       textAlign: 'center',
-      writingDirection: 'rtl',
     },
   });
 }

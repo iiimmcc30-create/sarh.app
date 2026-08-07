@@ -10,7 +10,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { rtlBackIcon } from '@/lib/rtl';
+import { marginStart, rtlBackIcon, rtlTextAlign } from '@/lib/rtl';
 import {
   BRAND_FOOTER_AR,
   BRAND_GOAL_AR,
@@ -182,7 +182,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
   },
   infoLabel: { ...typography.caption, color: colors.textMuted },
-  infoValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right', flex: 1, marginLeft: spacing.md },
+  infoValue: { ...typography.bodyStrong, color: colors.textPrimary, ...rtlTextAlign(), flex: 1, ...marginStart(spacing.md) },
   divider: { height: 1, backgroundColor: colors.borderSoft, marginHorizontal: spacing.lg },
   contactBtn: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,

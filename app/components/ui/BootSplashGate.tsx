@@ -12,7 +12,7 @@ type BootSplashGateProps = {
 const IS_WEB = Platform.OS === 'web';
 const BOOT_FAILSAFE_MS = IS_WEB ? 3500 : 8000;
 
-/** Shows animated boot splash until fonts, auth, and onboarding are ready. */
+/** Shows animated boot splash until auth and onboarding are ready. */
 export function BootSplashGate({ children }: BootSplashGateProps) {
   const { loaded: fontsLoaded, error: fontError } = useFlaticonFonts();
   const { isLoading: authLoading } = useAuth();

@@ -380,8 +380,8 @@ function createStyles(colors: ThemeColors) {
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 22,
     },
     deleteBtn: {

@@ -9,7 +9,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { getRtlRow, rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
 import { initiateListingFeePayment } from '@/services/listingFeePayment';
 import { launchPaymentCheckout } from '@/services/payments';
 import type { NIPaymentMethod } from '@/services/network_international';
@@ -395,7 +395,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
     },
     methodsGrid: {
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       flexWrap: 'wrap',
       gap: spacing.sm,
     },

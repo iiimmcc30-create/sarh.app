@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, getRtlText, rtlTextAlign } from '@/lib/rtl';
 import {
   fetchPromotionStats,
   formatRemainingMs,
@@ -57,12 +57,12 @@ export function PromotionStatsSheet({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={[styles.sheet, rtlDirection]} onPress={(e) => e.stopPropagation()}>
-          <View style={[styles.header, rtlRow]}>
+        <Pressable style={[styles.sheet, getRtlDirection()]} onPress={(e) => e.stopPropagation()}>
+          <View style={[styles.header, getRtlRow()]}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.title, rtlText]}>إحصائيات الترويج</Text>
+              <Text style={[styles.title, getRtlText()]}>إحصائيات الترويج</Text>
               {listingTitle ? (
-                <Text style={[styles.subtitle, rtlText]} numberOfLines={1}>
+                <Text style={[styles.subtitle, getRtlText()]} numberOfLines={1}>
                   {listingTitle}
                 </Text>
               ) : null}
@@ -90,7 +90,7 @@ export function PromotionStatsSheet({
                   <View key={row.key} style={styles.statCard}>
                     <AppIcon name={row.icon} size={20} color="#7C3AED" />
                     <Text style={styles.statValue}>{row.value}</Text>
-                    <Text style={[styles.statLabel, rtlText]}>{row.label}</Text>
+                    <Text style={[styles.statLabel, getRtlText()]}>{row.label}</Text>
                   </View>
                 ))}
               </View>
@@ -126,12 +126,12 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     subtitle: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...rtlTextAlign(),
       marginTop: 4,
     },
     muted: { color: colors.textMuted },
@@ -154,7 +154,7 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '800',
     },
     grid: {
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       flexWrap: 'wrap',
       gap: spacing.sm,
     },

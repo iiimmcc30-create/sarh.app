@@ -196,13 +196,13 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h3,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     desc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     priceBlock: {
       gap: 2,
@@ -245,7 +245,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       flex: 1,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     featureMuted: {
       color: colors.textSubtle,

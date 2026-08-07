@@ -173,7 +173,7 @@ export default function ButcherDashboardScreen() {
       icon: 'megaphone-outline',
       label: 'الترويج',
       color: colors.gold,
-      onPress: () => router.push('/subscription'),
+      onPress: () => router.push('/promote'),
     },
   ];
 

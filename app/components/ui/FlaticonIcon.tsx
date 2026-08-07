@@ -1,37 +1,47 @@
 import React, { memo } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import {
   DEFAULT_ICON_SIZE,
   ICON_STROKE,
   resolveLucideIcon,
 } from '@/lib/lucideIconMap';
 
-export type FlaticonIconProps = {
-  /** Icon name (legacy aliases supported) */
+export { DEFAULT_ICON_SIZE };
+
+export type AppIconProps = {
+  /** Legacy Ionicons / Flaticon names — resolved via lucideIconMap */
   name: string;
-  /** Ignored — Lucide stroke icons only */
-  variant?: string;
+  /** sr/br = filled look; rr = outline (default) */
+  variant?: 'rr' | 'sr' | 'br' | string;
   size?: number;
   color?: string;
-  style?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
 };
 
-function FlaticonIconComponent({
+function LucideAppIcon({
   name,
+  variant,
   size = DEFAULT_ICON_SIZE,
   color,
   style,
-}: FlaticonIconProps) {
+}: AppIconProps) {
   const Icon = resolveLucideIcon(name);
+  const solid = variant === 'sr' || variant === 'br';
+  const strokeWidth = variant === 'br' ? 2.5 : ICON_STROKE;
+
   return (
     <Icon
       size={size}
       color={color}
-      strokeWidth={ICON_STROKE}
+      strokeWidth={strokeWidth}
+      fill={solid && color ? color : 'transparent'}
       style={style}
     />
   );
 }
 
-export const FlaticonIcon = memo(FlaticonIconComponent);
-export const AppIcon = FlaticonIcon;
+/** Lucide icons — same import path as before for app-wide compatibility */
+export const AppIcon = memo(LucideAppIcon);
+export const LucideIcon = AppIcon;
+/** @deprecated use AppIcon or LucideIcon */
+export const FlaticonIcon = AppIcon;

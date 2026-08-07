@@ -4,7 +4,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { luxuryDark } from '@/constants/homeLuxury';
 import { motion } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
-import { isAppRtl } from '@/lib/rtl';
+import { getRtlRow, isAppRtl } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -56,7 +56,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
           ambientShadow(scheme, 'card'),
         ]}
       >
-        <View style={styles.row}>
+        <View style={[styles.row, getRtlRow()]}>
           {leftTabs.map((tab) => {
             const focused = activeRoute === tab.route;
             const tint = focused ? activeTint : inactiveTint;
@@ -181,7 +181,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   row: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },

@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 
 export default function ContactScreen() {
   const { colors, gradients } = useTheme();
@@ -55,7 +55,7 @@ export default function ContactScreen() {
               <Text style={styles.channelLabel}>الهاتف والواتساب</Text>
               <Text style={styles.channelValue}>+966 591 298 136</Text>
             </View>
-            <AppIcon name="chevron-forward" size={18} color={colors.textMuted} />
+            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
 
           <Pressable
@@ -69,7 +69,7 @@ export default function ContactScreen() {
               <Text style={styles.channelLabel}>واتساب</Text>
               <Text style={styles.channelValue}>+966 591 298 136</Text>
             </View>
-            <AppIcon name="chevron-forward" size={18} color={colors.textMuted} />
+            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
 
           <Pressable style={styles.channelCard} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
@@ -80,7 +80,7 @@ export default function ContactScreen() {
               <Text style={styles.channelLabel}>البريد الإلكتروني</Text>
               <Text style={styles.channelValue}>info@alsfat.com</Text>
             </View>
-            <AppIcon name="chevron-forward" size={18} color={colors.textMuted} />
+            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
 
           <Pressable style={styles.channelCard} onPress={() => Linking.openURL('https://alsfat.com')}>
@@ -91,7 +91,7 @@ export default function ContactScreen() {
               <Text style={styles.channelLabel}>الموقع الإلكتروني</Text>
               <Text style={styles.channelValue}>alsfat.com</Text>
             </View>
-            <AppIcon name="chevron-forward" size={18} color={colors.textMuted} />
+            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
         </View>
 
@@ -167,7 +167,7 @@ function createStyles(colors: ThemeColors) {
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     gap: spacing.sm,
   },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right', marginBottom: spacing.sm },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, ...rtlTextAlign(), marginBottom: spacing.sm },
   channelCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,

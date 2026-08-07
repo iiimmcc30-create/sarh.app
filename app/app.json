@@ -73,16 +73,6 @@
         }
       ],
       "expo-asset",
-      [
-        "expo-font",
-        {
-          "fonts": [
-            "./assets/fonts/flaticon/rr.ttf",
-            "./assets/fonts/flaticon/sr.ttf",
-            "./assets/fonts/flaticon/br.ttf"
-          ]
-        }
-      ],
       "expo-video"
     ],
     "experiments": {

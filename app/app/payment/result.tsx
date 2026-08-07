@@ -227,21 +227,21 @@ export default function PaymentResultScreen() {
         router.replace('/(tabs)/profile' as never);
         break;
       case 'listing_fee':
-        router.replace('/subscription' as never);
+        router.replace('/promote' as never);
         break;
       case 'commission':
         if (listingId) {
           router.replace({ pathname: '/listing/[id]', params: { id: listingId } } as never);
         } else {
-          router.replace('/subscription' as never);
+          router.replace('/promote' as never);
         }
         break;
       case 'boost':
       case 'promotion':
         if (listingId) {
-          router.replace({ pathname: '/listing/[id]', params: { id: listingId } } as never);
+          router.replace({ pathname: '/listing/[id]/promote', params: { id: listingId } } as never);
         } else {
-          router.replace('/subscription' as never);
+          router.replace('/promote' as never);
         }
         break;
       case 'butcher_order':
@@ -269,7 +269,11 @@ export default function PaymentResultScreen() {
       router.replace('/butchers' as never);
       return;
     }
-    router.replace('/subscription' as never);
+    if (context === 'boost' || context === 'promotion') {
+      router.replace('/promote' as never);
+      return;
+    }
+    router.replace('/promote' as never);
   }, [context, router]);
 
   if (syncState === 'syncing') {

@@ -24,6 +24,7 @@ import { showLiveBroadcastComingSoonAlert } from '@/lib/liveStreamAccess';
 import { LiveStreamItem } from '@/components/feature/LiveStreamItem';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { LiveStream } from '@/services/types';
+import { marginAutoStart } from '@/lib/rtl';
 
 const LIVE_CATEGORIES = ['الكل', 'إبل', 'خيول', 'أغنام', 'صقور', 'معز'] as const;
 const LIVE_CAT_MAP: Record<string, string> = {
@@ -289,7 +290,7 @@ function createStyles(colors: ThemeColors) {
   stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText: { ...typography.caption, color: colors.textMuted },
   catBadge: {
-    marginLeft: 'auto', paddingHorizontal: 8, paddingVertical: 2,
+    ...marginAutoStart(), paddingHorizontal: 8, paddingVertical: 2,
     backgroundColor: colors.bgGlass, borderRadius: radius.sm,
     borderWidth: 1, borderColor: colors.borderSoft,
   },

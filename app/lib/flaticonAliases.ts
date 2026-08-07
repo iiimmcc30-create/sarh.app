@@ -1,6 +1,4 @@
-/**
- * Maps legacy Ionicons / MaterialCommunityIcons names to Flaticon Uicons names.
- */
+/** Maps legacy Ionicons / Material names to Lucide-compatible keys in lucideIconMap. */
 export const FLATICON_ALIASES: Record<string, string> = {
   // Navigation & UI
   add: 'plus',

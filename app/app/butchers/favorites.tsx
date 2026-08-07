@@ -208,7 +208,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '800',
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     ratingRow: { alignItems: 'center', gap: 4 },
     rating: { ...typography.caption, color: colors.gold, fontWeight: '800' },

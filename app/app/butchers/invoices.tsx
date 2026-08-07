@@ -147,19 +147,19 @@ function createStyles(colors: ThemeColors) {
       color: colors.electricBright,
       fontWeight: '800',
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     date: {
       ...typography.caption,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     paidBadge: {
       paddingHorizontal: 10,
@@ -183,7 +183,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     totalRow: { justifyContent: 'space-between', marginTop: spacing.xs },
     totalLabel: {

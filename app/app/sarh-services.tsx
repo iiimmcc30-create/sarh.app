@@ -4,7 +4,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection } from '@/lib/rtl';
+import { getRtlRow, rtlDirection } from '@/lib/rtl';
 import {
   fetchOfficialServices,
   groupOfficialServicesByCategory,
@@ -140,7 +140,7 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     notice: {
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       alignItems: 'flex-start',
       gap: spacing.sm,
       padding: spacing.md,
@@ -154,8 +154,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       flex: 1,
       lineHeight: 20,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     loader: { marginTop: spacing.xl },
     errorBox: {
@@ -186,8 +186,8 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.h3,
       color: colors.textBrandStrong,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     sectionList: { gap: spacing.md },
   });

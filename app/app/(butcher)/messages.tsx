@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchNotifications } from '@/services/notifications';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { getRtlRow, marginEnd } from '@/lib/rtl';
 
 type Tab = 'messages' | 'activity';
 
@@ -269,10 +270,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderSoft,
   },
   tabs: {
-    flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+    ...getRtlRow(), borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     paddingHorizontal: spacing.lg,
   },
-  tab: { paddingVertical: spacing.md, marginRight: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  tab: { paddingVertical: spacing.md, ...marginEnd(spacing.xl), ...getRtlRow(), alignItems: 'center', gap: 6 },
   tabActive: { borderBottomWidth: 2, borderBottomColor: colors.electricBright },
   tabLabel: { ...typography.body, color: colors.textMuted },
   tabLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },

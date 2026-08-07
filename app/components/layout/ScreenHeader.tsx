@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { controls, layout, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlBackIcon, rtlDirection, rtlRow } from '@/lib/rtl';
+import { alignInlineEnd, getRtlRow, rtlBackIcon } from '@/lib/rtl';
 
 interface ScreenHeaderProps {
   title: string;
@@ -33,7 +33,7 @@ export function ScreenHeader({
   }));
 
   return (
-    <View style={[styles.container, rtlDirection]}>
+    <View style={[styles.container, getRtlRow()]}>
       <View style={styles.side}>
         {showBack ? (
           <Pressable
@@ -63,7 +63,7 @@ export function ScreenHeader({
         {arabic ? <Text style={styles.arabic}>{arabic}</Text> : null}
       </View>
 
-      <View style={[styles.side, { alignItems: 'flex-end' }]}>
+      <View style={[styles.side, alignInlineEnd()]}>
         {rightIcon ? (
           <Pressable
             accessibilityRole="button"
@@ -83,7 +83,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
     container: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       minHeight: layout.headerHeight,

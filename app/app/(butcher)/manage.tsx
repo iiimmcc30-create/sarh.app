@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Manage Screen (إدارة الملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlRow, getRtlText, marginEnd, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -1204,7 +1205,7 @@ export default function ButcherManageScreen() {
                                   ? 'جاهز'
                                   : 'تم التسليم'}
                           </Text>
-                          <AppIcon name="arrow-forward" size={14} color="#fff" />
+                          <AppIcon name={rtlForwardIcon()} size={14} color="#fff" />
                         </LinearGradient>
                       </Pressable>
                     ))}
@@ -1594,7 +1595,7 @@ function createMainStyles(colors: ThemeColors) {
   locationSub: {
     ...typography.caption,
     color: colors.textMuted,
-    textAlign: 'right',
+    ...rtlTextAlign(),
     marginTop: 4,
   },
   locationEditBtn: {
@@ -1752,7 +1753,7 @@ function createProductFormStyles(colors: ThemeColors) {
     writingDirection: 'rtl',
   },
   uploadText: { ...typography.micro, color: colors.textBrandStrong, fontWeight: '600', textAlign: 'center' },
-  uploadHint: { ...typography.micro, color: colors.textSubtle, textAlign: 'right', marginBottom: spacing.lg },
+  uploadHint: { ...typography.micro, color: colors.textSubtle, ...rtlTextAlign(), marginBottom: spacing.lg },
   actions: { flexDirection: 'row', gap: spacing.md },
   cancelBtn: {
     flex: 1, paddingVertical: 13,
@@ -1835,7 +1836,7 @@ function createOrderStyles(colors: ThemeColors) {
     gap: spacing.sm,
   },
   modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right' },
-  modalSub: { ...typography.caption, color: colors.textMuted, textAlign: 'right', marginBottom: spacing.sm },
+  modalSub: { ...typography.caption, color: colors.textMuted, ...rtlTextAlign(), marginBottom: spacing.sm },
   reasonChip: {
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -1967,7 +1968,7 @@ const sto = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
     fontWeight: '700',
-    textAlign: 'right',
+    ...rtlTextAlign(),
     marginBottom: spacing.xs,
   },
   activeCard: {

@@ -5,6 +5,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { dismissToast, getToastState, subscribeToast } from '@/lib/toast';
+import { getRtlRow } from '@/lib/rtl';
 
 const ICONS = {
   success: 'checkmark-circle',
@@ -48,7 +49,7 @@ export function ToastHost() {
     <View pointerEvents="box-none" style={[styles.host, { top: insets.top + spacing.sm }]}>
       <Animated.View style={{ opacity, transform: [{ translateY }] }}>
         <Pressable
-          style={[styles.toast, toneStyle]}
+          style={[styles.toast, toneStyle, getRtlRow()]}
           onPress={dismissToast}
           accessibilityRole="alert"
         >
@@ -80,7 +81,6 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     toast: {
-      flexDirection: 'row-reverse',
       alignItems: 'center',
       gap: spacing.sm,
       paddingHorizontal: spacing.md,
@@ -111,8 +111,8 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       flex: 1,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       fontSize: 14,
       lineHeight: 20,
     },

@@ -1,4 +1,4 @@
-// Powered by OnSpace.AI
+import { useCallback, useEffect, useState } from 'react';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -16,13 +16,11 @@ import { promptReport } from '@/services/reports';
 import { alertMessage, confirmDestructive, presentActionSheet } from '@/lib/actionSheet';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -34,16 +32,8 @@ import {
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
-import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
-import type { BoostTypeKey } from '@/services/listingBoost';
-import {
-  BOOST_TYPE_META,
-  BOOST_TYPE_ORDER,
-  FALLBACK_BOOST_PLANS,
-} from '@/services/listingBoost';
-import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -73,10 +63,8 @@ export default function ListingDetailScreen() {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
 
-  // ─── Boost state ──────────────────────────────────────────────────────────
-  const [boostModalVisible, setBoostModalVisible] = useState(false);
+  // ─── Boost / promote ────────────────────────────────────────────────────
   const [feeModalVisible, setFeeModalVisible] = useState(false);
-  const [initialBoostType, setInitialBoostType] = useState<BoostTypeKey>('pinned');
 
   const loadListing = useCallback(async () => {
     if (!id) return;
@@ -233,6 +221,11 @@ export default function ListingDetailScreen() {
   }
 
   const isOwner = !!me.id && listing.seller.id === me.id;
+
+  const openPromote = (promoteGoal: 'visibility' | 'pinned' | 'featured') => {
+    router.push(`/listing/${listing.id}/promote?goal=${promoteGoal}` as never);
+  };
+
   const timeLabel = listing.createdAt
     ? formatRelativeTimeAr(listing.createdAt)
     : listing.postedAt;
@@ -291,23 +284,10 @@ export default function ListingDetailScreen() {
       danger: false,
     },
     {
-      key: 'feature',
-      icon: 'star',
-      label: listing.featured ? 'مميز ⭐' : 'تمييز',
-      onPress: () => {
-        setInitialBoostType('featured');
-        setBoostModalVisible(true);
-      },
-      danger: false,
-    },
-    {
-      key: 'pin',
-      icon: 'pin',
-      label: 'تثبيت',
-      onPress: () => {
-        setInitialBoostType('pinned');
-        setBoostModalVisible(true);
-      },
+      key: 'promote',
+      icon: 'rocket-outline',
+      label: 'ترقية الإعلان',
+      onPress: () => openPromote('visibility'),
       danger: false,
     },
     {
@@ -326,22 +306,14 @@ export default function ListingDetailScreen() {
       items: [
         { key: 'edit', label: 'تعديل الإعلان', icon: 'create-outline' },
         { key: 'pay-fee', label: 'سداد الرسوم', icon: 'receipt-outline' },
-        { key: 'feature', label: listing.featured ? 'إدارة التمييز' : 'تمييز الإعلان', icon: 'star' },
-        { key: 'pin', label: 'تثبيت الإعلان', icon: 'pin' },
+        { key: 'promote', label: 'ترقية الإعلان', icon: 'rocket-outline' },
         { key: 'delete', label: 'حذف الإعلان', icon: 'trash-outline', destructive: true },
         { key: 'cancel', label: 'إلغاء', cancel: true },
       ],
     });
     if (key === 'edit') handleEdit();
     if (key === 'pay-fee') setFeeModalVisible(true);
-    if (key === 'feature') {
-      setInitialBoostType('featured');
-      setBoostModalVisible(true);
-    }
-    if (key === 'pin') {
-      setInitialBoostType('pinned');
-      setBoostModalVisible(true);
-    }
+    if (key === 'promote') openPromote('visibility');
     if (key === 'delete') void handleDelete();
   };
 
@@ -531,79 +503,32 @@ export default function ListingDetailScreen() {
         ) : null}
 
         {isOwner ? (
-          <View style={styles.promoSection}>
-            <Text style={styles.promoHeading}>ترقية الإعلان</Text>
-            <Text style={styles.promoSub}>زِد ظهور إعلانك بخدمات مدفوعة أو من حصة باقتك</Text>
-            <View style={styles.promoGrid}>
-              {BOOST_TYPE_ORDER.map((key) => {
-                const meta = BOOST_TYPE_META[key];
-                const minPlan = FALLBACK_BOOST_PLANS[key][0];
-                const active =
-                  key === 'pinned'
-                    ? listing.pinned
-                    : key === 'featured'
-                      ? listing.featured
-                      : listing.pinned && listing.featured;
-                return (
-                  <Pressable
-                    key={key}
-                    onPress={() => {
-                      setInitialBoostType(key);
-                      setBoostModalVisible(true);
-                    }}
-                    style={[styles.promoCard, active && styles.promoCardActive]}
-                  >
-                    <View style={styles.promoIconWrap}>
-                      <AppIcon
-                        name={meta.icon}
-                        size={20}
-                        color={active ? colors.electric : colors.textMuted}
-                      />
-                    </View>
-                    <Text style={styles.promoCardTitle}>{meta.title}</Text>
-                    <Text style={styles.promoCardDesc} numberOfLines={2}>{meta.desc}</Text>
-                    <View style={styles.promoChipRow}>
-                      <View style={styles.promoChip}>
-                        <Text style={styles.promoChipText}>{minPlan.labelAr}</Text>
-                      </View>
-                      <View style={[styles.promoChip, styles.promoChipPrice]}>
-                        <Text style={styles.promoChipPriceText}>{minPlan.amount} ر.س</Text>
-                      </View>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={[styles.ownerToolsRow, rtlRow]}>
-              {ownerActions
-                .filter((a) => a.key !== 'pin' && a.key !== 'feature')
-                .map((a) => (
-                  <Pressable
-                    key={a.key}
-                    onPress={a.onPress}
-                    style={({ pressed }) => [
-                      styles.ownerToolChip,
-                      a.danger && styles.ownerToolChipDanger,
-                      pressed && styles.ownerActionPressed,
-                    ]}
-                  >
-                    <AppIcon
-                      name={a.icon}
-                      size={18}
-                      color={a.danger ? colors.rose : colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.ownerToolLabel,
-                        a.danger && styles.ownerActionTextDanger,
-                      ]}
-                    >
-                      {a.label}
-                    </Text>
-                  </Pressable>
-                ))}
-            </View>
+          <View style={[styles.ownerToolsRow, rtlRow]}>
+            {ownerActions.map((a) => (
+              <Pressable
+                key={a.key}
+                onPress={a.onPress}
+                style={({ pressed }) => [
+                  styles.ownerToolChip,
+                  a.danger && styles.ownerToolChipDanger,
+                  pressed && styles.ownerActionPressed,
+                ]}
+              >
+                <AppIcon
+                  name={a.icon}
+                  size={18}
+                  color={a.danger ? colors.rose : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.ownerToolLabel,
+                    a.danger && styles.ownerActionTextDanger,
+                  ]}
+                >
+                  {a.label}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         ) : null}
 
@@ -634,18 +559,6 @@ export default function ListingDetailScreen() {
             </View>
           )}
         </SafeAreaView>
-      ) : null}
-
-      {listing ? (
-        <ListingBoostSheet
-          visible={boostModalVisible}
-          listingId={listing.id}
-          initialBoostType={initialBoostType}
-          listingFeatured={listing.featured}
-          listingPinned={listing.pinned}
-          onClose={() => setBoostModalVisible(false)}
-          onPlanPromoteSuccess={() => void loadListing()}
-        />
       ) : null}
 
       {listing ? (
@@ -723,8 +636,8 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '700',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     specMetaLine: {
       flexWrap: 'wrap',
@@ -763,8 +676,8 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 34,
       color: colors.textBrandStrong,
       fontWeight: '800',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     currency: {
       fontSize: 13,
@@ -804,8 +717,8 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 28,
       color: colors.textPrimary,
       fontWeight: '800',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     sellerRow: {
       alignItems: 'center',
@@ -831,101 +744,15 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '700',
       maxWidth: 180,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
 
-    // ─── Owner promotion cards ───────────────────────────────────────────
-    promoSection: {
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-    },
-    promoHeading: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      fontWeight: '800',
-      textAlign: 'right',
-    },
-    promoSub: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'right',
-      lineHeight: 18,
-    },
-    promoGrid: {
-      gap: spacing.sm,
-      marginTop: spacing.xs,
-    },
-    promoCard: {
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgSurface,
-      padding: spacing.md,
-      gap: spacing.xs,
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.04,
-          shadowRadius: 8,
-        },
-        android: { elevation: 1 },
-        default: {},
-      }),
-    },
-    promoCardActive: {
-      borderWidth: 1,
-      borderColor: `${colors.electric}55`,
-      backgroundColor: `${colors.electric}08`,
-    },
-    promoIconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 2,
-    },
-    promoCardTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      textAlign: 'right',
-    },
-    promoCardDesc: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'right',
-      lineHeight: 18,
-    },
-    promoChipRow: {
-      ...rtlRow,
-      flexWrap: 'wrap',
-      gap: spacing.xs,
-      marginTop: spacing.xs,
-    },
-    promoChip: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-    },
-    promoChipText: {
-      ...typography.micro,
-      color: colors.textSecondary,
-      fontWeight: '600',
-    },
-    promoChipPrice: {
-      backgroundColor: `${colors.electric}14`,
-    },
-    promoChipPriceText: {
-      ...typography.micro,
-      color: colors.electric,
-      fontWeight: '800',
-    },
     ownerToolsRow: {
       flexWrap: 'wrap',
       gap: spacing.sm,
       marginTop: spacing.sm,
+      paddingVertical: spacing.xs,
     },
     ownerToolChip: {
       ...rtlRow,
@@ -971,15 +798,15 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       color: colors.textSecondary,
       lineHeight: 24,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     descArabic: {
       ...typography.body,
       fontSize: 16,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 27,
     },
 

@@ -32,7 +32,7 @@ import { useSubscriptionAudience } from '@/hooks/useSubscriptionAudience';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 
 type Step = 'method' | 'card_details' | 'processing' | 'success';
 
@@ -351,7 +351,7 @@ export default function PaymentScreen() {
             >
               <LinearGradient colors={[planColor, planColorEnd]} style={styles.successBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 <Text style={styles.successBtnText}>ابدأ الاستخدام</Text>
-                <AppIcon name="arrow-forward" size={20} color="#fff" />
+                <AppIcon name={rtlForwardIcon()} size={20} color="#fff" />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -764,7 +764,7 @@ function ReceiptRow({ label, value, highlight, small }: { label: string; value: 
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
       <Text style={{ fontSize: 13, color: colors.textMuted }}>{label}</Text>
-      <Text style={{ fontSize: highlight ? 16 : small ? 11 : 13, fontWeight: highlight ? '800' : '600', color: highlight ? colors.electricBright : small ? colors.textSubtle : colors.textSecondary, textAlign: 'right', flex: 1, marginStart: 8 }}>
+      <Text style={{ fontSize: highlight ? 16 : small ? 11 : 13, fontWeight: highlight ? '800' : '600', color: highlight ? colors.electricBright : small ? colors.textSubtle : colors.textSecondary, ...rtlTextAlign(), flex: 1, marginStart: 8 }}>
         {value}
       </Text>
     </View>

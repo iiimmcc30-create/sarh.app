@@ -172,13 +172,13 @@ function createStyles(colors: ThemeColors) {
     headerTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     priorityBanner: {
       alignItems: 'center',
@@ -193,7 +193,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       flex: 1,
       lineHeight: 18,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     grid: {
       gap: spacing.sm,
@@ -228,13 +228,13 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     cardSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     toggle: {
       width: 28,
@@ -267,7 +267,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       marginTop: spacing.sm,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
   });
 }

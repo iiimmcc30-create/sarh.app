@@ -110,7 +110,7 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     table: {
       borderRadius: ds.radius.lg,
@@ -148,7 +148,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '700',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     headerPlan: {
       ...typography.caption,
@@ -159,7 +159,7 @@ function createStyles(colors: ThemeColors) {
     featureLabel: {
       ...typography.caption,
       color: colors.textSecondary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     cellValue: {
       ...typography.micro,

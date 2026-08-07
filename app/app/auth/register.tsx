@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Registration Screen (شاشة التسجيل المطابقة للتصميم الجديد بالكامل)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlRow, getRtlText, inlineEnd, marginEnd, marginStart, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -196,7 +197,7 @@ export default function RegisterScreen() {
           
           {/* Back button top right */}
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name="arrow-forward" size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
           </Pressable>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -473,7 +474,7 @@ function createStyles(colors: ThemeColors) {
   scroll: { paddingHorizontal: spacing.xl, paddingTop: 40, paddingBottom: 30, alignItems: 'center' },
 
   backBtn: {
-    position: 'absolute', top: 16, right: spacing.xl,
+    position: 'absolute', top: 16, ...inlineEnd(spacing.xl),
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
@@ -493,21 +494,21 @@ function createStyles(colors: ThemeColors) {
   fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
   
   inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
+    ...getRtlRow(), alignItems: 'center',
     backgroundColor: colors.bgDeep, borderRadius: 12,
     borderWidth: 1.2, borderColor: colors.borderHairline,
     paddingHorizontal: spacing.md, height: 50, width: '100%',
   },
   inputWrapError: { borderColor: colors.danger },
-  inputIcon: { marginLeft: 8 },
-  input: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
-  atSign: { fontSize: 14, color: colors.textMuted, fontWeight: 'bold', marginLeft: 8 },
+  inputIcon: marginStart(8),
+  input: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...rtlTextAlign() },
+  atSign: { fontSize: 14, color: colors.textMuted, fontWeight: 'bold', ...marginStart(8) },
   
-  fieldError: { fontSize: 11, color: colors.danger, textAlign: 'right', marginTop: 2 },
-  fieldHint: { fontSize: 11, color: colors.textMuted, textAlign: 'right', marginTop: 2, lineHeight: 16 },
+  fieldError: { fontSize: 11, color: colors.danger, ...rtlTextAlign(), marginTop: 2 },
+  fieldHint: { fontSize: 11, color: colors.textMuted, ...rtlTextAlign(), marginTop: 2, lineHeight: 16 },
   fieldHintLink: { color: colors.textBrandStrong, fontWeight: '500' },
 
-  pickerValueText: { flex: 1, fontSize: 14, color: colors.textPrimary, textAlign: 'right', marginRight: 8 },
+  pickerValueText: { flex: 1, fontSize: 14, color: colors.textPrimary, ...rtlTextAlign(), ...marginEnd(8) },
   pickerValueFlag: { fontSize: 16 },
 
   pickerDropdown: {
@@ -516,13 +517,13 @@ function createStyles(colors: ThemeColors) {
     marginTop: 4, overflow: 'hidden', width: '100%',
   },
   pickerItem: {
-    flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between',
+    ...getRtlRow(), alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.md, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)',
   },
   pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, textAlign: 'right', marginRight: 10 },
+  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...rtlTextAlign(), ...marginEnd(10) },
   pickerCode: { fontSize: 13, color: colors.textMuted },
 
   agreeRow: {
@@ -548,7 +549,7 @@ function createStyles(colors: ThemeColors) {
     padding: spacing.md, gap: spacing.sm, width: '100%',
   },
   otpInput: { flex: 1, fontSize: 18, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center', fontWeight: 'bold' },
-  otpActionsRow: { flexDirection: 'row-reverse', gap: spacing.md, width: '100%' },
+  otpActionsRow: { ...getRtlRow(), gap: spacing.md, width: '100%' },
   otpVerifyBtn: {
     backgroundColor: colors.electric, borderRadius: 12,
     height: 44, alignItems: 'center', justifyContent: 'center', flex: 2,
@@ -561,12 +562,12 @@ function createStyles(colors: ThemeColors) {
   otpEditText: { fontSize: 12, color: colors.textMuted },
 
   errorContainer: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 6,
+    ...getRtlRow(), alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, textAlign: 'right', flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...rtlTextAlign(), flex: 1 },
 
   footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },
   footerLinkText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },

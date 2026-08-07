@@ -1,5 +1,6 @@
 // SAFAT — Messages panel (standalone tab or embedded in profile)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlRow, getRtlText, marginEnd, rtlTextAlign } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { useRouter } from 'expo-router';
@@ -392,7 +393,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
-  tab: { paddingVertical: spacing.md, marginRight: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  tab: { paddingVertical: spacing.md, ...marginEnd(spacing.xl), ...getRtlRow(), alignItems: 'center', gap: 6 },
   tabActive: { borderBottomWidth: 2, borderBottomColor: colors.electricBright },
   tabLabel: { ...typography.body, color: colors.textMuted },
   tabLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
@@ -466,7 +467,7 @@ function createStyles(colors: ThemeColors) {
   activityAvatar: { width: 40, height: 40, borderRadius: 20 },
   activityContent: { flex: 1 },
   activityTextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
-  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, textAlign: 'right', flex: 1 },
+  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, ...rtlTextAlign(), flex: 1 },
   activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
   });

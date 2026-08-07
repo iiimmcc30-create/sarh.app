@@ -225,12 +225,12 @@ function createStyles(colors: ThemeColors) {
     metaText: {
       ...typography.caption,
       color: colors.textSecondary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     empty: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     notesBox: {
       marginTop: spacing.sm,
@@ -263,7 +263,7 @@ function createStyles(colors: ThemeColors) {
     errorText: {
       ...typography.caption,
       color: colors.danger,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     actions: {
       flexDirection: 'row',

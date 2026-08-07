@@ -359,7 +359,7 @@ export default function CreateListingScreen() {
                     onChangeText={setDescAr}
                     placeholder="صف الحيوان بالتفصيل: العمر، الجنس، الحالة الصحية..."
                     placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { textAlign: 'right', textAlignVertical: 'top', height: 80 }]}
+                    style={[styles.input, { ...rtlTextAlign(), textAlignVertical: 'top', height: 80 }]}
                     multiline
                     maxLength={500}
                   />
@@ -673,7 +673,7 @@ function createStyles(colors: ThemeColors) {
   },
   stepContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.md, gap: spacing.md },
   stepTitle: { ...typography.h2, color: colors.textPrimary, textAlign: 'right' },
-  stepSubtitle: { ...typography.body, color: colors.textMuted, textAlign: 'right', marginBottom: spacing.xs },
+  stepSubtitle: { ...typography.body, color: colors.textMuted, ...rtlTextAlign(), marginBottom: spacing.xs },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: CAT_GAP },
   catCard: {
     width: CAT_CARD_SIZE,

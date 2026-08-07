@@ -15,7 +15,7 @@ import {
 import { pp } from '@/constants/pixelPerfect';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
@@ -125,7 +125,7 @@ export default function SidebarScreen() {
         key: 'promotion',
         icon: 'megaphone-outline',
         label: 'الترويج',
-        route: '/subscription',
+        route: '/promote',
       },
     );
 
@@ -144,7 +144,7 @@ export default function SidebarScreen() {
     ));
 
   return (
-    <View style={[styles.backdrop, rtlRow]}>
+    <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
@@ -157,7 +157,7 @@ export default function SidebarScreen() {
             router.back();
             setTimeout(() => router.push('/(tabs)/profile'), 100);
           }}
-          style={[styles.profileRow, rtlRow, rtlDirection]}
+          style={[styles.profileRow, getRtlRow(), getRtlDirection()]}
         >
           <View style={styles.profileText}>
             <Text style={styles.displayName} numberOfLines={1}>
@@ -182,7 +182,7 @@ export default function SidebarScreen() {
         <ScrollView
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, rtlDirection]}
+          contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
           keyboardShouldPersistTaps="handled"
         >
           <SidebarSection title="الحساب" colors={colors}>
@@ -226,8 +226,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       maxWidth: 400,
       alignSelf: 'stretch',
       backgroundColor: panelBg,
-      borderLeftWidth: StyleSheet.hairlineWidth,
-      borderLeftColor: colors.borderMid,
+      ...borderInlineEnd(StyleSheet.hairlineWidth, colors.borderMid),
       overflow: 'hidden',
       shadowColor: '#000',
       shadowOffset: { width: scheme === 'dark' ? -4 : -2, height: 0 },
@@ -236,7 +235,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       elevation: 10,
     },
     header: {
-      alignItems: 'flex-end',
+      ...alignInlineEnd(),
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
       paddingBottom: spacing.xs,
@@ -287,14 +286,14 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontWeight: '800',
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     usernameText: {
       ...typography.caption,
       fontSize: 14,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     verifiedPill: {
       ...rtlRow,

@@ -78,6 +78,7 @@ function killPort(port) {
       resolve();
       return;
     }
+    const timer = setTimeout(() => resolve(), 4000);
     execFile(
       'powershell',
       [
@@ -85,8 +86,14 @@ function killPort(port) {
         '-Command',
         `$p = Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if ($p) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }`,
       ],
-      () => resolve(),
-    );
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+    ).on('error', () => {
+      clearTimeout(timer);
+      resolve();
+    });
   });
 }
 
@@ -99,7 +106,16 @@ async function main() {
 
   const devClientUrl = buildDevClientUrl(lanIp);
   const expoGoUrl = buildExpoGoUrl(lanIp);
-  const { apiUrl, socketUrl, mode } = resolveDevApiUrls(lanIp);
+  const resolved = resolveDevApiUrls(lanIp);
+  const apiUrl =
+    resolved.mode === 'remote'
+      ? resolved.apiUrl
+      : `http://${lanIp}:${API_PORT}`;
+  const socketUrl =
+    resolved.mode === 'remote'
+      ? resolved.socketUrl
+      : `http://${lanIp}:${SOCKET_PORT}`;
+  const mode = resolved.mode;
   const webSameOrigin = mode === 'remote' ? 'false' : process.env.EXPO_PUBLIC_WEB_SAME_ORIGIN;
 
   await killPort(EXPO_PORT);

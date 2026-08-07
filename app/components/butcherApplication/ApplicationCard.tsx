@@ -8,7 +8,7 @@ import {
   countryLabel,
   formatApplicationDate,
 } from '@/lib/butcherApplicationLabels';
-import { rtlRow } from '@/lib/rtl';
+import { borderInlineEnd, getRtlRow, paddingStart, rtlForwardIcon } from '@/lib/rtl';
 import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
 import { StatusBadge } from './StatusBadge';
 
@@ -60,7 +60,7 @@ export function ApplicationCard({ application, onPress }: ApplicationCardProps) 
       {onPress ? (
         <View style={styles.footer}>
           <Text style={styles.link}>عرض التفاصيل</Text>
-          <AppIcon name="chevron-back" size={16} color={colors.glow} />
+          <AppIcon name={rtlForwardIcon()} size={16} color={colors.glow} />
         </View>
       ) : null}
     </Pressable>
@@ -84,7 +84,7 @@ function createStyles(colors: ThemeColors) {
     main: {
       flex: 1,
       gap: spacing.xs,
-      paddingLeft: spacing.md,
+      ...paddingStart(spacing.md),
     },
     title: {
       ...typography.h3,
@@ -98,7 +98,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     metaItem: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.xs,
     },
@@ -107,7 +107,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
     },
     footer: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'flex-start',
       gap: spacing.xs,

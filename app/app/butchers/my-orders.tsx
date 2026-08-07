@@ -224,7 +224,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
       marginBottom: spacing.xs,
     },
     card: {
@@ -246,19 +246,19 @@ function createStyles(colors: ThemeColors) {
       color: colors.electricBright,
       fontWeight: '800',
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     orderDate: {
       ...typography.caption,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     statusBadge: {
       paddingHorizontal: 10,

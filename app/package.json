@@ -22,14 +22,11 @@
     "test": "jest --config jest.config.js --forceExit",
     "test:cov": "jest --config jest.config.js --coverage --forceExit",
     "sync:icons": "python scripts/generate-circular-branding.py",
-    "build:flaticon": "node scripts/build-flaticon-icons.js",
-    "migrate:icons": "node scripts/migrate-to-flaticon.js",
     "prebuild": "expo prebuild"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
-    "@flaticon/flaticon-uicons": "^3.3.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "5.0.1",
     "babel-preset-expo": "~54.0.10",
@@ -76,7 +73,7 @@
     "eslint-config-expo": "^57.0.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.3.3"
+    "typescript": "~5.9.2"
   },
   "expo": {
     "autolinking": {

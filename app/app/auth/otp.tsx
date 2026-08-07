@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — OTP Verification Screen (شاشة التحقق من رمز OTP)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -191,7 +192,7 @@ export default function OtpScreen() {
         >
           {/* Back button top right */}
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name="arrow-forward" size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
           </Pressable>
 
           {/* Logo */}
@@ -322,7 +323,7 @@ function createStyles(colors: ThemeColors) {
   kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.xl },
 
   backBtn: {
-    position: 'absolute', top: 16, right: spacing.xl,
+    position: 'absolute', top: 16, ...inlineEnd(spacing.xl),
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
@@ -360,12 +361,12 @@ function createStyles(colors: ThemeColors) {
   },
 
   errorContainer: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 6,
+    ...getRtlRow(), alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, textAlign: 'right', flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...rtlTextAlign(), flex: 1 },
 
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: 5 },
   countdownText: { fontSize: 13, color: colors.textMuted },

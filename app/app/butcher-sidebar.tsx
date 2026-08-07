@@ -15,7 +15,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
@@ -191,14 +191,14 @@ export default function ButcherSidebarScreen() {
       key: 'promotion',
       icon: 'megaphone-outline',
       label: 'الترويج',
-      route: '/subscription',
+      route: '/promote',
     },
   ];
 
   return (
-    <View style={[styles.backdrop, rtlRow]}>
+    <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        <View style={[styles.header, rtlRow]}>
+        <View style={[styles.header, getRtlRow()]}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
             <AppIcon name="close" size={22} color={colors.textPrimary} />
           </Pressable>
@@ -222,7 +222,7 @@ export default function ButcherSidebarScreen() {
         <ScrollView
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, rtlDirection]}
+          contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
           keyboardShouldPersistTaps="handled"
         >
           {ownerItems.length > 0 ? (
@@ -311,8 +311,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       maxWidth: 400,
       alignSelf: 'stretch',
       backgroundColor: panelBg,
-      borderLeftWidth: StyleSheet.hairlineWidth,
-      borderLeftColor: colors.borderMid,
+      ...borderInlineEnd(StyleSheet.hairlineWidth, colors.borderMid),
       overflow: 'hidden',
       shadowColor: '#000',
       shadowOffset: { width: scheme === 'dark' ? -4 : -2, height: 0 },
@@ -368,7 +367,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     scroll: {
       flex: 1,
-      ...rtlDirection,
+      ...getRtlDirection(),
     },
     scrollContent: {
       paddingBottom: spacing.lg,

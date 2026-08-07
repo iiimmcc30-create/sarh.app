@@ -137,5 +137,30 @@ export function boostSuccessMessage(boostType: string, expiresAt?: string): stri
     : 'تم تثبيت إعلانك بنجاح.';
 }
 
+export function getServiceTypeOrder(): BoostTypeKey[] {
+  const order = SERVICE_TYPE_ORDER ?? BOOST_TYPE_ORDER;
+  if (Array.isArray(order) && order.length > 0) return order;
+  return ['pinned', 'featured', 'promotion'];
+}
+
+export function getServiceMeta(key: BoostTypeKey) {
+  return BOOST_TYPE_META?.[key] ?? null;
+}
+
+export function getServiceFallbackMinPlan(
+  key: BoostTypeKey,
+  promotionPlans?: BoostPlanOption[] | null,
+): BoostPlanOption | null {
+  if (key === 'promotion') {
+    const plans = Array.isArray(promotionPlans) ? promotionPlans : [];
+    return plans[0] ?? null;
+  }
+  if (key === 'pinned' || key === 'featured') {
+    const plans = FALLBACK_BOOST_PLANS[key];
+    return Array.isArray(plans) ? (plans[0] ?? null) : null;
+  }
+  return null;
+}
+
 /** @deprecated use SERVICE_TYPE_ORDER */
 export const BOOST_TYPE_ORDER = SERVICE_TYPE_ORDER;

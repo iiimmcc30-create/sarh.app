@@ -4,7 +4,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { formatApplicationDateTime } from '@/lib/butcherApplicationLabels';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow, marginEnd, rtlForwardIcon } from '@/lib/rtl';
 import type { AppNotification } from '@/services/notifications';
 
 type NotificationCardProps = {
@@ -27,7 +27,7 @@ export function NotificationCard({ notification, onPress }: NotificationCardProp
         pressed && styles.pressed,
       ]}
     >
-      <View style={rtlRow}>
+      <View style={getRtlRow()}>
         <View style={styles.content}>
           <View style={styles.titleRow}>
             <Text style={[styles.title, !notification.isRead && styles.unreadTitle]} numberOfLines={2}>
@@ -40,7 +40,7 @@ export function NotificationCard({ notification, onPress }: NotificationCardProp
           </Text>
           <Text style={styles.time}>{formatApplicationDateTime(notification.createdAt)}</Text>
         </View>
-        <AppIcon name="chevron-back" size={ds.icon.sm} color={colors.textMuted} style={styles.chevron} />
+        <AppIcon name={rtlForwardIcon()} size={ds.icon.sm} color={colors.textMuted} style={styles.chevron} />
       </View>
     </Pressable>
   );
@@ -70,7 +70,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: spacing.sm,
     },
     titleRow: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'flex-start',
       gap: spacing.sm,
     },
@@ -100,7 +100,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     chevron: {
       marginTop: spacing.xs,
-      marginRight: spacing.xs,
+      ...marginEnd(spacing.xs),
     },
   });
 }

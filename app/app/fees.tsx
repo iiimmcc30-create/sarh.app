@@ -6,7 +6,7 @@ export default function FeesScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/subscription' as never);
+    router.replace('/promote' as never);
   }, [router]);
 
   return null;

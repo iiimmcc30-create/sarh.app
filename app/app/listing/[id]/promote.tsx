@@ -1,0 +1,773 @@
+import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
+import { PromoteGoalPreview } from '@/components/listing/PromoteGoalPreview';
+import { Image, uriSource } from '@/components/ui/AppImage';
+import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
+import { rtlBackIcon, rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { launchPaymentCheckout } from '@/services/payments';
+import { API_BASE } from '@/services/api';
+import { authFetch } from '@/services/authFetch';
+import type { Listing } from '@/services/types';
+import {
+  PROMOTE_AMOUNT_DEFAULT,
+  PROMOTE_AMOUNT_MAX,
+  PROMOTE_AMOUNT_MIN,
+  PROMOTE_DURATION_HOURS_DEFAULT,
+  PROMOTE_DURATION_HOURS_MAX,
+  PROMOTE_DURATION_HOURS_MIN,
+  PROMOTE_GOAL_OPTIONS,
+  buildPromoteCheckoutPayload,
+  clampPromoteAmount,
+  clampPromoteDurationHours,
+  formatPromoteAmount,
+  formatPromoteHours,
+  goalFromBoostType,
+  initiatePromotePayment,
+  parsePromoteAmountInput,
+  parsePromoteDurationInput,
+  validatePromoteForm,
+  type PromotionGoal,
+} from '@/services/listingPromote';
+import Slider from '@react-native-community/slider';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+function goalAccentColor(
+  accent: 'electric' | 'gold' | 'promotion',
+  colors: ThemeColors,
+): string {
+  if (accent === 'gold') return colors.gold;
+  if (accent === 'promotion') return '#7C3AED';
+  return colors.electric;
+}
+
+function PromoteValueDisplay({
+  value,
+  styles,
+}: {
+  value: string;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(scale, { toValue: 1.04, duration: 90, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
+    ]).start();
+  }, [scale, value]);
+
+  return (
+    <Animated.Text style={[styles.sliderValue, { transform: [{ scale }] }]}>
+      {value}
+    </Animated.Text>
+  );
+}
+
+export default function ListingPromoteScreen() {
+  const { id, goal: goalParam } = useLocalSearchParams<{ id: string; goal?: string }>();
+  const router = useRouter();
+  const { accessToken } = useAuth();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+
+  const initialGoal = goalFromBoostType(goalParam ?? null);
+
+  const [goal, setGoal] = useState<PromotionGoal | null>(initialGoal);
+  const [amount, setAmount] = useState(PROMOTE_AMOUNT_DEFAULT);
+  const [durationHours, setDurationHours] = useState(PROMOTE_DURATION_HOURS_DEFAULT);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [customAmountOpen, setCustomAmountOpen] = useState(false);
+  const [customDurationOpen, setCustomDurationOpen] = useState(false);
+  const [customAmountDraft, setCustomAmountDraft] = useState(String(PROMOTE_AMOUNT_DEFAULT));
+  const [customDurationDraft, setCustomDurationDraft] = useState(
+    String(PROMOTE_DURATION_HOURS_DEFAULT),
+  );
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [listingLoading, setListingLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setListingLoading(true);
+    void (async () => {
+      try {
+        const res = await (accessToken
+          ? authFetch(`${API_BASE}/api/listings/${id}`)
+          : fetch(`${API_BASE}/api/listings/${id}`));
+        if (!res.ok) throw new Error('fetch_failed');
+        const json = await res.json();
+        const raw = json.data;
+        if (!cancelled && json.success && raw) {
+          setListing({
+            id: raw.id,
+            title: raw.title,
+            arabicTitle: raw.arabicTitle,
+            price: raw.price,
+            currency: raw.currency || 'SAR',
+            category: raw.category,
+            breed: raw.breed || '',
+            age: raw.age || '',
+            location: raw.location,
+            arabicLocation: raw.arabicLocation,
+            country: raw.country,
+            images: raw.images?.length ? raw.images : [],
+            description: raw.description,
+            arabicDescription: raw.arabicDescription,
+            seller: raw.seller,
+            featured: raw.featured ?? false,
+            pinned: raw.pinned ?? false,
+            promoted: raw.promoted ?? false,
+            postedAt: raw.createdAt,
+            createdAt: raw.createdAt,
+          } as Listing);
+        }
+      } catch {
+        if (!cancelled) setListing(null);
+      } finally {
+        if (!cancelled) setListingLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, id]);
+
+  const listingTitle = listing?.arabicTitle || listing?.title || 'إعلانك';
+  const listingThumb = listing?.images?.[0];
+
+  const validationError = useMemo(
+    () => validatePromoteForm(goal, amount, durationHours),
+    [goal, amount, durationHours],
+  );
+
+  const checkoutPayload = useMemo(() => {
+    if (!id || !goal) return null;
+    return buildPromoteCheckoutPayload(id, goal, amount, durationHours);
+  }, [amount, durationHours, goal, id]);
+
+  const canPay = Boolean(accessToken && checkoutPayload && !validationError && !processing);
+
+  const handlePay = useCallback(async () => {
+    if (!accessToken || !checkoutPayload || validationError) return;
+    setProcessing(true);
+    setError(null);
+    try {
+      const result = await initiatePromotePayment(accessToken, checkoutPayload);
+      await launchPaymentCheckout({
+        accessToken,
+        paymentId: result.paymentId,
+        checkoutUrl: result.checkoutUrl,
+        devMode: result.devMode,
+        context: checkoutPayload.promotionGoal === 'visibility' ? 'promotion' : 'boost',
+        returnParams: {
+          listingId: checkoutPayload.adId,
+          boostType: checkoutPayload.promotionGoal,
+          durationHours: String(checkoutPayload.promotionDurationHours),
+          promotionAmount: String(checkoutPayload.promotionAmount),
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'تعذّر بدء عملية الدفع');
+    } finally {
+      setProcessing(false);
+    }
+  }, [accessToken, checkoutPayload, validationError]);
+
+  const applyCustomAmount = () => {
+    const parsed = parsePromoteAmountInput(customAmountDraft);
+    if (parsed == null) {
+      Alert.alert('مبلغ غير صالح', `أدخل مبلغاً بين ${PROMOTE_AMOUNT_MIN} و ${PROMOTE_AMOUNT_MAX} ريال`);
+      return;
+    }
+    setAmount(parsed);
+    setCustomAmountOpen(false);
+    Keyboard.dismiss();
+  };
+
+  const applyCustomDuration = () => {
+    const parsed = parsePromoteDurationInput(customDurationDraft);
+    if (parsed == null) {
+      Alert.alert(
+        'مدة غير صالحة',
+        `أدخل مدة بين ${PROMOTE_DURATION_HOURS_MIN} و ${PROMOTE_DURATION_HOURS_MAX} ساعة`,
+      );
+      return;
+    }
+    setDurationHours(parsed);
+    setCustomDurationOpen(false);
+    Keyboard.dismiss();
+  };
+
+  if (!id) {
+    return (
+      <ScreenScaffold>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>معرّف الإعلان غير متوفر</Text>
+        </View>
+      </ScreenScaffold>
+    );
+  }
+
+  return (
+    <ScreenScaffold edges={['top']}>
+      <KeyboardAvoidingView
+        style={[styles.flex, rtlDirection]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[styles.header, rtlRow]}>
+          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
+          </Pressable>
+          <Text style={styles.pageTitle}>الترويج</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.listingHero}>
+            <View style={styles.listingHeroThumb}>
+              {listingThumb ? (
+                <Image source={uriSource(listingThumb)} style={styles.listingHeroImg} contentFit="cover" />
+              ) : (
+                <View style={styles.listingHeroPlaceholder}>
+                  <AppIcon name="image-outline" size={24} color={colors.textMuted} />
+                </View>
+              )}
+            </View>
+            <View style={styles.listingHeroBody}>
+              {listingLoading ? (
+                <ActivityIndicator color={colors.electric} size="small" />
+              ) : (
+                <>
+                  <View style={[styles.listingHeroTitleRow, rtlRow]}>
+                    <Text style={styles.listingHeroTitle} numberOfLines={2}>
+                      {listingTitle}
+                    </Text>
+                    <ListingBoostTitleIcons
+                      pinned={listing?.pinned}
+                      featured={listing?.featured}
+                    />
+                  </View>
+                  {listing?.price && listing.price > 0 ? (
+                    <Text style={styles.listingHeroPrice}>
+                      {listing.price.toLocaleString('ar-SA')} {listing.currency || 'SAR'}
+                    </Text>
+                  ) : null}
+                </>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>اختيار الهدف</Text>
+            <Text style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</Text>
+            <View style={styles.goalList}>
+              {PROMOTE_GOAL_OPTIONS.map((option) => {
+                const selected = goal === option.key;
+                const accent = goalAccentColor(option.accent, colors);
+                return (
+                  <Pressable
+                    key={option.key}
+                    onPress={() => {
+                      setGoal(option.key);
+                      setError(null);
+                    }}
+                    style={[
+                      styles.goalCard,
+                      selected && { borderColor: accent, backgroundColor: `${accent}10` },
+                    ]}
+                  >
+                    <View style={[styles.goalTop, rtlRow]}>
+                      <View
+                        style={[
+                          styles.radioOuter,
+                          selected && { borderColor: accent },
+                        ]}
+                      >
+                        {selected ? <View style={[styles.radioInner, { backgroundColor: accent }]} /> : null}
+                      </View>
+                      <View style={[styles.goalIconWrap, selected && { backgroundColor: `${accent}18` }]}>
+                        <AppIcon
+                          name={option.icon}
+                          size={20}
+                          color={selected ? accent : colors.textMuted}
+                        />
+                      </View>
+                      <View style={styles.goalTextWrap}>
+                        <Text style={[styles.goalTitle, selected && { color: accent }]}>
+                          {option.title}
+                        </Text>
+                        <Text style={styles.goalDesc}>{option.desc}</Text>
+                      </View>
+                    </View>
+                    <View style={[styles.goalPreviewTag, rtlRow]}>
+                      {option.key === 'visibility' ? (
+                        <>
+                          <AppIcon name="trending-up-outline" size={13} color="#7C3AED" />
+                          <Text style={styles.goalPreviewText}>بدون تغيير على شكل الإعلان</Text>
+                        </>
+                      ) : option.key === 'pinned' ? (
+                        <>
+                          <View style={[styles.goalPreviewIcon, { backgroundColor: `${colors.electric}18` }]}>
+                            <AppIcon name="pin" size={11} color={colors.electric} />
+                          </View>
+                          <Text style={styles.goalPreviewText}>دبوس بجانب العنوان</Text>
+                        </>
+                      ) : (
+                        <>
+                          <View style={[styles.goalPreviewIcon, { backgroundColor: `${colors.gold}30` }]}>
+                            <AppIcon name="star" size={11} color="#1A1300" />
+                          </View>
+                          <Text style={styles.goalPreviewText}>نجمة ذهبية بجانب العنوان</Text>
+                        </>
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {goal ? (
+            <PromoteGoalPreview goal={goal} title={listingTitle} />
+          ) : null}
+
+          <View style={styles.sliderCard}>
+            <View style={[styles.sectionHeaderRow, rtlRow]}>
+              <Text style={styles.sectionTitle}>المبلغ</Text>
+              <Pressable
+                onPress={() => {
+                  setCustomAmountDraft(String(amount));
+                  setCustomAmountOpen(true);
+                }}
+                hitSlop={8}
+                style={[styles.customBtn, rtlRow]}
+              >
+                <AppIcon name="create-outline" size={15} color={colors.electric} />
+                <Text style={styles.customBtnText}>مبلغ مخصص</Text>
+              </Pressable>
+            </View>
+            <PromoteValueDisplay value={formatPromoteAmount(amount)} styles={styles} />
+            <Slider
+              style={styles.slider}
+              minimumValue={PROMOTE_AMOUNT_MIN}
+              maximumValue={PROMOTE_AMOUNT_MAX}
+              step={1}
+              value={amount}
+              onValueChange={(v) => setAmount(clampPromoteAmount(v))}
+              minimumTrackTintColor={colors.electric}
+              maximumTrackTintColor={colors.borderSoft}
+              thumbTintColor={colors.electricBright}
+            />
+            <View style={[styles.sliderBounds, rtlRow]}>
+              <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MIN} ر.س</Text>
+              <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MAX} ر.س</Text>
+            </View>
+          </View>
+
+          <View style={styles.sliderCard}>
+            <View style={[styles.sectionHeaderRow, rtlRow]}>
+              <Text style={styles.sectionTitle}>المدة</Text>
+              <Pressable
+                onPress={() => {
+                  setCustomDurationDraft(String(durationHours));
+                  setCustomDurationOpen(true);
+                }}
+                hitSlop={8}
+                style={[styles.customBtn, rtlRow]}
+              >
+                <AppIcon name="create-outline" size={15} color={colors.electric} />
+                <Text style={styles.customBtnText}>مدة مخصصة</Text>
+              </Pressable>
+            </View>
+            <PromoteValueDisplay value={formatPromoteHours(durationHours)} styles={styles} />
+            <Slider
+              style={styles.slider}
+              minimumValue={PROMOTE_DURATION_HOURS_MIN}
+              maximumValue={PROMOTE_DURATION_HOURS_MAX}
+              step={1}
+              value={durationHours}
+              onValueChange={(v) => setDurationHours(clampPromoteDurationHours(v))}
+              minimumTrackTintColor={colors.electric}
+              maximumTrackTintColor={colors.borderSoft}
+              thumbTintColor={colors.electricBright}
+            />
+            <View style={[styles.sliderBounds, rtlRow]}>
+              <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MIN} ساعة</Text>
+              <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MAX} ساعة</Text>
+            </View>
+          </View>
+
+          {validationError ? (
+            <Text style={styles.validationText}>{validationError}</Text>
+          ) : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </ScrollView>
+
+        <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
+          <View style={[styles.bottomInner, rtlRow]}>
+            <View style={styles.totalBlock}>
+              <Text style={styles.totalLabel}>الإجمالي</Text>
+              <Text style={styles.totalValue}>{formatPromoteAmount(amount)}</Text>
+            </View>
+            <View style={styles.payBtnWrap}>
+              <PrimaryButton
+                title="الدفع"
+                onPress={handlePay}
+                disabled={!canPay}
+                loading={processing}
+                fullWidth
+              />
+            </View>
+          </View>
+        </SafeAreaView>
+
+        <Modal visible={customAmountOpen} transparent animationType="fade" onRequestClose={() => setCustomAmountOpen(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setCustomAmountOpen(false)}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>مبلغ مخصص</Text>
+              <TextInput
+                value={customAmountDraft}
+                onChangeText={setCustomAmountDraft}
+                keyboardType="number-pad"
+                style={[styles.modalInput, rtlText]}
+                placeholder={`${PROMOTE_AMOUNT_MIN} - ${PROMOTE_AMOUNT_MAX}`}
+                placeholderTextColor={colors.textMuted}
+              />
+              <PrimaryButton title="تطبيق" onPress={applyCustomAmount} fullWidth />
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={customDurationOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCustomDurationOpen(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setCustomDurationOpen(false)}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>مدة مخصصة (ساعات)</Text>
+              <TextInput
+                value={customDurationDraft}
+                onChangeText={setCustomDurationDraft}
+                keyboardType="number-pad"
+                style={[styles.modalInput, rtlText]}
+                placeholder={`${PROMOTE_DURATION_HOURS_MIN} - ${PROMOTE_DURATION_HOURS_MAX}`}
+                placeholderTextColor={colors.textMuted}
+              />
+              <PrimaryButton title="تطبيق" onPress={applyCustomDuration} fullWidth />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </KeyboardAvoidingView>
+    </ScreenScaffold>
+  );
+}
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    flex: { flex: 1 },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    header: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerSpacer: { width: 40 },
+    pageTitle: {
+      ...typography.h2,
+      color: colors.textPrimary,
+      fontWeight: '800',
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: 140,
+      gap: spacing.lg,
+    },
+    listingHero: {
+      ...rtlRow,
+      alignItems: 'center',
+      gap: spacing.md,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgElevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+    },
+    listingHeroThumb: {
+      width: 64,
+      height: 64,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+      flexShrink: 0,
+    },
+    listingHeroImg: {
+      width: '100%',
+      height: '100%',
+    },
+    listingHeroPlaceholder: {
+      flex: 1,
+      backgroundColor: colors.bgDeep,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    listingHeroBody: {
+      flex: 1,
+      gap: 4,
+      minWidth: 0,
+    },
+    listingHeroTitleRow: {
+      alignItems: 'flex-start',
+      gap: 6,
+    },
+    listingHeroTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+      flex: 1,
+      lineHeight: 22,
+    },
+    listingHeroPrice: {
+      ...typography.caption,
+      color: colors.textBrandStrong,
+      fontWeight: '800',
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    section: {
+      gap: spacing.sm,
+    },
+    sectionHint: {
+      ...typography.caption,
+      color: colors.textMuted,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    sliderCard: {
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgSurface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+    },
+    sectionHeaderRow: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    sectionTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      fontWeight: '800',
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    customBtn: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    customBtnText: {
+      ...typography.caption,
+      color: colors.electric,
+      fontWeight: '700',
+    },
+    goalList: { gap: spacing.sm },
+    goalCard: {
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      padding: spacing.md,
+    },
+    goalTop: {
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    radioOuter: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      borderColor: colors.borderMid,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    goalIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    goalTextWrap: { flex: 1, gap: 4 },
+    goalTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    goalDesc: {
+      ...typography.caption,
+      color: colors.textMuted,
+      lineHeight: 18,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    goalPreviewTag: {
+      alignItems: 'center',
+      gap: 6,
+      marginTop: spacing.xs,
+      paddingTop: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+    },
+    goalPreviewIcon: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    goalPreviewText: {
+      ...typography.micro,
+      color: colors.textMuted,
+      fontWeight: '600',
+      writingDirection: 'rtl',
+    },
+    sliderValue: {
+      fontSize: 28,
+      lineHeight: 34,
+      fontWeight: '800',
+      color: colors.textBrandStrong,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    slider: {
+      width: '100%',
+      height: 40,
+    },
+    sliderBounds: {
+      justifyContent: 'space-between',
+    },
+    sliderBoundText: {
+      ...typography.micro,
+      color: colors.textMuted,
+    },
+    validationText: {
+      ...typography.caption,
+      color: colors.warning,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    errorText: {
+      ...typography.caption,
+      color: colors.danger,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    bottomBar: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderSoft,
+      backgroundColor: colors.bgPrimary,
+    },
+    bottomInner: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      gap: spacing.md,
+    },
+    totalBlock: {
+      flex: 1,
+      alignItems: 'flex-end',
+      gap: 2,
+    },
+    totalLabel: {
+      ...typography.caption,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+    },
+    totalValue: {
+      ...typography.h3,
+      color: colors.textBrandStrong,
+      fontWeight: '800',
+      writingDirection: 'rtl',
+    },
+    payBtnWrap: {
+      flex: 1.2,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: colors.bgOverlay,
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    modalCard: {
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgSurface,
+      padding: spacing.lg,
+      gap: spacing.md,
+    },
+    modalTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      ...rtlTextAlign(),
+      ...getRtlText(),
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.bgElevated,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+  });
+}

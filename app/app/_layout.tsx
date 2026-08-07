@@ -93,6 +93,7 @@ function RootNavigator() {
         <Stack.Screen name="butcher-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="butchers-market-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="notifications/index" />
+        <Stack.Screen name="promote" />
         <Stack.Screen name="subscription" />
         <Stack.Screen name="payment" />
         <Stack.Screen name="fees" />

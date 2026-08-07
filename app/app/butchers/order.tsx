@@ -731,7 +731,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      textAlign: 'right',
+      ...rtlTextAlign(),
       fontSize: 15,
     },
     hint: {
@@ -786,14 +786,14 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     productCat: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
     productPrice: {
       ...typography.caption,
       color: colors.gold,
       fontWeight: '800',
-      textAlign: 'right',
+      ...rtlTextAlign(),
       marginTop: 2,
     },
     selectedDot: {
@@ -906,7 +906,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     summaryRow: {
       flexDirection: 'row',

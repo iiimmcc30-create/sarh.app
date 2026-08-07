@@ -9,8 +9,9 @@ import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import {
   BOOST_TYPE_META,
-  SERVICE_TYPE_ORDER,
   FALLBACK_BOOST_PLANS,
+  getServiceMeta,
+  getServiceTypeOrder,
   type BoostPlansMap,
   type BoostTypeKey,
   fetchBoostPlans,
@@ -81,13 +82,16 @@ export function ListingBoostSheet({
 
   const typePlans =
     boostType === 'promotion'
-      ? promotionPlans
-      : plans[boostType] ?? FALLBACK_BOOST_PLANS[boostType];
+      ? (Array.isArray(promotionPlans) ? promotionPlans : [])
+      : (plans[boostType] ?? FALLBACK_BOOST_PLANS[boostType] ?? []);
   const selectedPlan =
     typePlans.find((p) => p.durationDays === durationDays) ?? typePlans[0];
 
   const accentFor = (key: BoostTypeKey) => {
-    const meta = BOOST_TYPE_META[key];
+    const meta = getServiceMeta(key);
+    if (!meta) {
+      return { main: colors.electric, bright: colors.electricBright };
+    }
     if (meta.accent === 'gold') return { main: colors.gold, bright: colors.gold };
     if (meta.accent === 'promotion') {
       return { main: '#7C3AED', bright: '#A78BFA' };
@@ -131,8 +135,8 @@ export function ListingBoostSheet({
     setBoostType(key);
     const nextPlans =
       key === 'promotion'
-        ? promotionPlans
-        : plans[key] ?? FALLBACK_BOOST_PLANS[key];
+        ? (Array.isArray(promotionPlans) ? promotionPlans : [])
+        : (plans[key] ?? FALLBACK_BOOST_PLANS[key] ?? []);
     setDurationDays(nextPlans[0]?.durationDays ?? 1);
   };
 
@@ -251,14 +255,15 @@ export function ListingBoostSheet({
 
             <Text style={styles.sectionLabel}>اختر الخدمة</Text>
             <View style={styles.serviceGrid}>
-              {SERVICE_TYPE_ORDER.map((key) => {
-                const meta = BOOST_TYPE_META[key];
+              {(getServiceTypeOrder() ?? []).map((key) => {
+                const meta = getServiceMeta(key);
+                if (!meta) return null;
                 const accent = accentFor(key);
                 const selected = boostType === key;
                 const minPrice =
                   key === 'promotion'
                     ? (promotionPlans[0]?.amount ?? FALLBACK_PROMOTION_PLANS[0]?.amount)
-                    : (plans[key] ?? FALLBACK_BOOST_PLANS[key])[0]?.amount;
+                    : (plans[key] ?? FALLBACK_BOOST_PLANS[key] ?? [])[0]?.amount;
                 return (
                   <Pressable
                     key={key}
@@ -568,13 +573,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       fontWeight: '800',
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     serviceDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     servicePriceChip: {
       alignSelf: 'flex-start',

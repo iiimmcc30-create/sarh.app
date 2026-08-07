@@ -123,7 +123,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       lineHeight: 20,
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     loader: { marginTop: spacing.xl },
     emptyBox: {

@@ -278,8 +278,8 @@ function createStyles(colors: ThemeColors) {
     hint: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 20,
     },
     errorBox: {
@@ -365,8 +365,8 @@ function createStyles(colors: ThemeColors) {
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 22,
     },
     deleteBtn: {

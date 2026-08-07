@@ -1,6 +1,6 @@
 // SAFAT — Common Styles (v2)
 import { StyleSheet } from 'react-native';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { ds } from './designSystem';
 import { colors, radius, spacing, shadow } from './theme';
 
@@ -39,11 +39,11 @@ export const commonStyles = StyleSheet.create({
     borderColor: colors.electric,
   },
   centerRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
   },
   spaceBetween: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     justifyContent: 'space-between',
   },

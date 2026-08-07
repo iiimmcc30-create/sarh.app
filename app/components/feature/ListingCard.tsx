@@ -19,6 +19,7 @@ import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { inlineStart, rtlDirection, rtlRow } from '@/lib/rtl';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 interface ListingCardProps {
@@ -105,9 +106,12 @@ function ListingCardInner({
       >
         <View style={styles.listContent}>
           <View style={[styles.listTitleRow, rtlRow]}>
-            <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
-              {title}
-            </Text>
+            <View style={[styles.listTitleWrap, rtlRow]}>
+              <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
+                {title}
+              </Text>
+              <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
+            </View>
             <View style={styles.listMenuDots}>
               <AppIcon name="menu-dots-vertical" size={16} color={colors.textMuted} />
             </View>
@@ -136,11 +140,7 @@ function ListingCardInner({
             </View>
           ) : null}
 
-          {listing.pinned ? (
-            <Text style={styles.listStatusPinned}>مثبّت</Text>
-          ) : listing.featured ? (
-            <Text style={styles.listStatusFeatured}>مميز</Text>
-          ) : showNew ? (
+          {!listing.pinned && !listing.featured && showNew ? (
             <Text style={styles.listStatusNew}>جديد</Text>
           ) : null}
 
@@ -204,16 +204,16 @@ function ListingCardInner({
           style={styles.profileOverlay}
         />
         <View style={styles.profileInfo}>
-          <Text style={styles.profileTitle} numberOfLines={2}>{listing.arabicTitle}</Text>
+          <View style={[styles.profileTitleRow, rtlRow]}>
+            <Text style={styles.profileTitle} numberOfLines={2}>
+              {listing.arabicTitle}
+            </Text>
+            <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} size="md" />
+          </View>
           <Text style={styles.profilePrice}>
             {listing.price.toLocaleString('ar-SA')} {listing.currency}
           </Text>
         </View>
-        {listing.featured ? (
-          <View style={[styles.profileStar, inlineStart(10)]}>
-            <AppIcon name="star" size={12} color="#1A1300" />
-          </View>
-        ) : null}
       </Pressable>
     );
   }
@@ -234,16 +234,13 @@ function ListingCardInner({
           colors={cardOverlayStrong}
           style={StyleSheet.absoluteFill}
         />
-        {listing.featured ? (
-          <View style={[styles.featuredBadge, inlineStart(spacing.lg), { top: compact ? spacing.md : spacing.lg }]}>
-            <AppIcon name="star" size={12} color="#1A1300" />
-            <Text style={styles.featuredText}>مميز</Text>
-          </View>
-        ) : null}
         <View style={[styles.featureContent, compact && styles.featureContentCompact]}>
-          <Text style={[styles.featureTitle, compact && styles.featureTitleCompact]} numberOfLines={2}>
-            {listing.arabicTitle}
-          </Text>
+          <View style={[styles.featureTitleRow, rtlRow]}>
+            <Text style={[styles.featureTitle, compact && styles.featureTitleCompact]} numberOfLines={2}>
+              {listing.arabicTitle}
+            </Text>
+            <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} size="md" />
+          </View>
           <View style={[styles.row, rtlRow]}>
             <Text style={[styles.featurePrice, compact && styles.featurePriceCompact]}>
               {listing.price.toLocaleString('ar-SA')} {listing.currency}
@@ -266,9 +263,12 @@ function ListingCardInner({
       onPress={onPress}
       style={({ pressed }) => [styles.harajCard, rtlDirection, pressed && styles.pressed]}
     >
-      <Text style={styles.harajTitle} numberOfLines={2}>
-        {title}
-      </Text>
+      <View style={[styles.harajTitleRow, rtlRow]}>
+        <Text style={styles.harajTitle} numberOfLines={2}>
+          {title}
+        </Text>
+        <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
+      </View>
 
       <View style={[styles.harajMeta, rtlRow]}>
         <View style={[styles.harajMetaItem, rtlRow]}>
@@ -289,12 +289,6 @@ function ListingCardInner({
           </Text>
           {seller?.verified ? <VerificationBadge size={14} /> : null}
         </UserProfileLink>
-        {listing.featured ? (
-          <View style={[styles.harajFeatured, rtlRow]}>
-            <AppIcon name="star" size={10} color="#1A1300" />
-            <Text style={styles.harajFeaturedText}>مميز</Text>
-          </View>
-        ) : null}
       </View>
 
       {desc ? (
@@ -375,6 +369,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: ds.space.sm,
+  },
+  listTitleWrap: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+    minWidth: 0,
   },
   listMenuDots: {
     width: 24,
@@ -567,11 +567,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     padding: spacing.sm,
     gap: 2,
   },
+  profileTitleRow: {
+    alignItems: 'center',
+    gap: 6,
+  },
   profileTitle: {
     ...typography.caption,
     color: '#fff',
     fontWeight: '700',
     textAlign: 'right',
+    flex: 1,
   },
   profilePrice: {
     ...typography.micro,
@@ -620,10 +625,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   featureContentCompact: {
     padding: spacing.md,
   },
+  featureTitleRow: {
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 2,
+  },
   featureTitle: {
     ...typography.h2,
     color: '#fff',
     marginBottom: 2,
+    flex: 1,
   },
   featureTitleCompact: {
     ...typography.h3,
@@ -691,13 +702,18 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     paddingBottom: spacing.md,
     gap: spacing.sm,
   },
+  harajTitleRow: {
+    alignItems: 'flex-start',
+    gap: 8,
+  },
   harajTitle: {
     ...typography.h3,
     color: colors.textBrandStrong,
     fontWeight: '700',
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
     lineHeight: 26,
+    flex: 1,
   },
   harajMeta: {
     ...rtlRow,
@@ -738,8 +754,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     flexShrink: 1,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   harajFeatured: {
     ...rtlRow,
@@ -758,16 +774,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajDesc: {
     ...typography.body,
     color: colors.textSecondary,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
     lineHeight: 24,
   },
   harajPrice: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     fontWeight: '800',
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   harajImgWrap: {
     width: '100%',

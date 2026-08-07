@@ -123,7 +123,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       marginBottom: spacing.xs,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     wrap: {
       ...rtlRow,
@@ -159,13 +159,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.danger,
       marginTop: spacing.xs,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
     hint: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: spacing.xs,
-      textAlign: 'right',
+      ...rtlTextAlign(),
     },
   });
 }
