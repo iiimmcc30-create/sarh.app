@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlText } from '@/lib/rtl';
 import {
-import { getRtlText, rtlTextAlign } from '@/lib/rtl';
   Modal,
   Pressable,
   ScrollView,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 22,
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   footer: {
     flexDirection: 'row',

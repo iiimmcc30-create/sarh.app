@@ -5,7 +5,7 @@ import { Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection } from '@/lib/rtl';
+import { getRtlDirection } from '@/lib/rtl';
 import { layout, radius } from '@/constants/theme';
 
 function TabBarIcon({
@@ -63,7 +63,7 @@ export default function ButcherTabsLayout() {
           shadowOpacity: scheme === 'light' ? 0.06 : 0.22,
           shadowRadius: 16,
           elevation: 12,
-          ...rtlDirection,
+          ...getRtlDirection(),
         },
         tabBarItemStyle: { paddingTop: 2 },
         tabBarLabelStyle: {

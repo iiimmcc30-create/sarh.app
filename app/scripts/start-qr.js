@@ -8,7 +8,7 @@ const fs = require('fs');
 const https = require('https');
 const { networkInterfaces } = require('os');
 
-const { resolveDevApiUrls } = require('./resolve-dev-api-urls');
+const { resolveDevApiUrlsAsync } = require('./resolve-dev-api-urls');
 
 const API_PORT = 3001;
 const SOCKET_PORT = 3002;
@@ -34,13 +34,13 @@ function getLanIp() {
   return null;
 }
 
-function buildDevClientUrl(lanIp) {
-  const metroUrl = `http://${lanIp}:${EXPO_PORT}`;
+function buildDevClientUrl(lanIp, port = EXPO_PORT) {
+  const metroUrl = `http://${lanIp}:${port}`;
   return `exp+${APP_SCHEME}://expo-development-client/?url=${encodeURIComponent(metroUrl)}`;
 }
 
-function buildExpoGoUrl(lanIp) {
-  return `exp://${lanIp}:${EXPO_PORT}`;
+function buildExpoGoUrl(lanIp, port = EXPO_PORT) {
+  return `exp://${lanIp}:${port}`;
 }
 
 function downloadQr(data, outPath) {
@@ -72,6 +72,61 @@ function openFile(filePath) {
   }
 }
 
+function killProjectMetro() {
+  return new Promise((resolve) => {
+    if (process.platform !== 'win32') {
+      resolve();
+      return;
+    }
+    const appPath = ROOT.replace(/\\/g, '\\\\');
+    const timer = setTimeout(() => resolve(), 8000);
+    execFile(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `$root = '${ROOT.replace(/'/g, "''")}'; ` +
+          'Get-CimInstance Win32_Process -Filter "Name=\'node.exe\'" -ErrorAction SilentlyContinue | ' +
+          'Where-Object { $_.CommandLine -and ($_.CommandLine -like "*$root*") -and ($_.CommandLine -match "expo|metro|@expo/cli") } | ' +
+          'ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }',
+      ],
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+    ).on('error', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+}
+
+function isPortListening(port) {
+  return new Promise((resolve) => {
+    if (process.platform !== 'win32') {
+      resolve(false);
+      return;
+    }
+    execFile(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `$c = Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1; if ($c) { 'yes' }`,
+      ],
+      (_err, stdout) => resolve(String(stdout ?? '').trim() === 'yes'),
+    ).on('error', () => resolve(false));
+  });
+}
+
+async function resolveExpoPort() {
+  const preferred = Number(process.env.EXPO_PORT) || 8081;
+  for (let port = preferred; port < preferred + 10; port += 1) {
+    if (!(await isPortListening(port))) return String(port);
+  }
+  return String(preferred);
+}
+
 function killPort(port) {
   return new Promise((resolve) => {
     if (process.platform !== 'win32') {
@@ -97,6 +152,20 @@ function killPort(port) {
   });
 }
 
+function clearMetroCache() {
+  const targets = [
+    path.join(ROOT, '.expo'),
+    path.join(ROOT, 'node_modules', '.cache'),
+  ];
+  for (const target of targets) {
+    try {
+      fs.rmSync(target, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+  }
+}
+
 async function main() {
   const lanIp = getLanIp();
   if (!lanIp) {
@@ -104,21 +173,21 @@ async function main() {
     process.exit(1);
   }
 
-  const devClientUrl = buildDevClientUrl(lanIp);
-  const expoGoUrl = buildExpoGoUrl(lanIp);
-  const resolved = resolveDevApiUrls(lanIp);
-  const apiUrl =
-    resolved.mode === 'remote'
-      ? resolved.apiUrl
-      : `http://${lanIp}:${API_PORT}`;
-  const socketUrl =
-    resolved.mode === 'remote'
-      ? resolved.socketUrl
-      : `http://${lanIp}:${SOCKET_PORT}`;
+  await killProjectMetro();
+  const expoPort = await resolveExpoPort();
+  if (expoPort !== (process.env.EXPO_PORT || '8081')) {
+    console.log(`[start:qr] المنفذ ${process.env.EXPO_PORT || '8081'} مشغول — استخدام ${expoPort}`);
+  }
+  await killPort(expoPort);
+  clearMetroCache();
+
+  const devClientUrl = buildDevClientUrl(lanIp, expoPort);
+  const expoGoUrl = buildExpoGoUrl(lanIp, expoPort);
+  const resolved = await resolveDevApiUrlsAsync(lanIp);
+  const apiUrl = resolved.apiUrl;
+  const socketUrl = resolved.socketUrl;
   const mode = resolved.mode;
   const webSameOrigin = mode === 'remote' ? 'false' : process.env.EXPO_PUBLIC_WEB_SAME_ORIGIN;
-
-  await killPort(EXPO_PORT);
 
   try {
     await downloadQr(devClientUrl, QR_PATH);
@@ -135,9 +204,11 @@ async function main() {
   console.log('  IP:', lanIp);
   console.log('  Dev app (امسح QR):', devClientUrl);
   console.log('  Expo Go (بديل):', expoGoUrl);
-  console.log('  API:', apiUrl, mode === 'remote' ? '(Railway)' : '');
-  console.log('  Socket:', socketUrl, mode === 'remote' ? '(Railway)' : '');
-  console.log('  DevTools:', `http://localhost:${EXPO_PORT}`);
+  const remoteLabel =
+    mode === 'remote' || mode === 'railway-fallback' ? '(Railway)' : '';
+  console.log('  API:', apiUrl, remoteLabel);
+  console.log('  Socket:', socketUrl, remoteLabel);
+  console.log('  DevTools:', `http://localhost:${expoPort}`);
   console.log('');
   console.log('  1) ثبّت التطبيق أولاً: npm run android');
   console.log('  2) نفس شبكة Wi‑Fi للهاتف والكمبيوتر');
@@ -147,7 +218,17 @@ async function main() {
 
   const expo = spawn(
     'npx',
-    ['expo', 'start', '--dev-client', '--lan', '--clear', '--port', EXPO_PORT],
+    [
+      'expo',
+      'start',
+      '--dev-client',
+      '--lan',
+      '--clear',
+      '--port',
+      expoPort,
+      '--max-workers',
+      '2',
+    ],
     {
       stdio: 'inherit',
       shell: true,
@@ -158,6 +239,13 @@ async function main() {
         EXPO_PUBLIC_SOCKET_URL: socketUrl,
         EXPO_PUBLIC_WEB_SAME_ORIGIN: webSameOrigin ?? 'false',
         EXPO_NO_DOTENV: '1',
+        EXPO_NO_METRO_WORKSPACE_ROOT: '1',
+        EXPO_PORT: expoPort,
+        RCT_METRO_PORT: expoPort,
+        WATCHMAN_DISABLE: '1',
+        METRO_DISABLE_WATCHMAN: '1',
+        // Polling retriggers rebuild loops on Windows during bundle writes — avoid it.
+        CHOKIDAR_USEPOLLING: '0',
       },
     },
   );

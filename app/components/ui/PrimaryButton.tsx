@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { ds } from '@/constants/designSystem';
 import { controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 
 interface PrimaryButtonProps {

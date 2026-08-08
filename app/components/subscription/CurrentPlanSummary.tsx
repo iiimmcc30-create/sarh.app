@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   planDisplayName,
   planIcon,
@@ -53,7 +53,7 @@ export function CurrentPlanSummary({
 
   return (
     <View style={styles.card}>
-      <View style={[styles.top, rtlRow]}>
+      <View style={[styles.top, getRtlRow()]}>
         <View style={styles.info}>
           <Text style={styles.label}>خطتك الحالية</Text>
           <Text style={styles.name}>{planDisplayName(plan.slug, plan.name)}</Text>
@@ -107,7 +107,7 @@ export function CurrentPlanSummary({
       </View>
 
       {permissions.prioritySearch ? (
-        <View style={[styles.priorityRow, rtlRow]}>
+        <View style={[styles.priorityRow, getRtlRow()]}>
           <AppIcon name="trending-up-outline" size={14} color={colors.electric} />
           <Text style={styles.priorityText}>أولوية في البحث والصفحة الرئيسية</Text>
         </View>
@@ -142,7 +142,7 @@ function UsageMeter({
 
   return (
     <View style={styles.usageItem}>
-      <View style={[styles.usageTop, rtlRow]}>
+      <View style={[styles.usageTop, getRtlRow()]}>
         <Text style={styles.usageLabel}>{label}</Text>
         <Text style={styles.usageVal}>{used}/{limitLabel}</Text>
       </View>
@@ -162,7 +162,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      ...rtlDirection,
+      ...getRtlDirection(),
     },
     top: {
       alignItems: 'flex-start',
@@ -188,17 +188,17 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h2,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     price: {
       ...typography.bodyStrong,
       color: colors.electric,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     renew: {
       ...typography.micro,
       color: colors.textMuted,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     usageGrid: {
       gap: spacing.sm,
@@ -244,7 +244,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       fontWeight: '600',
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
   });
 }

@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import type { PromotionGoal } from '@/services/listingPromote';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { StyleSheet, Text, View } from 'react-native';
@@ -23,11 +23,11 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
   const isVisibility = goal === 'visibility';
 
   return (
-    <View style={[styles.wrap, compact && styles.wrapCompact, rtlDirection]}>
+    <View style={[styles.wrap, compact && styles.wrapCompact, getRtlDirection()]}>
       <Text style={styles.label}>معاينة الشكل في السوق</Text>
 
-      <View style={[styles.mockCard, rtlDirection]}>
-        <View style={[styles.mockTitleRow, rtlRow]}>
+      <View style={[styles.mockCard, getRtlDirection()]}>
+        <View style={[styles.mockTitleRow, getRtlRow()]}>
           <ListingBoostTitleIcons
             pinned={previewPinned}
             featured={previewFeatured}
@@ -37,7 +37,7 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
             {title}
           </Text>
         </View>
-        <View style={[styles.mockMeta, rtlRow]}>
+        <View style={[styles.mockMeta, getRtlRow()]}>
           <View style={styles.mockThumb} />
           <View style={styles.mockLines}>
             <View style={styles.mockLineShort} />
@@ -48,7 +48,7 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
 
       {isVisibility ? (
         <View style={styles.reachBlock}>
-          <View style={[styles.reachHeader, rtlRow]}>
+          <View style={[styles.reachHeader, getRtlRow()]}>
             <AppIcon name="trending-up-outline" size={16} color="#7C3AED" />
             <Text style={styles.reachTitle}>زيادة قوة الظهور</Text>
           </View>
@@ -62,12 +62,12 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
           </View>
         </View>
       ) : previewPinned ? (
-        <View style={[styles.hintRow, rtlRow]}>
+        <View style={[styles.hintRow, getRtlRow()]}>
           <AppIcon name="pin" size={12} color={colors.electric} />
           <Text style={styles.hint}>يظهر دبوس صغير بجانب العنوان ويبقى في أعلى القائمة</Text>
         </View>
       ) : previewFeatured ? (
-        <View style={[styles.hintRow, rtlRow]}>
+        <View style={[styles.hintRow, getRtlRow()]}>
           <AppIcon name="star" size={12} color={colors.gold} />
           <Text style={styles.hint}>تظهر نجمة ذهبية بجانب العنوان في نتائج البحث</Text>
         </View>
@@ -95,7 +95,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '700',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     mockCard: {
@@ -114,7 +114,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       fontSize: 14,
     },
@@ -163,11 +163,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     reachBars: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'flex-end',
       gap: 6,
       marginTop: spacing.xs,
@@ -197,14 +197,14 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       flex: 1,
     },
     hintMuted: {
       ...typography.caption,
       color: colors.textMuted,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
   });

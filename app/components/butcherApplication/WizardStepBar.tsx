@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 
 const STEPS = [
   'معلومات المحل',
@@ -46,7 +46,7 @@ export function WizardStepBar({ current }: WizardStepBarProps) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
-      ...rtlRow,
+      ...getRtlRow(),
       justifyContent: 'space-between',
       paddingHorizontal: spacing.sm,
       paddingVertical: spacing.md,

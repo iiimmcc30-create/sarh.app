@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { inlineEnd, inlineStart, marginStart, rtlRow } from '@/lib/rtl';
+import { getRtlText, inlineEnd, inlineStart, marginStart, getRtlRow } from '@/lib/rtl';
 import { LiveStream } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 
@@ -129,12 +129,12 @@ function createStyles(colors: ThemeColors) {
     position: 'absolute',
     top: 60,
     ...inlineStart(spacing.lg),
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: spacing.sm,
   },
   liveBadge: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     backgroundColor: colors.liveRed,
     paddingHorizontal: spacing.md,
@@ -153,7 +153,7 @@ function createStyles(colors: ThemeColors) {
     color: '#fff',
   },
   viewerBadge: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     backgroundColor: 'rgba(6,9,26,0.7)',
     paddingHorizontal: spacing.md,
@@ -232,13 +232,13 @@ function createStyles(colors: ThemeColors) {
     bottom: 120,
   },
   hostRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     marginBottom: spacing.sm,
     gap: spacing.sm,
   },
   hostInfo: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
   },
   hostName: {
@@ -246,7 +246,7 @@ function createStyles(colors: ThemeColors) {
     color: '#fff',
   },
   topicPill: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 10,
@@ -264,13 +264,13 @@ function createStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.textSecondary,
     marginBottom: spacing.md,
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   commentsArea: {
     gap: 6,
   },
   commentRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'flex-start',
     gap: 8,
   },

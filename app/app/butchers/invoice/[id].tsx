@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import {
@@ -35,7 +35,7 @@ function InvoiceRow({
   highlight?: boolean;
 }) {
   return (
-    <View style={[styles.row, rtlRow]}>
+    <View style={[styles.row, getRtlRow()]}>
       <Text style={styles.rowLabel}>{label}</Text>
       <Text style={[styles.rowValue, highlight && styles.rowValueHighlight]}>{value}</Text>
     </View>
@@ -209,7 +209,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '800',
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       marginBottom: spacing.xs,
       paddingBottom: spacing.xs,
       borderBottomWidth: StyleSheet.hairlineWidth,

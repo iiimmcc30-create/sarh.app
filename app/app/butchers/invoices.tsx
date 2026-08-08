@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import {
@@ -100,7 +100,7 @@ export default function ButcherInvoicesScreen() {
                   router.push({ pathname: '/butchers/invoice/[id]', params: { id: invoice.id } })
                 }
               >
-                <View style={[styles.cardTop, rtlRow]}>
+                <View style={[styles.cardTop, getRtlRow()]}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.invoiceNo}>فاتورة #{invoice.orderNumber}</Text>
                     <Text style={styles.butcherName}>{invoice.butcher?.nameAr ?? 'ملحمة'}</Text>
@@ -114,7 +114,7 @@ export default function ButcherInvoicesScreen() {
                 <Text style={styles.productLine} numberOfLines={1}>
                   {invoice.product?.nameAr ?? 'منتج'} · {invoice.weightKg} كغ
                 </Text>
-                <View style={[styles.totalRow, rtlRow]}>
+                <View style={[styles.totalRow, getRtlRow()]}>
                   <Text style={styles.totalLabel}>المبلغ المدفوع</Text>
                   <Text style={styles.totalValue}>
                     {formatCurrency(invoice.totalPrice, invoice.currency)}
@@ -147,19 +147,19 @@ function createStyles(colors: ThemeColors) {
       color: colors.electricBright,
       fontWeight: '800',
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     date: {
       ...typography.caption,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     paidBadge: {
       paddingHorizontal: 10,
@@ -183,7 +183,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     totalRow: { justifyContent: 'space-between', marginTop: spacing.xs },
     totalLabel: {

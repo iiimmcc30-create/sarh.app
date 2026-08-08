@@ -19,7 +19,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getCountryInfo } from '@/services/types';
-import { rtlBackIcon, rtlRow, rtlText } from '@/lib/rtl';
+import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -209,8 +209,8 @@ export function ProfileScreenLayout({
               transform: [{ translateY: headerTranslate }],
             }}
           >
-            <View style={[styles.toolbar, rtlRow]}>
-              <View style={[styles.toolbarEnd, rtlRow]}>
+            <View style={[styles.toolbar, getRtlRow()]}>
+              <View style={[styles.toolbarEnd, getRtlRow()]}>
                 {mode === 'own' && onMenu ? (
                   <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
                     <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
@@ -223,7 +223,7 @@ export function ProfileScreenLayout({
                 ) : null}
               </View>
 
-              <View style={[styles.toolbarStart, rtlRow]}>
+              <View style={[styles.toolbarStart, getRtlRow()]}>
                 {mode === 'own' && onEditProfile ? (
                   <Pressable onPress={onEditProfile} hitSlop={10} style={styles.iconBtn}>
                     <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
@@ -242,10 +242,10 @@ export function ProfileScreenLayout({
               </View>
             </View>
 
-            <View style={[styles.identityRow, rtlRow]}>
+            <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  <View style={[styles.nameRow, rtlRow]}>
+                  <View style={[styles.nameRow, getRtlRow()]}>
                     <Text style={styles.displayName} numberOfLines={2}>
                       {displayName}
                     </Text>
@@ -269,9 +269,9 @@ export function ProfileScreenLayout({
                 </View>
 
                 <View style={styles.statsCard}>
-                  <View style={[styles.statsRow, rtlRow]}>
+                  <View style={[styles.statsRow, getRtlRow()]}>
                     {stats.map((stat, index) => (
-                      <View key={stat.key} style={[styles.statGroup, rtlRow]}>
+                      <View key={stat.key} style={[styles.statGroup, getRtlRow()]}>
                         {index > 0 ? <View style={styles.statDivider} /> : null}
                         {stat.onPress ? (
                           <Pressable style={styles.statItem} onPress={stat.onPress}>
@@ -295,7 +295,7 @@ export function ProfileScreenLayout({
                   </Text>
                 ) : null}
 
-                <View style={[styles.locationRow, rtlRow]}>
+                <View style={[styles.locationRow, getRtlRow()]}>
                   <AppIcon name="map-marker-outline" size={14} color={themeColors.textMuted} />
                   <Text style={styles.locationText}>
                     {country.flag} {country.ar}
@@ -341,7 +341,7 @@ export function ProfileScreenLayout({
             </View>
 
             {mode === 'visitor' && (onFollow || onMessage) ? (
-              <View style={[styles.actionsRow, rtlRow]}>
+              <View style={[styles.actionsRow, getRtlRow()]}>
                 {onMessage ? (
                   <Pressable
                     style={({ pressed }) => [
@@ -392,7 +392,7 @@ export function ProfileScreenLayout({
 
         <View style={styles.contentCardTop}>
           <View style={styles.tabsBar}>
-            <View style={[styles.tabsRow, rtlRow]}>
+            <View style={[styles.tabsRow, getRtlRow()]}>
               <ProfileTabButton
                 label="المنشورات"
                 active={activeTab === 'posts'}
@@ -479,11 +479,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 22,
       fontWeight: '800',
       color: colors.textPrimary,
-      ...rtlText,
+      ...getRtlText(),
       flexShrink: 1,
     },
     ratingChip: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 4,
       paddingHorizontal: 10,
@@ -510,7 +510,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textMuted,
       fontWeight: '500',
       fontSize: 13,
-      ...rtlText,
+      ...getRtlText(),
     },
     statsCard: {
       marginTop: 6,
@@ -555,13 +555,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textMuted,
       fontSize: 11,
       textAlign: 'center',
-      ...rtlText,
+      ...getRtlText(),
     },
     bio: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-      ...rtlText,
+      ...getRtlText(),
       marginTop: 2,
     },
     locationRow: {
@@ -573,7 +573,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.caption,
       color: colors.textMuted,
       fontSize: 12,
-      ...rtlText,
+      ...getRtlText(),
     },
     avatarCol: {
       position: 'relative',
@@ -629,7 +629,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      ...rtlRow,
+      ...getRtlRow(),
       gap: 6,
       paddingHorizontal: spacing.md,
     },
@@ -698,7 +698,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 15,
       fontWeight: '700',
       color: colors.textMuted,
-      ...rtlText,
+      ...getRtlText(),
     },
     tabLabelActive: {
       color: colors.electric,

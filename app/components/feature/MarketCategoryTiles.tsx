@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export type MarketCategoryId =
@@ -47,7 +47,7 @@ export function MarketCategoryTiles({ value, onChange }: Props) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.row, rtlDirection]}
+      contentContainerStyle={[styles.row, getRtlDirection()]}
     >
       {CATEGORIES.map((cat) => {
         const active = value === cat.id;
@@ -82,7 +82,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tile = ds.categoryTile;
   return StyleSheet.create({
     row: {
-      ...rtlRow,
+      ...getRtlRow(),
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       gap: spacing.sm,

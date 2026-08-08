@@ -8,7 +8,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveMediaUrl } from '@/services/media';
 import { ButcherProfile } from '@/services/butcherData';
@@ -178,9 +178,9 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
 
       {/* Content */}
       <View style={f.body}>
-        <View style={[f.titleRow, rtlRow]}>
+        <View style={[f.titleRow, getRtlRow()]}>
           <View style={f.titleBlock}>
-            <View style={[f.nameRow, rtlRow]}>
+            <View style={[f.nameRow, getRtlRow()]}>
               <Text style={f.name} numberOfLines={1}>
                 {butcher.nameAr}
               </Text>
@@ -190,7 +190,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
                 </View>
               ) : null}
             </View>
-            <View style={[f.locationRow, rtlRow]}>
+            <View style={[f.locationRow, getRtlRow()]}>
               <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
               <Text style={f.locationText} numberOfLines={1}>
                 {butcher.cityAr} · {country.ar}
@@ -202,7 +202,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
           </Pressable>
         </View>
 
-        <View style={[f.ratingRow, rtlRow]}>
+        <View style={[f.ratingRow, getRtlRow()]}>
           <AppIcon name="star" size={14} color={colors.gold} />
           <Text style={f.ratingValue}>{butcher.rating.toFixed(1)}</Text>
           <Text style={f.ratingCount}>({reviewLabel})</Text>
@@ -210,7 +210,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
 
         {butcher.specialties.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={f.chipsScroll}>
-            <View style={[f.chipsRow, rtlRow]}>
+            <View style={[f.chipsRow, getRtlRow()]}>
               {butcher.specialties.slice(0, 4).map((spec, i) => (
                 <View key={i} style={f.chip}>
                   <Text style={f.chipText}>{spec}</Text>
@@ -220,7 +220,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
           </ScrollView>
         ) : null}
 
-        <View style={[f.statsRow, rtlRow]}>
+        <View style={[f.statsRow, getRtlRow()]}>
           <View style={f.statCell}>
             <Text style={f.statNum}>{butcher.totalOrders.toLocaleString('ar-SA')}</Text>
             <Text style={f.statLbl}>طلب مكتمل</Text>
@@ -285,7 +285,7 @@ function createCompactStyles(colors: ThemeColors) {
 function createFullStyles(colors: ThemeColors, isDark: boolean) {
   return StyleSheet.create({
     card: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'stretch',
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,

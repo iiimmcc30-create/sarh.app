@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   formatPlanFeatureText,
   planDisplayName,
@@ -49,7 +49,7 @@ export function PlanComparisonTable({ plans, title }: PlanComparisonTableProps) 
     <View style={styles.wrap}>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.table}>
-        <View style={[styles.headerRow, rtlRow]}>
+        <View style={[styles.headerRow, getRtlRow()]}>
           <View style={styles.featureCol}>
             <Text style={styles.headerFeature}>الميزة</Text>
           </View>
@@ -69,7 +69,7 @@ export function PlanComparisonTable({ plans, title }: PlanComparisonTableProps) 
             key;
 
           return (
-            <View key={key} style={[styles.bodyRow, rtlRow]}>
+            <View key={key} style={[styles.bodyRow, getRtlRow()]}>
               <View style={styles.featureCol}>
                 <Text style={styles.featureLabel} numberOfLines={2}>{label}</Text>
               </View>
@@ -105,12 +105,12 @@ function createStyles(colors: ThemeColors) {
     wrap: {
       gap: spacing.md,
       marginTop: spacing.lg,
-      ...rtlDirection,
+      ...getRtlDirection(),
     },
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     table: {
       borderRadius: ds.radius.lg,
@@ -148,7 +148,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '700',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     headerPlan: {
       ...typography.caption,
@@ -159,7 +159,7 @@ function createStyles(colors: ThemeColors) {
     featureLabel: {
       ...typography.caption,
       color: colors.textSecondary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     cellValue: {
       ...typography.micro,

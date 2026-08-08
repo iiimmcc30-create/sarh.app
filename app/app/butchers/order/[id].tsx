@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
-import { rtlBackIcon, rtlRow } from '@/lib/rtl';
+import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { CUT_LABELS, CutType } from '@/services/butcherData';
@@ -198,7 +198,7 @@ function Row({ label, value }: { label: string; value: string }) {
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgDeep },
   header: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -241,7 +241,7 @@ const s = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   timelineItem: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'flex-start',
     gap: spacing.md,
     minHeight: 48,
@@ -287,7 +287,7 @@ const s = StyleSheet.create({
   timelineActive: { color: colors.electricBright, fontWeight: '800' },
   timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
   row: {
-    ...rtlRow,
+    ...getRtlRow(),
     justifyContent: 'space-between',
     gap: spacing.md,
     paddingVertical: 4,

@@ -19,7 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { launchPaymentCheckout } from '@/services/payments';
@@ -731,7 +731,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       fontSize: 15,
     },
     hint: {
@@ -786,14 +786,14 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     productCat: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
     productPrice: {
       ...typography.caption,
       color: colors.gold,
       fontWeight: '800',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       marginTop: 2,
     },
     selectedDot: {
@@ -906,7 +906,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     summaryRow: {
       flexDirection: 'row',

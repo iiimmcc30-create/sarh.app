@@ -6,11 +6,11 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { useState } from 'react';
 import {
-import { getRtlRow, getRtlText, rtlTextAlign } from '@/lib/rtl';
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -153,7 +153,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textSecondary,
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       lineHeight: 22,
     },
   });

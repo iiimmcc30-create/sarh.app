@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — OTP Verification Screen (شاشة التحقق من رمز OTP)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
+import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -366,7 +366,7 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, ...rtlTextAlign(), flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...getRtlText(), flex: 1 },
 
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: 5 },
   countdownText: { fontSize: 13, color: colors.textMuted },

@@ -34,21 +34,21 @@ function patchFile(file) {
   if (pairRe.test(src)) {
     src = src.replace(
       pairRe,
-      "...rtlTextAlign(),\n$1...getRtlText(),",
+      "...getRtlText(),\n$1",
     );
     changed = true;
   }
 
-  // Lone textAlign right (keep if already has rtlTextAlign nearby)
+  // Lone textAlign right (keep if already has getRtlText nearby)
   const loneRe = /textAlign:\s*['"]right['"],/g;
-  if (loneRe.test(src) && !src.includes('rtlTextAlign()')) {
-    src = src.replace(loneRe, '...rtlTextAlign(),');
+  if (loneRe.test(src) && !src.includes('getRtlText()')) {
+    src = src.replace(loneRe, '...getRtlText(),');
     changed = true;
   }
 
   if (!changed) return false;
 
-  const importLine = "import { getRtlText, rtlTextAlign } from '@/lib/rtl';";
+  const importLine = "import { getRtlText } from '@/lib/rtl';";
   if (!src.includes("from '@/lib/rtl'")) {
     const lines = src.split('\n');
     let insertAt = 0;
@@ -58,17 +58,16 @@ function patchFile(file) {
     }
     lines.splice(insertAt, 0, importLine);
     src = lines.join('\n');
-  } else if (!src.includes('rtlTextAlign')) {
+  } else if (!src.includes('getRtlText')) {
     src = src.replace(
       /from '@\/lib\/rtl';/,
       (m, offset) => {
         const lineStart = src.lastIndexOf('import ', offset);
         const line = src.slice(lineStart, src.indexOf('\n', lineStart));
-        if (line.includes('rtlTextAlign')) return m;
-        return line.replace('{', '{ getRtlText, rtlTextAlign, ').replace('{  ', '{ ');
+        if (line.includes('getRtlText')) return m;
+        return line.replace('{', '{ getRtlText, ').replace('{  ', '{ ');
       },
     );
-    // simpler: add to first rtl import
     src = src.replace(
       /import \{([^}]+)\} from '@\/lib\/rtl';/,
       (_, names) => {
@@ -76,7 +75,6 @@ function patchFile(file) {
           names.split(',').map((s) => s.trim()).filter(Boolean),
         );
         set.add('getRtlText');
-        set.add('rtlTextAlign');
         return `import { ${[...set].join(', ')} } from '@/lib/rtl';`;
       },
     );

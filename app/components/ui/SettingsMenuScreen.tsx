@@ -3,7 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlForwardIcon, rtlRow } from '@/lib/rtl';
+import { rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,7 +40,7 @@ export function SettingsMenuScreen({
       <ScreenHeader title={title} showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, rtlDirection]}
+        contentContainerStyle={[styles.content, getRtlDirection()]}
       >
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
@@ -122,7 +122,7 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     row: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       minHeight: 76,
       paddingHorizontal: spacing.lg,

@@ -9,7 +9,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
 import { initiateListingFeePayment } from '@/services/listingFeePayment';
 import { launchPaymentCheckout } from '@/services/payments';
 import type { NIPaymentMethod } from '@/services/network_international';
@@ -157,8 +157,7 @@ export function ListingFeePaymentSheet({
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <Animated.View
           style={[
-            styles.sheet,
-            rtlDirection,
+            styles.sheet, getRtlDirection(),
             { transform: [{ translateY }] },
           ]}
         >
@@ -166,13 +165,13 @@ export function ListingFeePaymentSheet({
             <View style={styles.handle} />
           </View>
 
-          <View style={[styles.header, rtlRow]}>
+          <View style={[styles.header, getRtlRow()]}>
             <Pressable onPress={handleClose} style={styles.closeBtn} hitSlop={8}>
               <AppIcon name="close" size={20} color={colors.textMuted} />
             </Pressable>
             <View style={styles.headerText}>
-              <Text style={[styles.title, rtlText]}>سداد رسوم سرح</Text>
-              <Text style={[styles.subtitle, rtlText]}>
+              <Text style={[styles.title, getRtlText()]}>سداد رسوم سرح</Text>
+              <Text style={[styles.subtitle, getRtlText()]}>
                 يمكنك سداد عمولة سرح المستحقة على هذا الإعلان.
               </Text>
             </View>
@@ -186,7 +185,7 @@ export function ListingFeePaymentSheet({
               <View style={styles.successIcon}>
                 <AppIcon name="checkmark-circle" size={56} color={colors.emerald} />
               </View>
-              <Text style={[styles.resultTitle, rtlText]}>
+              <Text style={[styles.resultTitle, getRtlText()]}>
                 تم سداد الرسوم بنجاح، شكراً لك.
               </Text>
               <PrimaryButton title="حسناً" onPress={handleClose} fullWidth />
@@ -196,8 +195,8 @@ export function ListingFeePaymentSheet({
               <View style={styles.errorIcon}>
                 <AppIcon name="alert-circle-outline" size={52} color={colors.danger} />
               </View>
-              <Text style={[styles.resultTitle, rtlText]}>تعذّر إتمام الدفع</Text>
-              <Text style={[styles.errorBody, rtlText]}>{errorMessage}</Text>
+              <Text style={[styles.resultTitle, getRtlText()]}>تعذّر إتمام الدفع</Text>
+              <Text style={[styles.errorBody, getRtlText()]}>{errorMessage}</Text>
               <PrimaryButton
                 title="إعادة المحاولة"
                 onPress={() => {
@@ -208,7 +207,7 @@ export function ListingFeePaymentSheet({
                 icon="refresh-outline"
               />
               <Pressable onPress={handleClose} style={styles.cancelBtn}>
-                <Text style={[styles.cancelText, rtlText]}>إغلاق</Text>
+                <Text style={[styles.cancelText, getRtlText()]}>إغلاق</Text>
               </Pressable>
             </View>
           ) : (
@@ -218,8 +217,8 @@ export function ListingFeePaymentSheet({
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.fieldBlock}>
-                <Text style={[styles.fieldLabel, rtlText]}>المبلغ (اختياري)</Text>
-                <View style={[styles.amountRow, rtlRow]}>
+                <Text style={[styles.fieldLabel, getRtlText()]}>المبلغ (اختياري)</Text>
+                <View style={[styles.amountRow, getRtlRow()]}>
                   <Text style={styles.currencyTag}>ر.س</Text>
                   <TextInput
                     value={amount}
@@ -227,15 +226,15 @@ export function ListingFeePaymentSheet({
                     placeholder="0.00"
                     placeholderTextColor={colors.textSubtle}
                     keyboardType="decimal-pad"
-                    style={[styles.amountInput, rtlText]}
+                    style={[styles.amountInput, getRtlText()]}
                   />
                 </View>
-                <Text style={[styles.fieldHint, rtlText]}>
+                <Text style={[styles.fieldHint, getRtlText()]}>
                   يمكنك ترك الحقل فارغاً والسداد لاحقاً، أو إدخال أي مبلغ ترغب بسداده الآن.
                 </Text>
               </View>
 
-              <Text style={[styles.sectionLabel, rtlText]}>وسائل الدفع</Text>
+              <Text style={[styles.sectionLabel, getRtlText()]}>وسائل الدفع</Text>
               <View style={styles.methodsGrid}>
                 {FEE_PAYMENT_METHODS.map((item) => {
                   const active = method === item.id;
@@ -248,8 +247,7 @@ export function ListingFeePaymentSheet({
                       <PaymentBrandLogo id={item.id} size={28} />
                       <Text
                         style={[
-                          styles.methodLabel,
-                          rtlText,
+                          styles.methodLabel, getRtlText(),
                           active && styles.methodLabelActive,
                         ]}
                       >
@@ -439,7 +437,7 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.sm,
     },
     payBtn: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,

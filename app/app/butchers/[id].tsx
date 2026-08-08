@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { countries, Country } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -901,7 +901,7 @@ export default function ButcherProfileScreen() {
                         borderRadius: radius.lg,
                         padding: spacing.md,
                         color: colors.textPrimary,
-                        ...rtlTextAlign(),
+                        ...getRtlText(),
                         minHeight: 80,
                       }}
                       placeholder="تعليق اختياري..."
@@ -1187,14 +1187,14 @@ function createProductsStyles(colors: ThemeColors) {
     color: colors.textPrimary,
     marginBottom: 4,
     writingDirection: 'rtl',
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   productDesc: {
     ...typography.caption,
     color: colors.textMuted,
     lineHeight: 20,
     writingDirection: 'rtl',
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   priceBlock: { alignItems: 'flex-end' },
   price: { fontSize: 22, fontWeight: '800', color: colors.electricBright },
@@ -1219,7 +1219,7 @@ function createProductsStyles(colors: ThemeColors) {
     color: colors.textMuted,
     marginTop: 8,
     writingDirection: 'rtl',
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   orderBtn: { marginTop: spacing.md, borderRadius: 18, overflow: 'hidden' },
   orderBtnGrad: {

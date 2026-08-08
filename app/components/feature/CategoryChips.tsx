@@ -2,7 +2,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 export type CategoryKey =
@@ -77,7 +77,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingVertical: spacing.sm,
     },
     content: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       gap: spacing.sm,

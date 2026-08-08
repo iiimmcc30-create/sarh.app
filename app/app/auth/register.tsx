@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Registration Screen (شاشة التسجيل المطابقة للتصميم الجديد بالكامل)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, marginEnd, marginStart, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
+import { getRtlRow, getRtlText, inlineEnd, marginEnd, marginStart, rtlForwardIcon } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -501,14 +501,14 @@ function createStyles(colors: ThemeColors) {
   },
   inputWrapError: { borderColor: colors.danger },
   inputIcon: marginStart(8),
-  input: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...rtlTextAlign() },
+  input: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...getRtlText() },
   atSign: { fontSize: 14, color: colors.textMuted, fontWeight: 'bold', ...marginStart(8) },
   
-  fieldError: { fontSize: 11, color: colors.danger, ...rtlTextAlign(), marginTop: 2 },
-  fieldHint: { fontSize: 11, color: colors.textMuted, ...rtlTextAlign(), marginTop: 2, lineHeight: 16 },
+  fieldError: { fontSize: 11, color: colors.danger, ...getRtlText(), marginTop: 2 },
+  fieldHint: { fontSize: 11, color: colors.textMuted, ...getRtlText(), marginTop: 2, lineHeight: 16 },
   fieldHintLink: { color: colors.textBrandStrong, fontWeight: '500' },
 
-  pickerValueText: { flex: 1, fontSize: 14, color: colors.textPrimary, ...rtlTextAlign(), ...marginEnd(8) },
+  pickerValueText: { flex: 1, fontSize: 14, color: colors.textPrimary, ...getRtlText(), ...marginEnd(8) },
   pickerValueFlag: { fontSize: 16 },
 
   pickerDropdown: {
@@ -523,7 +523,7 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...rtlTextAlign(), ...marginEnd(10) },
+  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
   pickerCode: { fontSize: 13, color: colors.textMuted },
 
   agreeRow: {
@@ -567,7 +567,7 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, ...rtlTextAlign(), flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...getRtlText(), flex: 1 },
 
   footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },
   footerLinkText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },

@@ -1,24 +1,66 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const config = getDefaultConfig(projectRoot);
 
-// Windows: Metro file-watcher often crashes ("Failed to start watch mode").
+// Windows: avoid workspace-wide watching and sibling-project resolution.
 if (process.platform === 'win32') {
-  config.watchFolders = [path.resolve(__dirname)];
+  config.projectRoot = projectRoot;
+  config.watchFolders = [projectRoot];
+  config.resolver = {
+    ...config.resolver,
+    unstable_enableSymlinks: false,
+    blockList: [
+      ...(Array.isArray(config.resolver.blockList)
+        ? config.resolver.blockList
+        : config.resolver.blockList
+          ? [config.resolver.blockList]
+          : []),
+      /backend-nest[\\/].*/,
+      /admin-panel[\\/].*/,
+      /arc-esports-website[\\/].*/,
+    ],
+  };
   config.watcher = {
     ...config.watcher,
+    useWatchman: false,
     healthCheck: {
       enabled: true,
       interval: 30000,
-      timeout: 10000,
+      timeout: 120000,
     },
   };
-  process.env.CHOKIDAR_USEPOLLING = process.env.CHOKIDAR_USEPOLLING || 'true';
+  config.maxWorkers = 2;
+  // Dev client only — skip web SSR bundles that thrash the watcher on Windows.
+  config.resolver.platforms = ['ios', 'android', 'native'];
+
+  const upstream = config.server?.enhanceMiddleware;
+  config.server = {
+    ...config.server,
+    enhanceMiddleware: (middleware, metroServer) => {
+      const base =
+        typeof upstream === 'function'
+          ? upstream(middleware, metroServer)
+          : middleware;
+      return (req, res, next) => {
+        const url = req.url ?? '';
+        // Block web/SSR only — Expo Router Android dev client needs transform.routerRoot=app.
+        if (
+          url.includes('platform=web') ||
+          url.includes('expo-router/node/render')
+        ) {
+          res.statusCode = 404;
+          res.end('web disabled (dev-client)');
+          return;
+        }
+        return base(req, res, next);
+      };
+    },
+  };
 }
 
 // `npx expo run:android` starts Metro — set up adb reverse so 127.0.0.1 reaches the PC.
-// Skip in CI/Docker web export builds.
 if (!process.env.CI && process.env.EXPO_PUBLIC_SKIP_ADB !== 'true') {
   try {
     const { trySetupUsbReverse } = require('./scripts/start-usb.js');

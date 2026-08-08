@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { ButcherProfile } from '@/services/butcherData';
 import {
@@ -129,7 +129,7 @@ export default function ButcherFavoritesScreen() {
                     <Text style={styles.name} numberOfLines={1}>
                       {butcher.nameAr}
                     </Text>
-                    <View style={[styles.ratingRow, rtlRow]}>
+                    <View style={[styles.ratingRow, getRtlRow()]}>
                       <AppIcon name="star" size={14} color={colors.gold} />
                       <Text style={styles.rating}>{butcher.rating.toFixed(1)}</Text>
                       <Text style={styles.reviews}>({butcher.reviewCount})</Text>
@@ -149,7 +149,7 @@ export default function ButcherFavoritesScreen() {
                         {isOpen ? 'مفتوح الآن' : 'مغلق حالياً'}
                       </Text>
                     </View>
-                    <View style={[styles.actions, rtlRow]}>
+                    <View style={[styles.actions, getRtlRow()]}>
                       <Pressable
                         style={styles.visitBtn}
                         onPress={() =>
@@ -178,7 +178,7 @@ function createStyles(colors: ThemeColors) {
     screen: { flex: 1, backgroundColor: colors.bgDeep },
     scroll: { padding: spacing.lg, paddingBottom: 40, gap: spacing.md },
     card: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'stretch',
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xl,
@@ -208,7 +208,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '800',
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     ratingRow: { alignItems: 'center', gap: 4 },
     rating: { ...typography.caption, color: colors.gold, fontWeight: '800' },

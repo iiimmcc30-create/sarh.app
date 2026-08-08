@@ -44,6 +44,7 @@ export default function HomeScreen() {
     toggleBookmark,
     deletePost,
     fetchPosts,
+    fetchListings,
   } = useApp();
   const { accessToken, isAuthenticated } = useAuth();
   const [storiesFeed, setStoriesFeed] = useState<StoryGroup[]>([]);
@@ -80,7 +81,8 @@ export default function HomeScreen() {
       if (now - lastPostsFocusAt.current < HOME_REFRESH_TTL_MS) return;
       lastPostsFocusAt.current = now;
       void fetchPosts('for_you');
-    }, [fetchPosts]),
+      void fetchListings();
+    }, [fetchPosts, fetchListings]),
   );
 
   const fetchStories = useCallback(async (force = false) => {

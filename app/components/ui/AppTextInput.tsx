@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { ltrInputText, marginStart, rtlInputText, rtlRow } from '@/lib/rtl';
+import { getRtlText, ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
 
 interface AppTextInputProps extends TextInputProps {
   label?: string;
@@ -123,10 +123,10 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       marginBottom: spacing.xs,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     wrap: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       backgroundColor: colors.bgElevated,
       borderRadius: radius.lg,
@@ -159,13 +159,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.danger,
       marginTop: spacing.xs,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     hint: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: spacing.xs,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
   });
 }

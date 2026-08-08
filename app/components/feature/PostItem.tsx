@@ -16,7 +16,7 @@ import {
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlRow, rtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { formatPostTimestampAr } from '@/lib/formatRelativeTime';
 import { Post } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
@@ -127,7 +127,7 @@ function ActionBtn({
 
   return (
     <Pressable style={style} onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} hitSlop={10}>
-      <Animated.View style={[{ transform: [{ scale }], opacity }, rtlRow, { alignItems: 'center', gap: 4 }]}>
+      <Animated.View style={[{ transform: [{ scale }], opacity }, getRtlRow(), { alignItems: 'center', gap: 4 }]}>
         <AppIcon name={icon} size={size} color={iconColor} />
         {label ? (
           <Text style={[countStyle, { color: textColor }]}>{label}</Text>
@@ -175,14 +175,14 @@ function PostItemComponent({
 
   return (
     <View style={[styles.card, variant === 'detail' && styles.cardDetail, variant === 'profile' && styles.cardProfile]}>
-      <View style={[styles.row, rtlRow]}>
+      <View style={[styles.row, getRtlRow()]}>
         <UserProfileLink userId={post.author.id}>
           <Image source={uriSource(post.author.avatar)} style={styles.avatar} contentFit="cover" />
         </UserProfileLink>
 
         <View style={styles.main}>
-          <View style={[styles.metaLine, rtlRow]}>
-            <UserProfileLink userId={post.author.id} style={[styles.metaInfo, rtlRow]}>
+          <View style={[styles.metaLine, getRtlRow()]}>
+            <UserProfileLink userId={post.author.id} style={[styles.metaInfo, getRtlRow()]}>
               <Text style={styles.name} numberOfLines={1}>
                 {post.author.arabicName}
               </Text>
@@ -246,7 +246,7 @@ function PostItemComponent({
             ) : null}
           </Pressable>
 
-          <View style={[styles.actions, rtlRow]}>
+          <View style={[styles.actions, getRtlRow()]}>
             <ActionBtn
               icon="chatbubble-ellipses-outline"
               iconColor={colors.textSubtle}
@@ -391,10 +391,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       fontWeight: '800',
       color: colors.textPrimary,
       flexShrink: 1,
-      ...rtlText,
+      ...getRtlText(),
     },
     ratingMini: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 2,
       paddingHorizontal: 5,
@@ -411,7 +411,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       fontSize: 13,
       color: colors.textMuted,
       flexShrink: 1,
-      ...rtlText,
+      ...getRtlText(),
     },
     metaDot: {
       fontSize: 13,
@@ -447,7 +447,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       fontSize: 15,
       lineHeight: 24,
       color: colors.textPrimary,
-      ...rtlText,
+      ...getRtlText(),
       marginTop: 8,
       alignSelf: 'stretch',
     },
@@ -459,7 +459,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       color: colors.electric,
       fontWeight: '600',
       marginTop: 4,
-      ...rtlText,
+      ...getRtlText(),
     },
     tagText: {
       color: colors.textMuted,

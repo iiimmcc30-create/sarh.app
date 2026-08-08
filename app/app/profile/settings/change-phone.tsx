@@ -5,7 +5,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
-import { rtlDirection, rtlText } from '@/lib/rtl';
+import { getRtlDirection, getRtlText } from '@/lib/rtl';
 import { changeAccountPhone } from '@/services/users';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -83,10 +83,10 @@ export default function ChangePhoneScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, rtlDirection]}
+          contentContainerStyle={[styles.content, getRtlDirection()]}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={[styles.hint, rtlText]}>
+          <Text style={[styles.hint, getRtlText()]}>
             {step === 'phone'
               ? 'أدخل رقم الجوال الجديد. سنرسل إليه رمز تحقق.'
               : `أدخل الرمز المرسل إلى ${fullPhone}`}

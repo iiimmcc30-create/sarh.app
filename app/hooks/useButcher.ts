@@ -2,7 +2,8 @@
 // SAFAT — useButcher hook
 
 import { useMemo, useState, useEffect } from 'react';
-import { API_BASE } from '@/services/api';
+import { API_BASE, ensureApiReachable } from '@/services/api';
+import { fetchPublicFeed } from '@/services/fetchPublicFeed';
 import {
   ButcherOffer,
   ButcherProduct,
@@ -43,19 +44,22 @@ async function loadButcherCatalog(): Promise<ButcherCatalogCache> {
   if (butcherCatalogInflight) return butcherCatalogInflight;
 
   butcherCatalogInflight = (async () => {
+    await ensureApiReachable();
+    let fetchOk = false;
     const [resB, resS] = await Promise.all([
-      fetch(`${API_BASE}/api/butchers`),
-      fetch(`${API_BASE}/api/butchers/stories`),
+      fetchPublicFeed(`${API_BASE}/api/butchers`),
+      fetchPublicFeed(`${API_BASE}/api/butchers/stories`),
     ]);
 
-    let butchers: ButcherProfile[] = butcherCatalogCache?.butchers ?? [];
-    let stories: ButcherStory[] = butcherCatalogCache?.stories ?? [];
+    let butchers: ButcherProfile[] = [];
+    let stories: ButcherStory[] = [];
 
     if (resB.ok) {
       const json = await resB.json();
       const rawButchers = Array.isArray(json.data) ? json.data : json.data?.butchers;
       if (json.success && Array.isArray(rawButchers)) {
         butchers = rawButchers.map((b: Record<string, unknown>) => mapButcherFromApi(b));
+        fetchOk = true;
       }
     }
 
@@ -79,6 +83,10 @@ async function loadButcherCatalog(): Promise<ButcherCatalogCache> {
           type: s.type ?? 'update',
         }));
       }
+    }
+
+    if (!fetchOk) {
+      throw new Error('[useButcher] Butchers catalog fetch failed');
     }
 
     const next: ButcherCatalogCache = { butchers, stories, fetchedAt: Date.now() };
@@ -111,14 +119,24 @@ export function useButcher() {
 
   useEffect(() => {
     let active = true;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryCount = 0;
+
     const fetchAll = async () => {
       try {
         const catalog = await loadButcherCatalog();
         if (!active) return;
         setButchers(catalog.butchers);
         setButcherStories(catalog.stories);
+        retryCount = 0;
       } catch (err) {
         console.warn('[useButcher] Failed to fetch butchers:', err);
+        if (active && retryCount < 5) {
+          retryCount += 1;
+          retryTimer = setTimeout(() => {
+            void fetchAll();
+          }, 4000 + retryCount * 2000);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -126,6 +144,7 @@ export function useButcher() {
     void fetchAll();
     return () => {
       active = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, []);
 

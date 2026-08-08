@@ -1,7 +1,7 @@
 import { Animated, StyleSheet, View } from 'react-native';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 
 type OnboardingDotsProps = {
   count: number;
@@ -53,7 +53,7 @@ export function OnboardingDots({ count, activeIndex, scrollX, slideWidth }: Onbo
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
-      ...rtlRow,
+      ...getRtlRow(),
       justifyContent: 'center',
       alignItems: 'center',
       gap: spacing.sm,

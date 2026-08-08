@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   formatPlanFeatureText,
   planIcon,
@@ -60,7 +60,7 @@ export function PlanTierCard({
         pressed && { opacity: 0.94 },
       ]}
     >
-      <View style={[styles.badges, rtlRow]}>
+      <View style={[styles.badges, getRtlRow()]}>
         {isRecommended ? (
           <View style={styles.recommendedBadge}>
             <Text style={styles.recommendedText}>الأكثر شيوعاً</Text>
@@ -73,7 +73,7 @@ export function PlanTierCard({
         ) : null}
       </View>
 
-      <View style={[styles.head, rtlRow]}>
+      <View style={[styles.head, getRtlRow()]}>
         <View style={styles.headText}>
           <Text style={styles.name}>{plan.name}</Text>
           <Text style={styles.desc} numberOfLines={2}>{plan.description}</Text>
@@ -104,7 +104,7 @@ export function PlanTierCard({
         {previewFeatures.map((f, i) => {
           const ok = featureIncluded(f);
           return (
-            <View key={`${f.key}-${i}`} style={[styles.featureRow, rtlRow]}>
+            <View key={`${f.key}-${i}`} style={[styles.featureRow, getRtlRow()]}>
               <AppIcon
                 name={ok ? 'check' : 'close'}
                 size={14}
@@ -122,7 +122,7 @@ export function PlanTierCard({
       </View>
 
       {selected ? (
-        <View style={[styles.selectedMark, rtlRow]}>
+        <View style={[styles.selectedMark, getRtlRow()]}>
           <AppIcon name="checkmark" size={14} color="#fff" />
           <Text style={styles.selectedMarkText}>محدّد للدفع</Text>
         </View>
@@ -141,7 +141,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
       gap: spacing.sm,
-      ...rtlDirection,
+      ...getRtlDirection(),
     },
     cardSelected: {
       borderColor: colors.electric,
@@ -196,13 +196,13 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h3,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     desc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     priceBlock: {
       gap: 2,
@@ -245,7 +245,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     featureMuted: {
       color: colors.textSubtle,

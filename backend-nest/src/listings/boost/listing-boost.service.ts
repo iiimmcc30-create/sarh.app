@@ -7,26 +7,20 @@ import { AppNotificationsService } from '../../queue/services/app-notifications.
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { createNiCheckout, isNiSandboxMockMode } from '../../payments/ni-client';
+import { BOOST_PLANS } from './boost-plans.config';
+import { boostPriceForHours } from './boost-pricing.util';
+import type { BoostPlanType } from './boost-plans.config';
+import {
+  PROMOTE_AMOUNT_MAX,
+  PROMOTE_AMOUNT_MIN,
+  PROMOTE_DURATION_HOURS_MAX,
+  PROMOTE_DURATION_HOURS_MIN,
+  clampPromoteAmount,
+  clampPromoteDurationHours,
+  durationDaysFromHours,
+} from '../promotion/promotion-limits.config';
 
-// ─── Pricing table ────────────────────────────────────────────────────────────
-
-export const BOOST_PLANS = {
-  pinned: [
-    { durationDays: 1, amount: 12, labelAr: 'يوم واحد' },
-    { durationDays: 3, amount: 29, labelAr: '٣ أيام' },
-    { durationDays: 7, amount: 59, labelAr: '٧ أيام' },
-  ],
-  featured: [
-    { durationDays: 1, amount: 10, labelAr: 'يوم واحد' },
-    { durationDays: 3, amount: 25, labelAr: '٣ أيام' },
-    { durationDays: 7, amount: 49, labelAr: '٧ أيام' },
-  ],
-  both: [
-    { durationDays: 1, amount: 20, labelAr: 'يوم واحد' },
-    { durationDays: 3, amount: 45, labelAr: '٣ أيام' },
-    { durationDays: 7, amount: 95, labelAr: '٧ أيام' },
-  ],
-} as const;
+export { BOOST_PLANS } from './boost-plans.config';
 
 function boostNotificationCopy(boostType: BoostType) {
   if (boostType === 'both') {
@@ -62,6 +56,15 @@ function buildOrderRef(prefix: string, userId: string): string {
   return `${prefix}-${uid}-${ts}`;
 }
 
+type InitiateBoostOptions = {
+  boostType: BoostType;
+  durationDays?: number;
+  durationHours?: number;
+  amount?: number;
+  method: string;
+  promotionGoal?: 'visibility' | 'pinned' | 'featured';
+};
+
 @Injectable()
 export class ListingBoostService {
   constructor(
@@ -87,10 +90,9 @@ export class ListingBoostService {
   async initiateBoost(
     user: JwtPayload,
     listingId: string,
-    boostType: BoostType,
-    durationDays: number,
-    method: string,
+    options: InitiateBoostOptions,
   ) {
+    const { boostType, method } = options;
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, sellerId: user.userId, deletedAt: null },
       select: { id: true, arabicTitle: true, status: true },
@@ -100,11 +102,51 @@ export class ListingBoostService {
     const plans = BOOST_PLANS[boostType as keyof typeof BOOST_PLANS];
     if (!plans) throwApi(400, 'invalid_boost_type', 'نوع الترقية غير صالح');
 
-    const plan = (plans as readonly { durationDays: number; amount: number; labelAr: string }[])
-      .find((p) => p.durationDays === durationDays);
-    if (!plan) throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
+    let durationHours: number;
+    let durationDays: number;
+    let amount: number;
 
-    const amount      = plan.amount;
+    if (options.durationHours != null) {
+      durationHours = clampPromoteDurationHours(options.durationHours);
+      durationDays = durationDaysFromHours(durationHours);
+      if (boostType === 'pinned' || boostType === 'featured' || boostType === 'both') {
+        amount = boostPriceForHours(boostType as BoostPlanType, durationHours);
+      } else if (options.amount != null) {
+        amount = clampPromoteAmount(options.amount);
+      } else {
+        throwApi(400, 'invalid_boost', 'مدة الترويج مطلوبة');
+      }
+    } else if (options.amount != null) {
+      throwApi(400, 'invalid_boost', 'حدّد مدة الترويج — السعر يُحسب تلقائياً');
+    } else {
+      if (!options.durationDays) {
+        throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
+      }
+      const plan = (plans as readonly { durationDays: number; amount: number; labelAr: string }[]).find(
+        (p) => p.durationDays === options.durationDays,
+      );
+      if (!plan) throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
+      durationDays = options.durationDays;
+      durationHours = durationDays * 24;
+      amount = plan.amount;
+    }
+
+    if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
+      throwApi(400, 'invalid_amount', 'المبلغ غير صالح');
+    }
+    if (
+      durationHours < PROMOTE_DURATION_HOURS_MIN ||
+      durationHours > PROMOTE_DURATION_HOURS_MAX
+    ) {
+      throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+    }
+
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+    const promotionGoal =
+      options.promotionGoal ??
+      (boostType === 'featured' ? 'featured' : boostType === 'pinned' ? 'pinned' : 'visibility');
+
     const currency    = 'SAR';
     const referenceType =
       boostType === 'pinned' ? 'pinned_ad' : 'featured_ad';
@@ -114,10 +156,10 @@ export class ListingBoostService {
 
     const descriptionAr =
       boostType === 'featured'
-        ? `إعلان مميز: ${listing.arabicTitle} لمدة ${durationDays} يوم`
+        ? `إعلان مميز: ${listing.arabicTitle} — ${durationHours} ساعة`
         : boostType === 'pinned'
-          ? `تثبيت إعلان: ${listing.arabicTitle} لمدة ${durationDays} يوم`
-          : `تثبيت وتمييز: ${listing.arabicTitle} لمدة ${durationDays} يوم`;
+          ? `تثبيت إعلان: ${listing.arabicTitle} — ${durationHours} ساعة`
+          : `تثبيت وتمييز: ${listing.arabicTitle} — ${durationHours} ساعة`;
 
     const niMethod = this.mapMethod(method);
 
@@ -150,6 +192,14 @@ export class ListingBoostService {
             boostType,
             userId: user.userId,
             durationDays,
+            durationHours,
+            promotionGoal,
+            promotionAmount: amount,
+            promotionDurationHours: durationHours,
+            totalAmount: amount,
+            adId: listingId,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
             referenceType,
           } as Prisma.InputJsonValue,
         },
@@ -232,7 +282,16 @@ export class ListingBoostService {
     if (!boost || boost.status === 'paid') return { processed: false };
 
     const now     = new Date();
-    const expires = new Date(now.getTime() + boost.durationDays * 24 * 60 * 60 * 1000);
+    const payment = await this.prisma.payment.findFirst({
+      where: { referenceId: boostId },
+      select: { metadata: true },
+    });
+    const meta = (payment?.metadata ?? {}) as Record<string, unknown>;
+    const durationHours =
+      typeof meta.durationHours === 'number' && meta.durationHours > 0
+        ? meta.durationHours
+        : boost.durationDays * 24;
+    const expires = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
 
     await this.prisma.$transaction([
       this.prisma.listingBoost.update({

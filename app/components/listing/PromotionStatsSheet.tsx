@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection, getRtlRow, getRtlText, rtlTextAlign } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import {
   fetchPromotionStats,
   formatRemainingMs,
@@ -126,12 +126,12 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     subtitle: {
       ...typography.caption,
       color: colors.textMuted,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       marginTop: 4,
     },
     muted: { color: colors.textMuted },

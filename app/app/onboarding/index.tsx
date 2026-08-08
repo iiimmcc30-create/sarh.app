@@ -17,7 +17,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { paddingStart, rtlDirection, rtlForwardIcon } from '@/lib/rtl';
+import { paddingStart, getRtlDirection, rtlForwardIcon } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -189,7 +189,7 @@ function createStyles(colors: ThemeColors) {
     root: {
       flex: 1,
       backgroundColor: colors.bgDeep,
-      ...rtlDirection,
+      ...getRtlDirection(),
     },
     patternTop: {
       position: 'absolute',

@@ -22,7 +22,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { marginStart, marginEnd, rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, marginStart, marginEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { BRAND_LOGIN_SUBTITLE_AR, BRAND_LOGIN_WELCOME_AR, BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
 
@@ -333,7 +333,7 @@ function createStyles(colors: ThemeColors) {
   forgotLink: { fontSize: 11, color: colors.textBrandStrong, fontWeight: '500' },
 
   inputWrap: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.borderSoft,
@@ -343,7 +343,7 @@ function createStyles(colors: ThemeColors) {
   textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
 
   countryBtn: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center', gap: 6,
     paddingHorizontal: 4, height: '100%',
   },
@@ -358,22 +358,22 @@ function createStyles(colors: ThemeColors) {
     marginTop: -8, overflow: 'hidden', width: '100%',
   },
   pickerItem: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.md, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)',
   },
   pickerItemActive: { backgroundColor: colors.bgGlass },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...rtlTextAlign(), ...marginEnd(10) },
+  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
   pickerCode: { fontSize: 13, color: colors.textMuted },
 
   switchFlowBtn: { alignSelf: 'center', paddingVertical: 4 },
   switchFlowText: { fontSize: 12, color: colors.textBrandStrong, fontWeight: '500', textAlign: 'center' },
 
-  channelRow: { ...rtlRow, justifyContent: 'center', gap: spacing.md, marginVertical: spacing.xs },
+  channelRow: { ...getRtlRow(), justifyContent: 'center', gap: spacing.md, marginVertical: spacing.xs },
   channelBtn: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center', gap: 6,
     paddingHorizontal: 16, paddingVertical: 6, borderRadius: radius.pill,
     backgroundColor: colors.bgDeep, borderWidth: 1, borderColor: colors.borderHairline,
@@ -383,16 +383,16 @@ function createStyles(colors: ThemeColors) {
   channelLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
 
   errorContainer: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, ...rtlTextAlign(), flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...getRtlText(), flex: 1 },
 
   rememberRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center', justifyContent: 'flex-end',
     gap: 8, width: '100%', marginVertical: 2,
   },

@@ -5,7 +5,7 @@ import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HomeAppBarProps = {
@@ -23,7 +23,7 @@ export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarPro
   }));
 
   return (
-    <View style={[styles.bar, rtlRow]}>
+    <View style={[styles.bar, getRtlRow()]}>
       <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8}>
         <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
       </Pressable>
@@ -34,7 +34,7 @@ export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarPro
         <Text style={styles.logoEn}>{BRAND_NAME_EN}</Text>
       </View>
 
-      <View style={[styles.actions, rtlRow]}>
+      <View style={[styles.actions, getRtlRow()]}>
         {showLive && onLive ? (
           <Pressable style={styles.iconBtn} hitSlop={8} onPress={onLive}>
             <AppIcon name="signal-stream" size={ds.icon.sm} color={colors.liveRed} />
@@ -65,7 +65,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: isDark ? colors.bgDeep : 'transparent',
     },
     logoWrap: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'center',
       flex: 1,

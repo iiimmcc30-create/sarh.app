@@ -10,7 +10,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { rtlBackIcon, rtlRow } from '@/lib/rtl';
+import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -157,7 +157,7 @@ export default function PostDetailScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <View style={[styles.topBar, rtlRow]}>
+      <View style={[styles.topBar, getRtlRow()]}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>

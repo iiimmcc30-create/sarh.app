@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, rtlForwardIcon, rtlRow, rtlDirection } from '@/lib/rtl';
+import { rtlBackIcon, rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
 
 type SubItem = { icon: string; label: string; route: string };
 type Section = { key: string; icon: string; title: string; route: string; items: SubItem[] };
@@ -56,7 +56,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
-      <View style={[styles.header, rtlRow]}>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -66,7 +66,7 @@ export default function SettingsScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, rtlDirection]}
+        contentContainerStyle={[styles.scroll, getRtlDirection()]}
       >
         <View style={styles.intro}>
           <View style={styles.introIcon}>
@@ -144,7 +144,7 @@ function createStyles(colors: ThemeColors) {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
     intro: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
@@ -172,7 +172,7 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     sectionHeader: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
@@ -191,7 +191,7 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1 },
     subList: { paddingVertical: spacing.xs },
     subRow: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,

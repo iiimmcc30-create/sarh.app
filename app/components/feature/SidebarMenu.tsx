@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection, getRtlRow, getRtlText, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, getRtlText, rtlForwardIcon } from '@/lib/rtl';
 
 export type SidebarMenuItem = {
   key: string;
@@ -186,7 +186,7 @@ const sectionStyles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 12,
     letterSpacing: 0.4,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
     marginBottom: spacing.sm,
     paddingHorizontal: 4,
@@ -224,13 +224,13 @@ const rowStyles = StyleSheet.create({
     ...typography.bodyStrong,
     fontSize: 15,
     fontWeight: '600',
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   subtitle: {
     ...typography.caption,
     fontSize: 12,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   badge: {
@@ -267,7 +267,7 @@ const themeStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     flex: 1,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   track: {
@@ -320,7 +320,7 @@ const logoutStyles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     flex: 1,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
 });

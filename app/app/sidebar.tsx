@@ -15,7 +15,7 @@ import {
 import { pp } from '@/constants/pixelPerfect';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
@@ -286,17 +286,17 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontWeight: '800',
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     usernameText: {
       ...typography.caption,
       fontSize: 14,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     verifiedPill: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 4,
       marginTop: 4,
@@ -314,7 +314,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     scroll: {
       flex: 1,
-      ...rtlDirection,
+      ...getRtlDirection(),
     },
     scrollContent: {
       paddingBottom: spacing.lg,

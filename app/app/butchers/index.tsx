@@ -32,7 +32,7 @@ import {
 } from '@/services/butcherData';
 import { ButcherCard } from '@/components/feature/ButcherCard';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 
 const STORY_CIRCLE = 62;
 
@@ -241,8 +241,8 @@ export default function ButchersScreen() {
       >
         {/* ── Premium Header ── */}
         <View style={s.stickyHeader}>
-          <View style={[s.headerRow, rtlRow]}>
-            <View style={[s.headerActions, rtlRow]}>
+          <View style={[s.headerRow, getRtlRow()]}>
+            <View style={[s.headerActions, getRtlRow()]}>
               <Pressable style={s.iconBtn} onPress={() => router.push('/butchers-market-sidebar')} hitSlop={8}>
                 <AppIcon name="menu" size={22} color={colors.textPrimary} />
               </Pressable>
@@ -267,7 +267,7 @@ export default function ButchersScreen() {
           </View>
 
           {/* Search */}
-          <View style={[s.searchWrap, rtlRow]}>
+          <View style={[s.searchWrap, getRtlRow()]}>
             <Pressable
               style={s.filterInlineBtn}
               onPress={() => setShowCountryFilter((v) => !v)}
@@ -360,7 +360,7 @@ export default function ButchersScreen() {
             </Pressable>
           </ScrollView>
 
-          <View style={[s.headerMetaRow, rtlRow]}>
+          <View style={[s.headerMetaRow, getRtlRow()]}>
             <Pressable style={s.mapLinkBtn} onPress={() => router.push('/butchers/map')}>
               <AppIcon name="map-outline" size={16} color={colors.electricBright} />
               <Text style={s.mapLinkText}>الخريطة</Text>
@@ -467,14 +467,14 @@ function createScreenStyles(colors: ThemeColors) {
     fontSize: 26,
     fontWeight: '800',
     color: colors.textPrimary,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   headerSub: {
     ...typography.caption,
     color: colors.textMuted,
     marginTop: 2,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   headerActions: {
@@ -536,7 +536,7 @@ function createScreenStyles(colors: ThemeColors) {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
 

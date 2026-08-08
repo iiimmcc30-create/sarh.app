@@ -16,7 +16,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { inlineStart, rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, inlineStart, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
@@ -102,11 +102,11 @@ function ListingCardInner({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.listRow, rtlDirection, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.listRow, getRtlDirection(), pressed && styles.pressed]}
       >
         <View style={styles.listContent}>
-          <View style={[styles.listTitleRow, rtlRow]}>
-            <View style={[styles.listTitleWrap, rtlRow]}>
+          <View style={[styles.listTitleRow, getRtlRow()]}>
+            <View style={[styles.listTitleWrap, getRtlRow()]}>
               <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
                 {title}
               </Text>
@@ -117,7 +117,7 @@ function ListingCardInner({
             </View>
           </View>
 
-          <View style={[styles.listMetaItem, rtlRow]}>
+          <View style={[styles.listMetaItem, getRtlRow()]}>
             <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
             <Text style={styles.listMetaText} numberOfLines={1}>
               {location}
@@ -125,7 +125,7 @@ function ListingCardInner({
           </View>
 
           {listing.price > 0 ? (
-            <View style={[styles.listPriceRow, rtlRow]}>
+            <View style={[styles.listPriceRow, getRtlRow()]}>
               <Text style={styles.listPriceAmount}>
                 {listing.price.toLocaleString('ar-SA')}
               </Text>
@@ -134,7 +134,7 @@ function ListingCardInner({
           ) : null}
 
           {timeLabel ? (
-            <View style={[styles.listMetaItem, rtlRow]}>
+            <View style={[styles.listMetaItem, getRtlRow()]}>
               <AppIcon name="time-outline" size={12} color={colors.textSubtle} />
               <Text style={styles.listStatText}>{timeLabel}</Text>
             </View>
@@ -144,7 +144,7 @@ function ListingCardInner({
             <Text style={styles.listStatusNew}>جديد</Text>
           ) : null}
 
-          <UserProfileLink userId={sellerId} style={[styles.listSeller, rtlRow]}>
+          <UserProfileLink userId={sellerId} style={[styles.listSeller, getRtlRow()]}>
             <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
             <Text style={styles.listSellerName} numberOfLines={1}>
               {sellerName}
@@ -190,7 +190,7 @@ function ListingCardInner({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.profileCard, rtlDirection, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.profileCard, getRtlDirection(), pressed && styles.pressed]}
       >
         {thumbUri ? (
           <Image source={uriSource(thumbUri)} style={styles.profileImg} contentFit="cover" transition={250} />
@@ -204,7 +204,7 @@ function ListingCardInner({
           style={styles.profileOverlay}
         />
         <View style={styles.profileInfo}>
-          <View style={[styles.profileTitleRow, rtlRow]}>
+          <View style={[styles.profileTitleRow, getRtlRow()]}>
             <Text style={styles.profileTitle} numberOfLines={2}>
               {listing.arabicTitle}
             </Text>
@@ -224,8 +224,7 @@ function ListingCardInner({
         onPress={onPress}
         style={({ pressed }) => [
           styles.feature,
-          compact && styles.featureCompact,
-          rtlDirection,
+          compact && styles.featureCompact, getRtlDirection(),
           pressed && styles.pressed,
         ]}
       >
@@ -235,13 +234,13 @@ function ListingCardInner({
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.featureContent, compact && styles.featureContentCompact]}>
-          <View style={[styles.featureTitleRow, rtlRow]}>
+          <View style={[styles.featureTitleRow, getRtlRow()]}>
             <Text style={[styles.featureTitle, compact && styles.featureTitleCompact]} numberOfLines={2}>
               {listing.arabicTitle}
             </Text>
             <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} size="md" />
           </View>
-          <View style={[styles.row, rtlRow]}>
+          <View style={[styles.row, getRtlRow()]}>
             <Text style={[styles.featurePrice, compact && styles.featurePriceCompact]}>
               {listing.price.toLocaleString('ar-SA')} {listing.currency}
             </Text>
@@ -261,28 +260,28 @@ function ListingCardInner({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.harajCard, rtlDirection, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.harajCard, getRtlDirection(), pressed && styles.pressed]}
     >
-      <View style={[styles.harajTitleRow, rtlRow]}>
+      <View style={[styles.harajTitleRow, getRtlRow()]}>
         <Text style={styles.harajTitle} numberOfLines={2}>
           {title}
         </Text>
         <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
       </View>
 
-      <View style={[styles.harajMeta, rtlRow]}>
-        <View style={[styles.harajMetaItem, rtlRow]}>
+      <View style={[styles.harajMeta, getRtlRow()]}>
+        <View style={[styles.harajMetaItem, getRtlRow()]}>
           <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
           <Text style={styles.harajMetaText}>{location}</Text>
         </View>
-        <View style={[styles.harajMetaItem, rtlRow]}>
+        <View style={[styles.harajMetaItem, getRtlRow()]}>
           <AppIcon name="time-outline" size={13} color={colors.textMuted} />
           <Text style={styles.harajMetaText}>{timeLabel || 'الآن'}</Text>
         </View>
       </View>
 
-      <View style={[styles.harajSellerRow, rtlRow]}>
-        <UserProfileLink userId={sellerId} style={[styles.harajSellerInfo, rtlRow]}>
+      <View style={[styles.harajSellerRow, getRtlRow()]}>
+        <UserProfileLink userId={sellerId} style={[styles.harajSellerInfo, getRtlRow()]}>
           <Image source={uriSource(seller?.avatar)} style={styles.harajAvatar} />
           <Text style={styles.harajSellerName} numberOfLines={1}>
             {sellerName}
@@ -333,7 +332,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
 
   // قائمة السوق — بطاقة موحّدة في الرئيسية والملف والسوق
   listRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'stretch',
     minHeight: 156,
     paddingVertical: 0,
@@ -412,14 +411,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     writingDirection: 'rtl',
   },
   listMetaRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
     marginTop: 2,
   },
   listMetaItem: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: 4,
     flexShrink: 1,
@@ -449,7 +448,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     marginTop: 2,
   },
   listSeller: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-end',
@@ -650,7 +649,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   featuredBadge: {
     position: 'absolute',
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     backgroundColor: colors.gold,
     paddingHorizontal: 10,
@@ -682,7 +681,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     maxWidth: 88,
   },
   row: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -710,19 +709,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.h3,
     color: colors.textBrandStrong,
     fontWeight: '700',
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
     lineHeight: 26,
     flex: 1,
   },
   harajMeta: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: spacing.md,
   },
   harajMetaItem: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: 4,
   },
@@ -732,13 +731,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     writingDirection: 'rtl',
   },
   harajSellerRow: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
   },
   harajSellerInfo: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: 8,
     flex: 1,
@@ -754,11 +753,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     flexShrink: 1,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   harajFeatured: {
-    ...rtlRow,
+    ...getRtlRow(),
     alignItems: 'center',
     gap: 4,
     backgroundColor: colors.gold,
@@ -774,7 +773,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajDesc: {
     ...typography.body,
     color: colors.textSecondary,
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
     lineHeight: 24,
   },
@@ -782,7 +781,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     fontWeight: '800',
-    ...rtlTextAlign(),
+    ...getRtlText(),
     ...getRtlText(),
   },
   harajImgWrap: {

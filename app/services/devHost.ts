@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
+const RAILWAY_API = 'https://sarh-app.up.railway.app';
+
 function getExpoDevHost(): string | null {
   if (!__DEV__) return null;
 
@@ -23,28 +25,28 @@ function isLoopbackHost(host: string): boolean {
 export function resolveDevServiceUrl(envUrl: string | undefined, port: number): string {
   const fromEnv = envUrl?.replace(/\/$/, '');
 
-  // Remote API (Railway / staging) — do not rewrite to LAN/USB localhost.
   if (fromEnv && /^https:\/\//i.test(fromEnv)) {
+    return fromEnv;
+  }
+
+  // Honor explicit URL from start scripts (LAN / USB / local mock).
+  if (fromEnv) {
     return fromEnv;
   }
 
   const expoHost = getExpoDevHost();
 
-  // Wi‑Fi dev client: Metro host is the PC LAN IP — API must use the same host.
   if (__DEV__ && Constants.isDevice && expoHost && !isLoopbackHost(expoHost)) {
     return `http://${expoHost}:${port}`;
   }
 
-  // USB + adb reverse (Metro on localhost / 127.0.0.1).
   if (__DEV__ && Constants.isDevice && expoHost && isLoopbackHost(expoHost)) {
     return `http://127.0.0.1:${port}`;
   }
 
-  if (__DEV__ && Constants.isDevice && fromEnv) {
-    return fromEnv;
+  if (__DEV__ && Constants.isDevice) {
+    return RAILWAY_API;
   }
-
-  if (fromEnv) return fromEnv;
 
   if (Platform.OS === 'android' && !Constants.isDevice) {
     return `http://10.0.2.2:${port}`;
@@ -52,3 +54,5 @@ export function resolveDevServiceUrl(envUrl: string | undefined, port: number): 
 
   return `http://localhost:${port}`;
 }
+
+export { RAILWAY_API };

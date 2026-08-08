@@ -6,7 +6,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 
 const FEATURE_ITEMS = [
   { emoji: '🐑', label: 'المواشي', icon: 'sheep' as const, tint: '#10B981' },
@@ -226,7 +226,7 @@ function createStyles(colors: ThemeColors) {
     },
     featureIconHint: { opacity: 0.6 },
     commissionPill: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignSelf: 'center',
       gap: spacing.sm,
       paddingHorizontal: spacing.lg,
@@ -251,7 +251,7 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     feedHeader: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'space-between',
       marginBottom: spacing.md,
@@ -267,7 +267,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.liveRed,
     },
     feedRow: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.md,
       paddingVertical: spacing.sm,
@@ -304,7 +304,7 @@ function createStyles(colors: ThemeColors) {
       letterSpacing: 0,
     },
     postPreview: {
-      ...rtlRow,
+      ...getRtlRow(),
       gap: spacing.md,
       alignItems: 'flex-start',
     },

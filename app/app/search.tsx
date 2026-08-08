@@ -20,7 +20,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { marginAutoStart, rtlBackIcon, rtlRow } from '@/lib/rtl';
+import { getRtlText, marginAutoStart, rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { useApp } from '@/hooks/useApp';
@@ -396,7 +396,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   liveThumbnail: { width: 88, height: 66, borderRadius: ds.radius.md },
   liveInfo: { flex: 1, gap: 4 },
-  liveTitle: { ...typography.caption, color: colors.textPrimary, ...rtlTextAlign(), lineHeight: 18 },
+  liveTitle: { ...typography.caption, color: colors.textPrimary, ...getRtlText(), lineHeight: 18 },
   liveHost: { ...typography.micro, color: colors.textMuted },
   liveStats: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   liveBadge: {

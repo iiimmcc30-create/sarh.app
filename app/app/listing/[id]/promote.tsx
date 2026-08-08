@@ -8,7 +8,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { rtlBackIcon, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { launchPaymentCheckout } from '@/services/payments';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -24,14 +24,18 @@ import {
   buildPromoteCheckoutPayload,
   clampPromoteAmount,
   clampPromoteDurationHours,
+  estimatePromotionReach,
   formatPromoteAmount,
   formatPromoteHours,
+  formatReachEstimate,
   goalFromBoostType,
   initiatePromotePayment,
   parsePromoteAmountInput,
   parsePromoteDurationInput,
+  resolvePromoteAmount,
   validatePromoteForm,
   type PromotionGoal,
+  type ReachEstimate,
 } from '@/services/listingPromote';
 import Slider from '@react-native-community/slider';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -159,6 +163,19 @@ export default function ListingPromoteScreen() {
   const listingTitle = listing?.arabicTitle || listing?.title || 'إعلانك';
   const listingThumb = listing?.images?.[0];
 
+  const isVisibility = goal === 'visibility';
+  const isDurationPriced = goal === 'pinned' || goal === 'featured';
+
+  const totalAmount = useMemo(() => {
+    if (!goal) return 0;
+    return resolvePromoteAmount(goal, durationHours, amount);
+  }, [goal, durationHours, amount]);
+
+  const reachEstimate: ReachEstimate | null = useMemo(() => {
+    if (!isVisibility) return null;
+    return estimatePromotionReach(amount, durationHours);
+  }, [isVisibility, amount, durationHours]);
+
   const validationError = useMemo(
     () => validatePromoteForm(goal, amount, durationHours),
     [goal, amount, durationHours],
@@ -235,10 +252,10 @@ export default function ListingPromoteScreen() {
   return (
     <ScreenScaffold edges={['top']}>
       <KeyboardAvoidingView
-        style={[styles.flex, rtlDirection]}
+        style={[styles.flex, getRtlDirection()]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[styles.header, rtlRow]}>
+        <View style={[styles.header, getRtlRow()]}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
@@ -266,7 +283,7 @@ export default function ListingPromoteScreen() {
                 <ActivityIndicator color={colors.electric} size="small" />
               ) : (
                 <>
-                  <View style={[styles.listingHeroTitleRow, rtlRow]}>
+                  <View style={[styles.listingHeroTitleRow, getRtlRow()]}>
                     <Text style={styles.listingHeroTitle} numberOfLines={2}>
                       {listingTitle}
                     </Text>
@@ -304,7 +321,7 @@ export default function ListingPromoteScreen() {
                       selected && { borderColor: accent, backgroundColor: `${accent}10` },
                     ]}
                   >
-                    <View style={[styles.goalTop, rtlRow]}>
+                    <View style={[styles.goalTop, getRtlRow()]}>
                       <View
                         style={[
                           styles.radioOuter,
@@ -327,7 +344,7 @@ export default function ListingPromoteScreen() {
                         <Text style={styles.goalDesc}>{option.desc}</Text>
                       </View>
                     </View>
-                    <View style={[styles.goalPreviewTag, rtlRow]}>
+                    <View style={[styles.goalPreviewTag, getRtlRow()]}>
                       {option.key === 'visibility' ? (
                         <>
                           <AppIcon name="trending-up-outline" size={13} color="#7C3AED" />
@@ -359,71 +376,114 @@ export default function ListingPromoteScreen() {
             <PromoteGoalPreview goal={goal} title={listingTitle} />
           ) : null}
 
-          <View style={styles.sliderCard}>
-            <View style={[styles.sectionHeaderRow, rtlRow]}>
-              <Text style={styles.sectionTitle}>المبلغ</Text>
-              <Pressable
-                onPress={() => {
-                  setCustomAmountDraft(String(amount));
-                  setCustomAmountOpen(true);
-                }}
-                hitSlop={8}
-                style={[styles.customBtn, rtlRow]}
-              >
-                <AppIcon name="create-outline" size={15} color={colors.electric} />
-                <Text style={styles.customBtnText}>مبلغ مخصص</Text>
-              </Pressable>
+          {goal ? (
+            <View style={styles.flowCard}>
+              <Text style={styles.flowTitle}>خطوات الدفع</Text>
+              <View style={styles.flowSteps}>
+                <Text style={styles.flowStepActive}>① اختيار الخدمة</Text>
+                <Text style={styles.flowStepActive}>
+                  ② {isVisibility ? 'المدة والميزانية' : 'المدة'}
+                </Text>
+                <Text style={styles.flowStepActive}>③ حساب السعر</Text>
+                <Text style={styles.flowStepMuted}>④ بوابة الدفع</Text>
+              </View>
             </View>
-            <PromoteValueDisplay value={formatPromoteAmount(amount)} styles={styles} />
-            <Slider
-              style={styles.slider}
-              minimumValue={PROMOTE_AMOUNT_MIN}
-              maximumValue={PROMOTE_AMOUNT_MAX}
-              step={1}
-              value={amount}
-              onValueChange={(v) => setAmount(clampPromoteAmount(v))}
-              minimumTrackTintColor={colors.electric}
-              maximumTrackTintColor={colors.borderSoft}
-              thumbTintColor={colors.electricBright}
-            />
-            <View style={[styles.sliderBounds, rtlRow]}>
-              <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MIN} ر.س</Text>
-              <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MAX} ر.س</Text>
-            </View>
-          </View>
+          ) : null}
 
-          <View style={styles.sliderCard}>
-            <View style={[styles.sectionHeaderRow, rtlRow]}>
-              <Text style={styles.sectionTitle}>المدة</Text>
-              <Pressable
-                onPress={() => {
-                  setCustomDurationDraft(String(durationHours));
-                  setCustomDurationOpen(true);
-                }}
-                hitSlop={8}
-                style={[styles.customBtn, rtlRow]}
-              >
-                <AppIcon name="create-outline" size={15} color={colors.electric} />
-                <Text style={styles.customBtnText}>مدة مخصصة</Text>
-              </Pressable>
+          {isVisibility ? (
+            <View style={styles.sliderCard}>
+              <View style={[styles.sectionHeaderRow, getRtlRow()]}>
+                <Text style={styles.sectionTitle}>الميزانية</Text>
+                <Pressable
+                  onPress={() => {
+                    setCustomAmountDraft(String(amount));
+                    setCustomAmountOpen(true);
+                  }}
+                  hitSlop={8}
+                  style={[styles.customBtn, getRtlRow()]}
+                >
+                  <AppIcon name="create-outline" size={15} color={colors.electric} />
+                  <Text style={styles.customBtnText}>مبلغ مخصص</Text>
+                </Pressable>
+              </View>
+              <PromoteValueDisplay value={formatPromoteAmount(amount)} styles={styles} />
+              <Slider
+                style={styles.slider}
+                minimumValue={PROMOTE_AMOUNT_MIN}
+                maximumValue={PROMOTE_AMOUNT_MAX}
+                step={1}
+                value={amount}
+                onValueChange={(v) => setAmount(clampPromoteAmount(v))}
+                minimumTrackTintColor="#7C3AED"
+                maximumTrackTintColor={colors.borderSoft}
+                thumbTintColor="#7C3AED"
+              />
+              <View style={[styles.sliderBounds, getRtlRow()]}>
+                <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MIN} ر.س</Text>
+                <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MAX} ر.س</Text>
+              </View>
             </View>
-            <PromoteValueDisplay value={formatPromoteHours(durationHours)} styles={styles} />
-            <Slider
-              style={styles.slider}
-              minimumValue={PROMOTE_DURATION_HOURS_MIN}
-              maximumValue={PROMOTE_DURATION_HOURS_MAX}
-              step={1}
-              value={durationHours}
-              onValueChange={(v) => setDurationHours(clampPromoteDurationHours(v))}
-              minimumTrackTintColor={colors.electric}
-              maximumTrackTintColor={colors.borderSoft}
-              thumbTintColor={colors.electricBright}
-            />
-            <View style={[styles.sliderBounds, rtlRow]}>
-              <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MIN} ساعة</Text>
-              <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MAX} ساعة</Text>
+          ) : null}
+
+          {goal ? (
+            <View style={styles.sliderCard}>
+              <View style={[styles.sectionHeaderRow, getRtlRow()]}>
+                <Text style={styles.sectionTitle}>المدة</Text>
+                <Pressable
+                  onPress={() => {
+                    setCustomDurationDraft(String(durationHours));
+                    setCustomDurationOpen(true);
+                  }}
+                  hitSlop={8}
+                  style={[styles.customBtn, getRtlRow()]}
+                >
+                  <AppIcon name="create-outline" size={15} color={colors.electric} />
+                  <Text style={styles.customBtnText}>مدة مخصصة</Text>
+                </Pressable>
+              </View>
+              <PromoteValueDisplay value={formatPromoteHours(durationHours)} styles={styles} />
+              <Slider
+                style={styles.slider}
+                minimumValue={PROMOTE_DURATION_HOURS_MIN}
+                maximumValue={PROMOTE_DURATION_HOURS_MAX}
+                step={1}
+                value={durationHours}
+                onValueChange={(v) => setDurationHours(clampPromoteDurationHours(v))}
+                minimumTrackTintColor={colors.electric}
+                maximumTrackTintColor={colors.borderSoft}
+                thumbTintColor={colors.electricBright}
+              />
+              <View style={[styles.sliderBounds, getRtlRow()]}>
+                <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MIN} ساعة</Text>
+                <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MAX} ساعة</Text>
+              </View>
             </View>
-          </View>
+          ) : null}
+
+          {isVisibility && reachEstimate ? (
+            <View style={styles.reachCard}>
+              <View style={[styles.reachHeader, getRtlRow()]}>
+                <AppIcon name="trending-up-outline" size={18} color="#7C3AED" />
+                <Text style={styles.reachTitle}>تقدير الوصول</Text>
+              </View>
+              <Text style={styles.reachValue}>
+                متوقع وصول إعلانك إلى {formatReachEstimate(reachEstimate)}
+              </Text>
+              <Text style={styles.reachHint}>
+                تقدير تقريبي يعتمد على الميزانية والمدة — قد يختلف حسب نشاط السوق
+              </Text>
+            </View>
+          ) : null}
+
+          {isDurationPriced && goal ? (
+            <View style={styles.priceCard}>
+              <Text style={styles.priceCardLabel}>السعر حسب المدة</Text>
+              <Text style={styles.priceCardValue}>{formatPromoteAmount(totalAmount)}</Text>
+              <Text style={styles.priceCardHint}>
+                يُحسب السعر تلقائياً من النظام — لا حاجة لتحديد المبلغ
+              </Text>
+            </View>
+          ) : null}
 
           {validationError ? (
             <Text style={styles.validationText}>{validationError}</Text>
@@ -432,10 +492,10 @@ export default function ListingPromoteScreen() {
         </ScrollView>
 
         <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
-          <View style={[styles.bottomInner, rtlRow]}>
+          <View style={[styles.bottomInner, getRtlRow()]}>
             <View style={styles.totalBlock}>
               <Text style={styles.totalLabel}>الإجمالي</Text>
-              <Text style={styles.totalValue}>{formatPromoteAmount(amount)}</Text>
+              <Text style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</Text>
             </View>
             <View style={styles.payBtnWrap}>
               <PrimaryButton
@@ -457,7 +517,7 @@ export default function ListingPromoteScreen() {
                 value={customAmountDraft}
                 onChangeText={setCustomAmountDraft}
                 keyboardType="number-pad"
-                style={[styles.modalInput, rtlText]}
+                style={[styles.modalInput, getRtlText()]}
                 placeholder={`${PROMOTE_AMOUNT_MIN} - ${PROMOTE_AMOUNT_MAX}`}
                 placeholderTextColor={colors.textMuted}
               />
@@ -479,7 +539,7 @@ export default function ListingPromoteScreen() {
                 value={customDurationDraft}
                 onChangeText={setCustomDurationDraft}
                 keyboardType="number-pad"
-                style={[styles.modalInput, rtlText]}
+                style={[styles.modalInput, getRtlText()]}
                 placeholder={`${PROMOTE_DURATION_HOURS_MIN} - ${PROMOTE_DURATION_HOURS_MAX}`}
                 placeholderTextColor={colors.textMuted}
               />
@@ -522,7 +582,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.lg,
     },
     listingHero: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.md,
@@ -560,7 +620,7 @@ function createStyles(colors: ThemeColors) {
     listingHeroTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       flex: 1,
       lineHeight: 22,
@@ -569,7 +629,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textBrandStrong,
       fontWeight: '800',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     section: {
@@ -578,7 +638,7 @@ function createStyles(colors: ThemeColors) {
     sectionHint: {
       ...typography.caption,
       color: colors.textMuted,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     sliderCard: {
@@ -597,7 +657,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '800',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     customBtn: {
@@ -647,14 +707,14 @@ function createStyles(colors: ThemeColors) {
     goalTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     goalDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     goalPreviewTag: {
@@ -683,7 +743,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 34,
       fontWeight: '800',
       color: colors.textBrandStrong,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     slider: {
@@ -700,13 +760,13 @@ function createStyles(colors: ThemeColors) {
     validationText: {
       ...typography.caption,
       color: colors.warning,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     errorText: {
       ...typography.caption,
       color: colors.danger,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     bottomBar: {
@@ -755,7 +815,7 @@ function createStyles(colors: ThemeColors) {
     modalTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     modalInput: {
@@ -768,6 +828,100 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       fontSize: 18,
       fontWeight: '700',
+    },
+    flowCard: {
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgElevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+    },
+    flowTitle: {
+      ...typography.caption,
+      color: colors.textMuted,
+      fontWeight: '700',
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    flowSteps: {
+      gap: 4,
+    },
+    flowStepActive: {
+      ...typography.caption,
+      color: colors.electric,
+      fontWeight: '700',
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    flowStepMuted: {
+      ...typography.caption,
+      color: colors.textMuted,
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    reachCard: {
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      backgroundColor: '#7C3AED12',
+      borderWidth: 1,
+      borderColor: '#7C3AED40',
+    },
+    reachHeader: {
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    reachTitle: {
+      ...typography.bodyStrong,
+      color: '#7C3AED',
+      fontWeight: '800',
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    reachValue: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      fontWeight: '800',
+      lineHeight: 24,
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    reachHint: {
+      ...typography.micro,
+      color: colors.textMuted,
+      lineHeight: 18,
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    priceCard: {
+      gap: spacing.xs,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgSurface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      alignItems: 'center',
+    },
+    priceCardLabel: {
+      ...typography.caption,
+      color: colors.textMuted,
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    priceCardValue: {
+      fontSize: 28,
+      lineHeight: 34,
+      fontWeight: '800',
+      color: colors.textBrandStrong,
+      ...getRtlText(),
+      ...getRtlText(),
+    },
+    priceCardHint: {
+      ...typography.micro,
+      color: colors.textMuted,
+      ...getRtlText(),
+      ...getRtlText(),
     },
   });
 }

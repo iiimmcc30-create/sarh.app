@@ -3,8 +3,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 
-import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState, useRef } from 'react';
 import {
   FlatList,
   Pressable,
@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
@@ -34,7 +34,17 @@ export default function MarketScreen() {
     styles: createMarketStyles(theme.colors, theme.scheme),
     colors: theme.colors,
   }));
-  const { listings } = useApp();
+  const { listings, fetchListings } = useApp();
+  const lastListingsFocusAt = useRef(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const now = Date.now();
+      if (now - lastListingsFocusAt.current < 60_000) return;
+      lastListingsFocusAt.current = now;
+      void fetchListings();
+    }, [fetchListings]),
+  );
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
@@ -100,12 +110,12 @@ export default function MarketScreen() {
   const ListHeader = useCallback(
     () => (
       <View>
-        <View style={[styles.pageHeader, rtlRow]}>
+        <View style={[styles.pageHeader, getRtlRow()]}>
           <View style={styles.pageTitleBlock}>
             <Text style={styles.pageTitle}>السوق</Text>
             <Text style={styles.pageSubtitle}>اكتشف أحدث الإعلانات من مجتمع سرح</Text>
           </View>
-          <View style={[styles.headerActions, rtlRow]}>
+          <View style={[styles.headerActions, getRtlRow()]}>
             <NotificationBellButton size={ds.iconBtn.md} iconSize={ds.icon.md} style={styles.headerIconBtn} />
             <Pressable
               style={styles.headerIconBtn}
@@ -117,7 +127,7 @@ export default function MarketScreen() {
           </View>
         </View>
 
-        <View style={[styles.searchRow, rtlRow]}>
+        <View style={[styles.searchRow, getRtlRow()]}>
           <Pressable
             style={[styles.filterStarBtn, showFeaturedOnly && styles.filterStarBtnActive]}
             onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
@@ -129,7 +139,7 @@ export default function MarketScreen() {
               variant={showFeaturedOnly ? 'sr' : 'rr'}
             />
           </Pressable>
-          <View style={[styles.searchBox, rtlRow]}>
+          <View style={[styles.searchBox, getRtlRow()]}>
             <AppIcon name="search" size={18} color={colors.textMuted} />
             <TextInput
               value={search}
@@ -148,19 +158,19 @@ export default function MarketScreen() {
 
         <MarketCategoryTiles value={activeCategory} onChange={setActiveCategory} />
 
-        <View style={[styles.filterRow, rtlRow]}>
+        <View style={[styles.filterRow, getRtlRow()]}>
           <Pressable
             style={styles.filterChip}
             onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
           >
             <AppIcon name="settings-sliders" size={16} color={colors.textPrimary} />
           </Pressable>
-          <Pressable style={[styles.filterChip, rtlRow]}>
+          <Pressable style={[styles.filterChip, getRtlRow()]}>
             <AppIcon name="map-marker-outline" size={14} color={colors.textSecondary} />
             <Text style={styles.filterChipText}>الموقع</Text>
           </Pressable>
           <Pressable
-            style={[styles.filterChip, rtlRow, activeCountry === 'SA' && styles.filterChipActive]}
+            style={[styles.filterChip, getRtlRow(), activeCountry === 'SA' && styles.filterChipActive]}
             onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
           >
             <Text style={styles.filterFlag}>{countries.SA.flag}</Text>
@@ -168,13 +178,13 @@ export default function MarketScreen() {
               السعودية
             </Text>
           </Pressable>
-          <View style={[styles.filterChip, rtlRow]}>
+          <View style={[styles.filterChip, getRtlRow()]}>
             <Text style={styles.filterChipText}>الأحدث</Text>
             <AppIcon name="sort-alt" size={14} color={colors.textSecondary} />
           </View>
         </View>
 
-        <View style={[styles.countRow, rtlRow]}>
+        <View style={[styles.countRow, getRtlRow()]}>
           <Text style={styles.count}>{filtered.length} إعلان</Text>
         </View>
       </View>
@@ -192,7 +202,7 @@ export default function MarketScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, rtlDirection]} edges={['top']}>
+    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
       <FlatList
         data={filtered}
         renderItem={renderItem}
@@ -303,7 +313,7 @@ function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
     },
     filterChip: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 6,
       paddingHorizontal: spacing.md,

@@ -5,7 +5,7 @@ import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { confirmDestructive, alertMessage } from '@/lib/actionSheet';
 import { showToast } from '@/lib/toast';
 import { fetchBlockedUsers, setBlockUser, type BlockedUser } from '@/services/users';
@@ -65,7 +65,7 @@ export default function BlockedUsersScreen() {
       <ScreenHeader title="المحظورين" showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, rtlDirection]}
+        contentContainerStyle={[styles.content, getRtlDirection()]}
       >
         <Text style={styles.description}>
           الحسابات المحظورة لن تظهر منشوراتها وإعلاناتها في خلاصتك، ولا يمكنها التواصل معك.
@@ -80,10 +80,10 @@ export default function BlockedUsersScreen() {
           </View>
         ) : (
           users.map((user) => (
-            <View key={user.id} style={[styles.row, rtlRow]}>
+            <View key={user.id} style={[styles.row, getRtlRow()]}>
               <Image source={uriSource(user.avatar)} style={styles.avatar} contentFit="cover" />
               <View style={styles.info}>
-                <View style={[styles.nameRow, rtlRow]}>
+                <View style={[styles.nameRow, getRtlRow()]}>
                   <Text style={styles.name} numberOfLines={1}>
                     {user.arabicName || user.displayName}
                   </Text>
@@ -123,7 +123,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       lineHeight: 20,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     loader: { marginTop: spacing.xl },
     emptyBox: {

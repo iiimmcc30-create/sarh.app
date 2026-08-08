@@ -19,7 +19,7 @@ function requireSecret(name: string, min = 32): string {
 const JWT_SECRET = requireSecret('JWT_SECRET', 32);
 const JWT_REFRESH_SECRET = requireSecret('JWT_REFRESH_SECRET', 32);
 const ACCESS_EXPIRES = process.env.JWT_EXPIRES_IN || '15m';
-const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '3650d';
 
 export interface JwtPayload {
   userId: string;

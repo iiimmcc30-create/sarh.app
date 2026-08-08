@@ -8,21 +8,44 @@ import {
   Post,
 } from '@nestjs/common';
 import { BoostType } from '@prisma/client';
-import { IsEnum, IsIn, IsString } from 'class-validator';
-import { RateLimit } from '../../common/decorators/auth.decorators';
+import { IsEnum, IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { RateLimit, Public } from '../../common/decorators/auth.decorators';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { successResponse } from '../../common/utils/response.util';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { ListingBoostService } from './listing-boost.service';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import {
+  PROMOTE_AMOUNT_MAX,
+  PROMOTE_AMOUNT_MIN,
+  PROMOTE_DURATION_HOURS_MAX,
+  PROMOTE_DURATION_HOURS_MIN,
+} from '../promotion/promotion-limits.config';
 
 class InitiateBoostDto {
   @IsEnum(BoostType)
   boostType: BoostType;
 
+  @IsOptional()
   @IsIn([1, 3, 7])
-  durationDays: number;
+  durationDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(PROMOTE_DURATION_HOURS_MIN)
+  @Max(PROMOTE_DURATION_HOURS_MAX)
+  durationHours?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(PROMOTE_AMOUNT_MIN)
+  @Max(PROMOTE_AMOUNT_MAX)
+  amount?: number;
+
+  @IsOptional()
+  @IsIn(['visibility', 'pinned', 'featured'])
+  promotionGoal?: 'visibility' | 'pinned' | 'featured';
 
   @IsString()
   method: string;
@@ -33,6 +56,7 @@ export class ListingBoostController {
   constructor(private readonly boosts: ListingBoostService) {}
 
   /** Return available plans + pricing. */
+  @Public()
   @RateLimit('api')
   @Get('boost/plans')
   getBoostPlans() {
@@ -49,13 +73,14 @@ export class ListingBoostController {
     @Body() dto: InitiateBoostDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    const result = await this.boosts.initiateBoost(
-      user,
-      listingId,
-      dto.boostType,
-      dto.durationDays,
-      dto.method,
-    );
+    const result = await this.boosts.initiateBoost(user, listingId, {
+      boostType: dto.boostType,
+      durationDays: dto.durationDays,
+      durationHours: dto.durationHours,
+      amount: dto.amount,
+      method: dto.method,
+      promotionGoal: dto.promotionGoal,
+    });
     return successResponse(result);
   }
 

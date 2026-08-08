@@ -1,6 +1,6 @@
 // SAFAT — Forgot Password via OTP (نسيت كلمة المرور)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon, rtlTextAlign } from '@/lib/rtl';
+import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -361,7 +361,7 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: '#fff', ...rtlTextAlign(), marginHorizontal: 10 },
+  pickerLabel: { flex: 1, fontSize: 13, color: '#fff', ...getRtlText(), marginHorizontal: 10 },
   pickerCode: { fontSize: 13, color: colors.textMuted },
   otpHint: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
   devHint: { fontSize: 12, color: '#f59e0b', textAlign: 'center' },

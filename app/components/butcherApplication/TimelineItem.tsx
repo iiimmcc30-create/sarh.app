@@ -7,7 +7,7 @@ import {
   formatApplicationDateTime,
   TIMELINE_ACTION_LABELS,
 } from '@/lib/butcherApplicationLabels';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import type { ApplicationTimelineEvent } from '@/services/butcherApplicationTypes';
 
 const ACTION_ICONS: Record<
@@ -42,7 +42,7 @@ export function TimelineItem({ event, isLast }: TimelineItemProps) {
         {!isLast ? <View style={styles.line} /> : null}
       </View>
       <View style={styles.content}>
-        <View style={rtlRow}>
+        <View style={getRtlRow()}>
           <Text style={styles.action}>{TIMELINE_ACTION_LABELS[event.action]}</Text>
           <Text style={styles.time}>{formatApplicationDateTime(event.createdAt)}</Text>
         </View>

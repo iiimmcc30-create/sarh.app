@@ -57,14 +57,11 @@ export function getRtlRow(): ViewStyle {
     : { flexDirection: 'row' };
 }
 
-/** Primary body text — writing direction follows active locale. */
+/** Primary body text — direction + alignment for the active locale. */
 export function getRtlText(): TextStyle {
-  return { writingDirection: isAppRtl() ? 'rtl' : 'ltr' };
-}
-
-/** Text alignment for the active locale (Arabic end / English start). */
-export function rtlTextAlign(): TextStyle {
-  return { textAlign: isAppRtl() ? 'right' : 'left' };
+  return isAppRtl()
+    ? { writingDirection: 'rtl', textAlign: 'right' }
+    : { writingDirection: 'ltr', textAlign: 'left' };
 }
 
 /** Cross-axis alignment at inline start. */
@@ -81,15 +78,6 @@ export function alignInlineEnd(): ViewStyle {
 export function selfInlineEnd(): ViewStyle {
   return { alignSelf: isAppRtl() ? 'flex-start' : 'flex-end' };
 }
-
-/** Snapshot at module load — prefer getRtlDirection() in render when locale can change. */
-export const rtlDirection: ViewStyle = getRtlDirection();
-
-/** Snapshot at module load — prefer getRtlRow() in render when locale can change. */
-export const rtlRow: ViewStyle = getRtlRow();
-
-/** Snapshot at module load — prefer getRtlText() in render when locale can change. */
-export const rtlText: TextStyle = getRtlText();
 
 export function inlineStart(offset: number): ViewStyle {
   return isAppRtl() ? { right: offset } : { left: offset };

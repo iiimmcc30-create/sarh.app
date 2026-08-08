@@ -2,7 +2,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { Country, countries } from '@/services/types';
 
 interface CountryChipsProps {
@@ -16,11 +16,11 @@ export function CountryChips({ value, onChange }: CountryChipsProps) {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
-    <View style={[styles.wrap, rtlDirection]}>
+    <View style={[styles.wrap, getRtlDirection()]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.content, rtlDirection]}
+        contentContainerStyle={[styles.content, getRtlDirection()]}
       >
         {order.map((code) => {
           const isSelected = value === code;
@@ -53,13 +53,13 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
     },
     content: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       gap: spacing.sm,
     },
     chip: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 6,
       paddingHorizontal: spacing.lg,

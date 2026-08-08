@@ -8,12 +8,31 @@ import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { createNiCheckout, isNiSandboxMockMode } from '../../payments/ni-client';
 import {
+  PROMOTE_AMOUNT_MAX,
+  PROMOTE_AMOUNT_MIN,
+  PROMOTE_DURATION_HOURS_MAX,
+  PROMOTE_DURATION_HOURS_MIN,
+  clampPromoteAmount,
+  clampPromoteDurationHours,
+  durationDaysFromHours,
+} from './promotion-limits.config';
+
+import {
   PROMOTION_PLANS,
   PROMOTION_TIERS,
   promotionPlanForDays,
   promotionTierWeight,
   type PromotionTierKey,
 } from './promotion-tiers.config';
+
+type InitiatePromotionOptions = {
+  durationDays?: number;
+  durationHours?: number;
+  amount?: number;
+  method: string;
+  tier?: PromotionTierKey;
+  promotionGoal?: 'visibility' | 'pinned' | 'featured';
+};
 
 function buildOrderRef(userId: string): string {
   const ts = Date.now().toString(36).toUpperCase();
@@ -76,9 +95,7 @@ export class ListingPromotionService {
   async initiatePromotion(
     user: JwtPayload,
     listingId: string,
-    durationDays: number,
-    method: string,
-    tier: PromotionTierKey = 'standard',
+    options: InitiatePromotionOptions,
   ) {
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, sellerId: user.userId, deletedAt: null },
@@ -86,20 +103,55 @@ export class ListingPromotionService {
     });
     if (!listing) throwApi(404, 'listing_not_found', 'الإعلان غير موجود');
 
-    const plan = promotionPlanForDays(durationDays);
-    if (!plan) throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
-
+    const tier = options.tier ?? 'standard';
     const tierConfig = PROMOTION_TIERS[tier] ?? PROMOTION_TIERS.standard;
-    const amount = plan.amount;
+
+    let durationHours: number;
+    let durationDays: number;
+    let amount: number;
+
+    if (options.durationHours != null || options.amount != null) {
+      if (options.durationHours == null || options.amount == null) {
+        throwApi(400, 'invalid_promotion', 'المبلغ ومدة الترويج مطلوبان');
+      }
+      durationHours = clampPromoteDurationHours(options.durationHours);
+      amount = clampPromoteAmount(options.amount);
+      durationDays = durationDaysFromHours(durationHours);
+    } else {
+      if (!options.durationDays) {
+        throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+      }
+      const plan = promotionPlanForDays(options.durationDays);
+      if (!plan) throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+      durationDays = options.durationDays;
+      durationHours = durationDays * 24;
+      amount = plan.amount;
+    }
+
+    if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
+      throwApi(400, 'invalid_amount', 'المبلغ غير صالح');
+    }
+    if (
+      durationHours < PROMOTE_DURATION_HOURS_MIN ||
+      durationHours > PROMOTE_DURATION_HOURS_MAX
+    ) {
+      throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+    }
+
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+    const promotionGoal = options.promotionGoal ?? 'visibility';
     const currency = 'SAR';
     const orderRef = buildOrderRef(user.userId);
-    const descriptionAr = `ترويج إعلان: ${listing.arabicTitle} لمدة ${durationDays} يوم`;
+    const descriptionAr = `ترويج إعلان: ${listing.arabicTitle} — ${durationHours} ساعة`;
 
-    const prismaMethod = ['mada', 'visa', 'mastercard', 'apple_pay', 'stc_pay'].includes(method)
-      ? (method as 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
+    const prismaMethod = ['mada', 'visa', 'mastercard', 'apple_pay', 'stc_pay'].includes(
+      options.method,
+    )
+      ? (options.method as 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
       : 'visa';
 
-    const niMethod = this.mapMethod(method);
+    const niMethod = this.mapMethod(options.method);
 
     const { promotion, payment } = await this.prisma.$transaction(async (tx) => {
       const promotion = await tx.listingPromotion.create({
@@ -134,6 +186,14 @@ export class ListingPromotionService {
             tier: tierConfig.key,
             userId: user.userId,
             durationDays,
+            durationHours,
+            promotionGoal,
+            promotionAmount: amount,
+            promotionDurationHours: durationHours,
+            totalAmount: amount,
+            adId: listingId,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
             referenceType: 'promoted_ad',
           } as Prisma.InputJsonValue,
         },
@@ -209,7 +269,16 @@ export class ListingPromotionService {
     if (!promotion || promotion.status === 'paid') return { processed: false };
 
     const now = new Date();
-    const expires = new Date(now.getTime() + promotion.durationDays * 24 * 60 * 60 * 1000);
+    const payment = await this.prisma.payment.findFirst({
+      where: { referenceId: promotionId, referenceType: 'promoted_ad' },
+      select: { metadata: true },
+    });
+    const meta = (payment?.metadata ?? {}) as Record<string, unknown>;
+    const durationHours =
+      typeof meta.durationHours === 'number' && meta.durationHours > 0
+        ? meta.durationHours
+        : promotion.durationDays * 24;
+    const expires = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
     const weight = promotion.weight || promotionTierWeight(promotion.tier);
 
     await this.prisma.$transaction([

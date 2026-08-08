@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import type { BillingCycle } from './subscriptionCopy';
 
 type PlanBillingToggleProps = {
@@ -18,7 +18,7 @@ export function PlanBillingToggle({
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
-    <View style={[styles.row, rtlRow]}>
+    <View style={[styles.row, getRtlRow()]}>
       <Pressable
         onPress={() => onChange('monthly')}
         style={[styles.btn, cycle === 'monthly' && styles.btnActive]}
@@ -27,7 +27,7 @@ export function PlanBillingToggle({
       </Pressable>
       <Pressable
         onPress={() => onChange('yearly')}
-        style={[styles.btn, rtlRow, cycle === 'yearly' && styles.btnActive]}
+        style={[styles.btn, getRtlRow(), cycle === 'yearly' && styles.btnActive]}
       >
         <Text style={[styles.label, cycle === 'yearly' && styles.labelActive]}>سنوي</Text>
         <View style={styles.savePill}>
@@ -41,7 +41,7 @@ export function PlanBillingToggle({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignSelf: 'center',
       backgroundColor: colors.bgSurface,
       borderRadius: radius.pill,

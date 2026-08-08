@@ -4,7 +4,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow, rtlDirection } from '@/lib/rtl';
+import { getRtlText, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import {
@@ -209,7 +209,7 @@ export function ListingBoostSheet({
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={handleClose} />
         <Animated.View
-          style={[styles.sheet, rtlDirection, { transform: [{ translateY }] }]}
+          style={[styles.sheet, getRtlDirection(), { transform: [{ translateY }] }]}
         >
           <LinearGradient
             colors={[colors.bgPrimary, colors.bgSurface]}
@@ -222,7 +222,7 @@ export function ListingBoostSheet({
             style={styles.rim}
           />
 
-          <View style={[styles.header, rtlRow]}>
+          <View style={[styles.header, getRtlRow()]}>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>ترقية الإعلان</Text>
               <Text style={styles.headerSub}>زِد ظهور إعلانك في السوق</Text>
@@ -300,7 +300,7 @@ export function ListingBoostSheet({
             </View>
 
             <Text style={styles.sectionLabel}>مدة الترقية</Text>
-            <View style={[styles.durationRow, rtlRow]}>
+            <View style={[styles.durationRow, getRtlRow()]}>
               {typePlans.map((plan) => {
                 const selected = durationDays === plan.durationDays;
                 return (
@@ -328,15 +328,15 @@ export function ListingBoostSheet({
 
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>ملخص الطلب</Text>
-              <View style={[styles.summaryRow, rtlRow]}>
+              <View style={[styles.summaryRow, getRtlRow()]}>
                 <Text style={styles.summaryKey}>الخدمة</Text>
                 <Text style={styles.summaryVal}>{BOOST_TYPE_META[boostType].title}</Text>
               </View>
-              <View style={[styles.summaryRow, rtlRow]}>
+              <View style={[styles.summaryRow, getRtlRow()]}>
                 <Text style={styles.summaryKey}>المدة</Text>
                 <Text style={styles.summaryVal}>{selectedPlan?.labelAr}</Text>
               </View>
-              <View style={[styles.summaryRow, rtlRow]}>
+              <View style={[styles.summaryRow, getRtlRow()]}>
                 <Text style={styles.summaryKey}>المبلغ</Text>
                 <Text style={[styles.summaryVal, styles.summaryAmount]}>
                   {selectedPlan?.amount ?? 0} ر.س
@@ -345,7 +345,7 @@ export function ListingBoostSheet({
             </View>
 
             <Text style={styles.sectionLabel}>طريقة السداد</Text>
-            <View style={[styles.methodRow, rtlRow]}>
+            <View style={[styles.methodRow, getRtlRow()]}>
               {PAYMENT_METHODS.map((m) => (
                 <Pressable
                   key={m.id}
@@ -397,13 +397,13 @@ export function ListingBoostSheet({
               </LinearGradient>
             </Pressable>
 
-            <View style={[styles.footerActions, rtlRow]}>
+            <View style={[styles.footerActions, getRtlRow()]}>
               {onSkip ? (
                 <Pressable onPress={onSkip} style={styles.skipBtn} disabled={processing}>
                   <Text style={styles.skipText}>تخطي الآن</Text>
                 </Pressable>
               ) : null}
-              <View style={[styles.niBadge, rtlRow]}>
+              <View style={[styles.niBadge, getRtlRow()]}>
                 <AppIcon name="lock-closed-outline" size={12} color={colors.textSubtle} />
                 <Text style={styles.niText}>دفع آمن · Network International</Text>
               </View>
@@ -573,13 +573,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       fontWeight: '800',
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     serviceDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     servicePriceChip: {
       alignSelf: 'flex-start',

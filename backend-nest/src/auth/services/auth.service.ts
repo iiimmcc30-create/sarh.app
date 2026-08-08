@@ -26,7 +26,7 @@ import {
   VerifyOtpDto,
 } from '../dto/auth.dto';
 
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const DEFAULT_SESSION_TTL_DAYS = 3650; // ~10 years — until explicit logout or app uninstall
 
 function formatUser(user: {
   id: string;
@@ -78,6 +78,17 @@ export class AuthService {
     }
   }
 
+  private sessionTtlMs(): number {
+    const raw = this.config.get<string>('SESSION_TTL_DAYS');
+    const days = raw ? parseInt(raw, 10) : DEFAULT_SESSION_TTL_DAYS;
+    const safe = Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_TTL_DAYS;
+    return safe * 24 * 60 * 60 * 1000;
+  }
+
+  private sessionExpiresAt(): Date {
+    return new Date(Date.now() + this.sessionTtlMs());
+  }
+
   private sessionMeta(req: Request) {
     return {
       ipAddress: req.socket.remoteAddress,
@@ -117,7 +128,7 @@ export class AuthService {
 
     await this.repo.loginTransaction(user.id, {
       refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      expiresAt: this.sessionExpiresAt(),
       ...this.sessionMeta(req),
     });
 
@@ -206,7 +217,7 @@ export class AuthService {
     await this.repo.createSession({
       userId: user.id,
       refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      expiresAt: this.sessionExpiresAt(),
       ...this.sessionMeta(req),
     });
 
@@ -266,7 +277,7 @@ export class AuthService {
       await this.repo.rotateSession(
         session.id,
         newRefreshToken,
-        new Date(Date.now() + SESSION_TTL_MS),
+        this.sessionExpiresAt(),
       );
 
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
@@ -463,7 +474,7 @@ export class AuthService {
 
     await this.repo.loginTransaction(user.id, {
       refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      expiresAt: this.sessionExpiresAt(),
       ...this.sessionMeta(req),
     });
     await this.repo.updateLastSeen(user.id);
@@ -556,7 +567,7 @@ export class AuthService {
 
     await this.repo.loginTransaction(user.id, {
       refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      expiresAt: this.sessionExpiresAt(),
       ...this.sessionMeta(req),
     });
 

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon, rtlRow } from '@/lib/rtl';
+import { rtlForwardIcon, getRtlRow } from '@/lib/rtl';
 
 type SectionHeaderProps = {
   title: string;
@@ -28,8 +28,8 @@ export function SectionHeader({
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.row, rtlRow]}>
-        <View style={[styles.titleBlock, rtlRow]}>
+      <View style={[styles.row, getRtlRow()]}>
+        <View style={[styles.titleBlock, getRtlRow()]}>
           {isDark ? <View style={styles.accentMark} /> : null}
           <View style={styles.titleTextWrap}>
             <Text style={styles.title}>{title}</Text>
@@ -37,7 +37,7 @@ export function SectionHeader({
           </View>
         </View>
         {onSeeAll ? (
-          <Pressable onPress={onSeeAll} hitSlop={8} style={[styles.seeAll, rtlRow]}>
+          <Pressable onPress={onSeeAll} hitSlop={8} style={[styles.seeAll, getRtlRow()]}>
             <Text style={styles.seeAllText}>{seeAllLabel}</Text>
             <AppIcon
               name={rtlForwardIcon()}

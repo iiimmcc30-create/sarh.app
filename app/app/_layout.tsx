@@ -19,7 +19,7 @@ import { BootSplashGate } from '@/components/ui/BootSplashGate';
 import { ListingCovenantHost } from '@/components/listing/ListingCovenantHost';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
-import { setupRtl, rtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
+import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
 setupRtl();
 
@@ -78,7 +78,7 @@ function RootNavigator() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: themeColors.bgDeep, ...rtlDirection },
+          contentStyle: { backgroundColor: themeColors.bgDeep, ...getRtlDirection() },
           animation: stackSlideAnimation(),
         }}
       >
@@ -175,6 +175,6 @@ const styles = StyleSheet.create({
   rtlRoot: {
     flex: 1,
     backgroundColor: '#163526',
-    ...rtlDirection,
+    ...getRtlDirection(),
   },
 });

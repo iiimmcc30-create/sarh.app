@@ -495,8 +495,13 @@ export class PaymentsRepository {
         });
 
         if (existing && existing.status !== 'paid') {
-          const now     = new Date();
-          const expires = new Date(now.getTime() + existing.durationDays * 24 * 60 * 60 * 1000);
+          const now = new Date();
+          const durationHours =
+            typeof params.storedMeta.durationHours === 'number' &&
+            params.storedMeta.durationHours > 0
+              ? params.storedMeta.durationHours
+              : existing.durationDays * 24;
+          const expires = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
 
           await tx.listingBoost.update({
             where: { id: params.referenceId },
@@ -544,7 +549,12 @@ export class PaymentsRepository {
 
         if (existing && existing.status !== 'paid') {
           const now = new Date();
-          const expires = new Date(now.getTime() + existing.durationDays * 24 * 60 * 60 * 1000);
+          const durationHours =
+            typeof params.storedMeta.durationHours === 'number' &&
+            params.storedMeta.durationHours > 0
+              ? params.storedMeta.durationHours
+              : existing.durationDays * 24;
+          const expires = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
           const listing = await tx.listing.findUnique({
             where: { id: existing.listingId },
             select: { views: true },

@@ -9,7 +9,7 @@ import { useApp } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
-import { rtlBackIcon, rtlForwardIcon, getRtlRow } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon, rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { searchListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -82,8 +82,8 @@ export default function PromoteHubScreen() {
 
   return (
     <ScreenScaffold edges={['top']}>
-      <View style={[styles.screen, rtlDirection]}>
-        <View style={[styles.header, rtlRow]}>
+      <View style={[styles.screen, getRtlDirection()]}>
+        <View style={[styles.header, getRtlRow()]}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
@@ -142,7 +142,7 @@ export default function PromoteHubScreen() {
                     </View>
 
                     <View style={styles.listingBody}>
-                      <View style={[styles.titleRow, rtlRow]}>
+                      <View style={[styles.titleRow, getRtlRow()]}>
                         <Text style={styles.listingTitle} numberOfLines={2}>
                           {title}
                         </Text>
@@ -158,7 +158,7 @@ export default function PromoteHubScreen() {
                         </Text>
                       ) : null}
 
-                      <View style={[styles.locationRow, rtlRow]}>
+                      <View style={[styles.locationRow, getRtlRow()]}>
                         <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
                         <Text style={styles.locationText} numberOfLines={1}>
                           {location}
@@ -166,7 +166,7 @@ export default function PromoteHubScreen() {
                       </View>
 
                       {listing.promoted ? (
-                        <View style={[styles.reachPill, rtlRow]}>
+                        <View style={[styles.reachPill, getRtlRow()]}>
                           <AppIcon name="trending-up-outline" size={12} color="#7C3AED" />
                           <Text style={styles.reachPillText}>ترويج نشط — زيادة ظهور</Text>
                         </View>
@@ -303,7 +303,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 20,
     },
     createBtn: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 8,
       marginTop: spacing.sm,
@@ -318,7 +318,7 @@ function createStyles(colors: ThemeColors) {
     },
     listingsList: { gap: spacing.sm },
     listingCard: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.md,
@@ -361,7 +361,7 @@ function createStyles(colors: ThemeColors) {
     listingTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       flex: 1,
       lineHeight: 20,
@@ -370,7 +370,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textBrandStrong,
       fontWeight: '800',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     locationRow: {
@@ -381,7 +381,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     reachPill: {

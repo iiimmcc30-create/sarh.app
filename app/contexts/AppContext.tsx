@@ -5,11 +5,13 @@ import { createContext, ReactNode, useState, useEffect, useCallback, useMemo, us
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Post, Listing } from '@/services/types';
 import { useAuth } from './AuthContext';
-import { API_BASE } from '@/services/api';
+import { API_BASE, ensureApiReachable } from '@/services/api';
 import { parseApiError } from '@/services/apiError';
 import { authFetch } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
+import { fetchPublicFeed } from '@/services/fetchPublicFeed';
 import { needsUpload } from '@/services/mediaUri';
+import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
@@ -17,7 +19,9 @@ const REFETCH_TTL_MS = 60_000;
 
 let userFetchInflight: Promise<void> | null = null;
 let listingsFetchInflight: Promise<void> | null = null;
+let listingsLastFetchOk = false;
 const postsFetchInflight = new Map<string, Promise<void>>();
+const postsLastFetchOk = new Map<string, boolean>();
 
 export type ActionResult = { ok: boolean; error?: string; listingId?: string };
 
@@ -40,7 +44,8 @@ interface AppContextValue {
   me: User;
   updateMe: (updates: Partial<User>) => Promise<ActionResult>;
   posts: Post[];
-  fetchPosts: (feed?: 'for_you' | 'following') => Promise<void>;
+  fetchPosts: (feed?: 'for_you' | 'following') => Promise<boolean>;
+  fetchListings: () => Promise<boolean>;
   addPost: (post: Omit<Post, 'id' | 'author' | 'likes' | 'reposts' | 'comments' | 'postedAt' | 'liked' | 'reposted'>) => Promise<boolean>;
   updatePost: (postId: string, data: { content: string; arabicContent: string; image?: string | null; images?: string[] }) => Promise<boolean>;
   deletePost: (postId: string) => Promise<ActionResult>;
@@ -186,19 +191,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await userFetchInflight;
   }, [isAuthenticated, accessToken, user, mapBackendUser]);
 
-  const fetchListings = useCallback(async () => {
+  const fetchListings = useCallback(async (): Promise<boolean> => {
     if (listingsFetchInflight) {
       await listingsFetchInflight;
-      return;
+      return listingsLastFetchOk;
     }
+    let succeeded = false;
     listingsFetchInflight = (async () => {
       try {
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
         const fetchList = async (url: string) => {
-          const res = await (accessToken
-            ? authFetch(url, { headers })
-            : fetchWithTimeout(url, { headers }));
-          if (!res.ok) return [] as Listing[];
+          const res = await fetchPublicFeed(url, accessToken);
+          if (!res.ok) return null;
           const json = await res.json();
           if (json.success && Array.isArray(json.data?.listings)) {
             return json.data.listings
@@ -207,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 Boolean(listing && listing.country !== 'EG'),
               );
           }
-          return [] as Listing[];
+          return null;
         };
 
         const marketPromise = fetchList(`${API_BASE}/api/listings`);
@@ -217,17 +220,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
             : Promise.resolve([] as Listing[]);
 
         const [market, mine] = await Promise.all([marketPromise, minePromise]);
+        if (market === null) return;
 
         const byId = new Map<string, Listing>();
-        for (const l of [...mine, ...market]) byId.set(l.id, l);
+        for (const l of [...(mine ?? []), ...market]) byId.set(l.id, l);
         setListingsState(Array.from(byId.values()));
+        succeeded = true;
       } catch (err) {
         console.warn('[AppContext] Failed to fetch listings:', err);
       }
     })().finally(() => {
       listingsFetchInflight = null;
+      listingsLastFetchOk = succeeded;
     });
     await listingsFetchInflight;
+    return succeeded;
   }, [accessToken, user, me, mapBackendListing]);
 
   // Keep ownership checks working even before profile fetch finishes
@@ -248,21 +255,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [user]);
 
-  const fetchPosts = useCallback(async (feed: 'for_you' | 'following' = 'for_you') => {
+  const fetchPosts = useCallback(async (feed: 'for_you' | 'following' = 'for_you'): Promise<boolean> => {
     const inflightKey = `${accessToken ?? 'guest'}:${feed}`;
     const inflight = postsFetchInflight.get(inflightKey);
     if (inflight) {
       await inflight;
-      return;
+      return postsLastFetchOk.get(inflightKey) ?? false;
     }
 
+    let succeeded = false;
     const promise = (async () => {
       try {
         const qs = feed === 'following' ? '?feed=following' : '';
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const res = await (accessToken
-          ? authFetch(`${API_BASE}/api/posts${qs}`, { headers })
-          : fetchWithTimeout(`${API_BASE}/api/posts${qs}`, { headers }));
+        const res = await fetchPublicFeed(`${API_BASE}/api/posts${qs}`, accessToken);
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data?.posts) {
@@ -279,6 +284,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             });
             setLikedPosts(liked);
             setRepostedPosts(reposted);
+            succeeded = true;
           }
         }
       } catch (err) {
@@ -286,10 +292,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     })().finally(() => {
       postsFetchInflight.delete(inflightKey);
+      postsLastFetchOk.set(inflightKey, succeeded);
     });
 
     postsFetchInflight.set(inflightKey, promise);
     await promise;
+    return succeeded;
   }, [accessToken, mapBackendPost]);
 
   const lastRefetchAtRef = useRef(0);
@@ -316,14 +324,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [fetchUserData, fetchListings, fetchPosts]);
 
-  const publicBootstrapped = useRef(false);
+  const feedRetryRef = useRef<{ count: number; timer: ReturnType<typeof setTimeout> | null }>({
+    count: 0,
+    timer: null,
+  });
+
+  const scheduleFeedRetry = useCallback(() => {
+    const retry = feedRetryRef.current;
+    if (retry.count >= 5 || retry.timer) return;
+    retry.timer = setTimeout(() => {
+      retry.timer = null;
+      retry.count += 1;
+      void Promise.all([fetchPosts(), fetchListings()]).then(([postsOk, listingsOk]) => {
+        if (postsOk && listingsOk) {
+          retry.count = 0;
+        } else {
+          scheduleFeedRetry();
+        }
+      });
+    }, 4000 + retry.count * 2000);
+  }, [fetchPosts, fetchListings]);
+
+  const bootstrapFeeds = useCallback(async () => {
+    await ensureApiReachable();
+    const [postsOk, listingsOk] = await Promise.all([fetchPosts(), fetchListings()]);
+    if (!postsOk || !listingsOk) {
+      scheduleFeedRetry();
+    } else {
+      feedRetryRef.current.count = 0;
+    }
+  }, [fetchPosts, fetchListings, scheduleFeedRetry]);
 
   // Public feed — available to guests and logged-in users
   useEffect(() => {
-    if (publicBootstrapped.current) return;
-    publicBootstrapped.current = true;
-    void Promise.all([fetchPosts(), fetchListings()]);
-  }, [fetchPosts, fetchListings]);
+    void bootstrapFeeds();
+    return () => {
+      const retry = feedRetryRef.current;
+      if (retry.timer) {
+        clearTimeout(retry.timer);
+        retry.timer = null;
+      }
+    };
+  }, [bootstrapFeeds]);
 
   const lastBootstrapKey = useRef<string | null>(null);
 
@@ -656,6 +698,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateMe,
       posts,
       fetchPosts,
+      fetchListings,
       addPost,
       updatePost,
       deletePost,
@@ -676,6 +719,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateMe,
       posts,
       fetchPosts,
+      fetchListings,
       addPost,
       updatePost,
       deletePost,

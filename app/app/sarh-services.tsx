@@ -4,7 +4,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlDirection } from '@/lib/rtl';
+import { getRtlText, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
   fetchOfficialServices,
   groupOfficialServicesByCategory,
@@ -62,7 +62,7 @@ export default function SarhServicesScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, rtlDirection]}
+        contentContainerStyle={[styles.content, getRtlDirection()]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -154,7 +154,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       flex: 1,
       lineHeight: 20,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     loader: { marginTop: spacing.xl },
@@ -186,7 +186,7 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.h3,
       color: colors.textBrandStrong,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     sectionList: { gap: spacing.md },

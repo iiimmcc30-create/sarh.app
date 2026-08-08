@@ -10,7 +10,7 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlForwardIcon, rtlRow } from '@/lib/rtl';
+import { rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
 
 type SidebarRouteItem = {
   icon: string;
@@ -87,7 +87,7 @@ export function ButchersSidebarEntry() {
   };
 
   return (
-    <View style={rtlDirection}>
+    <View style={getRtlDirection()}>
       {visibleItems.map((item, idx) => (
         <Pressable
           key={`${item.route}-${item.arabic}`}
@@ -112,14 +112,14 @@ export function ButchersSidebarEntry() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
       minHeight: 54,
     },
     leading: {
-      ...rtlRow,
+      ...getRtlRow(),
       flex: 1,
       alignItems: 'center',
       justifyContent: 'flex-start',

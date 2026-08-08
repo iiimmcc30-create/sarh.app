@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   CUT_LABELS,
@@ -50,7 +50,7 @@ function OrderCard({
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.92, transform: [{ scale: 0.995 }] }]}
     >
-      <View style={[styles.cardHeader, rtlRow]}>
+      <View style={[styles.cardHeader, getRtlRow()]}>
         <View style={styles.cardHeaderText}>
           <Text style={styles.orderNumber}>{order.orderNumber}</Text>
           <Text style={styles.butcherName}>{order.butcher?.nameAr ?? 'ملحمة'}</Text>
@@ -94,7 +94,7 @@ function OrderCard({
         </Text>
       </View>
 
-      <View style={[styles.totalRow, rtlRow]}>
+      <View style={[styles.totalRow, getRtlRow()]}>
         <Text style={styles.totalLabel}>الإجمالي</Text>
         <Text style={styles.totalValue}>{formatCurrency(order.totalPrice, order.currency)}</Text>
       </View>
@@ -224,7 +224,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       marginBottom: spacing.xs,
     },
     card: {
@@ -246,19 +246,19 @@ function createStyles(colors: ThemeColors) {
       color: colors.electricBright,
       fontWeight: '800',
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     orderDate: {
       ...typography.caption,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     statusBadge: {
       paddingHorizontal: 10,
@@ -277,7 +277,7 @@ function createStyles(colors: ThemeColors) {
       marginVertical: spacing.xs,
     },
     detailRow: {
-      ...rtlRow,
+      ...getRtlRow(),
       justifyContent: 'space-between',
       gap: spacing.md,
     },

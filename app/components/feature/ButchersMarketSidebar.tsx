@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography } from '@/constants/theme';
 import { useApp } from '@/hooks/useApp';
-import { borderInlineEnd, getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlText, borderInlineEnd, getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 
 export type ButchersMarketMenuItem = {
   key: string;
@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: SIDEBAR.text,
     writingDirection: 'rtl',
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   usernameText: {
     ...typography.caption,
     color: SIDEBAR.textMuted,
     writingDirection: 'rtl',
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   brandPill: {
     marginTop: 4,
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: SIDEBAR.text,
     writingDirection: 'rtl',
-    ...rtlTextAlign(),
+    ...getRtlText(),
   },
   menuLabelActive: {
     color: SIDEBAR.electricDark,

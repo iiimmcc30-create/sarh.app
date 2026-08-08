@@ -4,7 +4,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -57,7 +57,7 @@ export function SarhListingCovenantModal({
     >
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
-        <View style={[styles.dialog, rtlDirection]}>
+        <View style={[styles.dialog, getRtlDirection()]}>
           <LinearGradient colors={gradients.electric} style={styles.header}>
             <Pressable
               onPress={handleClose}
@@ -77,11 +77,11 @@ export function SarhListingCovenantModal({
           >
             <View style={styles.feeBadge}>
               <AppIcon name="receipt-outline" size={18} color={colors.textBrandStrong} />
-              <Text style={[styles.feeBadgeText, rtlText]}>الرسوم: 1% من قيمة البيع</Text>
+              <Text style={[styles.feeBadgeText, getRtlText()]}>الرسوم: 1% من قيمة البيع</Text>
             </View>
 
             <View style={styles.oathCard}>
-              <Text style={[styles.oathText, rtlText]}>
+              <Text style={[styles.oathText, getRtlText()]}>
                 أقسم بالله العظيم أنني إذا تم بيع هذا الإعلان، سواءً عن طريق تطبيق{' '}
                 <Text style={styles.brand}>سرح</Text> أو بسببه، فسألتزم بسداد عمولة{' '}
                 <Text style={styles.brand}>سرح</Text> وقدرها{' '}
@@ -92,12 +92,12 @@ export function SarhListingCovenantModal({
 
             <Pressable
               onPress={() => setChecked((v) => !v)}
-              style={[styles.checkboxRow, rtlRow, checked && styles.checkboxRowActive]}
+              style={[styles.checkboxRow, getRtlRow(), checked && styles.checkboxRowActive]}
             >
               <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
                 {checked ? <AppIcon name="checkmark" size={14} color="#fff" /> : null}
               </View>
-              <Text style={[styles.checkboxText, rtlText]}>
+              <Text style={[styles.checkboxText, getRtlText()]}>
                 إنني أوافق بما ورد أعلاه، كما أتعهد بالالتزام بـ{' '}
                 <Text
                   style={styles.link}
@@ -126,7 +126,7 @@ export function SarhListingCovenantModal({
               icon="add-circle-outline"
             />
             <Pressable onPress={handleClose} style={styles.cancelBtn}>
-              <Text style={[styles.cancelText, rtlText]}>إلغاء</Text>
+              <Text style={[styles.cancelText, getRtlText()]}>إلغاء</Text>
             </Pressable>
           </View>
         </View>
@@ -158,7 +158,7 @@ function createStyles(colors: ThemeColors) {
       elevation: 12,
     },
     header: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
@@ -176,7 +176,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: '#fff',
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     scrollContent: {
@@ -184,7 +184,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
     },
     feeBadge: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.sm,
       alignSelf: 'flex-end',

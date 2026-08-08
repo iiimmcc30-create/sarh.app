@@ -4,7 +4,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import type { OfficialService } from '@/services/officialServices';
 import { Linking, StyleSheet, Text, View } from 'react-native';
 
@@ -24,7 +24,7 @@ export function OfficialServiceCard({ service }: OfficialServiceCardProps) {
 
   return (
     <View style={styles.card}>
-      <View style={[styles.header, rtlRow]}>
+      <View style={[styles.header, getRtlRow()]}>
         <View style={styles.iconWrap}>
           <AppIcon name={service.icon || 'link-outline'} size={22} color={colors.electricBright} />
         </View>
@@ -74,14 +74,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 24,
     },
     description: {
       ...typography.body,
       color: colors.textSecondary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 22,
     },

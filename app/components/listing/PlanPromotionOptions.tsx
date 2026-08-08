@@ -3,7 +3,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { usePlanPromotionQuota } from '@/hooks/usePlanPromotionQuota';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type PlanPromotionOptionsProps = {
@@ -83,7 +83,7 @@ export function PlanPromotionOptions({
   ];
 
   return (
-    <View style={[styles.wrap, compact && styles.wrapCompact, rtlDirection]}>
+    <View style={[styles.wrap, compact && styles.wrapCompact, getRtlDirection()]}>
       <View style={styles.headerBlock}>
         <Text style={styles.headerTitle}>مميزات باقتك</Text>
         <Text style={styles.headerSub}>
@@ -94,7 +94,7 @@ export function PlanPromotionOptions({
       </View>
 
       {quota.hasPrioritySearch ? (
-        <View style={[styles.priorityBanner, rtlRow]}>
+        <View style={[styles.priorityBanner, getRtlRow()]}>
           <AppIcon name="trending-up-outline" size={16} color={colors.electric} />
           <Text style={styles.priorityText}>
             أولوية في البحث والصفحة الرئيسية مفعّلة لباقتك
@@ -118,7 +118,7 @@ export function PlanPromotionOptions({
                 pressed && !disabled && { opacity: 0.92 },
               ]}
             >
-              <View style={[styles.cardTop, rtlRow]}>
+              <View style={[styles.cardTop, getRtlRow()]}>
                 <View style={[styles.cardIcon, opt.active && styles.cardIconActive]}>
                   <AppIcon
                     name={opt.icon}
@@ -172,13 +172,13 @@ function createStyles(colors: ThemeColors) {
     headerTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     priorityBanner: {
       alignItems: 'center',
@@ -193,7 +193,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       flex: 1,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     grid: {
       gap: spacing.sm,
@@ -228,13 +228,13 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     cardSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     toggle: {
       width: 28,
@@ -267,7 +267,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       marginTop: spacing.sm,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
   });
 }

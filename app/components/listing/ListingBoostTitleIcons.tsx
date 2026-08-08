@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 type ListingBoostTitleIconsProps = {
@@ -33,7 +33,7 @@ export function ListingBoostTitleIcons({
   if (!pinned && !featured) return null;
 
   return (
-    <View style={[styles.wrap, rtlRow, style]} accessibilityElementsHidden>
+    <View style={[styles.wrap, getRtlRow(), style]} accessibilityElementsHidden>
       {featured ? (
         <View style={styles.starWrap}>
           <AppIcon name="star" size={size === 'sm' ? 11 : 13} color="#1A1300" />

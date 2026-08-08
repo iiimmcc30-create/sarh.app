@@ -11,7 +11,7 @@ import {
   formatApplicationDateTime,
 } from '@/lib/butcherApplicationLabels';
 import { maxBytesLabelForDocumentType } from '@/lib/butcherApplicationValidation';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import type {
   ApplicationDocument,
   ButcherApplicationDocumentType,
@@ -88,7 +88,7 @@ export function ApplicationDocumentCard({
 
   return (
     <View style={[styles.card, error ? styles.cardError : null]}>
-      <View style={rtlRow}>
+      <View style={getRtlRow()}>
         <View style={styles.iconWrap}>
           <AppIcon name={icon} size={22} color={colors.glow} />
         </View>
@@ -225,12 +225,12 @@ function createStyles(colors: ThemeColors) {
     metaText: {
       ...typography.caption,
       color: colors.textSecondary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     empty: {
       ...typography.caption,
       color: colors.textMuted,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     notesBox: {
       marginTop: spacing.sm,
@@ -252,7 +252,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 22,
     },
     progressRow: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: spacing.sm,
     },
@@ -263,7 +263,7 @@ function createStyles(colors: ThemeColors) {
     errorText: {
       ...typography.caption,
       color: colors.danger,
-      ...rtlTextAlign(),
+      ...getRtlText(),
     },
     actions: {
       flexDirection: 'row',

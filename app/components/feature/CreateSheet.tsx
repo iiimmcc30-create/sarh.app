@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon, rtlRow } from '@/lib/rtl';
+import { rtlForwardIcon } from '@/lib/rtl';
 
 interface CreateSheetProps {
   visible: boolean;

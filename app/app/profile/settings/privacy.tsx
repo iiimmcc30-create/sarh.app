@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { rtlDirection, rtlRow, rtlText } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   DEFAULT_PRIVACY_SETTINGS,
   fetchPrivacySettings,
@@ -124,7 +124,7 @@ export default function PrivacySettingsScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.content, rtlDirection]}
+          contentContainerStyle={[styles.content, getRtlDirection()]}
         >
           {loadError ? (
             <View style={styles.notice}>
@@ -148,14 +148,13 @@ export default function PrivacySettingsScreen() {
               <View
                 key={item.key}
                 style={[
-                  styles.row,
-                  rtlRow,
+                  styles.row, getRtlRow(),
                   index < TOGGLES.length - 1 && styles.rowDivider,
                 ]}
               >
                 <View style={styles.textWrap}>
-                  <Text style={[styles.label, rtlText]}>{item.label}</Text>
-                  <Text style={[styles.description, rtlText]}>{item.description}</Text>
+                  <Text style={[styles.label, getRtlText()]}>{item.label}</Text>
+                  <Text style={[styles.description, getRtlText()]}>{item.description}</Text>
                 </View>
                 <Switch
                   value={settings[item.key]}
@@ -213,14 +212,14 @@ function createStyles(colors: ThemeColors) {
     noticeText: {
       ...typography.caption,
       color: colors.textSecondary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 20,
     },
     intro: {
       ...typography.body,
       color: colors.textSecondary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 24,
     },

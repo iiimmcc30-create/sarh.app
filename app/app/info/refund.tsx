@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, rtlDirection, rtlRow } from '@/lib/rtl';
+import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
 
 const REFUND_SECTIONS = [
   {
@@ -47,7 +47,7 @@ export default function RefundScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
-      <View style={[styles.header, rtlRow]}>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -57,7 +57,7 @@ export default function RefundScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, rtlDirection]}
+        contentContainerStyle={[styles.content, getRtlDirection()]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.intro}>

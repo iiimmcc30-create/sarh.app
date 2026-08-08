@@ -28,7 +28,7 @@ export function ApplicationCard({ application, onPress }: ApplicationCardProps) 
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       disabled={!onPress}
     >
-      <View style={rtlRow}>
+      <View style={getRtlRow()}>
         <View style={styles.main}>
           <Text style={styles.title} numberOfLines={1}>
             {title}

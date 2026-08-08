@@ -3,7 +3,7 @@
 
 import { Stack } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlDirection } from '@/lib/rtl';
+import { getRtlDirection } from '@/lib/rtl';
 
 export default function ButchersLayout() {
   const { colors } = useTheme();
@@ -12,7 +12,7 @@ export default function ButchersLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.bgDeep, ...rtlDirection },
+        contentStyle: { backgroundColor: colors.bgDeep, ...getRtlDirection() },
         animation: 'slide_from_left',
       }}
     >

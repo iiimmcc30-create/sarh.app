@@ -6,41 +6,104 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { IsEnum, IsIn, IsString } from 'class-validator';
-import { RateLimit } from '../../common/decorators/auth.decorators';
+import { IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { RateLimit, Public } from '../../common/decorators/auth.decorators';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { successResponse } from '../../common/utils/response.util';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ListingPromotionService } from './listing-promotion.service';
+import { PromoteQuoteService } from './promote-quote.service';
 import type { PromotionTierKey } from './promotion-tiers.config';
+import {
+  PROMOTE_AMOUNT_MAX,
+  PROMOTE_AMOUNT_MIN,
+  PROMOTE_DURATION_HOURS_MAX,
+  PROMOTE_DURATION_HOURS_MIN,
+} from './promotion-limits.config';
 
 class InitiatePromotionDto {
+  @IsOptional()
   @IsIn([1, 3, 7])
-  durationDays: number;
+  durationDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(PROMOTE_DURATION_HOURS_MIN)
+  @Max(PROMOTE_DURATION_HOURS_MAX)
+  durationHours?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(PROMOTE_AMOUNT_MIN)
+  @Max(PROMOTE_AMOUNT_MAX)
+  amount?: number;
+
+  @IsOptional()
+  @IsIn(['visibility', 'pinned', 'featured'])
+  promotionGoal?: 'visibility' | 'pinned' | 'featured';
 
   @IsString()
   method: string;
 
-  @IsEnum(['standard'])
-  tier: PromotionTierKey = 'standard';
+  @IsOptional()
+  @IsIn(['standard'])
+  tier?: PromotionTierKey;
 }
 
 class TrackPromotionEventDto {
-  @IsEnum(['impression', 'click', 'view'])
+  @IsIn(['impression', 'click', 'view'])
   event: 'impression' | 'click' | 'view';
+}
+
+class PromoteQuoteQueryDto {
+  @IsIn(['visibility', 'pinned', 'featured'])
+  goal: 'visibility' | 'pinned' | 'featured';
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(PROMOTE_DURATION_HOURS_MIN)
+  @Max(PROMOTE_DURATION_HOURS_MAX)
+  durationHours: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(PROMOTE_AMOUNT_MIN)
+  @Max(PROMOTE_AMOUNT_MAX)
+  amount?: number;
 }
 
 @Controller('listings')
 export class ListingPromotionController {
-  constructor(private readonly promotions: ListingPromotionService) {}
+  constructor(
+    private readonly promotions: ListingPromotionService,
+    private readonly promoteQuote: PromoteQuoteService,
+  ) {}
 
+  @Public()
   @RateLimit('api')
   @Get('promotion/plans')
   getPlans() {
     return successResponse(this.promotions.getPromotionPlans());
+  }
+
+  /** Price quote: visibility = user budget; pinned/featured = duration-based pricing. */
+  @Public()
+  @RateLimit('api')
+  @Get('promote/quote')
+  getQuote(@Query() query: PromoteQuoteQueryDto) {
+    return successResponse(
+      this.promoteQuote.quote({
+        goal: query.goal,
+        durationHours: Number(query.durationHours),
+        amount: query.amount != null ? Number(query.amount) : undefined,
+      }),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -53,13 +116,14 @@ export class ListingPromotionController {
     @CurrentUser() user: JwtPayload,
   ) {
     return successResponse(
-      await this.promotions.initiatePromotion(
-        user,
-        listingId,
-        dto.durationDays,
-        dto.method,
-        dto.tier ?? 'standard',
-      ),
+      await this.promotions.initiatePromotion(user, listingId, {
+        durationDays: dto.durationDays,
+        durationHours: dto.durationHours,
+        amount: dto.amount,
+        method: dto.method,
+        tier: dto.tier ?? 'standard',
+        promotionGoal: dto.promotionGoal ?? 'visibility',
+      }),
     );
   }
 
@@ -70,6 +134,7 @@ export class ListingPromotionController {
     return successResponse(await this.promotions.getPromotionStats(user, listingId));
   }
 
+  @Public()
   @RateLimit('api')
   @Post(':listingId/promotion/track')
   @HttpCode(HttpStatus.OK)

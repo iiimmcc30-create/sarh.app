@@ -21,7 +21,7 @@ import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
 import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
-import { rtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
 
@@ -174,7 +174,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
 
     return (
       <View style={styles.wrap}>
-        <View style={[styles.header, rtlRow]}>
+        <View style={[styles.header, getRtlRow()]}>
           <View style={styles.sectionBar} />
           <Text style={styles.title}>التعليقات</Text>
           <Text style={styles.count}>{comments.length}</Text>
@@ -194,13 +194,13 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
         ) : (
           <View style={styles.list}>
             {comments.map((c) => (
-              <View key={c.id} style={[styles.commentRow, rtlRow]}>
+              <View key={c.id} style={[styles.commentRow, getRtlRow()]}>
                 <UserProfileLink userId={c.author.id}>
                   <Image source={uriSource(c.author.avatar)} style={styles.avatar} contentFit="cover" />
                 </UserProfileLink>
                 <View style={styles.commentBubble}>
-                  <View style={[styles.commentHeader, rtlRow]}>
-                    <UserProfileLink userId={c.author.id} style={[styles.commentMeta, rtlRow]}>
+                  <View style={[styles.commentHeader, getRtlRow()]}>
+                    <UserProfileLink userId={c.author.id} style={[styles.commentMeta, getRtlRow()]}>
                       <Text style={styles.commentName}>{c.author.arabicName || c.author.displayName}</Text>
                       {c.author.verified ? (
                         <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
@@ -230,7 +230,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
         )}
 
         {showInput ? (
-          <View style={[styles.inputRow, rtlRow]}>
+          <View style={[styles.inputRow, getRtlRow()]}>
             <TextInput
               ref={setInputRef}
               style={styles.input}
@@ -380,7 +380,7 @@ function createStyles(colors: ThemeColors) {
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 22,
     },

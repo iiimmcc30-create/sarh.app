@@ -75,7 +75,7 @@ async function main() {
     return;
   }
   await prisma.service.createMany({ data: DEFAULT_SERVICES });
-  console.log(`Seeded ${DEFAULT_SERVICES.length} official services.');
+  console.log(`Seeded ${DEFAULT_SERVICES.length} official services.`);
 }
 
 main()

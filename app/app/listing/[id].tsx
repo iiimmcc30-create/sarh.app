@@ -4,7 +4,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { rtlBackIcon, rtlDirection, rtlRow } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { type Listing } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -318,13 +318,13 @@ export default function ListingDetailScreen() {
   };
 
   return (
-    <View style={[styles.screen, rtlDirection]}>
+    <View style={[styles.screen, getRtlDirection()]}>
       <SafeAreaView edges={['top']} style={styles.topSafe}>
-        <View style={[styles.topBar, rtlRow]}>
+        <View style={[styles.topBar, getRtlRow()]}>
           <Pressable onPress={() => router.back()} hitSlop={8} style={styles.topBarBtn}>
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
-          <View style={[styles.topBarActions, rtlRow]}>
+          <View style={[styles.topBarActions, getRtlRow()]}>
             {isOwner ? (
               <Pressable hitSlop={8} style={styles.topBarBtn} onPress={showOwnerMenu}>
                 <AppIcon name="ellipsis-horizontal" size={20} color={colors.textPrimary} />
@@ -367,13 +367,13 @@ export default function ListingDetailScreen() {
             {listing.arabicTitle || listing.title}
           </Text>
 
-          <View style={[styles.headerMetaRow, rtlRow]}>
-            <View style={[styles.headerMetaItem, rtlRow]}>
+          <View style={[styles.headerMetaRow, getRtlRow()]}>
+            <View style={[styles.headerMetaItem, getRtlRow()]}>
               <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
               <Text style={styles.headerMetaText}>{listing.arabicLocation || listing.location}</Text>
             </View>
             {listing.weightKg ? (
-              <View style={[styles.headerMetaItem, rtlRow]}>
+              <View style={[styles.headerMetaItem, getRtlRow()]}>
                 <Text style={styles.headerMetaText}>
                   {listing.weightKg.toLocaleString('ar-SA')} كجم
                 </Text>
@@ -381,17 +381,17 @@ export default function ListingDetailScreen() {
             ) : null}
             <View style={styles.headerPriceTimeCol}>
               {listing.price > 0 ? (
-                <View style={[styles.priceRow, rtlRow]}>
+                <View style={[styles.priceRow, getRtlRow()]}>
                   <Text style={styles.price}>{listing.price.toLocaleString('ar-SA')}</Text>
                   <Text style={styles.currency}>{listing.currency}</Text>
                   {listing.pinned ? (
-                    <View style={[styles.pinned, rtlRow]}>
+                    <View style={[styles.pinned, getRtlRow()]}>
                       <AppIcon name="pin" size={11} color="#fff" />
                       <Text style={styles.pinnedText}>مثبّت</Text>
                     </View>
                   ) : null}
                   {listing.featured ? (
-                    <View style={[styles.featured, rtlRow]}>
+                    <View style={[styles.featured, getRtlRow()]}>
                       <AppIcon name="star" size={11} color="#1A1300" />
                       <Text style={styles.featuredText}>مميز</Text>
                     </View>
@@ -400,7 +400,7 @@ export default function ListingDetailScreen() {
               ) : (
                 <Text style={styles.priceOnRequest}>السعر عند الطلب</Text>
               )}
-              <View style={[styles.headerMetaItem, rtlRow]}>
+              <View style={[styles.headerMetaItem, getRtlRow()]}>
                 <AppIcon name="time-outline" size={13} color={colors.textMuted} />
                 <Text style={styles.headerMetaText}>{timeLabel || 'الآن'}</Text>
               </View>
@@ -408,7 +408,7 @@ export default function ListingDetailScreen() {
           </View>
 
           {!isOwner ? (
-            <View style={[styles.sellerRow, rtlRow]}>
+            <View style={[styles.sellerRow, getRtlRow()]}>
               <Pressable
                 onPress={handleFollowSeller}
                 disabled={followLoading || isFollowing === null}
@@ -429,7 +429,7 @@ export default function ListingDetailScreen() {
               </Pressable>
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
-                style={[styles.sellerInline, rtlRow]}
+                style={[styles.sellerInline, getRtlRow()]}
               >
                 <Text style={styles.sellerInlineName} numberOfLines={1}>
                   {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
@@ -456,7 +456,7 @@ export default function ListingDetailScreen() {
           <View style={styles.specsBlock}>
             <Text style={styles.specsHeading}>المواصفات</Text>
             {categoryLabel || listing.breed || listing.age ? (
-              <View style={[styles.specMetaLine, rtlRow]}>
+              <View style={[styles.specMetaLine, getRtlRow()]}>
                 {categoryLabel ? (
                   <Text style={styles.specMetaText}>{categoryLabel}</Text>
                 ) : null}
@@ -503,7 +503,7 @@ export default function ListingDetailScreen() {
         ) : null}
 
         {isOwner ? (
-          <View style={[styles.ownerToolsRow, rtlRow]}>
+          <View style={[styles.ownerToolsRow, getRtlRow()]}>
             {ownerActions.map((a) => (
               <Pressable
                 key={a.key}
@@ -636,7 +636,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '700',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     specMetaLine: {
@@ -676,7 +676,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 34,
       color: colors.textBrandStrong,
       fontWeight: '800',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     currency: {
@@ -717,7 +717,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 28,
       color: colors.textPrimary,
       fontWeight: '800',
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     sellerRow: {
@@ -744,7 +744,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '700',
       maxWidth: 180,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
 
@@ -755,7 +755,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.xs,
     },
     ownerToolChip: {
-      ...rtlRow,
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 6,
       paddingHorizontal: spacing.md,
@@ -798,14 +798,14 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       color: colors.textSecondary,
       lineHeight: 24,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
     },
     descArabic: {
       ...typography.body,
       fontSize: 16,
       color: colors.textPrimary,
-      ...rtlTextAlign(),
+      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 27,
     },
