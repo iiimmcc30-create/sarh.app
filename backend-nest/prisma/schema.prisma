@@ -706,6 +706,7 @@ model ButcherProduct {
   updatedAt         DateTime       @updatedAt
   deletedAt         DateTime?
   orderItems        ButcherOrder[]
+  lineItems         ButcherOrderItem[]
   butcher           Butcher        @relation(fields: [butcherId], references: [id])
 
   @@index([butcherId])
@@ -780,6 +781,7 @@ model ButcherOrder {
   butcher            Butcher            @relation(fields: [butcherId], references: [id])
   customer           User               @relation(fields: [customerId], references: [id])
   product            ButcherProduct     @relation(fields: [productId], references: [id])
+  items              ButcherOrderItem[]
   timeline           OrderTimeline[]
   audits             OrderStatusAudit[]
 
@@ -789,6 +791,22 @@ model ButcherOrder {
   @@index([butcherId, status])
   @@index([orderNumber])
   @@index([paymentStatus])
+}
+
+model ButcherOrderItem {
+  id               String         @id @default(uuid())
+  orderId          String
+  productId        String
+  cutType          String
+  weightKg         Float
+  linePrice        Float
+  reservedQuantity Float          @default(0)
+  createdAt        DateTime       @default(now())
+  order            ButcherOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product          ButcherProduct @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model OrderTimeline {

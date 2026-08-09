@@ -558,6 +558,13 @@ export class AdminRepository {
           product: {
             select: { id: true, nameAr: true, nameEn: true, availableQuantity: true, reservedQuantity: true },
           },
+          items: {
+            include: {
+              product: {
+                select: { id: true, nameAr: true, nameEn: true, availableQuantity: true, reservedQuantity: true },
+              },
+            },
+          },
           timeline: { orderBy: { createdAt: 'asc' } },
         },
       }),
@@ -573,6 +580,7 @@ export class AdminRepository {
         butcher: { select: { id: true, nameAr: true, nameEn: true, userId: true } },
         customer: { select: { id: true, arabicName: true, displayName: true, phone: true } },
         product: true,
+        items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
         audits: { orderBy: { changedAt: 'asc' } },
       },

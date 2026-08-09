@@ -2,6 +2,7 @@
 // SAFAT — Butchers Section Layout
 
 import { Stack } from 'expo-router';
+import { ButcherCartProvider } from '@/contexts/ButcherCartContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlDirection } from '@/lib/rtl';
 
@@ -9,6 +10,7 @@ export default function ButchersLayout() {
   const { colors } = useTheme();
 
   return (
+    <ButcherCartProvider>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -19,6 +21,7 @@ export default function ButchersLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="[id]" />
       <Stack.Screen name="order" />
+      <Stack.Screen name="cart" />
       <Stack.Screen name="order/[id]" />
       <Stack.Screen name="order-success" options={{ animation: 'fade' }} />
       <Stack.Screen name="chat" />
@@ -40,5 +43,6 @@ export default function ButchersLayout() {
         options={{ animation: 'fade', presentation: 'transparentModal' }}
       />
     </Stack>
+    </ButcherCartProvider>
   );
 }

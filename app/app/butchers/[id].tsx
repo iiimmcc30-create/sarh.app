@@ -24,8 +24,6 @@ import { countries, Country } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import {
-  CATEGORY_LABELS,
-  cutLabelAr,
   mapButcherProductFromApi,
   ButcherOffer,
   ButcherProduct,
@@ -33,9 +31,15 @@ import {
   ButcherReview,
   ButcherStory,
   gccCurrencies,
-  MeatCategory,
   ChatMessage,
+  type CutType,
 } from '@/services/butcherData';
+import { ButcherCategoryBar } from '@/components/butcher/ButcherCategoryBar';
+import { ButcherDeliverySegment } from '@/components/butcher/ButcherDeliverySegment';
+import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
+import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
+import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
+import { useButcherCart } from '@/contexts/ButcherCartContext';
 
 type Tab = 'products' | 'offers' | 'stories' | 'about' | 'chat';
 
@@ -47,137 +51,53 @@ const TABS: { id: Tab; labelAr: string; icon: string }[] = [
   { id: 'chat',     labelAr: 'المحادثة', icon: '💬' },
 ];
 
-// ─── Tab: Products ────────────────────────────────────────────────────────────
-function ProductsTab({ products, currencySymbol, onOrder }: {
+// ─── Tab: Products (store grid) ───────────────────────────────────────────────
+function StoreProductsTab({
+  products,
+  currencySymbol,
+  onOrder,
+  onOpenOptions,
+}: {
   products: ButcherProduct[];
   currencySymbol: string;
   onOrder: (p: ButcherProduct) => void;
+  onOpenOptions: (p: ButcherProduct) => void;
 }) {
-  const { colors } = useTheme();
-  const productsStyles = useThemedStyles(({ colors }) => createProductsStyles(colors));
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const categories = ['all', ...new Set(products.map((p) => p.category))];
 
-  const filtered = activeCategory === 'all'
-    ? products
-    : products.filter((p) => p.category === activeCategory);
+  const filtered =
+    activeCategory === 'all'
+      ? products
+      : products.filter((p) => p.category === activeCategory);
+
+  const emptyStyles = useThemedStyles(({ colors }) => createEmptyStyles(colors));
+
+  if (!products.length) {
+    return (
+      <View style={emptyStyles.wrap}>
+        <Text style={emptyStyles.icon}>🥩</Text>
+        <Text style={emptyStyles.title}>لا منتجات حالياً</Text>
+      </View>
+    );
+  }
 
   return (
     <View>
-      {/* Category filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={productsStyles.catRow}
-      >
-        {categories.map((cat) => (
-          <Pressable
-            key={cat}
-            onPress={() => setActiveCategory(cat)}
-            style={[productsStyles.catChip, activeCategory === cat && productsStyles.catChipActive]}
-          >
-            {cat !== 'all' && (
-              <Text style={productsStyles.catIcon}>{CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS]?.icon}</Text>
-            )}
-            <Text style={[productsStyles.catLabel, activeCategory === cat && productsStyles.catLabelActive]}>
-              {cat === 'all' ? 'الكل' : CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS]?.ar}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-
+      <ButcherCategoryBar
+        categories={categories}
+        active={activeCategory}
+        onChange={setActiveCategory}
+      />
       {filtered.map((product) => (
-        <Pressable
+        <ButcherStoreProductCard
           key={product.id}
-          style={({ pressed }) => [
-            productsStyles.card,
-            pressed && { opacity: 0.96, transform: [{ scale: 0.995 }] },
-          ]}
-        >
-          <Image
-            source={{ uri: product.images[0] }}
-            style={productsStyles.productImg}
-            contentFit="cover"
-          />
-          <LinearGradient
-            colors={['transparent', 'rgba(6,9,26,0.9)']}
-            style={productsStyles.productGrad}
-          />
-          {/* Freshness badge */}
-          <View style={[
-            productsStyles.freshnessBadge,
-            {
-              backgroundColor:
-                product.freshness === 'fresh' ? colors.success + 'CC' :
-                product.freshness === 'chilled' ? colors.electric + 'CC' :
-                colors.textSubtle + 'CC',
-            },
-          ]}>
-            <Text style={productsStyles.freshnessText}>
-              {product.freshness === 'fresh' ? '🟢 طازج' :
-               product.freshness === 'chilled' ? '🔵 مبرد' : '❄️ مجمد'}
-            </Text>
-          </View>
-
-          <View style={productsStyles.productBody}>
-            <View style={productsStyles.productHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={productsStyles.productName}>{product.nameAr}</Text>
-                <Text style={productsStyles.productDesc} numberOfLines={2}>{product.descriptionAr}</Text>
-              </View>
-              <View style={productsStyles.priceBlock}>
-                {product.pricePerKg ? (
-                  <>
-                    <Text style={productsStyles.price}>{product.pricePerKg}</Text>
-                    <Text style={productsStyles.priceSub}>{currencySymbol}/كغ</Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={productsStyles.price}>{product.priceFixed?.toLocaleString()}</Text>
-                    <Text style={productsStyles.priceSub}>{currencySymbol}</Text>
-                  </>
-                )}
-              </View>
-            </View>
-
-            {/* Available cuts */}
-            <View style={productsStyles.cutsRow}>
-              {product.availableCuts.map((cut) => (
-                <View key={cut} style={productsStyles.cutChip}>
-                  <Text style={productsStyles.cutLabel}>{cutLabelAr(cut)}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Weight range */}
-            {product.weightRange && (
-              <Text style={productsStyles.weightNote}>
-                الوزن: {product.weightRange.min}–{product.weightRange.max} كغ
-              </Text>
-            )}
-            {product.pricingNoteAr && (
-              <Text style={productsStyles.weightNote}>{product.pricingNoteAr}</Text>
-            )}
-
-            {/* Order button */}
-            <Pressable
-              style={({ pressed }) => [productsStyles.orderBtn, pressed && { opacity: 0.85 }]}
-              onPress={() => onOrder(product)}
-            >
-              <LinearGradient
-                colors={[colors.electric, colors.cyan]}
-                style={productsStyles.orderBtnGrad}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <AppIcon name="bag-add-outline" size={16} color="#fff" />
-                <Text style={productsStyles.orderBtnText}>
-                  {product.inStock ? 'اطلب الآن' : 'غير متوفر'}
-                </Text>
-              </LinearGradient>
-            </Pressable>
-          </View>
-        </Pressable>
+          product={product}
+          currencySymbol={currencySymbol}
+          onPress={() => onOpenOptions(product)}
+          onAdd={() => onOpenOptions(product)}
+          onBuyNow={() => onOrder(product)}
+        />
       ))}
     </View>
   );
@@ -493,8 +413,16 @@ export default function ButcherProfileScreen() {
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createMainStyles(colors));
   const { accessToken, user } = useAuth();
+  const {
+    setButcherMeta,
+    deliveryType,
+    setDeliveryType,
+    itemCount,
+    subtotal,
+    addLine,
+  } = useButcherCart();
   const [activeTab, setActiveTab] = useState<Tab>('products');
-  const [orderModalProduct, setOrderModalProduct] = useState<ButcherProduct | null>(null);
+  const [optionsProduct, setOptionsProduct] = useState<ButcherProduct | null>(null);
 
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
   const [products, setProducts] = useState<ButcherProduct[]>([]);
@@ -612,6 +540,15 @@ export default function ButcherProfileScreen() {
   }, [id, accessToken]);
 
   useEffect(() => {
+    if (!butcher) return;
+    setButcherMeta({
+      butcherId: butcher.id,
+      butcherNameAr: butcher.nameAr,
+      butcherLogo: butcher.logo,
+    });
+  }, [butcher?.id, butcher?.nameAr, butcher?.logo, setButcherMeta]);
+
+  useEffect(() => {
     if (!id) return;
     const fetchReviews = async () => {
       try {
@@ -711,6 +648,25 @@ export default function ButcherProfileScreen() {
       pathname: '/butchers/order',
       params: { productId: product.id, butcherId: butcher.id },
     });
+  };
+
+  const handleOpenOptions = (product: ButcherProduct) => {
+    if (!product.inStock) {
+      Alert.alert('غير متوفر', 'هذا المنتج غير متوفر حالياً');
+      return;
+    }
+    setOptionsProduct(product);
+  };
+
+  const handleAddToCart = (input: {
+    product: ButcherProduct;
+    cutType: CutType;
+    weightRaw: string;
+  }) => {
+    const ok = addLine(input);
+    if (!ok) {
+      Alert.alert('خطأ', 'تعذر إضافة المنتج — تحقق من الوزن والسعر');
+    }
   };
 
   return (
@@ -836,6 +792,8 @@ export default function ButcherProfileScreen() {
           </Pressable>
         </View>
 
+        <ButcherDeliverySegment value={deliveryType} onChange={setDeliveryType} />
+
         {/* ── Tabs ── */}
         <ScrollView
           horizontal
@@ -859,10 +817,11 @@ export default function ButcherProfileScreen() {
         {/* ── Tab Content ── */}
         <View style={styles.tabContent}>
           {activeTab === 'products' && (
-            <ProductsTab
+            <StoreProductsTab
               products={products}
               currencySymbol={currency.symbol}
               onOrder={handleOrder}
+              onOpenOptions={handleOpenOptions}
             />
           )}
           {activeTab === 'offers' && (
@@ -933,8 +892,28 @@ export default function ButcherProfileScreen() {
           {activeTab === 'chat' && <ChatTab butcherName={butcher.nameAr} butcherId={butcher.id} currentUserId={user?.id} />}
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: itemCount > 0 ? 120 : 100 }} />
       </ScrollView>
+
+      <ButcherProductOptionsModal
+        visible={optionsProduct != null}
+        product={optionsProduct}
+        currencySymbol={currency.symbol}
+        onClose={() => setOptionsProduct(null)}
+        onAddToCart={handleAddToCart}
+      />
+
+      <ButcherStickyCartBar
+        itemCount={itemCount}
+        subtotal={subtotal}
+        currencySymbol={currency.symbol}
+        onPress={() =>
+          router.push({
+            pathname: '/butchers/cart',
+            params: { butcherId: butcher.id },
+          })
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -1111,125 +1090,6 @@ function createEmptyStyles(colors: ThemeColors) {
   wrap: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
   icon: { fontSize: 40 },
   title: { ...typography.h3, color: colors.textMuted },
-  });
-}
-
-// Products tab
-function createProductsStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-  catRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 16,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  catChipActive: {
-    backgroundColor: colors.electric + '18',
-    borderColor: colors.electric,
-    shadowColor: colors.electric,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  catIcon: { fontSize: 13 },
-  catLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-  catLabelActive: { color: colors.electricBright, fontWeight: '800' },
-
-  card: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    borderRadius: 22,
-    overflow: 'hidden',
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  productImg: { width: '100%', height: 200 },
-  productGrad: {
-    position: 'absolute',
-    top: 120,
-    left: 0,
-    right: 0,
-    height: 80,
-  },
-  freshnessBadge: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-  },
-  freshnessText: { ...typography.micro, color: '#fff', fontWeight: '700' },
-  productBody: { padding: spacing.lg },
-  productHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-  productName: {
-    ...typography.h3,
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.textPrimary,
-    marginBottom: 4,
-    writingDirection: 'rtl',
-    ...getRtlText(),
-  },
-  productDesc: {
-    ...typography.caption,
-    color: colors.textMuted,
-    lineHeight: 20,
-    writingDirection: 'rtl',
-    ...getRtlText(),
-  },
-  priceBlock: { alignItems: 'flex-end' },
-  price: { fontSize: 22, fontWeight: '800', color: colors.electricBright },
-  priceSub: { ...typography.micro, color: colors.textMuted },
-  cutsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: spacing.md,
-  },
-  cutChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  cutLabel: { ...typography.micro, color: colors.textBrand, fontWeight: '600' },
-  weightNote: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 8,
-    writingDirection: 'rtl',
-    ...getRtlText(),
-  },
-  orderBtn: { marginTop: spacing.md, borderRadius: 18, overflow: 'hidden' },
-  orderBtnGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-  },
-  orderBtnText: { ...typography.bodyStrong, color: '#fff', fontWeight: '800' },
   });
 }
 

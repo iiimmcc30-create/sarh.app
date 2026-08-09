@@ -6,18 +6,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { throwApi } from '../../common/exceptions/api.exception';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { ButcherRankingService } from './butcher-ranking.service';
+import type { ValidatedOrderLine } from '../lib/order-line.util';
 
 type CreateOrderInput = {
   butcherId: string;
   customerId: string;
-  productId: string;
-  cutType: string;
-  weightKg: number;
   deliveryType: string;
   deliveryAddress?: string | null;
   notes?: string | null;
   currency: string;
   totalPrice: number;
+  items: ValidatedOrderLine[];
 };
 
 type LockedOrderRow = {
@@ -30,6 +29,11 @@ type LockedOrderRow = {
   reservedQuantity: number;
   butcherId: string;
   butcherUserId: string;
+};
+
+type OrderInventoryLine = {
+  productId: string;
+  reservedQuantity: number;
 };
 
 @Injectable()
@@ -181,33 +185,118 @@ export class OrderLifecycleService {
     return rows[0] ?? null;
   }
 
-  async createOrder(input: CreateOrderInput) {
-    const reserveQty = Math.max(input.weightKg, 0);
-    const created = await this.prisma.$transaction(async (tx) => {
-      const productLock = await tx.$executeRaw`
+  private async loadInventoryLines(
+    tx: Prisma.TransactionClient,
+    orderId: string,
+    locked: LockedOrderRow,
+  ): Promise<OrderInventoryLine[]> {
+    const items = await tx.butcherOrderItem.findMany({
+      where: { orderId },
+      select: { productId: true, reservedQuantity: true },
+    });
+    if (items.length > 0) {
+      return items.map((item) => ({
+        productId: item.productId,
+        reservedQuantity: item.reservedQuantity,
+      }));
+    }
+    if (locked.reservedQuantity > 0) {
+      return [
+        {
+          productId: locked.productId,
+          reservedQuantity: locked.reservedQuantity,
+        },
+      ];
+    }
+    return [];
+  }
+
+  private async releaseReservedInventory(
+    tx: Prisma.TransactionClient,
+    lines: OrderInventoryLine[],
+  ) {
+    for (const line of lines) {
+      if (line.reservedQuantity <= 0) continue;
+      await tx.$executeRaw`
         UPDATE "ButcherProduct"
-        SET "reservedQuantity" = "reservedQuantity" + ${reserveQty}
-        WHERE "id" = ${input.productId}
-          AND "inStock" = true
-          AND ("availableQuantity" - "reservedQuantity") >= ${reserveQty}
+        SET "reservedQuantity" = GREATEST("reservedQuantity" - ${line.reservedQuantity}, 0)
+        WHERE "id" = ${line.productId}
       `;
-      if (productLock === 0) {
-        throwApi(409, 'insufficient_inventory', 'الكمية غير متوفرة حالياً');
+    }
+  }
+
+  private async finalizeDeliveredInventory(
+    tx: Prisma.TransactionClient,
+    lines: OrderInventoryLine[],
+  ) {
+    for (const line of lines) {
+      if (line.reservedQuantity <= 0) continue;
+      const affected = await tx.$executeRaw`
+        UPDATE "ButcherProduct"
+        SET "reservedQuantity" = GREATEST("reservedQuantity" - ${line.reservedQuantity}, 0),
+            "availableQuantity" = GREATEST("availableQuantity" - ${line.reservedQuantity}, 0)
+        WHERE "id" = ${line.productId}
+          AND "reservedQuantity" >= ${line.reservedQuantity}
+      `;
+      if (affected === 0) {
+        throwApi(409, 'inventory_conflict', 'تعذر تحديث المخزون للطلب');
+      }
+    }
+  }
+
+  async createOrder(input: CreateOrderInput) {
+    if (!input.items.length) {
+      throwApi(400, 'validation_error', 'يجب أن يحتوي الطلب على منتج واحد على الأقل');
+    }
+
+    const firstItem = input.items[0];
+    const created = await this.prisma.$transaction(
+      async (tx) => {
+      for (const item of input.items) {
+        const productLock = await tx.$executeRaw`
+          UPDATE "ButcherProduct"
+          SET "reservedQuantity" = "reservedQuantity" + ${item.reservedQuantity}
+          WHERE "id" = ${item.productId}
+            AND "inStock" = true
+            AND ("availableQuantity" - "reservedQuantity") >= ${item.reservedQuantity}
+        `;
+        if (productLock === 0) {
+          throwApi(409, 'insufficient_inventory', 'الكمية غير متوفرة حالياً');
+        }
       }
 
       const orderNumber = await this.nextOrderNumber(tx);
 
       const order = await tx.butcherOrder.create({
         data: {
-          ...input,
+          butcherId: input.butcherId,
+          customerId: input.customerId,
+          productId: firstItem.productId,
+          cutType: firstItem.cutType,
+          weightKg: firstItem.weightKg,
+          reservedQuantity: firstItem.reservedQuantity,
+          deliveryType: input.deliveryType,
+          deliveryAddress: input.deliveryAddress,
+          notes: input.notes,
+          currency: input.currency,
+          totalPrice: input.totalPrice,
           orderNumber,
-          reservedQuantity: reserveQty,
           status: 'pending',
           paymentStatus: 'unpaid',
+          items: {
+            create: input.items.map((item) => ({
+              productId: item.productId,
+              cutType: item.cutType,
+              weightKg: item.weightKg,
+              linePrice: item.linePrice,
+              reservedQuantity: item.reservedQuantity,
+            })),
+          },
         },
         include: {
           butcher: { select: { id: true, userId: true, nameAr: true } },
           product: true,
+          items: { include: { product: true } },
         },
       });
 
@@ -221,7 +310,9 @@ export class OrderLifecycleService {
       });
 
       return { order, timeline };
-    });
+      },
+      { maxWait: 10000, timeout: 30000 },
+    );
 
     this.emitOrderSockets(
       created.order.customerId,
@@ -260,17 +351,21 @@ export class OrderLifecycleService {
     nextStatus: OrderStatus;
     cancellationReason?: string | null;
   }) {
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(
+      async (tx) => {
       const locked = await this.lockOrderRow(tx, params.orderId);
       if (!locked) throwApi(404, 'not_found', 'الطلب غير موجود');
 
       if (locked.status === params.nextStatus) {
         const order = await tx.butcherOrder.findUnique({
           where: { id: params.orderId },
-          include: { butcher: { select: { id: true, userId: true } } },
+          include: {
+            butcher: { select: { id: true, userId: true } },
+            items: { include: { product: true } },
+          },
         });
         if (!order) throwApi(404, 'not_found', 'الطلب غير موجود');
-        return { order, timeline: null, noop: true as const, locked };
+        return { order, timeline: null, noop: true as const, locked, inventoryLines: [] as OrderInventoryLine[] };
       }
 
       this.stateMachine.assertTransition(locked.status, params.nextStatus);
@@ -286,25 +381,18 @@ export class OrderLifecycleService {
         );
       }
 
-      if (params.nextStatus === 'cancelled' && locked.reservedQuantity > 0) {
-        await tx.$executeRaw`
-          UPDATE "ButcherProduct"
-          SET "reservedQuantity" = GREATEST("reservedQuantity" - ${locked.reservedQuantity}, 0)
-          WHERE "id" = ${locked.productId}
-        `;
+      const inventoryLines = await this.loadInventoryLines(
+        tx,
+        params.orderId,
+        locked,
+      );
+
+      if (params.nextStatus === 'cancelled') {
+        await this.releaseReservedInventory(tx, inventoryLines);
       }
 
-      if (params.nextStatus === 'delivered' && locked.reservedQuantity > 0) {
-        const affected = await tx.$executeRaw`
-          UPDATE "ButcherProduct"
-          SET "reservedQuantity" = GREATEST("reservedQuantity" - ${locked.reservedQuantity}, 0),
-              "availableQuantity" = GREATEST("availableQuantity" - ${locked.reservedQuantity}, 0)
-          WHERE "id" = ${locked.productId}
-            AND "reservedQuantity" >= ${locked.reservedQuantity}
-        `;
-        if (affected === 0) {
-          throwApi(409, 'inventory_conflict', 'تعذر تحديث المخزون للطلب');
-        }
+      if (params.nextStatus === 'delivered') {
+        await this.finalizeDeliveredInventory(tx, inventoryLines);
       }
 
       const order = await tx.butcherOrder.update({
@@ -319,7 +407,10 @@ export class OrderLifecycleService {
               }
             : {}),
         },
-        include: { butcher: { select: { id: true, userId: true } } },
+        include: {
+          butcher: { select: { id: true, userId: true } },
+          items: { include: { product: true } },
+        },
       });
 
       const timeline = await tx.orderTimeline.create({
@@ -343,8 +434,16 @@ export class OrderLifecycleService {
         },
       });
 
-      return { order, timeline, noop: false as const, locked };
-    });
+      return {
+        order,
+        timeline,
+        noop: false as const,
+        locked,
+        inventoryLines,
+      };
+      },
+      { maxWait: 10000, timeout: 30000 },
+    );
 
     if (updated.noop) {
       return updated.order;
@@ -353,14 +452,14 @@ export class OrderLifecycleService {
     const locked = updated.locked;
     const timeline = updated.timeline!;
 
-    this.emitOrderSockets(
-      locked.customerId,
-      locked.butcherUserId,
-      'inventory.updated',
-      {
-        productId: locked.productId,
-      },
-    );
+    for (const line of updated.inventoryLines) {
+      this.emitOrderSockets(
+        locked.customerId,
+        locked.butcherUserId,
+        'inventory.updated',
+        { productId: line.productId },
+      );
+    }
 
     await this.notifyOrderStatus(locked.customerId, locked.butcherUserId, {
       orderId: updated.order.id,

@@ -166,11 +166,33 @@ export default function OrderDetailsScreen() {
 
         <View style={s.card}>
           <Text style={s.sectionTitle}>تفاصيل الطلب</Text>
-          <Row label="المنتج" value={order.product?.nameAr ?? '—'} />
-          <Row label="التقطيع" value={CUT_LABELS[order.cutType as CutType]?.ar ?? order.cutType} />
-          <Row label="الوزن" value={`${order.weightKg} كغ`} />
-          <Row label="الكمية المحجوزة" value={`${order.reservedQuantity ?? order.weightKg} كغ`} />
-          <Row label="السعر" value={`${order.totalPrice} ${order.currency || 'SAR'}`} />
+          {Array.isArray(order.items) && order.items.length > 0 ? (
+            order.items.map((item: {
+              id: string;
+              cutType: string;
+              weightKg: number;
+              linePrice: number;
+              product?: { nameAr?: string };
+            }) => (
+              <View key={item.id} style={s.itemBlock}>
+                <Row label="المنتج" value={item.product?.nameAr ?? '—'} />
+                <Row
+                  label="التقطيع"
+                  value={CUT_LABELS[item.cutType as CutType]?.ar ?? item.cutType}
+                />
+                <Row label="الوزن" value={`${item.weightKg} كغ`} />
+                <Row label="السعر" value={`${item.linePrice} ${order.currency || 'SAR'}`} />
+              </View>
+            ))
+          ) : (
+            <>
+              <Row label="المنتج" value={order.product?.nameAr ?? '—'} />
+              <Row label="التقطيع" value={CUT_LABELS[order.cutType as CutType]?.ar ?? order.cutType} />
+              <Row label="الوزن" value={`${order.weightKg} كغ`} />
+              <Row label="الكمية المحجوزة" value={`${order.reservedQuantity ?? order.weightKg} كغ`} />
+            </>
+          )}
+          <Row label="الإجمالي" value={`${order.totalPrice} ${order.currency || 'SAR'}`} />
           <Row
             label="الاستلام"
             value={order.deliveryType === 'delivery' ? 'توصيل' : 'استلام من الملحمة'}
@@ -299,6 +321,13 @@ const s = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
     writingDirection: 'rtl',
+  },
+  itemBlock: {
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+    paddingTop: spacing.sm,
+    marginTop: spacing.sm,
+    gap: 2,
   },
   errorText: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
 });

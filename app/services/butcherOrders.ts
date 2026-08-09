@@ -32,6 +32,19 @@ export type ButcherOrderRecord = {
     pricePerKg?: number;
     priceFixed?: number;
   };
+  items?: Array<{
+    id: string;
+    productId: string;
+    cutType: string;
+    weightKg: number;
+    linePrice: number;
+    reservedQuantity?: number;
+    product?: {
+      id: string;
+      nameAr?: string;
+      images?: string[];
+    };
+  }>;
   timeline?: Array<{ id: string; status: OrderStatus; note?: string; createdAt: string }>;
 };
 

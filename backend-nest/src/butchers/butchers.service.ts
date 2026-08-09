@@ -19,6 +19,10 @@ import { ButcherRankingService } from './services/butcher-ranking.service';
 import { REVIEW_EDIT_WINDOW_DAYS } from './lib/butcher-ranking.util';
 import type { ButcherListSort } from './repositories/butchers.repository';
 import { resolveProductAvailableQuantity } from './lib/product-inventory.util';
+import {
+  sumOrderLinePrices,
+  validateAndPriceOrderLine,
+} from './lib/order-line.util';
 
 const PAGE_SIZE = 20;
 
@@ -147,18 +151,36 @@ const updateOfferSchema = z
   })
   .strict();
 
-const createOrderSchema = z
+const orderLineSchema = z
   .object({
-    butcherId: z.string().uuid(),
     productId: z.string().uuid(),
     cutType: z.string(),
     weightKg: z.number().positive(),
-    deliveryType: z.enum(['pickup', 'delivery']),
-    deliveryAddress: z.string().max(300).optional().nullable(),
-    notes: z.string().max(500).optional().nullable(),
-    currency: z.string().length(3).default('SAR'),
   })
   .strict();
+
+const createOrderHeaderSchema = z.object({
+  butcherId: z.string().uuid(),
+  deliveryType: z.enum(['pickup', 'delivery']),
+  deliveryAddress: z.string().max(300).optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+  currency: z.string().length(3).default('SAR'),
+});
+
+const createOrderSchema = z.union([
+  createOrderHeaderSchema
+    .extend({
+      productId: z.string().uuid(),
+      cutType: z.string(),
+      weightKg: z.number().positive(),
+    })
+    .strict(),
+  createOrderHeaderSchema
+    .extend({
+      items: z.array(orderLineSchema).min(1).max(30),
+    })
+    .strict(),
+]);
 
 const updateOrderSchema = z
   .object({
@@ -681,66 +703,48 @@ export class ButchersService {
     }
 
     const orderInput = parsed.data;
-
     const {
       butcherId,
-      productId,
-      cutType,
-      weightKg,
       deliveryType,
       deliveryAddress,
       notes,
       currency,
     } = orderInput;
 
-    const product = await this.repo.findProductForOrder(productId);
-    if (!product || product.butcherId !== butcherId) {
-      throwApi(404, 'not_found', 'المنتج غير موجود');
-    }
+    const rawLines =
+      'items' in orderInput
+        ? orderInput.items
+        : [
+            {
+              productId: orderInput.productId,
+              cutType: orderInput.cutType,
+              weightKg: orderInput.weightKg,
+            },
+          ];
 
-    if (!product.inStock) {
-      throwApi(400, 'validation_error', 'المنتج غير متوفر حالياً');
-    }
-
-    if (product.weightMin != null && weightKg < product.weightMin) {
-      throwApi(
-        400,
-        'validation_error',
-        `الوزن يجب أن يكون ${product.weightMin} كجم على الأقل`,
+    const validatedLines = [];
+    for (const line of rawLines) {
+      const product = await this.repo.findProductForOrder(line.productId);
+      validatedLines.push(
+        validateAndPriceOrderLine(product, butcherId, line),
       );
     }
 
-    if (product.weightMax != null && weightKg > product.weightMax) {
-      throwApi(
-        400,
-        'validation_error',
-        `الوزن يجب ألا يتجاوز ${product.weightMax} كجم`,
-      );
-    }
-
-    const totalPrice = (() => {
-      if (product.priceFixed != null) return product.priceFixed;
-      if (product.pricePerKg != null) return product.pricePerKg * weightKg;
-      throwApi(400, 'validation_error', 'المنتج لا يحتوي على سعر');
-    })();
-
-    const roundedTotal = Math.round(totalPrice * 100) / 100;
+    const totalPrice = sumOrderLinePrices(validatedLines);
 
     const order = await this.orderLifecycle.createOrder({
       butcherId,
-      productId,
-      cutType,
-      weightKg,
       deliveryType,
       deliveryAddress,
       notes,
       currency,
-      totalPrice: roundedTotal,
+      totalPrice,
       customerId: user.userId,
+      items: validatedLines,
     });
 
     logger.info(
-      { orderId: order.id, customerId: user.userId },
+      { orderId: order.id, customerId: user.userId, itemCount: validatedLines.length },
       'Butcher order placed',
     );
     return order;

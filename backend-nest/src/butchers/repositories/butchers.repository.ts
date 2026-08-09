@@ -293,6 +293,7 @@ export class ButchersRepository {
           },
         },
         product: true,
+        items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
     });
@@ -305,6 +306,7 @@ export class ButchersRepository {
       include: {
         butcher: true,
         product: true,
+        items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
     });
@@ -347,6 +349,7 @@ export class ButchersRepository {
           },
         },
         product: true,
+        items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
     });
