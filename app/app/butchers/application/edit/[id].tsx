@@ -832,7 +832,7 @@ export default function ButcherApplicationEditScreen() {
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   flex: { flex: 1 },
   header: {
     flexDirection: 'row',

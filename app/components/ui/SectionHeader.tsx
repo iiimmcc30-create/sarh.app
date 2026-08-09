@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { sarh } from '@/constants/sarhTokens';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -42,7 +43,7 @@ export function SectionHeader({
             <AppIcon
               name={rtlForwardIcon()}
               size={14}
-              color={colors.textBrandStrong}
+              color={isDark ? colors.textSecondary : colors.textBrandStrong}
             />
           </Pressable>
         ) : null}
@@ -77,13 +78,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: 3,
       height: 22,
       borderRadius: 2,
-      backgroundColor: colors.electric,
+      backgroundColor: sarh.color.action,
     },
     title: {
       ...typography.h3,
       fontSize: isDark ? 20 : 18,
       lineHeight: isDark ? 28 : 24,
-      fontWeight: isDark ? '800' : '700',
+      fontWeight: isDark ? '700' : '700',
       color: isDark ? colors.textPrimary : colors.electric,
       writingDirection: 'rtl',
     },
@@ -100,8 +101,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     seeAllText: {
       ...typography.caption,
       lineHeight: 18,
-      fontWeight: '600',
+      fontWeight: '500',
       color: isDark ? colors.textSecondary : colors.textBrandStrong,
     },
   });
 }
+
+export default SectionHeader;

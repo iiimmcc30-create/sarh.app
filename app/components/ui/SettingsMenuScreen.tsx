@@ -1,5 +1,6 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { sarh } from '@/constants/sarhTokens';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -33,7 +34,7 @@ export function SettingsMenuScreen({
 }: SettingsMenuScreenProps) {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -44,7 +45,7 @@ export function SettingsMenuScreen({
       >
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
-            <AppIcon name={heroIcon} size={25} color={colors.electricBright} />
+            <AppIcon name={heroIcon} size={25} color={colors.textMuted} />
           </View>
           <Text style={styles.heroTitle}>{title}</Text>
           <Text style={styles.heroDescription}>{description}</Text>
@@ -81,9 +82,10 @@ export function SettingsMenuScreen({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
     content: {
       padding: spacing.lg,
       paddingBottom: spacing.huge,
@@ -92,19 +94,21 @@ function createStyles(colors: ThemeColors) {
     hero: {
       alignItems: 'center',
       padding: spacing.xl,
-      borderRadius: radius.xl,
-      backgroundColor: colors.royal,
+      borderRadius: sarh.radius.lg,
+      backgroundColor: isDark ? sarh.color.surface : colors.royal,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderMid,
+      borderColor: isDark ? sarh.color.border : colors.borderMid,
     },
     heroIcon: {
       width: 54,
       height: 54,
       borderRadius: radius.lg,
-      backgroundColor: colors.bgGlassStrong,
+      backgroundColor: isDark ? sarh.color.surfaceRaised : colors.bgGlassStrong,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.md,
+      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
+      borderColor: isDark ? sarh.color.border : 'transparent',
     },
     heroTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
     heroDescription: {
@@ -115,10 +119,10 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.xs,
     },
     list: {
-      backgroundColor: colors.bgGlassStrong,
-      borderRadius: radius.xl,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,
+      borderRadius: sarh.radius.lg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderColor: isDark ? sarh.color.border : colors.borderSoft,
       overflow: 'hidden',
     },
     row: {

@@ -15,7 +15,7 @@ export function ButcherCategoryBar({
   active,
   onChange,
 }: ButcherCategoryBarProps) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
 
   return (
     <ScrollView
@@ -46,7 +46,7 @@ export function ButcherCategoryBar({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     row: {
       ...getRtlRow(),
@@ -77,7 +77,7 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '600',
     },
     labelActive: {
-      color: colors.electricBright,
+      color: scheme === 'dark' ? colors.textPrimary : colors.electricBright,
     },
   });
 }

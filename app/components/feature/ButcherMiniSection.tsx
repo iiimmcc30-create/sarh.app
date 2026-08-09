@@ -13,6 +13,7 @@ import {
   typography,
   type ThemeColors,
 } from '@/constants/theme';
+import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { gccCurrencies } from '@/services/butcherData';
 import { countries } from '@/services/types';
@@ -125,7 +126,7 @@ export function ButcherMiniSection({
             style={[s.skeleton, { width: CARD_W, height: COVER_H + (isHero ? 0 : 80) }]}
             onPress={() => router.push('/butchers')}
           >
-            <AppIcon name="storefront-outline" size={26} color={colors.electricBright} />
+            <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
             <Text style={s.skeletonText}>لا توجد ملاحم حالياً</Text>
           </Pressable>
         ) : (
@@ -196,8 +197,8 @@ export function ButcherMiniSection({
                       {
                         backgroundColor: butcher.workingHours.isOpen
                           ? isHero
-                            ? 'rgba(105, 216, 79, 0.92)'
-                            : 'rgba(16,185,129,0.9)'
+                            ? 'rgba(32, 182, 111, 0.92)'
+                            : 'rgba(32, 182, 111, 0.9)'
                           : 'rgba(239,68,68,0.9)',
                       },
                     ]}
@@ -212,7 +213,7 @@ export function ButcherMiniSection({
                     <View style={s.heroOverlay}>
                       <View style={s.heroRatingRow}>
                         <View style={s.ratingChip}>
-                          <AppIcon name="star" size={12} color={colors.electric} />
+                          <AppIcon name="star" size={12} color={colors.gold} />
                           <Text style={s.ratingText}>{butcher.rating.toFixed(1)}</Text>
                           <Text style={s.ratingCount}>
                             ({butcher.totalOrders > 999
@@ -357,21 +358,21 @@ function createStyles(colors: ThemeColors, isHero = false) {
     // Card
     card: {
       backgroundColor: colors.bgSurface,
-      borderRadius: isHero ? radius.lg : radius.xl,
+      borderRadius: isHero ? sarh.radius.card : radius.xl,
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: colors.borderSoft,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: isHero ? 2 : 4 },
-      shadowOpacity: isHero ? 0.12 : 0.1,
-      shadowRadius: isHero ? 6 : 8,
-      elevation: isHero ? 2 : 4,
+      shadowOpacity: isHero ? 0.08 : 0.1,
+      shadowRadius: isHero ? 4 : 8,
+      elevation: isHero ? 1 : 4,
     },
     cardHero: {
-      borderRadius: radius.lg,
-      shadowOpacity: 0.14,
-      shadowRadius: 8,
-      elevation: 3,
+      borderRadius: sarh.radius.card,
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+      elevation: 2,
     },
 
     // Cover
@@ -417,7 +418,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
-      backgroundColor: colors.electric,
+      backgroundColor: sarh.color.action,
     },
     newBadgeText: {
       ...typography.micro,

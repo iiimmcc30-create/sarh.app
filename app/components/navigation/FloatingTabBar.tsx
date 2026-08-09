@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ambientShadow, ds } from '@/constants/designSystem';
-import { luxuryDark } from '@/constants/homeLuxury';
+import { sarh } from '@/constants/sarhTokens';
 import { motion } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, isAppRtl } from '@/lib/rtl';
@@ -17,14 +17,14 @@ const VISIBLE_TABS: { route: string; icon: string; label: string }[] = [
   { route: 'profile', icon: 'user', label: 'حسابي' },
 ];
 
-export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, gradients, scheme } = useTheme();
   const isLight = scheme === 'light';
   const tokens = isLight ? ds.light : ds.dark;
   const bottom = Math.max(insets.bottom, ds.tabBar.marginBottom);
-  const activeTint = isLight ? colors.electricBright : luxuryDark.accent;
-  const inactiveTint = isLight ? colors.textMuted : luxuryDark.textMuted;
+  const activeTint = isLight ? colors.electricBright : sarh.color.action;
+  const inactiveTint = isLight ? colors.textMuted : sarh.color.textMuted;
 
   const activeRoute = state.routes[state.index]?.name;
 
@@ -42,6 +42,38 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const leftTabs = VISIBLE_TABS.slice(0, 2);
   const rightTabs = VISIBLE_TABS.slice(2);
 
+  const renderTab = (tab: (typeof VISIBLE_TABS)[number]) => {
+    const focused = activeRoute === tab.route;
+    const tint = focused ? activeTint : inactiveTint;
+    return (
+      <Pressable
+        key={tab.route}
+        accessibilityRole="button"
+        accessibilityState={{ selected: focused }}
+        onPress={() => onTabPress(tab.route, focused)}
+        style={({ pressed }) => [styles.tabSlot, pressed && styles.pressed]}
+      >
+        <AppIcon
+          name={tab.icon}
+          size={ds.icon.tab}
+          color={tint}
+          variant={focused ? 'sr' : 'rr'}
+        />
+        <Text
+          style={[
+            styles.tabLabel,
+            {
+              color: tint,
+              fontWeight: focused ? '700' : '500',
+            },
+          ]}
+        >
+          {tab.label}
+        </Text>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={[styles.wrap, { paddingBottom: bottom }]} pointerEvents="box-none">
       <View
@@ -52,46 +84,12 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 backgroundColor: tokens.glass,
                 borderColor: tokens.glassBorder,
               }
-            : styles.barLuxury,
+            : styles.barDark,
           ambientShadow(scheme, 'card'),
         ]}
       >
         <View style={[styles.row, getRtlRow()]}>
-          {leftTabs.map((tab) => {
-            const focused = activeRoute === tab.route;
-            const tint = focused ? activeTint : inactiveTint;
-            return (
-              <Pressable
-                key={tab.route}
-                accessibilityRole="button"
-                accessibilityState={{ selected: focused }}
-                onPress={() => onTabPress(tab.route, focused)}
-                style={({ pressed }) => [
-                  styles.tabSlot,
-                  focused && !isLight && { backgroundColor: luxuryDark.accentSoft },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <AppIcon
-                  name={tab.icon}
-                  size={ds.icon.tab}
-                  color={tint}
-                  variant={focused ? 'sr' : 'rr'}
-                />
-                <Text
-                  style={{
-                    color: tint,
-                    fontSize: 10,
-                    fontWeight: focused ? '700' : '600',
-                    marginTop: 2,
-                    writingDirection: isAppRtl() ? 'rtl' : 'ltr',
-                  }}
-                >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {leftTabs.map(renderTab)}
 
           <View style={styles.fabSlot}>
             <Pressable
@@ -103,57 +101,24 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
               {isLight ? (
                 <LinearGradient
                   colors={gradients.electric}
-                  style={[
-                    styles.fab,
-                    { borderColor: tokens.page },
-                    ambientShadow(scheme, 'fab'),
-                  ]}
+                  style={[styles.fab, { borderColor: tokens.page }]}
                 >
                   <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
                 </LinearGradient>
               ) : (
-                <View style={[styles.fab, styles.fabLuxury]}>
-                  <AppIcon name="plus" variant="sr" size={ds.icon.fab + 2} color="#fff" />
+                <View style={styles.fab}>
+                  <AppIcon
+                    name="plus"
+                    variant="sr"
+                    size={ds.icon.fab}
+                    color={sarh.color.fabIcon}
+                  />
                 </View>
               )}
             </Pressable>
           </View>
 
-          {rightTabs.map((tab) => {
-            const focused = activeRoute === tab.route;
-            const tint = focused ? activeTint : inactiveTint;
-            return (
-              <Pressable
-                key={tab.route}
-                accessibilityRole="button"
-                accessibilityState={{ selected: focused }}
-                onPress={() => onTabPress(tab.route, focused)}
-                style={({ pressed }) => [
-                  styles.tabSlot,
-                  focused && !isLight && { backgroundColor: luxuryDark.accentSoft },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <AppIcon
-                  name={tab.icon}
-                  size={ds.icon.tab}
-                  color={tint}
-                  variant={focused ? 'sr' : 'rr'}
-                />
-                <Text
-                  style={{
-                    color: tint,
-                    fontSize: 10,
-                    fontWeight: focused ? '700' : '600',
-                    marginTop: 2,
-                    writingDirection: isAppRtl() ? 'rtl' : 'ltr',
-                  }}
-                >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {rightTabs.map(renderTab)}
         </View>
       </View>
     </View>
@@ -169,15 +134,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: ds.tabBar.marginH,
   },
   bar: {
-    borderRadius: ds.radius.xxl,
+    borderRadius: sarh.radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 10,
     paddingHorizontal: 6,
   },
-  barLuxury: {
-    backgroundColor: luxuryDark.tabGlass,
-    borderColor: luxuryDark.border,
-    borderRadius: 28,
+  barDark: {
+    backgroundColor: sarh.color.surface,
+    borderColor: sarh.color.border,
     borderWidth: 1,
   },
   row: {
@@ -189,8 +153,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
-    borderRadius: ds.radius.lg,
+    borderRadius: sarh.radius.md,
     paddingVertical: 4,
+  },
+  tabLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    writingDirection: isAppRtl() ? 'rtl' : 'ltr',
   },
   fabSlot: {
     width: ds.tabBar.fabSize + 12,
@@ -201,22 +170,22 @@ const styles = StyleSheet.create({
   fab: {
     width: ds.tabBar.fabSize + 4,
     height: ds.tabBar.fabSize + 4,
-    borderRadius: ds.radius.fab,
+    borderRadius: sarh.radius.fab,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: sarh.color.fab,
     borderWidth: 3,
-  },
-  fabLuxury: {
-    backgroundColor: luxuryDark.accent,
-    borderColor: luxuryDark.bg,
-    shadowColor: luxuryDark.accent,
+    borderColor: sarh.color.bg,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],
     opacity: 0.92,
   },
 });
+
+export default FloatingTabBar;

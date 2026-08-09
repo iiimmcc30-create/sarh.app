@@ -2,6 +2,8 @@
 // Supports dark + light palettes; apply via bootstrap before app modules load.
 
 import { luxuryDark } from './homeLuxury';
+import { sarh } from './sarhTokens';
+import { appFont } from './fonts';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -43,11 +45,18 @@ export type ThemeColors = {
   danger: string;
   warning: string;
   liveRed: string;
+  /** Screen page bg — transparent in dark (pattern layer), bgDeep in light */
+  screenRoot: string;
 };
 
 type BaseThemeColors = Omit<
   ThemeColors,
-  'textBrand' | 'textBrandStrong' | 'textBrandSoft' | 'textBrandAlt' | 'textBrandSuccess'
+  | 'textBrand'
+  | 'textBrandStrong'
+  | 'textBrandSoft'
+  | 'textBrandAlt'
+  | 'textBrandSuccess'
+  | 'screenRoot'
 >;
 
 export type ThemeGradients = {
@@ -80,12 +89,12 @@ const darkColors: BaseThemeColors = {
   bgSurface: luxuryDark.card,
   bgElevated: luxuryDark.surface,
   bgGlass: luxuryDark.tabGlass,
-  bgGlassStrong: 'rgba(9, 9, 9, 0.95)',
-  bgOverlay: 'rgba(0, 0, 0, 0.78)',
-  royal: luxuryDark.surface,
+  bgGlassStrong: 'rgba(11, 22, 34, 0.95)',
+  bgOverlay: 'rgba(11, 22, 34, 0.78)',
+  royal: luxuryDark.surfaceAlt,
   royalDeep: luxuryDark.bg,
   electric: luxuryDark.accent,
-  electricBright: luxuryDark.accent,
+  electricBright: luxuryDark.accentPressed,
   glow: luxuryDark.accent,
   cyan: luxuryDark.accent,
   silver: luxuryDark.textSecondary,
@@ -96,7 +105,7 @@ const darkColors: BaseThemeColors = {
   textSubtle: luxuryDark.textMuted,
   borderSoft: luxuryDark.border,
   borderMid: luxuryDark.border,
-  borderStrong: luxuryDark.accentGlow,
+  borderStrong: 'rgba(150, 175, 185, 0.32)',
   borderHairline: luxuryDark.border,
   ...sharedAccents,
 };
@@ -130,15 +139,15 @@ const lightColors: BaseThemeColors = {
 
 const darkGradients: ThemeGradients = {
   hero: [luxuryDark.bg, luxuryDark.bg, luxuryDark.card],
-  royal: [luxuryDark.bg, luxuryDark.surface, luxuryDark.card],
+  royal: [luxuryDark.bg, luxuryDark.surface, luxuryDark.surfaceAlt],
   glass: [luxuryDark.tabGlass, luxuryDark.bg],
-  liveOverlay: ['transparent', 'rgba(0,0,0,0.45)', 'rgba(9,9,9,0.96)'],
-  card: [luxuryDark.card, luxuryDark.surface],
+  liveOverlay: ['transparent', 'rgba(11,22,34,0.45)', 'rgba(11,22,34,0.96)'],
+  card: [luxuryDark.card, luxuryDark.card],
   cardHover: [luxuryDark.surface, luxuryDark.card],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
   electric: [luxuryDark.accent, luxuryDark.accent, luxuryDark.accent],
-  primary: [luxuryDark.accent, luxuryDark.accent, luxuryDark.surface],
-  rim: [luxuryDark.accentGlow, 'rgba(105, 216, 79, 0)'],
+  primary: [luxuryDark.accent, luxuryDark.accentPressed, luxuryDark.surface],
+  rim: ['rgba(150,175,185,0.12)', 'rgba(150,175,185,0)'],
 };
 
 const lightGradients: ThemeGradients = {
@@ -199,14 +208,27 @@ export function getActiveScheme(): ColorScheme {
 }
 
 function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeColors {
+  // Dark: white/gray for all readable text — green is actions-only.
+  if (scheme === 'dark') {
+    return {
+      ...palette,
+      screenRoot: 'transparent',
+      textBrand: palette.textPrimary,
+      textBrandStrong: palette.textPrimary,
+      textBrandSoft: palette.textSecondary,
+      textBrandAlt: palette.textSecondary,
+      textBrandSuccess: palette.textPrimary,
+    };
+  }
   const accent = palette.electric;
   return {
     ...palette,
-    textBrand: scheme === 'dark' ? accent : palette.glow,
-    textBrandStrong: scheme === 'dark' ? accent : palette.electricBright,
-    textBrandSoft: scheme === 'dark' ? palette.textSecondary : palette.cyan,
-    textBrandAlt: scheme === 'dark' ? accent : palette.electric,
-    textBrandSuccess: scheme === 'dark' ? accent : palette.success,
+    screenRoot: palette.bgDeep,
+    textBrand: palette.glow,
+    textBrandStrong: palette.electricBright,
+    textBrandSoft: palette.textSecondary,
+    textBrandAlt: palette.electric,
+    textBrandSuccess: palette.success,
   };
 }
 
@@ -223,7 +245,7 @@ export function applyThemeScheme(scheme: ColorScheme) {
 export function headerFadeGradient(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
     ? ['rgba(250, 251, 248, 0.98)', 'rgba(250, 251, 248, 0)']
-    : ['rgba(9, 9, 9, 0.98)', 'rgba(9, 9, 9, 0)'];
+    : ['rgba(11, 22, 34, 0.98)', 'rgba(11, 22, 34, 0)'];
 }
 
 export function imageCardOverlay(scheme: ColorScheme): readonly [string, string] {
@@ -241,7 +263,7 @@ export function imageCardOverlayStrong(scheme: ColorScheme): readonly [string, s
 export function scrimColor(scheme: ColorScheme, opacity = 0.85): string {
   return scheme === 'light'
     ? `rgba(250, 251, 248, ${opacity})`
-    : `rgba(9, 9, 9, ${opacity})`;
+    : `rgba(11, 22, 34, ${opacity})`;
 }
 
 /** Raised panel surface — darker gray in dark mode, softer tint in light (sidebar, posts, etc.). */
@@ -252,23 +274,23 @@ export function panelSurfaceBg(scheme: ColorScheme, palette: ThemeColors): strin
 applyThemeScheme(activeScheme);
 
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
+  xs: sarh.space.xs,
+  sm: sarh.space.sm,
+  md: sarh.space.md,
+  lg: sarh.space.lg,
+  xl: sarh.space.xl,
+  xxl: sarh.space.xxl,
+  xxxl: sarh.space.xxxl,
   huge: 48,
 };
 
 export const radius = {
-  sm: 12,
-  md: 16,
-  lg: 22,
-  xl: 22,
+  sm: sarh.radius.sm,
+  md: sarh.radius.md,
+  lg: sarh.radius.lg,
+  xl: sarh.radius.xl,
   xxl: 28,
-  pill: 999,
+  pill: sarh.radius.pill,
 };
 
 /** Text direction follows I18nManager — no hardcoded textAlign (avoids RTL mirror bugs). */
@@ -277,14 +299,14 @@ const directionalText = {
 };
 
 export const typography = {
-  display: { fontSize: 36, fontWeight: '800' as const, letterSpacing: -0.6, ...directionalText },
-  h1: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.4, ...directionalText },
-  h2: { fontSize: 24, fontWeight: '700' as const, ...directionalText },
-  h3: { fontSize: 20, fontWeight: '600' as const, ...directionalText },
-  body: { fontSize: 15, fontWeight: '400' as const, ...directionalText },
-  bodyStrong: { fontSize: 15, fontWeight: '600' as const, ...directionalText },
-  caption: { fontSize: 13, fontWeight: '500' as const, ...directionalText },
-  micro: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.3, ...directionalText },
+  display: { fontSize: 36, fontFamily: appFont.bold, fontWeight: '700' as const, letterSpacing: -0.6, ...directionalText },
+  h1: { fontSize: 28, fontFamily: appFont.bold, fontWeight: '700' as const, letterSpacing: -0.4, ...directionalText },
+  h2: { fontSize: 24, fontFamily: appFont.bold, fontWeight: '700' as const, ...directionalText },
+  h3: { fontSize: 20, fontFamily: appFont.medium, fontWeight: '600' as const, ...directionalText },
+  body: { fontSize: 15, fontFamily: appFont.regular, fontWeight: '400' as const, ...directionalText },
+  bodyStrong: { fontSize: 15, fontFamily: appFont.medium, fontWeight: '600' as const, ...directionalText },
+  caption: { fontSize: 13, fontFamily: appFont.medium, fontWeight: '500' as const, ...directionalText },
+  micro: { fontSize: 11, fontFamily: appFont.medium, fontWeight: '600' as const, letterSpacing: 0.3, ...directionalText },
 };
 
 /** Shared 2026 layout metrics. Keep screens visually consistent across device sizes. */

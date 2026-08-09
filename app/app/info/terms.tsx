@@ -99,7 +99,7 @@ export default function TermsScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgDeep },
+  container: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,

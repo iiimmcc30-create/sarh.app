@@ -435,7 +435,7 @@ function StatusPill({ label, ok }: { label: string; ok: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   centered: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },
   muted: { ...typography.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
   blockedIcon: { fontSize: 48 },

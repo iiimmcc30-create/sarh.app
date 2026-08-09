@@ -626,7 +626,7 @@ export default function CreateListingScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgDeep },
+  container: { flex: 1, backgroundColor: colors.screenRoot },
   flex: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

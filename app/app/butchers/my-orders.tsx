@@ -217,7 +217,7 @@ export default function MyOrdersScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     scroll: { padding: spacing.lg, paddingBottom: 40, gap: spacing.lg },
     section: { gap: spacing.md },
     sectionTitle: {

@@ -218,7 +218,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
     ...getRtlRow(),
     alignItems: 'center',

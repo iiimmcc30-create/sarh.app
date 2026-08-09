@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
@@ -51,7 +52,7 @@ const SECTIONS: Section[] = [
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles((t) => createStyles(t.colors));
+  const styles = useThemedStyles((t) => createStyles(t.colors, t.scheme));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -70,7 +71,7 @@ export default function SettingsScreen() {
       >
         <View style={styles.intro}>
           <View style={styles.introIcon}>
-            <AppIcon name="shield-check-outline" size={24} color={colors.electricBright} />
+            <AppIcon name="shield-check-outline" size={24} color={colors.textMuted} />
           </View>
           <View style={styles.introText}>
             <Text style={styles.introTitle}>إدارة تجربتك بأمان</Text>
@@ -88,7 +89,7 @@ export default function SettingsScreen() {
               style={({ pressed }) => [styles.sectionHeader, pressed && { opacity: 0.72 }]}
             >
               <View style={styles.sectionIcon}>
-                <AppIcon name={section.icon} size={20} color={colors.electricBright} />
+                <AppIcon name={section.icon} size={20} color={colors.textMuted} />
               </View>
               <Text style={styles.sectionTitle}>{section.title}</Text>
               <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
@@ -121,14 +122,15 @@ export default function SettingsScreen() {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
     header: {
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       minHeight: 60,
-      backgroundColor: colors.bgGlassStrong,
+      backgroundColor: 'transparent',
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
@@ -136,9 +138,11 @@ function createStyles(colors: ThemeColors) {
       width: 42,
       height: 42,
       borderRadius: radius.md,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
+      borderColor: isDark ? sarh.color.border : 'transparent',
     },
     headerSpacer: { width: 42, height: 42 },
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
@@ -148,27 +152,29 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
-      backgroundColor: colors.royal,
-      borderRadius: radius.xl,
+      backgroundColor: isDark ? sarh.color.surface : colors.royal,
+      borderRadius: sarh.radius.lg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderMid,
+      borderColor: isDark ? sarh.color.border : colors.borderMid,
     },
     introIcon: {
       width: 48,
       height: 48,
       borderRadius: radius.lg,
-      backgroundColor: colors.bgGlassStrong,
+      backgroundColor: isDark ? sarh.color.surfaceRaised : colors.bgGlassStrong,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
+      borderColor: isDark ? sarh.color.border : 'transparent',
     },
     introText: { flex: 1, gap: spacing.xs },
     introTitle: { ...typography.bodyStrong, color: colors.textPrimary },
     introSubtitle: { ...typography.caption, color: colors.textSecondary, lineHeight: 19 },
     sectionBlock: {
-      backgroundColor: colors.bgGlassStrong,
-      borderRadius: radius.xl,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,
+      borderRadius: sarh.radius.lg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderColor: isDark ? sarh.color.border : colors.borderSoft,
       overflow: 'hidden',
     },
     sectionHeader: {

@@ -2,6 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 import { ds } from '@/constants/designSystem';
 import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
+import { sarh } from '@/constants/sarhTokens';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -62,7 +63,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.md,
       minHeight: 56,
-      backgroundColor: isDark ? colors.bgDeep : 'transparent',
+      backgroundColor: 'transparent',
     },
     logoWrap: {
       ...getRtlRow(),
@@ -72,19 +73,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       minWidth: 0,
     },
     logoAr: {
-      fontSize: 24,
-      fontWeight: '800',
+      fontSize: 22,
+      fontWeight: '700',
       color: colors.textPrimary,
       writingDirection: 'rtl',
     },
     logoSep: {
-      fontSize: 17,
-      fontWeight: '500',
+      fontSize: 16,
+      fontWeight: '400',
       color: colors.textMuted,
     },
     logoEn: {
-      fontSize: 17,
-      fontWeight: '700',
+      fontSize: 16,
+      fontWeight: '600',
       color: colors.textPrimary,
     },
     actions: {
@@ -94,20 +95,22 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
-      borderRadius: ds.radius.pill,
-      backgroundColor: isDark ? colors.bgElevated : 'rgba(255,255,255,0.08)',
+      borderRadius: sarh.radius.pill,
+      backgroundColor: isDark ? 'rgba(16, 31, 44, 0.72)' : 'rgba(255,255,255,0.08)',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? colors.borderSoft : 'rgba(255,255,255,0.1)',
+      borderColor: isDark ? sarh.color.border : 'rgba(255,255,255,0.1)',
       ...(Platform.OS === 'ios'
         ? {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: isDark ? 0.18 : 0.18,
-            shadowRadius: 6,
+            shadowOpacity: isDark ? 0.12 : 0.18,
+            shadowRadius: 4,
           }
-        : { elevation: 2 }),
+        : { elevation: 1 }),
     },
   });
 }
+
+export default HomeAppBar;

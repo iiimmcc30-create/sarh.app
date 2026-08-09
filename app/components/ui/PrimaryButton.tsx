@@ -1,6 +1,5 @@
-// SAFAT — Premium Button (v2) with rim-light, glow & scale press
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import {
   ActivityIndicator,
   Pressable,
@@ -11,8 +10,10 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { ds } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
 import { controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 
 interface PrimaryButtonProps {
@@ -38,22 +39,22 @@ export function PrimaryButton({
   icon,
   fullWidth = false,
 }: PrimaryButtonProps) {
-  const { styles, colors, gradients, shadow } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
+  const { scheme } = useTheme();
+  const isDark = scheme === 'dark';
+  const { styles, colors, gradients } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
     gradients: theme.gradients,
-    shadow: theme.shadow,
   }));
 
   const blocked = disabled || loading;
   const contentColor =
     variant === 'gold'
       ? '#1A1300'
-      : variant === 'outline'
-        ? colors.textBrandStrong
-        : variant === 'ghost'
-          ? colors.textPrimary
-          : '#FFFFFF';
+      : variant === 'outline' || variant === 'ghost'
+        ? colors.textPrimary
+        : '#FFFFFF';
+
   const content = (
     <View style={styles.content}>
       {loading ? (
@@ -86,7 +87,31 @@ export function PrimaryButton({
     );
   }
 
-  const colorStops = variant === 'gold' ? gradients.goldRing : gradients.electric;
+  if (variant === 'gold') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: blocked, busy: loading }}
+        onPress={blocked ? undefined : onPress}
+        style={({ pressed }) => [
+          styles.shell,
+          fullWidth && styles.fullWidth,
+          pressed && styles.pressed,
+          blocked && styles.disabled,
+          style,
+        ]}
+      >
+        <LinearGradient
+          colors={gradients.goldRing}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.btn, small && styles.small, fullWidth && styles.fullWidth]}
+        >
+          {content}
+        </LinearGradient>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
@@ -94,57 +119,45 @@ export function PrimaryButton({
       accessibilityState={{ disabled: blocked, busy: loading }}
       onPress={blocked ? undefined : onPress}
       style={({ pressed }) => [
-        styles.shell,
-        variant !== 'gold' && shadow.glow,
+        styles.btn,
+        styles.primary,
+        isDark && styles.primaryDark,
+        small && styles.small,
         fullWidth && styles.fullWidth,
         pressed && styles.pressed,
         blocked && styles.disabled,
         style,
       ]}
     >
-      <LinearGradient
-        colors={colorStops}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.btn, small && styles.small, fullWidth && styles.fullWidth]}
-      >
-        <LinearGradient
-          colors={gradients.rim}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.rim}
-        />
-        {content}
-      </LinearGradient>
+      {content}
     </Pressable>
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
     shell: {
-      borderRadius: ds.radius.lg,
+      borderRadius: sarh.radius.md,
     },
     btn: {
       paddingHorizontal: spacing.xl,
-      borderRadius: ds.radius.lg,
+      borderRadius: sarh.radius.md,
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: controls.heightLg,
       overflow: 'hidden',
-      position: 'relative',
     },
-    rim: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 1,
+    primary: {
+      backgroundColor: isDark ? sarh.color.action : colors.electric,
+    },
+    primaryDark: {
+      // pressed state handled via opacity transform
     },
     ghost: {
       paddingHorizontal: spacing.xl,
       minHeight: controls.heightLg,
-      borderRadius: ds.radius.lg,
+      borderRadius: sarh.radius.md,
       backgroundColor: colors.bgSurface,
       borderWidth: 1,
       borderColor: colors.borderSoft,
@@ -154,7 +167,7 @@ function createStyles(colors: ThemeColors) {
     outline: {
       paddingHorizontal: spacing.xl,
       minHeight: controls.heightLg,
-      borderRadius: ds.radius.lg,
+      borderRadius: sarh.radius.md,
       backgroundColor: 'transparent',
       borderWidth: 1,
       borderColor: colors.borderStrong,
@@ -167,7 +180,11 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.md,
     },
     fullWidth: { width: '100%' },
-    pressed: { transform: [{ scale: motion.pressScale }], opacity: 0.9 },
+    pressed: {
+      transform: [{ scale: motion.pressScale }],
+      opacity: 0.88,
+      backgroundColor: isDark ? sarh.color.actionPressed : undefined,
+    },
     disabled: { opacity: 0.45 },
     content: {
       ...getRtlRow(),

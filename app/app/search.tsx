@@ -318,7 +318,7 @@ export default function SearchScreen() {
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgDeep },
+  container: { flex: 1, backgroundColor: colors.screenRoot },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
@@ -378,7 +378,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     borderRadius: ds.radius.pill, backgroundColor: tokens.primaryMuted,
     borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderMid,
   },
-  trendingText: { ...typography.caption, color: colors.electricBright },
+  trendingText: { ...typography.caption, color: colors.textSecondary },
   userRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,

@@ -17,6 +17,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { sarhScreenStyles } from '@/constants/sarhScreen';
+import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
@@ -30,9 +32,9 @@ const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 
 
 export default function MarketScreen() {
   const router = useRouter();
-  const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createMarketStyles(theme.colors, theme.scheme),
-    colors: theme.colors,
+  const { styles, colors } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
+    styles: createMarketStyles(colors, scheme, screenStyles),
+    colors,
   }));
   const { listings, fetchListings } = useApp();
   const lastListingsFocusAt = useRef(0);
@@ -221,10 +223,15 @@ export default function MarketScreen() {
   );
 }
 
-function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+function createMarketStyles(
+  colors: ThemeColors,
+  scheme: 'light' | 'dark',
+  screenStyles: ReturnType<typeof sarhScreenStyles>,
+) {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    container: screenStyles.screenRoot,
     pageHeader: {
       alignItems: 'flex-start',
       justifyContent: 'space-between',
@@ -241,7 +248,7 @@ function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     pageTitle: {
       ...typography.h1,
       fontWeight: '800',
-      color: colors.electricBright,
+      color: colors.textPrimary,
       writingDirection: 'rtl',
     },
     pageSubtitle: {
@@ -256,15 +263,7 @@ function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: spacing.sm,
     },
     headerIconBtn: {
-      width: ds.iconBtn.md,
-      height: ds.iconBtn.md,
-      borderRadius: ds.radius.pill,
-      backgroundColor: tokens.glass,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      ...screenStyles.iconBtn,
     },
     searchRow: {
       gap: spacing.sm,
@@ -273,15 +272,7 @@ function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
     },
     filterStarBtn: {
-      width: ds.iconBtn.md,
-      height: ds.iconBtn.md,
-      borderRadius: ds.radius.pill,
-      backgroundColor: tokens.glass,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      ...screenStyles.iconBtn,
     },
     filterStarBtnActive: {
       borderColor: colors.gold,
@@ -291,12 +282,12 @@ function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       flex: 1,
       alignItems: 'center',
       gap: spacing.sm,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
       borderRadius: ds.radius.lg,
       paddingHorizontal: spacing.md,
       minHeight: 44,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
+      borderColor: isDark ? sarh.color.border : tokens.stroke,
       ...ambientShadow(scheme, 'soft'),
     },
     searchInput: {
@@ -320,13 +311,13 @@ function createMarketStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingVertical: 8,
       minHeight: 36,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
+      borderColor: isDark ? sarh.color.border : tokens.stroke,
     },
     filterChipActive: {
-      backgroundColor: colors.electric,
-      borderColor: colors.electric,
+      backgroundColor: isDark ? sarh.color.action : colors.electric,
+      borderColor: isDark ? sarh.color.action : colors.electric,
     },
     filterChipText: {
       ...typography.caption,

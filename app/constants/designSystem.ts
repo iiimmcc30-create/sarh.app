@@ -3,6 +3,7 @@
  * UI tokens only; no business logic.
  */
 import { Platform, type ViewStyle } from 'react-native';
+import { sarh } from './sarhTokens';
 
 export const ds = {
   light: {
@@ -17,38 +18,38 @@ export const ds = {
     glow: '#0B6B3A',
   },
   dark: {
-    page: '#090909',
-    card: '#151515',
-    cardGradientEnd: '#1C1C1C',
-    elevated: '#1C1C1C',
-    primary: '#69D84F',
-    accent: '#69D84F',
-    primaryMuted: 'rgba(105, 216, 79, 0.14)',
-    glass: 'rgba(9, 9, 9, 0.88)',
-    glassBorder: '#262626',
-    stroke: '#262626',
-    glow: '#69D84F',
+    page: sarh.color.bg,
+    card: sarh.color.surface,
+    cardGradientEnd: sarh.color.surfaceRaised,
+    elevated: sarh.color.surfaceRaised,
+    primary: sarh.color.action,
+    accent: sarh.color.action,
+    primaryMuted: sarh.color.actionMuted,
+    glass: sarh.color.overlay,
+    glassBorder: sarh.color.border,
+    stroke: sarh.color.border,
+    glow: sarh.color.action,
   },
 
-  /** 8pt grid */
+  /** 8pt grid — aligned with sarhTokens */
   space: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
+    xs: sarh.space.xs,
+    sm: sarh.space.sm,
+    md: sarh.space.lg,
+    lg: sarh.space.xxl,
+    xl: sarh.space.xxxl,
     xxl: 40,
   },
 
   /** Continuous-style corners */
   radius: {
-    sm: 12,
-    md: 16,
-    lg: 22,
-    xl: 22,
+    sm: sarh.radius.sm,
+    md: sarh.radius.md,
+    lg: sarh.radius.lg,
+    xl: sarh.radius.card,
     xxl: 28,
-    pill: 999,
-    fab: 28,
+    pill: sarh.radius.pill,
+    fab: sarh.radius.fab,
     icon: 14,
   },
 
@@ -84,17 +85,16 @@ export const ds = {
 
 export function ambientShadow(scheme: 'light' | 'dark', level: 'soft' | 'card' | 'fab' = 'card'): ViewStyle {
   const isLight = scheme === 'light';
-  const green = isLight ? '#0B6B3A' : '#69D84F';
 
   if (level === 'fab') {
     return Platform.select({
       ios: {
-        shadowColor: green,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: isLight ? 0.28 : 0.35,
-        shadowRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isLight ? 0.12 : 0.2,
+        shadowRadius: 8,
       },
-      android: { elevation: 10 },
+      android: { elevation: 4 },
       default: {},
     }) as ViewStyle;
   }

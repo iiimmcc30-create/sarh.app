@@ -24,5 +24,5 @@ export default function ButcherRegisterRedirectScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
 });

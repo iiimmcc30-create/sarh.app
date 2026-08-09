@@ -19,6 +19,8 @@ import { BootSplashGate } from '@/components/ui/BootSplashGate';
 import { ListingCovenantHost } from '@/components/listing/ListingCovenantHost';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
+import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
+import { sarh } from '@/constants/sarhTokens';
 import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
 setupRtl();
@@ -72,13 +74,16 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function RootNavigator() {
   const { isDark, colors: themeColors } = useTheme();
 
-  return (
+  const stack = (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: themeColors.bgDeep, ...getRtlDirection() },
+          contentStyle: {
+            backgroundColor: isDark ? 'transparent' : themeColors.bgDeep,
+            ...getRtlDirection(),
+          },
           animation: stackSlideAnimation(),
         }}
       >
@@ -125,6 +130,12 @@ function RootNavigator() {
       </Stack>
     </>
   );
+
+  if (isDark) {
+    return <SarhPatternBackground>{stack}</SarhPatternBackground>;
+  }
+
+  return stack;
 }
 
 function RootLayoutBody() {
@@ -174,7 +185,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   rtlRoot: {
     flex: 1,
-    backgroundColor: '#163526',
+    backgroundColor: sarh.color.bg,
     ...getRtlDirection(),
   },
 });

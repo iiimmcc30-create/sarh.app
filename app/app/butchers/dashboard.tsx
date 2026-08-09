@@ -366,7 +366,7 @@ export default function ButcherDashboardScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
 
   header: {

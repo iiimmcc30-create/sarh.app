@@ -570,7 +570,7 @@ function Field({
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgDeep },
+  container: { flex: 1, backgroundColor: colors.screenRoot },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
   loadingText: { ...typography.body, color: colors.textMuted },
   errorText: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },

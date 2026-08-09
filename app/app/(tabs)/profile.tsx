@@ -13,6 +13,7 @@ import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/featu
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
+import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
 
 export default function ProfileScreen() {
   const router = useRouter();

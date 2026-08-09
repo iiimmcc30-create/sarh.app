@@ -186,7 +186,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
               </Text>
               {butcher.subscriptionActive ? (
                 <View style={f.verifiedPill}>
-                  <AppIcon name="checkmark-circle" size={14} color={colors.electricBright} />
+                  <AppIcon name="checkmark-circle" size={14} color={colors.gold} />
                 </View>
               ) : null}
             </View>

@@ -575,7 +575,7 @@ export default function ListingDetailScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     notFound: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
     scrollContent: {
       paddingBottom: 140,

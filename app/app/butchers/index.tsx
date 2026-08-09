@@ -439,13 +439,13 @@ export default function ButchersScreen() {
 
 function createScreenStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   scroll: { paddingBottom: 20 },
 
   // Sticky header
   stickyHeader: {
     paddingBottom: spacing.sm,
-    backgroundColor: colors.bgDeep,
+    backgroundColor: colors.screenRoot,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },

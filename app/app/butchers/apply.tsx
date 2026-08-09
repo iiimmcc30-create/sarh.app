@@ -183,7 +183,7 @@ export default function ButcherApplyScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

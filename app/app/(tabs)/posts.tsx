@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
+import { sarhScreenStyles } from '@/constants/sarhScreen';
+import { sarh } from '@/constants/sarhTokens';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -31,7 +33,9 @@ type FeedTab = 'for_you' | 'following';
 export default function PostsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createPostsStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme, sarh: screenStyles }) =>
+    createPostsStyles(colors, scheme, screenStyles),
+  );
   const { postId, openComments } = useLocalSearchParams<{
     postId?: string;
     openComments?: string;
@@ -212,14 +216,19 @@ export default function PostsScreen() {
   );
 }
 
-function createPostsStyles(colors: ThemeColors) {
+function createPostsStyles(
+  colors: ThemeColors,
+  scheme: 'light' | 'dark',
+  sarhStyles: ReturnType<typeof sarhScreenStyles>,
+) {
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bgDeep },
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    root: sarhStyles.screenRoot,
+    container: sarhStyles.screenRoot,
     topBar: {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
-      backgroundColor: colors.bgGlassStrong,
+      backgroundColor: 'transparent',
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
     },
@@ -234,9 +243,9 @@ function createPostsStyles(colors: ThemeColors) {
       flexDirection: 'row',
       padding: 3,
       borderRadius: radius.lg,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderColor: isDark ? sarh.color.border : colors.borderSoft,
     },
     tab: {
       flex: 1,
@@ -260,7 +269,7 @@ function createPostsStyles(colors: ThemeColors) {
       width: 24,
       height: 3,
       borderRadius: radius.pill,
-      backgroundColor: colors.electric,
+      backgroundColor: isDark ? sarh.color.action : colors.electric,
     },
     scroll: { paddingBottom: spacing.md, flexGrow: 1 },
     empty: {

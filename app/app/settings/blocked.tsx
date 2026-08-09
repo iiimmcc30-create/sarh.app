@@ -112,7 +112,7 @@ export default function BlockedUsersScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
     content: {
       padding: spacing.lg,
       paddingBottom: spacing.huge,

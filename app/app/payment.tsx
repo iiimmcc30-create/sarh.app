@@ -776,7 +776,7 @@ function ReceiptRow({ label, value, highlight, small }: { label: string; value: 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const cardBg = scheme === 'dark' ? colors.bgElevated : colors.bgSurface;
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
 
     // Header
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 12 },

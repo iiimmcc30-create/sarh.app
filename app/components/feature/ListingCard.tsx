@@ -13,6 +13,7 @@ import {
   type ThemeColors,
 } from '@/constants/theme';
 import { ambientShadow, ds } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
@@ -340,7 +341,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     paddingEnd: 0,
     gap: ds.space.md,
     backgroundColor: colors.bgSurface,
-    borderRadius: ds.radius.xl,
+    borderRadius: sarh.radius.card,
     marginHorizontal: ds.space.md,
     marginVertical: ds.space.xs,
     borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
@@ -399,8 +400,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   listPriceAmount: {
     fontSize: 18,
     lineHeight: 24,
-    color: colors.electricBright,
-    fontWeight: '800',
+    color: colors.textPrimary,
+    fontWeight: '700',
     writingDirection: 'rtl',
   },
   listPriceCurrency: {
@@ -443,8 +444,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   listStatusPinned: {
     ...typography.micro,
-    color: colors.electric,
-    fontWeight: '700',
+    color: colors.textSecondary,
+    fontWeight: '600',
     marginTop: 2,
   },
   listSeller: {

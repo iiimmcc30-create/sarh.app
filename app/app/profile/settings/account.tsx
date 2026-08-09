@@ -184,7 +184,7 @@ export default function AccountInfoScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     content: {
       padding: spacing.lg,

@@ -353,7 +353,7 @@ function createStyles(colors: ThemeColors) {
   } as const;
 
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgDeep },
+  container: { flex: 1, backgroundColor: colors.screenRoot },
   scrollView: { flex: 1 },
   scroll: { paddingBottom: spacing.md },
   heroSection: {

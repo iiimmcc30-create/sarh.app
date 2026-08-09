@@ -131,7 +131,7 @@ export default function ButcherInvoicesScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     scroll: { padding: spacing.lg, paddingBottom: 40, gap: spacing.md },
     card: {
       backgroundColor: colors.bgSurface,

@@ -131,7 +131,7 @@ function createStyles(colors: ThemeColors) {
     price: {
       ...typography.bodyStrong,
       ...getRtlText(),
-      color: colors.electricBright,
+      color: colors.textPrimary,
     },
     actions: {
       ...getRtlRow(),

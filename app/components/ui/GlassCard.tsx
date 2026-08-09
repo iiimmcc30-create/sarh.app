@@ -1,7 +1,6 @@
-// SAFAT — Premium glass-lite card surface
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { ambientShadow, ds } from '@/constants/designSystem';
-import { radius, type ThemeColors } from '@/constants/theme';
+import { ds } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
+import { type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
@@ -14,68 +13,39 @@ interface GlassCardProps {
   padding?: number;
 }
 
+/** Premium flat card surface — Sarh 2026 */
 export function GlassCard({
   children,
   style,
-  glow = false,
   elevated = false,
   padding = ds.space.md,
 }: GlassCardProps) {
-  const { styles, gradients, scheme } = useThemedStyles((theme) => ({
+  const { styles } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
-    gradients: theme.gradients,
-    scheme: theme.scheme,
   }));
 
   return (
-    <View
-      style={[
-        styles.wrap,
-        elevated && ambientShadow(scheme, 'card'),
-        glow && ambientShadow(scheme, 'fab'),
-        style,
-      ]}
-    >
-      <LinearGradient
-        colors={glow ? gradients.cardHover : gradients.card}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.card}
-      >
-        <LinearGradient
-          colors={gradients.rim}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.rim}
-        />
-        <View style={[styles.inner, { padding }]}>{children}</View>
-      </LinearGradient>
+    <View style={[styles.wrap, elevated && styles.elevated, style]}>
+      <View style={[styles.card, { padding }]}>{children}</View>
     </View>
   );
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
     wrap: {
-      borderRadius: ds.radius.xl,
+      borderRadius: sarh.radius.card,
     },
     card: {
-      borderRadius: ds.radius.xl,
+      borderRadius: sarh.radius.card,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
+      borderColor: isDark ? sarh.color.border : colors.borderSoft,
       overflow: 'hidden',
-      position: 'relative',
     },
-    rim: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 1,
-    },
-    inner: {
-      padding: ds.space.md,
+    elevated: {
+      backgroundColor: isDark ? sarh.color.surfaceRaised : colors.bgElevated,
     },
   });
 }

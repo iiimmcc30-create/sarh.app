@@ -428,8 +428,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     },
     aiBadgeText: {
       fontSize: 10,
-      fontWeight: '800',
-      color: colors.electricBright,
+      fontWeight: '700',
+      color: colors.textSecondary,
     },
     menuBtn: {
       width: 30,
@@ -456,7 +456,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     },
     showMore: {
       fontSize: 14,
-      color: colors.electric,
+      color: colors.textSecondary,
       fontWeight: '600',
       marginTop: 4,
       ...getRtlText(),

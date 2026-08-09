@@ -1487,7 +1487,7 @@ export default function ButcherManageScreen() {
 
 function createMainStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
   header: {
     flexDirection: 'row', alignItems: 'center',

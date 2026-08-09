@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { ambientShadow } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -26,7 +27,7 @@ export function OfficialServiceCard({ service }: OfficialServiceCardProps) {
     <View style={styles.card}>
       <View style={[styles.header, getRtlRow()]}>
         <View style={styles.iconWrap}>
-          <AppIcon name={service.icon || 'link-outline'} size={22} color={colors.electricBright} />
+          <AppIcon name={service.icon || 'link-outline'} size={22} color={colors.textMuted} />
         </View>
         <Text style={styles.title} numberOfLines={2}>{service.title}</Text>
       </View>
@@ -45,16 +46,15 @@ export function OfficialServiceCard({ service }: OfficialServiceCardProps) {
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
     card: {
-      borderRadius: radius.xl,
+      borderRadius: sarh.radius.card,
       padding: spacing.lg,
       gap: spacing.md,
-      backgroundColor: colors.bgGlassStrong,
+      backgroundColor: scheme === 'dark' ? sarh.color.surface : colors.bgGlassStrong,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      ...ambientShadow(tokens, 'sm'),
+      borderColor: scheme === 'dark' ? sarh.color.border : colors.borderSoft,
+      ...ambientShadow(scheme, 'soft'),
     },
     header: {
       alignItems: 'center',

@@ -424,7 +424,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.screenRoot,
     },
     headerBlock: {
       paddingBottom: spacing.md,
@@ -701,7 +701,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...getRtlText(),
     },
     tabLabelActive: {
-      color: colors.electric,
+      color: scheme === 'dark' ? colors.textPrimary : colors.electric,
     },
     tabIndicator: {
       position: 'absolute',

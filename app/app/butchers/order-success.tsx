@@ -114,7 +114,7 @@ export default function OrderSuccessScreen() {
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   wrap: {
     flex: 1,
     alignItems: 'center',

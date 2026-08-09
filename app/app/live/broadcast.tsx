@@ -29,7 +29,7 @@ export default function BroadcastScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bgDeep },
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
   icon: { fontSize: 48, marginBottom: spacing.md },
   title: { ...typography.h2, color: colors.textPrimary, textAlign: 'center' },

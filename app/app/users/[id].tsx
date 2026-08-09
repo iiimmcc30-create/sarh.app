@@ -348,7 +348,7 @@ export default function UserProfileScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bgDeep },
+    root: { flex: 1, backgroundColor: colors.screenRoot },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     empty: {
       alignItems: 'center',

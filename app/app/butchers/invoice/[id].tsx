@@ -167,7 +167,7 @@ export default function InvoiceDetailScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     scroll: { padding: spacing.lg, paddingBottom: 40 },
     paper: {
       backgroundColor: colors.bgSurface,

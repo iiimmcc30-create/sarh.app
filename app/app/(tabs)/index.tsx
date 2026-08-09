@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,7 +33,25 @@ const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 
 
 export default function HomeScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(({ colors }) => createHomeStyles(colors));
+  const styles = useThemedStyles(({ colors, sarh }) =>
+    StyleSheet.create({
+      root: sarh.screenRoot,
+      container: sarh.screenRoot,
+      scrollContent: {
+        paddingBottom: spacing.lg,
+      },
+      listingsSection: {
+        gap: spacing.md,
+      },
+      postsSection: {
+        marginTop: spacing.sm,
+        gap: spacing.md,
+      },
+      empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
+      emptyIcon: { fontSize: 36 },
+      emptyText: { ...typography.body, color: colors.textMuted },
+    }),
+  );
   const {
     me,
     listings,
@@ -215,24 +233,4 @@ export default function HomeScreen() {
       </SafeAreaView>
     </View>
   );
-}
-
-function createHomeStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bgDeep },
-    container: { flex: 1, backgroundColor: colors.bgDeep },
-    scrollContent: {
-      paddingBottom: spacing.lg,
-    },
-    listingsSection: {
-      gap: spacing.md,
-    },
-    postsSection: {
-      marginTop: spacing.sm,
-      gap: spacing.md,
-    },
-    empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
-    emptyIcon: { fontSize: 36 },
-    emptyText: { ...typography.body, color: colors.textMuted },
-  });
 }

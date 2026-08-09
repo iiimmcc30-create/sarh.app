@@ -648,7 +648,7 @@ function SummaryRow({
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     centered: {
       flex: 1,
       alignItems: 'center',

@@ -1,20 +1,24 @@
 /**
- * Dark-mode luxury palette (Sarh identity).
- * Used by theme.ts — prefer `colors` from useTheme() in components.
+ * Dark-mode premium palette — Sarh 2026
+ * Prefer `colors` from useTheme() in components.
  */
+import { sarh } from './sarhTokens';
+
 export const luxuryDark = {
-  bg: '#090909',
-  card: '#151515',
-  surface: '#1C1C1C',
-  border: '#262626',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#B3B3B3',
-  textMuted: '#8A8A8A',
-  accent: '#69D84F',
-  accentSoft: 'rgba(105, 216, 79, 0.14)',
-  accentGlow: 'rgba(105, 216, 79, 0.22)',
-  radius: 22,
-  tabGlass: 'rgba(9, 9, 9, 0.88)',
+  bg: sarh.color.bg,
+  card: sarh.color.surface,
+  surface: sarh.color.surfaceRaised,
+  surfaceAlt: sarh.color.surfaceAlt,
+  border: sarh.color.border,
+  textPrimary: sarh.color.text,
+  textSecondary: sarh.color.textSecondary,
+  textMuted: sarh.color.textMuted,
+  accent: sarh.color.action,
+  accentPressed: sarh.color.actionPressed,
+  accentSoft: sarh.color.actionMuted,
+  accentGlow: 'rgba(32, 182, 111, 0.22)',
+  radius: sarh.radius.card,
+  tabGlass: sarh.color.overlay,
 } as const;
 
 /** @deprecated Use luxuryDark or theme colors */

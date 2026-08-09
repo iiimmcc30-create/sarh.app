@@ -81,7 +81,7 @@ export default function RefundScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bgDeep },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
     header: {
       alignItems: 'center',
       paddingHorizontal: spacing.lg,

@@ -7,14 +7,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlDirection } from '@/lib/rtl';
 
 export default function ButchersLayout() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
 
   return (
     <ButcherCartProvider>
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.bgDeep, ...getRtlDirection() },
+        contentStyle: { backgroundColor: scheme === 'dark' ? 'transparent' : colors.bgDeep, ...getRtlDirection() },
         animation: 'slide_from_left',
       }}
     >

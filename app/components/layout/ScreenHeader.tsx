@@ -87,7 +87,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       minHeight: layout.headerHeight,
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.screenRoot,
     },
     side: {
       width: controls.iconButton,

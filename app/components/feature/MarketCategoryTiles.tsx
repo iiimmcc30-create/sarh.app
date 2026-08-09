@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlDirection } from '@/lib/rtl';
@@ -62,7 +63,7 @@ export function MarketCategoryTiles({ value, onChange }: Props) {
                 <AppIcon
                   name={cat.icon}
                   size={ds.icon.sm}
-                  color={active ? colors.electricBright : colors.textMuted}
+                  color={active ? sarh.color.action : colors.textMuted}
                   variant={active ? 'sr' : 'rr'}
                 />
               ) : (
@@ -79,6 +80,7 @@ export function MarketCategoryTiles({ value, onChange }: Props) {
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
+  const isDark = scheme === 'dark';
   const tile = ds.categoryTile;
   return StyleSheet.create({
     row: {
@@ -96,17 +98,17 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: tile,
       height: tile,
       borderRadius: ds.radius.md,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
+      borderColor: isDark ? sarh.color.border : tokens.stroke,
       ...ambientShadow(scheme, 'soft'),
     },
     iconBoxActive: {
-      borderColor: colors.electricBright,
+      borderColor: sarh.color.action,
       borderWidth: 1.5,
-      backgroundColor: tokens.primaryMuted,
+      backgroundColor: isDark ? sarh.color.actionMuted : tokens.primaryMuted,
     },
     emoji: {
       fontSize: 20,
@@ -120,8 +122,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       textAlign: 'center',
     },
     labelActive: {
-      color: colors.electricBright,
+      color: colors.textPrimary,
       fontWeight: '700',
     },
   });
 }
+
+export default MarketCategoryTiles;

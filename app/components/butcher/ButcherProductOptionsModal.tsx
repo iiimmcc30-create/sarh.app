@@ -242,7 +242,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
     },
     chipTextActive: {
-      color: colors.electricBright,
+      color: colors.textPrimary,
       fontWeight: '700',
     },
     weightRow: {
@@ -292,7 +292,7 @@ function createStyles(colors: ThemeColors) {
     totalValue: {
       ...typography.h3,
       ...getRtlText(),
-      color: colors.electricBright,
+      color: colors.textPrimary,
     },
     cta: {
       ...getRtlRow(),

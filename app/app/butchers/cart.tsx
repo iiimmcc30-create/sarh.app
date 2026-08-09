@@ -363,7 +363,7 @@ export default function ButcherCartScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     header: {
       ...getRtlRow(),
       alignItems: 'center',
@@ -449,7 +449,7 @@ function createStyles(colors: ThemeColors) {
     backLinkText: {
       ...typography.bodyStrong,
       ...getRtlText(),
-      color: colors.electricBright,
+      color: colors.textSecondary,
     },
     lines: { gap: spacing.sm, paddingTop: spacing.sm },
     lineCard: {
@@ -487,7 +487,7 @@ function createStyles(colors: ThemeColors) {
     linePrice: {
       ...typography.bodyStrong,
       ...getRtlText(),
-      color: colors.electricBright,
+      color: colors.textSecondary,
     },
     removeBtn: { padding: 4 },
     fieldBlock: {

@@ -320,7 +320,7 @@ export default function ForgotPasswordScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bgDeep },
+  root: { flex: 1, backgroundColor: colors.screenRoot },
   safe: { flex: 1 },
   kav: { flex: 1 },
   backBtn: {
