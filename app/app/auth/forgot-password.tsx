@@ -16,10 +16,9 @@ import {
   TextInput,
   View,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, shadow, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
@@ -326,7 +325,7 @@ function createStyles(colors: ThemeColors) {
   backBtn: {
     position: 'absolute', top: 16, ...inlineEnd(spacing.xl), zIndex: 10,
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
+    backgroundColor: colors.bgGlassStrong, borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
   scroll: { paddingHorizontal: spacing.xl, paddingTop: 60, paddingBottom: 30 },
@@ -334,25 +333,26 @@ function createStyles(colors: ThemeColors) {
   title: { fontSize: 22, fontWeight: 'bold', color: colors.textPrimary, textAlign: 'center' },
   sub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 20, paddingHorizontal: 12 },
   card: {
-    width: '100%', borderRadius: 24, padding: spacing.xl,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline, gap: spacing.md,
+    width: '100%', borderRadius: appChrome.cardRadius, padding: appChrome.cardPadding,
+    backgroundColor: colors.bgGlassStrong, borderWidth: 1, borderColor: colors.borderSoft,
+    gap: spacing.md, ...shadow.card,
   },
   fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1.2, borderColor: colors.borderHairline,
-    paddingHorizontal: spacing.md, height: 50,
+    backgroundColor: colors.bgSurface, borderRadius: appChrome.controlRadius,
+    borderWidth: 1.2, borderColor: colors.borderSoft,
+    paddingHorizontal: spacing.md, height: appChrome.controlHeight,
   },
   countryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  countryCode: { fontSize: 14, color: '#fff', fontWeight: '600' },
+  countryCode: { fontSize: 14, color: colors.textPrimary, fontWeight: '600' },
   countryFlag: { fontSize: 16 },
   inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, fontSize: 14, color: '#fff', textAlign: 'right' },
-  textInput: { flex: 1, fontSize: 14, color: '#fff', textAlign: 'right' },
+  phoneInput: { flex: 1, fontSize: 14, color: colors.textPrimary, textAlign: 'right' },
+  textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, textAlign: 'right' },
   pickerDropdown: {
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.borderHairline, overflow: 'hidden',
+    backgroundColor: colors.bgSurface, borderRadius: appChrome.controlRadius,
+    borderWidth: 1, borderColor: colors.borderSoft, overflow: 'hidden',
   },
   pickerItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -367,8 +367,8 @@ function createStyles(colors: ThemeColors) {
   devHint: { fontSize: 12, color: '#f59e0b', textAlign: 'center' },
   otpRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
   otpBox: {
-    width: 42, height: 50, borderRadius: 10,
-    backgroundColor: colors.bgDeep, borderWidth: 1.5, borderColor: colors.borderHairline,
+    width: 42, height: appChrome.controlHeight, borderRadius: appChrome.controlRadius,
+    backgroundColor: colors.bgSurface, borderWidth: 1.5, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
   otpBoxFilled: { borderColor: colors.electric, backgroundColor: colors.electric + '1A' },
@@ -380,8 +380,8 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   errorText: { fontSize: 12, color: colors.danger, flex: 1, textAlign: 'right' },
-  submitBtn: { borderRadius: 25, overflow: 'hidden', marginTop: 4 },
-  submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
+  submitBtn: { borderRadius: appChrome.controlRadius, overflow: 'hidden', marginTop: 4 },
+  submitGrad: { height: appChrome.controlHeight, alignItems: 'center', justifyContent: 'center' },
   submitText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
   doneWrap: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg },
   doneText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },

@@ -19,7 +19,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, shadow, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
@@ -325,16 +325,16 @@ function createStyles(colors: ThemeColors) {
   backBtn: {
     position: 'absolute', top: 16, ...inlineEnd(spacing.xl),
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
+    backgroundColor: colors.bgGlassStrong, borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
   },
 
   header: { alignItems: 'center', marginBottom: 25 },
 
   card: {
-    width: '100%', borderRadius: 24, padding: spacing.xl,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline,
-    gap: spacing.md,
+    width: '100%', borderRadius: appChrome.cardRadius, padding: appChrome.cardPadding,
+    backgroundColor: colors.bgGlassStrong, borderWidth: 1, borderColor: colors.borderSoft,
+    gap: spacing.md, ...shadow.card,
   },
   channelIconWrap: { alignItems: 'center', marginBottom: -spacing.sm },
   cardTitle: { fontSize: 20, fontWeight: 'bold', color: colors.textPrimary, textAlign: 'center' },
@@ -346,8 +346,8 @@ function createStyles(colors: ThemeColors) {
     marginVertical: spacing.sm,
   },
   otpBox: {
-    width: 42, height: 50, borderRadius: 10,
-    backgroundColor: colors.bgDeep, borderWidth: 1.5, borderColor: colors.borderHairline,
+    width: 42, height: appChrome.controlHeight, borderRadius: appChrome.controlRadius,
+    backgroundColor: colors.bgSurface, borderWidth: 1.5, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
   otpBoxFilled: {
@@ -371,17 +371,17 @@ function createStyles(colors: ThemeColors) {
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: 5 },
   countdownText: { fontSize: 13, color: colors.textMuted },
   countdownBadge: {
-    backgroundColor: colors.bgDeep, paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: colors.bgSurface, paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 6, borderWidth: 1, borderColor: colors.borderHairline,
   },
   countdownValue: { fontSize: 12, color: '#f59e0b', fontWeight: 'bold' },
   resendActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   resendActionText: { fontSize: 13, color: colors.textBrandStrong, fontWeight: '600' },
 
-  verifyBtn: { width: '100%', borderRadius: 25, overflow: 'hidden', marginTop: 10 },
+  verifyBtn: { width: '100%', borderRadius: appChrome.controlRadius, overflow: 'hidden', marginTop: 10 },
   verifyBtnDisabled: { opacity: 0.5 },
-  verifyGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  verifyText: { fontSize: 16, fontWeight: 'bold', color: colors.textPrimary },
+  verifyGrad: { height: appChrome.controlHeight, alignItems: 'center', justifyContent: 'center' },
+  verifyText: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF' },
 
   poweredRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xs },
   poweredText: { fontSize: 11, color: '#6b7280' },

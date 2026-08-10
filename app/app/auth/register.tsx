@@ -20,7 +20,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, shadow, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
@@ -476,7 +476,7 @@ function createStyles(colors: ThemeColors) {
   backBtn: {
     position: 'absolute', top: 16, ...inlineEnd(spacing.xl),
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
+    backgroundColor: colors.bgGlassStrong, borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
   },
 
@@ -485,9 +485,9 @@ function createStyles(colors: ThemeColors) {
   sub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20, lineHeight: 18 },
 
   card: {
-    width: '100%', borderRadius: 24, padding: spacing.xl,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline,
-    gap: spacing.md,
+    width: '100%', borderRadius: appChrome.cardRadius, padding: appChrome.cardPadding,
+    backgroundColor: colors.bgGlassStrong, borderWidth: 1, borderColor: colors.borderSoft,
+    gap: spacing.md, ...shadow.card,
   },
 
   fieldGroup: { gap: 6, width: '100%' },
@@ -495,9 +495,9 @@ function createStyles(colors: ThemeColors) {
   
   inputWrap: {
     ...getRtlRow(), alignItems: 'center',
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1.2, borderColor: colors.borderHairline,
-    paddingHorizontal: spacing.md, height: 50, width: '100%',
+    backgroundColor: colors.bgSurface, borderRadius: appChrome.controlRadius,
+    borderWidth: 1.2, borderColor: colors.borderSoft,
+    paddingHorizontal: spacing.md, height: appChrome.controlHeight, width: '100%',
   },
   inputWrapError: { borderColor: colors.danger },
   inputIcon: marginStart(8),
@@ -512,8 +512,8 @@ function createStyles(colors: ThemeColors) {
   pickerValueFlag: { fontSize: 16 },
 
   pickerDropdown: {
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.borderHairline,
+    backgroundColor: colors.bgSurface, borderRadius: appChrome.controlRadius,
+    borderWidth: 1, borderColor: colors.borderSoft,
     marginTop: 4, overflow: 'hidden', width: '100%',
   },
   pickerItem: {
@@ -535,12 +535,12 @@ function createStyles(colors: ThemeColors) {
   checkbox: {
     width: 20, height: 20, borderRadius: 5,
     borderWidth: 1.5, borderColor: colors.borderHairline,
-    backgroundColor: colors.bgDeep, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.bgSurface, alignItems: 'center', justifyContent: 'center',
   },
   checkboxChecked: { backgroundColor: colors.electric, borderColor: colors.electric },
 
-  submitBtn: { width: '100%', borderRadius: 25, overflow: 'hidden', marginTop: 5 },
-  submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
+  submitBtn: { width: '100%', borderRadius: appChrome.controlRadius, overflow: 'hidden', marginTop: 5 },
+  submitGrad: { height: appChrome.controlHeight, alignItems: 'center', justifyContent: 'center' },
   submitText: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF' },
 
   otpVerifyContainer: {

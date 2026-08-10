@@ -3,9 +3,9 @@
  * Use screenRoot for page backgrounds; bgSurface for cards.
  */
 import { StyleSheet, type ViewStyle } from 'react-native';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
-import { spacing, type ColorScheme, type ThemeColors } from '@/constants/theme';
+import { appChrome, shadow, spacing, type ColorScheme, type ThemeColors } from '@/constants/theme';
 
 /** Page background: transparent in dark (pattern shows), solid in light. */
 export function sarhScreenRoot(scheme: ColorScheme, colors: ThemeColors): string {
@@ -13,9 +13,6 @@ export function sarhScreenRoot(scheme: ColorScheme, colors: ThemeColors): string
 }
 
 export function sarhScreenStyles(colors: ThemeColors, scheme: ColorScheme) {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
-  const isDark = scheme === 'dark';
-
   return {
     screenRoot: {
       flex: 1,
@@ -28,28 +25,28 @@ export function sarhScreenStyles(colors: ThemeColors, scheme: ColorScheme) {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
       borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? 'rgba(16, 31, 44, 0.72)' : tokens.glass,
+      backgroundColor: colors.bgGlassStrong,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      borderColor: colors.borderSoft,
+      ...shadow.soft,
     } satisfies ViewStyle,
     card: {
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderRadius: sarh.radius.lg,
+      backgroundColor: colors.bgGlassStrong,
+      borderRadius: appChrome.cardRadius,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
-      ...ambientShadow(scheme, 'soft'),
+      borderColor: colors.borderSoft,
+      ...shadow.card,
     } satisfies ViewStyle,
     sectionCard: {
       marginHorizontal: spacing.lg,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderRadius: sarh.radius.lg,
+      backgroundColor: colors.bgGlassStrong,
+      borderRadius: appChrome.cardRadius,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
+      borderColor: colors.borderSoft,
       overflow: 'hidden' as const,
-      ...ambientShadow(scheme, 'soft'),
+      ...shadow.card,
     } satisfies ViewStyle,
   };
 }
