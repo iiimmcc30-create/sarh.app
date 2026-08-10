@@ -190,8 +190,6 @@ export function SidebarLogoutButton({
   colors: ThemeColors;
   onPress: () => void;
 }) {
-  const isRtl = I18nManager.isRTL;
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -200,26 +198,14 @@ export function SidebarLogoutButton({
       style={({ pressed }) => [
         logoutStyles.btn,
         {
-          flexDirection: 'row',
-          direction: isRtl ? 'rtl' : 'ltr',
           backgroundColor: colors.bgElevated,
           borderColor: colors.borderSoft,
         },
         pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
       ]}
     >
-      <Text
-        style={[
-          logoutStyles.text,
-          {
-            color: colors.rose,
-            textAlign: isRtl ? 'right' : 'left',
-            writingDirection: isRtl ? 'rtl' : 'ltr',
-          },
-        ]}
-      >
-        تسجيل الخروج
-      </Text>
+      <View style={logoutStyles.spacer} />
+      <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
       <View style={[logoutStyles.iconWrap, { backgroundColor: `${colors.rose}14` }]}>
         <AppIcon name="log-out-outline" size={20} color={colors.rose} />
       </View>
@@ -296,6 +282,8 @@ const themeStyles = StyleSheet.create({
 
 const logoutStyles = StyleSheet.create({
   btn: {
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
@@ -304,18 +292,25 @@ const logoutStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 56,
+  },
+  spacer: {
+    flex: 1,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   text: {
     ...typography.bodyStrong,
     fontWeight: '700',
     fontSize: 15,
-    flex: 1,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    flexShrink: 1,
   },
 });

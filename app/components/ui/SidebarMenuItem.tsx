@@ -1,13 +1,13 @@
 /**
  * Sarh Design System — SidebarMenuItem
  *
- * Fixed visual result (no row-reverse, no double RTL flip):
- *
+ * Target visual (Arabic UI):
  *   RIGHT                                         LEFT
- *   [ Icon ] [ Title ] ———————— [ > ]
+ *   [ Icon ] [ Title ] ————————————— [ > ]
  *
- * App-level RTL already mirrors `flexDirection: 'row'`, so children
- * are declared in logical start→end order and must NOT be reversed again.
+ * Implementation isolates layout in a physical LTR row so app-level RTL
+ * cannot reverse children again. Child order is left→right:
+ *   [Chevron] [spacer] [Title][Icon]
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -20,21 +20,16 @@ export type SidebarMenuItemProps = {
   subtitle?: string;
   onPress: () => void;
   badge?: number;
-  /** Highlight current route (e.g. market sidebar). */
   active?: boolean;
-  /** Draw a bottom hairline divider. Default true. */
   showDivider?: boolean;
-  /** Show trailing chevron. Default true. */
   showChevron?: boolean;
   iconColor?: string;
-  /** Optional override when parent already has theme colors. */
   colors?: ThemeColors;
   style?: ViewStyle;
   accessibilityLabel?: string;
   testID?: string;
 };
 
-/** Shared metrics — keep every nav row identical across the app. */
 export const SIDEBAR_MENU_ITEM = {
   minHeight: 56,
   paddingHorizontal: spacing.md,
@@ -85,11 +80,25 @@ export function SidebarMenuItem({
         style,
       ]}
     >
-      {/* Start cluster (physical right under app RTL): Icon then Title */}
-      <View style={styles.rightContent}>
-        <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
-          <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
+      {/* Physical LEFT: quiet chevron */}
+      {showChevron ? (
+        <AppIcon
+          name="angle-left"
+          size={SIDEBAR_MENU_ITEM.chevronSize}
+          color={colors.textSubtle}
+        />
+      ) : null}
+
+      {showBadge ? (
+        <View style={[styles.badge, { backgroundColor: colors.electric }]}>
+          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
         </View>
+      ) : null}
+
+      <View style={styles.spacer} />
+
+      {/* Physical RIGHT: title then icon (icon at the far right) */}
+      <View style={styles.rightContent}>
         <View style={styles.textWrap}>
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
             {title}
@@ -100,40 +109,22 @@ export function SidebarMenuItem({
             </Text>
           ) : null}
         </View>
-      </View>
-
-      <View style={styles.spacer} />
-
-      {showBadge ? (
-        <View style={[styles.badge, { backgroundColor: colors.electric }]}>
-          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+        <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
+          <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
         </View>
-      ) : null}
-
-      {showChevron ? (
-        <AppIcon
-          name="angle-left"
-          size={SIDEBAR_MENU_ITEM.chevronSize}
-          color={colors.textSubtle}
-        />
-      ) : null}
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   /**
-   * IMPORTANT:
-   * - flexDirection is always 'row' — never 'row-reverse'
-   * - direction is 'rtl' once so the first child sits on the physical right
-   * - Do not combine with another reverse on parents
-   *
-   * Children order: [rightContent(Icon, Title)] [spacer] [chevron]
-   * Visual: RIGHT Icon Title ——— LEFT chevron
+   * Locked to physical LTR so I18nManager RTL cannot reverse the row.
+   * Left → Right children: chevron, spacer, title+icon.
    */
   row: {
     flexDirection: 'row',
-    direction: 'rtl',
+    direction: 'ltr',
     width: '100%',
     alignSelf: 'stretch',
     alignItems: 'center',
@@ -149,11 +140,10 @@ const styles = StyleSheet.create({
   },
   rightContent: {
     flexDirection: 'row',
-    direction: 'rtl',
+    direction: 'ltr',
     alignItems: 'center',
     gap: SIDEBAR_MENU_ITEM.gap,
     flexShrink: 1,
-    maxWidth: '85%',
   },
   iconWrap: {
     width: SIDEBAR_MENU_ITEM.iconWrap,

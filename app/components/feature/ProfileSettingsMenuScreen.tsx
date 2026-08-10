@@ -47,20 +47,23 @@ export function ProfileSettingsMenuScreen({
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
       >
-        {sections.map((section) => (
-          <SidebarSection key={section.title} title={section.title} colors={colors}>
-            {section.items.map((item, index) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => handleItemPress(item)}
-                isLast={index === section.items.length - 1}
-              />
-            ))}
-          </SidebarSection>
-        ))}
+        <View style={styles.sections}>
+          {sections.map((section) => (
+            <SidebarSection key={section.title} title={section.title} colors={colors}>
+              {section.items.map((item, index) => (
+                <SidebarMenuRow
+                  key={item.key}
+                  item={item}
+                  colors={colors}
+                  onPress={() => handleItemPress(item)}
+                  isLast={index === section.items.length - 1}
+                />
+              ))}
+            </SidebarSection>
+          ))}
+        </View>
 
         <SidebarLogoutButton colors={colors} onPress={onLogout} />
         <SidebarFooterArt />
@@ -73,10 +76,14 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.screenRoot,
     },
     content: {
-      paddingBottom: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xxl,
+    },
+    sections: {
+      gap: 0,
     },
   });
 }
