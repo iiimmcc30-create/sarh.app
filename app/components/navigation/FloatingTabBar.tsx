@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const VISIBLE_TABS: { route: string; icon: string; label: string }[] = [
   { route: 'index', icon: 'home', label: 'الرئيسية' },
   { route: 'market', icon: 'tags', label: 'السوق' },
-  { route: 'posts', icon: 'newspaper', label: 'المنشورات' },
+  { route: 'messages', icon: 'chatbubble-outline', label: 'الرسائل' },
   { route: 'profile', icon: 'user', label: 'حسابي' },
 ];
 
