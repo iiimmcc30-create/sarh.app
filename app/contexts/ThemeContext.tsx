@@ -35,8 +35,9 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>('light');
+  const [preference, setPreferenceState] = useState<ThemePreference>('system');
   const [scheme, setScheme] = useState<ColorScheme>(getActiveScheme());
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -45,7 +46,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       try {
         const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         const nextPreference =
-          stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'light';
+          stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
         const resolved = resolveScheme(nextPreference);
         applyThemeScheme(resolved);
         if (!mounted) return;
@@ -53,6 +54,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setScheme(resolved);
       } catch (error) {
         console.warn('[theme] failed to load preference', error);
+      } finally {
+        if (mounted) setHydrated(true);
       }
     })();
 
@@ -96,7 +99,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [preference, scheme],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={value}>{hydrated ? children : null}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

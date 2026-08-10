@@ -197,7 +197,7 @@ export function createShadow(palette: BaseThemeColors) {
   };
 }
 
-let activeScheme: ColorScheme = 'light';
+let activeScheme: ColorScheme = 'dark';
 
 export const colors = {} as ThemeColors;
 export const gradients: ThemeGradients = { ...darkGradients };
