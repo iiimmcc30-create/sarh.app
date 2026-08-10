@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/feature/ProfileScreenLayout';
+import { SarhScreenBackground } from '@/components/ui/SarhScreenBackground';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
@@ -169,6 +170,7 @@ export default function ProfileScreen() {
   };
 
   return (
+    <SarhScreenBackground variant="profile">
     <ProfileScreenLayout
       mode="own"
       user={profileUser}
@@ -191,6 +193,7 @@ export default function ProfileScreen() {
       postsContent={renderPosts()}
       adsContent={renderAds()}
     />
+    </SarhScreenBackground>
   );
 }
 

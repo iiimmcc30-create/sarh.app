@@ -24,6 +24,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { PostItem } from '@/components/feature/PostItem';
 import { CreatePostFab } from '@/components/feature/CreatePostFab';
+import { SarhScreenBackground } from '@/components/ui/SarhScreenBackground';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import type { Post } from '@/services/types';
@@ -153,7 +154,7 @@ export default function PostsScreen() {
   );
 
   return (
-    <View style={styles.root}>
+    <SarhScreenBackground variant="posts">
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.topBar}>
           <Text style={styles.screenTitle}>المنشورات</Text>
@@ -212,7 +213,7 @@ export default function PostsScreen() {
       </SafeAreaView>
 
       <CreatePostFab mode="fixed" />
-    </View>
+    </SarhScreenBackground>
   );
 }
 

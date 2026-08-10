@@ -24,6 +24,7 @@ import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
+import { SarhScreenBackground } from '@/components/ui/SarhScreenBackground';
 import { useApp } from '@/hooks/useApp';
 import { Country, countries, Listing } from '@/services/types';
 
@@ -204,7 +205,8 @@ export default function MarketScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
+    <SarhScreenBackground variant="market">
+      <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
       <FlatList
         data={filtered}
         renderItem={renderItem}
@@ -219,7 +221,8 @@ export default function MarketScreen() {
         maxToRenderPerBatch={10}
         windowSize={8}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </SarhScreenBackground>
   );
 }
 

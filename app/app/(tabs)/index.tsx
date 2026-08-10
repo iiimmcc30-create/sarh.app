@@ -22,6 +22,7 @@ import { ListingCard } from '@/components/feature/ListingCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { PostItem } from '@/components/feature/PostItem';
 import { HomeAppBar } from '@/components/ui/HomeAppBar';
+import { SarhScreenBackground } from '@/components/ui/SarhScreenBackground';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
@@ -144,7 +145,7 @@ export default function HomeScreen() {
   }, [posts]);
 
   return (
-    <View style={styles.root}>
+    <SarhScreenBackground variant="home">
       <SafeAreaView style={styles.container} edges={['top']}>
         <HomeAppBar
           onMenu={() => router.push('/sidebar')}
@@ -231,6 +232,6 @@ export default function HomeScreen() {
           <View style={{ height: TAB_BAR_CLEARANCE }} />
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </SarhScreenBackground>
   );
 }
