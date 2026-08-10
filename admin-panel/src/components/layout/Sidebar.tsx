@@ -19,6 +19,7 @@ import {
   BookOpen,
   Briefcase,
   LogOut,
+  LifeBuoy,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
@@ -31,6 +32,7 @@ const nav = [
   { href: '/official-services', label: 'خدمات سرح', icon: Briefcase },
   { href: '/listings', label: 'الإعلانات', icon: Tag },
   { href: '/reports', label: 'البلاغات', icon: Flag },
+  { href: '/support', label: 'الدعم والمساعدة', icon: LifeBuoy },
   { href: '/live', label: 'البث المباشر', icon: Radio },
   { href: '/butchers', label: 'الملاحم', icon: Store },
   { href: '/applications', label: 'طلبات الملاحم', icon: ClipboardList },

@@ -1,33 +1,25 @@
-import { SettingsMenuScreen, type SettingsMenuItem } from '@/components/ui/SettingsMenuScreen';
-
-const ITEMS: SettingsMenuItem[] = [
-  {
-    icon: 'email-outline',
-    label: 'تواصل معنا',
-    subtitle: 'راسلنا عبر البريد أو واتساب',
-    route: '/info/contact',
-  },
-  {
-    icon: 'alert-circle-outline',
-    label: 'الإبلاغ عن مشكلة',
-    subtitle: 'أبلغنا عن خطأ أو محتوى مخالف',
-    route: '/info/contact',
-  },
-  {
-    icon: 'ticket-outline',
-    label: 'تذاكر الدعم',
-    subtitle: 'متابعة طلبات الدعم الفني',
-    route: '/info/contact',
-  },
-];
+import { SettingsMenuScreen } from '@/components/ui/SettingsMenuScreen';
 
 export default function SupportScreen() {
   return (
     <SettingsMenuScreen
       title="الدعم والمساعدة"
-      description="فريق سرح جاهز لمساعدتك والإجابة عن استفساراتك."
+      description="تذاكر الدعم، طلب توثيق الحساب، والأسئلة الشائعة"
       heroIcon="lifebuoy"
-      items={ITEMS}
+      items={[
+        {
+          icon: 'lifebuoy',
+          label: 'مركز الدعم والمساعدة',
+          subtitle: 'تذاكر الدعم • التوثيق • الأسئلة الشائعة',
+          route: '/support',
+        },
+        {
+          icon: 'phone',
+          label: 'تواصل معنا',
+          subtitle: 'هاتف • واتساب • بريد',
+          route: '/info/contact',
+        },
+      ]}
     />
   );
 }

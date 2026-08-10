@@ -45,7 +45,7 @@ export const updateListingSchema = z.object({
 export const updateReportSchema = z
   .object({
     status: z
-      .enum(['OPEN', 'IN_REVIEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'])
+      .enum(['OPEN', 'IN_REVIEW', 'IN_PROGRESS', 'AWAITING_USER', 'RESOLVED', 'CLOSED'])
       .optional(),
     adminNotes: z.string().optional(),
     priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).optional(),

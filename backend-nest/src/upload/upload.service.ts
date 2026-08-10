@@ -55,6 +55,20 @@ function butcherApplicationFileKey(
   return undefined;
 }
 
+const SUPPORT_MIME_TYPES = [
+  ...IMAGE_MIME_TYPES,
+  ...STORY_VIDEO_MIME_TYPES,
+  ...ALLOWED_DOCUMENT_MIME_TYPES,
+] as const;
+
+function supportFileKey(userId: string, slot: UploadSlot): string | undefined {
+  if (slot.provider === 's3') return slot.key;
+  if (slot.provider === 'cloudinary') {
+    return `support/${userId}/${slot.publicId}`;
+  }
+  return undefined;
+}
+
 function validateMimetype(
   folder: PresignUploadDto['folder'],
   mimetype: string,
@@ -62,9 +76,11 @@ function validateMimetype(
   const allowed: readonly string[] =
     folder === 'butcher-applications'
       ? ALLOWED_DOCUMENT_MIME_TYPES
-      : MEDIA_FOLDERS.has(folder as UploadFolder)
-        ? [...IMAGE_MIME_TYPES, ...STORY_VIDEO_MIME_TYPES]
-        : IMAGE_MIME_TYPES;
+      : folder === 'support'
+        ? SUPPORT_MIME_TYPES
+        : MEDIA_FOLDERS.has(folder as UploadFolder)
+          ? [...IMAGE_MIME_TYPES, ...STORY_VIDEO_MIME_TYPES]
+          : IMAGE_MIME_TYPES;
 
   if (!allowed.includes(mimetype)) {
     throwApi(
@@ -121,7 +137,7 @@ export class UploadService {
 
     const count = dto.count ?? 1;
     const presignOptions =
-      dto.folder === 'butcher-applications'
+      dto.folder === 'butcher-applications' || dto.folder === 'support'
         ? { userId: user.userId }
         : undefined;
 
@@ -142,9 +158,11 @@ export class UploadService {
       const maxSizeMb =
         dto.folder === 'butcher-applications'
           ? Math.ceil(MAX_SHOP_PHOTO_FILE_BYTES / (1024 * 1024))
-          : dto.mimetype.startsWith('video/')
-            ? 50
-            : 20;
+          : dto.folder === 'support'
+            ? 25
+            : dto.mimetype.startsWith('video/')
+              ? 50
+              : 20;
 
       const normalizedUrls =
         dto.folder === 'butcher-applications'
@@ -152,7 +170,12 @@ export class UploadService {
               const fileKey = butcherApplicationFileKey(user.userId, slot);
               return fileKey ? { ...slot, fileKey } : slot;
             })
-          : urls;
+          : dto.folder === 'support'
+            ? urls.map((slot) => {
+                const fileKey = supportFileKey(user.userId, slot);
+                return fileKey ? { ...slot, fileKey } : slot;
+              })
+            : urls;
 
       return {
         provider: getStorageProvider(),

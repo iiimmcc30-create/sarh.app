@@ -320,34 +320,6 @@ export default function ProfileSettingsScreen() {
 
 
 
-  const openReportsTicket = async () => {
-
-    const key = await presentActionSheet({
-
-      title: 'البلاغات',
-
-      message: 'اختر نوع التذكرة',
-
-      items: [
-
-        { key: 'support', label: 'تواصل مع الدعم' },
-
-        { key: 'report', label: 'إبلاغ عن محتوى مخالف' },
-
-      ],
-
-    });
-
-    if (key === 'support' || key === 'report') {
-
-      router.push('/info/contact' as any);
-
-    }
-
-  };
-
-
-
   const accountSubtitle = formatAccountSubtitle(account, user?.phone, user?.email);
 
 
@@ -592,6 +564,18 @@ export default function ProfileSettingsScreen() {
 
             {
 
+              key: 'support-hub',
+
+              icon: 'lifebuoy',
+
+              label: 'الدعم والمساعدة',
+
+              route: '/support',
+
+            },
+
+            {
+
               key: 'contact',
 
               icon: 'headset',
@@ -599,18 +583,6 @@ export default function ProfileSettingsScreen() {
               label: 'تواصل معنا',
 
               route: '/info/contact',
-
-            },
-
-            {
-
-              key: 'reports',
-
-              icon: 'ticket',
-
-              label: 'البلاغات (إنشاء تذكرة)',
-
-              onPress: () => void openReportsTicket(),
 
             },
 

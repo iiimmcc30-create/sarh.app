@@ -10,6 +10,7 @@ const UPLOAD_FOLDERS = [
   'temp',
   'messages',
   'butcher-applications',
+  'support',
 ] as const;
 
 export class PresignUploadDto {

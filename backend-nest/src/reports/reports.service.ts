@@ -43,6 +43,7 @@ export class ReportsService {
     const ticket = await this.prisma.supportTicket.create({
       data: {
         ticketNumber: this.ticketNumber(),
+        type: 'REPORT',
         category: 'REPORT',
         priority: 'NORMAL',
         status: 'OPEN',

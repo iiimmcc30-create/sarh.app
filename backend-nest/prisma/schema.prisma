@@ -75,6 +75,10 @@ model User {
   butcherApplicationTimelineEvents    ButcherApplicationTimelineEvent[]
   verifiedButcherApplicationDocuments ButcherApplicationDocument[]      @relation("DocumentVerifiedBy")
   supportTickets                      SupportTicket[]
+  assignedSupportTickets              SupportTicket[]                   @relation("TicketAssignee")
+  supportTicketMessages               SupportTicketMessage[]
+  accountVerificationRequest          AccountVerificationRequest?
+  reviewedVerificationRequests        AccountVerificationRequest[]      @relation("VerificationReviewer")
 
   @@index([username])
   @@index([email])
@@ -1157,24 +1161,134 @@ enum ButcherApplicationTimelineAction {
 }
 
 model SupportTicket {
-  id           String         @id @default(uuid())
-  ticketNumber String         @unique
+  id           String                  @id @default(uuid())
+  ticketNumber String                  @unique
+  type         SupportTicketType       @default(SUPPORT)
   category     String
-  priority     TicketPriority @default(NORMAL)
-  status       TicketStatus   @default(OPEN)
+  priority     TicketPriority          @default(NORMAL)
+  status       TicketStatus            @default(OPEN)
   subject      String
   description  String
   adminNotes   String?
   reporterId   String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  assignedToId String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
   deletedAt    DateTime?
-  reporter     User?          @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  reporter     User?                   @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  assignedTo   User?                   @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  messages     SupportTicketMessage[]
+  attachments  SupportTicketAttachment[]
 
   @@index([status])
   @@index([category])
+  @@index([type])
   @@index([priority])
   @@index([createdAt])
+  @@index([deletedAt])
+  @@index([reporterId])
+  @@index([assignedToId])
+}
+
+model SupportTicketMessage {
+  id           String                    @id @default(uuid())
+  ticketId     String
+  authorId     String
+  body         String
+  isStaffReply Boolean                   @default(false)
+  createdAt    DateTime                  @default(now())
+  ticket       SupportTicket             @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author       User                      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  attachments  SupportTicketAttachment[]
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model SupportTicketAttachment {
+  id            String                @id @default(uuid())
+  ticketId      String
+  messageId     String?
+  fileUrl       String
+  fileName      String?
+  mimeType      String?
+  fileSizeBytes Int?
+  createdAt     DateTime              @default(now())
+  ticket        SupportTicket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message       SupportTicketMessage? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([messageId])
+}
+
+model AccountVerificationRequest {
+  id             String                           @id @default(uuid())
+  userId         String                           @unique
+  status         AccountVerificationStatus        @default(DRAFT)
+  fullName       String?
+  nationalId     String?
+  businessName   String?
+  businessType   String?
+  additionalInfo String?
+  reviewReason   String?
+  adminNotes     String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  submittedAt    DateTime?
+  createdAt      DateTime                         @default(now())
+  updatedAt      DateTime                         @updatedAt
+  user           User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy     User?                            @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  documents      AccountVerificationDocument[]
+  timeline       AccountVerificationTimelineEvent[]
+
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model AccountVerificationDocument {
+  id               String                          @id @default(uuid())
+  requestId        String
+  type             AccountVerificationDocumentType
+  fileKey          String
+  fileUrl          String
+  originalFileName String?
+  mimeType         String?
+  fileSizeBytes    Int?
+  createdAt        DateTime                        @default(now())
+  request          AccountVerificationRequest      @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+model AccountVerificationTimelineEvent {
+  id        String                     @id @default(uuid())
+  requestId String
+  action    String
+  actorId   String?
+  note      String?
+  createdAt DateTime                   @default(now())
+  request   AccountVerificationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([createdAt])
+}
+
+model Faq {
+  id         String      @id @default(uuid())
+  questionAr String
+  answerAr   String
+  category   FaqCategory
+  isActive   Boolean     @default(true)
+  sortOrder  Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+
+  @@index([category])
+  @@index([isActive])
+  @@index([sortOrder])
   @@index([deletedAt])
 }
 
@@ -1232,8 +1346,40 @@ enum TicketStatus {
   OPEN
   IN_REVIEW
   IN_PROGRESS
+  AWAITING_USER
   RESOLVED
   CLOSED
+}
+
+enum SupportTicketType {
+  SUPPORT
+  REPORT
+}
+
+enum AccountVerificationStatus {
+  DRAFT
+  UNDER_REVIEW
+  NEEDS_AMENDMENTS
+  VERIFIED
+  REJECTED
+}
+
+enum AccountVerificationDocumentType {
+  NATIONAL_ID
+  COMMERCIAL_REGISTER
+  OTHER
+}
+
+enum FaqCategory {
+  ACCOUNT
+  ADS
+  MARKET
+  BUY_SELL
+  PAYMENT
+  VERIFICATION
+  BUTCHERS
+  TECHNICAL
+  GENERAL
 }
 
 enum KnowledgeSourceType {

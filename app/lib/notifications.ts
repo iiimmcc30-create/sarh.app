@@ -294,6 +294,31 @@ export function handleNotificationNavigation(
         ctx.router.push('/butchers/my-application' as never);
         return true;
       }
+
+      case 'support_ticket_created':
+      case 'support_ticket_staff_reply':
+      case 'support_ticket_status_changed':
+      case 'support_ticket_awaiting_user':
+      case 'support_ticket_closed': {
+        const ticketId = stringField(data, 'ticketId');
+        if (ticketId) {
+          ctx.router.push({
+            pathname: '/support/tickets/[id]',
+            params: { id: ticketId },
+          } as never);
+          return true;
+        }
+        ctx.router.push('/support/tickets' as never);
+        return true;
+      }
+
+      case 'account_verification_received':
+      case 'account_verification_review_started':
+      case 'account_verification_needs_amendments':
+      case 'account_verification_approved':
+      case 'account_verification_rejected':
+        ctx.router.push('/support/verification' as never);
+        return true;
     }
   }
 

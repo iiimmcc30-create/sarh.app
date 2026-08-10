@@ -11,7 +11,8 @@ type UploadFolder =
   | 'posts'
   | 'temp'
   | 'messages'
-  | 'butcher-applications';
+  | 'butcher-applications'
+  | 'support';
 
 type S3UploadSlot = {
   provider?: 's3';
@@ -292,6 +293,61 @@ export async function uploadButcherApplicationFileFromUri(
 
   return {
     fileKey: slot.fileKey,
+    mimeType: mimetype,
+    fileSizeBytes,
+    originalFileName,
+  };
+}
+
+/** Presign + upload for support ticket / verification attachments. */
+export async function uploadSupportFileFromUri(
+  accessToken: string,
+  localUri: string,
+  options: { originalFileName?: string; mimeType?: string } = {},
+): Promise<{ fileKey: string; fileUrl: string; mimeType: string; fileSizeBytes: number; originalFileName: string }> {
+  const mimetype = options.mimeType ?? guessMime(localUri);
+  const originalFileName = options.originalFileName ?? fileNameFromUri(localUri);
+  const { blob, fileSizeBytes } = await readLocalFileMeta(localUri, mimetype);
+
+  const presignRes = await fetch(`${API_BASE}/api/upload/presign`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ mimetype, folder: 'support', count: 1 }),
+  });
+
+  const presignJson = await presignRes.json().catch(() => ({}));
+  if (!presignRes.ok || !presignJson.success) {
+    throw new Error(
+      presignJson.messageAr ||
+        presignJson.message ||
+        (presignRes.status === 503
+          ? 'خدمة رفع الملفات غير مُعدّة على السيرفر'
+          : 'فشل تجهيز الرفع'),
+    );
+  }
+
+  const slot = presignJson.data?.urls?.[0] as PresignSlot & { cdnUrl?: string } | undefined;
+  if (!slot?.uploadUrl || !slot.fileKey) {
+    throw new Error('استجابة الرفع غير صالحة');
+  }
+
+  let fileUrl: string;
+  if (slot.provider === 'local') {
+    fileUrl = await uploadToLocal(accessToken, slot as LocalUploadSlot, localUri, mimetype);
+  } else if (slot.provider === 'cloudinary' || 'signature' in slot) {
+    fileUrl = await uploadToCloudinary(slot as CloudinaryUploadSlot, localUri, mimetype);
+  } else {
+    await uploadBlobToSlot(slot, accessToken, localUri, mimetype, blob);
+    if (!slot.cdnUrl) throw new Error('استجابة الرفع غير صالحة');
+    fileUrl = slot.cdnUrl;
+  }
+
+  return {
+    fileKey: slot.fileKey,
+    fileUrl,
     mimeType: mimetype,
     fileSizeBytes,
     originalFileName,

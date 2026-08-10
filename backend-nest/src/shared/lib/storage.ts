@@ -19,7 +19,8 @@ export type UploadFolder =
   | 'posts'
   | 'temp'
   | 'messages'
-  | 'butcher-applications';
+  | 'butcher-applications'
+  | 'support';
 
 export interface UploadResult {
   key: string;
@@ -164,18 +165,18 @@ export function getAllowedUploadOrigins(): string[] {
 }
 
 function cloudinaryFolder(folder: UploadFolder, userId?: string): string {
-  if (folder === 'butcher-applications') {
+  if (folder === 'butcher-applications' || folder === 'support') {
     if (!userId)
-      throw new Error('userId is required for butcher-applications uploads');
+      throw new Error(`userId is required for ${folder} uploads`);
     return `${CLOUDINARY_BASE_FOLDER}/${folder}/${userId}`;
   }
   return `${CLOUDINARY_BASE_FOLDER}/${folder}`;
 }
 
 function objectKeyPrefix(folder: UploadFolder, userId?: string): string {
-  if (folder === 'butcher-applications') {
+  if (folder === 'butcher-applications' || folder === 'support') {
     if (!userId)
-      throw new Error('userId is required for butcher-applications uploads');
+      throw new Error(`userId is required for ${folder} uploads`);
     return `${folder}/${userId}`;
   }
   return folder;
