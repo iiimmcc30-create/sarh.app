@@ -521,7 +521,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.md, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)',
   },
-  pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
+  pickerItemActive: { backgroundColor: colors.electric + '1A' },
   pickerFlag: { fontSize: 16 },
   pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
   pickerCode: { fontSize: 13, color: colors.textMuted },
@@ -541,11 +541,11 @@ function createStyles(colors: ThemeColors) {
 
   submitBtn: { width: '100%', borderRadius: 25, overflow: 'hidden', marginTop: 5 },
   submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  submitText: { fontSize: 16, fontWeight: 'bold', color: colors.textPrimary },
+  submitText: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF' },
 
   otpVerifyContainer: {
-    backgroundColor: 'rgba(30,111,241,0.05)', borderRadius: 12,
-    borderWidth: 1, borderColor: 'rgba(30,111,241,0.15)',
+    backgroundColor: colors.electric + '0D', borderRadius: 12,
+    borderWidth: 1, borderColor: colors.electric + '26',
     padding: spacing.md, gap: spacing.sm, width: '100%',
   },
   otpInput: { flex: 1, fontSize: 18, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center', fontWeight: 'bold' },

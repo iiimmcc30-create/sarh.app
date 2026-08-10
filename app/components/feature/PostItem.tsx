@@ -14,7 +14,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { ambientShadow, ds } from '@/constants/designSystem';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { formatPostTimestampAr } from '@/lib/formatRelativeTime';
@@ -338,8 +338,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       marginHorizontal: feedCard ? spacing.lg : spacing.md,
       marginTop: feedCard ? spacing.md : spacing.sm,
       marginBottom: feedCard ? spacing.xs : 0,
-      borderRadius: ds.radius.xl,
-      backgroundColor: colors.bgSurface,
+      borderRadius: appChrome.cardRadius,
+      backgroundColor: colors.bgGlassStrong,
       borderWidth: feedCard ? 1 : 0,
       borderColor: feedCard ? colors.borderSoft : 'transparent',
       ...cardShadow,
@@ -355,7 +355,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     cardProfile: {
       marginHorizontal: 0,
       marginTop: spacing.md,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgGlassStrong,
       ...cardShadow,
     },
     row: {

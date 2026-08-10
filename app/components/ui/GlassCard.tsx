@@ -1,6 +1,5 @@
 import { ds } from '@/constants/designSystem';
-import { sarh } from '@/constants/sarhTokens';
-import { type ThemeColors } from '@/constants/theme';
+import { appChrome, shadow, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
@@ -21,7 +20,7 @@ export function GlassCard({
   padding = ds.space.md,
 }: GlassCardProps) {
   const { styles } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors, theme.scheme),
+    styles: createStyles(theme.colors),
   }));
 
   return (
@@ -31,21 +30,21 @@ export function GlassCard({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const isDark = scheme === 'dark';
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
-      borderRadius: sarh.radius.card,
+      borderRadius: appChrome.cardRadius,
+      ...shadow.card,
     },
     card: {
-      borderRadius: sarh.radius.card,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
+      borderRadius: appChrome.cardRadius,
+      backgroundColor: colors.bgGlassStrong,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
+      borderColor: colors.borderSoft,
       overflow: 'hidden',
     },
     elevated: {
-      backgroundColor: isDark ? sarh.color.surfaceRaised : colors.bgElevated,
+      backgroundColor: colors.bgElevated,
     },
   });
 }

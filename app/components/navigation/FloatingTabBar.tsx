@@ -21,7 +21,6 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, gradients, scheme } = useTheme();
   const isLight = scheme === 'light';
-  const tokens = isLight ? ds.light : ds.dark;
   const bottom = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const activeTint = isLight ? colors.electricBright : sarh.color.action;
   const inactiveTint = isLight ? colors.textMuted : sarh.color.textMuted;
@@ -79,12 +78,10 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       <View
         style={[
           styles.bar,
-          isLight
-            ? {
-                backgroundColor: tokens.glass,
-                borderColor: tokens.glassBorder,
-              }
-            : styles.barDark,
+          {
+            backgroundColor: colors.bgGlassStrong,
+            borderColor: colors.borderSoft,
+          },
           ambientShadow(scheme, 'card'),
         ]}
       >
@@ -98,23 +95,12 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
               onPress={() => void navigateToCreateListing()}
               style={({ pressed }) => [pressed && styles.pressed]}
             >
-              {isLight ? (
-                <LinearGradient
-                  colors={gradients.electric}
-                  style={[styles.fab, { borderColor: tokens.page }]}
-                >
-                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
-                </LinearGradient>
-              ) : (
-                <View style={styles.fab}>
-                  <AppIcon
-                    name="plus"
-                    variant="sr"
-                    size={ds.icon.fab}
-                    color={sarh.color.fabIcon}
-                  />
-                </View>
-              )}
+              <LinearGradient
+                colors={gradients.electric}
+                style={[styles.fab, { borderColor: colors.bgDeep }]}
+              >
+                <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
+              </LinearGradient>
             </Pressable>
           </View>
 
@@ -138,11 +124,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 10,
     paddingHorizontal: 6,
-  },
-  barDark: {
-    backgroundColor: sarh.color.surface,
-    borderColor: sarh.color.border,
-    borderWidth: 1,
   },
   row: {
     alignItems: 'center',

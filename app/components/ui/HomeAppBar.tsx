@@ -3,11 +3,10 @@ import { NotificationBellButton } from '@/components/notifications/NotificationB
 import { ds } from '@/constants/designSystem';
 import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
 import { sarh } from '@/constants/sarhTokens';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { shadow, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HomeAppBarProps = {
   onMenu: () => void;
@@ -17,9 +16,8 @@ type HomeAppBarProps = {
 };
 
 export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarProps) {
-  const { scheme } = useTheme();
   const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors, theme.scheme),
+    styles: createStyles(theme.colors),
     colors: theme.colors,
   }));
 
@@ -54,8 +52,7 @@ export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarPro
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const isDark = scheme === 'dark';
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     bar: {
       alignItems: 'center',
@@ -96,19 +93,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
       borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? 'rgba(16, 31, 44, 0.72)' : 'rgba(255,255,255,0.08)',
+      backgroundColor: colors.bgGlassStrong,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : 'rgba(255,255,255,0.1)',
-      ...(Platform.OS === 'ios'
-        ? {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: isDark ? 0.12 : 0.18,
-            shadowRadius: 4,
-          }
-        : { elevation: 1 }),
+      borderColor: colors.borderSoft,
+      ...shadow.soft,
     },
   });
 }

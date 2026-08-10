@@ -9,7 +9,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlText, ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
 
@@ -56,11 +56,11 @@ function AppTextInputComponent({
             }
           : {
               borderColor: colors.borderSoft,
-              backgroundColor: colors.bgElevated,
+              backgroundColor: colors.bgSurface,
             },
       });
     },
-    [colors.bgElevated, colors.bgSurface, colors.borderSoft, colors.electric],
+    [colors.bgSurface, colors.borderSoft, colors.electric],
   );
 
   const handleFocus = useCallback(
@@ -120,7 +120,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     label: {
       ...typography.caption,
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       fontWeight: '600',
       marginBottom: spacing.xs,
       ...getRtlText(),
@@ -128,12 +128,12 @@ function createStyles(colors: ThemeColors) {
     wrap: {
       ...getRtlRow(),
       alignItems: 'center',
-      backgroundColor: colors.bgElevated,
-      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+      borderRadius: appChrome.controlRadius,
       borderWidth: 1,
       borderColor: colors.borderSoft,
       paddingHorizontal: spacing.sm,
-      minHeight: controls.heightLg,
+      minHeight: appChrome.controlHeight,
     },
     wrapError: {
       borderColor: colors.danger,
@@ -143,7 +143,7 @@ function createStyles(colors: ThemeColors) {
       width: 34,
       height: 34,
       borderRadius: radius.md,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
       ...marginStart(spacing.sm),

@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   imageCardOverlay,
   imageCardOverlayStrong,
+  appChrome,
   radius,
   spacing,
   typography,
@@ -340,8 +341,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     paddingStart: ds.space.md,
     paddingEnd: 0,
     gap: ds.space.md,
-    backgroundColor: colors.bgSurface,
-    borderRadius: sarh.radius.card,
+    backgroundColor: colors.bgGlassStrong,
+    borderRadius: appChrome.cardRadius,
     marginHorizontal: ds.space.md,
     marginVertical: ds.space.xs,
     borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
@@ -536,7 +537,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   profileCard: {
     borderRadius: radius.xl,
     overflow: 'hidden',
-    backgroundColor: colors.bgSurface,
+    backgroundColor: colors.bgGlassStrong,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     aspectRatio: 0.82,
@@ -603,7 +604,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     marginEnd: spacing.lg,
     borderWidth: 1,
     borderColor: colors.borderMid,
-    backgroundColor: colors.bgSurface,
+    backgroundColor: colors.bgGlassStrong,
   },
   featureCompact: {
     width: 248,
@@ -692,8 +693,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
 
   harajCard: {
     width: '100%',
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xl,
+    backgroundColor: colors.bgGlassStrong,
+    borderRadius: appChrome.cardRadius,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.borderSoft,

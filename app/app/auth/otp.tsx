@@ -352,7 +352,7 @@ function createStyles(colors: ThemeColors) {
   },
   otpBoxFilled: {
     borderColor: colors.electric,
-    backgroundColor: 'rgba(30,111,241,0.1)',
+    backgroundColor: colors.electric + '1A',
   },
   otpBoxError: { borderColor: colors.danger, backgroundColor: 'rgba(239, 68, 68, 0.1)' },
   otpInput: {

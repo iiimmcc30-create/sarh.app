@@ -208,7 +208,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.screenRoot,
     },
     flex: {
       flex: 1,

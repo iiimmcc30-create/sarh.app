@@ -18,7 +18,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, radius, shadow, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
@@ -314,17 +314,13 @@ function createStyles(colors: ThemeColors) {
   card: {
     width: '100%',
     maxWidth: 520,
-    borderRadius: radius.xxl,
-    padding: spacing.xl,
+    borderRadius: appChrome.cardRadius,
+    padding: appChrome.cardPadding,
     backgroundColor: colors.bgGlassStrong,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.borderSoft,
     gap: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
+    ...shadow.card,
   },
 
   formGroup: { gap: spacing.md, width: '100%' },
@@ -335,9 +331,9 @@ function createStyles(colors: ThemeColors) {
   inputWrap: {
     ...getRtlRow(),
     alignItems: 'center',
-    backgroundColor: colors.bgSurface, borderRadius: radius.lg,
+    backgroundColor: colors.bgSurface, borderRadius: appChrome.controlRadius,
     borderWidth: 1, borderColor: colors.borderSoft,
-    paddingHorizontal: spacing.md, height: 54, width: '100%',
+    paddingHorizontal: spacing.md, height: appChrome.controlHeight, width: '100%',
   },
   inputIcon: marginStart(8),
   textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
@@ -404,8 +400,8 @@ function createStyles(colors: ThemeColors) {
   },
   checkboxChecked: { backgroundColor: colors.electric, borderColor: colors.electric },
 
-  submitBtn: { width: '100%', borderRadius: radius.lg, overflow: 'hidden', marginTop: spacing.xs },
-  submitGrad: { height: 54, alignItems: 'center', justifyContent: 'center' },
+  submitBtn: { width: '100%', borderRadius: appChrome.controlRadius, overflow: 'hidden', marginTop: spacing.xs },
+  submitGrad: { height: appChrome.controlHeight, alignItems: 'center', justifyContent: 'center' },
   submitText: { ...typography.bodyStrong, fontSize: 16, color: '#FFFFFF' },
 
   footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },

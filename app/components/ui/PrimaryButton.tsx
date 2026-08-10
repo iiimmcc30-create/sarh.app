@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 import { ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
-import { controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { appChrome, controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 
 interface PrimaryButtonProps {
@@ -39,8 +38,6 @@ export function PrimaryButton({
   icon,
   fullWidth = false,
 }: PrimaryButtonProps) {
-  const { scheme } = useTheme();
-  const isDark = scheme === 'dark';
   const { styles, colors, gradients } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
@@ -119,17 +116,21 @@ export function PrimaryButton({
       accessibilityState={{ disabled: blocked, busy: loading }}
       onPress={blocked ? undefined : onPress}
       style={({ pressed }) => [
-        styles.btn,
-        styles.primary,
-        isDark && styles.primaryDark,
-        small && styles.small,
+        styles.shell,
         fullWidth && styles.fullWidth,
         pressed && styles.pressed,
         blocked && styles.disabled,
         style,
       ]}
     >
-      {content}
+      <LinearGradient
+        colors={gradients.electric}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.btn, small && styles.small, fullWidth && styles.fullWidth]}
+      >
+        {content}
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -138,26 +139,21 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const isDark = scheme === 'dark';
   return StyleSheet.create({
     shell: {
-      borderRadius: sarh.radius.md,
+      borderRadius: appChrome.controlRadius,
+      overflow: 'hidden',
     },
     btn: {
       paddingHorizontal: spacing.xl,
-      borderRadius: sarh.radius.md,
+      borderRadius: appChrome.controlRadius,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: controls.heightLg,
+      minHeight: appChrome.controlHeight,
       overflow: 'hidden',
-    },
-    primary: {
-      backgroundColor: isDark ? sarh.color.action : colors.electric,
-    },
-    primaryDark: {
-      // pressed state handled via opacity transform
     },
     ghost: {
       paddingHorizontal: spacing.xl,
-      minHeight: controls.heightLg,
-      borderRadius: sarh.radius.md,
+      minHeight: appChrome.controlHeight,
+      borderRadius: appChrome.controlRadius,
       backgroundColor: colors.bgSurface,
       borderWidth: 1,
       borderColor: colors.borderSoft,
@@ -166,8 +162,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     outline: {
       paddingHorizontal: spacing.xl,
-      minHeight: controls.heightLg,
-      borderRadius: sarh.radius.md,
+      minHeight: appChrome.controlHeight,
+      borderRadius: appChrome.controlRadius,
       backgroundColor: 'transparent',
       borderWidth: 1,
       borderColor: colors.borderStrong,

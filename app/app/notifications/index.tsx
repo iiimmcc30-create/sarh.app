@@ -171,7 +171,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.bgDeep,
+    backgroundColor: colors.screenRoot,
   },
   header: {
     flexDirection: 'row',

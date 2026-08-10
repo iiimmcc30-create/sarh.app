@@ -326,6 +326,18 @@ export const controls = {
   minTouchTarget: 44,
 };
 
+/**
+ * Shared app chrome, sourced from the current login screen.
+ * Keeps cards, fields, and primary actions visually consistent without
+ * coupling feature screens to auth-specific components.
+ */
+export const appChrome = {
+  cardRadius: radius.xxl,
+  cardPadding: spacing.xl,
+  controlRadius: radius.lg,
+  controlHeight: 54,
+};
+
 /** Animation durations and spring values for shared interactive components. */
 export const motion = {
   fast: 140,
@@ -348,6 +360,7 @@ export const theme = {
   shadow,
   layout,
   controls,
+  appChrome,
   motion,
 };
 export default theme;
