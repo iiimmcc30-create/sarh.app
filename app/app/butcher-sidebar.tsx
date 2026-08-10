@@ -15,7 +15,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
@@ -222,7 +222,7 @@ export default function ButcherSidebarScreen() {
         <ScrollView
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           {ownerItems.length > 0 ? (
@@ -368,7 +368,6 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     scroll: {
       flex: 1,
-      ...getRtlDirection(),
     },
     scrollContent: {
       paddingBottom: spacing.lg,

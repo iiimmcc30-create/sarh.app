@@ -10,7 +10,7 @@ import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
-import { I18nManager, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ProfileSettingsMenuScreenProps = {
@@ -30,7 +30,6 @@ export function ProfileSettingsMenuScreen({
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const isRtl = I18nManager.isRTL;
 
   const handleItemPress = (item: SidebarNavItem) => {
     if (item.onPress) {
@@ -47,7 +46,7 @@ export function ProfileSettingsMenuScreen({
       <ScreenHeader title={title} showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { direction: isRtl ? 'rtl' : 'ltr' }]}
+        contentContainerStyle={styles.content}
       >
         {sections.map((section) => (
           <SidebarSection key={section.title} title={section.title} colors={colors}>

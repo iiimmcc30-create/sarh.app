@@ -6,7 +6,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
-import { I18nManager, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type SettingsMenuItem = {
@@ -35,14 +35,13 @@ export function SettingsMenuScreen({
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
-  const isRtl = I18nManager.isRTL;
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title={title} showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { direction: isRtl ? 'rtl' : 'ltr' }]}
+        contentContainerStyle={styles.content}
       >
         <View style={styles.hero}>
           <View style={styles.heroIcon}>

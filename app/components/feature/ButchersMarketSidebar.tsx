@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter, useSegments } from 'expo-router';
-import { I18nManager, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sarh } from '@/constants/sarhTokens';
 import {
@@ -90,7 +90,6 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
     colors: theme.colors,
   }));
   const currentPath = `/${segments.join('/')}`;
-  const isRtl = I18nManager.isRTL;
 
   const handleNav = (route: string) => {
     onClose();
@@ -110,38 +109,14 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
 
       <Pressable
         onPress={() => handleNav('/(tabs)/profile')}
-        style={[
-          styles.profileRow,
-          {
-            flexDirection: 'row',
-            direction: isRtl ? 'rtl' : 'ltr',
-          },
-        ]}
+        style={styles.profileRow}
       >
         <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
         <View style={styles.profileText}>
-          <Text
-            style={[
-              styles.displayName,
-              {
-                textAlign: isRtl ? 'right' : 'left',
-                writingDirection: isRtl ? 'rtl' : 'ltr',
-              },
-            ]}
-            numberOfLines={1}
-          >
+          <Text style={styles.displayName} numberOfLines={1}>
             {me.arabicName || me.displayName || me.username}
           </Text>
-          <Text
-            style={[
-              styles.usernameText,
-              {
-                textAlign: isRtl ? 'right' : 'left',
-                writingDirection: isRtl ? 'rtl' : 'ltr',
-              },
-            ]}
-            numberOfLines={1}
-          >
+          <Text style={styles.usernameText} numberOfLines={1}>
             @{me.username || 'user'}
           </Text>
           <View style={styles.brandPill}>
@@ -153,7 +128,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { direction: isRtl ? 'rtl' : 'ltr' }]}
+        contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.menuCard}>
           {BUTCHERS_MARKET_MENU.map((item, index) => (
@@ -210,6 +185,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
     profileRow: {
+      flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
       paddingHorizontal: spacing.lg,
@@ -236,10 +212,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 17,
       fontWeight: '800',
       color: colors.textPrimary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     brandPill: {
       marginTop: 4,

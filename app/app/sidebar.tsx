@@ -16,7 +16,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
@@ -160,7 +160,7 @@ export default function SidebarScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.brandBanner, getRtlRow(), getRtlDirection()]}>
+        <View style={[styles.brandBanner, getRtlRow()]}>
           <View style={styles.brandText}>
             <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
             <Text style={styles.brandTagline}>{BRAND_TAGLINE}</Text>
@@ -179,7 +179,7 @@ export default function SidebarScreen() {
         <ScrollView
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           <SidebarSection colors={colors}>{renderSectionItems(accountItems)}</SidebarSection>
@@ -286,7 +286,6 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     scroll: {
       flex: 1,
-      ...getRtlDirection(),
     },
     scrollContent: {
       paddingBottom: spacing.lg,

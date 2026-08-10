@@ -2,7 +2,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter } from 'expo-router';
-import { I18nManager, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
@@ -54,19 +54,10 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useThemedStyles((t) => createStyles(t.colors, t.scheme));
-  const isRtl = I18nManager.isRTL;
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View
-        style={[
-          styles.header,
-          {
-            flexDirection: 'row',
-            direction: isRtl ? 'rtl' : 'ltr',
-          },
-        ]}
-      >
+      <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -76,41 +67,15 @@ export default function SettingsScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { direction: isRtl ? 'rtl' : 'ltr' }]}
+        contentContainerStyle={styles.scroll}
       >
-        <View
-          style={[
-            styles.intro,
-            {
-              flexDirection: 'row',
-              direction: isRtl ? 'rtl' : 'ltr',
-            },
-          ]}
-        >
+        <View style={styles.intro}>
           <View style={styles.introIcon}>
             <AppIcon name="shield-check-outline" size={24} color={colors.textMuted} />
           </View>
           <View style={styles.introText}>
-            <Text
-              style={[
-                styles.introTitle,
-                {
-                  textAlign: isRtl ? 'right' : 'left',
-                  writingDirection: isRtl ? 'rtl' : 'ltr',
-                },
-              ]}
-            >
-              إدارة تجربتك بأمان
-            </Text>
-            <Text
-              style={[
-                styles.introSubtitle,
-                {
-                  textAlign: isRtl ? 'right' : 'left',
-                  writingDirection: isRtl ? 'rtl' : 'ltr',
-                },
-              ]}
-            >
+            <Text style={styles.introTitle}>إدارة تجربتك بأمان</Text>
+            <Text style={styles.introSubtitle}>
               تحكم في حسابك وخصوصيتك وطرق التواصل مع الدعم.
             </Text>
           </View>
@@ -146,6 +111,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     header: {
+      flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       minHeight: 60,
@@ -167,6 +133,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
     intro: {
+      flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
@@ -186,8 +153,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
     introText: { flex: 1, gap: spacing.xs },
-    introTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-    introSubtitle: { ...typography.caption, color: colors.textSecondary, lineHeight: 19 },
+    introTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    introSubtitle: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      lineHeight: 19,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     sectionBlock: {
       backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,
       borderRadius: sarh.radius.lg,

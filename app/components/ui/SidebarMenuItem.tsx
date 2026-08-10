@@ -1,16 +1,18 @@
 /**
  * Sarh Design System — SidebarMenuItem
  *
- * Visual layout (Arabic RTL):
- *   right edge → [ Icon ][ Title ][ flexible space ][ > ] ← left edge
+ * Fixed visual result (no row-reverse, no double RTL flip):
  *
- * Icon + title stay grouped on the inline-start side; a flex spacer
- * pins the quiet chevron to the far inline-end side.
+ *   RIGHT                                         LEFT
+ *   [ Icon ] [ Title ] ———————— [ > ]
+ *
+ * App-level RTL already mirrors `flexDirection: 'row'`, so children
+ * are declared in logical start→end order and must NOT be reversed again.
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
-import { I18nManager, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 export type SidebarMenuItemProps = {
   icon: string;
@@ -64,17 +66,8 @@ export function SidebarMenuItem({
 }: SidebarMenuItemProps) {
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
-  const isRtl = I18nManager.isRTL;
   const tint = iconColor ?? (active ? colors.electric : colors.textMuted);
   const showBadge = typeof badge === 'number' && badge > 0;
-
-  /**
-   * Explicit visual axis:
-   * - RTL: row-reverse so the first child sits on the physical right
-   * - LTR: row so the first child sits on the physical left
-   * Children order is always: [startCluster][spacer][badge?][chevron?]
-   */
-  const axis = isRtl ? 'row-reverse' : 'row';
 
   return (
     <Pressable
@@ -85,54 +78,30 @@ export function SidebarMenuItem({
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
-        {
-          flexDirection: axis,
-          borderBottomColor: colors.borderHairline,
-        },
+        { borderBottomColor: colors.borderHairline },
         showDivider && styles.rowDivider,
         active && { backgroundColor: `${colors.electric}14` },
         pressed && styles.rowPressed,
         style,
       ]}
     >
-      {/* Icon + title stay glued together on the start edge (right in RTL). */}
-      <View style={[styles.startCluster, { flexDirection: axis }]}>
+      {/* Start cluster (physical right under app RTL): Icon then Title */}
+      <View style={styles.rightContent}>
         <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
           <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
         </View>
         <View style={styles.textWrap}>
-          <Text
-            style={[
-              styles.title,
-              {
-                color: colors.textPrimary,
-                textAlign: isRtl ? 'right' : 'left',
-                writingDirection: isRtl ? 'rtl' : 'ltr',
-              },
-            ]}
-            numberOfLines={2}
-          >
+          <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
             {title}
           </Text>
           {subtitle ? (
-            <Text
-              style={[
-                styles.subtitle,
-                {
-                  color: colors.textMuted,
-                  textAlign: isRtl ? 'right' : 'left',
-                  writingDirection: isRtl ? 'rtl' : 'ltr',
-                },
-              ]}
-              numberOfLines={2}
-            >
+            <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
               {subtitle}
             </Text>
           ) : null}
         </View>
       </View>
 
-      {/* Flexible space pushes chevron/badge to the far end (left in RTL). */}
       <View style={styles.spacer} />
 
       {showBadge ? (
@@ -143,7 +112,7 @@ export function SidebarMenuItem({
 
       {showChevron ? (
         <AppIcon
-          name={isRtl ? 'angle-left' : 'angle-right'}
+          name="angle-left"
           size={SIDEBAR_MENU_ITEM.chevronSize}
           color={colors.textSubtle}
         />
@@ -153,7 +122,18 @@ export function SidebarMenuItem({
 }
 
 const styles = StyleSheet.create({
+  /**
+   * IMPORTANT:
+   * - flexDirection is always 'row' — never 'row-reverse'
+   * - direction is 'rtl' once so the first child sits on the physical right
+   * - Do not combine with another reverse on parents
+   *
+   * Children order: [rightContent(Icon, Title)] [spacer] [chevron]
+   * Visual: RIGHT Icon Title ——— LEFT chevron
+   */
   row: {
+    flexDirection: 'row',
+    direction: 'rtl',
     width: '100%',
     alignSelf: 'stretch',
     alignItems: 'center',
@@ -167,7 +147,9 @@ const styles = StyleSheet.create({
   rowPressed: {
     opacity: 0.76,
   },
-  startCluster: {
+  rightContent: {
+    flexDirection: 'row',
+    direction: 'rtl',
     alignItems: 'center',
     gap: SIDEBAR_MENU_ITEM.gap,
     flexShrink: 1,
@@ -189,11 +171,15 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     fontSize: SIDEBAR_MENU_ITEM.titleSize,
     fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   subtitle: {
     ...typography.caption,
     fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
     lineHeight: 18,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   spacer: {
     flex: 1,

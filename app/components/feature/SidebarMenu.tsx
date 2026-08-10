@@ -32,23 +32,10 @@ export function SidebarSection({
   children: ReactNode;
   colors: ThemeColors;
 }) {
-  const isRtl = I18nManager.isRTL;
-
   return (
-    <View style={[sectionStyles.block, { direction: isRtl ? 'rtl' : 'ltr' }]}>
+    <View style={sectionStyles.block}>
       {title ? (
-        <Text
-          style={[
-            sectionStyles.title,
-            {
-              color: colors.textMuted,
-              textAlign: isRtl ? 'right' : 'left',
-              writingDirection: isRtl ? 'rtl' : 'ltr',
-            },
-          ]}
-        >
-          {title}
-        </Text>
+        <Text style={[sectionStyles.title, { color: colors.textMuted }]}>{title}</Text>
       ) : null}
       <View
         style={[
@@ -252,6 +239,8 @@ const sectionStyles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: spacing.sm,
     paddingHorizontal: 4,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   card: {
     borderRadius: radius.xl,
