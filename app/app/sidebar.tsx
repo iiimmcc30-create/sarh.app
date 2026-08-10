@@ -31,8 +31,6 @@ import {
 
 type MenuItem = SidebarMenuItem;
 
-/** Brand forest green — matches logo identity in light & dark. */
-const BRAND_BANNER_BG = '#084D2A';
 const BRAND_TAGLINE = 'منصة المواشي السعودية';
 
 export default function SidebarScreen() {
@@ -253,10 +251,16 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: scheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(8,77,42,0.35)',
     },
-    brandMark: {
+    brandMarkWrap: {
       width: 56,
       height: 56,
       borderRadius: 28,
+      overflow: 'hidden',
+      backgroundColor: BRAND_BANNER_BG,
+    },
+    brandMark: {
+      width: 56,
+      height: 56,
     },
     brandText: {
       flex: 1,
