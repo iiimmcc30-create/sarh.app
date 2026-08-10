@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
 import { motion } from '@/constants/theme';
@@ -14,12 +13,12 @@ const VISIBLE_TABS: { route: string; icon: string; label: string }[] = [
   { route: 'index', icon: 'home', label: 'الرئيسية' },
   { route: 'market', icon: 'tags', label: 'السوق' },
   { route: 'posts', icon: 'newspaper', label: 'المنشورات' },
-  { route: 'profile', icon: 'user', label: 'حسابي' },
+  { route: 'profile', icon: 'user', label: 'الملف الشخصي' },
 ];
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, gradients, scheme } = useTheme();
+  const { colors, scheme } = useTheme();
   const isLight = scheme === 'light';
   const bottom = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const activeTint = isLight ? colors.electricBright : sarh.color.action;
@@ -59,6 +58,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
           variant={focused ? 'sr' : 'rr'}
         />
         <Text
+          numberOfLines={1}
           style={[
             styles.tabLabel,
             {
@@ -95,16 +95,15 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
               onPress={() => void navigateToCreateListing()}
               style={({ pressed }) => [pressed && styles.pressed]}
             >
-              <LinearGradient
-                colors={gradients.electric}
+              <View
                 style={[
                   styles.fab,
                   { borderColor: colors.bgDeep },
                   ambientShadow(scheme, 'fab'),
                 ]}
               >
-                <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
-              </LinearGradient>
+                <AppIcon name="plus" variant="sr" size={ds.icon.fab} color={sarh.color.fabIcon} />
+              </View>
             </Pressable>
           </View>
 
