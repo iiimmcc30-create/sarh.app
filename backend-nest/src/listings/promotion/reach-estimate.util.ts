@@ -1,15 +1,34 @@
-import { clampPromoteAmount, clampPromoteDurationHours } from './promotion-limits.config';
+import { clampPromoteDurationHours } from './promotion-limits.config';
 
 export type ReachEstimate = { min: number; max: number };
 
-/** Estimated impression range for visibility promotion (budget + duration). */
+export type ReachFactors = {
+  budgetFactorMin: number;
+  budgetFactorMax: number;
+  hourFactorMin: number;
+  hourFactorMax: number;
+};
+
+export const DEFAULT_REACH_FACTORS: ReachFactors = {
+  budgetFactorMin: 9,
+  budgetFactorMax: 15,
+  hourFactorMin: 3,
+  hourFactorMax: 5,
+};
+
+/**
+ * Estimated impression range for visibility promotion.
+ * min = amount × budgetFactorMin + hours × hourFactorMin
+ * max = amount × budgetFactorMax + hours × hourFactorMax
+ * Admin-configurable via AppSettings keys pricing.reach.*
+ */
 export function estimatePromotionReach(
-  rawAmount: number,
+  amount: number,
   rawDurationHours: number,
+  factors: ReachFactors = DEFAULT_REACH_FACTORS,
 ): ReachEstimate {
-  const amount = clampPromoteAmount(rawAmount);
   const durationHours = clampPromoteDurationHours(rawDurationHours);
-  const min = Math.max(50, Math.round(amount * 9 + durationHours * 3));
-  const max = Math.max(min + 30, Math.round(amount * 15 + durationHours * 5));
+  const min = Math.max(50, Math.round(amount * factors.budgetFactorMin + durationHours * factors.hourFactorMin));
+  const max = Math.max(min + 30, Math.round(amount * factors.budgetFactorMax + durationHours * factors.hourFactorMax));
   return { min, max };
 }

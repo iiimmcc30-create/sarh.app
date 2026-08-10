@@ -8,15 +8,16 @@ import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import { createNiCheckout, isNiSandboxMockMode } from '../../payments/ni-client';
 import { BOOST_PLANS } from './boost-plans.config';
-import { boostPriceForHours } from './boost-pricing.util';
-import type { BoostPlanType } from './boost-plans.config';
+import {
+  boostPriceForHours,
+  BOOST_AMOUNT_MIN,
+  BOOST_RATE_PER_12H,
+  type BoostPlanType,
+} from './boost-pricing.util';
 import {
   PROMOTE_AMOUNT_MAX,
-  PROMOTE_AMOUNT_MIN,
   PROMOTE_DURATION_HOURS_MAX,
   PROMOTE_DURATION_HOURS_MIN,
-  clampPromoteAmount,
-  clampPromoteDurationHours,
   durationDaysFromHours,
 } from '../promotion/promotion-limits.config';
 
@@ -51,15 +52,18 @@ function listingBoostListingUpdate(boostType: BoostType, expires: Date) {
 }
 
 function buildOrderRef(prefix: string, userId: string): string {
-  const ts  = Date.now().toString(36).toUpperCase();
+  const ts = Date.now().toString(36).toUpperCase();
   const uid = userId.replace(/-/g, '').slice(0, 6).toUpperCase();
   return `${prefix}-${uid}-${ts}`;
 }
 
 type InitiateBoostOptions = {
   boostType: BoostType;
+  /** Legacy: day-chip from ListingBoostSheet. Converted to hours internally. */
   durationDays?: number;
+  /** Preferred: hour-based duration from promote screen. */
   durationHours?: number;
+  /** Ignored — backend always computes the price. Kept for API compatibility. */
   amount?: number;
   method: string;
   promotionGoal?: 'visibility' | 'pinned' | 'featured';
@@ -83,9 +87,25 @@ export class ListingBoostService {
     };
   }
 
+  private async getRateFromSettings(boostType: BoostType): Promise<number> {
+    if (boostType === 'both') {
+      const [pin, ftr] = await Promise.all([
+        this.prisma.appSetting.findUnique({ where: { key: 'pricing.boost.pin.per12h' } }),
+        this.prisma.appSetting.findUnique({ where: { key: 'pricing.boost.feature.per12h' } }),
+      ]);
+      const pinRate = typeof pin?.value === 'number' && pin.value > 0 ? pin.value : BOOST_RATE_PER_12H.pinned;
+      const ftrRate = typeof ftr?.value === 'number' && ftr.value > 0 ? ftr.value : BOOST_RATE_PER_12H.featured;
+      return pinRate + ftrRate;
+    }
+    const key = boostType === 'pinned' ? 'pricing.boost.pin.per12h' : 'pricing.boost.feature.per12h';
+    const setting = await this.prisma.appSetting.findUnique({ where: { key } });
+    const fallback = boostType === 'pinned' ? BOOST_RATE_PER_12H.pinned : BOOST_RATE_PER_12H.featured;
+    return typeof setting?.value === 'number' && setting.value > 0 ? setting.value : fallback;
+  }
+
   /**
    * Initiate a boost payment for a listing.
-   * Creates ListingBoost + Payment records (pending), then calls NI for a checkout URL.
+   * Price is always computed server-side; client-supplied amount is ignored.
    */
   async initiateBoost(
     user: JwtPayload,
@@ -93,6 +113,7 @@ export class ListingBoostService {
     options: InitiateBoostOptions,
   ) {
     const { boostType, method } = options;
+
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, sellerId: user.userId, deletedAt: null },
       select: { id: true, arabicTitle: true, status: true },
@@ -102,43 +123,34 @@ export class ListingBoostService {
     const plans = BOOST_PLANS[boostType as keyof typeof BOOST_PLANS];
     if (!plans) throwApi(400, 'invalid_boost_type', 'نوع الترقية غير صالح');
 
+    // Resolve duration
     let durationHours: number;
-    let durationDays: number;
-    let amount: number;
-
     if (options.durationHours != null) {
-      durationHours = clampPromoteDurationHours(options.durationHours);
-      durationDays = durationDaysFromHours(durationHours);
-      if (boostType === 'pinned' || boostType === 'featured' || boostType === 'both') {
-        amount = boostPriceForHours(boostType as BoostPlanType, durationHours);
-      } else if (options.amount != null) {
-        amount = clampPromoteAmount(options.amount);
-      } else {
-        throwApi(400, 'invalid_boost', 'مدة الترويج مطلوبة');
-      }
-    } else if (options.amount != null) {
-      throwApi(400, 'invalid_boost', 'حدّد مدة الترويج — السعر يُحسب تلقائياً');
-    } else {
-      if (!options.durationDays) {
-        throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
-      }
-      const plan = (plans as readonly { durationDays: number; amount: number; labelAr: string }[]).find(
-        (p) => p.durationDays === options.durationDays,
+      durationHours = Math.min(
+        PROMOTE_DURATION_HOURS_MAX,
+        Math.max(PROMOTE_DURATION_HOURS_MIN, Math.round(options.durationHours)),
       );
-      if (!plan) throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
-      durationDays = options.durationDays;
-      durationHours = durationDays * 24;
-      amount = plan.amount;
+    } else if (options.durationDays != null && options.durationDays > 0) {
+      durationHours = Math.min(
+        PROMOTE_DURATION_HOURS_MAX,
+        options.durationDays * 24,
+      );
+    } else {
+      throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
     }
 
-    if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
-      throwApi(400, 'invalid_amount', 'المبلغ غير صالح');
+    if (durationHours < PROMOTE_DURATION_HOURS_MIN || durationHours > PROMOTE_DURATION_HOURS_MAX) {
+      throwApi(400, 'invalid_duration', 'مدة الترقية خارج النطاق المسموح');
     }
-    if (
-      durationHours < PROMOTE_DURATION_HOURS_MIN ||
-      durationHours > PROMOTE_DURATION_HOURS_MAX
-    ) {
-      throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+
+    const durationDays = durationDaysFromHours(durationHours);
+
+    // Server-side price calculation (slab formula)
+    const rate = await this.getRateFromSettings(boostType);
+    const amount = boostPriceForHours(boostType as BoostPlanType, durationHours, rate);
+
+    if (amount < BOOST_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
+      throwApi(400, 'invalid_amount', 'المبلغ المحسوب غير صالح');
     }
 
     const startTime = new Date();
@@ -147,12 +159,10 @@ export class ListingBoostService {
       options.promotionGoal ??
       (boostType === 'featured' ? 'featured' : boostType === 'pinned' ? 'pinned' : 'visibility');
 
-    const currency    = 'SAR';
-    const referenceType =
-      boostType === 'pinned' ? 'pinned_ad' : 'featured_ad';
-    const orderPrefix =
-      boostType === 'pinned' ? 'PIN' : boostType === 'both' ? 'BOTH' : 'FTR';
-    const orderRef    = buildOrderRef(orderPrefix, user.userId);
+    const currency = 'SAR';
+    const referenceType = boostType === 'pinned' ? 'pinned_ad' : 'featured_ad';
+    const orderPrefix = boostType === 'pinned' ? 'PIN' : boostType === 'both' ? 'BOTH' : 'FTR';
+    const orderRef = buildOrderRef(orderPrefix, user.userId);
 
     const descriptionAr =
       boostType === 'featured'
@@ -162,13 +172,10 @@ export class ListingBoostService {
           : `تثبيت وتمييز: ${listing.arabicTitle} — ${durationHours} ساعة`;
 
     const niMethod = this.mapMethod(method);
-
-    // Map payment method to Prisma enum
     const prismaMethod = ['mada', 'visa', 'mastercard', 'apple_pay', 'stc_pay'].includes(method)
-      ? method as 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay'
+      ? (method as 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
       : 'visa';
 
-    // Create boost + payment in a transaction
     const { boost, payment } = await this.prisma.$transaction(async (tx) => {
       const boost = await tx.listingBoost.create({
         data: { listingId, userId: user.userId, boostType, durationDays, amount, currency, status: 'pending' },
@@ -201,6 +208,7 @@ export class ListingBoostService {
             startTime: startTime.toISOString(),
             endTime: endTime.toISOString(),
             referenceType,
+            pricingFormula: `ceil(${durationHours}/12) × ${rate} = ${amount}`,
           } as Prisma.InputJsonValue,
         },
       });
@@ -212,7 +220,7 @@ export class ListingBoostService {
 
     if (isNiSandboxMockMode()) {
       checkoutUrl = `https://sandbox.network.ae/demo/${orderRef}`;
-      this.logger.info({ boostId: boost.id, paymentId: payment.id }, 'Boost created in mock mode');
+      this.logger.info({ boostId: boost.id, paymentId: payment.id, amount }, 'Boost created in mock mode');
       await this.prisma.payment.update({
         where: { id: payment.id },
         data: { checkoutUrl, transactionId: `DEV-${orderRef}` },
@@ -260,9 +268,9 @@ export class ListingBoostService {
     }
 
     return {
-      boostId:    boost.id,
-      paymentId:  payment.id,
-      orderId:    orderRef,
+      boostId: boost.id,
+      paymentId: payment.id,
+      orderId: orderRef,
       checkoutUrl,
       amount,
       currency,
@@ -272,7 +280,6 @@ export class ListingBoostService {
 
   /**
    * Fulfil a boost after NI confirms payment.
-   * Called by PaymentsRepository.processSuccessfulPayment via webhook / sync.
    */
   async fulfillBoost(boostId: string, niTransactionId: string) {
     const boost = await this.prisma.listingBoost.findUnique({
@@ -281,7 +288,7 @@ export class ListingBoostService {
     });
     if (!boost || boost.status === 'paid') return { processed: false };
 
-    const now     = new Date();
+    const now = new Date();
     const payment = await this.prisma.payment.findFirst({
       where: { referenceId: boostId },
       select: { metadata: true },
@@ -316,7 +323,10 @@ export class ListingBoostService {
     this.logger.info({ boostId, boostType: boost.boostType, listingId: boost.listingId }, 'Boost fulfilled');
     await this.cache.delPattern('listings:v2:*').catch(() => {});
     await this.cache.del(`listing:${boost.listingId}`).catch(() => {});
-    return { processed: true, boost: { id: boostId, boostType: boost.boostType, listingId: boost.listingId, expiresAt: expires } };
+    return {
+      processed: true,
+      boost: { id: boostId, boostType: boost.boostType, listingId: boost.listingId, expiresAt: expires },
+    };
   }
 
   /** Dev-only: simulate boost payment without NI. */
@@ -330,7 +340,6 @@ export class ListingBoostService {
 
     if (boost.status === 'paid') return { boostId, status: 'paid' };
 
-    // Also mark the Payment as paid
     await this.prisma.payment.updateMany({
       where: { referenceId: boostId, status: 'pending' },
       data: { status: 'paid', paidAt: new Date(), transactionId: `DEV-${boostId}` },
@@ -345,17 +354,26 @@ export class ListingBoostService {
     const boosts = await this.prisma.listingBoost.findMany({
       where: { listingId },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, boostType: true, durationDays: true, amount: true, status: true, startsAt: true, expiresAt: true, paidAt: true },
+      select: {
+        id: true,
+        boostType: true,
+        durationDays: true,
+        amount: true,
+        status: true,
+        startsAt: true,
+        expiresAt: true,
+        paidAt: true,
+      },
     });
     return { boosts };
   }
 
   private mapMethod(method: string): string {
     switch (method) {
-      case 'mada':       return 'MADA';
-      case 'apple_pay':  return 'APPLE_PAY';
-      case 'stc_pay':    return 'STC_PAY';
-      default:           return 'CARD';
+      case 'mada': return 'MADA';
+      case 'apple_pay': return 'APPLE_PAY';
+      case 'stc_pay': return 'STC_PAY';
+      default: return 'CARD';
     }
   }
 }

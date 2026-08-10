@@ -8,6 +8,7 @@ import { getStoredUser } from '@/services/auth.service';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>[]>([]);
+  const [editing, setEditing] = useState<Record<string, string>>({});
   const user = getStoredUser();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -21,37 +22,121 @@ export default function SettingsPage() {
     return <p className="text-amber-400">الإعدادات للمسؤول (ADMIN) فقط</p>;
   }
 
+  const saveNumber = async (key: string, labelAr: string, category: string) => {
+    const raw = editing[key];
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0) {
+      alert('يرجى إدخال رقم صحيح');
+      return;
+    }
+    await updateSetting({ key, value: n, labelAr, category });
+    setEditing((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    load();
+  };
+
+  const groupedSettings = settings.reduce<Record<string, typeof settings>>((acc, s) => {
+    const cat = String(s.category ?? 'general');
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(s);
+    return acc;
+  }, {});
+
+  const categoryLabel: Record<string, string> = {
+    system: 'النظام',
+    auth: 'المصادقة',
+    features: 'الميزات',
+    pricing: 'التسعير والأسعار',
+    general: 'عام',
+  };
+
   return (
     <div>
-      <PageHeader title="إعدادات النظام" description="Feature Flags والإعدادات العامة" />
-      <div className="space-y-4">
-        {settings.map((s) => {
-          const key = String(s.key);
-          const val = s.value;
-          const isBool = typeof val === 'boolean';
-          return (
-            <div key={key} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-              <div>
-                <p className="font-medium text-white">{String(s.labelAr ?? key)}</p>
-                <p className="text-xs text-slate-500">{key}</p>
-              </div>
-              {isBool ? (
-                <Button
-                  variant={val ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={async () => {
-                    await updateSetting({ key, value: !val, labelAr: String(s.labelAr ?? '') });
-                    load();
-                  }}
+      <PageHeader title="إعدادات النظام" description="Feature Flags وإعدادات التسعير" />
+      <div className="space-y-8">
+        {Object.entries(groupedSettings).map(([cat, items]) => (
+          <div key={cat} className="space-y-3">
+            <h2 className="text-slate-400 text-sm font-semibold uppercase tracking-wider">
+              {categoryLabel[cat] ?? cat}
+            </h2>
+            {items.map((s) => {
+              const key = String(s.key);
+              const val = s.value;
+              const isBool = typeof val === 'boolean';
+              const isNumber = typeof val === 'number';
+              const isEditing = key in editing;
+
+              return (
+                <div
+                  key={key}
+                  className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/50 p-4 gap-4"
                 >
-                  {val ? 'مفعّل' : 'معطّل'}
-                </Button>
-              ) : (
-                <span className="text-sm text-slate-400">{JSON.stringify(val)}</span>
-              )}
-            </div>
-          );
-        })}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white">{String(s.labelAr ?? key)}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{key}</p>
+                  </div>
+
+                  {isBool ? (
+                    <Button
+                      variant={val ? 'primary' : 'secondary'}
+                      size="sm"
+                      onClick={async () => {
+                        await updateSetting({ key, value: !val, labelAr: String(s.labelAr ?? '') });
+                        load();
+                      }}
+                    >
+                      {val ? 'مفعّل' : 'معطّل'}
+                    </Button>
+                  ) : isNumber ? (
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <>
+                          <input
+                            type="number"
+                            value={editing[key]}
+                            onChange={(e) => setEditing((prev) => ({ ...prev, [key]: e.target.value }))}
+                            className="w-24 rounded-xl border border-slate-700 bg-slate-950 p-2 text-sm text-white text-center"
+                            min={0}
+                            step={1}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => saveNumber(key, String(s.labelAr ?? key), String(s.category ?? 'general'))}
+                          >
+                            حفظ
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[key]; return n; })}
+                          >
+                            إلغاء
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-white font-semibold">{val}</span>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setEditing((prev) => ({ ...prev, [key]: String(val) }))}
+                          >
+                            تعديل
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-slate-400">{JSON.stringify(val)}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

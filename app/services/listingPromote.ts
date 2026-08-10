@@ -11,19 +11,29 @@ export const PROMOTE_DURATION_HOURS_MIN = 1;
 export const PROMOTE_DURATION_HOURS_MAX = 168;
 export const PROMOTE_DURATION_HOURS_DEFAULT = 6;
 
-/** Mirrors backend BOOST_PLANS for client-side price preview. */
-const BOOST_PLAN_POINTS = {
-  pinned: [
-    { hours: 24, amount: 12 },
-    { hours: 72, amount: 29 },
-    { hours: 168, amount: 59 },
-  ],
-  featured: [
-    { hours: 24, amount: 10 },
-    { hours: 72, amount: 25 },
-    { hours: 168, amount: 49 },
-  ],
-} as const;
+/**
+ * Default base rate for visibility promotion per 24h.
+ * Mirrors AppSettings default `pricing.promotion.per24h`.
+ */
+export const PROMOTION_BASE_PER_24H = 10;
+
+/**
+ * Boost price formula: ceil(hours / 12) × rate_per_12h
+ * PIN:     rate = 6 SAR / 12h
+ * FEATURE: rate = 5 SAR / 12h
+ *
+ * Examples (PIN):
+ *   1h  → ceil(1/12)×6  = 1×6 = 6
+ *  12h  → ceil(12/12)×6 = 1×6 = 6
+ *  13h  → ceil(13/12)×6 = 2×6 = 12
+ *  24h  → ceil(24/12)×6 = 2×6 = 12
+ *  25h  → ceil(25/12)×6 = 3×6 = 18
+ *  48h  → ceil(48/12)×6 = 4×6 = 24
+ */
+const BOOST_RATE_PER_12H: Record<'pinned' | 'featured', number> = {
+  pinned: 6,
+  featured: 5,
+};
 
 export type PromoteGoalOption = {
   key: PromotionGoal;
@@ -63,9 +73,10 @@ export type PromoteQuote = {
   goal: PromotionGoal;
   durationHours: number;
   amount: number;
+  minimumAmount: number;
   currency: 'SAR';
   reachEstimate?: ReachEstimate;
-  pricingMode: 'user_budget' | 'duration_based';
+  pricingMode: 'duration_based';
 };
 
 export type PromoteCheckoutPayload = {
@@ -79,38 +90,31 @@ export type PromoteCheckoutPayload = {
   reachEstimate?: ReachEstimate;
 };
 
-function interpolateBoostPrice(
-  points: readonly { hours: number; amount: number }[],
-  hours: number,
-): number {
-  if (hours <= points[0].hours) {
-    const rate = points[0].amount / points[0].hours;
-    return Math.max(PROMOTE_AMOUNT_MIN, Math.round(rate * hours));
-  }
-  for (let i = 1; i < points.length; i++) {
-    if (hours <= points[i].hours) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      const ratio = (hours - prev.hours) / (curr.hours - prev.hours);
-      return Math.round(prev.amount + ratio * (curr.amount - prev.amount));
-    }
-  }
-  const prev = points[points.length - 2];
-  const curr = points[points.length - 1];
-  const rate = (curr.amount - prev.amount) / (curr.hours - prev.hours);
-  return Math.round(curr.amount + rate * (hours - curr.hours));
+/**
+ * Client-side boost price (mirrors server formula exactly).
+ * Server is always authoritative; this is for live UI preview only.
+ */
+export function computeBoostPrice(goal: 'pinned' | 'featured', durationHours: number): number {
+  const hours = Math.max(1, Math.round(durationHours));
+  const rate = BOOST_RATE_PER_12H[goal];
+  return Math.ceil(hours / 12) * rate;
 }
 
-/** Client-side boost price preview (server is authoritative at checkout). */
-export function computeBoostPrice(goal: 'pinned' | 'featured', durationHours: number): number {
-  const hours = clampPromoteDurationHours(durationHours);
-  const points = BOOST_PLAN_POINTS[goal];
-  return interpolateBoostPrice(points, hours);
+/**
+ * Client-side visibility promotion price (minimum based on duration).
+ * Formula: ceil(hours / 24) × basePer24h
+ * 
+ * Examples (base=10):
+ *  1h  → 10, 24h → 10, 25h → 20, 48h → 20, 49h → 30, 72h → 30
+ */
+export function computeVisibilityMinPrice(durationHours: number, basePer24h = PROMOTION_BASE_PER_24H): number {
+  const hours = Math.max(1, Math.round(durationHours));
+  return Math.ceil(hours / 24) * basePer24h;
 }
 
 /** Estimated reach range for visibility promotion. */
 export function estimatePromotionReach(amount: number, durationHours: number): ReachEstimate {
-  const budget = clampPromoteAmount(amount);
+  const budget = Math.min(PROMOTE_AMOUNT_MAX, Math.max(PROMOTE_AMOUNT_MIN, Math.round(amount)));
   const hours = clampPromoteDurationHours(durationHours);
   const min = Math.max(50, Math.round(budget * 9 + hours * 3));
   const max = Math.max(min + 30, Math.round(budget * 15 + hours * 5));
@@ -122,8 +126,11 @@ export function resolvePromoteAmount(
   durationHours: number,
   userBudget: number,
 ): number {
-  if (goal === 'visibility') return clampPromoteAmount(userBudget);
-  return computeBoostPrice(goal, durationHours);
+  if (goal === 'visibility') {
+    const minPrice = computeVisibilityMinPrice(durationHours);
+    return Math.max(minPrice, Math.min(PROMOTE_AMOUNT_MAX, Math.round(userBudget)));
+  }
+  return computeBoostPrice(goal as 'pinned' | 'featured', durationHours);
 }
 
 export function clampPromoteAmount(value: number): number {
@@ -164,9 +171,7 @@ export function buildPromoteCheckoutPayload(
   const startTime = new Date();
   const endTime = new Date(startTime.getTime() + hours * 60 * 60 * 1000);
   const reachEstimate =
-    promotionGoal === 'visibility'
-      ? estimatePromotionReach(amount, hours)
-      : undefined;
+    promotionGoal === 'visibility' ? estimatePromotionReach(amount, hours) : undefined;
   return {
     promotionGoal,
     promotionAmount: amount,
@@ -185,13 +190,17 @@ export function validatePromoteForm(
   durationHours: number,
 ): string | null {
   if (!goal) return 'اختر هدف الترويج';
-  if (goal === 'visibility') {
-    if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
-      return `الميزانية يجب أن تكون بين ${PROMOTE_AMOUNT_MIN} و ${PROMOTE_AMOUNT_MAX} ريال`;
-    }
-  }
   if (durationHours < PROMOTE_DURATION_HOURS_MIN || durationHours > PROMOTE_DURATION_HOURS_MAX) {
     return `المدة يجب أن تكون بين ${PROMOTE_DURATION_HOURS_MIN} و ${PROMOTE_DURATION_HOURS_MAX} ساعة`;
+  }
+  if (goal === 'visibility') {
+    const minRequired = computeVisibilityMinPrice(durationHours);
+    if (amount < minRequired) {
+      return `الحد الأدنى للميزانية لهذه المدة: ${minRequired} ريال`;
+    }
+    if (amount > PROMOTE_AMOUNT_MAX) {
+      return `الميزانية يجب أن تكون أقل من ${PROMOTE_AMOUNT_MAX} ريال`;
+    }
   }
   return null;
 }

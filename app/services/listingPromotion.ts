@@ -27,10 +27,14 @@ export type PromotionStats = {
   startsAt: string | null;
 };
 
+/**
+ * Fallback promotion plans used when API fetch fails.
+ * Amounts computed via slab formula: ceil(days×24/24) × 10 (base)
+ */
 export const FALLBACK_PROMOTION_PLANS: PromotionPlanOption[] = [
-  { durationDays: 1, amount: 15, labelAr: 'يوم واحد' },
-  { durationDays: 3, amount: 39, labelAr: '٣ أيام' },
-  { durationDays: 7, amount: 79, labelAr: '٧ أيام' },
+  { durationDays: 1, amount: 10, labelAr: 'يوم واحد' },
+  { durationDays: 3, amount: 30, labelAr: '٣ أيام' },
+  { durationDays: 7, amount: 70, labelAr: '٧ أيام' },
 ];
 
 export const PROMOTION_META = {

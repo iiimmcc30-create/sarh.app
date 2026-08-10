@@ -8,7 +8,16 @@ import {
   Post,
 } from '@nestjs/common';
 import { BoostType } from '@prisma/client';
-import { IsEnum, IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { RateLimit, Public } from '../../common/decorators/auth.decorators';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { successResponse } from '../../common/utils/response.util';
@@ -17,8 +26,6 @@ import { ListingBoostService } from './listing-boost.service';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import {
-  PROMOTE_AMOUNT_MAX,
-  PROMOTE_AMOUNT_MIN,
   PROMOTE_DURATION_HOURS_MAX,
   PROMOTE_DURATION_HOURS_MIN,
 } from '../promotion/promotion-limits.config';
@@ -37,10 +44,9 @@ class InitiateBoostDto {
   @Max(PROMOTE_DURATION_HOURS_MAX)
   durationHours?: number;
 
+  /** Ignored by backend — price is always computed server-side. */
   @IsOptional()
   @IsNumber()
-  @Min(PROMOTE_AMOUNT_MIN)
-  @Max(PROMOTE_AMOUNT_MAX)
   amount?: number;
 
   @IsOptional()

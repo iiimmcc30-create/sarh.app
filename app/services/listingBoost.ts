@@ -46,21 +46,26 @@ export const BOOST_TYPE_META: Record<
   },
 };
 
+/**
+ * Fallback plans used when API fetch fails.
+ * Amounts computed via slab formula: ceil(days×24/12) × rate
+ * PIN rate=6, FEATURE rate=5, BOTH rate=11
+ */
 export const FALLBACK_BOOST_PLANS: BoostPlansMap = {
   pinned: [
     { durationDays: 1, amount: 12, labelAr: 'يوم واحد' },
-    { durationDays: 3, amount: 29, labelAr: '٣ أيام' },
-    { durationDays: 7, amount: 59, labelAr: '٧ أيام' },
+    { durationDays: 3, amount: 36, labelAr: '٣ أيام' },
+    { durationDays: 7, amount: 84, labelAr: '٧ أيام' },
   ],
   featured: [
     { durationDays: 1, amount: 10, labelAr: 'يوم واحد' },
-    { durationDays: 3, amount: 25, labelAr: '٣ أيام' },
-    { durationDays: 7, amount: 49, labelAr: '٧ أيام' },
+    { durationDays: 3, amount: 30, labelAr: '٣ أيام' },
+    { durationDays: 7, amount: 70, labelAr: '٧ أيام' },
   ],
   both: [
-    { durationDays: 1, amount: 20, labelAr: 'يوم واحد' },
-    { durationDays: 3, amount: 45, labelAr: '٣ أيام' },
-    { durationDays: 7, amount: 95, labelAr: '٧ أيام' },
+    { durationDays: 1, amount: 22, labelAr: 'يوم واحد' },
+    { durationDays: 3, amount: 66, labelAr: '٣ أيام' },
+    { durationDays: 7, amount: 154, labelAr: '٧ أيام' },
   ],
 };
 

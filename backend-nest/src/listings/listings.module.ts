@@ -9,9 +9,10 @@ import { ListingPromotionService } from './promotion/listing-promotion.service';
 import { PromoteQuoteService } from './promotion/promote-quote.service';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, UsersModule, PrismaModule],
   controllers: [ListingsController, ListingBoostController, ListingPromotionController],
   providers: [
     ListingsService,

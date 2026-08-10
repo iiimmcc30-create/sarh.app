@@ -593,6 +593,15 @@ export class AdminRepository {
       { key: 'allowRegistration', value: true, labelAr: 'السماح بالتسجيل', category: 'auth' },
       { key: 'liveStreamsEnabled', value: true, labelAr: 'تفعيل البث المباشر', category: 'features' },
       { key: 'butcherApplicationsEnabled', value: true, labelAr: 'طلبات الملاحم', category: 'features' },
+      // Listing paid-services pricing (SAR)
+      { key: 'pricing.boost.pin.per12h', value: 6, labelAr: 'تثبيت الإعلان — سعر كل 12 ساعة (ر.س)', category: 'pricing' },
+      { key: 'pricing.boost.feature.per12h', value: 5, labelAr: 'تمييز الإعلان — سعر كل 12 ساعة (ر.س)', category: 'pricing' },
+      { key: 'pricing.promotion.per24h', value: 10, labelAr: 'ترويج الظهور — الحد الأدنى للميزانية كل 24 ساعة (ر.س)', category: 'pricing' },
+      // Reach estimate factors for visibility promotion
+      { key: 'pricing.reach.budgetFactorMin', value: 9, labelAr: 'معامل الوصول الأدنى (الميزانية)', category: 'pricing' },
+      { key: 'pricing.reach.budgetFactorMax', value: 15, labelAr: 'معامل الوصول الأقصى (الميزانية)', category: 'pricing' },
+      { key: 'pricing.reach.hourFactorMin', value: 3, labelAr: 'معامل الوصول الأدنى (الساعات)', category: 'pricing' },
+      { key: 'pricing.reach.hourFactorMax', value: 5, labelAr: 'معامل الوصول الأقصى (الساعات)', category: 'pricing' },
     ];
     return Promise.all(
       defaults.map((s) =>

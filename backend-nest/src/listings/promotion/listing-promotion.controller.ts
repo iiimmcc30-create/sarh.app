@@ -37,6 +37,7 @@ class InitiatePromotionDto {
   @Max(PROMOTE_DURATION_HOURS_MAX)
   durationHours?: number;
 
+  /** Optional: user may pay more than the computed minimum for higher reach. */
   @IsOptional()
   @IsNumber()
   @Min(PROMOTE_AMOUNT_MIN)
@@ -70,6 +71,7 @@ class PromoteQuoteQueryDto {
   @Max(PROMOTE_DURATION_HOURS_MAX)
   durationHours: number;
 
+  /** Optional: kept for API compatibility. Ignored by server for price calculation. */
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -92,13 +94,13 @@ export class ListingPromotionController {
     return successResponse(this.promotions.getPromotionPlans());
   }
 
-  /** Price quote: visibility = user budget; pinned/featured = duration-based pricing. */
+  /** Price quote: server-side computed price for all goals. */
   @Public()
   @RateLimit('api')
   @Get('promote/quote')
-  getQuote(@Query() query: PromoteQuoteQueryDto) {
+  async getQuote(@Query() query: PromoteQuoteQueryDto) {
     return successResponse(
-      this.promoteQuote.quote({
+      await this.promoteQuote.quote({
         goal: query.goal,
         durationHours: Number(query.durationHours),
         amount: query.amount != null ? Number(query.amount) : undefined,

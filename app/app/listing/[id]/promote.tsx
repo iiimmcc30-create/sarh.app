@@ -36,6 +36,7 @@ import {
   validatePromoteForm,
   type PromotionGoal,
   type ReachEstimate,
+  computeVisibilityMinPrice,
 } from '@/services/listingPromote';
 import Slider from '@react-native-community/slider';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -166,6 +167,19 @@ export default function ListingPromoteScreen() {
   const isVisibility = goal === 'visibility';
   const isDurationPriced = goal === 'pinned' || goal === 'featured';
 
+  // Compute the minimum required budget for visibility based on duration
+  const visibilityMinPrice = useMemo(() => {
+    if (!isVisibility) return PROMOTE_AMOUNT_MIN;
+    return computeVisibilityMinPrice(durationHours);
+  }, [isVisibility, durationHours]);
+
+  // Auto-bump budget to minimum when duration changes
+  useEffect(() => {
+    if (!isVisibility) return;
+    const minPrice = computeVisibilityMinPrice(durationHours);
+    setAmount((prev) => Math.max(prev, minPrice));
+  }, [isVisibility, durationHours]);
+
   const totalAmount = useMemo(() => {
     if (!goal) return 0;
     return resolvePromoteAmount(goal, durationHours, amount);
@@ -173,8 +187,8 @@ export default function ListingPromoteScreen() {
 
   const reachEstimate: ReachEstimate | null = useMemo(() => {
     if (!isVisibility) return null;
-    return estimatePromotionReach(amount, durationHours);
-  }, [isVisibility, amount, durationHours]);
+    return estimatePromotionReach(totalAmount, durationHours);
+  }, [isVisibility, totalAmount, durationHours]);
 
   const validationError = useMemo(
     () => validatePromoteForm(goal, amount, durationHours),
@@ -217,10 +231,11 @@ export default function ListingPromoteScreen() {
   const applyCustomAmount = () => {
     const parsed = parsePromoteAmountInput(customAmountDraft);
     if (parsed == null) {
-      Alert.alert('مبلغ غير صالح', `أدخل مبلغاً بين ${PROMOTE_AMOUNT_MIN} و ${PROMOTE_AMOUNT_MAX} ريال`);
+      Alert.alert('مبلغ غير صالح', `أدخل مبلغاً بين ${visibilityMinPrice} و ${PROMOTE_AMOUNT_MAX} ريال`);
       return;
     }
-    setAmount(parsed);
+    const enforced = Math.max(parsed, visibilityMinPrice);
+    setAmount(enforced);
     setCustomAmountOpen(false);
     Keyboard.dismiss();
   };
@@ -407,19 +422,24 @@ export default function ListingPromoteScreen() {
                 </Pressable>
               </View>
               <PromoteValueDisplay value={formatPromoteAmount(amount)} styles={styles} />
+              {visibilityMinPrice > PROMOTE_AMOUNT_MIN ? (
+                <Text style={styles.minBudgetHint}>
+                  الحد الأدنى للميزانية لهذه المدة: {formatPromoteAmount(visibilityMinPrice)}
+                </Text>
+              ) : null}
               <Slider
                 style={styles.slider}
-                minimumValue={PROMOTE_AMOUNT_MIN}
+                minimumValue={visibilityMinPrice}
                 maximumValue={PROMOTE_AMOUNT_MAX}
                 step={1}
-                value={amount}
-                onValueChange={(v) => setAmount(clampPromoteAmount(v))}
+                value={Math.max(amount, visibilityMinPrice)}
+                onValueChange={(v) => setAmount(Math.max(visibilityMinPrice, Math.round(v)))}
                 minimumTrackTintColor="#7C3AED"
                 maximumTrackTintColor={colors.borderSoft}
                 thumbTintColor="#7C3AED"
               />
               <View style={[styles.sliderBounds, getRtlRow()]}>
-                <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MIN} ر.س</Text>
+                <Text style={styles.sliderBoundText}>{formatPromoteAmount(visibilityMinPrice)}</Text>
                 <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MAX} ر.س</Text>
               </View>
             </View>
@@ -827,7 +847,14 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       backgroundColor: colors.bgElevated,
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: '700' as const,
+    },
+    minBudgetHint: {
+      ...typography.caption,
+      color: '#7C3AED',
+      fontWeight: '700' as const,
+      ...getRtlText(),
+      ...getRtlText(),
     },
     flowCard: {
       gap: spacing.sm,

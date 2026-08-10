@@ -20,14 +20,19 @@ import {
 import {
   PROMOTION_PLANS,
   PROMOTION_TIERS,
-  promotionPlanForDays,
   promotionTierWeight,
   type PromotionTierKey,
 } from './promotion-tiers.config';
 
+import {
+  promotionPriceForHours,
+  PROMOTION_DEFAULT_BASE_PER_24H,
+} from '../boost/boost-pricing.util';
+
 type InitiatePromotionOptions = {
   durationDays?: number;
   durationHours?: number;
+  /** Ignored for visibility — price is server-computed. Kept for API compatibility. */
   amount?: number;
   method: string;
   tier?: PromotionTierKey;
@@ -54,6 +59,14 @@ export class ListingPromotionService {
       tiers: Object.values(PROMOTION_TIERS),
       plans: PROMOTION_PLANS,
     };
+  }
+
+  private async getPromotionBase(): Promise<number> {
+    try {
+      const s = await this.prisma.appSetting.findUnique({ where: { key: 'pricing.promotion.per24h' } });
+      if (s && typeof s.value === 'number' && s.value > 0) return s.value;
+    } catch { /* fall through */ }
+    return PROMOTION_DEFAULT_BASE_PER_24H;
   }
 
   async expireStalePromotions() {
@@ -110,40 +123,36 @@ export class ListingPromotionService {
     let durationDays: number;
     let amount: number;
 
-    if (options.durationHours != null || options.amount != null) {
-      if (options.durationHours == null || options.amount == null) {
-        throwApi(400, 'invalid_promotion', 'المبلغ ومدة الترويج مطلوبان');
-      }
+    if (options.durationHours != null) {
       durationHours = clampPromoteDurationHours(options.durationHours);
-      amount = clampPromoteAmount(options.amount);
       durationDays = durationDaysFromHours(durationHours);
-    } else {
-      if (!options.durationDays) {
-        throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
-      }
-      const plan = promotionPlanForDays(options.durationDays);
-      if (!plan) throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+      // Server computes price — user-supplied amount is validated as minimum but ignored for final charge
+      const base = await this.getPromotionBase();
+      amount = promotionPriceForHours(durationHours, base);
+    } else if (options.durationDays != null && options.durationDays > 0) {
       durationDays = options.durationDays;
       durationHours = durationDays * 24;
-      amount = plan.amount;
+      const base = await this.getPromotionBase();
+      amount = promotionPriceForHours(durationHours, base);
+    } else {
+      throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
+    }
+
+    // Allow user to pay more than the minimum (higher budget = more reach)
+    if (options.amount != null && options.amount > amount) {
+      amount = clampPromoteAmount(options.amount);
     }
 
     if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
       throwApi(400, 'invalid_amount', 'المبلغ غير صالح');
     }
-    if (
-      durationHours < PROMOTE_DURATION_HOURS_MIN ||
-      durationHours > PROMOTE_DURATION_HOURS_MAX
-    ) {
+    if (durationHours < PROMOTE_DURATION_HOURS_MIN || durationHours > PROMOTE_DURATION_HOURS_MAX) {
       throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
     }
 
-    const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
-    const promotionGoal = options.promotionGoal ?? 'visibility';
     const currency = 'SAR';
     const orderRef = buildOrderRef(user.userId);
-    const descriptionAr = `ترويج إعلان: ${listing.arabicTitle} — ${durationHours} ساعة`;
+    const descriptionAr = `ترويج إعلان: ${listing.arabicTitle} — ${durationHours} ساعة (${amount} ر.س)`;
 
     const prismaMethod = ['mada', 'visa', 'mastercard', 'apple_pay', 'stc_pay'].includes(
       options.method,
@@ -152,6 +161,10 @@ export class ListingPromotionService {
       : 'visa';
 
     const niMethod = this.mapMethod(options.method);
+
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+    const promotionGoal = options.promotionGoal ?? 'visibility';
 
     const { promotion, payment } = await this.prisma.$transaction(async (tx) => {
       const promotion = await tx.listingPromotion.create({
