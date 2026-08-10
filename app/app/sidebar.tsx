@@ -1,35 +1,52 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image } from '@/components/ui/AppImage';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { APP_LOGO } from '@/constants/branding';
+import { BRAND_NAME_AR } from '@/constants/brandCopy';
 import {
   scrimColor,
   spacing,
+  typography,
   panelSurfaceBg,
   type ThemeColors,
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
+import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { confirmSignOut } from '@/lib/confirmSignOut';
 import {
   SidebarLogoutButton,
   SidebarMenuRow,
+  SidebarSection,
   SidebarThemeToggle,
   type SidebarMenuItem,
 } from '@/components/feature/SidebarMenu';
 
 type MenuItem = SidebarMenuItem;
 
+/** Brand forest green — matches logo identity in light & dark. */
+const BRAND_BANNER_BG = '#084D2A';
+const BRAND_TAGLINE = 'منصة المواشي السعودية';
+
 export default function SidebarScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
   const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
+  const { isButcherOwner, refresh } = useButcherOwnerAccess();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
 
   const handleNav = (route: string) => {
     router.back();
@@ -48,8 +65,8 @@ export default function SidebarScreen() {
     setPreference(preference === 'dark' ? 'light' : 'dark');
   };
 
-  const menuItems: MenuItem[] = useMemo(
-    () => [
+  const accountItems: MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [
       {
         key: 'profile',
         icon: 'user',
@@ -57,22 +74,39 @@ export default function SidebarScreen() {
         route: '/(tabs)/profile',
       },
       {
-        key: 'favorites',
-        icon: 'heart',
-        label: 'المفضلة',
-        route: '/favorites',
+        key: 'butchers',
+        icon: 'storefront-outline',
+        label: 'سوق الملاحم',
+        route: '/butchers',
       },
+    ];
+
+    if (isButcherOwner) {
+      items.push({
+        key: 'manage-butcher',
+        icon: 'grid-outline',
+        label: 'إدارة الملحمة',
+        route: '/(butcher)/manage',
+      });
+    }
+
+    items.push({
+      key: 'favorites',
+      icon: 'heart',
+      label: 'المفضلة',
+      route: '/favorites',
+    });
+
+    return items;
+  }, [isButcherOwner]);
+
+  const serviceItems: MenuItem[] = useMemo(
+    () => [
       {
         key: 'posts',
         icon: 'newspaper',
         label: 'مجلس سرح',
         route: '/(tabs)/posts',
-      },
-      {
-        key: 'butchers',
-        icon: 'storefront-outline',
-        label: 'سوق الملاحم',
-        route: '/butchers',
       },
       {
         key: 'promote',
@@ -86,6 +120,12 @@ export default function SidebarScreen() {
         label: 'خدمات سرح',
         route: '/sarh-services',
       },
+    ],
+    [],
+  );
+
+  const supportItems: MenuItem[] = useMemo(
+    () => [
       {
         key: 'support',
         icon: 'lifebuoy',
@@ -102,6 +142,17 @@ export default function SidebarScreen() {
     [],
   );
 
+  const renderSectionItems = (items: MenuItem[]) =>
+    items.map((item, index) => (
+      <SidebarMenuRow
+        key={item.key}
+        item={item}
+        colors={colors}
+        isLast={index === items.length - 1}
+        onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
+      />
+    ));
+
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
@@ -111,31 +162,31 @@ export default function SidebarScreen() {
           </Pressable>
         </View>
 
+        <View style={[styles.brandBanner, getRtlRow(), getRtlDirection()]}>
+          <View style={styles.brandText}>
+            <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
+            <Text style={styles.brandTagline}>{BRAND_TAGLINE}</Text>
+          </View>
+          {/* Official mark — white waves + green diamond stay as-is (no tint). */}
+          <View style={styles.brandMarkWrap}>
+            <Image
+              source={APP_LOGO}
+              style={styles.brandMark}
+              contentFit="cover"
+              accessibilityLabel="شعار سرح"
+            />
+          </View>
+        </View>
+
         <ScrollView
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
           keyboardShouldPersistTaps="handled"
         >
-          <View
-            style={[
-              styles.menuCard,
-              {
-                backgroundColor: colors.bgElevated,
-                borderColor: colors.borderSoft,
-              },
-            ]}
-          >
-            {menuItems.map((item, index) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                isLast={index === menuItems.length - 1}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
-          </View>
+          <SidebarSection colors={colors}>{renderSectionItems(accountItems)}</SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(serviceItems)}</SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(supportItems)}</SidebarSection>
 
           <SidebarThemeToggle
             preference={preference}
@@ -182,7 +233,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...alignInlineEnd(),
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
+      paddingBottom: spacing.xs,
     },
     closeBtn: {
       width: 36,
@@ -190,12 +241,46 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    menuCard: {
+    brandBanner: {
+      alignItems: 'center',
+      gap: spacing.md,
       marginHorizontal: spacing.lg,
-      marginTop: spacing.sm,
+      marginBottom: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
       borderRadius: 16,
+      backgroundColor: BRAND_BANNER_BG,
       borderWidth: StyleSheet.hairlineWidth,
-      overflow: 'hidden',
+      borderColor: scheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(8,77,42,0.35)',
+    },
+    brandMark: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+    },
+    brandText: {
+      flex: 1,
+      minWidth: 0,
+      gap: 4,
+      alignItems: 'flex-end',
+    },
+    brandName: {
+      ...typography.h2,
+      fontSize: 28,
+      lineHeight: 34,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      writingDirection: 'rtl',
+      ...getRtlText(),
+    },
+    brandTagline: {
+      ...typography.caption,
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: '500',
+      color: 'rgba(255,255,255,0.88)',
+      writingDirection: 'rtl',
+      ...getRtlText(),
     },
     scroll: {
       flex: 1,

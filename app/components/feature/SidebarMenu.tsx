@@ -20,13 +20,15 @@ export function SidebarSection({
   children,
   colors,
 }: {
-  title: string;
+  title?: string;
   children: ReactNode;
   colors: ThemeColors;
 }) {
   return (
     <View style={[sectionStyles.block, getRtlDirection()]}>
-      <Text style={[sectionStyles.title, getRtlText(), { color: colors.textMuted }]}>{title}</Text>
+      {title ? (
+        <Text style={[sectionStyles.title, getRtlText(), { color: colors.textMuted }]}>{title}</Text>
+      ) : null}
       <View
         style={[
           sectionStyles.card,
