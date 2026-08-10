@@ -7,9 +7,9 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, type ColorScheme, type ThemeColors } from '@/constants/theme';
 
-/** Page background: transparent in dark (pattern shows), solid in light. */
+/** Page background — always opaque to block React Navigation white scenes. */
 export function sarhScreenRoot(scheme: ColorScheme, colors: ThemeColors): string {
-  return scheme === 'dark' ? 'transparent' : colors.bgDeep;
+  return scheme === 'dark' ? (colors.bgDeep || sarh.color.bg) : colors.bgDeep;
 }
 
 export function sarhScreenStyles(colors: ThemeColors, scheme: ColorScheme) {

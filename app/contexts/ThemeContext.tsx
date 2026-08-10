@@ -35,7 +35,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>('system');
+  const [preference, setPreferenceState] = useState<ThemePreference>('dark');
   const [scheme, setScheme] = useState<ColorScheme>(getActiveScheme());
   const [hydrated, setHydrated] = useState(false);
 
@@ -45,8 +45,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        const nextPreference =
-          stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+        // Sarh brand default is dark. Migrate unset and legacy "system"
+        // (which often resolves to light OS and paints white scenes).
+        let nextPreference: ThemePreference = 'dark';
+        if (stored === 'light' || stored === 'dark') {
+          nextPreference = stored;
+        } else {
+          // unset | system | garbage → persist dark
+          nextPreference = 'dark';
+          await AsyncStorage.setItem(THEME_STORAGE_KEY, 'dark');
+        }
         const resolved = resolveScheme(nextPreference);
         applyThemeScheme(resolved);
         if (!mounted) return;
@@ -54,6 +62,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setScheme(resolved);
       } catch (error) {
         console.warn('[theme] failed to load preference', error);
+        applyThemeScheme('dark');
+        if (mounted) {
+          setPreferenceState('dark');
+          setScheme('dark');
+        }
       } finally {
         if (mounted) setHydrated(true);
       }

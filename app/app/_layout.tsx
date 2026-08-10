@@ -84,7 +84,9 @@ function RootNavigator() {
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: isDark ? 'transparent' : themeColors.bgDeep,
+            backgroundColor: isDark
+              ? themeColors.bgDeep || sarh.color.bg
+              : themeColors.bgDeep,
             ...getRtlDirection(),
           },
           animation: stackSlideAnimation(),

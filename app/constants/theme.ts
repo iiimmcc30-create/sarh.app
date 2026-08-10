@@ -212,7 +212,9 @@ function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeC
   if (scheme === 'dark') {
     return {
       ...palette,
-      screenRoot: 'transparent',
+      // Opaque — never transparent. React Navigation tab scenes paint white
+      // behind transparent screens and cause a persistent light flash/leak.
+      screenRoot: palette.bgDeep,
       textBrand: palette.textPrimary,
       textBrandStrong: palette.textPrimary,
       textBrandSoft: palette.textSecondary,
@@ -240,6 +242,9 @@ export function applyThemeScheme(scheme: ColorScheme) {
   Object.assign(gradients, paletteGradients);
   Object.assign(shadow, createShadow(palette));
 }
+
+// Synchronous init — colors must never be an empty object at first render.
+applyThemeScheme('dark');
 
 /** Gradients that must react to light/dark at runtime (not frozen in StyleSheet). */
 export function headerFadeGradient(scheme: ColorScheme): readonly [string, string] {

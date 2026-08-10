@@ -2,17 +2,22 @@
 // SAFAT — Tabs Layout
 
 import { Tabs } from 'expo-router';
-import { StyleSheet } from 'react-native';
 import { FloatingTabBar } from '@/components/navigation/FloatingTabBar';
 import { ds } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function TabsLayout() {
+  const { colors, isDark } = useTheme();
+  const sceneBg = isDark ? colors.bgDeep || sarh.color.bg : colors.bgDeep;
+
   return (
     <Tabs
       tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        sceneStyle: { backgroundColor: sceneBg },
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: 'transparent',
@@ -38,5 +43,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({});
