@@ -26,10 +26,10 @@ import {
   SidebarMenuRow,
   SidebarSection,
   SidebarThemeToggle,
-  type SidebarMenuItem,
+  type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
 
-type MenuItem = SidebarMenuItem;
+type MenuItem = SidebarNavItem;
 
 const BRAND_TAGLINE = 'منصة المواشي السعودية';
 
@@ -247,16 +247,14 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
       borderRadius: 16,
-      backgroundColor: BRAND_BANNER_BG,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: scheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(8,77,42,0.35)',
+      backgroundColor: panelBg,
     },
     brandMarkWrap: {
       width: 56,
       height: 56,
       borderRadius: 28,
       overflow: 'hidden',
-      backgroundColor: BRAND_BANNER_BG,
+      backgroundColor: panelBg,
     },
     brandMark: {
       width: 56,
@@ -273,7 +271,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 28,
       lineHeight: 34,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: colors.textPrimary,
       writingDirection: 'rtl',
       ...getRtlText(),
     },
@@ -282,7 +280,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 12,
       lineHeight: 18,
       fontWeight: '500',
-      color: 'rgba(255,255,255,0.88)',
+      color: colors.textMuted,
       writingDirection: 'rtl',
       ...getRtlText(),
     },

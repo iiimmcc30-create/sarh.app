@@ -3,22 +3,21 @@ import {
   SidebarLogoutButton,
   SidebarMenuRow,
   SidebarSection,
-  type SidebarMenuItem,
+  type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { I18nManager, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ProfileSettingsMenuScreenProps = {
   title?: string;
   sections: Array<{
     title: string;
-    items: SidebarMenuItem[];
+    items: SidebarNavItem[];
   }>;
   onLogout: () => void;
 };
@@ -31,8 +30,9 @@ export function ProfileSettingsMenuScreen({
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const isRtl = I18nManager.isRTL;
 
-  const handleItemPress = (item: SidebarMenuItem) => {
+  const handleItemPress = (item: SidebarNavItem) => {
     if (item.onPress) {
       item.onPress();
       return;
@@ -47,7 +47,7 @@ export function ProfileSettingsMenuScreen({
       <ScreenHeader title={title} showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
+        contentContainerStyle={[styles.content, { direction: isRtl ? 'rtl' : 'ltr' }]}
       >
         {sections.map((section) => (
           <SidebarSection key={section.title} title={section.title} colors={colors}>

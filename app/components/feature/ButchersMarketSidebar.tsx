@@ -1,7 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter, useSegments } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { I18nManager, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sarh } from '@/constants/sarhTokens';
 import {
@@ -12,7 +13,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
-import { getRtlText, borderInlineEnd, getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { borderInlineEnd } from '@/lib/rtl';
 
 export type ButchersMarketMenuItem = {
   key: string;
@@ -89,6 +90,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
     colors: theme.colors,
   }));
   const currentPath = `/${segments.join('/')}`;
+  const isRtl = I18nManager.isRTL;
 
   const handleNav = (route: string) => {
     onClose();
@@ -108,14 +110,38 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
 
       <Pressable
         onPress={() => handleNav('/(tabs)/profile')}
-        style={[styles.profileRow, getRtlRow()]}
+        style={[
+          styles.profileRow,
+          {
+            flexDirection: 'row',
+            direction: isRtl ? 'rtl' : 'ltr',
+          },
+        ]}
       >
         <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
         <View style={styles.profileText}>
-          <Text style={styles.displayName} numberOfLines={1}>
+          <Text
+            style={[
+              styles.displayName,
+              {
+                textAlign: isRtl ? 'right' : 'left',
+                writingDirection: isRtl ? 'rtl' : 'ltr',
+              },
+            ]}
+            numberOfLines={1}
+          >
             {me.arabicName || me.displayName || me.username}
           </Text>
-          <Text style={styles.usernameText} numberOfLines={1}>
+          <Text
+            style={[
+              styles.usernameText,
+              {
+                textAlign: isRtl ? 'right' : 'left',
+                writingDirection: isRtl ? 'rtl' : 'ltr',
+              },
+            ]}
+            numberOfLines={1}
+          >
             @{me.username || 'user'}
           </Text>
           <View style={styles.brandPill}>
@@ -127,36 +153,21 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
+        contentContainerStyle={[styles.scrollContent, { direction: isRtl ? 'rtl' : 'ltr' }]}
       >
-        {BUTCHERS_MARKET_MENU.map((item) => {
-          const active = isItemActive(item, currentPath);
-          return (
-            <Pressable
+        <View style={styles.menuCard}>
+          {BUTCHERS_MARKET_MENU.map((item, index) => (
+            <SidebarMenuItem
               key={item.key}
+              icon={item.icon}
+              title={item.label}
+              active={isItemActive(item, currentPath)}
+              showDivider={index < BUTCHERS_MARKET_MENU.length - 1}
+              colors={colors}
               onPress={() => handleNav(item.route)}
-              style={({ pressed }) => [
-                styles.menuRow,
-                getRtlRow(),
-                active && styles.menuRowActive,
-                pressed && styles.menuRowPressed,
-              ]}
-            >
-              {active ? <View style={styles.activeBar} /> : null}
-              <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
-                <AppIcon
-                  name={item.icon}
-                  size={20}
-                  color={active ? sarh.color.action : colors.textMuted}
-                />
-              </View>
-              <Text style={[styles.menuLabel, active && styles.menuLabelActive]}>
-                {item.label}
-              </Text>
-              <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
-            </Pressable>
-          );
-        })}
+            />
+          ))}
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -225,14 +236,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 17,
       fontWeight: '800',
       color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
-      ...getRtlText(),
     },
     brandPill: {
       marginTop: 4,
@@ -249,64 +256,18 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     scroll: {
       flex: 1,
-      ...getRtlDirection(),
     },
     scrollContent: {
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.md,
       paddingBottom: spacing.lg,
     },
-    menuRow: {
-      alignItems: 'center',
-      gap: spacing.md,
-      marginHorizontal: spacing.md,
-      marginVertical: 3,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 14,
-      borderRadius: 14,
-      position: 'relative',
+    menuCard: {
+      marginHorizontal: spacing.lg,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
       overflow: 'hidden',
-    },
-    menuRowActive: {
-      backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
-    },
-    menuRowPressed: {
-      opacity: 0.85,
-      transform: [{ scale: 0.99 }],
-    },
-    activeBar: {
-      position: 'absolute',
-      start: 0,
-      top: 8,
-      bottom: 8,
-      width: 4,
-      borderRadius: 4,
-      backgroundColor: sarh.color.action,
-    },
-    iconWrap: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
-    },
-    iconWrapActive: {
-      backgroundColor: isDark ? 'rgba(32, 182, 111, 0.22)' : '#DFF5D6',
-    },
-    menuLabel: {
-      ...typography.bodyStrong,
-      flex: 1,
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-    },
-    menuLabelActive: {
-      color: colors.textPrimary,
-      fontWeight: '800',
     },
     footer: {
       paddingVertical: spacing.md,

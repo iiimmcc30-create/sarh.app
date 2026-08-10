@@ -27,10 +27,10 @@ import {
   SidebarLogoutButton,
   SidebarMenuRow,
   SidebarSection,
-  type SidebarMenuItem,
+  type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
 
-type MenuItem = SidebarMenuItem;
+type MenuItem = SidebarNavItem;
 
 export default function ButcherSidebarScreen() {
   const router = useRouter();
@@ -280,6 +280,7 @@ export default function ButcherSidebarScreen() {
                 route: '/(tabs)',
               }}
               colors={colors}
+              isLast
               onPress={() => handleNav('/(tabs)')}
             />
           </SidebarSection>

@@ -1,16 +1,14 @@
 // Powered by OnSpace.AI
 // SAFAT — ButchersSidebarEntry
 // Public butcher discovery + owner tools when application is approved.
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-
+import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
 
 type SidebarRouteItem = {
   icon: string;
@@ -87,23 +85,16 @@ export function ButchersSidebarEntry() {
   };
 
   return (
-    <View style={getRtlDirection()}>
+    <View style={styles.card}>
       {visibleItems.map((item, idx) => (
-        <Pressable
+        <SidebarMenuItem
           key={`${item.route}-${item.arabic}`}
+          icon={item.icon}
+          title={item.arabic}
+          colors={colors}
+          showDivider={idx < visibleItems.length - 1}
           onPress={() => navigate(item.route)}
-          style={({ pressed }) => [
-            styles.row,
-            idx < visibleItems.length - 1 && styles.rowDivider,
-            pressed && { opacity: 0.72 },
-          ]}
-        >
-          <View style={styles.leading}>
-            <AppIcon name={item.icon} size={22} color={colors.textPrimary} />
-            <Text style={styles.label}>{item.arabic}</Text>
-          </View>
-          <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
-        </Pressable>
+        />
       ))}
     </View>
   );
@@ -111,34 +102,13 @@ export function ButchersSidebarEntry() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    row: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      minHeight: 54,
-    },
-    leading: {
-      ...getRtlRow(),
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      gap: spacing.sm,
-      minWidth: 0,
-    },
-    rowDivider: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    label: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      flexShrink: 1,
-    },
-    sectionDivider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: colors.borderHairline,
-      marginHorizontal: spacing.xl,
+    card: {
+      marginHorizontal: spacing.lg,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
+      overflow: 'hidden',
     },
   });
 }
