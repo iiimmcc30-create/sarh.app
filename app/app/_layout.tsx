@@ -23,6 +23,9 @@ import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
 import { sarh } from '@/constants/sarhTokens';
 import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
+import { bootstrapTheme } from '@/constants/themeBootstrap';
+
+bootstrapTheme().catch(() => {});
 setupRtl();
 
 SplashScreen.preventAutoHideAsync().catch(() => {});

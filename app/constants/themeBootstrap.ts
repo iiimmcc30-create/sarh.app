@@ -14,7 +14,7 @@ export function resolveScheme(preference: ThemePreference | null): ColorScheme {
 export async function bootstrapTheme(): Promise<ColorScheme> {
   const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
   const preference =
-    stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'light';
+    stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
   const scheme = resolveScheme(preference);
   applyThemeScheme(scheme);
   return scheme;
