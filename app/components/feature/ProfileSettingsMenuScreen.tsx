@@ -74,7 +74,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.screenRoot,
     },
     content: {
       paddingBottom: spacing.lg,

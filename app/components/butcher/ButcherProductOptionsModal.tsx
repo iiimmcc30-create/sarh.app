@@ -174,7 +174,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.45)',
+      backgroundColor: colors.bgOverlay,
     },
     sheet: {
       maxHeight: '82%',

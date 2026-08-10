@@ -192,7 +192,7 @@ export default function OtpScreen() {
         >
           {/* Back button top right */}
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={24} color={colors.textPrimary} />
           </Pressable>
 
           {/* Logo */}

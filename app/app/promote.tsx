@@ -167,7 +167,7 @@ export default function PromoteHubScreen() {
 
                       {listing.promoted ? (
                         <View style={[styles.reachPill, getRtlRow()]}>
-                          <AppIcon name="trending-up-outline" size={12} color="#7C3AED" />
+                          <AppIcon name="trending-up-outline" size={12} color={colors.electric} />
                           <Text style={styles.reachPillText}>ترويج نشط — زيادة ظهور</Text>
                         </View>
                       ) : null}
@@ -183,7 +183,7 @@ export default function PromoteHubScreen() {
                           }}
                           hitSlop={8}
                         >
-                          <AppIcon name="stats-chart-outline" size={18} color="#7C3AED" />
+                          <AppIcon name="stats-chart-outline" size={18} color={colors.electric} />
                         </Pressable>
                       ) : null}
                       <View style={styles.chevronWrap}>
@@ -392,11 +392,11 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 999,
-      backgroundColor: '#7C3AED12',
+      backgroundColor: `${colors.electric}12`,
     },
     reachPillText: {
       ...typography.micro,
-      color: '#7C3AED',
+      color: colors.electric,
       fontWeight: '700',
       writingDirection: 'rtl',
     },
@@ -410,8 +410,8 @@ function createStyles(colors: ThemeColors) {
       height: 36,
       borderRadius: 18,
       borderWidth: 1,
-      borderColor: '#7C3AED30',
-      backgroundColor: '#7C3AED08',
+      borderColor: `${colors.electric}30`,
+      backgroundColor: `${colors.electric}08`,
       alignItems: 'center',
       justifyContent: 'center',
     },

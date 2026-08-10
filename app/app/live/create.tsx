@@ -22,7 +22,8 @@ import { AgoraVideoView } from '@/components/live/AgoraVideoView';
 import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeModal';
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -53,6 +54,10 @@ export default function CreateStreamScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ listingId?: string; listingTitle?: string }>();
   const { accessToken } = useAuth();
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+  }));
 
   const [arabicTitle, setArabicTitle] = useState(params.listingTitle ?? '');
   const [category, setCategory] = useState('camels');
@@ -427,6 +432,8 @@ export default function CreateStreamScreen() {
 }
 
 function StatusPill({ label, ok }: { label: string; ok: boolean }) {
+  const styles = useThemedStyles(({ colors }) => createStatusStyles(colors));
+
   return (
     <View style={[styles.statusPill, ok && styles.statusPillOk]}>
       <Text style={[styles.statusPillText, ok && styles.statusPillTextOk]}>{label}</Text>
@@ -434,7 +441,8 @@ function StatusPill({ label, ok }: { label: string; ok: boolean }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   centered: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },
   muted: { ...typography.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
@@ -579,17 +587,6 @@ const styles = StyleSheet.create({
   catChipText: { ...typography.caption, color: colors.textMuted },
   catChipTextActive: { color: '#fff', fontWeight: '700' },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-end' },
-  statusPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  statusPillOk: { borderColor: `${colors.success}55`, backgroundColor: `${colors.success}15` },
-  statusPillText: { ...typography.micro, color: colors.textMuted },
-  statusPillTextOk: { color: colors.textBrandSuccess },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
@@ -608,4 +605,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
   },
   startBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
-});
+  });
+}
+
+function createStatusStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    statusPill: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    statusPillOk: { borderColor: `${colors.success}55`, backgroundColor: `${colors.success}15` },
+    statusPillText: { ...typography.micro, color: colors.textMuted },
+    statusPillTextOk: { color: colors.textBrandSuccess },
+  });
+}

@@ -17,7 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 import { API_BASE } from '@/services/api';
 import { STORY_IMAGE_DURATION_SEC, isVideoMediaUrl } from '@/constants/stories';
 import { resolveMediaUrl } from '@/services/media';
@@ -30,17 +31,18 @@ function ButcherStoryVideo({ uri }: { uri: string }) {
   return <StoryVideoPlayer uri={uri} style={StyleSheet.absoluteFill} />;
 }
 
-const STORY_TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  daily_slaughter: { label: '🔪 ذبح يومي طازج', color: colors.danger   },
-  offer:           { label: '🏷️ عرض خاص',        color: colors.amber    },
-  new_stock:       { label: '📦 مخزون جديد',      color: colors.textBrandSuccess  },
-  update:          { label: '📢 تحديث',            color: colors.textBrandAlt },
+const STORY_TYPE_LABELS: Record<string, { label: string; tone: keyof ThemeColors }> = {
+  daily_slaughter: { label: '🔪 ذبح يومي طازج', tone: 'danger' },
+  offer:           { label: '🏷️ عرض خاص', tone: 'amber' },
+  new_stock:       { label: '📦 مخزون جديد', tone: 'textBrandSuccess' },
+  update:          { label: '📢 تحديث', tone: 'textBrandAlt' },
 };
 
 export default function ButcherStoryViewerScreen() {
   const { butcherId, storyId } = useLocalSearchParams<{ butcherId?: string; storyId?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const [stories, setStories] = useState<ButcherStory[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -126,7 +128,10 @@ export default function ButcherStoryViewerScreen() {
     return null;
   }
 
-  const typeInfo = STORY_TYPE_LABELS[story.type] ?? { label: story.type, color: colors.textBrandAlt };
+  const typeMeta = STORY_TYPE_LABELS[story.type];
+  const typeInfo = typeMeta
+    ? { label: typeMeta.label, color: colors[typeMeta.tone] as string }
+    : { label: story.type, color: colors.textBrandAlt };
 
   return (
     <View style={s.screen}>

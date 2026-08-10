@@ -4,6 +4,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sarh } from '@/constants/sarhTokens';
+import { ambientShadow } from '@/constants/designSystem';
 import {
   panelSurfaceBg,
   spacing,
@@ -176,11 +177,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       maxWidth: 400,
       alignSelf: 'stretch',
       backgroundColor: panelBg,
-      shadowColor: '#000',
-      shadowOffset: { width: isDark ? -4 : -2, height: 0 },
-      shadowOpacity: isDark ? 0.35 : 0.12,
-      shadowRadius: isDark ? 16 : 20,
-      elevation: 12,
+      ...ambientShadow(scheme, 'card'),
     },
     header: {
       alignItems: 'flex-end',
@@ -192,7 +189,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: 40,
       height: 40,
       borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
@@ -239,12 +236,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 999,
-      backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
+      backgroundColor: `${colors.electric}18`,
     },
     brandPillText: {
       ...typography.micro,
       fontWeight: '700',
-      color: isDark ? colors.textPrimary : '#3FA82E',
+      color: isDark ? colors.textPrimary : colors.electric,
       writingDirection: 'rtl',
     },
     scroll: {
@@ -267,7 +264,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       overflow: 'hidden',
     },
     menuRowActive: {
-      backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
+      backgroundColor: `${colors.electric}18`,
     },
     menuRowPressed: {
       opacity: 0.85,
@@ -286,14 +283,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: 38,
       height: 38,
       borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
     iconWrapActive: {
-      backgroundColor: isDark ? 'rgba(32, 182, 111, 0.22)' : '#DFF5D6',
+      backgroundColor: `${colors.electric}24`,
     },
     menuLabel: {
       ...typography.bodyStrong,

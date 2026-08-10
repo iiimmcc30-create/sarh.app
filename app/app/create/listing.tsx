@@ -714,7 +714,7 @@ function createStyles(colors: ThemeColors) {
   imageThumb: { width: '100%', height: '100%' },
   imageRemove: {
     position: 'absolute', top: 2, right: 2,
-    backgroundColor: 'rgba(6,9,26,0.6)', borderRadius: 11,
+    backgroundColor: colors.bgOverlay, borderRadius: 11,
   },
   imageAddBtn: {
     width: 88, height: 88, borderRadius: radius.lg,

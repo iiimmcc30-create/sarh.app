@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "safat",
     "owner": "alsafa00",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
@@ -48,7 +48,11 @@
           "image": "./assets/images/splash-circle.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#FAFBF8",
+          "dark": {
+            "image": "./assets/images/splash-circle.png",
+            "backgroundColor": "#0B1622"
+          }
         }
       ],
       [

@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -19,7 +20,7 @@ export function ButcherStickyCartBar({
   onPress,
 }: ButcherStickyCartBarProps) {
   const insets = useSafeAreaInsets();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
 
   if (itemCount <= 0) return null;
 
@@ -49,7 +50,7 @@ export function ButcherStickyCartBar({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     wrap: {
       position: 'absolute',
@@ -65,11 +66,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
       paddingVertical: 12,
       paddingHorizontal: spacing.lg,
-      shadowColor: '#000',
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 6,
+      ...ambientShadow(scheme, 'fab'),
     },
     left: {
       ...getRtlRow(),

@@ -1,4 +1,4 @@
-import { colors } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
 import type {
   ButcherApplicationDocumentStatus,
   ButcherApplicationDocumentType,
@@ -7,16 +7,21 @@ import type {
   GccCountry,
 } from '@/services/butcherApplicationTypes';
 
-export const APPLICATION_STATUS_META: Record<
-  ButcherApplicationStatus,
-  { label: string; color: string; bg: string }
-> = {
-  DRAFT: { label: 'مسودة', color: colors.textSecondary, bg: colors.bgElevated },
-  SUBMITTED: { label: 'قيد المراجعة', color: colors.amber, bg: 'rgba(251, 191, 36, 0.15)' },
-  APPROVED: { label: 'مقبول', color: colors.success, bg: 'rgba(16, 185, 129, 0.15)' },
-  REJECTED: { label: 'مرفوض', color: colors.danger, bg: 'rgba(244, 63, 94, 0.15)' },
-  WITHDRAWN: { label: 'مسحوب', color: colors.textMuted, bg: colors.bgGlass },
-};
+type ApplicationStatusMeta = { label: string; color: string; bg: string };
+
+export function getApplicationStatusMeta(
+  status: ButcherApplicationStatus,
+  colors: ThemeColors,
+): ApplicationStatusMeta {
+  const meta: Record<ButcherApplicationStatus, ApplicationStatusMeta> = {
+    DRAFT: { label: 'مسودة', color: colors.textSecondary, bg: colors.bgElevated },
+    SUBMITTED: { label: 'قيد المراجعة', color: colors.amber, bg: `${colors.amber}26` },
+    APPROVED: { label: 'مقبول', color: colors.success, bg: `${colors.success}26` },
+    REJECTED: { label: 'مرفوض', color: colors.danger, bg: `${colors.danger}26` },
+    WITHDRAWN: { label: 'مسحوب', color: colors.textMuted, bg: colors.bgGlass },
+  };
+  return meta[status];
+}
 
 export const DOCUMENT_TYPE_LABELS: Record<ButcherApplicationDocumentType, string> = {
   commercial_license: 'السجل التجاري',

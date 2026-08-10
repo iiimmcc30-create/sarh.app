@@ -152,7 +152,7 @@ export default function ForgotPasswordScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={24} color={colors.textPrimary} />
           </Pressable>
 
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>

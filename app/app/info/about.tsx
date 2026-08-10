@@ -21,7 +21,7 @@ import {
 } from '@/constants/brandCopy';
 
 export default function AboutScreen() {
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router = useRouter();
 
@@ -38,7 +38,7 @@ export default function AboutScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Hero */}
-        <LinearGradient colors={['#0B1330', '#162149', '#1E3A8A']} style={styles.hero}>
+        <LinearGradient colors={gradients.hero} style={styles.hero}>
           <AppLogo size={96} showRing={false} />
           <Text style={styles.heroTitle}>{BRAND_NAME_AR}</Text>
           <Text style={styles.heroSub}>{BRAND_TAGLINE_AR}</Text>

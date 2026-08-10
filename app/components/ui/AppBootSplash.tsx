@@ -1,4 +1,6 @@
 import { APP_LOGO } from '@/constants/branding';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -17,11 +19,6 @@ const MIN_SHOW_MS = IS_WEB ? 850 : 1800;
 const FADE_MS = IS_WEB ? 260 : 420;
 const BOOT_ANIM_FAILSAFE_MS = IS_WEB ? 2200 : 5500;
 
-const BRAND_GREEN = '#163526';
-const BG = '#FFFFFF';
-const MUTED = '#6B7280';
-const ACCENT = '#1F6B4F';
-
 type AppBootSplashProps = {
   /** App fonts + auth/onboarding finished */
   ready: boolean;
@@ -29,6 +26,7 @@ type AppBootSplashProps = {
 };
 
 function LoadingDots({ opacity }: { opacity: Animated.Value }) {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const d1 = useRef(new Animated.Value(0.35)).current;
   const d2 = useRef(new Animated.Value(0.35)).current;
   const d3 = useRef(new Animated.Value(0.35)).current;
@@ -75,8 +73,9 @@ function LoadingDots({ opacity }: { opacity: Animated.Value }) {
   );
 }
 
-/** Minimal white boot splash with brand-green accents. */
+/** Theme-aware boot splash with brand-green accents. */
 export function AppBootSplash({ ready, onComplete }: AppBootSplashProps) {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const overlayOpacity = useRef(new Animated.Value(1)).current;
   const ringScale = useRef(new Animated.Value(0.88)).current;
   const ringOpacity = useRef(new Animated.Value(0)).current;
@@ -247,10 +246,11 @@ export function AppBootSplash({ ready, onComplete }: AppBootSplashProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: BG,
+    backgroundColor: colors.bgDeep,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: 'rgba(31, 107, 79, 0.06)',
+    backgroundColor: colors.electric + '0F',
   },
   bgOrbBottom: {
     position: 'absolute',
@@ -273,14 +273,14 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(22, 53, 38, 0.04)',
+    backgroundColor: colors.electric + '0A',
   },
   glow: {
     position: 'absolute',
     width: LOGO_SIZE + 56,
     height: LOGO_SIZE + 56,
     borderRadius: (LOGO_SIZE + 56) / 2,
-    backgroundColor: 'rgba(31, 107, 79, 0.08)',
+    backgroundColor: colors.electric + '14',
   },
   ring: {
     position: 'absolute',
@@ -288,11 +288,11 @@ const styles = StyleSheet.create({
     height: LOGO_SIZE + 24,
     borderRadius: (LOGO_SIZE + 24) / 2,
     borderWidth: 1.5,
-    borderColor: 'rgba(31, 107, 79, 0.18)',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.bgGlassStrong,
     ...Platform.select({
       ios: {
-        shadowColor: BRAND_GREEN,
+        shadowColor: colors.glow,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.12,
         shadowRadius: 18,
@@ -309,14 +309,14 @@ const styles = StyleSheet.create({
     marginTop: 22,
     fontSize: 30,
     fontWeight: '800',
-    color: BRAND_GREEN,
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   sub: {
     marginTop: 8,
     fontSize: 13,
     fontWeight: '500',
-    color: MUTED,
+    color: colors.textMuted,
     textAlign: 'center',
     paddingHorizontal: 36,
     lineHeight: 20,
@@ -331,6 +331,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: ACCENT,
+    backgroundColor: colors.electric,
   },
-});
+  });
+}

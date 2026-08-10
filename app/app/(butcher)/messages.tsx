@@ -15,7 +15,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchNotifications } from '@/services/notifications';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
@@ -25,6 +26,10 @@ import { getRtlRow, marginEnd } from '@/lib/rtl';
 type Tab = 'messages' | 'activity';
 
 export default function ButcherMessagesScreen() {
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+  }));
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const listBottomPadding = 58 + Math.max(insets.bottom, 8) + 6 + spacing.xl;
@@ -257,7 +262,8 @@ export default function ButcherMessagesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -329,4 +335,5 @@ const styles = StyleSheet.create({
   activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, textAlign: 'right' },
   activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
-});
+  });
+}

@@ -15,7 +15,8 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { marginAutoStart, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 import { useEffect } from 'react';
 import {
@@ -77,6 +78,10 @@ function MapPin({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { styles: mp, colors } = useThemedStyles((theme) => ({
+    styles: createMapPinStyles(theme.colors),
+    colors: theme.colors,
+  }));
   const pos = getPinPosition(butcher);
 
   return (
@@ -126,6 +131,10 @@ function BottomCard({
   onChat: () => void;
   onOrder: () => void;
 }) {
+  const { styles: bc, colors } = useThemedStyles((theme) => ({
+    styles: createBottomCardStyles(theme.colors),
+    colors: theme.colors,
+  }));
   const currency = gccCurrencies[butcher.country];
   const country = countries[butcher.country];
 
@@ -223,6 +232,11 @@ function BottomCard({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ButchersMapScreen() {
+  const { styles: s, colors, gradients } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+    gradients: theme.gradients,
+  }));
   const router = useRouter();
   const { accessToken } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -488,7 +502,8 @@ export default function ButchersMapScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const s = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
 
   header: {
@@ -550,7 +565,7 @@ const s = StyleSheet.create({
   },
   gridLine: {
     position: 'absolute',
-    backgroundColor: 'rgba(125,211,252,0.05)',
+    backgroundColor: colors.borderHairline,
   },
   gridLineH: { left: 0, right: 0, height: 1 },
   gridLineV: { top: 0, bottom: 0, width: 1 },
@@ -558,21 +573,21 @@ const s = StyleSheet.create({
     position: 'absolute',
     top: spacing.md,
     alignSelf: 'center',
-    backgroundColor: 'rgba(6,9,26,0.7)',
+    backgroundColor: colors.bgOverlay,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  regionText: { ...typography.micro, color: colors.textMuted },
+  regionText: { ...typography.micro, color: '#fff' },
   legend: {
     position: 'absolute',
     bottom: spacing.md,
     left: spacing.md,
     flexDirection: 'row',
     gap: spacing.md,
-    backgroundColor: 'rgba(6,9,26,0.8)',
+    backgroundColor: colors.bgOverlay,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill,
@@ -581,7 +596,7 @@ const s = StyleSheet.create({
   },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { ...typography.micro, color: colors.textMuted },
+  legendText: { ...typography.micro, color: '#fff' },
   tapHint: {
     position: 'absolute',
     bottom: spacing.xl,
@@ -589,14 +604,14 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(6,9,26,0.75)',
+    backgroundColor: colors.bgOverlay,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  tapHintText: { ...typography.caption, color: colors.textMuted },
+  tapHintText: { ...typography.caption, color: '#fff' },
 
   // Mini list
   miniList: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
@@ -621,10 +636,12 @@ const s = StyleSheet.create({
   miniCity: { ...typography.micro, color: colors.textMuted },
   miniRating: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   miniRatingText: { ...typography.micro, color: colors.gold, fontWeight: '700' },
-});
+  });
+}
 
 // Map pin styles
-const mp = StyleSheet.create({
+function createMapPinStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   pin: {
     position: 'absolute',
     alignItems: 'center',
@@ -659,7 +676,7 @@ const mp = StyleSheet.create({
     marginTop: -2,
   },
   pinLabel: {
-    backgroundColor: 'rgba(6,9,26,0.9)',
+    backgroundColor: colors.bgOverlay,
     borderWidth: 1,
     borderColor: colors.borderMid,
     borderRadius: radius.pill,
@@ -668,11 +685,15 @@ const mp = StyleSheet.create({
     marginTop: 4,
     maxWidth: 120,
   },
-  pinLabelText: { ...typography.micro, color: colors.textPrimary },
-});
+  pinLabelText: { ...typography.micro, color: '#fff' },
+  });
+}
 
 // Bottom card styles
-const bc = StyleSheet.create({
+function createBottomCardStyles(colors: ThemeColors) {
+  const autoStartMargin = marginAutoStart();
+
+  return StyleSheet.create({
   card: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
@@ -727,7 +748,12 @@ const bc = StyleSheet.create({
     borderWidth: 1, borderColor: colors.electricBright + '33',
   },
   completionText: { ...typography.micro, color: colors.textBrandStrong },
-  currencyText: { ...typography.caption, color: colors.textMuted, ...marginAutoStart() },
+  currencyText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginLeft: autoStartMargin.marginLeft,
+    marginRight: autoStartMargin.marginRight,
+  },
   chipsRow: { flexDirection: 'row', gap: 6 },
   chip: {
     paddingHorizontal: 10, paddingVertical: 4,
@@ -759,4 +785,5 @@ const bc = StyleSheet.create({
     backgroundColor: colors.bgElevated,
   },
   profileBtnText: { ...typography.micro, color: colors.textBrandStrong },
-});
+  });
+}

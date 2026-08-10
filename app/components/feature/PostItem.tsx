@@ -323,15 +323,7 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
 export const PostItem = memo(PostItemComponent, arePropsEqual);
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = false) {
-  const cardShadow = feedCard
-    ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 2,
-      }
-    : ambientShadow(scheme, 'soft');
+  const cardShadow = ambientShadow(scheme, feedCard ? 'card' : 'soft');
 
   return StyleSheet.create({
     card: {

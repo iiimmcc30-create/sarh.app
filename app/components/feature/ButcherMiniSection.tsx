@@ -7,13 +7,13 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
-  colors,
   radius,
   spacing,
   typography,
   type ThemeColors,
 } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
+import { ambientShadow } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { gccCurrencies } from '@/services/butcherData';
 import { countries } from '@/services/types';
@@ -45,7 +45,10 @@ export function ButcherMiniSection({
   const router      = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const isHero = size === 'hero';
-  const s           = useThemedStyles(({ colors }) => createStyles(colors, isHero));
+  const { s, colors } = useThemedStyles((theme) => ({
+    s: createStyles(theme.colors, theme.scheme, isHero),
+    colors: theme.colors,
+  }));
   const CARD_W = isHero ? Math.round(screenWidth * 0.84) : CARD_W_COMPACT;
   const COVER_H = isHero ? 210 : COVER_H_COMPACT;
 
@@ -291,7 +294,7 @@ export function ButcherMiniSection({
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
-function createStyles(colors: ThemeColors, isHero = false) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', isHero = false) {
   return StyleSheet.create({
     wrapper: { marginTop: isHero ? spacing.xs : spacing.sm, marginBottom: isHero ? spacing.lg : spacing.md },
     wrapperHero: { marginTop: spacing.xs, marginBottom: spacing.lg },
@@ -362,11 +365,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: isHero ? 2 : 4 },
-      shadowOpacity: isHero ? 0.08 : 0.1,
-      shadowRadius: isHero ? 4 : 8,
-      elevation: isHero ? 1 : 4,
+      ...ambientShadow(scheme, isHero ? 'soft' : 'card'),
     },
     cardHero: {
       borderRadius: sarh.radius.card,

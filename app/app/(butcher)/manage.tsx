@@ -20,7 +20,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -607,6 +607,7 @@ export default function ButcherManageScreen() {
   const pm = useThemedStyles(({ colors }) => createProductManageStyles(colors));
   const ord = useThemedStyles(({ colors }) => createOrderStyles(colors));
   const of = useThemedStyles(({ colors }) => createOfferManageStyles(colors));
+  const sto = useThemedStyles(({ colors }) => createStoryStyles(colors));
   const statusColors: Record<string, string> = {
     pending: colors.amber,
     confirmed: colors.electricBright,
@@ -1932,7 +1933,8 @@ function createOfferManageStyles(colors: ThemeColors) {
 }
 
 // Stories
-const sto = StyleSheet.create({
+function createStoryStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   typeCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
@@ -1989,4 +1991,5 @@ const sto = StyleSheet.create({
   },
   activeCaption: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   activeMeta: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
-});
+  });
+}

@@ -197,7 +197,7 @@ export default function RegisterScreen() {
           
           {/* Back button top right */}
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={24} color={colors.textPrimary} />
           </Pressable>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>

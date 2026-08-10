@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 import { COUNTRY_MAP_CENTER } from '@/lib/butcherLocation';
 
 export interface NativeLocationMapProps {
@@ -11,6 +11,7 @@ export interface NativeLocationMapProps {
 }
 
 export function NativeLocationMap({ lat, lng, cityLabel, height }: NativeLocationMapProps) {
+  const { colors } = useTheme();
   const [MapModule, setMapModule] = useState<typeof import('react-native-maps') | null>(null);
 
   useEffect(() => {

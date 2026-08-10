@@ -37,6 +37,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>('light');
   const [scheme, setScheme] = useState<ColorScheme>(getActiveScheme());
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -53,6 +54,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setScheme(resolved);
       } catch (error) {
         console.warn('[theme] failed to load preference', error);
+      } finally {
+        if (mounted) setHydrated(true);
       }
     })();
 
@@ -95,6 +98,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }),
     [preference, scheme],
   );
+
+  // Keep the native splash visible until the stored scheme is applied. This
+  // prevents light-palette StyleSheets or a white frame from rendering first.
+  if (!hydrated) return null;
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

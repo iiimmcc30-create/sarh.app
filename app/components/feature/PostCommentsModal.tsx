@@ -209,7 +209,7 @@ function createStyles(colors: ThemeColors) {
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: colors.bgOverlay,
   },
   sheetWrap: {
     width: '100%',

@@ -29,7 +29,7 @@ export function SarhListingCovenantModal({
 }: SarhListingCovenantModalProps) {
   const router = useRouter();
   const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, shadow }) => createStyles(colors, shadow));
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export function SarhListingCovenantModal({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, shadow: ReturnType<typeof useTheme>['shadow']) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
@@ -151,11 +151,7 @@ function createStyles(colors: ThemeColors) {
       maxHeight: '90%',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.18,
-      shadowRadius: 24,
-      elevation: 12,
+      ...shadow.card,
     },
     header: {
       ...getRtlRow(),

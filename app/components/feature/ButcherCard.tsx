@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
@@ -35,7 +36,7 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
   const { colors, scheme } = useTheme();
   const { c, f } = useThemedStyles(({ colors }) => ({
     c: createCompactStyles(colors),
-    f: createFullStyles(colors, scheme === 'dark'),
+    f: createFullStyles(colors, scheme),
   }));
   const country = countries[butcher.country];
   const [favorited, setFavorited] = useState(false);
@@ -282,7 +283,8 @@ function createCompactStyles(colors: ThemeColors) {
   });
 }
 
-function createFullStyles(colors: ThemeColors, isDark: boolean) {
+function createFullStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const isDark = scheme === 'dark';
   return StyleSheet.create({
     card: {
       ...getRtlRow(),
@@ -295,11 +297,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       borderColor: isDark ? colors.borderSoft : colors.borderHairline,
       overflow: 'hidden',
       minHeight: 176,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: isDark ? 0.28 : 0.08,
-      shadowRadius: 14,
-      elevation: 4,
+      ...ambientShadow(scheme, 'card'),
     },
     cardPressed: {
       opacity: 0.94,

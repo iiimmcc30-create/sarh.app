@@ -6,9 +6,14 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
-import { colors, gradients } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 export default function ButcherRegisterRedirectScreen() {
+  const { styles, gradients } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    gradients: theme.gradients,
+  }));
   const router = useRouter();
 
   useEffect(() => {
@@ -23,6 +28,8 @@ export default function ButcherRegisterRedirectScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
+  });
+}

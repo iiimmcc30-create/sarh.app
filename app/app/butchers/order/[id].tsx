@@ -12,7 +12,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -28,18 +30,22 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'ملغي',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: colors.amber,
-  confirmed: colors.electricBright,
-  preparing: colors.cyan,
-  ready: colors.success,
-  delivered: colors.success,
-  cancelled: colors.danger,
-};
+function statusColors(colors: ThemeColors): Record<string, string> {
+  return {
+    pending: colors.amber,
+    confirmed: colors.electricBright,
+    preparing: colors.cyan,
+    ready: colors.success,
+    delivered: colors.success,
+    cancelled: colors.danger,
+  };
+}
 
 const FLOW: string[] = ['pending', 'confirmed', 'preparing', 'ready', 'delivered'];
 
 export default function OrderDetailsScreen() {
+  const { colors, gradients } = useTheme();
+  const s = useThemedStyles(({ colors }) => createStyles(colors));
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { accessToken } = useAuth();
@@ -87,7 +93,7 @@ export default function OrderDetailsScreen() {
     );
   }
 
-  const statusColor = STATUS_COLORS[order.status] ?? colors.textMuted;
+  const statusColor = statusColors(colors)[order.status] ?? colors.textMuted;
   const timeline: any[] = Array.isArray(order.timeline) ? order.timeline : [];
   const reached = new Set(timeline.map((t) => t.status));
 
@@ -209,6 +215,7 @@ export default function OrderDetailsScreen() {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const s = useThemedStyles(({ colors }) => createStyles(colors));
   return (
     <View style={s.row}>
       <Text style={s.rowLabel}>{label}</Text>
@@ -217,7 +224,8 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const s = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
     ...getRtlRow(),
@@ -330,4 +338,5 @@ const s = StyleSheet.create({
     gap: 2,
   },
   errorText: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
-});
+  });
+}

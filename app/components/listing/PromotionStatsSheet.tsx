@@ -30,7 +30,10 @@ export function PromotionStatsSheet({
   listingTitle,
   onClose,
 }: PromotionStatsSheetProps) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+  }));
   const [stats, setStats] = useState<PromotionStats | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -88,7 +91,7 @@ export function PromotionStatsSheet({
               <View style={styles.grid}>
                 {rows.map((row) => (
                   <View key={row.key} style={styles.statCard}>
-                    <AppIcon name={row.icon} size={20} color="#7C3AED" />
+                    <AppIcon name={row.icon} size={20} color={colors.glow} />
                     <Text style={styles.statValue}>{row.value}</Text>
                     <Text style={[styles.statLabel, getRtlText()]}>{row.label}</Text>
                   </View>
@@ -138,9 +141,9 @@ function createStyles(colors: ThemeColors) {
     remainingCard: {
       padding: spacing.md,
       borderRadius: radius.lg,
-      backgroundColor: '#7C3AED14',
+      backgroundColor: `${colors.glow}14`,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: '#7C3AED33',
+      borderColor: `${colors.glow}33`,
       alignItems: 'center',
       gap: 4,
     },
@@ -150,7 +153,7 @@ function createStyles(colors: ThemeColors) {
     },
     remainingValue: {
       ...typography.h3,
-      color: '#7C3AED',
+      color: colors.glow,
       fontWeight: '800',
     },
     grid: {

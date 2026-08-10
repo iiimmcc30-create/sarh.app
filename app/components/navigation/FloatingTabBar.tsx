@@ -97,7 +97,11 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             >
               <LinearGradient
                 colors={gradients.electric}
-                style={[styles.fab, { borderColor: colors.bgDeep }]}
+                style={[
+                  styles.fab,
+                  { borderColor: colors.bgDeep },
+                  ambientShadow(scheme, 'fab'),
+                ]}
               >
                 <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
               </LinearGradient>
@@ -157,11 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: sarh.color.fab,
     borderWidth: 3,
     borderColor: sarh.color.bg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],

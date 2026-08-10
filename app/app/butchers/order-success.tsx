@@ -6,9 +6,15 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 export default function OrderSuccessScreen() {
+  const { styles: s, colors, gradients } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+    gradients: theme.gradients,
+  }));
   const router = useRouter();
   const { orderId, orderNumber, butcherId, paymentStatus } = useLocalSearchParams<{
     orderId?: string;
@@ -113,7 +119,8 @@ export default function OrderSuccessScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   wrap: {
     flex: 1,
@@ -194,4 +201,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   backBtnText: { ...typography.bodyStrong, color: colors.textMuted },
-});
+  });
+}

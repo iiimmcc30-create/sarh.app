@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { APPLICATION_STATUS_META } from '@/lib/butcherApplicationLabels';
+import { getApplicationStatusMeta } from '@/lib/butcherApplicationLabels';
 import type { ButcherApplicationStatus } from '@/services/butcherApplicationTypes';
 
 type StatusBadgeProps = {
@@ -12,7 +12,7 @@ type StatusBadgeProps = {
 
 function statusTextColor(
   status: ButcherApplicationStatus,
-  colors: ReturnType<typeof useTheme>['colors'],
+  colors: ThemeColors,
   accent: string,
 ): string {
   if (status === 'APPROVED') return colors.textBrandSuccess;
@@ -21,8 +21,8 @@ function statusTextColor(
 
 export function StatusBadge({ status, compact }: StatusBadgeProps) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(() => createStyles());
-  const meta = APPLICATION_STATUS_META[status];
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const meta = getApplicationStatusMeta(status, colors);
   const labelColor = statusTextColor(status, colors, meta.color);
 
   return (
@@ -35,7 +35,7 @@ export function StatusBadge({ status, compact }: StatusBadgeProps) {
   );
 }
 
-function createStyles() {
+function createStyles(_colors: ThemeColors) {
   return StyleSheet.create({
     badge: {
       flexDirection: 'row',

@@ -49,7 +49,7 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
       {isVisibility ? (
         <View style={styles.reachBlock}>
           <View style={[styles.reachHeader, getRtlRow()]}>
-            <AppIcon name="trending-up-outline" size={16} color="#7C3AED" />
+            <AppIcon name="trending-up-outline" size={16} color={colors.glow} />
             <Text style={styles.reachTitle}>زيادة قوة الظهور</Text>
           </View>
           <Text style={styles.reachDesc}>
@@ -155,7 +155,7 @@ function createStyles(colors: ThemeColors) {
     },
     reachTitle: {
       ...typography.caption,
-      color: '#7C3AED',
+      color: colors.glow,
       fontWeight: '800',
       writingDirection: 'rtl',
     },
@@ -176,7 +176,7 @@ function createStyles(colors: ThemeColors) {
     reachBar: {
       flex: 1,
       borderRadius: 4,
-      backgroundColor: '#7C3AED',
+      backgroundColor: colors.glow,
     },
     reachBarDim: {
       height: '40%',

@@ -348,15 +348,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
     borderColor: scheme === 'dark' ? colors.borderSoft : tokens.stroke,
     overflow: 'hidden',
-  ...(scheme === 'dark'
-    ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 2,
-      }
-    : ambientShadow(scheme, 'card')),
+    ...ambientShadow(scheme, 'card'),
   },
   listContent: {
     flex: 1,

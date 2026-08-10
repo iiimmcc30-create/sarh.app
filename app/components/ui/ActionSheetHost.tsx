@@ -190,8 +190,8 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
     },
     itemDanger: {
-      backgroundColor: 'rgba(239,68,68,0.1)',
-      borderColor: 'rgba(239,68,68,0.28)',
+      backgroundColor: `${colors.danger}1A`,
+      borderColor: `${colors.danger}47`,
     },
     itemCancel: {
       backgroundColor: colors.bgSurface,
@@ -213,8 +213,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     itemIconWrapDanger: {
-      backgroundColor: 'rgba(239,68,68,0.14)',
-      borderColor: 'rgba(239,68,68,0.28)',
+      backgroundColor: `${colors.danger}24`,
+      borderColor: `${colors.danger}47`,
     },
     itemIconWrapMuted: {
       backgroundColor: colors.bgSurface,

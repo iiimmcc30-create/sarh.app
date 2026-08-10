@@ -62,7 +62,7 @@ function goalAccentColor(
   colors: ThemeColors,
 ): string {
   if (accent === 'gold') return colors.gold;
-  if (accent === 'promotion') return '#7C3AED';
+  if (accent === 'promotion') return colors.electric;
   return colors.electric;
 }
 
@@ -347,7 +347,7 @@ export default function ListingPromoteScreen() {
                     <View style={[styles.goalPreviewTag, getRtlRow()]}>
                       {option.key === 'visibility' ? (
                         <>
-                          <AppIcon name="trending-up-outline" size={13} color="#7C3AED" />
+                          <AppIcon name="trending-up-outline" size={13} color={colors.electric} />
                           <Text style={styles.goalPreviewText}>بدون تغيير على شكل الإعلان</Text>
                         </>
                       ) : option.key === 'pinned' ? (
@@ -414,9 +414,9 @@ export default function ListingPromoteScreen() {
                 step={1}
                 value={amount}
                 onValueChange={(v) => setAmount(clampPromoteAmount(v))}
-                minimumTrackTintColor="#7C3AED"
+                minimumTrackTintColor={colors.electric}
                 maximumTrackTintColor={colors.borderSoft}
-                thumbTintColor="#7C3AED"
+                thumbTintColor={colors.electric}
               />
               <View style={[styles.sliderBounds, getRtlRow()]}>
                 <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MIN} ر.س</Text>
@@ -463,7 +463,7 @@ export default function ListingPromoteScreen() {
           {isVisibility && reachEstimate ? (
             <View style={styles.reachCard}>
               <View style={[styles.reachHeader, getRtlRow()]}>
-                <AppIcon name="trending-up-outline" size={18} color="#7C3AED" />
+                <AppIcon name="trending-up-outline" size={18} color={colors.electric} />
                 <Text style={styles.reachTitle}>تقدير الوصول</Text>
               </View>
               <Text style={styles.reachValue}>
@@ -864,9 +864,9 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       padding: spacing.md,
       borderRadius: radius.xl,
-      backgroundColor: '#7C3AED12',
+      backgroundColor: `${colors.electric}12`,
       borderWidth: 1,
-      borderColor: '#7C3AED40',
+      borderColor: `${colors.electric}40`,
     },
     reachHeader: {
       alignItems: 'center',
@@ -874,7 +874,7 @@ function createStyles(colors: ThemeColors) {
     },
     reachTitle: {
       ...typography.bodyStrong,
-      color: '#7C3AED',
+      color: colors.electric,
       fontWeight: '800',
       ...getRtlText(),
       ...getRtlText(),

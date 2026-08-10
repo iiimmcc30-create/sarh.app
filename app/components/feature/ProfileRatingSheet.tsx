@@ -76,7 +76,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.52)',
+      backgroundColor: colors.bgOverlay,
       justifyContent: 'flex-end',
     },
     sheet: {

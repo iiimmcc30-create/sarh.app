@@ -3,6 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { dismissToast, getToastState, subscribeToast } from '@/lib/toast';
 import { getRtlText, getRtlRow } from '@/lib/rtl';
@@ -15,7 +16,7 @@ const ICONS = {
 
 export function ToastHost() {
   const insets = useSafeAreaInsets();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const [tick, setTick] = useState(0);
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-16)).current;
@@ -71,7 +72,7 @@ export function ToastHost() {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     host: {
       position: 'absolute',
@@ -89,11 +90,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       maxWidth: 420,
       width: '100%',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-      elevation: 6,
+      ...ambientShadow(scheme, 'card'),
     },
     toastSuccess: {
       backgroundColor: colors.bgSurface,

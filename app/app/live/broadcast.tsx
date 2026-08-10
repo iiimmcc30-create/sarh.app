@@ -3,11 +3,16 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, typography } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { showLiveBroadcastComingSoonAlert } from '@/lib/liveStreamAccess';
 
 export default function BroadcastScreen() {
   const router = useRouter();
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+  }));
 
   useEffect(() => {
     showLiveBroadcastComingSoonAlert();
@@ -28,9 +33,11 @@ export default function BroadcastScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
-  icon: { fontSize: 48, marginBottom: spacing.md },
-  title: { ...typography.h2, color: colors.textPrimary, textAlign: 'center' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
+    wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
+    icon: { fontSize: 48, marginBottom: spacing.md },
+    title: { ...typography.h2, color: colors.textPrimary, textAlign: 'center' },
+  });
+}

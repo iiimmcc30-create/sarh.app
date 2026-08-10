@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { colors } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { ButcherProfile } from '@/services/butcherData';
 
 export interface NativeButchersMapProps {
@@ -21,6 +22,10 @@ export function NativeButchersMap({
   selectedId,
   onSelect,
 }: NativeButchersMapProps) {
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+  }));
   const [MapModule, setMapModule] = useState<typeof import('react-native-maps') | null>(null);
 
   useEffect(() => {
@@ -63,11 +68,13 @@ export function NativeButchersMap({
   );
 }
 
-const styles = StyleSheet.create({
-  loading: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bgSurface,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    loading: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgSurface,
+    },
+  });
+}

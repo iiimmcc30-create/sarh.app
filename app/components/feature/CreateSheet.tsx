@@ -65,7 +65,7 @@ export function CreateSheet({ visible, onClose, onSelect }: CreateSheetProps) {
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim, backgroundColor: 'rgba(6,9,26,0.7)' }]} />
+        <Animated.View style={[styles.overlay, { opacity: fadeAnim }]} />
         <Animated.View
           style={[
             styles.sheet,
@@ -118,6 +118,10 @@ function createStyles(colors: ThemeColors) {
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.bgOverlay,
   },
   sheet: {
     backgroundColor: colors.bgPrimary,

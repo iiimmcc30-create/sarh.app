@@ -94,7 +94,7 @@ export function ListingBoostSheet({
     }
     if (meta.accent === 'gold') return { main: colors.gold, bright: colors.gold };
     if (meta.accent === 'promotion') {
-      return { main: '#7C3AED', bright: '#A78BFA' };
+      return { main: colors.glow, bright: colors.electricBright };
     }
     return { main: colors.electric, bright: colors.electricBright };
   };
@@ -102,8 +102,8 @@ export function ListingBoostSheet({
   const currentAccent = accentFor(boostType);
 
   const payGradient = (): [string, string, string] => {
-    if (boostType === 'featured') return ['#B8860B', '#FFD700', '#B8860B'];
-    if (boostType === 'promotion') return ['#5B21B6', '#7C3AED', '#5B21B6'];
+    if (boostType === 'featured') return [colors.gold, colors.amber, colors.gold];
+    if (boostType === 'promotion') return [colors.glow, colors.electric, colors.electricBright];
     return [colors.electric, colors.electricBright, colors.electric];
   };
 

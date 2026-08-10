@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ambientShadow } from '@/constants/designSystem';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -61,7 +62,7 @@ function SchematicMap({
   return (
     <View style={[styles.map, { height }]}>
       <LinearGradient
-        colors={['#0B1A4E', '#102260', '#0B1A4E']}
+        colors={[colors.bgDeep, colors.bgElevated, colors.bgDeep]}
         style={StyleSheet.absoluteFill}
       />
       {[...Array(6)].map((_, i) => (
@@ -109,7 +110,7 @@ export function LocationMapPreview({
   pinSeed,
 }: LocationMapPreviewProps) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const useNative =
     Platform.OS !== 'web' &&
     isNativeMapsEnabled() &&
@@ -171,7 +172,7 @@ export function LocationMapPreview({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
   wrap: {
     borderRadius: radius.xl,
@@ -195,14 +196,14 @@ function createStyles(colors: ThemeColors) {
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.borderSoft,
   },
   gridV: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.borderSoft,
   },
   pinWrap: {
     position: 'absolute',
@@ -227,11 +228,7 @@ function createStyles(colors: ThemeColors) {
     justifyContent: 'center',
     borderWidth: 2.5,
     borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 8,
+    ...ambientShadow(scheme, 'card'),
   },
   pinTail: {
     width: 0,
@@ -246,7 +243,7 @@ function createStyles(colors: ThemeColors) {
   },
   pinLabel: {
     marginTop: 4,
-    backgroundColor: 'rgba(6,9,26,0.88)',
+    backgroundColor: colors.bgOverlay,
     borderWidth: 1,
     borderColor: colors.borderMid,
     borderRadius: radius.pill,
@@ -267,7 +264,7 @@ function createStyles(colors: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(6,9,26,0.75)',
+    backgroundColor: colors.bgOverlay,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
@@ -291,11 +288,7 @@ function createStyles(colors: ThemeColors) {
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.electricBright,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    ...ambientShadow(scheme, 'soft'),
   },
   locateBtnText: {
     ...typography.caption,
@@ -309,7 +302,7 @@ function createStyles(colors: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(6,9,26,0.65)',
+    backgroundColor: colors.bgGlassStrong,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
@@ -326,7 +319,7 @@ function createStyles(colors: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(6,9,26,0.88)',
+    backgroundColor: colors.bgOverlay,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.lg,

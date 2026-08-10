@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useButcherStats, StatsPeriod } from '@/hooks/useButcherStats';
 import { useRequireApprovedButcher } from '@/hooks/useRequireApprovedButcher';
 
@@ -53,6 +54,11 @@ function StatCard({
   color: string;
   trend?: { value: number; positive: boolean };
 }) {
+  const { styles: sc, colors } = useThemedStyles((theme) => ({
+    styles: createStatCardStyles(theme.colors),
+    colors: theme.colors,
+  }));
+
   return (
     <View style={sc.card}>
       <LinearGradient colors={[color + '22', color + '08']} style={StyleSheet.absoluteFill} />
@@ -85,6 +91,11 @@ function trendProp(value: number | null | undefined) {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ButcherDashboardScreen() {
+  const { styles: s, colors, gradients } = useThemedStyles((theme) => ({
+    styles: createStyles(theme.colors),
+    colors: theme.colors,
+    gradients: theme.gradients,
+  }));
   const router = useRouter();
   const { accessToken } = useAuth();
   const { hasApprovedApplication, loading: accessLoading } = useRequireApprovedButcher();
@@ -365,7 +376,8 @@ export default function ButcherDashboardScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const s = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
 
@@ -530,9 +542,11 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   rankNum: { fontSize: 22, fontWeight: '900', color: '#1A1300' },
-});
+  });
+}
 
-const sc = StyleSheet.create({
+function createStatCardStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: {
     width: '47%',
     borderRadius: radius.xl,
@@ -554,7 +568,8 @@ const sc = StyleSheet.create({
   sub: { ...typography.micro, color: colors.textMuted },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   trendText: { ...typography.micro, fontWeight: '700' },
-});
+  });
+}
 
 const chart = StyleSheet.create({
   wrap: {

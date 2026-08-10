@@ -322,7 +322,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    backgroundColor: colors.bgDeep,
+    backgroundColor: colors.screenRoot,
   },
   backBtn: {
     width: ds.iconBtn.md, height: ds.iconBtn.md, borderRadius: ds.radius.pill,
@@ -343,7 +343,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   filterRow: {
     paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm,
-    backgroundColor: colors.bgDeep,
+    backgroundColor: colors.screenRoot,
   },
   filterChip: {
     paddingHorizontal: spacing.lg, minHeight: 36, justifyContent: 'center',
@@ -359,7 +359,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     marginTop: spacing.lg,
     padding: spacing.lg,
     borderRadius: ds.radius.xl,
-    backgroundColor: colors.bgSurface,
+    backgroundColor: colors.bgGlassStrong,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: tokens.stroke,
     ...ambientShadow(scheme, 'card'),

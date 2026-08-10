@@ -2,9 +2,10 @@
 import { StyleSheet } from 'react-native';
 import { getRtlRow } from '@/lib/rtl';
 import { ds } from './designSystem';
-import { colors, radius, spacing, shadow } from './theme';
+import { radius, spacing, shadow, type ThemeColors } from './theme';
 
-export const commonStyles = StyleSheet.create({
+export function createCommonStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.bgDeep,
@@ -62,6 +63,7 @@ export const commonStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+  });
+}
 
-export default commonStyles;
+export default createCommonStyles;

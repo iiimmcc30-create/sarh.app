@@ -43,7 +43,7 @@ export function ListingFeePaymentSheet({
 }: ListingFeePaymentSheetProps) {
   const { accessToken } = useAuth();
   const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, shadow }) => createStyles(colors, shadow));
 
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<NIPaymentMethod>('mada');
@@ -290,7 +290,7 @@ export function ListingFeePaymentSheet({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, shadow: ReturnType<typeof useTheme>['shadow']) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
@@ -304,11 +304,7 @@ function createStyles(colors: ThemeColors) {
       maxHeight: '92%',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -8 },
-      shadowOpacity: 0.12,
-      shadowRadius: 20,
-      elevation: 16,
+      ...shadow.soft,
     },
     handleWrap: { alignItems: 'center', paddingTop: spacing.sm },
     handle: {

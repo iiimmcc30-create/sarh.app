@@ -18,9 +18,11 @@ import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
 import { TimelineItem } from '@/components/butcherApplication/TimelineItem';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import {
   applicationDisplayName,
   countryLabel,
@@ -33,6 +35,7 @@ import { rtlBackIcon } from '@/lib/rtl';
 import type { ApplicationDetail } from '@/services/butcherApplicationTypes';
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const d = useThemedStyles(({ colors }) => createDetailStyles(colors));
   return (
     <View style={d.row}>
       <Text style={d.label}>{label}</Text>
@@ -42,6 +45,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
+  const d = useThemedStyles(({ colors }) => createDetailStyles(colors));
   return (
     <View style={d.section}>
       <Text style={d.sectionTitle}>{title}</Text>
@@ -51,6 +55,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function ButcherApplicationDetailScreen() {
+  const { colors, gradients } = useTheme();
+  const s = useThemedStyles(({ colors }) => createStyles(colors));
+  const d = useThemedStyles(({ colors }) => createDetailStyles(colors));
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -335,7 +342,8 @@ export default function ButcherApplicationDetailScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
     flexDirection: 'row',
@@ -402,9 +410,11 @@ const s = StyleSheet.create({
     color: colors.danger,
     textAlign: 'center',
   },
-});
+  });
+}
 
-const d = StyleSheet.create({
+function createDetailStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   section: {
     gap: spacing.sm,
   },
@@ -488,4 +498,5 @@ const d = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
   },
-});
+  });
+}

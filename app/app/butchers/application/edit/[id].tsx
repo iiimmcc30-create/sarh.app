@@ -27,9 +27,11 @@ import { WizardStepBar } from '@/components/butcherApplication/WizardStepBar';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { presentActionSheet } from '@/lib/actionSheet';
 import {
   applicationDisplayName,
@@ -190,6 +192,7 @@ function mapCountryForMap(): Country {
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
+  const rv = useThemedStyles(({ colors }) => createReviewStyles(colors));
   return (
     <View style={rv.row}>
       <Text style={rv.label}>{label}</Text>
@@ -207,6 +210,7 @@ function CheckboxRow({
   onToggle: () => void;
   label: string;
 }) {
+  const rv = useThemedStyles(({ colors }) => createReviewStyles(colors));
   return (
     <Pressable
       onPress={onToggle}
@@ -221,6 +225,9 @@ function CheckboxRow({
 }
 
 export default function ButcherApplicationEditScreen() {
+  const { colors, gradients } = useTheme();
+  const s = useThemedStyles(({ colors }) => createStyles(colors));
+  const rv = useThemedStyles(({ colors }) => createReviewStyles(colors));
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -831,7 +838,8 @@ export default function ButcherApplicationEditScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   flex: { flex: 1 },
   header: {
@@ -926,9 +934,11 @@ const s = StyleSheet.create({
   secondaryBtn: {
     marginTop: spacing.xs,
   },
-});
+  });
+}
 
-const rv = StyleSheet.create({
+function createReviewStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.lg,
@@ -991,4 +1001,5 @@ const rv = StyleSheet.create({
     lineHeight: 22,
     ...getRtlText(),
   },
-});
+  });
+}
