@@ -4,7 +4,6 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
   fetchOfficialServices,
   groupOfficialServicesByCategory,
@@ -62,7 +61,7 @@ export default function SarhServicesScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
+        contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -79,11 +78,13 @@ export default function SarhServicesScreen() {
         </View>
 
         <View style={styles.notice}>
-          <AppIcon name="information-circle-outline" size={18} color={colors.electricBright} />
           <Text style={styles.noticeText}>
             تطبيق سرح يعرض معلومات الخدمة فقط ولا ينشئ طلبات ولا يخزن بياناتك.
-            عند الضغط على «طلب الخدمة» يُفتح الرابط الرسمي في المتصفح.
+            عند الضغط على الخدمة يُفتح الرابط الرسمي في المتصفح.
           </Text>
+          <View style={styles.noticeIcon}>
+            <AppIcon name="information-circle-outline" size={18} color={colors.electricBright} />
+          </View>
         </View>
 
         {loading ? (
@@ -102,8 +103,12 @@ export default function SarhServicesScreen() {
                 {group.emoji} {group.label}
               </Text>
               <View style={styles.sectionList}>
-                {group.items.map((service) => (
-                  <OfficialServiceCard key={service.id} service={service} />
+                {group.items.map((service, index) => (
+                  <OfficialServiceCard
+                    key={service.id}
+                    service={service}
+                    showDivider={index < group.items.length - 1}
+                  />
                 ))}
               </View>
             </View>
@@ -140,7 +145,8 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     notice: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'flex-start',
       gap: spacing.sm,
       padding: spacing.md,
@@ -149,13 +155,22 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
+    noticeSpacer: {
+      width: 0,
+    },
+    noticeIcon: {
+      width: 28,
+      alignItems: 'center',
+      paddingTop: 2,
+      flexShrink: 0,
+    },
     noticeText: {
       ...typography.caption,
       color: colors.textSecondary,
       flex: 1,
       lineHeight: 20,
-      ...getRtlText(),
-      ...getRtlText(),
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     loader: { marginTop: spacing.xl },
     errorBox: {
@@ -182,13 +197,23 @@ function createStyles(colors: ThemeColors) {
       color: colors.electricBright,
       fontWeight: '700',
     },
-    section: { gap: spacing.md },
+    section: { gap: spacing.sm },
     sectionTitle: {
-      ...typography.h3,
-      color: colors.textBrandStrong,
-      ...getRtlText(),
-      ...getRtlText(),
+      ...typography.caption,
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 0.4,
+      color: colors.textMuted,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      paddingHorizontal: 4,
     },
-    sectionList: { gap: spacing.md },
+    sectionList: {
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
+      overflow: 'hidden',
+    },
   });
 }

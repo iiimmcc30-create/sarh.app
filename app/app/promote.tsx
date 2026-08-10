@@ -2,6 +2,7 @@ import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIc
 import { PromotionStatsSheet } from '@/components/listing/PromotionStatsSheet';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { SIDEBAR_MENU_ITEM } from '@/components/ui/SidebarMenuItem';
 import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +10,7 @@ import { useApp } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
-import { getRtlText, rtlBackIcon, rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 import { searchListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -82,13 +83,13 @@ export default function PromoteHubScreen() {
 
   return (
     <ScreenScaffold edges={['top']}>
-      <View style={[styles.screen, getRtlDirection()]}>
-        <View style={[styles.header, getRtlRow()]}>
+      <View style={styles.screen}>
+        <View style={styles.header}>
+          <View style={styles.headerSpacer} />
+          <Text style={styles.headerTitle}>تعزيز سرح</Text>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>الترويج</Text>
-          <View style={styles.headerSpacer} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -112,82 +113,88 @@ export default function PromoteHubScreen() {
               <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
               <Text style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</Text>
               <Pressable style={styles.createBtn} onPress={() => void navigateToCreateListing()}>
-                <AppIcon name="add-circle-outline" size={18} color="#fff" />
                 <Text style={styles.createBtnText}>إنشاء إعلان</Text>
+                <AppIcon name="add-circle-outline" size={18} color="#fff" />
               </Pressable>
             </View>
           ) : (
             <View style={styles.listingsList}>
-              {myListings.map((listing) => {
+              {myListings.map((listing, index) => {
                 const thumb = listingThumb(listing);
                 const title = listing.arabicTitle || listing.title;
                 const location = listing.arabicLocation || listing.location;
+                const metaParts = [
+                  listing.price > 0
+                    ? `${listing.price.toLocaleString('ar-SA')} ${listing.currency}`
+                    : null,
+                  location || null,
+                ].filter(Boolean);
 
                 return (
                   <Pressable
                     key={listing.id}
-                    style={({ pressed }) => [styles.listingCard, pressed && styles.listingCardPressed]}
+                    style={({ pressed }) => [
+                      styles.listingRow,
+                      index < myListings.length - 1 && styles.listingRowDivider,
+                      pressed && styles.listingRowPressed,
+                    ]}
                     onPress={() => openPromote(listing.id)}
                   >
-                    <View style={styles.thumbWrap}>
-                      {thumb ? (
-                        <Image source={uriSource(thumb)} style={styles.thumb} contentFit="cover" />
-                      ) : (
-                        <View style={styles.thumbPlaceholder}>
-                          <Text style={styles.thumbEmoji}>
-                            {CATEGORY_ICONS[listing.category] || '📦'}
+                    {/* Physical LEFT: chevron + optional stats */}
+                    <AppIcon
+                      name="angle-left"
+                      size={SIDEBAR_MENU_ITEM.chevronSize}
+                      color={colors.textSubtle}
+                    />
+
+                    {listing.promoted ? (
+                      <Pressable
+                        style={styles.statsBtn}
+                        onPress={(e) => {
+                          e.stopPropagation?.();
+                          setStatsListingId(listing.id);
+                        }}
+                        hitSlop={8}
+                        accessibilityLabel="إحصائيات الترويج"
+                      >
+                        <AppIcon name="stats-chart-outline" size={16} color="#7C3AED" />
+                      </Pressable>
+                    ) : null}
+
+                    <View style={styles.spacer} />
+
+                    {/* Physical RIGHT: title meta + thumb/icon */}
+                    <View style={styles.listingContent}>
+                      <View style={styles.textWrap}>
+                        <View style={styles.titleRow}>
+                          <ListingBoostTitleIcons
+                            pinned={listing.pinned}
+                            featured={listing.featured}
+                          />
+                          <Text style={styles.listingTitle} numberOfLines={2}>
+                            {title}
                           </Text>
                         </View>
-                      )}
-                    </View>
-
-                    <View style={styles.listingBody}>
-                      <View style={[styles.titleRow, getRtlRow()]}>
-                        <Text style={styles.listingTitle} numberOfLines={2}>
-                          {title}
-                        </Text>
-                        <ListingBoostTitleIcons
-                          pinned={listing.pinned}
-                          featured={listing.featured}
-                        />
+                        {metaParts.length > 0 ? (
+                          <Text style={styles.listingMeta} numberOfLines={1}>
+                            {metaParts.join(' · ')}
+                          </Text>
+                        ) : null}
+                        {listing.promoted ? (
+                          <Text style={styles.reachText}>ترويج نشط — زيادة ظهور</Text>
+                        ) : null}
                       </View>
 
-                      {listing.price > 0 ? (
-                        <Text style={styles.listingPrice}>
-                          {listing.price.toLocaleString('ar-SA')} {listing.currency}
-                        </Text>
-                      ) : null}
-
-                      <View style={[styles.locationRow, getRtlRow()]}>
-                        <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-                        <Text style={styles.locationText} numberOfLines={1}>
-                          {location}
-                        </Text>
-                      </View>
-
-                      {listing.promoted ? (
-                        <View style={[styles.reachPill, getRtlRow()]}>
-                          <AppIcon name="trending-up-outline" size={12} color="#7C3AED" />
-                          <Text style={styles.reachPillText}>ترويج نشط — زيادة ظهور</Text>
-                        </View>
-                      ) : null}
-                    </View>
-
-                    <View style={styles.cardActions}>
-                      {listing.promoted ? (
-                        <Pressable
-                          style={styles.statsBtn}
-                          onPress={(e) => {
-                            e.stopPropagation?.();
-                            setStatsListingId(listing.id);
-                          }}
-                          hitSlop={8}
-                        >
-                          <AppIcon name="stats-chart-outline" size={18} color="#7C3AED" />
-                        </Pressable>
-                      ) : null}
-                      <View style={styles.chevronWrap}>
-                        <AppIcon name={rtlForwardIcon()} size={18} color={colors.electric} />
+                      <View style={styles.thumbWrap}>
+                        {thumb ? (
+                          <Image source={uriSource(thumb)} style={styles.thumb} contentFit="cover" />
+                        ) : (
+                          <View style={styles.thumbPlaceholder}>
+                            <Text style={styles.thumbEmoji}>
+                              {CATEGORY_ICONS[listing.category] || '📦'}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   </Pressable>
@@ -215,6 +222,8 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1 },
     header: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
@@ -237,6 +246,7 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '800',
       textAlign: 'center',
       writingDirection: 'rtl',
+      flex: 1,
     },
     scroll: {
       paddingHorizontal: spacing.lg,
@@ -303,7 +313,8 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 20,
     },
     createBtn: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       gap: 8,
       marginTop: spacing.sm,
@@ -315,28 +326,86 @@ function createStyles(colors: ThemeColors) {
     createBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
+      writingDirection: 'rtl',
     },
-    listingsList: { gap: spacing.sm },
-    listingCard: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
+    listingsList: {
       borderRadius: radius.xl,
-      backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
+      overflow: 'hidden',
     },
-    listingCardPressed: {
-      opacity: 0.92,
-      transform: [{ scale: 0.995 }],
+    listingRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: SIDEBAR_MENU_ITEM.gap,
+      paddingHorizontal: SIDEBAR_MENU_ITEM.paddingHorizontal,
+      paddingVertical: SIDEBAR_MENU_ITEM.paddingVertical,
+      minHeight: 72,
+    },
+    listingRowDivider: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
+    },
+    listingRowPressed: {
+      opacity: 0.76,
+    },
+    spacer: {
+      flex: 1,
+      minWidth: SIDEBAR_MENU_ITEM.gap,
+    },
+    listingContent: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: SIDEBAR_MENU_ITEM.gap,
+      flexShrink: 1,
+      maxWidth: '88%',
+    },
+    textWrap: {
+      flexShrink: 1,
+      gap: 3,
+      minWidth: 0,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: 6,
+      justifyContent: 'flex-end',
+    },
+    listingTitle: {
+      ...typography.bodyStrong,
+      fontSize: SIDEBAR_MENU_ITEM.titleSize,
+      fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
+      color: colors.textPrimary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      flexShrink: 1,
+      lineHeight: 20,
+    },
+    listingMeta: {
+      ...typography.caption,
+      fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
+      color: colors.textMuted,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    reachText: {
+      ...typography.micro,
+      color: '#7C3AED',
+      fontWeight: '700',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     thumbWrap: {
-      width: 72,
-      height: 72,
-      borderRadius: radius.lg,
+      width: 48,
+      height: 48,
+      borderRadius: 12,
       overflow: 'hidden',
       flexShrink: 0,
+      backgroundColor: colors.bgDeep,
     },
     thumb: {
       width: '100%',
@@ -344,84 +413,20 @@ function createStyles(colors: ThemeColors) {
     },
     thumbPlaceholder: {
       flex: 1,
-      backgroundColor: colors.bgDeep,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    thumbEmoji: { fontSize: 28 },
-    listingBody: {
-      flex: 1,
-      gap: 4,
-      minWidth: 0,
-    },
-    titleRow: {
-      alignItems: 'flex-start',
-      gap: 6,
-    },
-    listingTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      ...getRtlText(),
-      ...getRtlText(),
-      flex: 1,
-      lineHeight: 20,
-    },
-    listingPrice: {
-      ...typography.caption,
-      color: colors.textBrandStrong,
-      fontWeight: '800',
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    locationRow: {
-      alignItems: 'center',
-      gap: 4,
-    },
-    locationText: {
-      ...typography.micro,
-      color: colors.textMuted,
-      flex: 1,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    reachPill: {
-      alignSelf: 'flex-end',
-      alignItems: 'center',
-      gap: 4,
-      marginTop: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
-      backgroundColor: '#7C3AED12',
-    },
-    reachPillText: {
-      ...typography.micro,
-      color: '#7C3AED',
-      fontWeight: '700',
-      writingDirection: 'rtl',
-    },
-    cardActions: {
-      alignItems: 'center',
-      gap: spacing.xs,
-      flexShrink: 0,
-    },
+    thumbEmoji: { fontSize: 22 },
     statsBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 32,
+      height: 32,
+      borderRadius: 10,
       borderWidth: 1,
       borderColor: '#7C3AED30',
       backgroundColor: '#7C3AED08',
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    chevronWrap: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: `${colors.electric}12`,
-      alignItems: 'center',
-      justifyContent: 'center',
+      flexShrink: 0,
     },
   });
 }
