@@ -1,8 +1,11 @@
 /**
  * Sarh Design System — SidebarMenuItem
  *
- * Canonical navigation row for sidebars and settings lists.
- * Visual order (RTL): Icon (right) → Title → Spacer → quiet chevron (left)
+ * Visual layout (Arabic RTL):
+ *   right edge → [ Icon ][ Title ][ flexible space ][ > ] ← left edge
+ *
+ * Icon + title stay grouped on the inline-start side; a flex spacer
+ * pins the quiet chevron to the far inline-end side.
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -65,6 +68,14 @@ export function SidebarMenuItem({
   const tint = iconColor ?? (active ? colors.electric : colors.textMuted);
   const showBadge = typeof badge === 'number' && badge > 0;
 
+  /**
+   * Explicit visual axis:
+   * - RTL: row-reverse so the first child sits on the physical right
+   * - LTR: row so the first child sits on the physical left
+   * Children order is always: [startCluster][spacer][badge?][chevron?]
+   */
+  const axis = isRtl ? 'row-reverse' : 'row';
+
   return (
     <Pressable
       testID={testID}
@@ -75,8 +86,7 @@ export function SidebarMenuItem({
       style={({ pressed }) => [
         styles.row,
         {
-          flexDirection: 'row',
-          direction: isRtl ? 'rtl' : 'ltr',
+          flexDirection: axis,
           borderBottomColor: colors.borderHairline,
         },
         showDivider && styles.rowDivider,
@@ -85,41 +95,45 @@ export function SidebarMenuItem({
         style,
       ]}
     >
-      {/* Leading icon — sits on the inline-start side (right in RTL). */}
-      <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
-        <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
-      </View>
-
-      <View style={styles.textWrap}>
-        <Text
-          style={[
-            styles.title,
-            {
-              color: colors.textPrimary,
-              textAlign: isRtl ? 'right' : 'left',
-              writingDirection: isRtl ? 'rtl' : 'ltr',
-            },
-          ]}
-          numberOfLines={2}
-        >
-          {title}
-        </Text>
-        {subtitle ? (
+      {/* Icon + title stay glued together on the start edge (right in RTL). */}
+      <View style={[styles.startCluster, { flexDirection: axis }]}>
+        <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
+          <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
+        </View>
+        <View style={styles.textWrap}>
           <Text
             style={[
-              styles.subtitle,
+              styles.title,
               {
-                color: colors.textMuted,
+                color: colors.textPrimary,
                 textAlign: isRtl ? 'right' : 'left',
                 writingDirection: isRtl ? 'rtl' : 'ltr',
               },
             ]}
             numberOfLines={2}
           >
-            {subtitle}
+            {title}
           </Text>
-        ) : null}
+          {subtitle ? (
+            <Text
+              style={[
+                styles.subtitle,
+                {
+                  color: colors.textMuted,
+                  textAlign: isRtl ? 'right' : 'left',
+                  writingDirection: isRtl ? 'rtl' : 'ltr',
+                },
+              ]}
+              numberOfLines={2}
+            >
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
       </View>
+
+      {/* Flexible space pushes chevron/badge to the far end (left in RTL). */}
+      <View style={styles.spacer} />
 
       {showBadge ? (
         <View style={[styles.badge, { backgroundColor: colors.electric }]}>
@@ -140,8 +154,9 @@ export function SidebarMenuItem({
 
 const styles = StyleSheet.create({
   row: {
+    width: '100%',
+    alignSelf: 'stretch',
     alignItems: 'center',
-    gap: SIDEBAR_MENU_ITEM.gap,
     paddingHorizontal: SIDEBAR_MENU_ITEM.paddingHorizontal,
     paddingVertical: SIDEBAR_MENU_ITEM.paddingVertical,
     minHeight: SIDEBAR_MENU_ITEM.minHeight,
@@ -152,16 +167,22 @@ const styles = StyleSheet.create({
   rowPressed: {
     opacity: 0.76,
   },
+  startCluster: {
+    alignItems: 'center',
+    gap: SIDEBAR_MENU_ITEM.gap,
+    flexShrink: 1,
+    maxWidth: '85%',
+  },
   iconWrap: {
     width: SIDEBAR_MENU_ITEM.iconWrap,
     height: SIDEBAR_MENU_ITEM.iconWrap,
     borderRadius: SIDEBAR_MENU_ITEM.iconRadius,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   textWrap: {
-    flex: 1,
-    minWidth: 0,
+    flexShrink: 1,
     gap: 2,
   },
   title: {
@@ -174,6 +195,10 @@ const styles = StyleSheet.create({
     fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
     lineHeight: 18,
   },
+  spacer: {
+    flex: 1,
+    minWidth: SIDEBAR_MENU_ITEM.gap,
+  },
   badge: {
     minWidth: 24,
     height: 22,
@@ -181,6 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 7,
+    flexShrink: 0,
   },
   badgeText: {
     color: '#fff',
