@@ -19,7 +19,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
+import { borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
