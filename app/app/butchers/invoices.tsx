@@ -146,19 +146,16 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.electricBright,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     date: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     paidBadge: {
@@ -173,7 +170,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.success,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -182,14 +179,13 @@ function createStyles(colors: ThemeColors) {
     productLine: {
       ...typography.caption,
       color: colors.textSecondary,
-      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     totalRow: { justifyContent: 'space-between', marginTop: spacing.xs },
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     totalValue: {
       ...typography.h3,

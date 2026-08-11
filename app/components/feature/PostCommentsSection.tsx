@@ -286,7 +286,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textBrandStrong,
       fontWeight: '600',
       flex: 1,
-      textAlign: 'right',
+      ...getRtlText(),
     },
     count: {
       ...typography.caption,

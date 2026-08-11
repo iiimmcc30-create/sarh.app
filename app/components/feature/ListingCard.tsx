@@ -381,7 +381,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 20,
     color: colors.textPrimary,
     fontWeight: '600',
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
     flex: 1,
   },
   listPriceRow: {
@@ -394,14 +394,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 24,
     color: colors.textPrimary,
     fontWeight: '600',
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   listPriceCurrency: {
     ...typography.caption,
     lineHeight: 18,
     color: colors.textMuted,
     fontWeight: '600',
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   listMetaRow: {
     ...getRtlRow(),
@@ -421,7 +421,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textSecondary,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
     flexShrink: 1,
   },
   listStatusNew: {
@@ -458,13 +458,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 16,
     color: colors.textPrimary,
     flexShrink: 1,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   listStatText: {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textSubtle,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   listThumbWrap: {
     width: ds.listingThumb,
@@ -567,14 +567,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.caption,
     color: '#fff',
     fontWeight: '600',
-    textAlign: 'right',
+    ...getRtlText(),
     flex: 1,
   },
   profilePrice: {
     ...typography.micro,
     color: colors.gold,
     fontWeight: '600',
-    textAlign: 'right',
+    ...getRtlText(),
   },
   profileStar: {
     position: 'absolute',
@@ -703,7 +703,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     color: colors.textBrandStrong,
     fontWeight: '600',
     ...getRtlText(),
-    ...getRtlText(),
     lineHeight: 26,
     flex: 1,
   },
@@ -721,7 +720,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajMetaText: {
     ...typography.caption,
     color: colors.textMuted,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   harajSellerRow: {
     ...getRtlRow(),
@@ -747,7 +746,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     color: colors.textPrimary,
     flexShrink: 1,
     ...getRtlText(),
-    ...getRtlText(),
   },
   harajFeatured: {
     ...getRtlRow(),
@@ -767,14 +765,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.body,
     color: colors.textSecondary,
     ...getRtlText(),
-    ...getRtlText(),
     lineHeight: 24,
   },
   harajPrice: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     fontWeight: '600',
-    ...getRtlText(),
     ...getRtlText(),
   },
   harajImgWrap: {

@@ -641,7 +641,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       ...getRtlText(),
-      ...getRtlText(),
       flex: 1,
       lineHeight: 22,
     },
@@ -650,7 +649,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textBrandStrong,
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     section: {
       gap: spacing.sm,
@@ -658,7 +656,6 @@ function createStyles(colors: ThemeColors) {
     sectionHint: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
       ...getRtlText(),
     },
     sliderCard: {
@@ -677,7 +674,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
       ...getRtlText(),
     },
     customBtn: {
@@ -728,13 +724,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       ...getRtlText(),
-      ...getRtlText(),
     },
     goalDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
       ...getRtlText(),
     },
     goalPreviewTag: {
@@ -756,14 +750,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     sliderValue: {
       fontSize: 28,
       lineHeight: 34,
       fontWeight: '600',
       color: colors.textBrandStrong,
-      ...getRtlText(),
       ...getRtlText(),
     },
     slider: {
@@ -781,12 +774,10 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.warning,
       ...getRtlText(),
-      ...getRtlText(),
     },
     errorText: {
       ...typography.caption,
       color: colors.danger,
-      ...getRtlText(),
       ...getRtlText(),
     },
     bottomBar: {
@@ -809,13 +800,13 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     totalValue: {
       ...typography.h3,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     payBtnWrap: {
       flex: 1.2,
@@ -836,7 +827,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       ...getRtlText(),
-      ...getRtlText(),
     },
     modalInput: {
       borderWidth: 1,
@@ -854,7 +844,6 @@ function createStyles(colors: ThemeColors) {
       color: '#7C3AED',
       fontWeight: '600' as const,
       ...getRtlText(),
-      ...getRtlText(),
     },
     flowCard: {
       gap: spacing.sm,
@@ -869,7 +858,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     flowSteps: {
       gap: 4,
@@ -879,12 +867,10 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     flowStepMuted: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
       ...getRtlText(),
     },
     reachCard: {
@@ -904,7 +890,6 @@ function createStyles(colors: ThemeColors) {
       color: '#7C3AED',
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     reachValue: {
       ...typography.bodyStrong,
@@ -912,13 +897,11 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '600',
       lineHeight: 24,
       ...getRtlText(),
-      ...getRtlText(),
     },
     reachHint: {
       ...typography.micro,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
       ...getRtlText(),
     },
     priceCard: {
@@ -934,7 +917,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       ...getRtlText(),
-      ...getRtlText(),
     },
     priceCardValue: {
       fontSize: 28,
@@ -942,12 +924,10 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '600',
       color: colors.textBrandStrong,
       ...getRtlText(),
-      ...getRtlText(),
     },
     priceCardHint: {
       ...typography.micro,
       color: colors.textMuted,
-      ...getRtlText(),
       ...getRtlText(),
     },
   });

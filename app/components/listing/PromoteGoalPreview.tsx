@@ -96,7 +96,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     mockCard: {
       padding: spacing.sm,
@@ -114,7 +113,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      ...getRtlText(),
       ...getRtlText(),
       fontSize: 14,
     },
@@ -157,13 +155,12 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#7C3AED',
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     reachDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
       ...getRtlText(),
     },
     reachBars: {
@@ -198,13 +195,11 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       lineHeight: 18,
       ...getRtlText(),
-      ...getRtlText(),
       flex: 1,
     },
     hintMuted: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
       ...getRtlText(),
     },
   });

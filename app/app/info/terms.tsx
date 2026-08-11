@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon, getRtlText } from '@/lib/rtl';
 
 const TERMS = [
   {
@@ -133,7 +133,7 @@ function createStyles(colors: ThemeColors) {
     textAlign: 'center',
     color: colors.textBrandStrong,
   },
-  sectionTitle: { ...typography.bodyStrong, color: colors.gold, textAlign: 'right' },
+  sectionTitle: { ...typography.bodyStrong, color: colors.gold, ...getRtlText(), },
   sectionContent: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
   contactSection: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, gap: spacing.sm },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },

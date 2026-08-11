@@ -1650,7 +1650,7 @@ function createProductFormStyles(colors: ThemeColors) {
     alignSelf: 'center', marginBottom: spacing.md,
   },
   title: { ...typography.h3, color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.md },
-  label: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', marginBottom: 5, textAlign: 'right' },
+  label: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', marginBottom: 5, ...getRtlText(), },
   input: {
     backgroundColor: colors.bgElevated,
     borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
@@ -1791,7 +1791,7 @@ function createOrderStyles(colors: ThemeColors) {
     borderRadius: radius.pill, borderWidth: 1,
   },
   statusText: { ...typography.micro, fontWeight: '600' },
-  orderNumber: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
+  orderNumber: { ...typography.micro, color: colors.textMuted, ...getRtlText(), },
   detailRow: { flexDirection: 'row', gap: spacing.md },
   detail: { flex: 1, gap: 2 },
   detailLabel: { ...typography.micro, color: colors.textMuted },
@@ -1835,7 +1835,7 @@ function createOrderStyles(colors: ThemeColors) {
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right' },
+  modalTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText(), },
   modalSub: { ...typography.caption, color: colors.textMuted, ...getRtlText(), marginBottom: spacing.sm },
   reasonChip: {
     paddingVertical: 10,
@@ -1849,7 +1849,7 @@ function createOrderStyles(colors: ThemeColors) {
     borderColor: colors.danger,
     backgroundColor: colors.danger + '18',
   },
-  reasonChipText: { ...typography.caption, color: colors.textSecondary, textAlign: 'right' },
+  reasonChipText: { ...typography.caption, color: colors.textSecondary, ...getRtlText(), },
   reasonChipTextActive: { color: colors.danger, fontWeight: '600' },
   customReasonInput: {
     borderWidth: 1,

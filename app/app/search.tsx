@@ -201,7 +201,7 @@ export default function SearchScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🔥 الأكثر تداولاً</Text>
             {trendingTags.length === 0 ? (
-              <Text style={{ color: colors.textMuted, ...typography.caption, textAlign: 'right' }}>
+              <Text style={{ color: colors.textMuted, ...typography.caption, ...getRtlText(), }}>
                 لا توجد هاشتاقات رائجة حالياً
               </Text>
             ) : (
@@ -371,7 +371,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderHairline,
   },
-  recentText: { ...typography.body, color: colors.textSecondary, flex: 1, textAlign: 'right' },
+  recentText: { ...typography.body, color: colors.textSecondary, flex: 1, ...getRtlText(), },
   trendingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   trendingChip: {
     paddingHorizontal: spacing.md, paddingVertical: 7,

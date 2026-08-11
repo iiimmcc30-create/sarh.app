@@ -10,7 +10,7 @@ import { useApp } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon, getRtlText } from '@/lib/rtl';
 import { searchListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -326,7 +326,7 @@ function createStyles(colors: ThemeColors) {
     createBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     listingsList: {
       borderRadius: radius.xl,
@@ -380,7 +380,7 @@ function createStyles(colors: ThemeColors) {
       fontSize: SIDEBAR_MENU_ITEM.titleSize,
       fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
       flexShrink: 1,
       lineHeight: 20,
@@ -389,14 +389,14 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     reachText: {
       ...typography.micro,
       color: '#7C3AED',
       fontWeight: '600',
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     thumbWrap: {

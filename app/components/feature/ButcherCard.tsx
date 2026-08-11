@@ -8,7 +8,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveMediaUrl } from '@/services/media';
 import { ButcherProfile } from '@/services/butcherData';
@@ -387,7 +387,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       fontWeight: '600',
       fontSize: 16,
       flexShrink: 1,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     verifiedPill: {
       flexShrink: 0,
@@ -403,7 +403,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       ...typography.caption,
       color: colors.textMuted,
       flexShrink: 1,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     ratingRow: {
       alignItems: 'center',

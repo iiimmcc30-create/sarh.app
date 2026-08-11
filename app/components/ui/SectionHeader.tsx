@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon, getRtlRow } from '@/lib/rtl';
+import { rtlForwardIcon, getRtlRow, getRtlText } from '@/lib/rtl';
 
 type SectionHeaderProps = {
   title: string;
@@ -86,12 +86,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: isDark ? 28 : 24,
       fontWeight: isDark ? '700' : '700',
       color: isDark ? colors.textPrimary : colors.electric,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     subtitle: {
       ...typography.caption,
       lineHeight: 18,
       color: colors.textMuted,
+      ...getRtlText(),
     },
     seeAll: {
       alignItems: 'center',
@@ -103,6 +104,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: 18,
       fontWeight: '500',
       color: isDark ? colors.textSecondary : colors.textBrandStrong,
+      ...getRtlText(),
     },
   });
 }

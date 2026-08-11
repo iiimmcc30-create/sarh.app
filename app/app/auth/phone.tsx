@@ -340,7 +340,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.md, height: 54, width: '100%',
   },
   inputIcon: marginStart(8),
-  textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
+  textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...getRtlText(), },
 
   countryBtn: {
     ...getRtlRow(),
@@ -350,7 +350,7 @@ function createStyles(colors: ThemeColors) {
   countryCode: { fontSize: 14, color: colors.textPrimary, fontWeight: '600' },
   countryFlag: { fontSize: 16 },
   inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
+  phoneInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...getRtlText(), },
 
   pickerDropdown: {
     backgroundColor: colors.bgGlassStrong, borderRadius: radius.lg,

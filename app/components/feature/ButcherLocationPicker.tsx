@@ -193,6 +193,6 @@ function createStyles(colors: ThemeColors) {
     ...getRtlText(),
     marginTop: 2,
   },
-  hint: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },
+  hint: { ...typography.caption, color: colors.textMuted, ...getRtlText(), },
 });
 }

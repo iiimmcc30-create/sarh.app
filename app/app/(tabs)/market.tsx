@@ -19,7 +19,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { sarhScreenStyles } from '@/constants/sarhScreen';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
@@ -250,14 +250,14 @@ function createMarketStyles(
       ...typography.h1,
       fontWeight: '600',
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     pageSubtitle: {
       ...typography.caption,
       fontSize: 13,
       lineHeight: 18,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     headerActions: {
       alignItems: 'center',
@@ -296,7 +296,7 @@ function createMarketStyles(
       ...typography.body,
       fontSize: 14,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     filterRow: {
       paddingHorizontal: spacing.lg,
@@ -325,7 +325,7 @@ function createMarketStyles(
       fontSize: 12,
       color: colors.textSecondary,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     filterChipTextActive: {
       color: '#fff',
@@ -342,7 +342,7 @@ function createMarketStyles(
       ...typography.caption,
       fontSize: 12,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
     emptyIcon: { fontSize: 40 },

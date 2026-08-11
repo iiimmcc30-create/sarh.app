@@ -672,7 +672,7 @@ function createStyles(colors: ThemeColors) {
     ...(Platform.OS === 'web' ? { flexGrow: 0 } : {}),
   },
   stepContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.md, gap: spacing.md },
-  stepTitle: { ...typography.h2, color: colors.textPrimary, textAlign: 'right' },
+  stepTitle: { ...typography.h2, color: colors.textPrimary, ...getRtlText(), },
   stepSubtitle: { ...typography.body, color: colors.textMuted, ...getRtlText(), marginBottom: spacing.xs },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: CAT_GAP },
   catCard: {
@@ -702,7 +702,7 @@ function createStyles(colors: ThemeColors) {
   },
   currencyLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
   fieldHint: { ...typography.micro, color: colors.gold },
-  mapHint: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
+  mapHint: { ...typography.micro, color: colors.textMuted, ...getRtlText(), },
   row: { flexDirection: 'row', gap: spacing.md },
   imageGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm,
@@ -723,7 +723,7 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center', gap: 2,
   },
   imagePickerText: { ...typography.caption, color: colors.textMuted },
-  imagePickerSub: { ...typography.micro, color: colors.textSubtle, textAlign: 'right' },
+  imagePickerSub: { ...typography.micro, color: colors.textSubtle, ...getRtlText(), },
   countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   countryChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -760,13 +760,13 @@ function createStyles(colors: ThemeColors) {
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   reviewLabel: { ...typography.caption, color: colors.textMuted },
-  reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right' },
+  reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, ...getRtlText(), },
   termsBox: {
     flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start',
     padding: spacing.md, backgroundColor: `${colors.electric}10`,
     borderRadius: radius.lg, borderWidth: 1, borderColor: `${colors.electric}20`,
   },
-  termsText: { ...typography.caption, color: colors.textMuted, flex: 1, lineHeight: 18, textAlign: 'right' },
+  termsText: { ...typography.caption, color: colors.textMuted, flex: 1, lineHeight: 18, ...getRtlText(), },
   bottomBar: {
     flexShrink: 0,
     paddingHorizontal: spacing.lg,

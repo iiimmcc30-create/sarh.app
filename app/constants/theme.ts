@@ -1,6 +1,7 @@
 // SAFAT — Logo-aligned brand theme (forest green · white · black)
 // Supports dark + light palettes; apply via bootstrap before app modules load.
 
+import { I18nManager, Platform } from 'react-native';
 import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';
 import { appFont } from './fonts';
@@ -301,13 +302,20 @@ export const radius = {
 };
 
 /**
- * Arabic text defaults — writingDirection tells the text engine the script direction,
- * textAlign: 'right' ensures the glyph block is flush to the reading side.
- * Elements that need center/left alignment override textAlign explicitly after spreading.
+ * Arabic text defaults.
+ *
+ * IMPORTANT — do NOT hardcode textAlign:'right' for native RTL:
+ * When Yoga layoutDirection is RTL, React Native mirrors textAlign so that
+ * 'right' becomes visual LEFT and 'left' becomes visual RIGHT
+ * (ReactTextShadowNode / TextAttributeProps on Android).
+ * Web does not mirror — physical 'right' is correct there.
+ * Elements that need center alignment override textAlign after spreading.
  */
 const directionalText = {
   writingDirection: 'rtl' as const,
-  textAlign: 'right' as const,
+  textAlign: (Platform.OS !== 'web' && I18nManager?.isRTL ? 'left' : 'right') as
+    | 'left'
+    | 'right',
 };
 
 /** IBM Plex Sans Arabic — prefer 600 for titles, 500 for item labels, 400 for body. */

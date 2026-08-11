@@ -1185,7 +1185,7 @@ function createAboutStyles(colors: ThemeColors) {
   wrap: { paddingHorizontal: spacing.lg },
   section: { marginBottom: spacing.xl },
   sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
-  bio: { ...typography.body, color: colors.textSecondary, lineHeight: 22, textAlign: 'right' },
+  bio: { ...typography.body, color: colors.textSecondary, lineHeight: 22, ...getRtlText(), },
   infoGrid: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.xl,
@@ -1204,7 +1204,7 @@ function createAboutStyles(colors: ThemeColors) {
     borderBottomColor: colors.borderSoft,
   },
   infoLabel: { ...typography.caption, color: colors.textMuted, flex: 1 },
-  infoValue: { ...typography.caption, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
+  infoValue: { ...typography.caption, color: colors.textPrimary, fontWeight: '600', ...getRtlText(), },
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 14,
@@ -1255,7 +1255,7 @@ function createChatStyles(colors: ThemeColors) {
   bubbleText: { ...typography.body, lineHeight: 20 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
-  bubbleTime: { ...typography.micro, color: 'rgba(255,255,255,0.5)', marginTop: 4, textAlign: 'right' },
+  bubbleTime: { ...typography.micro, color: 'rgba(255,255,255,0.5)', marginTop: 4, ...getRtlText(), },
   openChatBtn: {
     marginTop: spacing.xl,
     borderRadius: radius.xl,

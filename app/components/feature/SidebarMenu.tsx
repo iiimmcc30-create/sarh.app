@@ -225,7 +225,7 @@ const sectionStyles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: spacing.sm,
     paddingHorizontal: 4,
-    textAlign: 'right',
+    ...getRtlText(),
     writingDirection: 'rtl',
   },
   card: {
@@ -309,7 +309,7 @@ const logoutStyles = StyleSheet.create({
     ...typography.bodyStrong,
     fontWeight: '600',
     fontSize: 15,
-    textAlign: 'right',
+    ...getRtlText(),
     writingDirection: 'rtl',
     flexShrink: 1,
   },

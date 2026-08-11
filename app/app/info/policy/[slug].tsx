@@ -5,7 +5,7 @@ import { fetchPublicPolicy } from '@/services/content';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, rtlBackIcon, getRtlText } from '@/lib/rtl';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -99,14 +99,14 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     sectionBody: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 24,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     updated: {

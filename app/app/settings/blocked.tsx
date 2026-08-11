@@ -122,7 +122,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 20,
-      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     loader: { marginTop: spacing.xl },
@@ -156,7 +155,7 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     handle: {
       ...typography.caption,

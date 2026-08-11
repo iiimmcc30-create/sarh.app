@@ -181,7 +181,7 @@ function createStyles(colors: ThemeColors) {
   channelLabel: { ...typography.caption, color: colors.textMuted },
   channelValue: { ...typography.bodyStrong, color: colors.textPrimary },
   fieldGroup: { gap: spacing.sm },
-  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600', textAlign: 'right' },
+  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600', ...getRtlText(), },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,

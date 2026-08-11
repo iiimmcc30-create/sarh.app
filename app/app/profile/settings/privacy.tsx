@@ -249,13 +249,13 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       fontWeight: '600',
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...getRtlText(),
     },
     description: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 20,
-      textAlign: 'right',
+      ...getRtlText(),
     },
   });
 }

@@ -788,7 +788,7 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       ...getRtlText(),
     },
-    productCat: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
+    productCat: { ...typography.micro, color: colors.textMuted, ...getRtlText(), },
     productPrice: {
       ...typography.caption,
       color: colors.gold,
@@ -921,7 +921,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       flex: 1,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     summaryDivider: {
       height: StyleSheet.hairlineWidth,

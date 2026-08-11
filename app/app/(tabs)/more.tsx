@@ -4,7 +4,7 @@ import { SidebarThemeToggle } from '@/components/feature/SidebarMenu';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { ds } from '@/constants/designSystem';
 import { LOCALE_STORAGE_KEY, type AppLocale, normalizeAppLocale } from '@/lib/locale';
-import { setupRtl } from '@/lib/rtl';
+import { setupRtl, getRtlText } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -175,13 +175,13 @@ function createStyles(colors: ThemeColors) {
     headerTitle: {
       ...typography.h2,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     content: {
@@ -206,7 +206,7 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
     langTrack: {
@@ -243,7 +243,7 @@ function createStyles(colors: ThemeColors) {
     sectionLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
+      ...getRtlText(),
       writingDirection: 'rtl',
     },
   });

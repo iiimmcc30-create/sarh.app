@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { uploadImageFromUri } from '@/services/upload';
-import { rtlInputText, ltrInputText } from '@/lib/rtl';
+import { rtlInputText, ltrInputText, getRtlText } from '@/lib/rtl';
 
 const HASHTAG_BLUE = '#1D9BF0';
 const MAX_POST_IMAGES = 4;
@@ -461,7 +461,7 @@ function createStyles(colors: ThemeColors) {
   previewAvatar: { width: 32, height: 32, borderRadius: 16 },
   previewName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   previewHandle: { ...typography.micro, color: colors.textMuted },
-  previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' as const },
+  previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, ...getRtlText(), },
   previewImage: {
     width: '100%',
     height: 180,

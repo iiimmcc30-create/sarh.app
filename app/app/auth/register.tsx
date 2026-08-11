@@ -491,7 +491,7 @@ function createStyles(colors: ThemeColors) {
   },
 
   fieldGroup: { gap: 6, width: '100%' },
-  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
+  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', ...getRtlText(), },
   
   inputWrap: {
     ...getRtlRow(), alignItems: 'center',
@@ -530,7 +530,7 @@ function createStyles(colors: ThemeColors) {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
     gap: 8, width: '100%', marginVertical: 4,
   },
-  agreeText: { fontSize: 13, color: colors.textMuted, textAlign: 'right' },
+  agreeText: { fontSize: 13, color: colors.textMuted, ...getRtlText(), },
   agreeLink: { color: colors.textBrandStrong, fontWeight: '600' },
   checkbox: {
     width: 20, height: 20, borderRadius: 5,

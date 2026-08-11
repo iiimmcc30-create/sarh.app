@@ -468,13 +468,11 @@ function createScreenStyles(colors: ThemeColors) {
     fontWeight: '600',
     color: colors.textPrimary,
     ...getRtlText(),
-    ...getRtlText(),
   },
   headerSub: {
     ...typography.caption,
     color: colors.textMuted,
     marginTop: 2,
-    ...getRtlText(),
     ...getRtlText(),
   },
   headerActions: {
@@ -536,7 +534,6 @@ function createScreenStyles(colors: ThemeColors) {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
-    ...getRtlText(),
     ...getRtlText(),
   },
 
@@ -603,7 +600,7 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.caption,
     fontWeight: '600',
     color: colors.textSecondary,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   headerMetaRow: {
     flexDirection: 'row',
@@ -628,12 +625,12 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.micro,
     fontWeight: '600',
     color: colors.electricBright,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
   resultsCount: {
     ...typography.caption,
     color: colors.textMuted,
-    writingDirection: 'rtl', textAlign: 'right' as const,
+    ...getRtlText(),
   },
 
   // Country chips

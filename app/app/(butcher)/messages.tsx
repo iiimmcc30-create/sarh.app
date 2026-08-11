@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchNotifications } from '@/services/notifications';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
-import { getRtlRow, marginEnd } from '@/lib/rtl';
+import { getRtlRow, marginEnd, getRtlText } from '@/lib/rtl';
 
 type Tab = 'messages' | 'activity';
 
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   activityAvatar: { width: 40, height: 40, borderRadius: 20 },
   activityContent: { flex: 1 },
-  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, textAlign: 'right' },
+  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, ...getRtlText(), },
   activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
 });

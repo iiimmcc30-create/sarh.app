@@ -337,7 +337,7 @@ function createStyles(colors: ThemeColors) {
     width: '100%', borderRadius: 20, padding: spacing.xl,
     backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline, gap: spacing.md,
   },
-  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
+  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', ...getRtlText(), },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bgDeep, borderRadius: 12,
@@ -348,7 +348,7 @@ function createStyles(colors: ThemeColors) {
   countryCode: { fontSize: 14, color: '#fff', fontWeight: '600' },
   countryFlag: { fontSize: 16 },
   inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, fontSize: 14, color: '#fff', textAlign: 'right' },
+  phoneInput: { flex: 1, fontSize: 14, color: '#fff', ...getRtlText(), },
   textInput: { flex: 1, fontSize: 14, color: '#fff', textAlign: 'right' },
   pickerDropdown: {
     backgroundColor: colors.bgDeep, borderRadius: 12,
@@ -379,7 +379,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
   },
-  errorText: { fontSize: 12, color: colors.danger, flex: 1, textAlign: 'right' },
+  errorText: { fontSize: 12, color: colors.danger, flex: 1, ...getRtlText(), },
   submitBtn: { borderRadius: 20, overflow: 'hidden', marginTop: 4 },
   submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
   submitText: { fontSize: 16, fontWeight: '600', color: '#fff' },

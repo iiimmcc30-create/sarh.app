@@ -159,8 +159,8 @@ function createStyles(colors: ThemeColors) {
   heroSub: { ...typography.body, color: colors.textBrand, textAlign: 'center', paddingHorizontal: spacing.xl },
   scroll: { paddingBottom: 40 },
   section: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right' },
-  bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, ...getRtlText(), },
+  bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, ...getRtlText() },
   featureRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     paddingVertical: spacing.sm,
@@ -171,7 +171,7 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  featureText: { flex: 1, ...typography.body, color: colors.textSecondary, textAlign: 'right' },
+  featureText: { flex: 1, ...typography.body, color: colors.textSecondary, ...getRtlText(), },
   infoCard: {
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.borderSoft,

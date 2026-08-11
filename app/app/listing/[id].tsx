@@ -622,7 +622,7 @@ function createStyles(colors: ThemeColors) {
     headerMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     headerPriceTimeCol: {
       alignItems: 'flex-end',
@@ -637,7 +637,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textBrandStrong,
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     specMetaLine: {
       flexWrap: 'wrap',
@@ -646,7 +645,7 @@ function createStyles(colors: ThemeColors) {
     specMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right' as const,
+      ...getRtlText(),
     },
     galleryBlock: {
       gap: spacing.xs,
@@ -657,7 +656,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontWeight: '600',
       writingDirection: 'rtl',
-      textAlign: 'right',
+      ...getRtlText(),
       marginBottom: spacing.xs,
     },
     galleryImageWrap: {
@@ -676,7 +675,6 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 34,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
       ...getRtlText(),
     },
     currency: {
@@ -718,7 +716,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '600',
       ...getRtlText(),
-      ...getRtlText(),
     },
     sellerRow: {
       alignItems: 'center',
@@ -744,7 +741,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       maxWidth: 180,
-      ...getRtlText(),
       ...getRtlText(),
     },
 
@@ -799,13 +795,11 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       lineHeight: 24,
       ...getRtlText(),
-      ...getRtlText(),
     },
     descArabic: {
       ...typography.body,
       fontSize: 16,
       color: colors.textPrimary,
-      ...getRtlText(),
       ...getRtlText(),
       lineHeight: 27,
     },
