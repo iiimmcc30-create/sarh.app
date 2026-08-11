@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import {
@@ -235,7 +234,7 @@ export function ListingFeePaymentSheet({
                 </Text>
               </View>
 
-              <RtlText style={styles.sectionLabel}>وسائل الدفع</RtlText>
+              <Text style={[styles.sectionLabel, getRtlText()]}>وسائل الدفع</Text>
               <View style={styles.methodsGrid}>
                 {FEE_PAYMENT_METHODS.map((item) => {
                   const active = method === item.id;
@@ -389,8 +388,10 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       lineHeight: 20,
     },
-    sectionLabel: { ...typography.bodyStrong,
-      color: colors.textPrimary, textAlign: 'right', writingDirection: 'rtl' },
+    sectionLabel: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+    },
     methodsGrid: {
       ...getRtlRow(),
       flexWrap: 'wrap',

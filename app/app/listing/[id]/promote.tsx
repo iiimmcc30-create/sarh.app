@@ -2,7 +2,6 @@ import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIc
 import { PromoteGoalPreview } from '@/components/listing/PromoteGoalPreview';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -319,7 +318,7 @@ export default function ListingPromoteScreen() {
           </View>
 
           <View style={styles.section}>
-            <RtlText style={styles.sectionTitle}>اختيار الهدف</RtlText>
+            <Text style={styles.sectionTitle}>اختيار الهدف</Text>
             <Text style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</Text>
             <View style={styles.goalList}>
               {PROMOTE_GOAL_OPTIONS.map((option) => {
@@ -409,7 +408,7 @@ export default function ListingPromoteScreen() {
           {isVisibility ? (
             <View style={styles.sliderCard}>
               <View style={[styles.sectionHeaderRow, getRtlRow()]}>
-                <RtlText style={styles.sectionTitle}>الميزانية</RtlText>
+                <Text style={styles.sectionTitle}>الميزانية</Text>
                 <Pressable
                   onPress={() => {
                     setCustomAmountDraft(String(amount));
@@ -449,7 +448,7 @@ export default function ListingPromoteScreen() {
           {goal ? (
             <View style={styles.sliderCard}>
               <View style={[styles.sectionHeaderRow, getRtlRow()]}>
-                <RtlText style={styles.sectionTitle}>المدة</RtlText>
+                <Text style={styles.sectionTitle}>المدة</Text>
                 <Pressable
                   onPress={() => {
                     setCustomDurationDraft(String(durationHours));

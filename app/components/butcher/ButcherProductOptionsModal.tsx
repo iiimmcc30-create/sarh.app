@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { Image } from '@/components/ui/AppImage';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -96,7 +95,7 @@ export function ButcherProductOptionsModal({
 
           {product.availableCuts.length > 0 ? (
             <View style={styles.section}>
-              <RtlText style={styles.sectionTitle}>طريقة التقطيع</RtlText>
+              <Text style={styles.sectionTitle}>طريقة التقطيع</Text>
               <View style={styles.chips}>
                 {product.availableCuts.map((cut) => {
                   const active = selectedCut === cut;
@@ -118,7 +117,7 @@ export function ButcherProductOptionsModal({
 
           {product.pricePerKg ? (
             <View style={styles.section}>
-              <RtlText style={styles.sectionTitle}>الوزن (كغ)</RtlText>
+              <Text style={styles.sectionTitle}>الوزن (كغ)</Text>
               <View style={styles.weightRow}>
                 <Pressable
                   style={styles.weightBtn}

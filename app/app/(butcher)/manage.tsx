@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Manage Screen (إدارة الملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { getRtlRow, getRtlText, marginEnd, rtlForwardIcon } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
@@ -1023,7 +1022,7 @@ export default function ButcherManageScreen() {
         <View style={styles.locationCard}>
           <View style={styles.locationHeader}>
             <View style={{ flex: 1 }}>
-              <RtlText style={styles.sectionTitle}>📍 موقع الملحمة</RtlText>
+              <Text style={styles.sectionTitle}>📍 موقع الملحمة</Text>
               <Text style={styles.locationSub}>
                 {hasValidCoords(butcher?.lat, butcher?.lng)
                   ? formatLocationLabel(butcher?.cityAr, butcher?.addressAr ?? butcher?.address, butcher.lat, butcher.lng)
@@ -1085,9 +1084,9 @@ export default function ButcherManageScreen() {
         {/* ── Orders Tab ── */}
         {activeTab === 'orders' && (
           <View>
-            <RtlText style={styles.sectionTitle}>
+            <Text style={styles.sectionTitle}>
               الطلبات الواردة ({orders.length})
-            </RtlText>
+            </Text>
             {orders.map((order) => {
               const status = order.status;
               const statusColor = statusColors[status] ?? colors.textMuted;
@@ -1237,7 +1236,7 @@ export default function ButcherManageScreen() {
         {activeTab === 'products' && (
           <View>
             <View style={styles.tabHeader}>
-              <RtlText style={styles.sectionTitle}>منتجاتي ({products.length})</RtlText>
+              <Text style={styles.sectionTitle}>منتجاتي ({products.length})</Text>
               <Pressable style={styles.addBtn} onPress={() => openProductForm()}>
                 <AppIcon name="add" size={16} color={colors.electricBright} />
                 <Text style={styles.addBtnText}>إضافة منتج</Text>
@@ -1303,7 +1302,7 @@ export default function ButcherManageScreen() {
         {activeTab === 'offers' && (
           <View>
             <View style={styles.tabHeader}>
-              <RtlText style={styles.sectionTitle}>عروضي ({offers.length})</RtlText>
+              <Text style={styles.sectionTitle}>عروضي ({offers.length})</Text>
               <Pressable style={styles.addBtn} onPress={() => openOfferForm()}>
                 <AppIcon name="add" size={16} color={colors.electricBright} />
                 <Text style={styles.addBtnText}>إضافة عرض</Text>
@@ -1360,7 +1359,7 @@ export default function ButcherManageScreen() {
         {activeTab === 'stories' && (
           <View>
             <View style={styles.tabHeader}>
-              <RtlText style={styles.sectionTitle}>قصصي</RtlText>
+              <Text style={styles.sectionTitle}>قصصي</Text>
               <Pressable
                 style={styles.addBtn}
                 onPress={() => router.push({ pathname: '/create/story', params: { mode: 'butcher' } })}
@@ -1578,7 +1577,7 @@ function createMainStyles(colors: ThemeColors) {
     color: colors.textBrandStrong,
     fontWeight: '600',
   },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', writingDirection: 'rtl' },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
   locationCard: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.xxl,

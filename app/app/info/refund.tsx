@@ -1,6 +1,5 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -68,7 +67,9 @@ export default function RefundScreen() {
 
         {REFUND_SECTIONS.map((section, i) => (
           <View key={i} style={styles.section}>
-            <RtlText style={styles.sectionTitle}>{section.title}</RtlText>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+            </View>
             <View style={styles.rtlTextShell}>
               <Text style={styles.sectionBody}>{section.content}</Text>
             </View>

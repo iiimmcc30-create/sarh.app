@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — Terms & Conditions (الشروط والأحكام)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 
 import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -72,7 +71,9 @@ export default function TermsScreen() {
           <View key={i} style={styles.section}>
             <View style={styles.titleRow}>
               <Text style={styles.sectionNum}>{i + 1}</Text>
-              <RtlText style={styles.sectionTitle}>{item.title}</RtlText>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionTitle}>{item.title}</Text>
+              </View>
             </View>
             <View style={styles.rtlTextShell}>
               <Text style={styles.sectionContent}>{item.content}</Text>
@@ -82,7 +83,9 @@ export default function TermsScreen() {
 
         {/* Contact */}
         <View style={styles.contactSection}>
-          <RtlText style={styles.sectionTitle}>للاستفسار</RtlText>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.sectionTitle}>للاستفسار</Text>
+          </View>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>info@alsfat.com</Text>

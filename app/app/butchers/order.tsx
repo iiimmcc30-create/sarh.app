@@ -1,6 +1,5 @@
 // SAFAT — Butcher Order Screen (صفحة الطلب + الدفع)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -622,7 +621,7 @@ function Section({
 }) {
   return (
     <View style={styles.section}>
-      <RtlText style={styles.sectionTitle}>{title}</RtlText>
+      <Text style={styles.sectionTitle}>{title}</Text>
       {children}
     </View>
   );

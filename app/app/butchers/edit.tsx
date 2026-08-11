@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — Edit Butcher Account (تعديل حساب الملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -422,7 +421,7 @@ export default function EditButcherScreen() {
             <Field styles={styles} colors={colors} label="السجل التجاري" value={commercialReg} onChange={setCommercialReg} placeholder="رقم السجل التجاري" />
 
             <View style={styles.sectionDivider}>
-              <RtlText style={styles.sectionLabel}>ساعات العمل</RtlText>
+              <Text style={styles.sectionLabel}>ساعات العمل</Text>
             </View>
             <View style={styles.hoursRow}>
               <View style={styles.hourField}>
@@ -461,7 +460,7 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <RtlText style={styles.sectionLabel}>أيام الإغلاق</RtlText>
+              <Text style={styles.sectionLabel}>أيام الإغلاق</Text>
             </View>
             <View style={styles.chipsRow}>
               {CLOSED_DAYS.map((day) => {
@@ -479,7 +478,7 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <RtlText style={styles.sectionLabel}>التخصصات</RtlText>
+              <Text style={styles.sectionLabel}>التخصصات</Text>
             </View>
             <View style={styles.chipsRow}>
               {SPECIALTY_OPTIONS.map((spec) => {
@@ -497,7 +496,7 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <RtlText style={styles.sectionLabel}>موقع الملحمة على الخريطة (اختياري)</RtlText>
+              <Text style={styles.sectionLabel}>موقع الملحمة على الخريطة (اختياري)</Text>
             </View>
             <ButcherLocationPicker
               country={country}
@@ -695,7 +694,7 @@ function createStyles(colors: ThemeColors) {
   phoneCodeText: { ...typography.bodyStrong, color: colors.textPrimary },
   phoneInput: { flex: 1 },
   sectionDivider: { marginTop: spacing.sm, marginBottom: 4 },
-  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', textAlign: 'right', textAlign: 'right', writingDirection: 'rtl' },
+  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', textAlign: 'right' },
   hoursRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   hourField: { flex: 1, gap: 6 },
   hourLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },

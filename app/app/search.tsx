@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — Search Screen (البحث)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 
 import { Image } from '@/components/ui/AppImage';
 import { useRouter } from 'expo-router';
@@ -182,7 +181,7 @@ export default function SearchScreen() {
           {recentSearches.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <RtlText style={styles.sectionTitle}>البحث الأخير</RtlText>
+                <Text style={styles.sectionTitle}>البحث الأخير</Text>
                 <Pressable onPress={() => saveRecent([])}>
                   <Text style={styles.clearText}>مسح الكل</Text>
                 </Pressable>
@@ -200,7 +199,7 @@ export default function SearchScreen() {
           )}
 
           <View style={styles.section}>
-            <RtlText style={styles.sectionTitle}>🔥 الأكثر تداولاً</RtlText>
+            <Text style={styles.sectionTitle}>🔥 الأكثر تداولاً</Text>
             {trendingTags.length === 0 ? (
               <Text style={{ color: colors.textMuted, ...typography.caption, textAlign: 'right' }}>
                 لا توجد هاشتاقات رائجة حالياً
@@ -217,7 +216,7 @@ export default function SearchScreen() {
           </View>
 
           <View style={styles.section}>
-            <RtlText style={styles.sectionTitle}>🏆 أبرز المربّين</RtlText>
+            <Text style={styles.sectionTitle}>🏆 أبرز المربّين</Text>
             {dbUsers.slice(0, 4).map((user) => (
               <Pressable
                 key={user.id}
@@ -242,7 +241,7 @@ export default function SearchScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {(filter === 'all' || filter === 'listings') && filteredListings.length > 0 && (
             <View style={styles.section}>
-              <RtlText style={styles.sectionTitle}>الإعلانات ({filteredListings.length})</RtlText>
+              <Text style={styles.sectionTitle}>الإعلانات ({filteredListings.length})</Text>
               <View style={styles.listingsFeed}>
                 {filteredListings.slice(0, 6).map((l) => (
                   <ListingCard
@@ -258,7 +257,7 @@ export default function SearchScreen() {
 
           {(filter === 'all' || filter === 'users') && filteredUsers.length > 0 && (
             <View style={styles.section}>
-              <RtlText style={styles.sectionTitle}>المستخدمون ({filteredUsers.length})</RtlText>
+              <Text style={styles.sectionTitle}>المستخدمون ({filteredUsers.length})</Text>
               {filteredUsers.map((user) => (
                 <Pressable
                   key={user.id}
@@ -280,7 +279,7 @@ export default function SearchScreen() {
 
           {(filter === 'all' || filter === 'live') && filteredLive.length > 0 && (
             <View style={styles.section}>
-              <RtlText style={styles.sectionTitle}>بث مباشر ({filteredLive.length})</RtlText>
+              <Text style={styles.sectionTitle}>بث مباشر ({filteredLive.length})</Text>
               {filteredLive.map((l) => (
                 <View key={l.id} style={styles.liveRow}>
                   <Image source={l.thumbnail ? { uri: l.thumbnail } : undefined} style={styles.liveThumbnail} contentFit="cover" />
@@ -366,7 +365,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...ambientShadow(scheme, 'card'),
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', writingDirection: 'rtl' },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
   clearText: { ...typography.caption, color: colors.textBrandStrong },
   recentRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,

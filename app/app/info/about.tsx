@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — About Us (من نحن)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -47,23 +46,23 @@ export default function AboutScreen() {
 
         {/* About text */}
         <View style={styles.section}>
-          <RtlText style={styles.sectionTitle}>رسالتنا</RtlText>
+          <Text style={styles.sectionTitle}>رسالتنا</Text>
           <Text style={styles.bodyText}>{BRAND_MISSION_AR}</Text>
         </View>
 
         <View style={styles.section}>
-          <RtlText style={styles.sectionTitle}>رؤيتنا</RtlText>
+          <Text style={styles.sectionTitle}>رؤيتنا</Text>
           <Text style={styles.bodyText}>{BRAND_VISION_AR}</Text>
         </View>
 
         <View style={styles.section}>
-          <RtlText style={styles.sectionTitle}>هدفنا</RtlText>
+          <Text style={styles.sectionTitle}>هدفنا</Text>
           <Text style={styles.bodyText}>{BRAND_GOAL_AR}</Text>
         </View>
 
         {/* Features */}
         <View style={styles.section}>
-          <RtlText style={styles.sectionTitle}>ما نقدّمه</RtlText>
+          <Text style={styles.sectionTitle}>ما نقدّمه</Text>
           {[
             { icon: 'tag-multiple', label: 'إعلانات واضحة وموثوقة لبيع وشراء الحيوانات والمعدات' },
             { icon: 'broadcast', label: 'بث مباشر للمزادات والعروض الحية' },
@@ -82,7 +81,7 @@ export default function AboutScreen() {
 
         {/* Ownership */}
         <View style={styles.section}>
-          <RtlText style={styles.sectionTitle}>المالك والامتثال</RtlText>
+          <Text style={styles.sectionTitle}>المالك والامتثال</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>المالك الرسمي</Text>
@@ -103,7 +102,7 @@ export default function AboutScreen() {
 
         {/* Contact */}
         <View style={styles.section}>
-          <RtlText style={styles.sectionTitle}>تواصل معنا</RtlText>
+          <Text style={styles.sectionTitle}>تواصل معنا</Text>
           <Pressable
             style={styles.contactBtn}
             onPress={() => Linking.openURL('tel:+966591298136')}
@@ -160,7 +159,7 @@ function createStyles(colors: ThemeColors) {
   heroSub: { ...typography.body, color: colors.textBrand, textAlign: 'center', paddingHorizontal: spacing.xl },
   scroll: { paddingBottom: 40 },
   section: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', textAlign: 'right', writingDirection: 'rtl' },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right' },
   bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
   featureRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,

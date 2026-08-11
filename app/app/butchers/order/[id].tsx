@@ -1,6 +1,5 @@
 // Customer order details with realtime timeline
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -115,7 +114,7 @@ export default function OrderDetailsScreen() {
         </View>
 
         <View style={s.card}>
-          <RtlText style={s.sectionTitle}>متابعة الطلب</RtlText>
+          <Text style={s.sectionTitle}>متابعة الطلب</Text>
           {order.status === 'cancelled' ? (
             timeline.map((event) => (
               <View key={event.id} style={s.timelineItem}>
@@ -166,7 +165,7 @@ export default function OrderDetailsScreen() {
         </View>
 
         <View style={s.card}>
-          <RtlText style={s.sectionTitle}>تفاصيل الطلب</RtlText>
+          <Text style={s.sectionTitle}>تفاصيل الطلب</Text>
           {Array.isArray(order.items) && order.items.length > 0 ? (
             order.items.map((item: {
               id: string;

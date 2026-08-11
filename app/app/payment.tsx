@@ -5,7 +5,6 @@
 //   • Step indicator: Method → Card Details → Processing → Success
 //   • Trust badges, NI branding, PCI-DSS notice
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -457,7 +456,7 @@ export default function PaymentScreen() {
           {/* ── Method Selection ── */}
           {step === 'method' ? (
             <>
-              <RtlText style={styles.sectionTitle}>اختر طريقة الدفع</RtlText>
+              <Text style={styles.sectionTitle}>اختر طريقة الدفع</Text>
 
               {/* Card methods (mada, visa, mastercard) in 2-col grid */}
               <View style={styles.methodGrid}>
@@ -527,7 +526,7 @@ export default function PaymentScreen() {
                 colors={colors}
               />
 
-              <RtlText style={styles.sectionTitle}>بيانات البطاقة</RtlText>
+              <Text style={styles.sectionTitle}>بيانات البطاقة</Text>
 
               <View style={styles.formCard}>
                 {/* Card holder name */}
@@ -811,7 +810,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     savingsTag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.22)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99, alignSelf: 'flex-start', marginTop: 4 },
     savingsText: { fontSize: 12, color: '#fff', fontWeight: '600' },
 
-    sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: 14, textAlign: 'right', writingDirection: 'rtl' },
+    sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: 14 },
 
     // Method grid (cards)
     methodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },

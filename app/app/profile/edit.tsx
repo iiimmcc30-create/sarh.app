@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — Edit Profile Screen (تعديل الملف الشخصي)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -253,7 +252,7 @@ export default function EditProfileScreen() {
 
             {/* Divider */}
             <View style={styles.sectionDivider}>
-              <RtlText style={styles.sectionLabel}>إعدادات الخصوصية</RtlText>
+              <Text style={styles.sectionLabel}>إعدادات الخصوصية</Text>
             </View>
 
             {([
@@ -377,7 +376,7 @@ function createStyles(colors: ThemeColors) {
     paddingVertical: spacing.md, marginTop: spacing.sm,
     borderTopWidth: 1, borderTopColor: colors.borderSoft,
   },
-  sectionLabel: { ...typography.micro, color: colors.textMuted, letterSpacing: 0.8, textAlign: 'right', writingDirection: 'rtl' },
+  sectionLabel: { ...typography.micro, color: colors.textMuted, letterSpacing: 0.8 },
   settingRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: spacing.md,

@@ -1,6 +1,5 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -104,7 +103,7 @@ export default function InvoiceDetailScreen() {
           </View>
 
           <View style={styles.section}>
-            <RtlText style={styles.sectionTitle}>بيانات الفاتورة</RtlText>
+            <Text style={styles.sectionTitle}>بيانات الفاتورة</Text>
             <InvoiceRow label="رقم الطلب" value={invoice.orderNumber} styles={styles} />
             <InvoiceRow
               label="اسم الملحمة"
@@ -125,7 +124,7 @@ export default function InvoiceDetailScreen() {
           </View>
 
           <View style={styles.section}>
-            <RtlText style={styles.sectionTitle}>تفاصيل المنتجات</RtlText>
+            <Text style={styles.sectionTitle}>تفاصيل المنتجات</Text>
             <InvoiceRow
               label="المنتج"
               value={invoice.product?.nameAr ?? '—'}
@@ -145,7 +144,7 @@ export default function InvoiceDetailScreen() {
           </View>
 
           <View style={styles.section}>
-            <RtlText style={styles.sectionTitle}>الملخص المالي</RtlText>
+            <Text style={styles.sectionTitle}>الملخص المالي</Text>
             <InvoiceRow label="رسوم التوصيل" value="—" styles={styles} />
             <InvoiceRow label="الضريبة" value="—" styles={styles} />
             <InvoiceRow label="الخصومات" value="—" styles={styles} />

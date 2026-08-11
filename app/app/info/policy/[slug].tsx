@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { getPolicyBySlug, POLICY_LAST_UPDATED_PLACEHOLDER } from '@/constants/sarhPolicies';
 import { fetchPublicPolicy } from '@/services/content';
@@ -67,7 +66,9 @@ export default function PolicyDetailScreen() {
           {sections.map((section, i) => (
             <View key={`${section.title}-${i}`} style={styles.section}>
               {section.title ? (
-                <RtlText style={styles.sectionTitle}>{section.title}</RtlText>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                </View>
               ) : null}
               <View style={styles.rtlTextShell}>
                 <Text style={styles.sectionBody}>{section.body}</Text>
