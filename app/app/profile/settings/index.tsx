@@ -506,49 +506,13 @@ export default function ProfileSettingsScreen() {
 
             {
 
-              key: 'terms',
+              key: 'policies',
 
               icon: 'document-text-outline',
 
-              label: 'الشروط والأحكام',
+              label: 'السياسات والشروط',
 
-              route: '/info/terms',
-
-            },
-
-            {
-
-              key: 'usage',
-
-              icon: 'shield-check',
-
-              label: 'سياسة الاستخدام',
-
-              route: '/info/terms',
-
-            },
-
-            {
-
-              key: 'privacy-policy',
-
-              icon: 'shield-outline',
-
-              label: 'سياسة الخصوصية',
-
-              route: '/info/privacy',
-
-            },
-
-            {
-
-              key: 'refund',
-
-              icon: 'refresh',
-
-              label: 'سياسة الاسترداد',
-
-              route: '/info/refund',
+              route: '/info/policies',
 
             },
 
