@@ -21,7 +21,7 @@ import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
 import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
 
@@ -154,13 +154,17 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
     <View style={styles.card}>
       <View style={[styles.header, getRtlRow()]}>
         <View style={styles.sectionBar} />
-        <Text style={styles.title}>الردود على الإعلان</Text>
+        <View style={styles.titleShell}>
+          <Text style={styles.title}>الردود على الإعلان</Text>
+        </View>
         <Text style={styles.count}>{comments.length}</Text>
       </View>
 
-      <Text style={styles.hint}>
-        ردود عامة يراها الجميع — للمحادثة الخاصة استخدم زر المراسلة أسفل الصفحة
-      </Text>
+      <View style={styles.rtlTextShell}>
+        <Text style={styles.hint}>
+          ردود عامة يراها الجميع — للمحادثة الخاصة استخدم زر المراسلة أسفل الصفحة
+        </Text>
+      </View>
 
       {loading ? (
         <ActivityIndicator color={colors.electricBright} style={styles.loader} />
@@ -172,7 +176,9 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
           </Pressable>
         </View>
       ) : comments.length === 0 ? (
-        <Text style={styles.empty}>لا توجد ردود بعد — كن أول من يسأل أو يعلّق علناً</Text>
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.empty}>لا توجد ردود بعد — كن أول من يسأل أو يعلّق علناً</Text>
+        </View>
       ) : (
         <View style={styles.list}>
           {comments.map((c) => (
@@ -183,7 +189,9 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
               <View style={styles.commentBubble}>
                 <View style={[styles.commentHeader, getRtlRow()]}>
                   <UserProfileLink userId={c.author.id} style={[styles.commentMeta, getRtlRow()]}>
-                    <Text style={styles.commentName}>{c.author.arabicName || c.author.displayName}</Text>
+                    <View style={styles.rtlTextShell}>
+                      <Text style={styles.commentName}>{c.author.arabicName || c.author.displayName}</Text>
+                    </View>
                     {c.author.verified ? (
                       <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
                     ) : null}
@@ -204,7 +212,9 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
                     </Pressable>
                   ) : null}
                 </View>
-                <Text style={styles.commentText}>{c.content}</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.commentText}>{c.content}</Text>
+                </View>
               </View>
             </View>
           ))}
@@ -259,12 +269,22 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 2,
       backgroundColor: colors.electricBright,
     },
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    titleShell: {
+      flex: 1,
+      direction: 'ltr',
+    },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     title: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      flex: 1,
+      width: '100%',
       textAlign: 'right',
+      writingDirection: 'rtl',
     },
     count: {
       ...typography.caption,
@@ -278,9 +298,10 @@ function createStyles(colors: ThemeColors) {
     hint: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-      ...getRtlText(),
       lineHeight: 20,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     errorBox: {
       alignItems: 'center',
@@ -312,9 +333,11 @@ function createStyles(colors: ThemeColors) {
     empty: {
       ...typography.body,
       color: colors.textMuted,
-      textAlign: 'center',
       lineHeight: 22,
       paddingVertical: spacing.sm,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     list: {
       gap: spacing.md,
@@ -357,6 +380,9 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textPrimary,
       fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     commentTime: {
       ...typography.micro,
@@ -365,9 +391,10 @@ function createStyles(colors: ThemeColors) {
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
-      ...getRtlText(),
-      ...getRtlText(),
       lineHeight: 22,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     deleteBtn: {
       padding: 2,
