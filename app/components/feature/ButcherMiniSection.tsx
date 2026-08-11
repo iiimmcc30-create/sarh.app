@@ -34,7 +34,7 @@ const STORY_SIZE = 52;
 interface ButcherMiniSectionProps {
   limit?: number;
   showStories?: boolean;
-  /** grid = one horizontal row (~2 reference-width cards visible); hero/compact = legacy */
+  /** grid = one horizontal row (full first card + half peek of next); hero/compact = legacy */
   size?: 'compact' | 'hero' | 'grid';
 }
 

@@ -141,8 +141,8 @@ function createStyles(colors: ThemeColors) {
       opacity: 0.92,
     },
     coverWrap: {
-      // Reference card image proportion (~square-ish top on half-width card).
-      height: 132,
+      // Taller cover for the wider peek-carousel card.
+      height: 148,
       backgroundColor: colors.bgElevated,
       position: 'relative',
     },
