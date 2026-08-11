@@ -38,9 +38,8 @@ export default function ButcherSidebarScreen() {
   const router = useRouter();
   const { me } = useApp();
   const { signOut, accessToken } = useAuth();
-  const { preference, setPreference, colors } = useTheme();
+  const { colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
-  const { unreadCount: notificationsUnread } = useUnreadNotificationCount();
   const { threads } = useMessageThreads(accessToken, 'BUTCHER');
   const {
     isButcherOwner,
