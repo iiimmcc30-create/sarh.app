@@ -1,13 +1,15 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppScrollView } from '@/components/ui/AppScrollView';
-import { APP_LOGO } from '@/constants/branding';
-import { BRAND_NAME_AR } from '@/constants/brandCopy';
+import {
+  BRAND_LOGIN_SUBTITLE_AR,
+  BRAND_NAME_AR,
+} from '@/constants/brandCopy';
 import {
   scrimColor,
   spacing,
@@ -17,7 +19,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlRow, getRtlText } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
@@ -31,8 +33,6 @@ import {
 } from '@/components/feature/SidebarMenu';
 
 type MenuItem = SidebarNavItem;
-
-const BRAND_TAGLINE = 'منصة المواشي السعودية';
 
 export default function SidebarScreen() {
   const router = useRouter();
@@ -153,20 +153,11 @@ export default function SidebarScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.brandBanner, getRtlRow()]}>
-          <View style={styles.brandText}>
-            <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
-            <Text style={styles.brandTagline}>{BRAND_TAGLINE}</Text>
-          </View>
-          {/* Official mark — white waves + green diamond stay as-is (no tint). */}
-          <View style={styles.brandMarkWrap}>
-            <Image
-              source={APP_LOGO}
-              style={styles.brandMark}
-              contentFit="cover"
-              accessibilityLabel="شعار سرح"
-            />
-          </View>
+        {/* Same brand stack as login: AppLogo → سرح → منصة المواشي السعودية */}
+        <View style={styles.brandBanner}>
+          <AppLogo size={72} />
+          <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
+          <Text style={styles.brandTagline}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
         </View>
 
         <AppScrollView
@@ -226,48 +217,25 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     brandBanner: {
       alignItems: 'center',
-      gap: spacing.md,
+      gap: spacing.sm,
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
-      borderRadius: 16,
-      backgroundColor: 'transparent',
-    },
-    brandMarkWrap: {
-      width: 56,
-      height: 56,
-      borderRadius: 20,
-      overflow: 'hidden',
-      backgroundColor: colors.bgSurface,
-    },
-    brandMark: {
-      width: 56,
-      height: 56,
-    },
-    brandText: {
-      flex: 1,
-      minWidth: 0,
-      gap: 4,
-      alignItems: 'flex-end',
+      width: '100%',
+      alignSelf: 'center',
     },
     brandName: {
-      ...typography.h2,
-      fontSize: 28,
-      lineHeight: 34,
-      fontWeight: '600',
+      ...typography.h1,
       color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
+      textAlign: 'center',
     },
     brandTagline: {
       ...typography.caption,
-      fontSize: 12,
-      lineHeight: 18,
-      fontWeight: '500',
       color: colors.textMuted,
-      writingDirection: 'rtl',
-      ...getRtlText(),
+      textAlign: 'center',
+      paddingHorizontal: 20,
+      lineHeight: 20,
     },
     scroll: {
       flex: 1,
