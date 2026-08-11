@@ -221,9 +221,13 @@ function AddProductForm({
   return (
     <View style={apf.wrap}>
       <View style={apf.handle} />
-      <Text style={apf.title}>{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.title}>{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</Text>
+      </View>
 
-      <Text style={apf.label}>اسم المنتج بالعربي</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>اسم المنتج بالعربي</Text>
+      </View>
       <TextInput
         style={apf.input}
         placeholder="مثال: خروف كامل طازج"
@@ -233,7 +237,9 @@ function AddProductForm({
         textAlign="right"
       />
 
-      <Text style={apf.label}>الفئة</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>الفئة</Text>
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.lg }}>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {ALL_CATEGORIES.map(([cat, info]) => (
@@ -243,16 +249,22 @@ function AddProductForm({
               style={[apf.catChip, form.category === cat && apf.catChipActive]}
             >
               <Text style={apf.catIcon}>{info.icon}</Text>
-              <Text style={[apf.catLabel, form.category === cat && apf.catLabelActive]}>{info.ar}</Text>
+              <View style={apf.chipTextShell}>
+                <Text style={[apf.catLabel, form.category === cat && apf.catLabelActive]}>{info.ar}</Text>
+              </View>
             </Pressable>
           ))}
         </View>
       </ScrollView>
 
-      <Text style={apf.label}>التسعير</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>التسعير</Text>
+      </View>
       <View style={apf.priceRow}>
         <View style={{ flex: 1 }}>
-          <Text style={apf.priceLabel}>سعر/كغ</Text>
+          <View style={apf.rtlTextShell}>
+            <Text style={apf.priceLabel}>سعر/كغ</Text>
+          </View>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -263,9 +275,13 @@ function AddProductForm({
             textAlign="center"
           />
         </View>
-        <Text style={{ color: colors.textMuted, marginTop: 24 }}>أو</Text>
+        <View style={apf.orShell}>
+          <Text style={apf.orText}>أو</Text>
+        </View>
         <View style={{ flex: 1 }}>
-          <Text style={apf.priceLabel}>سعر ثابت</Text>
+          <View style={apf.rtlTextShell}>
+            <Text style={apf.priceLabel}>سعر ثابت</Text>
+          </View>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -278,7 +294,9 @@ function AddProductForm({
         </View>
       </View>
 
-      <Text style={apf.label}>الكمية المتاحة (كغ)</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>الكمية المتاحة (كغ)</Text>
+      </View>
       <TextInput
         style={apf.input}
         placeholder="مثال: 50"
@@ -289,7 +307,9 @@ function AddProductForm({
         textAlign="center"
       />
 
-      <Text style={apf.label}>طرق التقطيع المتاحة</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>طرق التقطيع المتاحة</Text>
+      </View>
       <View style={apf.cutsGrid}>
         {ALL_CUTS.map((cut) => (
           <Pressable
@@ -297,14 +317,18 @@ function AddProductForm({
             onPress={() => toggleCut(cut)}
             style={[apf.cutChip, selectedCuts.includes(cut) && apf.cutChipActive]}
           >
-            <Text style={[apf.cutLabel, selectedCuts.includes(cut) && apf.cutLabelActive]}>
-              {CUT_LABELS[cut].ar}
-            </Text>
+            <View style={apf.chipTextShell}>
+              <Text style={[apf.cutLabel, selectedCuts.includes(cut) && apf.cutLabelActive]}>
+                {CUT_LABELS[cut].ar}
+              </Text>
+            </View>
           </Pressable>
         ))}
       </View>
 
-      <Text style={apf.label}>الطزاجة</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>الطزاجة</Text>
+      </View>
       <View style={apf.freshnessRow}>
         {[
           { id: 'fresh',   label: '🟢 طازج'  },
@@ -316,12 +340,16 @@ function AddProductForm({
             onPress={() => setForm({ ...form, freshness: opt.id })}
             style={[apf.freshnessBtn, form.freshness === opt.id && apf.freshnessBtnActive]}
           >
-            <Text style={apf.freshnessLabel}>{opt.label}</Text>
+            <View style={apf.chipTextShell}>
+              <Text style={apf.freshnessLabel}>{opt.label}</Text>
+            </View>
           </Pressable>
         ))}
       </View>
 
-      <Text style={apf.label}>التوفر</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>التوفر</Text>
+      </View>
       <View style={apf.freshnessRow}>
         {[
           { id: true,  label: '✅ متوفر' },
@@ -332,12 +360,16 @@ function AddProductForm({
             onPress={() => setForm({ ...form, inStock: opt.id })}
             style={[apf.freshnessBtn, form.inStock === opt.id && apf.freshnessBtnActive]}
           >
-            <Text style={apf.freshnessLabel}>{opt.label}</Text>
+            <View style={apf.chipTextShell}>
+              <Text style={apf.freshnessLabel}>{opt.label}</Text>
+            </View>
           </Pressable>
         ))}
       </View>
 
-      <Text style={apf.label}>صور المنتج</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>صور المنتج</Text>
+      </View>
       <View style={apf.imageGrid}>
         {imageUris.map((uri, idx) => (
           <View key={`${uri}-${idx}`} style={apf.imageThumbWrap}>
@@ -350,22 +382,30 @@ function AddProductForm({
         {imageUris.length < 5 && (
           <Pressable style={apf.uploadBox} onPress={pickImages} disabled={loading}>
             <AppIcon name="camera-outline" size={28} color={colors.electricBright} />
-            <Text style={apf.uploadText}>إضافة صورة</Text>
+            <View style={apf.chipTextShell}>
+              <Text style={apf.uploadText}>إضافة صورة</Text>
+            </View>
           </Pressable>
         )}
       </View>
-      <Text style={apf.uploadHint}>حتى 5 صور · JPG أو PNG</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.uploadHint}>حتى 5 صور · JPG أو PNG</Text>
+      </View>
 
       <View style={apf.actions}>
         <Pressable style={apf.cancelBtn} onPress={onClose} disabled={loading}>
-          <Text style={apf.cancelText}>إلغاء</Text>
+          <View style={apf.chipTextShell}>
+            <Text style={apf.cancelText}>إلغاء</Text>
+          </View>
         </Pressable>
         <Pressable style={apf.saveBtn} onPress={handleSave} disabled={loading}>
           <LinearGradient colors={[colors.electric, colors.cyan]} style={apf.saveBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={apf.saveBtnText}>{product ? 'تحديث المنتج' : 'حفظ المنتج'}</Text>
+              <View style={apf.chipTextShell}>
+                <Text style={apf.saveBtnText}>{product ? 'تحديث المنتج' : 'حفظ المنتج'}</Text>
+              </View>
             )}
           </LinearGradient>
         </Pressable>
@@ -1649,14 +1689,38 @@ function createProductFormStyles(colors: ThemeColors) {
     backgroundColor: colors.borderMid,
     alignSelf: 'center', marginBottom: spacing.md,
   },
-  title: { ...typography.h3, color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.md },
-  label: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', marginBottom: 5, textAlign: 'right' },
+  /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+  rtlTextShell: {
+    width: '100%',
+    direction: 'ltr',
+  },
+  chipTextShell: {
+    direction: 'ltr',
+  },
+  title: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    marginBottom: spacing.md,
+  },
+  label: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginBottom: 5,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   input: {
     backgroundColor: colors.bgElevated,
     borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
     paddingHorizontal: spacing.md, paddingVertical: 12,
     ...typography.body, color: colors.textPrimary,
     marginBottom: spacing.md,
+    writingDirection: 'rtl',
   },
   catChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -1666,10 +1730,31 @@ function createProductFormStyles(colors: ThemeColors) {
   },
   catChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
   catIcon: { fontSize: 14 },
-  catLabel: { ...typography.caption, color: colors.textMuted },
+  catLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   catLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
   priceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md },
-  priceLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center', marginBottom: 4 },
+  priceLabel: {
+    ...typography.micro,
+    color: colors.textMuted,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    marginBottom: 4,
+  },
+  orShell: {
+    direction: 'ltr',
+    marginTop: 24,
+  },
+  orText: {
+    color: colors.textMuted,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   cutsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.lg },
   cutChip: {
     paddingHorizontal: 12, paddingVertical: 7,
@@ -1677,7 +1762,12 @@ function createProductFormStyles(colors: ThemeColors) {
     borderWidth: 1.5, borderColor: colors.borderSoft,
   },
   cutChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
-  cutLabel: { ...typography.micro, color: colors.textMuted },
+  cutLabel: {
+    ...typography.micro,
+    color: colors.textMuted,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   cutLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
   freshnessRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   freshnessBtn: {
@@ -1686,7 +1776,12 @@ function createProductFormStyles(colors: ThemeColors) {
     backgroundColor: colors.bgElevated, alignItems: 'center',
   },
   freshnessBtnActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
-  freshnessLabel: { ...typography.caption, color: colors.textSecondary },
+  freshnessLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   imageGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1750,10 +1845,25 @@ function createProductFormStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.danger,
     fontWeight: '600',
+    width: '100%',
+    textAlign: 'right',
     writingDirection: 'rtl',
   },
-  uploadText: { ...typography.micro, color: colors.textBrandStrong, fontWeight: '600', textAlign: 'center' },
-  uploadHint: { ...typography.micro, color: colors.textSubtle, ...getRtlText(), marginBottom: spacing.lg },
+  uploadText: {
+    ...typography.micro,
+    color: colors.textBrandStrong,
+    fontWeight: '600',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  uploadHint: {
+    ...typography.micro,
+    color: colors.textSubtle,
+    marginBottom: spacing.lg,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   actions: { flexDirection: 'row', gap: spacing.md },
   cancelBtn: {
     flex: 1, paddingVertical: 13,
@@ -1762,13 +1872,23 @@ function createProductFormStyles(colors: ThemeColors) {
     alignItems: 'center',
     backgroundColor: colors.bgElevated,
   },
-  cancelText: { ...typography.bodyStrong, color: colors.textMuted },
+  cancelText: {
+    ...typography.bodyStrong,
+    color: colors.textMuted,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   saveBtn: { flex: 2, borderRadius: radius.xl, overflow: 'hidden' },
   saveBtnGrad: {
     paddingVertical: 13,
     alignItems: 'center', justifyContent: 'center',
   },
-  saveBtnText: { ...typography.bodyStrong, color: '#fff' },
+  saveBtnText: {
+    ...typography.bodyStrong,
+    color: '#fff',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   });
 }
 
