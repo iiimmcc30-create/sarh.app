@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
@@ -117,7 +118,7 @@ export default function AccountInfoScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>رقم الهاتف</Text>
+            <RtlText style={styles.sectionLabel}>رقم الهاتف</RtlText>
             <View style={[styles.row, getRtlRow()]}>
               <Pressable
                 style={styles.changeBtn}
@@ -130,7 +131,7 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>البريد الإلكتروني</Text>
+            <RtlText style={styles.sectionLabel}>البريد الإلكتروني</RtlText>
             <AppTextInput
               value={email}
               onChangeText={setEmail}
@@ -149,7 +150,7 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>تاريخ الميلاد</Text>
+            <RtlText style={styles.sectionLabel}>تاريخ الميلاد</RtlText>
             <AppTextInput
               value={birthDate}
               onChangeText={setBirthDate}
@@ -199,11 +200,9 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.lg,
       gap: spacing.md,
     },
-    sectionLabel: {
-      ...typography.bodyStrong,
+    sectionLabel: { ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontSize: 15,
-    },
+      fontSize: 15, textAlign: 'right', writingDirection: 'rtl' },
     row: {
       alignItems: 'center',
       justifyContent: 'space-between',

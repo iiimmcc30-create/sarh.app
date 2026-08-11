@@ -2,6 +2,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
+import { RtlText } from '@/components/ui/RtlText';
   ActivityIndicator,
   Pressable,
   RefreshControl,
@@ -176,7 +177,7 @@ export default function MyOrdersScreen() {
             <>
               {activeOrders.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>الطلب الحالي</Text>
+                  <RtlText style={styles.sectionTitle}>الطلب الحالي</RtlText>
                   {activeOrders.map((order) => (
                     <OrderCard
                       key={order.id}
@@ -193,7 +194,7 @@ export default function MyOrdersScreen() {
 
               {pastOrders.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>الطلبات السابقة</Text>
+                  <RtlText style={styles.sectionTitle}>الطلبات السابقة</RtlText>
                   {pastOrders.map((order) => (
                     <OrderCard
                       key={order.id}

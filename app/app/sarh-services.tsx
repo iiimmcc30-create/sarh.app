@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 import { OfficialServiceCard } from '@/components/feature/OfficialServiceCard';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -98,9 +99,9 @@ export default function SarhServicesScreen() {
         ) : (
           groups.map((group) => (
             <View key={group.category} style={styles.section}>
-              <Text style={styles.sectionTitle}>
+              <RtlText style={styles.sectionTitle}>
                 {group.emoji} {group.label}
-              </Text>
+              </RtlText>
               <View style={styles.sectionList}>
                 {group.items.map((service, index) => (
                   <OfficialServiceCard

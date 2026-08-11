@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Privacy Policy (سياسة الخصوصية)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 
 import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -65,9 +66,7 @@ export default function PrivacyScreen() {
 
         {SECTIONS.map((sec, i) => (
           <View key={i} style={styles.section}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionTitle}>{sec.title}</Text>
-            </View>
+            <RtlText style={styles.sectionTitle}>{sec.title}</RtlText>
             <View style={styles.rtlTextShell}>
               <Text style={styles.sectionContent}>{sec.content}</Text>
             </View>
@@ -75,9 +74,7 @@ export default function PrivacyScreen() {
         ))}
 
         <View style={styles.contactSection}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>تواصل معنا</Text>
-          </View>
+          <RtlText style={styles.sectionTitle}>تواصل معنا</RtlText>
           <View style={styles.rtlTextShell}>
             <Text style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</Text>
           </View>

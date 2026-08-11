@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butchers Listing Screen (قسم الملاحم)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -372,7 +373,7 @@ export default function ButchersScreen() {
         {/* ── Stories ── */}
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>قصص اليوم</Text>
+            <RtlText style={s.sectionTitle}>قصص اليوم</RtlText>
             <View style={s.liveDotRow}>
               <View style={s.liveDot} />
               <Text style={s.sectionSub}>{storiesWithSeen.filter((s) => !s.seen).length} جديد</Text>
@@ -384,7 +385,7 @@ export default function ButchersScreen() {
         {/* ── Listing ── */}
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>{activeTabLabel} ({filtered.length})</Text>
+            <RtlText style={s.sectionTitle}>{activeTabLabel} ({filtered.length})</RtlText>
             <Pressable
               style={s.addBtn}
               onPress={() => {
@@ -671,7 +672,7 @@ function createScreenStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right', writingDirection: 'rtl' },
   sectionSub: { ...typography.caption, color: colors.textMuted },
   liveDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   liveDot: {

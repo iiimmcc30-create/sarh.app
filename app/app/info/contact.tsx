@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Contact Us (تواصل معنا)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -45,7 +46,7 @@ export default function ContactScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Channels */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>قنوات التواصل</Text>
+          <RtlText style={styles.sectionTitle}>قنوات التواصل</RtlText>
 
           <Pressable style={styles.channelCard} onPress={() => Linking.openURL('tel:+966591298136')}>
             <LinearGradient colors={['#162149', '#1E3A8A']} style={styles.channelIcon}>
@@ -97,7 +98,7 @@ export default function ContactScreen() {
 
         {/* Message form */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>أرسل رسالة</Text>
+          <RtlText style={styles.sectionTitle}>أرسل رسالة</RtlText>
 
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>الاسم</Text>

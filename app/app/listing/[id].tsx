@@ -15,6 +15,7 @@ import { authFetch } from '@/services/authFetch';
 import { promptReport } from '@/services/reports';
 import { alertMessage, confirmDestructive, presentActionSheet } from '@/lib/actionSheet';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -457,9 +458,7 @@ export default function ListingDetailScreen() {
 
         {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
           <View style={styles.specsBlock}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.specsHeading}>المواصفات</Text>
-            </View>
+            <RtlText style={styles.specsHeading}>المواصفات</RtlText>
             {categoryLabel || listing.breed || listing.age ? (
               <View style={[styles.specMetaLine, getRtlRow()]}>
                 {categoryLabel ? (
@@ -488,9 +487,9 @@ export default function ListingDetailScreen() {
 
         {images.length > 0 ? (
           <View style={styles.galleryBlock}>
-            <Text style={styles.galleryHeading}>
+            <RtlText style={styles.galleryHeading}>
               الصور ({images.length.toLocaleString('ar-SA')})
-            </Text>
+            </RtlText>
             {images.map((uri, index) => (
               <Pressable
                 key={`${uri}-${index}`}

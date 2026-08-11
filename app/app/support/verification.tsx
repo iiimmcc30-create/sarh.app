@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
+import { RtlText } from '@/components/ui/RtlText';
   ActivityIndicator,
   Alert,
   Pressable,
@@ -158,7 +159,7 @@ export default function AccountVerificationScreen() {
         </GlassCard>
 
         <GlassCard style={styles.section}>
-          <Text style={styles.sectionTitle}>المتطلبات</Text>
+          <RtlText style={styles.sectionTitle}>المتطلبات</RtlText>
           {[
             'الاسم الكامل كما في الهوية',
             'رقم الهوية الوطنية',
@@ -185,7 +186,7 @@ export default function AccountVerificationScreen() {
         {editable ? (
           <>
             <GlassCard style={styles.section}>
-              <Text style={styles.sectionTitle}>المستندات</Text>
+              <RtlText style={styles.sectionTitle}>المستندات</RtlText>
               <View style={styles.docActions}>
                 <Pressable style={styles.docBtn} onPress={() => void uploadDocument('NATIONAL_ID')}>
                   <Text style={styles.docBtnText}>رفع الهوية</Text>
@@ -223,7 +224,7 @@ function createStyles(colors: ThemeColors) {
     statusValue: { ...typography.h3, color: colors.electric },
     reason: { ...typography.body, color: colors.danger, lineHeight: 22 },
     section: { gap: spacing.sm },
-    sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary },
+    sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right', writingDirection: 'rtl' },
     requirement: { ...typography.caption, color: colors.textSecondary, lineHeight: 20 },
     docActions: { ...getRtlRow(), gap: spacing.sm, flexWrap: 'wrap' },
     docBtn: {

@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Analytics Dashboard (لوحة التحليلات - للجزار الموثّق)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -303,7 +304,7 @@ export default function ButcherDashboardScreen() {
 
         {/* Top products */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>🥩 أكثر المنتجات مبيعاً</Text>
+          <RtlText style={s.sectionTitle}>🥩 أكثر المنتجات مبيعاً</RtlText>
           {data.topProducts.length === 0 ? (
             <Text style={{ color: colors.textMuted, ...typography.caption, textAlign: 'center', paddingVertical: spacing.lg }}>
               لا توجد مبيعات في هذه الفترة
@@ -340,7 +341,7 @@ export default function ButcherDashboardScreen() {
 
         {/* Quick actions */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>⚡ إجراءات سريعة</Text>
+          <RtlText style={s.sectionTitle}>⚡ إجراءات سريعة</RtlText>
           <View style={s.actionsGrid}>
             {quickActions.map((action, i) => (
               <Pressable
@@ -456,7 +457,7 @@ const s = StyleSheet.create({
   },
 
   section: { marginBottom: spacing.xl },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', writingDirection: 'rtl' },
 
   productRow: {
     flexDirection: 'row',

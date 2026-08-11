@@ -1,5 +1,6 @@
 // SAFAT — Butcher Application Detail (تفاصيل الطلب — قراءة فقط)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -44,7 +45,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View style={d.section}>
-      <Text style={d.sectionTitle}>{title}</Text>
+      <RtlText style={d.sectionTitle}>{title}</RtlText>
       <View style={d.sectionBody}>{children}</View>
     </View>
   );
@@ -412,6 +413,8 @@ const d = StyleSheet.create({
     ...typography.h3,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   sectionBody: {
     backgroundColor: colors.bgSurface,

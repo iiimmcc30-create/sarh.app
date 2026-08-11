@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -253,7 +254,7 @@ export function ListingBoostSheet({
               </LinearGradient>
             ) : null}
 
-            <Text style={styles.sectionLabel}>اختر الخدمة</Text>
+            <RtlText style={styles.sectionLabel}>اختر الخدمة</RtlText>
             <View style={styles.serviceGrid}>
               {(getServiceTypeOrder() ?? []).map((key) => {
                 const meta = getServiceMeta(key);
@@ -299,7 +300,7 @@ export function ListingBoostSheet({
               })}
             </View>
 
-            <Text style={styles.sectionLabel}>مدة الترقية</Text>
+            <RtlText style={styles.sectionLabel}>مدة الترقية</RtlText>
             <View style={[styles.durationRow, getRtlRow()]}>
               {typePlans.map((plan) => {
                 const selected = durationDays === plan.durationDays;
@@ -344,7 +345,7 @@ export function ListingBoostSheet({
               </View>
             </View>
 
-            <Text style={styles.sectionLabel}>طريقة السداد</Text>
+            <RtlText style={styles.sectionLabel}>طريقة السداد</RtlText>
             <View style={[styles.methodRow, getRtlRow()]}>
               {PAYMENT_METHODS.map((m) => (
                 <Pressable
@@ -544,13 +545,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
     },
-    sectionLabel: {
-      ...typography.caption,
+    sectionLabel: { ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
       marginTop: spacing.sm,
-      marginBottom: spacing.xs,
-    },
+      marginBottom: spacing.xs, textAlign: 'right', writingDirection: 'rtl' },
     serviceGrid: {
       gap: spacing.sm,
     },

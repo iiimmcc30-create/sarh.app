@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Profile Screen (صفحة الملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -207,7 +208,7 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
     <View style={aboutStyles.wrap}>
       {/* Bio */}
       <View style={aboutStyles.section}>
-        <Text style={aboutStyles.sectionTitle}>عن الملحمة</Text>
+        <RtlText style={aboutStyles.sectionTitle}>عن الملحمة</RtlText>
         <Text style={aboutStyles.bio}>{butcher.bioAr}</Text>
       </View>
 
@@ -225,7 +226,7 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
 
       {/* Specialties */}
       <View style={aboutStyles.section}>
-        <Text style={aboutStyles.sectionTitle}>التخصصات</Text>
+        <RtlText style={aboutStyles.sectionTitle}>التخصصات</RtlText>
         <View style={aboutStyles.chipsWrap}>
           {butcher.specialties.map((s, i) => (
             <View key={i} style={aboutStyles.chip}>
@@ -832,9 +833,9 @@ export default function ButcherProfileScreen() {
             <>
               <AboutTab butcher={butcher} />
               <View style={{ marginTop: spacing.xl }}>
-                <Text style={[styles.sectionTitle, { paddingHorizontal: spacing.lg }]}>
+                <RtlText style={[styles.sectionTitle, { paddingHorizontal: spacing.lg }]}>
                   آراء العملاء ({butcher.reviewCount})
-                </Text>
+                </RtlText>
                 <RatingDistribution
                   average={butcher.rating}
                   total={butcher.reviewCount}
@@ -1081,7 +1082,7 @@ function createMainStyles(colors: ThemeColors) {
   tabLabel: { ...typography.caption, color: colors.textMuted },
   tabLabelActive: { color: '#fff', fontWeight: '600' },
   tabContent: { paddingTop: spacing.lg },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', writingDirection: 'rtl' },
   });
 }
 
@@ -1184,7 +1185,7 @@ function createAboutStyles(colors: ThemeColors) {
   return StyleSheet.create({
   wrap: { paddingHorizontal: spacing.lg },
   section: { marginBottom: spacing.xl },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', writingDirection: 'rtl' },
   bio: { ...typography.body, color: colors.textSecondary, lineHeight: 22, textAlign: 'right' },
   infoGrid: {
     backgroundColor: colors.bgSurface,

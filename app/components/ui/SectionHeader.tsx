@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 import { sarh } from '@/constants/sarhTokens';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -33,13 +34,15 @@ export function SectionHeader({
         <View style={[styles.titleBlock, getRtlRow()]}>
           {isDark ? <View style={styles.accentMark} /> : null}
           <View style={styles.titleTextWrap}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            <RtlText style={styles.title}>{title}</RtlText>
+            {subtitle ? <RtlText style={styles.subtitle}>{subtitle}</RtlText> : null}
           </View>
         </View>
         {onSeeAll ? (
           <Pressable onPress={onSeeAll} hitSlop={8} style={[styles.seeAll, getRtlRow()]}>
-            <Text style={styles.seeAllText}>{seeAllLabel}</Text>
+            <RtlText style={styles.seeAllText} shellStyle={styles.seeAllTextShell}>
+              {seeAllLabel}
+            </RtlText>
             <AppIcon
               name={rtlForwardIcon()}
               size={14}
@@ -84,9 +87,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.h3,
       fontSize: isDark ? 20 : 18,
       lineHeight: isDark ? 28 : 24,
-      fontWeight: isDark ? '700' : '700',
+      fontWeight: '700',
       color: isDark ? colors.textPrimary : colors.electric,
-      writingDirection: 'rtl',
     },
     subtitle: {
       ...typography.caption,
@@ -98,8 +100,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: spacing.xs,
       paddingVertical: spacing.xs,
     },
+    seeAllTextShell: {
+      width: undefined,
+      flexShrink: 0,
+    },
     seeAllText: {
       ...typography.caption,
+      width: undefined,
       lineHeight: 18,
       fontWeight: '500',
       color: isDark ? colors.textSecondary : colors.textBrandStrong,

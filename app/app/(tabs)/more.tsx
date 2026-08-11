@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { SidebarThemeToggle } from '@/components/feature/SidebarMenu';
 import { AppScrollView } from '@/components/ui/AppScrollView';
@@ -115,7 +116,7 @@ export default function MoreScreen() {
 
         {/* السياسات والشروط */}
         <View style={styles.sectionLabelWrap}>
-          <Text style={styles.sectionLabel}>السياسات والشروط</Text>
+          <RtlText style={styles.sectionLabel}>السياسات والشروط</RtlText>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -130,7 +131,7 @@ export default function MoreScreen() {
 
         {/* عن سرح */}
         <View style={styles.sectionLabelWrap}>
-          <Text style={styles.sectionLabel}>عن سرح</Text>
+          <RtlText style={styles.sectionLabel}>عن سرح</RtlText>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem

@@ -21,6 +21,7 @@ import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
 import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
+import { RtlText } from '@/components/ui/RtlText';
 import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
@@ -154,9 +155,9 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
     <View style={styles.card}>
       <View style={[styles.header, getRtlRow()]}>
         <View style={styles.sectionBar} />
-        <View style={styles.titleShell}>
-          <Text style={styles.title}>الردود على الإعلان</Text>
-        </View>
+        <RtlText style={styles.title} shellStyle={styles.titleShell}>
+          الردود على الإعلان
+        </RtlText>
         <Text style={styles.count}>{comments.length}</Text>
       </View>
 
@@ -277,7 +278,7 @@ function createStyles(colors: ThemeColors) {
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
     titleShell: {
       flex: 1,
-      direction: 'ltr',
+      width: undefined,
     },
     rtlTextShell: {
       width: '100%',
@@ -287,9 +288,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     count: {
       ...typography.caption,
