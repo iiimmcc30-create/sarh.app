@@ -154,16 +154,25 @@ function ListingCardInner({
             </View>
           </View>
 
-          {/* LTR shell — seller name stays on the visual right (same as listing detail). */}
-          <UserProfileLink userId={sellerId} style={styles.listSeller}>
-            <View style={styles.listSellerNameShell}>
-              <Text style={styles.listSellerName} numberOfLines={1}>
-                {sellerName}
-              </Text>
-            </View>
-            {seller?.verified ? <VerificationBadge size={14} /> : null}
-            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
-          </UserProfileLink>
+          {/*
+           * Physical LTR seller cluster — same shell as listing detail:
+           * name → badge → avatar, pinned to the visual right.
+           */}
+          <View style={styles.listSellerRow}>
+            <UserProfileLink userId={sellerId} style={styles.listSeller}>
+              <View style={styles.listSellerNameShell}>
+                <Text style={styles.listSellerName} numberOfLines={1}>
+                  {sellerName}
+                </Text>
+              </View>
+              {seller?.verified ? <VerificationBadge size={14} /> : null}
+              <Image
+                source={uriSource(seller?.avatar)}
+                style={styles.listAvatar}
+                contentFit="cover"
+              />
+            </UserProfileLink>
+          </View>
         </View>
 
         <View style={styles.listThumbWrap}>
@@ -293,13 +302,20 @@ function ListingCardInner({
         </View>
       </View>
 
-      <View style={[styles.harajSellerRow, getRtlRow()]}>
-        <UserProfileLink userId={sellerId} style={[styles.harajSellerInfo, getRtlRow()]}>
-          <Image source={uriSource(seller?.avatar)} style={styles.harajAvatar} />
-          <Text style={styles.harajSellerName} numberOfLines={1}>
-            {sellerName}
-          </Text>
+      {/* Physical LTR seller cluster — same shell as listing detail / list card. */}
+      <View style={styles.harajSellerRow}>
+        <UserProfileLink userId={sellerId} style={styles.harajSellerInfo}>
+          <View style={styles.harajSellerNameShell}>
+            <Text style={styles.harajSellerName} numberOfLines={1}>
+              {sellerName}
+            </Text>
+          </View>
           {seller?.verified ? <VerificationBadge size={14} /> : null}
+          <Image
+            source={uriSource(seller?.avatar)}
+            style={styles.harajAvatar}
+            contentFit="cover"
+          />
         </UserProfileLink>
       </View>
 
@@ -469,12 +485,20 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     fontSize: 10,
     flexShrink: 0,
   },
+  listSellerRow: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
   listSeller: {
     flexDirection: 'row',
     direction: 'ltr',
     alignItems: 'center',
     gap: 6,
-    alignSelf: 'flex-end',
+    flexShrink: 1,
+    minWidth: 0,
     maxWidth: '100%',
   },
   listSellerNameShell: {
@@ -493,6 +517,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     fontSize: 11,
     lineHeight: 14,
     color: colors.textPrimary,
+    fontWeight: '600',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
@@ -754,16 +779,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     writingDirection: 'rtl',
   },
   harajSellerRow: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
+    justifyContent: 'flex-end',
   },
   harajSellerInfo: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: 8,
-    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  harajSellerNameShell: {
+    direction: 'ltr',
+    flexShrink: 1,
     minWidth: 0,
   },
   harajAvatar: {
@@ -771,13 +804,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     height: 32,
     borderRadius: 16,
     backgroundColor: colors.bgElevated,
+    flexShrink: 0,
   },
   harajSellerName: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     flexShrink: 1,
-    ...getRtlText(),
-    ...getRtlText(),
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   harajFeatured: {
     ...getRtlRow(),
