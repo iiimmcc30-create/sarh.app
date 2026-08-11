@@ -126,36 +126,43 @@ function ListingCardInner({
             ) : null}
           </View>
 
-          {/* Single horizontal meta line: location · time · price */}
+          {/* Physical LTR: price (left) · time (center) · location (right) */}
           <View style={styles.listMetaRow}>
-            <View style={styles.listMetaLocation}>
-              <AppIcon name="map-marker-outline" size={11} color={colors.textMuted} />
-              <Text style={styles.listMetaText} numberOfLines={1} ellipsizeMode="tail">
-                {location}
-              </Text>
+            <View style={styles.listMetaSideLeft}>
+              {listing.price > 0 ? (
+                <View style={styles.listPriceCluster}>
+                  <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
+                  <View style={styles.listRiyalBadge}>
+                    <Text style={styles.listRiyalText}>﷼</Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
-            <View style={styles.listMetaFixed}>
+            <View style={styles.listMetaCenter}>
               <AppIcon name="time-outline" size={11} color={colors.textMuted} />
               <Text style={styles.listMetaText} numberOfLines={1}>
                 {displayTime}
               </Text>
             </View>
-            {listing.price > 0 ? (
-              <View style={styles.listMetaFixed}>
-                <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
-                <View style={styles.listRiyalBadge}>
-                  <Text style={styles.listRiyalText}>﷼</Text>
-                </View>
+            <View style={styles.listMetaSideRight}>
+              <View style={styles.listLocationCluster}>
+                <AppIcon name="map-marker-outline" size={11} color={colors.textMuted} />
+                <Text style={styles.listMetaText} numberOfLines={1} ellipsizeMode="tail">
+                  {location}
+                </Text>
               </View>
-            ) : null}
+            </View>
           </View>
 
-          <UserProfileLink userId={sellerId} style={[styles.listSeller, getRtlRow()]}>
-            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
-            <Text style={styles.listSellerName} numberOfLines={1}>
-              {sellerName}
-            </Text>
+          {/* LTR shell — seller name stays on the visual right (same as listing detail). */}
+          <UserProfileLink userId={sellerId} style={styles.listSeller}>
+            <View style={styles.listSellerNameShell}>
+              <Text style={styles.listSellerName} numberOfLines={1}>
+                {sellerName}
+              </Text>
+            </View>
             {seller?.verified ? <VerificationBadge size={14} /> : null}
+            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
           </UserProfileLink>
         </View>
 
@@ -383,29 +390,46 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     writingDirection: 'rtl',
   },
   /**
-   * Physical LTR + row-reverse keeps one clean horizontal line under RTL:
-   * visual right → left: location · time · price
+   * Physical LTR three-column meta:
+   * LEFT price · CENTER time · RIGHT location
    */
   listMetaRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     direction: 'ltr',
     alignItems: 'center',
     flexWrap: 'nowrap',
-    gap: 8,
     width: '100%',
   },
-  listMetaLocation: {
+  listMetaSideLeft: {
     flex: 1,
     minWidth: 0,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 3,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
-  listMetaFixed: {
-    flexDirection: 'row-reverse',
+  listMetaCenter: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 3,
     flexShrink: 0,
+    paddingHorizontal: 4,
+  },
+  listMetaSideRight: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  listLocationCluster: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 3,
+    maxWidth: '100%',
+  },
+  listPriceCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   listMetaText: {
     fontSize: 11,
@@ -446,10 +470,17 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     flexShrink: 0,
   },
   listSeller: {
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-end',
     maxWidth: '100%',
+  },
+  listSellerNameShell: {
+    direction: 'ltr',
+    flexShrink: 1,
+    minWidth: 0,
   },
   listAvatar: {
     width: 20,
@@ -462,7 +493,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     fontSize: 11,
     lineHeight: 14,
     color: colors.textPrimary,
-    flexShrink: 1,
+    textAlign: 'right',
     writingDirection: 'rtl',
   },
   listThumbWrap: {
