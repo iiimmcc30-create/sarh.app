@@ -132,7 +132,10 @@ export default function HomeScreen() {
   );
 
   const displayedListings = useMemo(() => {
-    return interleavePromotedListings(listings.slice().sort(compareListingBoostPriority));
+    return interleavePromotedListings(listings.slice().sort(compareListingBoostPriority)).slice(
+      0,
+      HOME_LISTINGS_LIMIT,
+    );
   }, [listings]);
 
   const recentPosts = useMemo(() => {
@@ -171,8 +174,7 @@ export default function HomeScreen() {
             onRefresh={() => void fetchStories(true)}
           />
 
-          <ButcherMiniSection size="grid" showStories={false} limit={12} />
-
+          {/* 1) الإعلانات → 2) الملاحم → 3) المنشورات */}
           <SectionHeader
             title="الإعلانات"
             onSeeAll={() => safePush('/(tabs)/market', undefined, router)}
@@ -197,6 +199,8 @@ export default function HomeScreen() {
               ))
             )}
           </View>
+
+          <ButcherMiniSection size="grid" showStories={false} limit={HOME_BUTCHERS_LIMIT} />
 
           <SectionHeader
             title="المنشورات"
