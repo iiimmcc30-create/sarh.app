@@ -20,6 +20,7 @@ import {
   Briefcase,
   LogOut,
   LifeBuoy,
+  Images,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
@@ -28,6 +29,7 @@ const nav = [
   { href: '/', label: 'لوحة التحكم', icon: LayoutDashboard },
   { href: '/users', label: 'المستخدمون', icon: Users },
   { href: '/posts', label: 'المنشورات', icon: FileText },
+  { href: '/editorial-stories', label: 'ستوريات', icon: Images },
   { href: '/knowledge', label: 'مركز المعرفة', icon: BookOpen },
   { href: '/official-services', label: 'خدمات سرح', icon: Briefcase },
   { href: '/listings', label: 'الإعلانات', icon: Tag },
