@@ -120,6 +120,8 @@ function RootNavigator() {
         <Stack.Screen name="info/terms" />
         <Stack.Screen name="info/contact" />
         <Stack.Screen name="info/refund" />
+        <Stack.Screen name="info/policies" />
+        <Stack.Screen name="info/policy/[slug]" />
         <Stack.Screen name="settings/index" />
         <Stack.Screen name="settings/account" />
         <Stack.Screen name="settings/blocked" />

@@ -280,16 +280,58 @@ export class AdminController {
   @RateLimit('api')
   @Post('sections')
   @HttpCode(HttpStatus.CREATED)
-  async createSection(@Body() body: Record<string, unknown>) {
-    return successResponse(await this.admin.createSection(body));
+  async createSection(@Body() body: Record<string, unknown>, @CurrentUser() user: JwtPayload) {
+    return successResponse(await this.admin.createSection(body, user.username));
   }
 
   @Roles(...STAFF)
   @RateLimit('api')
   @Patch('sections/:id')
   @HttpCode(HttpStatus.OK)
-  async updateSection(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return successResponse(await this.admin.updateSection(id, body));
+  async updateSection(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(await this.admin.updateSection(id, body, user.username));
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Post('sections/:id/publish')
+  @HttpCode(HttpStatus.OK)
+  async publishSection(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return successResponse(await this.admin.publishSection(id, user.username));
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Post('sections/:id/unpublish')
+  @HttpCode(HttpStatus.OK)
+  async unpublishSection(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return successResponse(await this.admin.unpublishSection(id, user.username));
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Get('sections/:id/versions')
+  @HttpCode(HttpStatus.OK)
+  async listSectionVersions(@Param('id') id: string) {
+    return successResponse(await this.admin.listSectionVersions(id));
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Post('sections/:id/restore/:versionId')
+  @HttpCode(HttpStatus.OK)
+  async restoreSectionVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(
+      await this.admin.restoreSectionVersion(id, versionId, user.username),
+    );
   }
 
   @Roles(...STAFF)

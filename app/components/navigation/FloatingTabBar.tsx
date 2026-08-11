@@ -12,11 +12,12 @@ import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/** Visual RTL order (right→left): الرئيسية · السوق · إضافة عرض · صندوق الوارد · المزيد */
 const VISIBLE_TABS: { route: string; icon: string; label: string }[] = [
   { route: 'index', icon: 'home', label: 'الرئيسية' },
-  { route: 'market', icon: 'tags', label: 'السوق' },
-  { route: 'messages', icon: 'chatbubble-outline', label: 'الرسائل' },
-  { route: 'profile', icon: 'user', label: 'حسابي' },
+  { route: 'market', icon: 'shopping-bag', label: 'السوق' },
+  { route: 'messages', icon: 'chatbubble-outline', label: 'صندوق الوارد' },
+  { route: 'more', icon: 'apps', label: 'المزيد' },
 ];
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
@@ -71,6 +72,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
               fontWeight: focused ? '600' : '500',
             },
           ]}
+          numberOfLines={1}
         >
           {tab.label}
         </Text>
@@ -98,9 +100,9 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
           <View style={styles.fabSlot}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="إضافة إعلان"
+              accessibilityLabel="إضافة عرض"
               onPress={() => void navigateToCreateListing()}
-              style={({ pressed }) => [pressed && styles.pressed]}
+              style={({ pressed }) => [styles.fabPress, pressed && styles.pressed]}
             >
               {isLight ? (
                 <LinearGradient
@@ -110,15 +112,28 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                   <AppIcon name="plus" variant="sr" size={ds.icon.fab} color={sarh.color.fab} />
                 </LinearGradient>
               ) : (
-                <View style={[styles.fab, ambientShadow(scheme, 'fab')]}>
-                  <AppIcon
-                    name="plus"
-                    variant="sr"
-                    size={ds.icon.fab}
-                    color={sarh.color.fabIcon}
-                  />
+                <View
+                  style={[
+                    styles.fab,
+                    ambientShadow(scheme, 'fab'),
+                    { borderColor: activeTint, backgroundColor: sarh.color.surfaceRaised },
+                  ]}
+                >
+                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color={activeTint} />
                 </View>
               )}
+              <Text
+                style={[
+                  styles.fabLabel,
+                  {
+                    color: inactiveTint,
+                    fontFamily: appFont.medium,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                إضافة عرض
+              </Text>
             </Pressable>
           </View>
 
@@ -140,8 +155,8 @@ const styles = StyleSheet.create({
   bar: {
     borderRadius: sarh.radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
   barDark: {
     backgroundColor: sarh.color.surface,
@@ -149,37 +164,49 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   row: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
   tabSlot: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: 48,
     borderRadius: sarh.radius.md,
     paddingVertical: spacing.xs,
+    paddingHorizontal: 2,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 9,
     marginTop: spacing.xs / 2,
+    textAlign: 'center',
     writingDirection: isAppRtl() ? 'rtl' : 'ltr',
   },
   fabSlot: {
-    width: ds.tabBar.fabSize + 12,
+    width: ds.tabBar.fabSize + 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -ds.tabBar.fabLift - 2,
+    justifyContent: 'flex-end',
+    marginTop: -ds.tabBar.fabLift,
+  },
+  fabPress: {
+    alignItems: 'center',
   },
   fab: {
-    width: ds.tabBar.fabSize + 4,
-    height: ds.tabBar.fabSize + 4,
-    borderRadius: sarh.radius.fab,
+    width: ds.tabBar.fabSize,
+    height: ds.tabBar.fabSize,
+    borderRadius: sarh.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: sarh.color.fab,
-    borderWidth: 3,
-    borderColor: sarh.color.bg,
+    borderWidth: 2,
+    borderColor: sarh.color.action,
+  },
+  fabLabel: {
+    fontSize: 9,
+    marginTop: spacing.xs / 2,
+    textAlign: 'center',
+    fontWeight: '500',
+    writingDirection: isAppRtl() ? 'rtl' : 'ltr',
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],

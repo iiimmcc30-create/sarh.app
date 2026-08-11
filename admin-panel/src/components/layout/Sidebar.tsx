@@ -38,7 +38,7 @@ const nav = [
   { href: '/applications', label: 'طلبات الملاحم', icon: ClipboardList },
   { href: '/orders', label: 'الطلبات', icon: ReceiptText },
   { href: '/plans', label: 'الباقات', icon: CreditCard },
-  { href: '/content', label: 'المحتوى', icon: Layers },
+  { href: '/content', label: 'السياسات والمحتوى', icon: Layers },
   { href: '/settings', label: 'الإعدادات', icon: Settings },
 ];
 

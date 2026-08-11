@@ -1320,19 +1320,40 @@ model Service {
 }
 
 model ContentSection {
-  id        String    @id @default(uuid())
-  slug      String    @unique
-  titleAr   String
-  titleEn   String?
-  bodyAr    String
-  bodyEn    String?
-  isActive  Boolean   @default(true)
-  sortOrder Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id            String                 @id @default(uuid())
+  slug          String                 @unique
+  titleAr       String
+  titleEn       String?
+  bodyAr        String
+  bodyEn        String?
+  isActive      Boolean                @default(true)
+  sortOrder     Int                    @default(0)
+  publishedAt   DateTime?
+  updatedByName String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  deletedAt     DateTime?
+  versions      ContentSectionVersion[]
 
   @@index([deletedAt])
+  @@index([isActive, sortOrder])
+}
+
+model ContentSectionVersion {
+  id            String         @id @default(uuid())
+  sectionId     String
+  section       ContentSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  titleAr       String
+  titleEn       String?
+  bodyAr        String
+  bodyEn        String?
+  version       Int
+  isPublished   Boolean        @default(false)
+  createdByName String?
+  createdAt     DateTime       @default(now())
+
+  @@unique([sectionId, version])
+  @@index([sectionId])
 }
 
 enum TicketPriority {

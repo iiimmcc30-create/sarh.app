@@ -342,6 +342,7 @@ const MAP: Record<string, LucideIcon> = {
   moon: Moon,
   'weather-night': Moon,
   sun: Sun,
+  'sunny-outline': Sun,
   'white-balance-sunny': Sun,
   brightness: Sun,
   'theme-light-dark': Sun,

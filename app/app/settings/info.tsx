@@ -9,21 +9,15 @@ const ITEMS: SettingsMenuItem[] = [
   },
   {
     icon: 'file-document-outline',
-    label: 'الشروط والأحكام',
-    subtitle: 'شروط استخدام المنصة',
-    route: '/info/terms',
+    label: 'السياسات والشروط',
+    subtitle: 'الشروط، الخصوصية، الملكية الفكرية والدفع',
+    route: '/info/policies',
   },
   {
-    icon: 'lock-outline',
-    label: 'سياسة الخصوصية',
-    subtitle: 'كيف نحمي بياناتك',
-    route: '/info/privacy',
-  },
-  {
-    icon: 'receipt-outline',
-    label: 'سياسة الاسترداد',
-    subtitle: 'شروط وإجراءات استرداد المبالغ',
-    route: '/info/refund',
+    icon: 'mail-outline',
+    label: 'تواصل معنا',
+    subtitle: 'قنوات الدعم والتواصل',
+    route: '/info/contact',
   },
 ];
 

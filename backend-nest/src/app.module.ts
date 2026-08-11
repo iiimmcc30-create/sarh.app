@@ -27,6 +27,7 @@ import { GatewaySharedModule } from './gateway/gateway-shared.module';
 import { ReportsModule } from './reports/reports.module';
 import { OfficialServicesModule } from './official-services/official-services.module';
 import { SupportModule } from './support/support.module';
+import { ContentModule } from './content/content.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { SupportModule } from './support/support.module';
     ReportsModule,
     OfficialServicesModule,
     SupportModule,
+    ContentModule,
   ],
 })
 export class AppModule {}

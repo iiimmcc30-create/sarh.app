@@ -23,7 +23,7 @@ export default function TabsLayout() {
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
-          height: ds.tabBar.height + ds.tabBar.fabLift + 24,
+          height: ds.tabBar.height + ds.tabBar.fabLift + 32,
         },
       }}
     >
@@ -38,8 +38,9 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="posts" options={{ href: null }} />
       <Tabs.Screen name="live" options={{ href: null }} />
-      <Tabs.Screen name="messages" options={{ title: 'الرسائل' }} />
-      <Tabs.Screen name="profile" options={{ title: 'حسابي' }} />
+      <Tabs.Screen name="messages" options={{ title: 'صندوق الوارد' }} />
+      <Tabs.Screen name="more" options={{ title: 'المزيد' }} />
+      <Tabs.Screen name="profile" options={{ title: 'حسابي', href: null }} />
     </Tabs>
   );
 }
