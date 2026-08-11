@@ -49,10 +49,39 @@ if (__DEV__) {
 }
 
 // Configure RTL before any app module loads (Arabic default).
+// On web, react-native-web's I18nManager is a no-op stub (isRTL always false),
+// so we patch it and set <html dir="rtl"> before expo-router boots.
 const { I18nManager, Platform } = require('react-native');
-I18nManager.allowRTL(true);
-I18nManager.forceRTL(true);
-if (Platform.OS !== 'web') {
+if (Platform.OS === 'web') {
+  let webIsRtl = true;
+  I18nManager.allowRTL = function allowRTL() {};
+  I18nManager.forceRTL = function forceRTL(value) {
+    webIsRtl = !!value;
+  };
+  I18nManager.swapLeftAndRightInRTL = function swapLeftAndRightInRTL() {};
+  I18nManager.getConstants = function getConstants() {
+    return { isRTL: webIsRtl };
+  };
+  try {
+    Object.defineProperty(I18nManager, 'isRTL', {
+      configurable: true,
+      enumerable: true,
+      get: function getIsRTL() {
+        return webIsRtl;
+      },
+    });
+  } catch {
+    I18nManager.isRTL = true;
+  }
+  I18nManager.forceRTL(true);
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', 'ar');
+    if (document.body) document.body.style.direction = 'rtl';
+  }
+} else {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
   I18nManager.swapLeftAndRightInRTL(true);
 }
 

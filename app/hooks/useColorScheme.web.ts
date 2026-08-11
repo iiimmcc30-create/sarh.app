@@ -17,5 +17,6 @@ export function useColorScheme() {
     return colorScheme;
   }
 
-  return 'light';
+  // Sarh is dark-first — avoid a light flash before client hydration on web.
+  return 'dark';
 }
