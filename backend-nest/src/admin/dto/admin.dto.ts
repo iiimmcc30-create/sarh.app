@@ -11,15 +11,50 @@ export type ApproveApplicationBodyDto = z.infer<typeof approveBodySchema>;
 export type RejectApplicationBodyDto = z.infer<typeof rejectBodySchema>;
 export type CommentApplicationBodyDto = z.infer<typeof commentBodySchema>;
 
-export const adminLoginSchema = z.object({
-  login: z.string().min(1),
-  password: z.string().min(1),
-});
+export const adminLoginSchema = z
+  .object({
+    login: z.string().trim().min(1).optional(),
+    /** Browser autofill / alternate clients may send username or email instead of login. */
+    username: z.string().trim().min(1).optional(),
+    email: z.string().trim().min(1).optional(),
+    password: z.string().min(1),
+  })
+  .transform((data) => ({
+    login: (data.login || data.username || data.email || '').trim(),
+    password: data.password,
+  }))
+  .superRefine((data, ctx) => {
+    if (!data.login) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'مطلوب',
+        path: ['login'],
+      });
+    }
+  });
+
+/** Coerce query-string numbers; treat '', null, and invalid values as "missing" so defaults apply. */
+function queryInt(defaultValue: number, min: number, max?: number) {
+  const base = z.number().int().min(min);
+  const bounded = max === undefined ? base : base.max(max);
+  return z.preprocess((value) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    if (typeof value === 'string' && value.trim() === '') return undefined;
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) return undefined;
+    // Invalid/out-of-range values fall back to the default instead of 400.
+    if (n < min || (max !== undefined && n > max)) return undefined;
+    return n;
+  }, bounded.default(defaultValue));
+}
 
 export const paginationQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().optional(),
+  page: queryInt(1, 1),
+  pageSize: queryInt(20, 1, 100),
+  search: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z.string().optional(),
+  ),
   hidden: z.string().optional(),
   status: z.string().optional(),
   category: z.string().optional(),

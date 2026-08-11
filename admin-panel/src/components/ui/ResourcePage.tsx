@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import type { Paginated } from '@/services/admin.service';
+import { getApiErrorMessage } from '@/services/api.client';
 
 export type Column<T> = {
   key: string;
@@ -12,18 +13,25 @@ export type Column<T> = {
   render?: (row: T) => React.ReactNode;
 };
 
+/** Shared list fetch args — support/tickets & verification may pass status/category. */
+export type ResourcePageFetchParams = {
+  page: number;
+  search: string;
+  status?: string;
+  category?: string;
+};
+
 type Props<T extends { id: string }> = {
   title: string;
   description?: string;
   columns: Column<T>[];
-  fetchPage: (params: {
-    page: number;
-    search: string;
-    status?: string;
-    category?: string;
-  }) => Promise<Paginated<Record<string, unknown>>>;
+  fetchPage: (params: ResourcePageFetchParams) => Promise<Paginated<Record<string, unknown>>>;
   actions?: (row: T, reload: () => void) => React.ReactNode;
   filters?: React.ReactNode;
+  /** Optional status filter forwarded into fetchPage (e.g. support tickets). */
+  status?: string;
+  /** Optional category filter forwarded into fetchPage. */
+  category?: string;
 };
 
 export function ResourcePage<T extends { id: string }>({
@@ -33,6 +41,8 @@ export function ResourcePage<T extends { id: string }>({
   fetchPage,
   actions,
   filters,
+  status,
+  category,
 }: Props<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [page, setPage] = useState(1);
@@ -45,15 +55,15 @@ export function ResourcePage<T extends { id: string }>({
     setLoading(true);
     setError('');
     try {
-      const data = await fetchPage({ page, search });
+      const data = await fetchPage({ page, search, status, category });
       setItems(data.items as T[]);
       setTotalPages(data.totalPages);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'خطأ');
+      setError(getApiErrorMessage(e, 'تعذّر تحميل البيانات'));
     } finally {
       setLoading(false);
     }
-  }, [fetchPage, page, search]);
+  }, [fetchPage, page, search, status, category]);
 
   useEffect(() => {
     load();

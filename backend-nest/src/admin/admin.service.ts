@@ -87,10 +87,15 @@ export class AdminService {
     };
   }
 
-  async adminLogin(dto: AdminLoginDto, req: Request) {
-    const parsed = adminLoginSchema.safeParse(dto);
+  async adminLogin(dto: AdminLoginDto | Record<string, unknown>, req: Request) {
+    const parsed = adminLoginSchema.safeParse(dto ?? {});
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'أدخل اسم المستخدم أو البريد وكلمة المرور',
+        parsed.error.flatten(),
+      );
     }
 
     const user = await this.repo.findAdminUserForLogin(parsed.data.login);

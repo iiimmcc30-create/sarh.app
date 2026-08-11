@@ -29,13 +29,23 @@ export default function LoginPage() {
       .catch(() => setBackendDown(true));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     clearSession();
     try {
-      const session = await adminLogin(login, password);
+      // Prefer FormData so browser autofill values are used even if React state lagged.
+      const fd = new FormData(e.currentTarget);
+      const loginValue = String(fd.get('login') ?? login).trim();
+      const passwordValue = String(fd.get('password') ?? password);
+      if (!loginValue || !passwordValue) {
+        setError('أدخل اسم المستخدم أو البريد وكلمة المرور');
+        return;
+      }
+      setLogin(loginValue);
+      setPassword(passwordValue);
+      const session = await adminLogin(loginValue, passwordValue);
       persistSession(session);
       // Full navigation so middleware receives the new admin_token cookie.
       window.location.assign('/');
@@ -59,8 +69,10 @@ export default function LoginPage() {
           <div>
             <label className="mb-1 block text-sm text-slate-400">البريد / اسم المستخدم</label>
             <input
+              name="login"
               value={login}
               onChange={(e) => setLogin(e.target.value)}
+              onInput={(e) => setLogin((e.target as HTMLInputElement).value)}
               className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-500"
               required
               autoComplete="username"
@@ -69,9 +81,11 @@ export default function LoginPage() {
           <div>
             <label className="mb-1 block text-sm text-slate-400">كلمة المرور</label>
             <input
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
               className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-500"
               required
               autoComplete="current-password"
