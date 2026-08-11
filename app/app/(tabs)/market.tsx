@@ -28,7 +28,8 @@ import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
 import { useApp } from '@/hooks/useApp';
 import { Country, countries, Listing } from '@/services/types';
 
-const LISTING_ROW_HEIGHT = 156;
+/** Card height 118 + vertical margins (2 + 2). */
+const LISTING_ROW_HEIGHT = 122;
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 export default function MarketScreen() {

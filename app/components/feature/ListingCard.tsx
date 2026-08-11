@@ -355,7 +355,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     backgroundColor: colors.bgSurface,
     borderRadius: sarh.radius.card,
     marginHorizontal: spacing.md,
-    marginVertical: 6,
+    marginVertical: 2,
     borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
     borderColor: scheme === 'dark' ? colors.borderSoft : tokens.stroke,
     overflow: 'hidden',
