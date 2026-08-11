@@ -183,11 +183,13 @@ function PostItemComponent({
         <View style={styles.main}>
           <View style={[styles.metaLine, getRtlRow()]}>
             <UserProfileLink userId={post.author.id} style={styles.metaInfo}>
-              {/* Name + time stay adjacent on the visual right (LTR shell). */}
+              {/* LTR shell — same pattern as SidebarMenuItem / post body. */}
               <View style={styles.nameTimeShell}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {post.author.arabicName}
-                </Text>
+                <View style={styles.nameShell}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {post.author.arabicName}
+                  </Text>
+                </View>
                 {post.author.verified ? <VerificationBadge size={14} /> : null}
                 {authorRating ? (
                   <View style={styles.ratingMini}>
@@ -385,6 +387,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       flex: 1,
       minWidth: 0,
       overflow: 'hidden',
+      // Isolate from app RTL so flex-end = physical right (near avatar).
+      direction: 'ltr',
     },
     nameTimeShell: {
       direction: 'ltr',
@@ -394,6 +398,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       gap: 4,
       alignSelf: 'flex-end',
       maxWidth: '100%',
+    },
+    nameShell: {
+      direction: 'ltr',
+      flexShrink: 1,
+      minWidth: 0,
     },
     name: {
       fontSize: 16,

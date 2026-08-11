@@ -205,11 +205,12 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
                 <View style={styles.commentBubble}>
                   <View style={[styles.commentHeader, getRtlRow()]}>
                     <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
-                      {/* LTR shell keeps name + time on one line at the visual right. */}
                       <View style={styles.nameTimeShell}>
-                        <Text style={styles.commentName} numberOfLines={1}>
-                          {c.author.arabicName || c.author.displayName}
-                        </Text>
+                        <View style={styles.nameShell}>
+                          <Text style={styles.commentName} numberOfLines={1}>
+                            {c.author.arabicName || c.author.displayName}
+                          </Text>
+                        </View>
                         {c.author.verified ? (
                           <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
                         ) : null}
