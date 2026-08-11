@@ -51,10 +51,11 @@ export function ButcherMiniSection({
   const CARD_W = isHero ? Math.round(screenWidth * 0.84) : CARD_W_COMPACT;
   const COVER_H = isHero ? 210 : COVER_H_COMPACT;
 
-  // Reference width: ~2 cards visible side-by-side with a slight peek of the next.
+  // Wider cards: first fully visible, second ~half peek to invite horizontal scroll.
+  // pad + card + gap + 0.5*card ≈ screenWidth
   const gridGap = spacing.md;
   const gridPad = spacing.lg;
-  const GRID_CARD_W = Math.round((screenWidth - gridPad * 2 - gridGap) / 2 - 6);
+  const GRID_CARD_W = Math.round(((screenWidth - gridPad - gridGap) / 1.5));
 
   const { filteredButchers, stories, loading } = useButcher();
   const ranked = filteredButchers.slice(0, limit);
