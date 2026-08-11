@@ -17,7 +17,7 @@ import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { getRtlText, inlineStart, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
