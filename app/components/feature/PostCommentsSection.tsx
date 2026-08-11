@@ -204,14 +204,20 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
                 </UserProfileLink>
                 <View style={styles.commentBubble}>
                   <View style={[styles.commentHeader, getRtlRow()]}>
-                    <UserProfileLink userId={c.author.id} style={[styles.commentMeta, getRtlRow()]}>
-                      <View style={styles.rtlTextShell}>
-                        <Text style={styles.commentName}>{c.author.arabicName || c.author.displayName}</Text>
+                    <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
+                      {/* LTR shell keeps name + time on one line at the visual right. */}
+                      <View style={styles.nameTimeShell}>
+                        <Text style={styles.commentName} numberOfLines={1}>
+                          {c.author.arabicName || c.author.displayName}
+                        </Text>
+                        {c.author.verified ? (
+                          <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
+                        ) : null}
+                        <Text style={styles.metaDot}>·</Text>
+                        <Text style={styles.commentTime} numberOfLines={1}>
+                          {c.createdAt}
+                        </Text>
                       </View>
-                      {c.author.verified ? (
-                        <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
-                      ) : null}
-                      <Text style={styles.commentTime}>{c.createdAt}</Text>
                     </UserProfileLink>
                     {canDeleteComment(c.author.id, postOwnerId, user, me) ? (
                       <Pressable
@@ -383,22 +389,37 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     commentMeta: {
-      alignItems: 'center',
-      gap: 4,
       flex: 1,
-      flexWrap: 'wrap',
+      minWidth: 0,
+    },
+    nameTimeShell: {
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      flexWrap: 'nowrap',
+      gap: 4,
+      alignSelf: 'flex-end',
+      maxWidth: '100%',
     },
     commentName: {
       ...typography.caption,
       color: colors.textPrimary,
       fontWeight: '600',
-      width: '100%',
+      flexShrink: 1,
       textAlign: 'right',
       writingDirection: 'rtl',
+    },
+    metaDot: {
+      ...typography.micro,
+      color: colors.textSubtle,
+      flexShrink: 0,
     },
     commentTime: {
       ...typography.micro,
       color: colors.textMuted,
+      flexShrink: 0,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     commentText: {
       ...typography.body,

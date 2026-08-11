@@ -182,29 +182,29 @@ function PostItemComponent({
 
         <View style={styles.main}>
           <View style={[styles.metaLine, getRtlRow()]}>
-            <UserProfileLink userId={post.author.id} style={[styles.metaInfo, getRtlRow()]}>
-              <Text style={styles.name} numberOfLines={1}>
-                {post.author.arabicName}
-              </Text>
-              {post.author.verified ? <VerificationBadge size={14} /> : null}
-              {authorRating ? (
-                <View style={styles.ratingMini}>
-                  <AppIcon name="star" size={11} color={colors.gold} />
-                  <Text style={styles.ratingMiniText}>{authorRating}</Text>
-                </View>
-              ) : null}
-              {post.author.isAI ? (
-                <View style={styles.aiBadge}>
-                  <Text style={styles.aiBadgeText}>AI</Text>
-                </View>
-              ) : null}
-              <Text style={styles.metaMuted} numberOfLines={1}>
-                {'@' + post.author.username}
-              </Text>
-              <Text style={styles.metaDot}>·</Text>
-              <Text style={styles.metaMuted} numberOfLines={1}>
-                {timestamp}
-              </Text>
+            <UserProfileLink userId={post.author.id} style={styles.metaInfo}>
+              {/* Name + time stay adjacent on the visual right (LTR shell). */}
+              <View style={styles.nameTimeShell}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {post.author.arabicName}
+                </Text>
+                {post.author.verified ? <VerificationBadge size={14} /> : null}
+                {authorRating ? (
+                  <View style={styles.ratingMini}>
+                    <AppIcon name="star" size={11} color={colors.gold} />
+                    <Text style={styles.ratingMiniText}>{authorRating}</Text>
+                  </View>
+                ) : null}
+                {post.author.isAI ? (
+                  <View style={styles.aiBadge}>
+                    <Text style={styles.aiBadgeText}>AI</Text>
+                  </View>
+                ) : null}
+                <Text style={styles.metaDot}>·</Text>
+                <Text style={styles.metaMuted} numberOfLines={1}>
+                  {timestamp}
+                </Text>
+              </View>
             </UserProfileLink>
 
             <Pressable
@@ -382,28 +382,36 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       justifyContent: 'space-between',
     },
     metaInfo: {
-      alignItems: 'center',
       flex: 1,
-      flexWrap: 'nowrap',
-      gap: 4,
       minWidth: 0,
       overflow: 'hidden',
+    },
+    nameTimeShell: {
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      flexWrap: 'nowrap',
+      gap: 4,
+      alignSelf: 'flex-end',
+      maxWidth: '100%',
     },
     name: {
       fontSize: 16,
       fontWeight: '600',
       color: colors.textPrimary,
       flexShrink: 1,
-      ...getRtlText(),
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     ratingMini: {
-      ...getRtlRow(),
+      flexDirection: 'row',
       alignItems: 'center',
       gap: 2,
       paddingHorizontal: 5,
       paddingVertical: 1,
       borderRadius: radius.pill,
       backgroundColor: colors.bgElevated,
+      flexShrink: 0,
     },
     ratingMiniText: {
       fontSize: 11,
@@ -413,8 +421,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     metaMuted: {
       fontSize: 13,
       color: colors.textMuted,
-      flexShrink: 1,
-      ...getRtlText(),
+      flexShrink: 0,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     metaDot: {
       fontSize: 13,
