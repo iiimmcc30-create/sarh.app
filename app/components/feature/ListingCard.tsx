@@ -67,8 +67,15 @@ function isNewListing(listing: Listing): boolean {
   return Date.now() - t < NEW_LISTING_MS;
 }
 
-function formatCount(n: number): string {
-  return n.toLocaleString('ar-SA');
+/** Western digits with thousands separators — e.g. 1,700 */
+function formatEnNumber(n: number): string {
+  const value = Number.isFinite(n) ? n : 0;
+  const rounded = value % 1 === 0 ? Math.round(value) : value;
+  return rounded.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function toWesternDigits(value: string): string {
+  return value.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
 }
 
 function ListingCardInner({
@@ -99,58 +106,66 @@ function ListingCardInner({
   if (variant === 'list') {
     const showNew = isNewListing(listing);
     const hasVideo = listingHasVideo(listing);
+    const displayTime = toWesternDigits(timeLabel || 'الآن');
 
     return (
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [styles.listRow, getRtlDirection(), pressed && styles.pressed]}
       >
+        {/*
+          Reference card (RTL content, image on the left):
+          1) Title (brand green)
+          2) Meta row: location · time · price
+          3) Seller (name + avatar)
+        */}
         <View style={styles.listContent}>
-          <View style={[styles.listTitleRow, getRtlRow()]}>
-            <View style={[styles.listTitleWrap, getRtlRow()]}>
+          <View style={[styles.listTitleWrap, getRtlRow()]}>
+            <View style={styles.listTitleShell}>
               <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
                 {title}
               </Text>
-              <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
             </View>
-            <View style={styles.listMenuDots}>
-              <AppIcon name="menu-dots-vertical" size={16} color={colors.textMuted} />
-            </View>
+            <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
           </View>
 
-          <View style={[styles.listMetaItem, getRtlRow()]}>
-            <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-            <Text style={styles.listMetaText} numberOfLines={1}>
-              {location}
-            </Text>
-          </View>
-
-          {listing.price > 0 ? (
-            <View style={[styles.listPriceRow, getRtlRow()]}>
-              <Text style={styles.listPriceAmount}>
-                {listing.price.toLocaleString('ar-SA')}
-              </Text>
-              <Text style={styles.listPriceCurrency}>{listing.currency}</Text>
-            </View>
-          ) : null}
-
-          {timeLabel ? (
+          <View style={[styles.listMetaRow, getRtlRow()]}>
             <View style={[styles.listMetaItem, getRtlRow()]}>
-              <AppIcon name="time-outline" size={12} color={colors.textSubtle} />
-              <Text style={styles.listStatText}>{timeLabel}</Text>
+              <AppIcon name="map-marker-outline" size={13} color={colors.textSecondary} />
+              <Text style={styles.listMetaText} numberOfLines={1}>
+                {location}
+              </Text>
             </View>
-          ) : null}
+            {displayTime ? (
+              <View style={[styles.listMetaItem, getRtlRow()]}>
+                <AppIcon name="time-outline" size={12} color={colors.textSecondary} />
+                <Text style={styles.listMetaText} numberOfLines={1}>
+                  {displayTime}
+                </Text>
+              </View>
+            ) : null}
+            {listing.price > 0 ? (
+              <View style={[styles.listPriceRow, getRtlRow()]}>
+                <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
+                <View style={styles.listRiyalBadge}>
+                  <Text style={styles.listRiyalText}>﷼</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
 
           {!listing.pinned && !listing.featured && showNew ? (
             <Text style={styles.listStatusNew}>جديد</Text>
           ) : null}
 
-          <UserProfileLink userId={sellerId} style={[styles.listSeller, getRtlRow()]}>
-            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
-            <Text style={styles.listSellerName} numberOfLines={1}>
-              {sellerName}
-            </Text>
+          <UserProfileLink userId={sellerId} style={styles.listSeller}>
+            <View style={styles.listSellerNameShell}>
+              <Text style={styles.listSellerName} numberOfLines={1}>
+                {sellerName}
+              </Text>
+            </View>
             {seller?.verified ? <VerificationBadge size={14} /> : null}
+            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
           </UserProfileLink>
         </View>
 
@@ -179,7 +194,7 @@ function ListingCardInner({
           {photoCount > 1 ? (
             <View style={styles.listPhotoCountBadge}>
               <AppIcon name="image-outline" size={10} color="#fff" />
-              <Text style={styles.listPhotoCountText}>{photoCount}</Text>
+              <Text style={styles.listPhotoCountText}>{formatEnNumber(photoCount)}</Text>
             </View>
           ) : null}
         </View>
@@ -352,70 +367,71 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   listContent: {
     flex: 1,
     minWidth: 0,
-    gap: 4,
+    gap: 8,
     paddingVertical: ds.space.md,
     paddingEnd: ds.space.xs,
     justifyContent: 'center',
   },
-  listTitleRow: {
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: ds.space.sm,
-  },
   listTitleWrap: {
-    flex: 1,
     alignItems: 'center',
     gap: 6,
     minWidth: 0,
   },
-  listMenuDots: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  listTitleShell: {
+    flex: 1,
+    minWidth: 0,
+    direction: 'ltr',
   },
   listTitle: {
     ...typography.bodyStrong,
     fontSize: 15,
     lineHeight: 20,
-    color: colors.textPrimary,
+    color: colors.textBrandStrong,
     fontWeight: '600',
+    width: '100%',
+    textAlign: 'right',
     writingDirection: 'rtl',
-    flex: 1,
   },
   listPriceRow: {
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: 5,
-    marginTop: 2,
+    flexShrink: 0,
   },
   listPriceAmount: {
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 18,
     color: colors.textPrimary,
     fontWeight: '600',
-    writingDirection: 'rtl',
+    writingDirection: 'ltr',
   },
-  listPriceCurrency: {
-    ...typography.caption,
-    lineHeight: 18,
+  listRiyalBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderSoft,
+  },
+  listRiyalText: {
+    fontSize: 10,
+    lineHeight: 12,
     color: colors.textMuted,
     fontWeight: '600',
-    writingDirection: 'rtl',
   },
   listMetaRow: {
-    ...getRtlRow(),
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginTop: 2,
+    justifyContent: 'flex-start',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    rowGap: 6,
   },
   listMetaItem: {
-    ...getRtlRow(),
     alignItems: 'center',
     gap: 4,
     flexShrink: 1,
-    marginTop: 2,
+    maxWidth: '100%',
   },
   listMetaText: {
     ...typography.caption,
@@ -428,42 +444,34 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.micro,
     color: colors.cyan,
     fontWeight: '600',
-  },
-  listStatusFeatured: {
-    ...typography.micro,
-    color: colors.gold,
-    fontWeight: '600',
-  },
-  listStatusPinned: {
-    ...typography.micro,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    marginTop: 2,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   listSeller: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-end',
     maxWidth: '100%',
   },
+  listSellerNameShell: {
+    direction: 'ltr',
+    flexShrink: 1,
+    minWidth: 0,
+  },
   listAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: colors.bgElevated,
+    flexShrink: 0,
   },
   listSellerName: {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textPrimary,
-    flexShrink: 1,
-    writingDirection: 'rtl',
-  },
-  listStatText: {
-    ...typography.caption,
-    lineHeight: 16,
-    color: colors.textSubtle,
+    textAlign: 'right',
     writingDirection: 'rtl',
   },
   listThumbWrap: {
