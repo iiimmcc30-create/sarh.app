@@ -7,25 +7,80 @@ import {
   normalizeAppLocale,
 } from '@/lib/locale';
 
-/** Read layout direction from React Native (always fresh). */
+/** Locale-driven RTL flag — required on web where I18nManager is a no-op stub. */
+let activeRtl = localeUsesRtl(DEFAULT_LOCALE);
+let activeLocale: AppLocale = DEFAULT_LOCALE;
+
+function applyDocumentDirection(locale: AppLocale, rtl: boolean) {
+  if (Platform.OS !== 'web') return;
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+  root.setAttribute('lang', locale === 'ar' ? 'ar' : 'en');
+  if (document.body) {
+    document.body.style.direction = rtl ? 'rtl' : 'ltr';
+  }
+}
+
+/**
+ * Patch react-native-web's I18nManager stub so Expo Router / React Navigation
+ * read isRTL=true (their default direction comes from getConstants().isRTL).
+ */
+export function patchWebI18nManager(rtl: boolean): void {
+  if (Platform.OS !== 'web') return;
+  const mgr = I18nManager as unknown as {
+    allowRTL?: (v: boolean) => void;
+    forceRTL?: (v: boolean) => void;
+    swapLeftAndRightInRTL?: (v: boolean) => void;
+    getConstants?: () => { isRTL: boolean };
+    isRTL?: boolean;
+  };
+
+  mgr.allowRTL = () => undefined;
+  mgr.forceRTL = (value: boolean) => {
+    activeRtl = !!value;
+    try {
+      Object.defineProperty(mgr, 'isRTL', {
+        configurable: true,
+        enumerable: true,
+        get: () => activeRtl,
+      });
+    } catch {
+      mgr.isRTL = activeRtl;
+    }
+  };
+  mgr.swapLeftAndRightInRTL = () => undefined;
+  mgr.getConstants = () => ({ isRTL: activeRtl });
+  mgr.forceRTL(rtl);
+}
+
+/** Read layout direction — locale-backed on web, I18nManager on native. */
 export function isAppRtl(): boolean {
-  return I18nManager.isRTL;
+  if (Platform.OS === 'web') return activeRtl;
+  return !!I18nManager.isRTL;
 }
 
 /** @deprecated Use `isAppRtl()` — kept for existing imports. */
-export const isRTL = I18nManager.isRTL;
+export const isRTL = activeRtl;
 
 /**
- * Configure RTL/LTR via official I18nManager.
+ * Configure RTL/LTR via official I18nManager (native) + document dir (web).
  * Call once before the app bundle renders (see `index.js`).
  */
 export function setupRtl(locale: AppLocale = DEFAULT_LOCALE): void {
   const rtl = localeUsesRtl(locale);
+  activeLocale = locale;
+  activeRtl = rtl;
+
+  if (Platform.OS === 'web') {
+    patchWebI18nManager(rtl);
+    applyDocumentDirection(locale, rtl);
+    return;
+  }
+
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(rtl);
-  if (Platform.OS !== 'web') {
-    I18nManager.swapLeftAndRightInRTL(rtl);
-  }
+  I18nManager.swapLeftAndRightInRTL(rtl);
 }
 
 /** Apply stored locale on cold start (async). May require reload if direction changes. */
@@ -37,12 +92,13 @@ export async function setupRtlFromStorage(
   return stored;
 }
 
+export function getActiveLocale(): AppLocale {
+  return activeLocale;
+}
+
 /** Root / screen layout direction for the active locale. */
 export function getRtlDirection(): ViewStyle {
-  if (isAppRtl()) {
-    return Platform.OS === 'web' ? { direction: 'rtl' } : { direction: 'rtl' };
-  }
-  return Platform.OS === 'web' ? { direction: 'ltr' } : {};
+  return { direction: isAppRtl() ? 'rtl' : 'ltr' };
 }
 
 /** Horizontal row that respects layout direction (RTL Arabic vs LTR English). */

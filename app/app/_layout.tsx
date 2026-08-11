@@ -163,7 +163,7 @@ function RootLayoutBody() {
   }, []);
 
   return (
-    <View style={styles.rtlRoot}>
+    <View style={[styles.rtlRoot, getRtlDirection()]}>
       <AuthProvider>
         <OnboardingProvider>
           <BootSplashGate>
@@ -190,7 +190,7 @@ function RootLayoutBody() {
 
 export default function RootLayout() {
   return (
-    <View style={styles.rtlRoot}>
+    <View style={[styles.rtlRoot, getRtlDirection()]}>
       <ThemeProvider>
         <RootLayoutBody />
       </ThemeProvider>
@@ -202,6 +202,5 @@ const styles = StyleSheet.create({
   rtlRoot: {
     flex: 1,
     backgroundColor: sarh.color.bg,
-    ...getRtlDirection(),
   },
 });
