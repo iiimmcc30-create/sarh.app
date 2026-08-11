@@ -528,8 +528,12 @@ export default function ListingPromoteScreen() {
         <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
           <View style={[styles.bottomInner, getRtlRow()]}>
             <View style={styles.totalBlock}>
-              <Text style={styles.totalLabel}>الإجمالي</Text>
-              <Text style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.totalLabel}>الإجمالي</Text>
+              </View>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</Text>
+              </View>
             </View>
             <View style={styles.payBtnWrap}>
               <PrimaryButton
@@ -835,18 +839,21 @@ function createStyles(colors: ThemeColors) {
     },
     totalBlock: {
       flex: 1,
-      alignItems: 'flex-end',
       gap: 2,
     },
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     totalValue: {
       ...typography.h3,
       color: colors.textBrandStrong,
       fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     payBtnWrap: {
