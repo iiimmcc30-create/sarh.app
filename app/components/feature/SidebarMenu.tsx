@@ -118,27 +118,11 @@ export function SidebarThemeToggle({
         },
       ]}
     >
-      <View
-        style={[
-          themeStyles.header,
-          {
-            flexDirection: 'row',
-            direction: isRtl ? 'rtl' : 'ltr',
-          },
-        ]}
-      >
-        <Text
-          style={[
-            themeStyles.title,
-            {
-              color: colors.textPrimary,
-              textAlign: isRtl ? 'right' : 'left',
-              writingDirection: isRtl ? 'rtl' : 'ltr',
-            },
-          ]}
-        >
-          المظهر
-        </Text>
+      <View style={[themeStyles.header, { flexDirection: 'row-reverse' }]}>
+        {/* LTR shell — same as SidebarMenuItem — keeps «المظهر» on the visual right. */}
+        <View style={themeStyles.titleShell}>
+          <Text style={[themeStyles.title, { color: colors.textPrimary }]}>المظهر</Text>
+        </View>
         <AppIcon name={isDark ? 'weather-night' : 'sunny-outline'} size={20} color={colors.textMuted} />
       </View>
       <View
@@ -249,11 +233,17 @@ const themeStyles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: 4,
   },
+  titleShell: {
+    flex: 1,
+    direction: 'ltr',
+  },
   title: {
     ...typography.bodyStrong,
     fontSize: 15,
     fontWeight: '600',
-    flex: 1,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   track: {
     borderRadius: radius.lg,

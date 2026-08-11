@@ -83,8 +83,12 @@ export default function MoreScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>المزيد</Text>
-        <Text style={styles.headerSub}>المظهر واللغة والسياسات</Text>
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.headerTitle}>المزيد</Text>
+        </View>
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.headerSub}>المظهر واللغة والسياسات</Text>
+        </View>
       </View>
 
       <AppScrollView contentContainerStyle={styles.content}>
@@ -94,7 +98,9 @@ export default function MoreScreen() {
         {/* اللغة */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>اللغة</Text>
+            <View style={styles.rtlTextShellFlex}>
+              <Text style={styles.cardTitle}>اللغة</Text>
+            </View>
             <AppIcon name="globe-outline" size={20} color={colors.textMuted} />
           </View>
           <View style={styles.langTrack}>
@@ -115,7 +121,9 @@ export default function MoreScreen() {
 
         {/* السياسات والشروط */}
         <View style={styles.sectionLabelWrap}>
-          <Text style={styles.sectionLabel}>السياسات والشروط</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.sectionLabel}>السياسات والشروط</Text>
+          </View>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -130,7 +138,9 @@ export default function MoreScreen() {
 
         {/* عن سرح */}
         <View style={styles.sectionLabelWrap}>
-          <Text style={styles.sectionLabel}>عن سرح</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.sectionLabel}>عن سرح</Text>
+          </View>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -172,15 +182,26 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: spacing.md,
       gap: spacing.xs,
     },
+    /** Physical LTR shell — same as SidebarMenuItem. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
+    rtlTextShellFlex: {
+      flex: 1,
+      direction: 'ltr',
+    },
     headerTitle: {
       ...typography.h2,
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
@@ -206,6 +227,7 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
@@ -243,6 +265,7 @@ function createStyles(colors: ThemeColors) {
     sectionLabel: {
       ...typography.caption,
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
