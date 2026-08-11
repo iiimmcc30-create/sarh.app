@@ -6,7 +6,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { useState } from 'react';
@@ -89,9 +89,11 @@ export default function ChangePasswordScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.hintCard}>
             <AppIcon name="lock-outline" size={22} color={styles.hintIcon.color} />
-            <Text style={styles.hintText}>
-              استخدم 8 أحرف على الأقل مع حرف كبير ورقم لحماية أفضل لحسابك.
-            </Text>
+            <View style={styles.hintTextShell}>
+              <Text style={styles.hintText}>
+                استخدم 8 أحرف على الأقل مع حرف كبير ورقم لحماية أفضل لحسابك.
+              </Text>
+            </View>
           </View>
 
           <AppTextInput
@@ -100,6 +102,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setCurrentPassword}
             secureTextEntry
             autoCapitalize="none"
+            ltr
           />
           <AppTextInput
             label="كلمة المرور الجديدة"
@@ -107,6 +110,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setNewPassword}
             secureTextEntry
             autoCapitalize="none"
+            ltr
           />
           <AppTextInput
             label="تأكيد كلمة المرور الجديدة"
@@ -114,6 +118,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setConfirmPassword}
             secureTextEntry
             autoCapitalize="none"
+            ltr
           />
 
           <PrimaryButton
@@ -149,11 +154,18 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     hintIcon: { color: colors.textBrandStrong },
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    hintTextShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     hintText: {
       ...typography.body,
       color: colors.textSecondary,
-      flex: 1,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       lineHeight: 22,
     },
   });

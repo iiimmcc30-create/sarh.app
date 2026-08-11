@@ -6,7 +6,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
   fetchAccountSettings,
   updateAccountSettings,
@@ -117,7 +117,9 @@ export default function AccountInfoScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>رقم الهاتف</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionLabel}>رقم الهاتف</Text>
+            </View>
             <View style={[styles.row, getRtlRow()]}>
               <Pressable
                 style={styles.changeBtn}
@@ -125,12 +127,16 @@ export default function AccountInfoScreen() {
               >
                 <Text style={styles.changeBtnText}>تغيير</Text>
               </Pressable>
-              <Text style={[styles.value, getRtlText()]}>{formatPhone(account?.phone)}</Text>
+              <View style={styles.valueShell}>
+                <Text style={styles.value}>{formatPhone(account?.phone)}</Text>
+              </View>
             </View>
           </View>
 
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>البريد الإلكتروني</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionLabel}>البريد الإلكتروني</Text>
+            </View>
             <AppTextInput
               value={email}
               onChangeText={setEmail}
@@ -138,6 +144,7 @@ export default function AccountInfoScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              ltr
             />
             <PrimaryButton
               title="حفظ البريد"
@@ -149,17 +156,22 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>تاريخ الميلاد</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionLabel}>تاريخ الميلاد</Text>
+            </View>
             <AppTextInput
               value={birthDate}
               onChangeText={setBirthDate}
               placeholder="YYYY-MM-DD"
               keyboardType="numbers-and-punctuation"
+              ltr
             />
             {account?.birthDate ? (
-              <Text style={[styles.hint, getRtlText()]}>
-                المحفوظ: {formatBirthDate(account.birthDate)}
-              </Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.hint}>
+                  المحفوظ: {formatBirthDate(account.birthDate)}
+                </Text>
+              </View>
             ) : null}
             <PrimaryButton
               title="حفظ تاريخ الميلاد"
@@ -172,9 +184,11 @@ export default function AccountInfoScreen() {
 
           <View style={styles.noteCard}>
             <AppIcon name="information-circle-outline" size={20} color={styles.noteIcon.color} />
-            <Text style={[styles.noteText, getRtlText()]}>
-              لتغيير رقم الجوال ستحتاج إلى التحقق برمز OTP المرسل إلى الرقم الجديد.
-            </Text>
+            <View style={styles.noteTextShell}>
+              <Text style={styles.noteText}>
+                لتغيير رقم الجوال ستحتاج إلى التحقق برمز OTP المرسل إلى الرقم الجديد.
+              </Text>
+            </View>
           </View>
         </ScrollView>
       )}
@@ -191,6 +205,11 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
       paddingBottom: spacing.xxxl,
     },
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     card: {
       backgroundColor: colors.bgElevated,
       borderRadius: radius.lg,
@@ -203,15 +222,26 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontSize: 15,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     row: {
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    valueShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
     },
     value: {
       ...typography.body,
       color: colors.textSecondary,
-      flex: 1,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'ltr',
     },
     changeBtn: {
       paddingHorizontal: spacing.md,
@@ -223,10 +253,15 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontSize: 14,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     hint: {
       ...typography.caption,
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     noteCard: {
       ...getRtlRow(),
@@ -239,10 +274,17 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     noteIcon: { color: colors.textBrandStrong },
+    noteTextShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     noteText: {
       ...typography.body,
       color: colors.textSecondary,
-      flex: 1,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       lineHeight: 22,
     },
   });

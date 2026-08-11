@@ -5,7 +5,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlDirection, getRtlText } from '@/lib/rtl';
+import { getRtlDirection } from '@/lib/rtl';
 import { changeAccountPhone } from '@/services/users';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -86,21 +86,24 @@ export default function ChangePhoneScreen() {
           contentContainerStyle={[styles.content, getRtlDirection()]}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={[styles.hint, getRtlText()]}>
-            {step === 'phone'
-              ? 'أدخل رقم الجوال الجديد. سنرسل إليه رمز تحقق.'
-              : `أدخل الرمز المرسل إلى ${fullPhone}`}
-          </Text>
+          <View style={styles.hintShell}>
+            <Text style={styles.hint}>
+              {step === 'phone'
+                ? 'أدخل رقم الجوال الجديد. سنرسل إليه رمز تحقق.'
+                : `أدخل الرمز المرسل إلى ${fullPhone}`}
+            </Text>
+          </View>
 
           {step === 'phone' ? (
             <>
               <AppTextInput
-                  label={`رقم الجوال (${COUNTRY_CODE})`}
-                  value={phoneDigits}
-                  onChangeText={setPhoneDigits}
-                  placeholder="5XXXXXXXX"
-                  keyboardType="phone-pad"
-                />
+                label={`رقم الجوال (${COUNTRY_CODE})`}
+                value={phoneDigits}
+                onChangeText={setPhoneDigits}
+                placeholder="5XXXXXXXX"
+                keyboardType="phone-pad"
+                ltr
+              />
               <PrimaryButton
                 title="إرسال رمز التحقق"
                 onPress={() => void handleSendOtp()}
@@ -118,6 +121,7 @@ export default function ChangePhoneScreen() {
                 placeholder="••••••"
                 keyboardType="number-pad"
                 maxLength={6}
+                ltr
               />
               <PrimaryButton
                 title="تأكيد وتغيير الرقم"
@@ -152,16 +156,23 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
       paddingBottom: spacing.xxxl,
     },
-    hint: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 22,
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    hintShell: {
+      width: '100%',
+      direction: 'ltr',
       padding: spacing.lg,
       borderRadius: radius.lg,
       backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    phoneRow: { gap: spacing.sm },
+    hint: {
+      ...typography.body,
+      color: colors.textSecondary,
+      lineHeight: 22,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
   });
 }

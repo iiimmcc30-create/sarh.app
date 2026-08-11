@@ -84,7 +84,11 @@ function AppTextInputComponent({
 
   return (
     <View style={containerStyle}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.label}>{label}</Text>
+        </View>
+      ) : null}
       <View
         ref={wrapRef}
         style={[
@@ -111,8 +115,16 @@ function AppTextInputComponent({
           {...props}
         />
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {!error && hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      {error ? (
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : null}
+      {!error && hint ? (
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.hint}>{hint}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -121,13 +133,20 @@ export const AppTextInput = memo(AppTextInputComponent);
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     label: {
       ...typography.caption,
       fontFamily: appFont.medium,
       fontWeight: '500',
       color: colors.textSecondary,
       marginBottom: spacing.xs,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     wrap: {
       ...getRtlRow(),
@@ -163,13 +182,17 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.danger,
       marginTop: spacing.xs,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     hint: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: spacing.xs,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
   });
 }
