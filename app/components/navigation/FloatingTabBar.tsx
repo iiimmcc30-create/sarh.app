@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { appFont } from '@/constants/fonts';
 import { sarh } from '@/constants/sarhTokens';
@@ -12,22 +11,34 @@ import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/** Visual RTL order (right→left): الرئيسية · السوق · إضافة عرض · صندوق الوارد · المزيد */
-const VISIBLE_TABS: { route: string; icon: string; label: string }[] = [
-  { route: 'index', icon: 'home', label: 'الرئيسية' },
-  { route: 'market', icon: 'shopping-bag', label: 'السوق' },
-  { route: 'messages', icon: 'chatbubble-outline', label: 'صندوق الوارد' },
-  { route: 'more', icon: 'apps', label: 'المزيد' },
+const ICON_SIZE = 22;
+const ADD_BOX = 22;
+const LABEL_SIZE = 10;
+
+type TabDef =
+  | { kind: 'route'; route: string; icon: string; label: string }
+  | { kind: 'create'; label: string };
+
+/**
+ * Visual RTL order (right→left), matching reference:
+ * الرئيسية · السوق · إضافة عرض · صندوق الوارد · المزيد
+ */
+const TABS: TabDef[] = [
+  { kind: 'route', route: 'index', icon: 'home-outline', label: 'الرئيسية' },
+  { kind: 'route', route: 'market', icon: 'cart-outline', label: 'السوق' },
+  { kind: 'create', label: 'إضافة عرض' },
+  { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'صندوق الوارد' },
+  { kind: 'route', route: 'more', icon: 'apps', label: 'المزيد' },
 ];
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, gradients, scheme } = useTheme();
+  const { colors, scheme } = useTheme();
   const isLight = scheme === 'light';
   const tokens = isLight ? ds.light : ds.dark;
   const bottom = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const activeTint = isLight ? colors.electricBright : sarh.color.action;
-  const inactiveTint = isLight ? colors.textMuted : sarh.color.textMuted;
+  const inactiveTint = isLight ? colors.textMuted : '#E8EEF2';
 
   const activeRoute = state.routes[state.index]?.name;
 
@@ -43,43 +54,6 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
     }
   };
 
-  const leftTabs = VISIBLE_TABS.slice(0, 2);
-  const rightTabs = VISIBLE_TABS.slice(2);
-
-  const renderTab = (tab: (typeof VISIBLE_TABS)[number]) => {
-    const focused = activeRoute === tab.route;
-    const tint = focused ? activeTint : inactiveTint;
-    return (
-      <Pressable
-        key={tab.route}
-        accessibilityRole="button"
-        accessibilityState={{ selected: focused }}
-        onPress={() => onTabPress(tab.route, focused)}
-        style={({ pressed }) => [styles.tabSlot, pressed && styles.pressed]}
-      >
-        <AppIcon
-          name={tab.icon}
-          size={ds.icon.tab}
-          color={tint}
-          variant={focused ? 'sr' : 'rr'}
-        />
-        <Text
-          style={[
-            styles.tabLabel,
-            {
-              color: tint,
-              fontFamily: focused ? appFont.semibold : appFont.medium,
-              fontWeight: focused ? '600' : '500',
-            },
-          ]}
-          numberOfLines={1}
-        >
-          {tab.label}
-        </Text>
-      </Pressable>
-    );
-  };
-
   return (
     <View style={[styles.wrap, { paddingBottom: bottom }]} pointerEvents="box-none">
       <View
@@ -88,56 +62,82 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
           isLight
             ? {
                 backgroundColor: tokens.glass,
-                borderColor: tokens.glassBorder,
+                borderTopColor: tokens.glassBorder,
               }
-            : styles.barDark,
-          ambientShadow(scheme, 'card'),
+            : {
+                backgroundColor: '#0A161E',
+                borderTopColor: 'rgba(255,255,255,0.06)',
+              },
+          ambientShadow(scheme, 'soft'),
         ]}
       >
         <View style={[styles.row, getRtlRow()]}>
-          {leftTabs.map(renderTab)}
+          {TABS.map((tab) => {
+            if (tab.kind === 'create') {
+              return (
+                <Pressable
+                  key="create"
+                  accessibilityRole="button"
+                  accessibilityLabel={tab.label}
+                  onPress={() => void navigateToCreateListing()}
+                  style={({ pressed }) => [styles.tabSlot, pressed && styles.pressed]}
+                >
+                  <View style={styles.iconSlot}>
+                    <View style={[styles.addBox, { borderColor: inactiveTint }]}>
+                      <AppIcon name="plus" size={14} color={activeTint} variant="sr" />
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      {
+                        color: inactiveTint,
+                        fontFamily: appFont.medium,
+                        fontWeight: '500',
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {tab.label}
+                  </Text>
+                </Pressable>
+              );
+            }
 
-          <View style={styles.fabSlot}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="إضافة عرض"
-              onPress={() => void navigateToCreateListing()}
-              style={({ pressed }) => [styles.fabPress, pressed && styles.pressed]}
-            >
-              {isLight ? (
-                <LinearGradient
-                  colors={gradients.electric}
-                  style={[styles.fab, ambientShadow(scheme, 'fab'), { borderColor: tokens.page }]}
-                >
-                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color={sarh.color.fab} />
-                </LinearGradient>
-              ) : (
-                <View
-                  style={[
-                    styles.fab,
-                    ambientShadow(scheme, 'fab'),
-                    { borderColor: activeTint, backgroundColor: sarh.color.surfaceRaised },
-                  ]}
-                >
-                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color={activeTint} />
-                </View>
-              )}
-              <Text
-                style={[
-                  styles.fabLabel,
-                  {
-                    color: inactiveTint,
-                    fontFamily: appFont.medium,
-                  },
-                ]}
-                numberOfLines={1}
+            const focused = activeRoute === tab.route;
+            const tint = focused ? activeTint : inactiveTint;
+            return (
+              <Pressable
+                key={tab.route}
+                accessibilityRole="button"
+                accessibilityState={{ selected: focused }}
+                onPress={() => onTabPress(tab.route, focused)}
+                style={({ pressed }) => [styles.tabSlot, pressed && styles.pressed]}
               >
-                إضافة عرض
-              </Text>
-            </Pressable>
-          </View>
-
-          {rightTabs.map(renderTab)}
+                <View style={styles.iconSlot}>
+                  <AppIcon
+                    name={tab.icon}
+                    size={ICON_SIZE}
+                    color={tint}
+                    variant={focused ? 'sr' : 'rr'}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    {
+                      color: tint,
+                      fontFamily: focused ? appFont.semibold : appFont.medium,
+                      fontWeight: focused ? '600' : '500',
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     </View>
@@ -153,59 +153,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: ds.tabBar.marginH,
   },
   bar: {
-    borderRadius: sarh.radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
     paddingHorizontal: spacing.xs,
   },
-  barDark: {
-    backgroundColor: sarh.color.surface,
-    borderColor: sarh.color.border,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
   row: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   tabSlot: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     minHeight: 48,
-    borderRadius: sarh.radius.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: 2,
     paddingHorizontal: 2,
+    gap: 4,
+  },
+  /** Fixed icon box so every tab (including +) shares the same visual height. */
+  iconSlot: {
+    width: ICON_SIZE + 2,
+    height: ICON_SIZE + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addBox: {
+    width: ADD_BOX,
+    height: ADD_BOX,
+    borderRadius: 5,
+    borderWidth: 1.75,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabLabel: {
-    fontSize: 9,
-    marginTop: spacing.xs / 2,
+    fontSize: LABEL_SIZE,
+    lineHeight: 13,
     textAlign: 'center',
-    writingDirection: isAppRtl() ? 'rtl' : 'ltr',
-  },
-  fabSlot: {
-    width: ds.tabBar.fabSize + 20,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: -ds.tabBar.fabLift,
-  },
-  fabPress: {
-    alignItems: 'center',
-  },
-  fab: {
-    width: ds.tabBar.fabSize,
-    height: ds.tabBar.fabSize,
-    borderRadius: sarh.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: sarh.color.fab,
-    borderWidth: 2,
-    borderColor: sarh.color.action,
-  },
-  fabLabel: {
-    fontSize: 9,
-    marginTop: spacing.xs / 2,
-    textAlign: 'center',
-    fontWeight: '500',
     writingDirection: isAppRtl() ? 'rtl' : 'ltr',
   },
   pressed: {

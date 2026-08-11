@@ -74,11 +74,12 @@ export const ds = {
   },
 
   tabBar: {
-    height: 64,
-    fabSize: 58,
-    fabLift: 18,
-    marginH: 16,
-    marginBottom: 8,
+    /** Flat reference bar — no raised center FAB. */
+    height: 56,
+    fabSize: 22,
+    fabLift: 0,
+    marginH: 0,
+    marginBottom: 0,
   },
 
   motion: {
