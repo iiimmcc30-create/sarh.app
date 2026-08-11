@@ -44,7 +44,8 @@ export function SidebarSection({
         style={[
           sectionStyles.card,
           {
-            backgroundColor: colors.bgElevated,
+            // Same card surface as listing/post cards across the app.
+            backgroundColor: colors.bgSurface,
             borderColor: colors.borderSoft,
           },
         ]}
@@ -116,7 +117,7 @@ export function SidebarThemeToggle({
         themeStyles.wrap,
         {
           direction: isRtl ? 'rtl' : 'ltr',
-          backgroundColor: colors.bgElevated,
+          backgroundColor: colors.bgSurface,
           borderColor: colors.borderSoft,
         },
       ]}
@@ -185,7 +186,7 @@ export function SidebarLogoutButton({
       style={({ pressed }) => [
         logoutStyles.btn,
         {
-          backgroundColor: colors.bgElevated,
+          backgroundColor: colors.bgSurface,
           borderColor: colors.borderSoft,
         },
         pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },

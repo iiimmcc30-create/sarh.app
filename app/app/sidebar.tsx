@@ -232,14 +232,14 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
       borderRadius: 16,
-      backgroundColor: panelBg,
+      backgroundColor: 'transparent',
     },
     brandMarkWrap: {
       width: 56,
       height: 56,
       borderRadius: 20,
       overflow: 'hidden',
-      backgroundColor: panelBg,
+      backgroundColor: colors.bgSurface,
     },
     brandMark: {
       width: 56,
