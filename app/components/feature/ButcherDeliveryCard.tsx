@@ -141,8 +141,8 @@ function createStyles(colors: ThemeColors) {
       opacity: 0.92,
     },
     coverWrap: {
-      // Taller cover for the wider peek-carousel card.
-      height: 148,
+      // Slightly shorter vertical card footprint.
+      height: 118,
       backgroundColor: colors.bgElevated,
       position: 'relative',
     },
