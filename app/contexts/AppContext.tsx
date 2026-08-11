@@ -7,7 +7,7 @@ import { User, Post, Listing } from '@/services/types';
 import { useAuth } from './AuthContext';
 import { API_BASE, ensureApiReachable } from '@/services/api';
 import { parseApiError } from '@/services/apiError';
-import { authFetch } from '@/services/authFetch';
+import { authFetch, getAccessToken } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { fetchPublicFeed } from '@/services/fetchPublicFeed';
 import { needsUpload } from '@/services/mediaUri';
@@ -395,9 +395,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let coverImage = updates.coverImage;
       let uploadWarning: string | undefined;
 
+      // Prefer live token — AppState refresh after ImagePicker can rotate access tokens.
+      const uploadToken = getAccessToken() ?? accessToken;
+
       if (needsUpload(avatar)) {
         try {
-          avatar = await uploadImageFromUri(accessToken, avatar, 'avatars');
+          avatar = await uploadImageFromUri(uploadToken, avatar, 'avatars');
         } catch (err) {
           uploadWarning =
             err instanceof Error ? err.message : 'تعذّر رفع صورة الملف الشخصي';
@@ -406,7 +409,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (needsUpload(coverImage)) {
         try {
-          coverImage = await uploadImageFromUri(accessToken, coverImage, 'avatars');
+          coverImage = await uploadImageFromUri(
+            getAccessToken() ?? uploadToken,
+            coverImage,
+            'avatars',
+          );
         } catch (err) {
           uploadWarning =
             err instanceof Error ? err.message : 'تعذّر رفع صورة الغلاف';

@@ -15,6 +15,11 @@ export function registerAuthFetch(next: AuthFetchDeps) {
   deps = next;
 }
 
+/** Latest access token from AuthProvider (avoids stale closures during uploads). */
+export function getAccessToken(): string | null {
+  return deps?.getToken() ?? null;
+}
+
 export async function authFetch(
   input: string,
   init: RequestInit = {},

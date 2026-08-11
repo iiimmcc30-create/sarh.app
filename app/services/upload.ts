@@ -2,6 +2,7 @@
 
 import { Platform } from 'react-native';
 import { API_BASE } from './api';
+import { authFetch, getAccessToken } from './authFetch';
 
 type UploadFolder =
   | 'avatars'
@@ -146,9 +147,10 @@ async function uploadToLocal(
   }
 
   const url = `${API_BASE}/api/upload/direct?folder=${encodeURIComponent(slot.folder)}`;
-  const res = await fetch(url, {
+  // Prefer authFetch so a stale token after ImagePicker AppState refresh can rotate once.
+  const res = await authFetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
     body: form,
   });
 
@@ -167,12 +169,14 @@ export async function uploadMediaFromUri(
   mediaType: 'image' | 'video' = 'image',
 ): Promise<string> {
   const mimetype = mediaType === 'video' ? guessVideoMime(localUri) : guessMime(localUri);
+  // Use the live AuthProvider token when available (closure tokens go stale after refresh).
+  const token = getAccessToken() ?? accessToken;
 
-  const presignRes = await fetch(`${API_BASE}/api/upload/presign`, {
+  const presignRes = await authFetch(`${API_BASE}/api/upload/presign`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ mimetype, folder, count: 1 }),
   });
@@ -193,8 +197,10 @@ export async function uploadMediaFromUri(
     throw new Error('استجابة الرفع غير صالحة');
   }
 
+  const liveToken = getAccessToken() ?? token;
+
   if (slot.provider === 'local') {
-    return uploadToLocal(accessToken, slot as LocalUploadSlot, localUri, mimetype);
+    return uploadToLocal(liveToken, slot as LocalUploadSlot, localUri, mimetype);
   }
 
   if (slot.provider === 'cloudinary' || 'signature' in slot) {
@@ -264,11 +270,12 @@ export async function uploadButcherApplicationFileFromUri(
   const originalFileName = options.originalFileName ?? fileNameFromUri(localUri);
   const { blob, fileSizeBytes } = await readLocalFileMeta(localUri, mimetype);
 
-  const presignRes = await fetch(`${API_BASE}/api/upload/presign`, {
+  const token = getAccessToken() ?? accessToken;
+  const presignRes = await authFetch(`${API_BASE}/api/upload/presign`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ mimetype, folder: 'butcher-applications', count: 1 }),
   });
@@ -289,7 +296,7 @@ export async function uploadButcherApplicationFileFromUri(
     throw new Error('استجابة الرفع غير صالحة');
   }
 
-  await uploadBlobToSlot(slot, accessToken, localUri, mimetype, blob);
+  await uploadBlobToSlot(slot, getAccessToken() ?? token, localUri, mimetype, blob);
 
   return {
     fileKey: slot.fileKey,
@@ -309,11 +316,12 @@ export async function uploadSupportFileFromUri(
   const originalFileName = options.originalFileName ?? fileNameFromUri(localUri);
   const { blob, fileSizeBytes } = await readLocalFileMeta(localUri, mimetype);
 
-  const presignRes = await fetch(`${API_BASE}/api/upload/presign`, {
+  const token = getAccessToken() ?? accessToken;
+  const presignRes = await authFetch(`${API_BASE}/api/upload/presign`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ mimetype, folder: 'support', count: 1 }),
   });
@@ -334,13 +342,14 @@ export async function uploadSupportFileFromUri(
     throw new Error('استجابة الرفع غير صالحة');
   }
 
+  const liveToken = getAccessToken() ?? token;
   let fileUrl: string;
   if (slot.provider === 'local') {
-    fileUrl = await uploadToLocal(accessToken, slot as LocalUploadSlot, localUri, mimetype);
+    fileUrl = await uploadToLocal(liveToken, slot as LocalUploadSlot, localUri, mimetype);
   } else if (slot.provider === 'cloudinary' || 'signature' in slot) {
     fileUrl = await uploadToCloudinary(slot as CloudinaryUploadSlot, localUri, mimetype);
   } else {
-    await uploadBlobToSlot(slot, accessToken, localUri, mimetype, blob);
+    await uploadBlobToSlot(slot, liveToken, localUri, mimetype, blob);
     if (!slot.cdnUrl) throw new Error('استجابة الرفع غير صالحة');
     fileUrl = slot.cdnUrl;
   }
