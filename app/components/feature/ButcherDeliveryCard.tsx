@@ -141,7 +141,8 @@ function createStyles(colors: ThemeColors) {
       opacity: 0.92,
     },
     coverWrap: {
-      height: 118,
+      // Reference card image proportion (~square-ish top on half-width card).
+      height: 132,
       backgroundColor: colors.bgElevated,
       position: 'relative',
     },

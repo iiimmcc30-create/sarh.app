@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-// SAFAT — ButcherMiniSection — dual horizontal rows + legacy hero/compact
+// SAFAT — ButcherMiniSection — single horizontal row (reference width) + legacy hero/compact
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -16,7 +16,7 @@ import {
 } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { gccCurrencies, type ButcherProfile } from '@/services/butcherData';
+import { gccCurrencies } from '@/services/butcherData';
 import { countries } from '@/services/types';
 import { useButcher } from '@/hooks/useButcher';
 
@@ -34,18 +34,8 @@ const STORY_SIZE = 52;
 interface ButcherMiniSectionProps {
   limit?: number;
   showStories?: boolean;
-  /** grid = two horizontal rows (~2 cards visible); hero/compact = legacy single row */
+  /** grid = one horizontal row (~2 reference-width cards visible); hero/compact = legacy */
   size?: 'compact' | 'hero' | 'grid';
-}
-
-function splitIntoRows(items: ButcherProfile[]): [ButcherProfile[], ButcherProfile[]] {
-  const row1: ButcherProfile[] = [];
-  const row2: ButcherProfile[] = [];
-  items.forEach((item, index) => {
-    if (index % 2 === 0) row1.push(item);
-    else row2.push(item);
-  });
-  return [row1, row2];
 }
 
 export function ButcherMiniSection({
@@ -61,39 +51,17 @@ export function ButcherMiniSection({
   const CARD_W = isHero ? Math.round(screenWidth * 0.84) : CARD_W_COMPACT;
   const COVER_H = isHero ? 210 : COVER_H_COMPACT;
 
-  // ~2 cards visible with a slight peek of the next column
+  // Reference width: ~2 cards visible side-by-side with a slight peek of the next.
   const gridGap = spacing.md;
   const gridPad = spacing.lg;
   const GRID_CARD_W = Math.round((screenWidth - gridPad * 2 - gridGap) / 2 - 6);
 
   const { filteredButchers, stories, loading } = useButcher();
   const ranked = filteredButchers.slice(0, limit);
-  const [row1, row2] = splitIntoRows(ranked);
 
   const openButcher = (id: string) => {
     router.push({ pathname: '/butchers/[id]', params: { id } });
   };
-
-  const renderGridRow = (items: ButcherProfile[], key: string) => (
-    <ScrollView
-      key={key}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={s.gridRow}
-      decelerationRate="fast"
-      snapToInterval={GRID_CARD_W + gridGap}
-      snapToAlignment="start"
-    >
-      {items.map((butcher) => (
-        <ButcherDeliveryCard
-          key={butcher.id}
-          butcher={butcher}
-          width={GRID_CARD_W}
-          onPress={() => openButcher(butcher.id)}
-        />
-      ))}
-    </ScrollView>
-  );
 
   return (
     <View style={[s.wrapper, (isHero || isGrid) && s.wrapperHero]}>
@@ -151,22 +119,35 @@ export function ButcherMiniSection({
 
       {isGrid ? (
         loading && ranked.length === 0 ? (
-          <View style={[s.skeleton, { width: GRID_CARD_W * 2 + gridGap, height: 220, marginHorizontal: gridPad }]}>
+          <View style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: gridPad }]}>
             <Text style={s.skeletonText}>جاري التحميل...</Text>
           </View>
         ) : ranked.length === 0 ? (
           <Pressable
-            style={[s.skeleton, { width: GRID_CARD_W * 2 + gridGap, height: 220, marginHorizontal: gridPad }]}
+            style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: gridPad }]}
             onPress={() => router.push('/butchers')}
           >
             <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
             <Text style={s.skeletonText}>لا توجد ملاحم حالياً</Text>
           </Pressable>
         ) : (
-          <View style={s.gridStack}>
-            {row1.length > 0 ? renderGridRow(row1, 'butcher-row-1') : null}
-            {row2.length > 0 ? renderGridRow(row2, 'butcher-row-2') : null}
-          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.gridRow}
+            decelerationRate="fast"
+            snapToInterval={GRID_CARD_W + gridGap}
+            snapToAlignment="start"
+          >
+            {ranked.map((butcher) => (
+              <ButcherDeliveryCard
+                key={butcher.id}
+                butcher={butcher}
+                width={GRID_CARD_W}
+                onPress={() => openButcher(butcher.id)}
+              />
+            ))}
+          </ScrollView>
         )
       ) : (
         <ScrollView
@@ -403,15 +384,12 @@ function createStyles(colors: ThemeColors, isHero = false) {
       fontSize: 10,
     },
 
-    gridStack: {
-      gap: spacing.md,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-    },
     gridRow: {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
       gap: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
     },
 
     cardsRow: {
