@@ -25,7 +25,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -299,7 +299,9 @@ export default function EditButcherScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.electricBright} />
-          <Text style={styles.loadingText}>جاري تحميل بيانات الملحمة...</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.loadingText}>جاري تحميل بيانات الملحمة...</Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -312,13 +314,19 @@ export default function EditButcherScreen() {
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>تعديل حساب الملحمة</Text>
+          <View style={styles.headerTitleShell}>
+            <Text style={styles.headerTitle}>تعديل حساب الملحمة</Text>
+          </View>
           <View style={{ width: 38 }} />
         </View>
         <View style={styles.center}>
-          <Text style={styles.errorText}>{errorMsg}</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          </View>
           <Pressable style={styles.retryBtn} onPress={loadProfile}>
-            <Text style={styles.retryText}>إعادة المحاولة</Text>
+            <View style={styles.chipTextShell}>
+              <Text style={styles.retryText}>إعادة المحاولة</Text>
+            </View>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -335,7 +343,9 @@ export default function EditButcherScreen() {
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>تعديل حساب الملحمة</Text>
+          <View style={styles.headerTitleShell}>
+            <Text style={styles.headerTitle}>تعديل حساب الملحمة</Text>
+          </View>
           <Pressable
             style={[styles.saveBtn, saving && styles.saveBtnLoading]}
             onPress={handleSave}
@@ -345,9 +355,11 @@ export default function EditButcherScreen() {
               colors={saving ? [colors.bgSurface, colors.bgSurface] : themeGradients.royal}
               style={styles.saveBtnInner}
             >
-              <Text style={[styles.saveBtnText, saving && { color: colors.textMuted }]}>
-                {saving ? 'جاري...' : 'حفظ'}
-              </Text>
+              <View style={styles.chipTextShell}>
+                <Text style={[styles.saveBtnText, saving && { color: colors.textMuted }]}>
+                  {saving ? 'جاري...' : 'حفظ'}
+                </Text>
+              </View>
             </LinearGradient>
           </Pressable>
         </View>
@@ -365,7 +377,9 @@ export default function EditButcherScreen() {
               ) : (
                 <View style={styles.coverPlaceholder}>
                   <AppIcon name="image-outline" size={28} color={colors.textMuted} />
-                  <Text style={styles.coverHint}>صورة الغلاف</Text>
+                  <View style={styles.chipTextShell}>
+                    <Text style={styles.coverHint}>صورة الغلاف</Text>
+                  </View>
                 </View>
               )}
               <View style={styles.mediaBadge}>
@@ -394,14 +408,20 @@ export default function EditButcherScreen() {
             <Field styles={styles} colors={colors} label="اسم الملحمة *" value={nameAr} onChange={setNameAr} placeholder="مثال: ملحمة الطازج" />
             <Field styles={styles} colors={colors} label="نبذة" value={bioAr} onChange={setBioAr} placeholder="وصف مختصر عن ملحمتك..." multiline />
 
-            <Text style={styles.fieldLabel}>البلد</Text>
-            <View style={styles.countryFixed}>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.fieldLabel}>البلد</Text>
+            </View>
+            <View style={[styles.countryFixed, getRtlRow()]}>
               <Text style={styles.countryFlag}>🇸🇦</Text>
-              <Text style={styles.countryLabelFixed}>السعودية</Text>
+              <View style={styles.chipTextShell}>
+                <Text style={styles.countryLabelFixed}>السعودية</Text>
+              </View>
             </View>
 
-            <Text style={styles.fieldLabel}>رقم الهاتف</Text>
-            <View style={styles.phoneRow}>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.fieldLabel}>رقم الهاتف</Text>
+            </View>
+            <View style={[styles.phoneRow, getRtlRow()]}>
               <View style={styles.phoneCodePill}>
                 <Text style={styles.phoneCodeText}>{phoneCode}</Text>
               </View>
@@ -421,11 +441,15 @@ export default function EditButcherScreen() {
             <Field styles={styles} colors={colors} label="السجل التجاري" value={commercialReg} onChange={setCommercialReg} placeholder="رقم السجل التجاري" />
 
             <View style={styles.sectionDivider}>
-              <Text style={styles.sectionLabel}>ساعات العمل</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionLabel}>ساعات العمل</Text>
+              </View>
             </View>
-            <View style={styles.hoursRow}>
+            <View style={[styles.hoursRow, getRtlRow()]}>
               <View style={styles.hourField}>
-                <Text style={styles.hourLabel}>الافتتاح</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.hourLabel}>الافتتاح</Text>
+                </View>
                 <TextInput
                   style={styles.input}
                   value={openTime}
@@ -437,7 +461,9 @@ export default function EditButcherScreen() {
               </View>
               <AppIcon name="arrow-forward" size={18} color={colors.textMuted} style={{ marginTop: 28 }} />
               <View style={styles.hourField}>
-                <Text style={styles.hourLabel}>الإغلاق</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.hourLabel}>الإغلاق</Text>
+                </View>
                 <TextInput
                   style={styles.input}
                   value={closeTime}
@@ -449,8 +475,10 @@ export default function EditButcherScreen() {
               </View>
             </View>
 
-            <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>الملحمة مفتوحة الآن</Text>
+            <View style={[styles.toggleRow, getRtlRow()]}>
+              <View style={styles.toggleLabelShell}>
+                <Text style={styles.toggleLabel}>الملحمة مفتوحة الآن</Text>
+              </View>
               <Switch
                 value={isOpen}
                 onValueChange={setIsOpen}
@@ -460,7 +488,9 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <Text style={styles.sectionLabel}>أيام الإغلاق</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionLabel}>أيام الإغلاق</Text>
+              </View>
             </View>
             <View style={styles.chipsRow}>
               {CLOSED_DAYS.map((day) => {
@@ -471,14 +501,18 @@ export default function EditButcherScreen() {
                     onPress={() => toggleClosedDay(day.id)}
                     style={[styles.chip, active && styles.chipActive]}
                   >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{day.ar}</Text>
+                    <View style={styles.chipTextShell}>
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{day.ar}</Text>
+                    </View>
                   </Pressable>
                 );
               })}
             </View>
 
             <View style={styles.sectionDivider}>
-              <Text style={styles.sectionLabel}>التخصصات</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionLabel}>التخصصات</Text>
+              </View>
             </View>
             <View style={styles.chipsRow}>
               {SPECIALTY_OPTIONS.map((spec) => {
@@ -489,14 +523,18 @@ export default function EditButcherScreen() {
                     onPress={() => toggleSpecialty(spec)}
                     style={[styles.chip, active && styles.chipActive]}
                   >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{spec}</Text>
+                    <View style={styles.chipTextShell}>
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{spec}</Text>
+                    </View>
                   </Pressable>
                 );
               })}
             </View>
 
             <View style={styles.sectionDivider}>
-              <Text style={styles.sectionLabel}>موقع الملحمة على الخريطة (اختياري)</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionLabel}>موقع الملحمة على الخريطة (اختياري)</Text>
+              </View>
             </View>
             <ButcherLocationPicker
               country={country}
@@ -515,11 +553,13 @@ export default function EditButcherScreen() {
               height={260}
             />
             {hasValidCoords(lat, lng) && (
-              <View style={styles.coordsBox}>
+              <View style={[styles.coordsBox, getRtlRow()]}>
                 <AppIcon name="checkmark-circle" size={16} color={colors.success} />
-                <Text style={styles.coordsText}>
-                  {formatLocationLabel(city, address, lat, lng)}
-                </Text>
+                <View style={styles.coordsTextShell}>
+                  <Text style={styles.coordsText}>
+                    {formatLocationLabel(city, address, lat, lng)}
+                  </Text>
+                </View>
               </View>
             )}
           </View>
@@ -552,7 +592,9 @@ function Field({
 }) {
   return (
     <View style={styles.fieldGroup}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      <View style={styles.rtlTextShell}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+      </View>
       <TextInput
         style={[styles.input, multiline && styles.inputMultiline, rtl && styles.inputRtl]}
         value={value}
@@ -572,15 +614,44 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.screenRoot },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
-  loadingText: { ...typography.body, color: colors.textMuted },
-  errorText: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
+  /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+  rtlTextShell: {
+    width: '100%',
+    direction: 'ltr',
+  },
+  chipTextShell: {
+    direction: 'ltr',
+  },
+  headerTitleShell: {
+    flex: 1,
+    direction: 'ltr',
+  },
+  loadingText: {
+    ...typography.body,
+    color: colors.textMuted,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  errorText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   retryBtn: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: radius.pill,
     backgroundColor: colors.electric,
   },
-  retryText: { ...typography.bodyStrong, color: '#fff' },
+  retryText: {
+    ...typography.bodyStrong,
+    color: '#fff',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -589,6 +660,7 @@ function createStyles(colors: ThemeColors) {
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
+    gap: spacing.sm,
   },
   backBtn: {
     width: 38,
@@ -600,11 +672,22 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   saveBtn: { borderRadius: radius.pill, overflow: 'hidden' },
   saveBtnLoading: { opacity: 0.7 },
   saveBtnInner: { paddingHorizontal: spacing.lg, paddingVertical: 8, borderRadius: radius.pill },
-  saveBtnText: { ...typography.bodyStrong, color: '#fff' },
+  saveBtnText: {
+    ...typography.bodyStrong,
+    color: '#fff',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   scroll: { paddingBottom: 40 },
   mediaSection: { position: 'relative', marginBottom: 48 },
   coverWrap: {
@@ -620,7 +703,12 @@ function createStyles(colors: ThemeColors) {
     justifyContent: 'center',
     gap: 6,
   },
-  coverHint: { ...typography.caption, color: colors.textMuted },
+  coverHint: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   logoWrap: {
     position: 'absolute',
     bottom: -36,
@@ -654,7 +742,14 @@ function createStyles(colors: ThemeColors) {
   logoBadge: { bottom: 4, left: 4, width: 24, height: 24, borderRadius: 12 },
   form: { paddingHorizontal: spacing.lg, gap: spacing.md },
   fieldGroup: { gap: 6 },
-  fieldLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', textAlign: 'right' },
+  fieldLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   input: {
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
@@ -664,11 +759,11 @@ function createStyles(colors: ThemeColors) {
     paddingVertical: 12,
     ...typography.body,
     color: colors.textPrimary,
+    writingDirection: 'rtl',
   },
   inputRtl: { textAlign: 'right' },
   inputMultiline: { minHeight: 80, paddingTop: 12 },
   countryFixed: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     alignSelf: 'flex-start',
@@ -681,8 +776,13 @@ function createStyles(colors: ThemeColors) {
     marginBottom: spacing.sm,
   },
   countryFlag: { fontSize: 16 },
-  countryLabelFixed: { ...typography.bodyStrong, color: colors.textPrimary },
-  phoneRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  countryLabelFixed: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  phoneRow: { alignItems: 'center', gap: spacing.sm },
   phoneCodePill: {
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -694,12 +794,24 @@ function createStyles(colors: ThemeColors) {
   phoneCodeText: { ...typography.bodyStrong, color: colors.textPrimary },
   phoneInput: { flex: 1 },
   sectionDivider: { marginTop: spacing.sm, marginBottom: 4 },
-  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', textAlign: 'right' },
-  hoursRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  sectionLabel: {
+    ...typography.caption,
+    color: colors.textBrand,
+    fontWeight: '600',
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  hoursRow: { alignItems: 'center', gap: spacing.md },
   hourField: { flex: 1, gap: 6 },
-  hourLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
+  hourLabel: {
+    ...typography.micro,
+    color: colors.textMuted,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   toggleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
@@ -708,8 +820,20 @@ function createStyles(colors: ThemeColors) {
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+    gap: spacing.sm,
   },
-  toggleLabel: { ...typography.body, color: colors.textPrimary },
+  toggleLabelShell: {
+    flex: 1,
+    minWidth: 0,
+    direction: 'ltr',
+  },
+  toggleLabel: {
+    ...typography.body,
+    color: colors.textPrimary,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
     paddingHorizontal: 12,
@@ -720,10 +844,14 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
   },
   chipActive: { borderColor: colors.electricBright, backgroundColor: colors.electric + '18' },
-  chipText: { ...typography.caption, color: colors.textMuted },
+  chipText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   chipTextActive: { color: colors.textBrandStrong, fontWeight: '600' },
   coordsBox: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     padding: spacing.md,
@@ -732,6 +860,17 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.success + '33',
   },
-  coordsText: { ...typography.caption, color: colors.textBrandSuccess, flex: 1, textAlign: 'right' },
+  coordsTextShell: {
+    flex: 1,
+    minWidth: 0,
+    direction: 'ltr',
+  },
+  coordsText: {
+    ...typography.caption,
+    color: colors.textBrandSuccess,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
 });
 }

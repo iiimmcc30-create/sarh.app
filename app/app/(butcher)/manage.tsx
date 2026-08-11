@@ -533,9 +533,13 @@ function AddOfferForm({
   return (
     <View style={apf.wrap}>
       <View style={apf.handle} />
-      <Text style={apf.title}>{offer ? 'تعديل العرض' : 'إضافة عرض جديد'}</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.title}>{offer ? 'تعديل العرض' : 'إضافة عرض جديد'}</Text>
+      </View>
 
-      <Text style={apf.label}>عنوان العرض</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>عنوان العرض</Text>
+      </View>
       <TextInput
         style={apf.input}
         placeholder="مثال: عرض نهاية الأسبوع"
@@ -545,7 +549,9 @@ function AddOfferForm({
         textAlign="right"
       />
 
-      <Text style={apf.label}>الوصف</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>الوصف</Text>
+      </View>
       <TextInput
         style={[apf.input, { minHeight: 72 }]}
         placeholder="وصف مختصر للعرض"
@@ -558,7 +564,9 @@ function AddOfferForm({
 
       <View style={apf.priceRow}>
         <View style={{ flex: 1 }}>
-          <Text style={apf.priceLabel}>السعر الأصلي</Text>
+          <View style={apf.rtlTextShell}>
+            <Text style={apf.priceLabel}>السعر الأصلي</Text>
+          </View>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -570,7 +578,9 @@ function AddOfferForm({
           />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={apf.priceLabel}>سعر العرض</Text>
+          <View style={apf.rtlTextShell}>
+            <Text style={apf.priceLabel}>سعر العرض</Text>
+          </View>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -583,7 +593,9 @@ function AddOfferForm({
         </View>
       </View>
 
-      <Text style={apf.label}>نسبة الخصم % (اختياري)</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>نسبة الخصم % (اختياري)</Text>
+      </View>
       <TextInput
         style={apf.input}
         placeholder="20"
@@ -594,24 +606,32 @@ function AddOfferForm({
         textAlign="center"
       />
 
-      <Text style={apf.label}>صورة العرض</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>صورة العرض</Text>
+      </View>
       <Pressable onPress={pickImage} style={apf.uploadBoxWide}>
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={apf.previewImgWide} contentFit="cover" />
         ) : (
           <>
             <AppIcon name="image-outline" size={28} color={colors.textMuted} />
-            <Text style={apf.uploadText}>إرفاق صورة</Text>
+            <View style={apf.chipTextShell}>
+              <Text style={apf.uploadText}>إرفاق صورة</Text>
+            </View>
           </>
         )}
       </Pressable>
       {imageUri ? (
         <Pressable onPress={() => setImageUri('')} style={apf.removeImageLink}>
-          <Text style={apf.removeImageText}>إزالة الصورة</Text>
+          <View style={apf.rtlTextShell}>
+            <Text style={apf.removeImageText}>إزالة الصورة</Text>
+          </View>
         </Pressable>
       ) : null}
 
-      <Text style={apf.label}>تاريخ الانتهاء (YYYY-MM-DD)</Text>
+      <View style={apf.rtlTextShell}>
+        <Text style={apf.label}>تاريخ الانتهاء (YYYY-MM-DD)</Text>
+      </View>
       <TextInput
         style={apf.input}
         placeholder="2026-12-31"
@@ -623,14 +643,18 @@ function AddOfferForm({
 
       <View style={apf.actions}>
         <Pressable style={apf.cancelBtn} onPress={onClose} disabled={loading}>
-          <Text style={apf.cancelText}>إلغاء</Text>
+          <View style={apf.chipTextShell}>
+            <Text style={apf.cancelText}>إلغاء</Text>
+          </View>
         </Pressable>
         <Pressable style={apf.saveBtn} onPress={handleSave} disabled={loading}>
           <LinearGradient colors={[colors.gold, colors.amber]} style={apf.saveBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={apf.saveBtnText}>{offer ? 'تحديث العرض' : 'حفظ العرض'}</Text>
+              <View style={apf.chipTextShell}>
+                <Text style={apf.saveBtnText}>{offer ? 'تحديث العرض' : 'حفظ العرض'}</Text>
+              </View>
             )}
           </LinearGradient>
         </Pressable>
