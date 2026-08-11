@@ -168,7 +168,9 @@ export default function ProfileScreen() {
         listing={listing}
         variant="list"
         listMode="market"
-        onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
+        onPress={() =>
+          safePush({ pathname: '/listing/[id]', params: { id: listing.id } }, undefined, router)
+        }
       />
     ));
   };
@@ -185,10 +187,14 @@ export default function ProfileScreen() {
       onEditAvatar={() => safePush('/profile/edit', undefined, router)}
       onAvatarPress={() => {
         if (hasStories && myStoryGroup) {
-          router.push({
-            pathname: '/stories/view',
-            params: { groupIndex: '0' },
-          } as never);
+          safePush(
+            {
+              pathname: '/stories/view',
+              params: { groupIndex: '0' },
+            },
+            undefined,
+            router,
+          );
         }
       }}
       onFollowersPress={() => openConnections('followers')}
