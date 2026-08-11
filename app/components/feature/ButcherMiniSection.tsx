@@ -68,7 +68,6 @@ export function ButcherMiniSection({
     <View style={[s.wrapper, (isHero || isGrid) && s.wrapperHero]}>
       <SectionHeader
         title="الملاحم"
-        subtitle={isGrid ? 'لحوم طازجة قريبة منك' : !isHero ? 'لحوم طازجة قريبة منك' : undefined}
         onSeeAll={() => router.push('/butchers')}
       />
 
