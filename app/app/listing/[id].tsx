@@ -411,7 +411,11 @@ export default function ListingDetailScreen() {
           </View>
 
           {!isOwner ? (
-            <View style={[styles.sellerRow, getRtlRow()]}>
+            /**
+             * Physical LTR row — same shell pattern as SidebarMenuItem:
+             * LEFT: متابعة · RIGHT: name + avatar
+             */
+            <View style={styles.sellerRow}>
               <Pressable
                 onPress={handleFollowSeller}
                 disabled={followLoading || isFollowing === null}
@@ -420,23 +424,27 @@ export default function ListingDetailScreen() {
                 {isFollowing === null && isAuthenticated ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text
-                    style={[
-                      styles.followPillText,
-                      isFollowing === true && styles.followingPillText,
-                    ]}
-                  >
-                    {isFollowing ? 'متابَع' : 'متابعة'}
-                  </Text>
+                  <View style={styles.followTextShell}>
+                    <Text
+                      style={[
+                        styles.followPillText,
+                        isFollowing === true && styles.followingPillText,
+                      ]}
+                    >
+                      {isFollowing ? 'متابَع' : 'متابعة'}
+                    </Text>
+                  </View>
                 )}
               </Pressable>
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
-                style={[styles.sellerInline, getRtlRow()]}
+                style={styles.sellerInline}
               >
-                <Text style={styles.sellerInlineName} numberOfLines={1}>
-                  {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
-                </Text>
+                <View style={styles.sellerNameShell}>
+                  <Text style={styles.sellerInlineName} numberOfLines={1}>
+                    {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
+                  </Text>
+                </View>
                 {listing.seller.verified ? <VerificationBadge size={16} /> : null}
                 <Image
                   source={uriSource(listing.seller.avatar)}
@@ -741,15 +749,27 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     sellerRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      width: '100%',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.sm,
       paddingTop: spacing.xs,
     },
     sellerInline: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       gap: 8,
-      alignSelf: 'flex-start',
+      flexShrink: 1,
+      minWidth: 0,
+      maxWidth: '72%',
+    },
+    sellerNameShell: {
+      direction: 'ltr',
+      flexShrink: 1,
+      minWidth: 0,
     },
     sellerInlineAvatar: {
       width: 28,
@@ -758,14 +778,17 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       borderWidth: 1.5,
       borderColor: colors.electric,
+      flexShrink: 0,
     },
     sellerInlineName: {
       ...typography.caption,
       color: colors.textSecondary,
       fontWeight: '600',
-      maxWidth: 180,
-      ...getRtlText(),
-      ...getRtlText(),
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    followTextShell: {
+      direction: 'ltr',
     },
 
     ownerToolsRow: {
@@ -810,7 +833,13 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderMid,
     },
-    followPillText: { ...typography.caption, color: '#fff', fontWeight: '600' },
+    followPillText: {
+      ...typography.caption,
+      color: '#fff',
+      fontWeight: '600',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     followingPillText: { color: colors.textMuted },
 
     desc: {
