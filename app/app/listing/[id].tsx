@@ -441,8 +441,42 @@ export default function ListingDetailScreen() {
           onClose={() => setImageViewerVisible(false)}
         />
 
+        {/* Description stays in its previous place — only the «المواصفات» label is removed. */}
+        {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
+          <View style={styles.specsBlock}>
+            {categoryLabel || listing.breed || listing.age ? (
+              <View style={[styles.specMetaLine, getRtlRow()]}>
+                {categoryLabel ? (
+                  <Text style={styles.specMetaText}>{categoryLabel}</Text>
+                ) : null}
+                {listing.breed ? (
+                  <Text style={styles.specMetaText}>{listing.breed}</Text>
+                ) : null}
+                {listing.age ? (
+                  <Text style={styles.specMetaText}>{listing.age}</Text>
+                ) : null}
+              </View>
+            ) : null}
+            {listing.arabicDescription ? (
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.descArabic}>{listing.arabicDescription}</Text>
+              </View>
+            ) : null}
+            {listing.description && listing.description !== listing.arabicDescription ? (
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.desc}>{listing.description}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
         {images.length > 0 ? (
           <View style={styles.galleryBlock}>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.galleryHeading}>
+                الصور ({images.length.toLocaleString('ar-SA')})
+              </Text>
+            </View>
             {images.map((uri, index) => (
               <Pressable
                 key={`${uri}-${index}`}
@@ -493,34 +527,6 @@ export default function ListingDetailScreen() {
             </View>
           ) : null}
         </View>
-
-        {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
-          <View style={styles.specsBlock}>
-            {categoryLabel || listing.breed || listing.age ? (
-              <View style={[styles.specMetaLine, getRtlRow()]}>
-                {categoryLabel ? (
-                  <Text style={styles.specMetaText}>{categoryLabel}</Text>
-                ) : null}
-                {listing.breed ? (
-                  <Text style={styles.specMetaText}>{listing.breed}</Text>
-                ) : null}
-                {listing.age ? (
-                  <Text style={styles.specMetaText}>{listing.age}</Text>
-                ) : null}
-              </View>
-            ) : null}
-            {listing.arabicDescription ? (
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.descArabic}>{listing.arabicDescription}</Text>
-              </View>
-            ) : null}
-            {listing.description && listing.description !== listing.arabicDescription ? (
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.desc}>{listing.description}</Text>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
 
         {isOwner ? (
           <View style={[styles.ownerToolsRow, getRtlRow()]}>
@@ -660,6 +666,15 @@ function createStyles(colors: ThemeColors) {
     galleryBlock: {
       gap: spacing.xs,
       marginTop: spacing.sm,
+    },
+    galleryHeading: {
+      ...typography.caption,
+      color: colors.textMuted,
+      fontWeight: '600',
+      width: '100%',
+      writingDirection: 'rtl',
+      textAlign: 'right',
+      marginBottom: spacing.xs,
     },
     galleryImageWrap: {
       width: '100%',
