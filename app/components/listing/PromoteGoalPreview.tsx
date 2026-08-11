@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import type { PromotionGoal } from '@/services/listingPromote';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { StyleSheet, Text, View } from 'react-native';
@@ -24,7 +24,9 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact, getRtlDirection()]}>
-      <Text style={styles.label}>معاينة الشكل في السوق</Text>
+      <View style={styles.rtlTextShell}>
+        <Text style={styles.label}>معاينة الشكل في السوق</Text>
+      </View>
 
       <View style={[styles.mockCard, getRtlDirection()]}>
         <View style={[styles.mockTitleRow, getRtlRow()]}>
@@ -33,9 +35,11 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
             featured={previewFeatured}
             size="sm"
           />
-          <Text style={styles.mockTitle} numberOfLines={1}>
-            {title}
-          </Text>
+          <View style={styles.mockTitleShell}>
+            <Text style={styles.mockTitle} numberOfLines={1}>
+              {title}
+            </Text>
+          </View>
         </View>
         <View style={[styles.mockMeta, getRtlRow()]}>
           <View style={styles.mockThumb} />
@@ -50,11 +54,15 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
         <View style={styles.reachBlock}>
           <View style={[styles.reachHeader, getRtlRow()]}>
             <AppIcon name="trending-up-outline" size={16} color="#7C3AED" />
-            <Text style={styles.reachTitle}>زيادة قوة الظهور</Text>
+            <View style={styles.inlineTextShell}>
+              <Text style={styles.reachTitle}>زيادة قوة الظهور</Text>
+            </View>
           </View>
-          <Text style={styles.reachDesc}>
-            لا يتغيّر شكل إعلانك — يُعرض لجمهور أوسع ويحصل على أولوية في الخوارزمية
-          </Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.reachDesc}>
+              لا يتغيّر شكل إعلانك — يُعرض لجمهور أوسع ويحصل على أولوية في الخوارزمية
+            </Text>
+          </View>
           <View style={styles.reachBars}>
             <View style={[styles.reachBar, styles.reachBarDim]} />
             <View style={[styles.reachBar, styles.reachBarMid]} />
@@ -64,15 +72,21 @@ export function PromoteGoalPreview({ goal, title = 'عنوان إعلانك', co
       ) : previewPinned ? (
         <View style={[styles.hintRow, getRtlRow()]}>
           <AppIcon name="pin" size={12} color={colors.electric} />
-          <Text style={styles.hint}>يظهر دبوس صغير بجانب العنوان ويبقى في أعلى القائمة</Text>
+          <View style={styles.inlineTextShell}>
+            <Text style={styles.hint}>يظهر دبوس صغير بجانب العنوان ويبقى في أعلى القائمة</Text>
+          </View>
         </View>
       ) : previewFeatured ? (
         <View style={[styles.hintRow, getRtlRow()]}>
           <AppIcon name="star" size={12} color={colors.gold} />
-          <Text style={styles.hint}>تظهر نجمة ذهبية بجانب العنوان في نتائج البحث</Text>
+          <View style={styles.inlineTextShell}>
+            <Text style={styles.hint}>تظهر نجمة ذهبية بجانب العنوان في نتائج البحث</Text>
+          </View>
         </View>
       ) : (
-        <Text style={styles.hintMuted}>اختر هدفاً لمعاينة تأثيره على شكل الإعلان</Text>
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.hintMuted}>اختر هدفاً لمعاينة تأثيره على شكل الإعلان</Text>
+        </View>
       )}
     </View>
   );
@@ -91,12 +105,23 @@ function createStyles(colors: ThemeColors) {
     wrapCompact: {
       padding: spacing.sm,
     },
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
+    inlineTextShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     label: {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     mockCard: {
       padding: spacing.sm,
@@ -110,12 +135,17 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       gap: 6,
     },
+    mockTitleShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     mockTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      flex: 1,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       fontSize: 14,
     },
     mockMeta: {
@@ -157,14 +187,17 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#7C3AED',
       fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     reachDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     reachBars: {
       ...getRtlRow(),
@@ -197,15 +230,16 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 18,
-      ...getRtlText(),
-      ...getRtlText(),
-      flex: 1,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     hintMuted: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
   });
 }

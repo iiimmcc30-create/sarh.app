@@ -318,8 +318,12 @@ export default function ListingPromoteScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>اختيار الهدف</Text>
-            <Text style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</Text>
+            </View>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</Text>
+            </View>
             <View style={styles.goalList}>
               {PROMOTE_GOAL_OPTIONS.map((option) => {
                 const selected = goal === option.key;
@@ -353,31 +357,41 @@ export default function ListingPromoteScreen() {
                         />
                       </View>
                       <View style={styles.goalTextWrap}>
-                        <Text style={[styles.goalTitle, selected && { color: accent }]}>
-                          {option.title}
-                        </Text>
-                        <Text style={styles.goalDesc}>{option.desc}</Text>
+                        <View style={styles.rtlTextShell}>
+                          <Text style={[styles.goalTitle, selected && { color: accent }]}>
+                            {option.title}
+                          </Text>
+                        </View>
+                        <View style={styles.rtlTextShell}>
+                          <Text style={styles.goalDesc}>{option.desc}</Text>
+                        </View>
                       </View>
                     </View>
                     <View style={[styles.goalPreviewTag, getRtlRow()]}>
                       {option.key === 'visibility' ? (
                         <>
                           <AppIcon name="trending-up-outline" size={13} color="#7C3AED" />
-                          <Text style={styles.goalPreviewText}>بدون تغيير على شكل الإعلان</Text>
+                          <View style={styles.goalPreviewTextShell}>
+                            <Text style={styles.goalPreviewText}>بدون تغيير على شكل الإعلان</Text>
+                          </View>
                         </>
                       ) : option.key === 'pinned' ? (
                         <>
                           <View style={[styles.goalPreviewIcon, { backgroundColor: `${colors.electric}18` }]}>
                             <AppIcon name="pin" size={11} color={colors.electric} />
                           </View>
-                          <Text style={styles.goalPreviewText}>دبوس بجانب العنوان</Text>
+                          <View style={styles.goalPreviewTextShell}>
+                            <Text style={styles.goalPreviewText}>دبوس بجانب العنوان</Text>
+                          </View>
                         </>
                       ) : (
                         <>
                           <View style={[styles.goalPreviewIcon, { backgroundColor: `${colors.gold}30` }]}>
                             <AppIcon name="star" size={11} color="#1A1300" />
                           </View>
-                          <Text style={styles.goalPreviewText}>نجمة ذهبية بجانب العنوان</Text>
+                          <View style={styles.goalPreviewTextShell}>
+                            <Text style={styles.goalPreviewText}>نجمة ذهبية بجانب العنوان</Text>
+                          </View>
                         </>
                       )}
                     </View>
@@ -655,11 +669,17 @@ function createStyles(colors: ThemeColors) {
     section: {
       gap: spacing.sm,
     },
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     sectionHint: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     sliderCard: {
       gap: spacing.sm,
@@ -677,8 +697,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    sectionTitleBlock: {
+      width: '100%',
     },
     customBtn: {
       alignItems: 'center',
@@ -723,19 +746,21 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    goalTextWrap: { flex: 1, gap: 4 },
+    goalTextWrap: { flex: 1, gap: 4, minWidth: 0 },
     goalTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     goalDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     goalPreviewTag: {
       alignItems: 'center',
@@ -752,10 +777,17 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    goalPreviewTextShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     goalPreviewText: {
       ...typography.micro,
       color: colors.textMuted,
       fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     sliderValue: {

@@ -35,7 +35,9 @@ export function SidebarSection({
   return (
     <View style={sectionStyles.block}>
       {title ? (
-        <Text style={[sectionStyles.title, { color: colors.textMuted }]}>{title}</Text>
+        <View style={sectionStyles.titleShell}>
+          <Text style={[sectionStyles.title, { color: colors.textMuted }]}>{title}</Text>
+        </View>
       ) : null}
       <View
         style={[
@@ -202,13 +204,18 @@ const sectionStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
   },
+  titleShell: {
+    width: '100%',
+    direction: 'ltr',
+    marginBottom: spacing.sm,
+    paddingHorizontal: 4,
+  },
   title: {
     ...typography.caption,
     fontWeight: '600',
     fontSize: 12,
     letterSpacing: 0.4,
-    marginBottom: spacing.sm,
-    paddingHorizontal: 4,
+    width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
