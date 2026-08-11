@@ -13,7 +13,7 @@ export const BRAND_VISION_AR = `أن يكون سرح المنصة الوطنية
 
 export const BRAND_GOAL_AR = `بناء منظومة رقمية متكاملة تربط ملاك الماشية، والمربين، والجهات الحكومية، والقطاع الخاص، ومقدمي الخدمات، في منصة واحدة توفر تجربة ذكية وآمنة وسهلة، وتدعم نمو القطاع ورفع جودة الخدمات.`;
 
-export const BRAND_LOGIN_SUBTITLE_AR = BRAND_TAGLINE_AR;
+export const BRAND_LOGIN_SUBTITLE_AR = 'منصة المواشي السعودية';
 
 export const BRAND_REGISTER_SUBTITLE_AR =
   'انضم إلى المنظومة الرقمية للثروة الحيوانية في المملكة';
