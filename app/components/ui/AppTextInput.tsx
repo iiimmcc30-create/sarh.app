@@ -12,7 +12,7 @@ import {
 import { appFont } from '@/constants/fonts';
 import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlText, ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
+import { ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
 
 interface AppTextInputProps extends TextInputProps {
   label?: string;
