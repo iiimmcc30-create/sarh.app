@@ -17,7 +17,7 @@ import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { getRtlText, inlineStart, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
@@ -67,8 +67,15 @@ function isNewListing(listing: Listing): boolean {
   return Date.now() - t < NEW_LISTING_MS;
 }
 
-function formatCount(n: number): string {
-  return n.toLocaleString('ar-SA');
+/** Western digits with thousands separators — e.g. 1,700 */
+function formatEnNumber(n: number): string {
+  const value = Number.isFinite(n) ? n : 0;
+  const rounded = value % 1 === 0 ? Math.round(value) : value;
+  return rounded.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function toWesternDigits(value: string): string {
+  return value.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
 }
 
 function ListingCardInner({
@@ -99,6 +106,7 @@ function ListingCardInner({
   if (variant === 'list') {
     const showNew = isNewListing(listing);
     const hasVideo = listingHasVideo(listing);
+    const displayTime = toWesternDigits(timeLabel || 'الآن');
 
     return (
       <Pressable
@@ -107,51 +115,64 @@ function ListingCardInner({
       >
         <View style={styles.listContent}>
           <View style={[styles.listTitleRow, getRtlRow()]}>
-            <View style={[styles.listTitleWrap, getRtlRow()]}>
-              <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
+            <View style={styles.listTitleShell}>
+              <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
                 {title}
               </Text>
-              <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
             </View>
-            <View style={styles.listMenuDots}>
-              <AppIcon name="menu-dots-vertical" size={16} color={colors.textMuted} />
-            </View>
+            <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
+            {!listing.pinned && !listing.featured && showNew ? (
+              <Text style={styles.listStatusNew}>جديد</Text>
+            ) : null}
           </View>
 
-          <View style={[styles.listMetaItem, getRtlRow()]}>
-            <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-            <Text style={styles.listMetaText} numberOfLines={1}>
-              {location}
-            </Text>
-          </View>
-
-          {listing.price > 0 ? (
-            <View style={[styles.listPriceRow, getRtlRow()]}>
-              <Text style={styles.listPriceAmount}>
-                {listing.price.toLocaleString('ar-SA')}
+          {/* Physical LTR: price (left) · time (center) · location (right) */}
+          <View style={styles.listMetaRow}>
+            <View style={styles.listMetaSideLeft}>
+              {listing.price > 0 ? (
+                <View style={styles.listPriceCluster}>
+                  <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
+                  <View style={styles.listRiyalBadge}>
+                    <Text style={styles.listRiyalText}>﷼</Text>
+                  </View>
+                </View>
+              ) : null}
+            </View>
+            <View style={styles.listMetaCenter}>
+              <AppIcon name="time-outline" size={11} color={colors.textMuted} />
+              <Text style={styles.listMetaText} numberOfLines={1}>
+                {displayTime}
               </Text>
-              <Text style={styles.listPriceCurrency}>{listing.currency}</Text>
             </View>
-          ) : null}
-
-          {timeLabel ? (
-            <View style={[styles.listMetaItem, getRtlRow()]}>
-              <AppIcon name="time-outline" size={12} color={colors.textSubtle} />
-              <Text style={styles.listStatText}>{timeLabel}</Text>
+            <View style={styles.listMetaSideRight}>
+              <View style={styles.listLocationCluster}>
+                <AppIcon name="map-marker-outline" size={11} color={colors.textMuted} />
+                <Text style={styles.listMetaText} numberOfLines={1} ellipsizeMode="tail">
+                  {location}
+                </Text>
+              </View>
             </View>
-          ) : null}
+          </View>
 
-          {!listing.pinned && !listing.featured && showNew ? (
-            <Text style={styles.listStatusNew}>جديد</Text>
-          ) : null}
-
-          <UserProfileLink userId={sellerId} style={[styles.listSeller, getRtlRow()]}>
-            <Image source={uriSource(seller?.avatar)} style={styles.listAvatar} />
-            <Text style={styles.listSellerName} numberOfLines={1}>
-              {sellerName}
-            </Text>
-            {seller?.verified ? <VerificationBadge size={14} /> : null}
-          </UserProfileLink>
+          {/*
+           * Physical LTR seller cluster — same shell as listing detail:
+           * name → badge → avatar, pinned to the visual right.
+           */}
+          <View style={styles.listSellerRow}>
+            <UserProfileLink userId={sellerId} style={styles.listSeller}>
+              <View style={styles.listSellerNameShell}>
+                <Text style={styles.listSellerName} numberOfLines={1}>
+                  {sellerName}
+                </Text>
+              </View>
+              {seller?.verified ? <VerificationBadge size={14} /> : null}
+              <Image
+                source={uriSource(seller?.avatar)}
+                style={styles.listAvatar}
+                contentFit="cover"
+              />
+            </UserProfileLink>
+          </View>
         </View>
 
         <View style={styles.listThumbWrap}>
@@ -169,7 +190,7 @@ function ListingCardInner({
             </View>
           )}
           <View style={styles.listHeartOverlay}>
-            <AppIcon name="heart-outline" size={16} color="#fff" />
+            <AppIcon name="heart-outline" size={14} color="#fff" />
           </View>
           {hasVideo ? (
             <View style={styles.listVideoBadge}>
@@ -179,7 +200,7 @@ function ListingCardInner({
           {photoCount > 1 ? (
             <View style={styles.listPhotoCountBadge}>
               <AppIcon name="image-outline" size={10} color="#fff" />
-              <Text style={styles.listPhotoCountText}>{photoCount}</Text>
+              <Text style={styles.listPhotoCountText}>{formatEnNumber(photoCount)}</Text>
             </View>
           ) : null}
         </View>
@@ -281,13 +302,20 @@ function ListingCardInner({
         </View>
       </View>
 
-      <View style={[styles.harajSellerRow, getRtlRow()]}>
-        <UserProfileLink userId={sellerId} style={[styles.harajSellerInfo, getRtlRow()]}>
-          <Image source={uriSource(seller?.avatar)} style={styles.harajAvatar} />
-          <Text style={styles.harajSellerName} numberOfLines={1}>
-            {sellerName}
-          </Text>
+      {/* Physical LTR seller cluster — same shell as listing detail / list card. */}
+      <View style={styles.harajSellerRow}>
+        <UserProfileLink userId={sellerId} style={styles.harajSellerInfo}>
+          <View style={styles.harajSellerNameShell}>
+            <Text style={styles.harajSellerName} numberOfLines={1}>
+              {sellerName}
+            </Text>
+          </View>
           {seller?.verified ? <VerificationBadge size={14} /> : null}
+          <Image
+            source={uriSource(seller?.avatar)}
+            style={styles.harajAvatar}
+            contentFit="cover"
+          />
         </UserProfileLink>
       </View>
 
@@ -331,143 +359,170 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     opacity: 0.92,
   },
 
-  // قائمة السوق — بطاقة موحّدة في الرئيسية والملف والسوق
+  // External listing card — compact row matching reference proportions
   listRow: {
     ...getRtlRow(),
     alignItems: 'stretch',
-    minHeight: 156,
+    height: 118,
     paddingVertical: 0,
-    paddingStart: ds.space.md,
+    paddingStart: spacing.md,
     paddingEnd: 0,
-    gap: ds.space.md,
+    gap: spacing.sm,
     backgroundColor: colors.bgSurface,
     borderRadius: sarh.radius.card,
-    marginHorizontal: ds.space.md,
-    marginVertical: ds.space.xs,
+    marginHorizontal: spacing.md,
+    marginVertical: 2,
     borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
     borderColor: scheme === 'dark' ? colors.borderSoft : tokens.stroke,
     overflow: 'hidden',
-  ...ambientShadow(scheme, scheme === 'dark' ? 'soft' : 'card'),
+    ...ambientShadow(scheme, scheme === 'dark' ? 'soft' : 'card'),
   },
   listContent: {
     flex: 1,
     minWidth: 0,
-    gap: 4,
-    paddingVertical: ds.space.md,
-    paddingEnd: ds.space.xs,
-    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingEnd: spacing.xs,
+    justifyContent: 'space-between',
   },
   listTitleRow: {
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: ds.space.sm,
-  },
-  listTitleWrap: {
-    flex: 1,
     alignItems: 'center',
     gap: 6,
     minWidth: 0,
   },
-  listMenuDots: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  listTitleShell: {
+    flex: 1,
+    minWidth: 0,
+    direction: 'ltr',
   },
   listTitle: {
     ...typography.bodyStrong,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    writingDirection: 'rtl',
-    flex: 1,
-  },
-  listPriceRow: {
-    alignItems: 'baseline',
-    gap: 5,
-    marginTop: 2,
-  },
-  listPriceAmount: {
-    fontSize: 18,
-    lineHeight: 24,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    writingDirection: 'rtl',
-  },
-  listPriceCurrency: {
-    ...typography.caption,
+    fontSize: 14,
     lineHeight: 18,
-    color: colors.textMuted,
+    color: colors.textBrandStrong,
     fontWeight: '600',
+    width: '100%',
+    textAlign: 'right',
     writingDirection: 'rtl',
   },
+  /**
+   * Physical LTR three-column meta:
+   * LEFT price · CENTER time · RIGHT location
+   */
   listMetaRow: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginTop: 2,
+    flexWrap: 'nowrap',
+    width: '100%',
   },
-  listMetaItem: {
-    ...getRtlRow(),
+  listMetaSideLeft: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  listMetaCenter: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    flexShrink: 1,
-    marginTop: 2,
+    justifyContent: 'center',
+    gap: 3,
+    flexShrink: 0,
+    paddingHorizontal: 4,
+  },
+  listMetaSideRight: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  listLocationCluster: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 3,
+    maxWidth: '100%',
+  },
+  listPriceCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   listMetaText: {
-    ...typography.caption,
-    lineHeight: 16,
-    color: colors.textSecondary,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.textMuted,
     writingDirection: 'rtl',
     flexShrink: 1,
+  },
+  listPriceAmount: {
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.textPrimary,
+    fontWeight: '600',
+    writingDirection: 'ltr',
+    fontVariant: ['tabular-nums'],
+  },
+  listRiyalBadge: {
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderSoft,
+  },
+  listRiyalText: {
+    fontSize: 8,
+    lineHeight: 10,
+    color: colors.textMuted,
+    fontWeight: '600',
   },
   listStatusNew: {
     ...typography.micro,
     color: colors.cyan,
     fontWeight: '600',
+    fontSize: 10,
+    flexShrink: 0,
   },
-  listStatusFeatured: {
-    ...typography.micro,
-    color: colors.gold,
-    fontWeight: '600',
-  },
-  listStatusPinned: {
-    ...typography.micro,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    marginTop: 2,
+  listSellerRow: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   listSeller: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: 6,
-    alignSelf: 'flex-end',
+    flexShrink: 1,
+    minWidth: 0,
     maxWidth: '100%',
+  },
+  listSellerNameShell: {
+    direction: 'ltr',
+    flexShrink: 1,
+    minWidth: 0,
   },
   listAvatar: {
     width: 20,
     height: 20,
-    borderRadius: 12,
+    borderRadius: 10,
     backgroundColor: colors.bgElevated,
+    flexShrink: 0,
   },
   listSellerName: {
-    ...typography.caption,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
     color: colors.textPrimary,
-    flexShrink: 1,
-    writingDirection: 'rtl',
-  },
-  listStatText: {
-    ...typography.caption,
-    lineHeight: 16,
-    color: colors.textSubtle,
+    fontWeight: '600',
+    textAlign: 'right',
     writingDirection: 'rtl',
   },
   listThumbWrap: {
-    width: ds.listingThumb,
+    width: 118,
     alignSelf: 'stretch',
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
@@ -476,11 +531,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   listHeartOverlay: {
     position: 'absolute',
-    top: 8,
-    start: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 16,
+    top: 6,
+    start: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -724,16 +779,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     writingDirection: 'rtl',
   },
   harajSellerRow: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
+    justifyContent: 'flex-end',
   },
   harajSellerInfo: {
-    ...getRtlRow(),
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: 8,
-    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  harajSellerNameShell: {
+    direction: 'ltr',
+    flexShrink: 1,
     minWidth: 0,
   },
   harajAvatar: {
@@ -741,13 +804,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     height: 32,
     borderRadius: 16,
     backgroundColor: colors.bgElevated,
+    flexShrink: 0,
   },
   harajSellerName: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     flexShrink: 1,
-    ...getRtlText(),
-    ...getRtlText(),
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   harajFeatured: {
     ...getRtlRow(),

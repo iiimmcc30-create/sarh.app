@@ -70,6 +70,12 @@ const STORAGE_KEYS = {
 
 /** Proactive refresh — keeps long-lived session alive while app is installed. */
 const SESSION_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+/**
+ * Returning from ImagePicker briefly backgrounds the app and would otherwise
+ * trigger a refresh that races authFetch — backend refresh-token reuse then
+ * wipes all sessions and the user appears logged out.
+ */
+const FOREGROUND_REFRESH_MIN_GAP_MS = 45_000;
 
 // ── Context ───────────────────────────────────────────────────────────────────
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -88,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [activeMode, setActiveMode]   = useState<'USER' | 'BUTCHER'>('USER');
   const accessTokenRef = useRef<string | null>(null);
   accessTokenRef.current = accessToken;
+  /** Single-flight lock — concurrent callers await the same refresh promise. */
+  const refreshInFlightRef = useRef<Promise<boolean> | null>(null);
+  const lastRefreshAtRef = useRef(0);
 
   const clearSession = useCallback(async () => {
     await AsyncStorage.multiRemove([...Object.values(STORAGE_KEYS), 'safat_active_mode']);
@@ -104,35 +113,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
-    try {
-      const refresh = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-      if (!refresh) return false;
-
-      const res = await fetchWithTimeout(`${API_BASE}/api/auth/refresh`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ refresh_token: refresh, refreshToken: refresh }),
-      }, 12_000);
-
-      if (res.status === 401) {
-        await clearSession();
-        return false;
-      }
-      if (!res.ok) return false;
-
-      const responseJson = await res.json().catch(() => ({}));
-      const data = (responseJson && responseJson.success && responseJson.data !== undefined)
-        ? responseJson.data
-        : responseJson;
-      const access = data.access_token ?? data.accessToken;
-      const newRefresh = data.refresh_token ?? data.refreshToken;
-      if (!access) return false;
-
-      await persistTokens(access, newRefresh);
-      return true;
-    } catch {
-      return false;
+    if (refreshInFlightRef.current) {
+      return refreshInFlightRef.current;
     }
+
+    const task = (async (): Promise<boolean> => {
+      try {
+        const refresh = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+        if (!refresh) return false;
+
+        const res = await fetchWithTimeout(`${API_BASE}/api/auth/refresh`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ refresh_token: refresh, refreshToken: refresh }),
+        }, 12_000);
+
+        if (res.status === 401) {
+          await clearSession();
+          return false;
+        }
+        if (!res.ok) return false;
+
+        const responseJson = await res.json().catch(() => ({}));
+        const data = (responseJson && responseJson.success && responseJson.data !== undefined)
+          ? responseJson.data
+          : responseJson;
+        const access = data.access_token ?? data.accessToken;
+        const newRefresh = data.refresh_token ?? data.refreshToken;
+        if (!access) return false;
+
+        await persistTokens(access, newRefresh);
+        lastRefreshAtRef.current = Date.now();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshInFlightRef.current = null;
+      }
+    })();
+
+    refreshInFlightRef.current = task;
+    return task;
   }, [clearSession, persistTokens]);
 
   const refreshSessionRef = useRef(refreshSession);
@@ -183,9 +204,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Keep session alive: refresh when app returns to foreground ─────────────
   useEffect(() => {
     const onAppStateChange = (next: AppStateStatus) => {
-      if (next === 'active') {
-        void refreshSessionRef.current();
-      }
+      if (next !== 'active') return;
+      // ImagePicker / system sheets bounce AppState — don't rotate tokens every time.
+      if (Date.now() - lastRefreshAtRef.current < FOREGROUND_REFRESH_MIN_GAP_MS) return;
+      void refreshSessionRef.current();
     };
     const sub = AppState.addEventListener('change', onAppStateChange);
     return () => sub.remove();

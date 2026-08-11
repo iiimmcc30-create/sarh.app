@@ -4,6 +4,7 @@ import {
   SidebarMenuItem as SidebarMenuItemRow,
   type SidebarMenuItemProps,
 } from '@/components/ui/SidebarMenuItem';
+import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -190,8 +191,9 @@ export function SidebarLogoutButton({
         pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
       ]}
     >
-      <View style={logoutStyles.spacer} />
-      <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
+      <View style={logoutStyles.textShell}>
+        <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
+      </View>
       <View style={[logoutStyles.iconWrap, { backgroundColor: `${colors.rose}14` }]}>
         <AppIcon name="log-out-outline" size={20} color={colors.rose} />
       </View>
@@ -282,7 +284,7 @@ const logoutStyles = StyleSheet.create({
     flexDirection: 'row',
     direction: 'ltr',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     paddingVertical: 14,
@@ -290,9 +292,6 @@ const logoutStyles = StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     minHeight: 56,
-  },
-  spacer: {
-    flex: 1,
   },
   iconWrap: {
     width: 40,
@@ -302,12 +301,23 @@ const logoutStyles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
+  /**
+   * Physical LTR shell with bounded width — same as SidebarMenuItem /
+   * listing title. Prevents Arabic logout label from clipping under
+   * overflow:hidden parents.
+   */
+  textShell: {
+    flex: 1,
+    minWidth: 0,
+    direction: 'ltr',
+  },
   text: {
     ...typography.bodyStrong,
+    fontFamily: appFont.semibold,
     fontWeight: '600',
     fontSize: 15,
+    width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
-    flexShrink: 1,
   },
 });
