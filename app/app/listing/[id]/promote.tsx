@@ -1,5 +1,4 @@
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
-import { PromoteGoalPreview } from '@/components/listing/PromoteGoalPreview';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -400,24 +399,6 @@ export default function ListingPromoteScreen() {
               })}
             </View>
           </View>
-
-          {goal ? (
-            <PromoteGoalPreview goal={goal} title={listingTitle} />
-          ) : null}
-
-          {goal ? (
-            <View style={styles.flowCard}>
-              <Text style={styles.flowTitle}>خطوات الدفع</Text>
-              <View style={styles.flowSteps}>
-                <Text style={styles.flowStepActive}>① اختيار الخدمة</Text>
-                <Text style={styles.flowStepActive}>
-                  ② {isVisibility ? 'المدة والميزانية' : 'المدة'}
-                </Text>
-                <Text style={styles.flowStepActive}>③ حساب السعر</Text>
-                <Text style={styles.flowStepMuted}>④ بوابة الدفع</Text>
-              </View>
-            </View>
-          ) : null}
 
           {isVisibility ? (
             <View style={styles.sliderCard}>
@@ -892,37 +873,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#7C3AED',
       fontWeight: '600' as const,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    flowCard: {
-      gap: spacing.sm,
-      padding: spacing.md,
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    flowTitle: {
-      ...typography.caption,
-      color: colors.textMuted,
-      fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    flowSteps: {
-      gap: 4,
-    },
-    flowStepActive: {
-      ...typography.caption,
-      color: colors.electric,
-      fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    flowStepMuted: {
-      ...typography.caption,
-      color: colors.textMuted,
       ...getRtlText(),
       ...getRtlText(),
     },
