@@ -127,10 +127,17 @@ export default function PhoneScreen() {
         >
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
             
-            {/* Logo and Header */}
+            {/* Logo + brand — same mark as main sidebar */}
             <View style={styles.header}>
-              <AppLogo size={90} />
-              <Text style={styles.title}>{BRAND_LOGIN_WELCOME_AR}</Text>
+              <View style={styles.brandMarkWrap}>
+                <Image
+                  source={APP_LOGO}
+                  style={styles.brandMark}
+                  contentFit="cover"
+                  accessibilityLabel="شعار سرح"
+                />
+              </View>
+              <Text style={styles.title}>{BRAND_NAME_AR}</Text>
               <Text style={styles.sub}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
             </View>
 
@@ -312,9 +319,33 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center',
   },
 
-  header: { alignItems: 'center', marginBottom: spacing.xxl, gap: spacing.sm, width: '100%' },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.xxl,
+    gap: spacing.sm,
+    width: '100%',
+  },
+  /** Same official mark treatment as main sidebar (no tint / no glow ring). */
+  brandMarkWrap: {
+    width: 90,
+    height: 90,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: colors.bgSurface,
+    marginBottom: spacing.xs,
+  },
+  brandMark: {
+    width: 90,
+    height: 90,
+  },
   title: { ...typography.h1, color: colors.textPrimary, textAlign: 'center' },
-  sub: { ...typography.caption, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20, lineHeight: 20 },
+  sub: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    lineHeight: 20,
+  },
 
   card: {
     width: '100%',
