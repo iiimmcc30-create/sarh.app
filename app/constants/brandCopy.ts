@@ -13,7 +13,7 @@ export const BRAND_VISION_AR = `أن يكون سرح المنصة الوطنية
 
 export const BRAND_GOAL_AR = `بناء منظومة رقمية متكاملة تربط ملاك الماشية، والمربين، والجهات الحكومية، والقطاع الخاص، ومقدمي الخدمات، في منصة واحدة توفر تجربة ذكية وآمنة وسهلة، وتدعم نمو القطاع ورفع جودة الخدمات.`;
 
-export const BRAND_LOGIN_SUBTITLE_AR = BRAND_TAGLINE_AR;
+export const BRAND_LOGIN_SUBTITLE_AR = 'منصة المواشي السعودية';
 
 export const BRAND_REGISTER_SUBTITLE_AR =
   'انضم إلى المنظومة الرقمية للثروة الحيوانية في المملكة';
@@ -21,7 +21,7 @@ export const BRAND_REGISTER_SUBTITLE_AR =
 export const BRAND_MARKET_TERMS_AR = `شروط وأحكام سوق ${BRAND_NAME_AR}`;
 export const BRAND_TERMS_SHORT_AR = `شروط استخدام ${BRAND_NAME_AR}`;
 export const BRAND_JOIN_TITLE_AR = `انضم إلى ${BRAND_NAME_AR}`;
-export const BRAND_LOGIN_WELCOME_AR = `مرحباً في ${BRAND_NAME_AR}`;
+export const BRAND_LOGIN_WELCOME_AR = `مرحبا بكم في ${BRAND_NAME_AR}`;
 export const BRAND_FOOTER_AR = `${BRAND_NAME_EN} v1.0.0 · ${BRAND_NAME_AR} · مؤسسة ماد يونيت للتجارة · جميع الحقوق محفوظة © 2024`;
 export const BRAND_VERIFIED_AR = `موثّق من ${BRAND_NAME_AR}`;
 export const BRAND_VERIFIED_EN = `Verified by ${BRAND_NAME_EN}`;

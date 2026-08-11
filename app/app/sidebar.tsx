@@ -1,13 +1,15 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppScrollView } from '@/components/ui/AppScrollView';
-import { APP_LOGO } from '@/constants/branding';
-import { BRAND_NAME_AR } from '@/constants/brandCopy';
+import {
+  BRAND_LOGIN_SUBTITLE_AR,
+  BRAND_NAME_AR,
+} from '@/constants/brandCopy';
 import {
   scrimColor,
   spacing,
@@ -17,7 +19,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlRow, getRtlText } from '@/lib/rtl';
+import { borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
@@ -31,8 +33,6 @@ import {
 } from '@/components/feature/SidebarMenu';
 
 type MenuItem = SidebarNavItem;
-
-const BRAND_TAGLINE = 'منصة المواشي السعودية';
 
 export default function SidebarScreen() {
   const router = useRouter();
@@ -147,26 +147,14 @@ export default function SidebarScreen() {
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        <View style={styles.header}>
+        {/* Compact brand stack — close overlays the top corner to cut empty space. */}
+        <View style={styles.brandBanner}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
-            <AppIcon name="close" size={22} color={colors.textPrimary} />
+            <AppIcon name="close" size={20} color={colors.textPrimary} />
           </Pressable>
-        </View>
-
-        <View style={[styles.brandBanner, getRtlRow()]}>
-          <View style={styles.brandText}>
-            <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
-            <Text style={styles.brandTagline}>{BRAND_TAGLINE}</Text>
-          </View>
-          {/* Official mark — white waves + green diamond stay as-is (no tint). */}
-          <View style={styles.brandMarkWrap}>
-            <Image
-              source={APP_LOGO}
-              style={styles.brandMark}
-              contentFit="cover"
-              accessibilityLabel="شعار سرح"
-            />
-          </View>
+          <AppLogo size={64} />
+          <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
+          <Text style={styles.brandTagline}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
         </View>
 
         <AppScrollView
@@ -212,68 +200,49 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       shadowRadius: 16,
       elevation: 10,
     },
-    header: {
-      ...alignInlineEnd(),
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    closeBtn: {
-      width: 36,
-      height: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     brandBanner: {
       alignItems: 'center',
-      gap: spacing.md,
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      borderRadius: 16,
-      backgroundColor: panelBg,
-    },
-    brandMarkWrap: {
-      width: 56,
-      height: 56,
-      borderRadius: 20,
-      overflow: 'hidden',
-      backgroundColor: panelBg,
-    },
-    brandMark: {
-      width: 56,
-      height: 56,
-    },
-    brandText: {
-      flex: 1,
-      minWidth: 0,
       gap: 4,
-      alignItems: 'flex-end',
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.xs,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+      alignSelf: 'stretch',
+      position: 'relative',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 0,
+      end: spacing.xs,
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 2,
     },
     brandName: {
       ...typography.h2,
-      fontSize: 28,
-      lineHeight: 34,
+      fontSize: 26,
+      lineHeight: 30,
       fontWeight: '600',
       color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
+      textAlign: 'center',
     },
     brandTagline: {
       ...typography.caption,
-      fontSize: 12,
-      lineHeight: 18,
-      fontWeight: '500',
       color: colors.textMuted,
-      writingDirection: 'rtl',
-      ...getRtlText(),
+      textAlign: 'center',
+      paddingHorizontal: 12,
+      lineHeight: 18,
     },
     scroll: {
       flex: 1,
     },
     scrollContent: {
       paddingBottom: spacing.lg,
+      paddingTop: 0,
     },
   });
 }

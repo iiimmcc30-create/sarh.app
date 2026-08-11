@@ -144,6 +144,14 @@ export default function MoreScreen() {
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
+            icon="information-outline"
+            title="من نحن"
+            subtitle="تعرّف على سرح ورؤيتنا"
+            colors={colors}
+            showDivider
+            onPress={() => safePush('/info/about', undefined, router)}
+          />
+          <SidebarMenuItem
             icon="lifebuoy"
             title="الدعم والمساعدة"
             subtitle="مركز الدعم والأسئلة الشائعة"

@@ -273,9 +273,12 @@ export function scrimColor(scheme: ColorScheme, opacity = 0.85): string {
     : `rgba(7, 19, 28, ${opacity})`;
 }
 
-/** Raised panel surface — darker gray in dark mode, softer tint in light (sidebar, posts, etc.). */
+/**
+ * Sidebar / drawer panel page tone — matches the app screen root in dark mode
+ * so section cards (bgSurface) read like home listing/post cards.
+ */
 export function panelSurfaceBg(scheme: ColorScheme, palette: ThemeColors): string {
-  return scheme === 'dark' ? palette.bgElevated : palette.bgSurface;
+  return scheme === 'dark' ? palette.bgDeep : palette.bgSurface;
 }
 
 applyThemeScheme(activeScheme);
