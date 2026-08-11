@@ -32,7 +32,7 @@ import {
 } from '@/services/butcherData';
 import { ButcherCard } from '@/components/feature/ButcherCard';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 
 const STORY_CIRCLE = 62;
 
@@ -467,14 +467,12 @@ function createScreenStyles(colors: ThemeColors) {
     fontSize: 26,
     fontWeight: '600',
     color: colors.textPrimary,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   headerSub: {
     ...typography.caption,
     color: colors.textMuted,
     marginTop: 2,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -534,8 +532,7 @@ function createScreenStyles(colors: ThemeColors) {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
 
   quickFiltersRow: {
     flexDirection: 'row',
@@ -600,8 +597,7 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.caption,
     fontWeight: '600',
     color: colors.textSecondary,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   headerMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -625,13 +621,11 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.micro,
     fontWeight: '600',
     color: colors.electricBright,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   resultsCount: {
     ...typography.caption,
     color: colors.textMuted,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
 
   // Country chips
   countryRow: {

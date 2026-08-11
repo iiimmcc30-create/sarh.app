@@ -19,7 +19,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getCountryInfo } from '@/services/types';
-import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
+import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -479,8 +479,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 22,
       fontWeight: '600',
       color: colors.textPrimary,
-      ...getRtlText(),
-      flexShrink: 1,
+      writingDirection: 'rtl', textAlign: 'right', flexShrink: 1,
     },
     ratingChip: {
       ...getRtlRow(),
@@ -510,8 +509,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textMuted,
       fontWeight: '500',
       fontSize: 13,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     statsCard: {
       marginTop: 6,
       backgroundColor: colors.bgSurface,
@@ -555,14 +553,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textMuted,
       fontSize: 11,
       textAlign: 'center',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     bio: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-      ...getRtlText(),
-      marginTop: 2,
+      writingDirection: 'rtl', textAlign: 'right', marginTop: 2,
     },
     locationRow: {
       alignItems: 'center',
@@ -573,8 +569,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.caption,
       color: colors.textMuted,
       fontSize: 12,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     avatarCol: {
       position: 'relative',
       paddingTop: 2,
@@ -698,8 +693,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 15,
       fontWeight: '600',
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     tabLabelActive: {
       color: scheme === 'dark' ? colors.textPrimary : colors.electric,
     },

@@ -3,7 +3,7 @@ import { Image } from '@/components/ui/AppImage';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { computeProductLineTotal, resolveLineWeightKg } from '@/lib/butcherOrderPricing';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { resolveMediaUrl } from '@/services/media';
 import {
   cutLabelAr,
@@ -205,19 +205,16 @@ function createStyles(colors: ThemeColors) {
     heroText: { flex: 1, gap: 4 },
     title: {
       ...typography.h3,
-      ...getRtlText(),
-      color: colors.textPrimary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
     },
     subtitle: {
       ...typography.caption,
-      ...getRtlText(),
-      color: colors.textMuted,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
     },
     section: { marginBottom: spacing.lg, gap: spacing.sm },
     sectionTitle: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: colors.textPrimary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
     },
     chips: {
       flexDirection: 'row',
@@ -238,8 +235,7 @@ function createStyles(colors: ThemeColors) {
     },
     chipText: {
       ...typography.caption,
-      ...getRtlText(),
-      color: colors.textSecondary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
     },
     chipTextActive: {
       color: colors.textPrimary,
@@ -267,15 +263,13 @@ function createStyles(colors: ThemeColors) {
     weightInput: {
       minWidth: 72,
       ...typography.h3,
-      ...getRtlText(),
-      color: colors.textPrimary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
       textAlign: 'center',
       paddingVertical: 4,
     },
     hint: {
       ...typography.micro,
-      ...getRtlText(),
-      color: colors.textMuted,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
     },
     iconColor: { color: colors.textPrimary },
     totalRow: {
@@ -286,13 +280,11 @@ function createStyles(colors: ThemeColors) {
     },
     totalLabel: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: colors.textSecondary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
     },
     totalValue: {
       ...typography.h3,
-      ...getRtlText(),
-      color: colors.textPrimary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
     },
     cta: {
       ...getRtlRow(),
@@ -307,8 +299,7 @@ function createStyles(colors: ThemeColors) {
     ctaDisabled: { opacity: 0.5 },
     ctaText: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: '#fff',
+      writingDirection: 'rtl', textAlign: 'right', color: '#fff',
     },
   });
 }

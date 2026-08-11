@@ -17,7 +17,7 @@ import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { getRtlText, inlineStart, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { inlineStart, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
@@ -381,8 +381,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 20,
     color: colors.textPrimary,
     fontWeight: '600',
-    ...getRtlText(),
-    flex: 1,
+    writingDirection: 'rtl', textAlign: 'right', flex: 1,
   },
   listPriceRow: {
     alignItems: 'baseline',
@@ -394,15 +393,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 24,
     color: colors.textPrimary,
     fontWeight: '600',
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   listPriceCurrency: {
     ...typography.caption,
     lineHeight: 18,
     color: colors.textMuted,
     fontWeight: '600',
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   listMetaRow: {
     ...getRtlRow(),
     alignItems: 'center',
@@ -421,8 +418,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textSecondary,
-    ...getRtlText(),
-    flexShrink: 1,
+    writingDirection: 'rtl', textAlign: 'right', flexShrink: 1,
   },
   listStatusNew: {
     ...typography.micro,
@@ -458,14 +454,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 16,
     color: colors.textPrimary,
     flexShrink: 1,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   listStatText: {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textSubtle,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   listThumbWrap: {
     width: ds.listingThumb,
     alignSelf: 'stretch',
@@ -567,15 +561,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.caption,
     color: '#fff',
     fontWeight: '600',
-    ...getRtlText(),
-    flex: 1,
+    writingDirection: 'rtl', textAlign: 'right', flex: 1,
   },
   profilePrice: {
     ...typography.micro,
     color: colors.gold,
     fontWeight: '600',
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   profileStar: {
     position: 'absolute',
     top: 10,
@@ -702,8 +694,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.h3,
     color: colors.textBrandStrong,
     fontWeight: '600',
-    ...getRtlText(),
-    lineHeight: 26,
+    writingDirection: 'rtl', textAlign: 'right', lineHeight: 26,
     flex: 1,
   },
   harajMeta: {
@@ -720,8 +711,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajMetaText: {
     ...typography.caption,
     color: colors.textMuted,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   harajSellerRow: {
     ...getRtlRow(),
     alignItems: 'center',
@@ -745,8 +735,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     flexShrink: 1,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   harajFeatured: {
     ...getRtlRow(),
     alignItems: 'center',
@@ -764,15 +753,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajDesc: {
     ...typography.body,
     color: colors.textSecondary,
-    ...getRtlText(),
-    lineHeight: 24,
+    writingDirection: 'rtl', textAlign: 'right', lineHeight: 24,
   },
   harajPrice: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     fontWeight: '600',
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   harajImgWrap: {
     width: '100%',
     aspectRatio: 16 / 10,

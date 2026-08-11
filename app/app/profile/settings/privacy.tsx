@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   DEFAULT_PRIVACY_SETTINGS,
   fetchPrivacySettings,
@@ -153,8 +153,8 @@ export default function PrivacySettingsScreen() {
                 ]}
               >
                 <View style={styles.textWrap}>
-                  <Text style={[styles.label, getRtlText()]}>{item.label}</Text>
-                  <Text style={[styles.description, getRtlText()]}>{item.description}</Text>
+                  <Text style={[styles.label, { writingDirection: 'rtl', textAlign: 'right' }]}>{item.label}</Text>
+                  <Text style={[styles.description, { writingDirection: 'rtl', textAlign: 'right' }]}>{item.description}</Text>
                 </View>
                 <Switch
                   value={settings[item.key]}
@@ -212,16 +212,12 @@ function createStyles(colors: ThemeColors) {
     noticeText: {
       ...typography.caption,
       color: colors.textSecondary,
-      ...getRtlText(),
-      ...getRtlText(),
-      lineHeight: 20,
+      writingDirection: 'rtl', textAlign: 'right', lineHeight: 20,
     },
     intro: {
       ...typography.body,
       color: colors.textSecondary,
-      ...getRtlText(),
-      ...getRtlText(),
-      lineHeight: 24,
+      writingDirection: 'rtl', textAlign: 'right', lineHeight: 24,
     },
     card: {
       backgroundColor: colors.bgElevated,
@@ -249,13 +245,11 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       fontWeight: '600',
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     description: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 20,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
   });
 }

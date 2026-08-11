@@ -4,7 +4,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { getRtlText, rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { type Listing } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -622,8 +622,7 @@ function createStyles(colors: ThemeColors) {
     headerMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     headerPriceTimeCol: {
       alignItems: 'flex-end',
       gap: 2,
@@ -636,8 +635,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     specMetaLine: {
       flexWrap: 'wrap',
       gap: spacing.sm,
@@ -645,8 +643,7 @@ function createStyles(colors: ThemeColors) {
     specMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     galleryBlock: {
       gap: spacing.xs,
       marginTop: -spacing.xs,
@@ -656,8 +653,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontWeight: '600',
       writingDirection: 'rtl',
-      ...getRtlText(),
-      marginBottom: spacing.xs,
+      writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.xs,
     },
     galleryImageWrap: {
       width: '100%',
@@ -675,8 +671,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 34,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     currency: {
       fontSize: 13,
       lineHeight: 18,
@@ -715,8 +710,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 28,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     sellerRow: {
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -741,8 +735,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       maxWidth: 180,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
 
     ownerToolsRow: {
       flexWrap: 'wrap',
@@ -794,14 +787,12 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       color: colors.textSecondary,
       lineHeight: 24,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     descArabic: {
       ...typography.body,
       fontSize: 16,
       color: colors.textPrimary,
-      ...getRtlText(),
-      lineHeight: 27,
+      writingDirection: 'rtl', textAlign: 'right', lineHeight: 27,
     },
 
     // Bottom CTA

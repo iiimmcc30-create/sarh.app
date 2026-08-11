@@ -14,7 +14,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
-import { borderInlineEnd, getRtlText } from '@/lib/rtl';
+import { borderInlineEnd } from '@/lib/rtl';
 import { closeThenPush } from '@/lib/safeNavigate';
 
 export type ButchersMarketMenuItem = {
@@ -213,14 +213,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 17,
       fontWeight: '600',
       color: colors.textPrimary,
-      ...getRtlText(),
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right',
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right',
     },
     brandPill: {
       marginTop: 4,
@@ -233,8 +231,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.micro,
       fontWeight: '600',
       color: isDark ? colors.textPrimary : '#3FA82E',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     scroll: {
       flex: 1,
     },
@@ -259,8 +256,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     footerText: {
       ...typography.micro,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
   });
 }
 

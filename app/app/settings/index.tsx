@@ -10,7 +10,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, getRtlText } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 
 type SubItem = { icon: string; label: string; route: string };
 type Section = { key: string; icon: string; title: string; route: string; items: SubItem[] };
@@ -155,15 +155,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     introTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right',
     },
     introSubtitle: {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 19,
-      ...getRtlText(),
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right',
     },
     sectionBlock: {
       backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,

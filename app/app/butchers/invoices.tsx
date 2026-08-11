@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import {
@@ -146,18 +146,15 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.electricBright,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     date: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     paidBadge: {
       paddingHorizontal: 10,
       paddingVertical: 5,
@@ -170,8 +167,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.success,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderHairline,
@@ -179,14 +175,12 @@ function createStyles(colors: ThemeColors) {
     productLine: {
       ...typography.caption,
       color: colors.textSecondary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     totalRow: { justifyContent: 'space-between', marginTop: spacing.xs },
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     totalValue: {
       ...typography.h3,
       color: colors.textPrimary,

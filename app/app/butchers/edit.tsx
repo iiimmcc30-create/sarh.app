@@ -25,7 +25,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { rtlBackIcon, getRtlText } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -654,7 +654,7 @@ function createStyles(colors: ThemeColors) {
   logoBadge: { bottom: 4, left: 4, width: 24, height: 24, borderRadius: 12 },
   form: { paddingHorizontal: spacing.lg, gap: spacing.md },
   fieldGroup: { gap: 6 },
-  fieldLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', ...getRtlText(), },
+  fieldLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
   input: {
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
@@ -694,7 +694,7 @@ function createStyles(colors: ThemeColors) {
   phoneCodeText: { ...typography.bodyStrong, color: colors.textPrimary },
   phoneInput: { flex: 1 },
   sectionDivider: { marginTop: spacing.sm, marginBottom: 4 },
-  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', ...getRtlText(), },
+  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
   hoursRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   hourField: { flex: 1, gap: 6 },
   hourLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
@@ -732,6 +732,6 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.success + '33',
   },
-  coordsText: { ...typography.caption, color: colors.textBrandSuccess, flex: 1, ...getRtlText(), },
+  coordsText: { ...typography.caption, color: colors.textBrandSuccess, flex: 1, writingDirection: 'rtl', textAlign: 'right', },
 });
 }

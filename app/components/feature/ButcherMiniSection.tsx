@@ -18,7 +18,6 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { gccCurrencies } from '@/services/butcherData';
 import { countries } from '@/services/types';
 import { useButcher } from '@/hooks/useButcher';
-import { getRtlText } from '@/lib/rtl';
 
 const STORY_RING_COLORS = {
   daily_slaughter: ['#EF4444', '#DC2626'],
@@ -530,8 +529,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
       lineHeight: 24,
       fontWeight: '600',
       color: '#fff',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     heroMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -560,14 +558,12 @@ function createStyles(colors: ThemeColors, isHero = false) {
       lineHeight: 20,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     tagLine: {
       ...typography.caption,
       lineHeight: 18,
       color: colors.textSecondary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     metaRow: {
       flexDirection: 'row',
       alignItems: 'center',

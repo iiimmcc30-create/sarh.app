@@ -17,7 +17,7 @@ import {
   getActionSheetState,
   subscribeActionSheet,
 } from '@/lib/actionSheet';
-import { getRtlText, alignInlineEnd, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { alignInlineEnd, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 
 /** Global host — mount once in root layout so action sheets work on web + native. */
 export function ActionSheetHost() {
@@ -227,15 +227,13 @@ function createStyles(colors: ThemeColors) {
     itemText: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     itemTextDanger: { color: colors.rose },
     itemTextCancel: { color: colors.textMuted },
     itemSubtitle: {
       ...typography.micro,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     itemChevron: {
       color: colors.textSubtle,
     },

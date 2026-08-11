@@ -8,7 +8,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
+import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { launchPaymentCheckout } from '@/services/payments';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -537,7 +537,7 @@ export default function ListingPromoteScreen() {
                 value={customAmountDraft}
                 onChangeText={setCustomAmountDraft}
                 keyboardType="number-pad"
-                style={[styles.modalInput, getRtlText()]}
+                style={[styles.modalInput, { writingDirection: 'rtl', textAlign: 'right' }]}
                 placeholder={`${PROMOTE_AMOUNT_MIN} - ${PROMOTE_AMOUNT_MAX}`}
                 placeholderTextColor={colors.textMuted}
               />
@@ -559,7 +559,7 @@ export default function ListingPromoteScreen() {
                 value={customDurationDraft}
                 onChangeText={setCustomDurationDraft}
                 keyboardType="number-pad"
-                style={[styles.modalInput, getRtlText()]}
+                style={[styles.modalInput, { writingDirection: 'rtl', textAlign: 'right' }]}
                 placeholder={`${PROMOTE_DURATION_HOURS_MIN} - ${PROMOTE_DURATION_HOURS_MAX}`}
                 placeholderTextColor={colors.textMuted}
               />
@@ -640,24 +640,21 @@ function createStyles(colors: ThemeColors) {
     listingHeroTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
-      flex: 1,
+      writingDirection: 'rtl', textAlign: 'right', flex: 1,
       lineHeight: 22,
     },
     listingHeroPrice: {
       ...typography.caption,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     section: {
       gap: spacing.sm,
     },
     sectionHint: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     sliderCard: {
       gap: spacing.sm,
       padding: spacing.md,
@@ -674,8 +671,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     customBtn: {
       alignItems: 'center',
       gap: 4,
@@ -723,14 +719,12 @@ function createStyles(colors: ThemeColors) {
     goalTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     goalDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     goalPreviewTag: {
       alignItems: 'center',
       gap: 6,
@@ -750,15 +744,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     sliderValue: {
       fontSize: 28,
       lineHeight: 34,
       fontWeight: '600',
       color: colors.textBrandStrong,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     slider: {
       width: '100%',
       height: 40,
@@ -773,13 +765,11 @@ function createStyles(colors: ThemeColors) {
     validationText: {
       ...typography.caption,
       color: colors.warning,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     errorText: {
       ...typography.caption,
       color: colors.danger,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     bottomBar: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.borderSoft,
@@ -800,14 +790,12 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     totalValue: {
       ...typography.h3,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     payBtnWrap: {
       flex: 1.2,
     },
@@ -826,8 +814,7 @@ function createStyles(colors: ThemeColors) {
     modalTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     modalInput: {
       borderWidth: 1,
       borderColor: colors.borderSoft,
@@ -843,8 +830,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#7C3AED',
       fontWeight: '600' as const,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     flowCard: {
       gap: spacing.sm,
       padding: spacing.md,
@@ -857,8 +843,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     flowSteps: {
       gap: 4,
     },
@@ -866,13 +851,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.electric,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     flowStepMuted: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     reachCard: {
       gap: spacing.sm,
       padding: spacing.md,
@@ -889,21 +872,18 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: '#7C3AED',
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     reachValue: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
       lineHeight: 24,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     reachHint: {
       ...typography.micro,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     priceCard: {
       gap: spacing.xs,
       padding: spacing.md,
@@ -916,19 +896,16 @@ function createStyles(colors: ThemeColors) {
     priceCardLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     priceCardValue: {
       fontSize: 28,
       lineHeight: 34,
       fontWeight: '600',
       color: colors.textBrandStrong,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     priceCardHint: {
       ...typography.micro,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
   });
 }

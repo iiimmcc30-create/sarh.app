@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
+import { rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 
 export default function ContactScreen() {
   const { colors, gradients } = useTheme();
@@ -167,7 +167,7 @@ function createStyles(colors: ThemeColors) {
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     gap: spacing.sm,
   },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText(), marginBottom: spacing.sm },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.sm },
   channelCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
@@ -181,7 +181,7 @@ function createStyles(colors: ThemeColors) {
   channelLabel: { ...typography.caption, color: colors.textMuted },
   channelValue: { ...typography.bodyStrong, color: colors.textPrimary },
   fieldGroup: { gap: spacing.sm },
-  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600', ...getRtlText(), },
+  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,

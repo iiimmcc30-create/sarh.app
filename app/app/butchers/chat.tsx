@@ -23,7 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, getRtlText } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ChatMessage, ButcherProfile } from '@/services/butcherData';
@@ -772,7 +772,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingVertical: 8,
   },
-  orderStripText: { ...typography.caption, color: colors.textMuted, flex: 1, ...getRtlText(), },
+  orderStripText: { ...typography.caption, color: colors.textMuted, flex: 1, writingDirection: 'rtl', textAlign: 'right', },
 
   messagesList: {
     paddingHorizontal: spacing.lg,
@@ -883,7 +883,7 @@ function createMessageStyles(colors: ThemeColors) {
     overflow: 'hidden',
   },
   timeText: { ...typography.micro, marginTop: 4 },
-  timeTextMe: { color: 'rgba(255,255,255,0.55)', ...getRtlText(), },
+  timeTextMe: { color: 'rgba(255,255,255,0.55)', writingDirection: 'rtl', textAlign: 'right', },
   timeTextThem: { color: colors.textSubtle },
   });
 }

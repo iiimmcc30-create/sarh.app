@@ -25,7 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { Country } from '@/services/types';
@@ -359,7 +359,7 @@ export default function CreateListingScreen() {
                     onChangeText={setDescAr}
                     placeholder="صف الحيوان بالتفصيل: العمر، الجنس، الحالة الصحية..."
                     placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { ...getRtlText(), textAlignVertical: 'top', height: 80 }]}
+                    style={[styles.input, { writingDirection: 'rtl', textAlign: 'right', textAlignVertical: 'top', height: 80 }]}
                     multiline
                     maxLength={500}
                   />
@@ -672,8 +672,8 @@ function createStyles(colors: ThemeColors) {
     ...(Platform.OS === 'web' ? { flexGrow: 0 } : {}),
   },
   stepContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.md, gap: spacing.md },
-  stepTitle: { ...typography.h2, color: colors.textPrimary, ...getRtlText(), },
-  stepSubtitle: { ...typography.body, color: colors.textMuted, ...getRtlText(), marginBottom: spacing.xs },
+  stepTitle: { ...typography.h2, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', },
+  stepSubtitle: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.xs },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: CAT_GAP },
   catCard: {
     width: CAT_CARD_SIZE,
@@ -702,7 +702,7 @@ function createStyles(colors: ThemeColors) {
   },
   currencyLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
   fieldHint: { ...typography.micro, color: colors.gold },
-  mapHint: { ...typography.micro, color: colors.textMuted, ...getRtlText(), },
+  mapHint: { ...typography.micro, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', },
   row: { flexDirection: 'row', gap: spacing.md },
   imageGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm,
@@ -723,7 +723,7 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center', gap: 2,
   },
   imagePickerText: { ...typography.caption, color: colors.textMuted },
-  imagePickerSub: { ...typography.micro, color: colors.textSubtle, ...getRtlText(), },
+  imagePickerSub: { ...typography.micro, color: colors.textSubtle, writingDirection: 'rtl', textAlign: 'right', },
   countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   countryChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -760,13 +760,13 @@ function createStyles(colors: ThemeColors) {
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   reviewLabel: { ...typography.caption, color: colors.textMuted },
-  reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, ...getRtlText(), },
+  reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', },
   termsBox: {
     flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start',
     padding: spacing.md, backgroundColor: `${colors.electric}10`,
     borderRadius: radius.lg, borderWidth: 1, borderColor: `${colors.electric}20`,
   },
-  termsText: { ...typography.caption, color: colors.textMuted, flex: 1, lineHeight: 18, ...getRtlText(), },
+  termsText: { ...typography.caption, color: colors.textMuted, flex: 1, lineHeight: 18, writingDirection: 'rtl', textAlign: 'right', },
   bottomBar: {
     flexShrink: 0,
     paddingHorizontal: spacing.lg,

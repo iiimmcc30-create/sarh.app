@@ -19,7 +19,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { sarhScreenStyles } from '@/constants/sarhScreen';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
@@ -250,15 +250,13 @@ function createMarketStyles(
       ...typography.h1,
       fontWeight: '600',
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     pageSubtitle: {
       ...typography.caption,
       fontSize: 13,
       lineHeight: 18,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     headerActions: {
       alignItems: 'center',
       gap: spacing.sm,
@@ -296,8 +294,7 @@ function createMarketStyles(
       ...typography.body,
       fontSize: 14,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     filterRow: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
@@ -325,8 +322,7 @@ function createMarketStyles(
       fontSize: 12,
       color: colors.textSecondary,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     filterChipTextActive: {
       color: '#fff',
     },
@@ -342,8 +338,7 @@ function createMarketStyles(
       ...typography.caption,
       fontSize: 12,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
     emptyIcon: { fontSize: 40 },
     emptyText: { ...typography.body, color: colors.textMuted },

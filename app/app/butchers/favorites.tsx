@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { ButcherProfile } from '@/services/butcherData';
 import {
@@ -207,8 +207,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     ratingRow: { alignItems: 'center', gap: 4 },
     rating: { ...typography.caption, color: colors.gold, fontWeight: '600' },
     reviews: { ...typography.caption, color: colors.textMuted },
@@ -218,7 +217,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    openText: { ...typography.micro, fontWeight: '600', ...getRtlText(), },
+    openText: { ...typography.micro, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
     actions: { marginTop: spacing.sm, gap: spacing.sm, alignItems: 'center' },
     visitBtn: {
       flex: 1,
@@ -233,8 +232,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.electricBright,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     removeBtn: {
       width: 40,
       height: 40,
@@ -270,7 +268,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: '#fff',
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
   });
 }

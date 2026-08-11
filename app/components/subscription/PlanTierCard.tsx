@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   formatPlanFeatureText,
   planIcon,
@@ -196,14 +196,12 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h3,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     desc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     priceBlock: {
       gap: 2,
       alignItems: 'flex-end',
@@ -245,8 +243,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       flex: 1,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     featureMuted: {
       color: colors.textSubtle,
       textDecorationLine: 'line-through',

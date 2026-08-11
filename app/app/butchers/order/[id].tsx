@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
-import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
+import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { CUT_LABELS, CutType } from '@/services/butcherData';
@@ -246,8 +246,7 @@ const s = StyleSheet.create({
   orderNumber: {
     ...typography.h2,
     color: colors.textPrimary,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   badge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
@@ -255,12 +254,11 @@ const s = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  badgeText: { ...typography.caption, fontWeight: '600', ...getRtlText(), },
+  badgeText: { ...typography.caption, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
   sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
-    ...getRtlText(),
-    marginBottom: spacing.sm,
+    writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.sm,
   },
   timelineItem: {
     ...getRtlRow(),
@@ -304,24 +302,23 @@ const s = StyleSheet.create({
     flex: 1,
     paddingBottom: spacing.sm,
   },
-  timelineLabel: { ...typography.body, color: colors.textMuted, ...getRtlText(), },
+  timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', },
   timelineDone: { color: colors.textPrimary, fontWeight: '600' },
   timelineActive: { color: colors.electricBright, fontWeight: '600' },
-  timelineNote: { ...typography.caption, color: colors.textMuted, ...getRtlText(), marginTop: 2 },
+  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', marginTop: 2 },
   row: {
     ...getRtlRow(),
     justifyContent: 'space-between',
     gap: spacing.md,
     paddingVertical: 4,
   },
-  rowLabel: { ...typography.caption, color: colors.textMuted, ...getRtlText(), },
+  rowLabel: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', },
   rowValue: {
     ...typography.caption,
     color: colors.textPrimary,
     fontWeight: '600',
     flex: 1,
-    ...getRtlText(),
-  },
+    writingDirection: 'rtl', textAlign: 'right', },
   itemBlock: {
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,

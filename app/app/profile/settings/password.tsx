@@ -6,7 +6,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { useState } from 'react';
@@ -153,8 +153,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textSecondary,
       flex: 1,
-      ...getRtlText(),
-      lineHeight: 22,
+      writingDirection: 'rtl', textAlign: 'right', lineHeight: 22,
     },
   });
 }

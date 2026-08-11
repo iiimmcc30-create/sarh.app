@@ -5,7 +5,7 @@ import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HomeAppBarProps = {
@@ -80,8 +80,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     searchPlaceholder: {
       ...typography.body,
-      ...getRtlText(),
-      flex: 1,
+      writingDirection: 'rtl', textAlign: 'right', flex: 1,
       color: colors.textMuted,
       fontSize: 14,
     },

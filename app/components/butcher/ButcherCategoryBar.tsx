@@ -1,7 +1,7 @@
 import { CATEGORY_LABELS, type MeatCategory } from '@/services/butcherData';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 type ButcherCategoryBarProps = {
@@ -72,8 +72,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     icon: { fontSize: 14 },
     label: {
       ...typography.caption,
-      ...getRtlText(),
-      color: colors.textSecondary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
       fontWeight: '600',
     },
     labelActive: {

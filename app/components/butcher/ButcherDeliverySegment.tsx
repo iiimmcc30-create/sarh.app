@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import type { DeliveryType } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -77,8 +77,7 @@ function createStyles(colors: ThemeColors) {
     },
     optionText: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: colors.textSecondary,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
       fontSize: 14,
     },
     optionTextActive: {
@@ -86,8 +85,7 @@ function createStyles(colors: ThemeColors) {
     },
     hint: {
       ...typography.caption,
-      ...getRtlText(),
-      color: colors.textMuted,
+      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
       paddingHorizontal: spacing.xs,
     },
   });

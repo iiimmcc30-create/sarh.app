@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   planDisplayName,
   planIcon,
@@ -188,18 +188,15 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h2,
       color: colors.textPrimary,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     price: {
       ...typography.bodyStrong,
       color: colors.electric,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     renew: {
       ...typography.micro,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     usageGrid: {
       gap: spacing.sm,
     },
@@ -244,7 +241,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       fontWeight: '600',
       flex: 1,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
   });
 }

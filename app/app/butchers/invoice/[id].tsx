@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import {
@@ -190,14 +190,12 @@ function createStyles(colors: ThemeColors) {
     brand: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     invoiceTitle: {
       ...typography.h3,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     invoiceNo: {
       ...typography.bodyStrong,
       color: colors.electricBright,
@@ -208,8 +206,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-      marginBottom: spacing.xs,
+      writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.xs,
       paddingBottom: spacing.xs,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
@@ -222,8 +219,7 @@ function createStyles(colors: ThemeColors) {
     rowLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     rowValue: {
       ...typography.caption,
       color: colors.textPrimary,
@@ -244,8 +240,7 @@ function createStyles(colors: ThemeColors) {
     grandLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     grandValue: {
       ...typography.h2,
       color: colors.electricBright,

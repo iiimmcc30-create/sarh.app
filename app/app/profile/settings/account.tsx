@@ -6,7 +6,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
   fetchAccountSettings,
   updateAccountSettings,
@@ -117,7 +117,7 @@ export default function AccountInfoScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>رقم الهاتف</Text>
+            <Text style={[styles.sectionLabel, { writingDirection: 'rtl', textAlign: 'right' }]}>رقم الهاتف</Text>
             <View style={[styles.row, getRtlRow()]}>
               <Pressable
                 style={styles.changeBtn}
@@ -125,12 +125,12 @@ export default function AccountInfoScreen() {
               >
                 <Text style={styles.changeBtnText}>تغيير</Text>
               </Pressable>
-              <Text style={[styles.value, getRtlText()]}>{formatPhone(account?.phone)}</Text>
+              <Text style={[styles.value, { writingDirection: 'rtl', textAlign: 'right' }]}>{formatPhone(account?.phone)}</Text>
             </View>
           </View>
 
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>البريد الإلكتروني</Text>
+            <Text style={[styles.sectionLabel, { writingDirection: 'rtl', textAlign: 'right' }]}>البريد الإلكتروني</Text>
             <AppTextInput
               value={email}
               onChangeText={setEmail}
@@ -149,7 +149,7 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={[styles.sectionLabel, getRtlText()]}>تاريخ الميلاد</Text>
+            <Text style={[styles.sectionLabel, { writingDirection: 'rtl', textAlign: 'right' }]}>تاريخ الميلاد</Text>
             <AppTextInput
               value={birthDate}
               onChangeText={setBirthDate}
@@ -157,7 +157,7 @@ export default function AccountInfoScreen() {
               keyboardType="numbers-and-punctuation"
             />
             {account?.birthDate ? (
-              <Text style={[styles.hint, getRtlText()]}>
+              <Text style={[styles.hint, { writingDirection: 'rtl', textAlign: 'right' }]}>
                 المحفوظ: {formatBirthDate(account.birthDate)}
               </Text>
             ) : null}
@@ -172,7 +172,7 @@ export default function AccountInfoScreen() {
 
           <View style={styles.noteCard}>
             <AppIcon name="information-circle-outline" size={20} color={styles.noteIcon.color} />
-            <Text style={[styles.noteText, getRtlText()]}>
+            <Text style={[styles.noteText, { writingDirection: 'rtl', textAlign: 'right' }]}>
               لتغيير رقم الجوال ستحتاج إلى التحقق برمز OTP المرسل إلى الرقم الجديد.
             </Text>
           </View>

@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -92,8 +92,7 @@ function createStyles(colors: ThemeColors) {
     },
     summary: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: '#fff',
+      writingDirection: 'rtl', textAlign: 'right', color: '#fff',
     },
     right: {
       alignItems: 'flex-end',
@@ -101,13 +100,11 @@ function createStyles(colors: ThemeColors) {
     },
     total: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: '#fff',
+      writingDirection: 'rtl', textAlign: 'right', color: '#fff',
     },
     cta: {
       ...typography.micro,
-      ...getRtlText(),
-      color: 'rgba(255,255,255,0.9)',
+      writingDirection: 'rtl', textAlign: 'right', color: 'rgba(255,255,255,0.9)',
       fontWeight: '600',
     },
   });

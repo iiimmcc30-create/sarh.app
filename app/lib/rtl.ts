@@ -48,21 +48,6 @@ export async function setupRtlFromStorage(
   return stored;
 }
 
-/**
- * Inline-start text alignment for Arabic/RTL UI.
- *
- * Critical (Android / RN Text): when Yoga layout direction is RTL,
- * `textAlign: 'right'` is mirrored to visual LEFT and `textAlign: 'left'`
- * to visual RIGHT (see ReactTextShadowNode / TextAttributeProps).
- * Web does not mirror — use physical right for RTL.
- */
-export function rtlStartAlign(): 'left' | 'right' {
-  if (Platform.OS === 'web') {
-    return isAppRtl() ? 'right' : 'left';
-  }
-  return I18nManager?.isRTL ? 'left' : 'right';
-}
-
 /** Root / screen layout direction for the active locale. */
 export function getRtlDirection(): ViewStyle {
   if (isAppRtl()) {
@@ -81,13 +66,6 @@ export function getRtlRow(): ViewStyle {
   return Platform.OS === 'web'
     ? { flexDirection: 'row', direction: 'ltr' }
     : { flexDirection: 'row' };
-}
-
-/** Primary body text — direction + alignment for the active locale. */
-export function getRtlText(): TextStyle {
-  return isAppRtl()
-    ? { writingDirection: 'rtl', textAlign: rtlStartAlign() }
-    : { writingDirection: 'ltr', textAlign: 'left' };
 }
 
 /** Cross-axis alignment at inline start. */

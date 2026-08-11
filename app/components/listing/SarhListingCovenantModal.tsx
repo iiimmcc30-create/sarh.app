@@ -4,7 +4,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -77,11 +77,11 @@ export function SarhListingCovenantModal({
           >
             <View style={styles.feeBadge}>
               <AppIcon name="receipt-outline" size={18} color={colors.textBrandStrong} />
-              <Text style={[styles.feeBadgeText, getRtlText()]}>الرسوم: 1% من قيمة البيع</Text>
+              <Text style={[styles.feeBadgeText, { writingDirection: 'rtl', textAlign: 'right' }]}>الرسوم: 1% من قيمة البيع</Text>
             </View>
 
             <View style={styles.oathCard}>
-              <Text style={[styles.oathText, getRtlText()]}>
+              <Text style={[styles.oathText, { writingDirection: 'rtl', textAlign: 'right' }]}>
                 أقسم بالله العظيم أنني إذا تم بيع هذا الإعلان، سواءً عن طريق تطبيق{' '}
                 <Text style={styles.brand}>سرح</Text> أو بسببه، فسألتزم بسداد عمولة{' '}
                 <Text style={styles.brand}>سرح</Text> وقدرها{' '}
@@ -97,7 +97,7 @@ export function SarhListingCovenantModal({
               <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
                 {checked ? <AppIcon name="checkmark" size={14} color="#fff" /> : null}
               </View>
-              <Text style={[styles.checkboxText, getRtlText()]}>
+              <Text style={[styles.checkboxText, { writingDirection: 'rtl', textAlign: 'right' }]}>
                 إنني أوافق بما ورد أعلاه، كما أتعهد بالالتزام بـ{' '}
                 <Text
                   style={styles.link}
@@ -126,7 +126,7 @@ export function SarhListingCovenantModal({
               icon="add-circle-outline"
             />
             <Pressable onPress={handleClose} style={styles.cancelBtn}>
-              <Text style={[styles.cancelText, getRtlText()]}>إلغاء</Text>
+              <Text style={[styles.cancelText, { writingDirection: 'rtl', textAlign: 'right' }]}>إلغاء</Text>
             </Pressable>
           </View>
         </View>
@@ -176,9 +176,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: '#fff',
       flex: 1,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     scrollContent: {
       padding: spacing.lg,
       gap: spacing.md,

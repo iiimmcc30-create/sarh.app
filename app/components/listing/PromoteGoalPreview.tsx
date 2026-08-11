@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import type { PromotionGoal } from '@/services/listingPromote';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { StyleSheet, Text, View } from 'react-native';
@@ -95,8 +95,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     mockCard: {
       padding: spacing.sm,
       borderRadius: radius.lg,
@@ -113,8 +112,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      ...getRtlText(),
-      fontSize: 14,
+      writingDirection: 'rtl', textAlign: 'right', fontSize: 14,
     },
     mockMeta: {
       alignItems: 'center',
@@ -155,14 +153,12 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#7C3AED',
       fontWeight: '600',
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     reachDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
     reachBars: {
       ...getRtlRow(),
       alignItems: 'flex-end',
@@ -194,13 +190,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 18,
-      ...getRtlText(),
-      flex: 1,
+      writingDirection: 'rtl', textAlign: 'right', flex: 1,
     },
     hintMuted: {
       ...typography.caption,
       color: colors.textMuted,
-      ...getRtlText(),
-    },
+      writingDirection: 'rtl', textAlign: 'right', },
   });
 }

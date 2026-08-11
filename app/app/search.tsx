@@ -20,7 +20,7 @@ import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, marginAutoStart, rtlBackIcon, getRtlRow } from '@/lib/rtl';
+import { marginAutoStart, rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { useApp } from '@/hooks/useApp';
@@ -201,7 +201,7 @@ export default function SearchScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🔥 الأكثر تداولاً</Text>
             {trendingTags.length === 0 ? (
-              <Text style={{ color: colors.textMuted, ...typography.caption, ...getRtlText(), }}>
+              <Text style={{ color: colors.textMuted, ...typography.caption, writingDirection: 'rtl', textAlign: 'right', }}>
                 لا توجد هاشتاقات رائجة حالياً
               </Text>
             ) : (
@@ -371,7 +371,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderHairline,
   },
-  recentText: { ...typography.body, color: colors.textSecondary, flex: 1, ...getRtlText(), },
+  recentText: { ...typography.body, color: colors.textSecondary, flex: 1, writingDirection: 'rtl', textAlign: 'right', },
   trendingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   trendingChip: {
     paddingHorizontal: spacing.md, paddingVertical: 7,
@@ -396,7 +396,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   liveThumbnail: { width: 88, height: 66, borderRadius: ds.radius.md },
   liveInfo: { flex: 1, gap: 4 },
-  liveTitle: { ...typography.caption, color: colors.textPrimary, ...getRtlText(), lineHeight: 18 },
+  liveTitle: { ...typography.caption, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', lineHeight: 18 },
   liveHost: { ...typography.micro, color: colors.textMuted },
   liveStats: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   liveBadge: {

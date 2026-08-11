@@ -166,15 +166,13 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     fontSize: SIDEBAR_MENU_ITEM.titleSize,
     fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
-    ...getRtlText(),
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right',
   },
   subtitle: {
     ...typography.caption,
     fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
     lineHeight: 18,
-    ...getRtlText(),
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right',
   },
   spacer: {
     flex: 1,

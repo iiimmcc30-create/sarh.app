@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Manage Screen (إدارة الملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, marginEnd, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlRow, marginEnd, rtlForwardIcon } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -1595,8 +1595,7 @@ function createMainStyles(colors: ThemeColors) {
   locationSub: {
     ...typography.caption,
     color: colors.textMuted,
-    ...getRtlText(),
-    marginTop: 4,
+    writingDirection: 'rtl', textAlign: 'right', marginTop: 4,
   },
   locationEditBtn: {
     width: 36,
@@ -1650,7 +1649,7 @@ function createProductFormStyles(colors: ThemeColors) {
     alignSelf: 'center', marginBottom: spacing.md,
   },
   title: { ...typography.h3, color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.md },
-  label: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', marginBottom: 5, ...getRtlText(), },
+  label: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', marginBottom: 5, writingDirection: 'rtl', textAlign: 'right', },
   input: {
     backgroundColor: colors.bgElevated,
     borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
@@ -1753,7 +1752,7 @@ function createProductFormStyles(colors: ThemeColors) {
     writingDirection: 'rtl',
   },
   uploadText: { ...typography.micro, color: colors.textBrandStrong, fontWeight: '600', textAlign: 'center' },
-  uploadHint: { ...typography.micro, color: colors.textSubtle, ...getRtlText(), marginBottom: spacing.lg },
+  uploadHint: { ...typography.micro, color: colors.textSubtle, writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.lg },
   actions: { flexDirection: 'row', gap: spacing.md },
   cancelBtn: {
     flex: 1, paddingVertical: 13,
@@ -1791,7 +1790,7 @@ function createOrderStyles(colors: ThemeColors) {
     borderRadius: radius.pill, borderWidth: 1,
   },
   statusText: { ...typography.micro, fontWeight: '600' },
-  orderNumber: { ...typography.micro, color: colors.textMuted, ...getRtlText(), },
+  orderNumber: { ...typography.micro, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', },
   detailRow: { flexDirection: 'row', gap: spacing.md },
   detail: { flex: 1, gap: 2 },
   detailLabel: { ...typography.micro, color: colors.textMuted },
@@ -1835,8 +1834,8 @@ function createOrderStyles(colors: ThemeColors) {
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  modalTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText(), },
-  modalSub: { ...typography.caption, color: colors.textMuted, ...getRtlText(), marginBottom: spacing.sm },
+  modalTitle: { ...typography.h3, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', },
+  modalSub: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.sm },
   reasonChip: {
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -1849,7 +1848,7 @@ function createOrderStyles(colors: ThemeColors) {
     borderColor: colors.danger,
     backgroundColor: colors.danger + '18',
   },
-  reasonChipText: { ...typography.caption, color: colors.textSecondary, ...getRtlText(), },
+  reasonChipText: { ...typography.caption, color: colors.textSecondary, writingDirection: 'rtl', textAlign: 'right', },
   reasonChipTextActive: { color: colors.danger, fontWeight: '600' },
   customReasonInput: {
     borderWidth: 1,
@@ -1968,8 +1967,7 @@ const sto = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
     fontWeight: '600',
-    ...getRtlText(),
-    marginBottom: spacing.xs,
+    writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.xs,
   },
   activeCard: {
     flexDirection: 'row',
