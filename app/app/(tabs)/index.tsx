@@ -47,7 +47,8 @@ export default function HomeScreen() {
         gap: 4,
       },
       postsSection: {
-        marginTop: spacing.sm,
+        // Keep tight under SectionHeader — same rhythm as listingsSection.
+        marginTop: 0,
         gap: 4,
       },
       empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
