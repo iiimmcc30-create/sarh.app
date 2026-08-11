@@ -20,7 +20,6 @@ import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
-import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { confirmSignOut } from '@/lib/confirmSignOut';
@@ -72,10 +71,6 @@ export default function ButcherSidebarScreen() {
     });
   };
 
-  const toggleTheme = () => {
-    setPreference(preference === 'dark' ? 'light' : 'dark');
-  };
-
   const ownerItems: MenuItem[] = useMemo(() => {
     if (!isButcherOwner) return [];
 
@@ -91,30 +86,6 @@ export default function ButcherSidebarScreen() {
         icon: 'bar-chart-outline',
         label: 'لوحة التحليلات',
         route: '/(butcher)',
-      },
-      {
-        key: 'manage',
-        icon: 'settings-outline',
-        label: 'إدارة الملحمة',
-        route: '/(butcher)/manage',
-      },
-      {
-        key: 'products',
-        icon: 'cube-outline',
-        label: 'المنتجات',
-        route: '/(butcher)/manage?tab=products',
-      },
-      {
-        key: 'offers',
-        icon: 'pricetag-outline',
-        label: 'العروض',
-        route: '/(butcher)/manage?tab=offers',
-      },
-      {
-        key: 'edit',
-        icon: 'create-outline',
-        label: 'تعديل بيانات الملحمة',
-        route: '/butchers/edit',
       },
       {
         key: 'butcher-messages',
@@ -173,28 +144,6 @@ export default function ButcherSidebarScreen() {
     return items;
   }, [isButcherOwner, hasAnyApplication, hasPendingApplication]);
 
-  const generalItems: MenuItem[] = [
-    {
-      key: 'butchers',
-      icon: 'storefront-outline',
-      label: 'سوق الملاحم',
-      route: '/butchers',
-    },
-    {
-      key: 'notifications',
-      icon: 'notifications-outline',
-      label: 'الإشعارات',
-      route: '/notifications',
-      badge: notificationsUnread,
-    },
-    {
-      key: 'promotion',
-      icon: 'megaphone-outline',
-      label: 'الترويج',
-      route: '/promote',
-    },
-  ];
-
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
@@ -233,17 +182,6 @@ export default function ButcherSidebarScreen() {
             </SidebarSection>
           ) : null}
 
-          <SidebarSection title="عام" colors={colors}>
-            {generalItems.map((item) => (
-              <SidebarMenuRow
-                key={item.key}
-                item={item}
-                colors={colors}
-                onPress={() => (item.route ? handleNav(item.route) : item.onPress?.())}
-              />
-            ))}
-          </SidebarSection>
-
           {applicationItems.length > 0 ? (
             <SidebarSection title="التسجيل والطلبات" colors={colors}>
               {applicationItems.map((item) => (
@@ -258,15 +196,6 @@ export default function ButcherSidebarScreen() {
           ) : null}
 
           <SidebarSection title="التفضيلات" colors={colors}>
-            <SidebarMenuRow
-              item={{
-                key: 'theme',
-                icon: preference === 'dark' ? 'weather-night' : 'sunny-outline',
-                label: 'الوضع النهاري / الداكن',
-              }}
-              colors={colors}
-              onPress={toggleTheme}
-            />
             <SidebarMenuRow
               item={{
                 key: 'main-app',
