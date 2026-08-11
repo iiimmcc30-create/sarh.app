@@ -27,7 +27,6 @@ import {
   SidebarLogoutButton,
   SidebarMenuRow,
   SidebarSection,
-  SidebarThemeToggle,
   type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
 
@@ -38,7 +37,7 @@ const BRAND_TAGLINE = 'منصة المواشي السعودية';
 export default function SidebarScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
-  const { preference, setPreference, colors } = useTheme();
+  const { colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
   const { isButcherOwner, refresh } = useButcherOwnerAccess();
 
@@ -60,11 +59,8 @@ export default function SidebarScreen() {
     });
   };
 
-  const toggleTheme = () => {
-    setPreference(preference === 'dark' ? 'light' : 'dark');
-  };
-
-  const accountItems: MenuItem[] = useMemo(() => {
+  /** الملف الشخصي · المنشورات · الملاحم · إدارة الملحمة · المفضلة */
+  const browseItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [
       {
         key: 'profile',
@@ -73,9 +69,15 @@ export default function SidebarScreen() {
         route: '/(tabs)/profile',
       },
       {
+        key: 'posts',
+        icon: 'newspaper',
+        label: 'المنشورات',
+        route: '/(tabs)/posts',
+      },
+      {
         key: 'butchers',
         icon: 'storefront-outline',
-        label: 'سوق الملاحم',
+        label: 'الملاحم',
         route: '/butchers',
       },
     ];
@@ -99,14 +101,9 @@ export default function SidebarScreen() {
     return items;
   }, [isButcherOwner]);
 
-  const serviceItems: MenuItem[] = useMemo(
+  /** تعزيز سرح · خدمات سرح */
+  const sarhItems: MenuItem[] = useMemo(
     () => [
-      {
-        key: 'posts',
-        icon: 'newspaper',
-        label: 'مجلس سرح',
-        route: '/(tabs)/posts',
-      },
       {
         key: 'promote',
         icon: 'megaphone-outline',
@@ -123,14 +120,9 @@ export default function SidebarScreen() {
     [],
   );
 
-  const supportItems: MenuItem[] = useMemo(
+  /** الإعدادات والخصوصية */
+  const settingsItems: MenuItem[] = useMemo(
     () => [
-      {
-        key: 'support',
-        icon: 'lifebuoy',
-        label: 'الدعم والمساعدة',
-        route: '/support',
-      },
       {
         key: 'settings',
         icon: 'settings-outline',
@@ -181,15 +173,9 @@ export default function SidebarScreen() {
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
         >
-          <SidebarSection colors={colors}>{renderSectionItems(accountItems)}</SidebarSection>
-          <SidebarSection colors={colors}>{renderSectionItems(serviceItems)}</SidebarSection>
-          <SidebarSection colors={colors}>{renderSectionItems(supportItems)}</SidebarSection>
-
-          <SidebarThemeToggle
-            preference={preference}
-            colors={colors}
-            onToggle={toggleTheme}
-          />
+          <SidebarSection colors={colors}>{renderSectionItems(browseItems)}</SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(sarhItems)}</SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(settingsItems)}</SidebarSection>
 
           <SidebarLogoutButton colors={colors} onPress={handleSignOut} />
 

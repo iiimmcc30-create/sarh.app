@@ -340,9 +340,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
 
   return StyleSheet.create({
     card: {
-      marginHorizontal: feedCard ? spacing.lg : spacing.md,
-      marginTop: feedCard ? spacing.md : spacing.sm,
-      marginBottom: feedCard ? spacing.xs : 0,
+      marginHorizontal: feedCard ? spacing.md : spacing.md,
+      marginTop: feedCard ? 6 : 4,
+      marginBottom: feedCard ? 2 : 0,
       borderRadius: ds.radius.xl,
       backgroundColor: colors.bgSurface,
       borderWidth: feedCard ? 1 : 0,
@@ -359,7 +359,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     },
     cardProfile: {
       marginHorizontal: 0,
-      marginTop: spacing.md,
+      marginTop: 0,
       backgroundColor: colors.bgSurface,
       ...cardShadow,
     },

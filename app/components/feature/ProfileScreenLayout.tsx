@@ -675,10 +675,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     postsFeed: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
+      paddingTop: spacing.sm,
       paddingBottom: spacing.xl,
       minHeight: 200,
-      gap: spacing.sm,
+      gap: 4,
     },
     tabsBar: {
       backgroundColor: colors.bgSurface,

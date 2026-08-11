@@ -42,11 +42,11 @@ export default function HomeScreen() {
         paddingBottom: spacing.lg,
       },
       listingsSection: {
-        gap: spacing.md,
+        gap: 4,
       },
       postsSection: {
         marginTop: spacing.sm,
-        gap: spacing.md,
+        gap: 4,
       },
       empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
       emptyIcon: { fontSize: 36 },
