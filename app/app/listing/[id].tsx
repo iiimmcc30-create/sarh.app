@@ -692,8 +692,9 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     price: {
-      fontSize: 28,
-      lineHeight: 34,
+      ...typography.bodyStrong,
+      fontSize: 15,
+      lineHeight: 22,
       color: colors.textBrandStrong,
       fontWeight: '600',
       width: '100%',
@@ -701,8 +702,9 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     priceOnRequest: {
-      ...typography.h3,
-      fontSize: 18,
+      ...typography.bodyStrong,
+      fontSize: 15,
+      lineHeight: 22,
       color: colors.textBrandStrong,
       fontWeight: '600',
       width: '100%',
