@@ -16,6 +16,7 @@ import {
   Alert,
   DevSettings,
   I18nManager,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -24,6 +25,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TAB_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 24;
+
+const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.safat.app';
+import { Platform } from 'react-native';
+
+function openStoreRating() {
+  const url = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
+  Linking.openURL(url).catch(() => {});
+}
 
 export default function MoreScreen() {
   const router = useRouter();
@@ -78,8 +88,10 @@ export default function MoreScreen() {
       </View>
 
       <AppScrollView contentContainerStyle={styles.content}>
+        {/* المظهر */}
         <SidebarThemeToggle preference={preference} colors={colors} onToggle={onToggleTheme} />
 
+        {/* اللغة */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>اللغة</Text>
@@ -101,6 +113,7 @@ export default function MoreScreen() {
           </View>
         </View>
 
+        {/* السياسات والشروط */}
         <View style={styles.sectionLabelWrap}>
           <Text style={styles.sectionLabel}>السياسات والشروط</Text>
         </View>
@@ -115,24 +128,34 @@ export default function MoreScreen() {
           />
         </View>
 
+        {/* عن سرح */}
         <View style={styles.sectionLabelWrap}>
-          <Text style={styles.sectionLabel}>الحساب</Text>
+          <Text style={styles.sectionLabel}>عن سرح</Text>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
-            icon="user"
-            title="الملف الشخصي"
-            subtitle="عرض حسابك وإدارته"
+            icon="lifebuoy"
+            title="الدعم والمساعدة"
+            subtitle="مركز الدعم والأسئلة الشائعة"
             colors={colors}
             showDivider
-            onPress={() => safePush('/(tabs)/profile', undefined, router)}
+            onPress={() => safePush('/support/index', undefined, router)}
           />
           <SidebarMenuItem
-            icon="settings"
-            title="الإعدادات والخصوصية"
+            icon="mail-outline"
+            title="تواصل معنا"
+            subtitle="تواصل مع فريق سرح"
+            colors={colors}
+            showDivider
+            onPress={() => safePush('/info/contact', undefined, router)}
+          />
+          <SidebarMenuItem
+            icon="star-outline"
+            title="تقييم التطبيق"
+            subtitle="أخبرنا برأيك وساعدنا في التطوير"
             colors={colors}
             showDivider={false}
-            onPress={() => safePush('/profile/settings', undefined, router)}
+            onPress={openStoreRating}
           />
         </View>
       </AppScrollView>
