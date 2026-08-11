@@ -245,11 +245,24 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  <View style={[styles.nameRow, getRtlRow()]}>
-                    <Text style={styles.displayName} numberOfLines={2}>
-                      {displayName}
-                    </Text>
+                  {/*
+                   * Physical LTR shell — name must not share a shrinking row with
+                   * the rating chip (long Arabic names like «محمد بن عبدالعزيز» were clipped).
+                   */}
+                  <View style={styles.nameRow}>
+                    <View style={styles.nameShell}>
+                      <Text style={styles.displayName} numberOfLines={2}>
+                        {displayName}
+                      </Text>
+                    </View>
                     {user.verified ? <VerificationBadge size={18} /> : null}
+                  </View>
+                  <View style={styles.nameMetaRow}>
+                    <View style={styles.handleShell}>
+                      <Text style={styles.handleText} numberOfLines={1}>
+                        @{user.username}
+                      </Text>
+                    </View>
                     <Pressable
                       onPress={onRatePress}
                       disabled={!onRatePress}
@@ -265,7 +278,6 @@ export function ProfileScreenLayout({
                       ) : null}
                     </Pressable>
                   </View>
-                  <Text style={styles.handleText}>@{user.username}</Text>
                 </View>
 
                 <View style={styles.statsCard}>
@@ -467,29 +479,54 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 8,
     },
     nameBlock: {
-      gap: 2,
+      gap: 4,
+      width: '100%',
     },
     nameRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
+      justifyContent: 'flex-end',
       gap: 8,
-      flexWrap: 'wrap',
+      width: '100%',
+    },
+    nameShell: {
+      direction: 'ltr',
+      flex: 1,
+      minWidth: 0,
     },
     displayName: {
       ...typography.h2,
       fontSize: 22,
       fontWeight: '600',
       color: colors.textPrimary,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    nameMetaRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 8,
+      width: '100%',
+    },
+    handleShell: {
+      direction: 'ltr',
       flexShrink: 1,
+      minWidth: 0,
     },
     ratingChip: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       gap: 4,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: radius.pill,
       backgroundColor: colors.bgElevated,
+      flexShrink: 0,
     },
     ratingChipPressed: {
       opacity: 0.75,
@@ -510,7 +547,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textMuted,
       fontWeight: '500',
       fontSize: 13,
-      ...getRtlText(),
+      textAlign: 'right',
+      writingDirection: 'ltr',
     },
     statsCard: {
       marginTop: 6,
