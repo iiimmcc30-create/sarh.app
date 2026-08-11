@@ -29,7 +29,9 @@ import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
 import { safePush } from '@/lib/safeNavigate';
 
 const HOME_REFRESH_TTL_MS = 60_000;
-const HOME_POSTS_LIMIT = 6;
+const HOME_LISTINGS_LIMIT = 10;
+const HOME_BUTCHERS_LIMIT = 10;
+const HOME_POSTS_LIMIT = 10;
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 export default function HomeScreen() {
@@ -45,7 +47,8 @@ export default function HomeScreen() {
         gap: 4,
       },
       postsSection: {
-        marginTop: spacing.sm,
+        // Keep tight under SectionHeader — same rhythm as listingsSection.
+        marginTop: 0,
         gap: 4,
       },
       empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
@@ -130,7 +133,10 @@ export default function HomeScreen() {
   );
 
   const displayedListings = useMemo(() => {
-    return interleavePromotedListings(listings.slice().sort(compareListingBoostPriority));
+    return interleavePromotedListings(listings.slice().sort(compareListingBoostPriority)).slice(
+      0,
+      HOME_LISTINGS_LIMIT,
+    );
   }, [listings]);
 
   const recentPosts = useMemo(() => {
@@ -169,8 +175,7 @@ export default function HomeScreen() {
             onRefresh={() => void fetchStories(true)}
           />
 
-          <ButcherMiniSection size="hero" showStories={false} limit={8} />
-
+          {/* 1) الإعلانات → 2) الملاحم → 3) المنشورات */}
           <SectionHeader
             title="الإعلانات"
             onSeeAll={() => safePush('/(tabs)/market', undefined, router)}
@@ -195,6 +200,8 @@ export default function HomeScreen() {
               ))
             )}
           </View>
+
+          <ButcherMiniSection size="grid" showStories={false} limit={HOME_BUTCHERS_LIMIT} />
 
           <SectionHeader
             title="المنشورات"

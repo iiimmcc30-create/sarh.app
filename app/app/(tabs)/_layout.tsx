@@ -23,7 +23,7 @@ export default function TabsLayout() {
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
-          height: ds.tabBar.height + ds.tabBar.fabLift + 32,
+          height: ds.tabBar.height + 28,
         },
       }}
     >
