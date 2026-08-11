@@ -123,7 +123,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     labelActive: {
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

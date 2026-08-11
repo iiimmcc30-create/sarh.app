@@ -205,7 +205,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     minWidth: 22,
     height: 22,
     paddingHorizontal: spacing.xs,
-    borderRadius: 11,
+    borderRadius: 12,
     backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
@@ -213,7 +213,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   badgeText: {
     ...typography.micro,
     color: '#fff',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   markAllRow: {
     paddingHorizontal: spacing.lg,

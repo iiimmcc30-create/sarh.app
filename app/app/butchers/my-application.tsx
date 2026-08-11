@@ -349,7 +349,7 @@ function createStyles(colors: ThemeColors) {
   },
   datesCard: {
     backgroundColor: colors.bgGlass,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     padding: spacing.lg,

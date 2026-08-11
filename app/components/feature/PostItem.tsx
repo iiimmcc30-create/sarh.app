@@ -366,7 +366,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     avatar: {
       width: 48,
       height: 48,
-      borderRadius: 24,
+      borderRadius: 20,
       backgroundColor: colors.bgElevated,
       flexShrink: 0,
     },
@@ -388,7 +388,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     },
     name: {
       fontSize: 16,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       flexShrink: 1,
       ...getRtlText(),
@@ -404,7 +404,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     },
     ratingMiniText: {
       fontSize: 11,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textSecondary,
     },
     metaMuted: {
@@ -428,13 +428,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     },
     aiBadgeText: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textSecondary,
     },
     menuBtn: {
       width: 30,
       height: 30,
-      borderRadius: 15,
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,

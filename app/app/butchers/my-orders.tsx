@@ -244,7 +244,7 @@ function createStyles(colors: ThemeColors) {
     orderNumber: {
       ...typography.bodyStrong,
       color: colors.electricBright,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
     },
@@ -268,7 +268,7 @@ function createStyles(colors: ThemeColors) {
     },
     statusText: {
       ...typography.micro,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
     divider: {
@@ -309,7 +309,7 @@ function createStyles(colors: ThemeColors) {
     totalValue: {
       ...typography.h3,
       color: colors.electricBright,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     empty: {
       alignItems: 'center',
@@ -335,7 +335,7 @@ function createStyles(colors: ThemeColors) {
     emptyBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
   });

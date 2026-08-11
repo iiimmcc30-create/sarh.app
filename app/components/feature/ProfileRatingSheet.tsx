@@ -98,7 +98,7 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     subtitle: {
       ...typography.caption,
@@ -121,7 +121,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.h1,
       fontSize: 32,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     scoreHint: {
       ...typography.caption,

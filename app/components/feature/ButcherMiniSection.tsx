@@ -22,7 +22,7 @@ import { useButcher } from '@/hooks/useButcher';
 const STORY_RING_COLORS = {
   daily_slaughter: ['#EF4444', '#DC2626'],
   offer:           ['#F59E0B', '#D97706'],
-  new_stock:       ['#10B981', '#059669'],
+  new_stock:       ['#20B66F', '#18965B'],
   update:          ['#3B82F6', '#2563EB'],
 } as const;
 
@@ -423,7 +423,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
     newBadgeText: {
       ...typography.micro,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 9,
     },
     ratingChip: {
@@ -438,7 +438,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
     ratingText: {
       ...typography.micro,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 11,
     },
     ratingCount: {
@@ -475,7 +475,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
     statusText: {
       ...typography.micro,
       color: '#fff',
-      fontWeight: '700',
+      fontWeight: '600',
       fontSize: 10,
     },
 
@@ -508,7 +508,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
     badgeText: {
       ...typography.micro,
       color: '#fff',
-      fontWeight: '700',
+      fontWeight: '600',
       fontSize: 9,
     },
 
@@ -527,7 +527,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
     heroName: {
       ...typography.h3,
       lineHeight: 24,
-      fontWeight: '700',
+      fontWeight: '600',
       color: '#fff',
     },
     heroMetaRow: {
@@ -557,7 +557,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
       ...typography.bodyStrong,
       lineHeight: 20,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     tagLine: {
       ...typography.caption,

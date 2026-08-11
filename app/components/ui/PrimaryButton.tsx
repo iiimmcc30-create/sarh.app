@@ -9,9 +9,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
-import { controls, motion, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { controls, motion, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
@@ -50,10 +49,10 @@ export function PrimaryButton({
   const blocked = disabled || loading;
   const contentColor =
     variant === 'gold'
-      ? '#1A1300'
+      ? '#101820'
       : variant === 'outline' || variant === 'ghost'
         ? colors.textPrimary
-        : '#FFFFFF';
+        : sarh.color.fab;
 
   const content = (
     <View style={styles.content}>
@@ -177,7 +176,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     small: {
       paddingHorizontal: spacing.lg,
       minHeight: controls.heightSm,
-      borderRadius: radius.md,
+      borderRadius: sarh.radius.md,
     },
     fullWidth: { width: '100%' },
     pressed: {

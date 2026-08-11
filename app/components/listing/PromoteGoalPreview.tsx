@@ -94,7 +94,7 @@ function createStyles(colors: ThemeColors) {
     label: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -156,7 +156,7 @@ function createStyles(colors: ThemeColors) {
     reachTitle: {
       ...typography.caption,
       color: '#7C3AED',
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
     reachDesc: {

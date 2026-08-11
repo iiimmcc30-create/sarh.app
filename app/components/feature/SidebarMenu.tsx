@@ -1,13 +1,21 @@
 import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  SidebarMenuItem as SidebarMenuItemRow,
+  type SidebarMenuItemProps,
+} from '@/components/ui/SidebarMenuItem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection, getRtlRow, getRtlText, rtlForwardIcon } from '@/lib/rtl';
+import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 
-export type SidebarMenuItem = {
+/**
+ * Data shape for building sidebar/settings menus.
+ * Prefer `title`; `label` is kept for existing call sites.
+ */
+export type SidebarNavItem = {
   key: string;
   icon: string;
-  label: string;
+  title?: string;
+  label?: string;
   subtitle?: string;
   route?: string;
   onPress?: () => void;
@@ -20,13 +28,15 @@ export function SidebarSection({
   children,
   colors,
 }: {
-  title: string;
+  title?: string;
   children: ReactNode;
   colors: ThemeColors;
 }) {
   return (
-    <View style={[sectionStyles.block, getRtlDirection()]}>
-      <Text style={[sectionStyles.title, getRtlText(), { color: colors.textMuted }]}>{title}</Text>
+    <View style={sectionStyles.block}>
+      {title ? (
+        <Text style={[sectionStyles.title, { color: colors.textMuted }]}>{title}</Text>
+      ) : null}
       <View
         style={[
           sectionStyles.card,
@@ -42,105 +52,131 @@ export function SidebarSection({
   );
 }
 
+/**
+ * Adapter over the canonical SidebarMenuItem design-system row.
+ * Accepts the existing data object API used by sidebars/settings.
+ */
 export function SidebarMenuRow({
   item,
   colors,
   onPress,
   iconColor,
   isLast = false,
+  active = false,
+  showChevron = true,
 }: {
-  item: SidebarMenuItem;
+  item: SidebarNavItem;
   colors: ThemeColors;
   onPress: () => void;
   iconColor?: string;
   isLast?: boolean;
+  active?: boolean;
+  showChevron?: boolean;
 }) {
-  const tint = iconColor ?? colors.textMuted;
+  const title = item.title ?? item.label ?? '';
 
   return (
-    <Pressable
+    <SidebarMenuItemRow
+      icon={item.icon}
+      title={title}
+      subtitle={item.subtitle}
       onPress={onPress}
-      style={({ pressed }) => [
-        rowStyles.row,
-        getRtlRow(),
-        getRtlDirection(),
-        !isLast && {
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.borderHairline,
-        },
-        pressed && rowStyles.rowPressed,
-      ]}
-    >
-      <View style={rowStyles.labelWrap}>
-        <Text style={[rowStyles.label, getRtlText(), { color: colors.textPrimary }]}>{item.label}</Text>
-        {item.subtitle ? (
-          <Text style={[rowStyles.subtitle, getRtlText(), { color: colors.textMuted }]}>
-            {item.subtitle}
-          </Text>
-        ) : null}
-      </View>
-      <View style={[rowStyles.iconWrap, { backgroundColor: `${tint}18` }]}>
-        <AppIcon name={item.icon} size={20} color={tint} />
-      </View>
-      {item.badge && item.badge > 0 ? (
-        <View style={[rowStyles.badge, { backgroundColor: colors.electric }]}>
-          <Text style={rowStyles.badgeText}>
-            {item.badge > 99 ? '99+' : item.badge}
-          </Text>
-        </View>
-      ) : (
-        <AppIcon name={rtlForwardIcon()} size={16} color={colors.textSubtle} />
-      )}
-    </Pressable>
+      badge={item.badge}
+      active={active}
+      showDivider={!isLast}
+      showChevron={showChevron}
+      iconColor={iconColor ?? item.accent}
+      colors={colors}
+    />
   );
 }
+
+/** Canonical design-system row — preferred for new code. */
+export { SidebarMenuItemRow as SidebarMenuItem };
+export type { SidebarMenuItemProps };
 
 export function SidebarThemeToggle({
   preference,
   colors,
   onToggle,
 }: {
-  preference: 'light' | 'dark';
+  preference: 'light' | 'dark' | 'system';
   colors: ThemeColors;
   onToggle: () => void;
 }) {
-  const isDark = preference === 'dark';
+  const isDark = preference !== 'light';
+  const isRtl = I18nManager.isRTL;
 
   return (
     <View
       style={[
         themeStyles.wrap,
-        getRtlDirection(),
         {
+          direction: isRtl ? 'rtl' : 'ltr',
           backgroundColor: colors.bgElevated,
           borderColor: colors.borderSoft,
         },
       ]}
     >
-      <View style={[themeStyles.header, getRtlRow(), getRtlDirection()]}>
-        <Text style={[themeStyles.title, getRtlText(), { color: colors.textPrimary }]}>المظهر</Text>
+      <View
+        style={[
+          themeStyles.header,
+          {
+            flexDirection: 'row',
+            direction: isRtl ? 'rtl' : 'ltr',
+          },
+        ]}
+      >
+        <Text
+          style={[
+            themeStyles.title,
+            {
+              color: colors.textPrimary,
+              textAlign: isRtl ? 'right' : 'left',
+              writingDirection: isRtl ? 'rtl' : 'ltr',
+            },
+          ]}
+        >
+          المظهر
+        </Text>
         <AppIcon name={isDark ? 'weather-night' : 'sunny-outline'} size={20} color={colors.textMuted} />
       </View>
-      <View style={[themeStyles.track, { backgroundColor: colors.bgDeep, borderColor: colors.borderHairline }]}>
+      <View
+        style={[
+          themeStyles.track,
+          {
+            flexDirection: 'row',
+            direction: isRtl ? 'rtl' : 'ltr',
+            backgroundColor: colors.bgDeep,
+            borderColor: colors.borderHairline,
+          },
+        ]}
+      >
         <Pressable
           onPress={() => isDark && onToggle()}
           style={[
             themeStyles.option,
+            { flexDirection: 'row' },
             !isDark && { backgroundColor: colors.electric, shadowColor: colors.electric },
           ]}
         >
           <AppIcon name="sunny-outline" size={16} color={!isDark ? '#fff' : colors.textMuted} />
-          <Text style={[themeStyles.optionText, { color: !isDark ? '#fff' : colors.textMuted }]}>فاتح</Text>
+          <Text style={[themeStyles.optionText, { color: !isDark ? '#fff' : colors.textMuted }]}>
+            فاتح
+          </Text>
         </Pressable>
         <Pressable
           onPress={() => !isDark && onToggle()}
           style={[
             themeStyles.option,
+            { flexDirection: 'row' },
             isDark && { backgroundColor: colors.electric, shadowColor: colors.electric },
           ]}
         >
           <AppIcon name="weather-night" size={16} color={isDark ? '#fff' : colors.textMuted} />
-          <Text style={[themeStyles.optionText, { color: isDark ? '#fff' : colors.textMuted }]}>داكن</Text>
+          <Text style={[themeStyles.optionText, { color: isDark ? '#fff' : colors.textMuted }]}>
+            داكن
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -156,11 +192,11 @@ export function SidebarLogoutButton({
 }) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="تسجيل الخروج"
       onPress={onPress}
       style={({ pressed }) => [
         logoutStyles.btn,
-        getRtlRow(),
-        getRtlDirection(),
         {
           backgroundColor: colors.bgElevated,
           borderColor: colors.borderSoft,
@@ -168,7 +204,8 @@ export function SidebarLogoutButton({
         pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
       ]}
     >
-      <Text style={[logoutStyles.text, getRtlText(), { color: colors.rose }]}>تسجيل الخروج</Text>
+      <View style={logoutStyles.spacer} />
+      <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
       <View style={[logoutStyles.iconWrap, { backgroundColor: `${colors.rose}14` }]}>
         <AppIcon name="log-out-outline" size={20} color={colors.rose} />
       </View>
@@ -183,68 +220,18 @@ const sectionStyles = StyleSheet.create({
   },
   title: {
     ...typography.caption,
-    fontWeight: '800',
+    fontWeight: '600',
     fontSize: 12,
     letterSpacing: 0.4,
-    ...getRtlText(),
-    ...getRtlText(),
     marginBottom: spacing.sm,
     paddingHorizontal: 4,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   card: {
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-  },
-});
-
-const rowStyles = StyleSheet.create({
-  row: {
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    minHeight: 56,
-  },
-  rowPressed: {
-    opacity: 0.76,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  labelWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  label: {
-    ...typography.bodyStrong,
-    fontSize: 15,
-    fontWeight: '600',
-    ...getRtlText(),
-    ...getRtlText(),
-  },
-  subtitle: {
-    ...typography.caption,
-    fontSize: 12,
-    ...getRtlText(),
-    ...getRtlText(),
-  },
-  badge: {
-    minWidth: 24,
-    height: 22,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 7,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '800',
   },
 });
 
@@ -265,13 +252,10 @@ const themeStyles = StyleSheet.create({
   title: {
     ...typography.bodyStrong,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '600',
     flex: 1,
-    ...getRtlText(),
-    ...getRtlText(),
   },
   track: {
-    ...getRtlRow(),
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 4,
@@ -279,7 +263,6 @@ const themeStyles = StyleSheet.create({
   },
   option: {
     flex: 1,
-    ...getRtlRow(),
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
@@ -292,13 +275,15 @@ const themeStyles = StyleSheet.create({
   },
   optionText: {
     ...typography.caption,
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 13,
   },
 });
 
 const logoutStyles = StyleSheet.create({
   btn: {
+    flexDirection: 'row',
+    direction: 'ltr',
     alignItems: 'center',
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
@@ -307,20 +292,25 @@ const logoutStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 56,
+  },
+  spacer: {
+    flex: 1,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   text: {
     ...typography.bodyStrong,
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 15,
-    flex: 1,
-    ...getRtlText(),
-    ...getRtlText(),
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    flexShrink: 1,
   },
 });

@@ -724,7 +724,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.gold + '44',
     },
-    verifiedText: { ...typography.micro, color: colors.gold, fontWeight: '700' },
+    verifiedText: { ...typography.micro, color: colors.gold, fontWeight: '600' },
 
     section: { marginBottom: spacing.lg },
     sectionTitle: {
@@ -792,14 +792,14 @@ function createStyles(colors: ThemeColors) {
     productPrice: {
       ...typography.caption,
       color: colors.gold,
-      fontWeight: '800',
+      fontWeight: '600',
       ...getRtlText(),
       marginTop: 2,
     },
     selectedDot: {
       width: 22,
       height: 22,
-      borderRadius: 11,
+      borderRadius: 12,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',

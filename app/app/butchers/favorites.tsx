@@ -206,12 +206,12 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
     },
     ratingRow: { alignItems: 'center', gap: 4 },
-    rating: { ...typography.caption, color: colors.gold, fontWeight: '800' },
+    rating: { ...typography.caption, color: colors.gold, fontWeight: '600' },
     reviews: { ...typography.caption, color: colors.textMuted },
     openBadge: {
       alignSelf: 'flex-start',
@@ -219,7 +219,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    openText: { ...typography.micro, fontWeight: '700', writingDirection: 'rtl' },
+    openText: { ...typography.micro, fontWeight: '600', writingDirection: 'rtl' },
     actions: { marginTop: spacing.sm, gap: spacing.sm, alignItems: 'center' },
     visitBtn: {
       flex: 1,
@@ -233,7 +233,7 @@ function createStyles(colors: ThemeColors) {
     visitBtnText: {
       ...typography.caption,
       color: colors.electricBright,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
     removeBtn: {
@@ -270,7 +270,7 @@ function createStyles(colors: ThemeColors) {
     emptyBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
   });

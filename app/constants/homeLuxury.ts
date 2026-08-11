@@ -1,9 +1,6 @@
-/**
- * Dark-mode premium palette — Sarh 2026
- * Prefer `colors` from useTheme() in components.
- */
 import { sarh } from './sarhTokens';
 
+/** Dark luxury aliases — sourced from sarhTokens for a single source of truth. */
 export const luxuryDark = {
   bg: sarh.color.bg,
   card: sarh.color.surface,
@@ -20,6 +17,3 @@ export const luxuryDark = {
   radius: sarh.radius.card,
   tabGlass: sarh.color.overlay,
 } as const;
-
-/** @deprecated Use luxuryDark or theme colors */
-export const homeLuxury = luxuryDark;

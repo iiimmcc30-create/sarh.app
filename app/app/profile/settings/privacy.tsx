@@ -247,7 +247,7 @@ function createStyles(colors: ThemeColors) {
     label: {
       ...typography.bodyStrong,
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textPrimary,
       textAlign: 'right',
     },

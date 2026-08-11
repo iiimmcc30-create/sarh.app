@@ -13,6 +13,7 @@ import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/featu
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
+import { safePush } from '@/lib/safeNavigate';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
 
 export default function ProfileScreen() {
@@ -94,10 +95,14 @@ export default function ProfileScreen() {
   );
 
   const openConnections = (t: 'followers' | 'following') => {
-    router.push({
-      pathname: '/profile/connections',
-      params: { userId: me.id, tab: t, username: me.username },
-    } as never);
+    safePush(
+      {
+        pathname: '/profile/connections',
+        params: { userId: me.id, tab: t, username: me.username },
+      },
+      undefined,
+      router,
+    );
   };
 
   const handleShare = () => {
@@ -119,7 +124,7 @@ export default function ProfileScreen() {
       return (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>لا توجد منشورات بعد</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => router.push('/create/post')}>
+          <Pressable style={styles.emptyBtn} onPress={() => safePush('/create/post', undefined, router)}>
             <Text style={styles.emptyBtnText}>+ أنشئ منشوراً</Text>
           </Pressable>
         </View>
@@ -163,7 +168,9 @@ export default function ProfileScreen() {
         listing={listing}
         variant="list"
         listMode="market"
-        onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
+        onPress={() =>
+          safePush({ pathname: '/listing/[id]', params: { id: listing.id } }, undefined, router)
+        }
       />
     ));
   };
@@ -175,15 +182,19 @@ export default function ProfileScreen() {
       hasStoryRing={hasStories}
       refreshing={refreshing}
       onRefresh={onRefresh}
-      onMenu={() => router.push('/sidebar')}
-      onEditProfile={() => router.push('/profile/edit')}
-      onEditAvatar={() => router.push('/profile/edit')}
+      onMenu={() => safePush('/sidebar', undefined, router)}
+      onEditProfile={() => safePush('/profile/edit', undefined, router)}
+      onEditAvatar={() => safePush('/profile/edit', undefined, router)}
       onAvatarPress={() => {
         if (hasStories && myStoryGroup) {
-          router.push({
-            pathname: '/stories/view',
-            params: { groupIndex: '0' },
-          } as never);
+          safePush(
+            {
+              pathname: '/stories/view',
+              params: { groupIndex: '0' },
+            },
+            undefined,
+            router,
+          );
         }
       }}
       onFollowersPress={() => openConnections('followers')}

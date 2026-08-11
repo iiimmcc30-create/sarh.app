@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   countText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   dotsRow: {
     position: 'absolute',

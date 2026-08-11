@@ -79,7 +79,7 @@ function createStyles(colors: ThemeColors) {
     },
     saveText: {
       fontSize: 10,
-      fontWeight: '700',
+      fontWeight: '600',
       color: '#fff',
     },
   });

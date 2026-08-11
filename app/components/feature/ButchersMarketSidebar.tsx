@@ -1,7 +1,9 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter, useSegments } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sarh } from '@/constants/sarhTokens';
 import {
@@ -12,7 +14,8 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
-import { getRtlText, borderInlineEnd, getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { borderInlineEnd } from '@/lib/rtl';
+import { closeThenPush } from '@/lib/safeNavigate';
 
 export type ButchersMarketMenuItem = {
   key: string;
@@ -91,8 +94,8 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
   const currentPath = `/${segments.join('/')}`;
 
   const handleNav = (route: string) => {
-    onClose();
-    setTimeout(() => router.push(route as any), 120);
+    // onClose = router.back via shell; closeThenPush handles back + guarded push
+    closeThenPush(route, undefined, router);
   };
 
   return (
@@ -108,7 +111,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
 
       <Pressable
         onPress={() => handleNav('/(tabs)/profile')}
-        style={[styles.profileRow, getRtlRow()]}
+        style={styles.profileRow}
       >
         <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
         <View style={styles.profileText}>
@@ -124,40 +127,24 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
         </View>
       </Pressable>
 
-      <ScrollView
+      <AppScrollView
         style={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
+        contentContainerStyle={styles.scrollContent}
       >
-        {BUTCHERS_MARKET_MENU.map((item) => {
-          const active = isItemActive(item, currentPath);
-          return (
-            <Pressable
+        <View style={styles.menuCard}>
+          {BUTCHERS_MARKET_MENU.map((item, index) => (
+            <SidebarMenuItem
               key={item.key}
+              icon={item.icon}
+              title={item.label}
+              active={isItemActive(item, currentPath)}
+              showDivider={index < BUTCHERS_MARKET_MENU.length - 1}
+              colors={colors}
               onPress={() => handleNav(item.route)}
-              style={({ pressed }) => [
-                styles.menuRow,
-                getRtlRow(),
-                active && styles.menuRowActive,
-                pressed && styles.menuRowPressed,
-              ]}
-            >
-              {active ? <View style={styles.activeBar} /> : null}
-              <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
-                <AppIcon
-                  name={item.icon}
-                  size={20}
-                  color={active ? sarh.color.action : colors.textMuted}
-                />
-              </View>
-              <Text style={[styles.menuLabel, active && styles.menuLabelActive]}>
-                {item.label}
-              </Text>
-              <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+            />
+          ))}
+        </View>
+      </AppScrollView>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>سرح · سوق الملاحم</Text>
@@ -199,6 +186,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
     profileRow: {
+      flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
       paddingHorizontal: spacing.lg,
@@ -209,7 +197,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     avatar: {
       width: 58,
       height: 58,
-      borderRadius: 18,
+      borderRadius: 16,
       borderWidth: 2,
       borderColor: sarh.color.action,
       backgroundColor: colors.bgElevated,
@@ -223,16 +211,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayName: {
       ...typography.h3,
       fontSize: 17,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
+      textAlign: 'right',
       writingDirection: 'rtl',
-      ...getRtlText(),
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
+      textAlign: 'right',
       writingDirection: 'rtl',
-      ...getRtlText(),
     },
     brandPill: {
       marginTop: 4,
@@ -243,70 +231,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     brandPillText: {
       ...typography.micro,
-      fontWeight: '700',
+      fontWeight: '600',
       color: isDark ? colors.textPrimary : '#3FA82E',
       writingDirection: 'rtl',
     },
     scroll: {
       flex: 1,
-      ...getRtlDirection(),
     },
     scrollContent: {
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.md,
       paddingBottom: spacing.lg,
     },
-    menuRow: {
-      alignItems: 'center',
-      gap: spacing.md,
-      marginHorizontal: spacing.md,
-      marginVertical: 3,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 14,
-      borderRadius: 14,
-      position: 'relative',
+    menuCard: {
+      marginHorizontal: spacing.lg,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
       overflow: 'hidden',
-    },
-    menuRowActive: {
-      backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
-    },
-    menuRowPressed: {
-      opacity: 0.85,
-      transform: [{ scale: 0.99 }],
-    },
-    activeBar: {
-      position: 'absolute',
-      start: 0,
-      top: 8,
-      bottom: 8,
-      width: 4,
-      borderRadius: 4,
-      backgroundColor: sarh.color.action,
-    },
-    iconWrap: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
-    },
-    iconWrapActive: {
-      backgroundColor: isDark ? 'rgba(32, 182, 111, 0.22)' : '#DFF5D6',
-    },
-    menuLabel: {
-      ...typography.bodyStrong,
-      flex: 1,
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-    },
-    menuLabelActive: {
-      color: colors.textPrimary,
-      fontWeight: '800',
     },
     footer: {
       paddingVertical: spacing.md,

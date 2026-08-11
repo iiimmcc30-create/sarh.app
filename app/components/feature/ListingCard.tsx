@@ -347,15 +347,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
     borderColor: scheme === 'dark' ? colors.borderSoft : tokens.stroke,
     overflow: 'hidden',
-  ...(scheme === 'dark'
-    ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 2,
-      }
-    : ambientShadow(scheme, 'card')),
+  ...ambientShadow(scheme, scheme === 'dark' ? 'soft' : 'card'),
   },
   listContent: {
     flex: 1,
@@ -388,7 +380,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     fontSize: 15,
     lineHeight: 20,
     color: colors.textPrimary,
-    fontWeight: '700',
+    fontWeight: '600',
     writingDirection: 'rtl',
     flex: 1,
   },
@@ -401,7 +393,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     fontSize: 18,
     lineHeight: 24,
     color: colors.textPrimary,
-    fontWeight: '700',
+    fontWeight: '600',
     writingDirection: 'rtl',
   },
   listPriceCurrency: {
@@ -435,12 +427,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   listStatusNew: {
     ...typography.micro,
     color: colors.cyan,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   listStatusFeatured: {
     ...typography.micro,
     color: colors.gold,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   listStatusPinned: {
     ...typography.micro,
@@ -458,7 +450,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   listAvatar: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: colors.bgElevated,
   },
   listSellerName: {
@@ -488,7 +480,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     start: 8,
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -509,7 +501,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     start: 6,
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -529,7 +521,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   listPhotoCountText: {
     ...typography.micro,
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 10,
   },
 
@@ -574,14 +566,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   profileTitle: {
     ...typography.caption,
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
     textAlign: 'right',
     flex: 1,
   },
   profilePrice: {
     ...typography.micro,
     color: colors.gold,
-    fontWeight: '700',
+    fontWeight: '600',
     textAlign: 'right',
   },
   profileStar: {
@@ -709,7 +701,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajTitle: {
     ...typography.h3,
     color: colors.textBrandStrong,
-    fontWeight: '700',
+    fontWeight: '600',
     ...getRtlText(),
     ...getRtlText(),
     lineHeight: 26,
@@ -769,7 +761,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajFeaturedText: {
     ...typography.micro,
     color: '#1A1300',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   harajDesc: {
     ...typography.body,
@@ -781,7 +773,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajPrice: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
-    fontWeight: '800',
+    fontWeight: '600',
     ...getRtlText(),
     ...getRtlText(),
   },
@@ -819,7 +811,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajPhotoCountText: {
     ...typography.micro,
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 11,
   },
   });

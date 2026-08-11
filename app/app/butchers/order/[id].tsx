@@ -255,7 +255,7 @@ const s = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  badgeText: { ...typography.caption, fontWeight: '700', writingDirection: 'rtl' },
+  badgeText: { ...typography.caption, fontWeight: '600', writingDirection: 'rtl' },
   sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
@@ -275,7 +275,7 @@ const s = StyleSheet.create({
   timelineDot: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.borderMid,
     backgroundColor: colors.bgElevated,
@@ -306,7 +306,7 @@ const s = StyleSheet.create({
   },
   timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl' },
   timelineDone: { color: colors.textPrimary, fontWeight: '600' },
-  timelineActive: { color: colors.electricBright, fontWeight: '800' },
+  timelineActive: { color: colors.electricBright, fontWeight: '600' },
   timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
   row: {
     ...getRtlRow(),

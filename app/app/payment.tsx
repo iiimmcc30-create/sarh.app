@@ -41,7 +41,7 @@ type Step = 'method' | 'card_details' | 'processing' | 'success';
 function MadaLogo({ size = 32 }: { size?: number }) {
   return (
     <View style={{ width: size * 1.9, height: size, borderRadius: size * 0.25, backgroundColor: '#005BAA', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontWeight: '900', fontSize: size * 0.45, letterSpacing: 1 }}>mada</Text>
+      <Text style={{ color: '#fff', fontWeight: '600', fontSize: size * 0.45, letterSpacing: 1 }}>mada</Text>
     </View>
   );
 }
@@ -49,7 +49,7 @@ function MadaLogo({ size = 32 }: { size?: number }) {
 function VisaLogo({ size = 32 }: { size?: number }) {
   return (
     <View style={{ width: size * 1.9, height: size, borderRadius: size * 0.25, backgroundColor: '#1A1F71', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontStyle: 'italic', fontWeight: '900', fontSize: size * 0.55, letterSpacing: -1 }}>VISA</Text>
+      <Text style={{ color: '#fff', fontStyle: 'italic', fontWeight: '600', fontSize: size * 0.55, letterSpacing: -1 }}>VISA</Text>
     </View>
   );
 }
@@ -76,7 +76,7 @@ function ApplePayLogo({ size = 32 }: { size?: number }) {
 function StcPayLogo({ size = 32 }: { size?: number }) {
   return (
     <View style={{ width: size * 2.2, height: size, borderRadius: size * 0.25, backgroundColor: '#4F008C', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontWeight: '900', fontSize: size * 0.4, letterSpacing: 0.5 }}>stc pay</Text>
+      <Text style={{ color: '#fff', fontWeight: '600', fontSize: size * 0.4, letterSpacing: 0.5 }}>stc pay</Text>
     </View>
   );
 }
@@ -179,7 +179,7 @@ const virtualCardStyles = StyleSheet.create({
   cardNumber: { color: '#fff', fontSize: 18, letterSpacing: 2.5, fontFamily: 'monospace', fontWeight: '600', textAlign: 'center' },
   bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   cardLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 10, letterSpacing: 1, marginBottom: 3, textTransform: 'uppercase' },
-  cardValue: { color: '#fff', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
+  cardValue: { color: '#fff', fontSize: 13, fontWeight: '600', letterSpacing: 1 },
   circle: { position: 'absolute', borderRadius: 999, backgroundColor: '#fff' },
 });
 
@@ -330,7 +330,7 @@ export default function PaymentScreen() {
               <AppIcon name="check-bold" size={52} color="#fff" />
             </LinearGradient>
             <Text style={styles.successTitle}>تمّ الاشتراك بنجاح 🎉</Text>
-            <Text style={styles.successSub}>أهلاً بك في باقة <Text style={{ color: planColorEnd, fontWeight: '800' }}>{plan.name}</Text></Text>
+            <Text style={styles.successSub}>أهلاً بك في باقة <Text style={{ color: planColorEnd, fontWeight: '600' }}>{plan.name}</Text></Text>
 
             <View style={styles.receiptCard}>
               <View style={styles.receiptHeader}>
@@ -612,7 +612,7 @@ export default function PaymentScreen() {
             <AppIcon name="lock-outline" size={13} color={colors.textSubtle} />
             <Text style={styles.niText}>
               مدفوعات آمنة عبر{' '}
-              <Text style={{ color: colors.electricBright, fontWeight: '700' }}>Network International</Text>
+              <Text style={{ color: colors.electricBright, fontWeight: '600' }}>Network International</Text>
             </Text>
           </View>
 
@@ -728,7 +728,7 @@ function FloatingField({ label, value, onChangeText, placeholder, keyboardType, 
 const floatStyles = StyleSheet.create({
   wrap: {
     height: 60,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1.5,
     backgroundColor: 'transparent',
     position: 'relative',
@@ -789,11 +789,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     // Step indicator
     stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, paddingBottom: 12, gap: 0 },
     stepItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    stepDot: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.bgElevated, borderWidth: 1.5, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
+    stepDot: { width: 22, height: 22, borderRadius: 12, backgroundColor: colors.bgElevated, borderWidth: 1.5, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
     stepDotActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-    stepDotText: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+    stepDotText: { fontSize: 11, fontWeight: '600', color: colors.textMuted },
     stepLabel: { fontSize: 11, color: colors.textMuted, marginHorizontal: 4 },
-    stepLabelActive: { color: colors.electricBright, fontWeight: '700' },
+    stepLabelActive: { color: colors.electricBright, fontWeight: '600' },
     stepLine: { width: 24, height: 1.5, backgroundColor: colors.borderSoft, marginHorizontal: 2 },
     stepLineActive: { backgroundColor: colors.electric },
 
@@ -803,9 +803,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     orderCard: { borderRadius: 20, padding: spacing.xl, marginBottom: spacing.xl, gap: spacing.sm },
     orderTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
     orderLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500', marginBottom: 4 },
-    orderPlanName: { fontSize: 22, fontWeight: '800', color: '#fff' },
+    orderPlanName: { fontSize: 22, fontWeight: '600', color: '#fff' },
     orderAmountWrap: { alignItems: 'flex-end' },
-    orderAmount: { fontSize: 38, fontWeight: '900', color: '#fff', lineHeight: 42 },
+    orderAmount: { fontSize: 38, fontWeight: '600', color: '#fff', lineHeight: 42 },
     orderCurrency: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.8)' },
     savingsTag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.22)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99, alignSelf: 'flex-start', marginTop: 4 },
     savingsText: { fontSize: 12, color: '#fff', fontWeight: '600' },
@@ -820,13 +820,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     methodCheck: { position: 'absolute', top: 8, left: 8, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
 
     // Wallet list
-    walletTitle: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginBottom: 10, letterSpacing: 0.5 },
+    walletTitle: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 10, letterSpacing: 0.5 },
     walletList: { gap: 10, marginBottom: 20 },
     walletCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: 16, backgroundColor: cardBg, borderWidth: 1.5, borderColor: colors.borderSoft },
     walletCardActive: { borderWidth: 2, backgroundColor: colors.bgDeep },
-    walletName: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+    walletName: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     walletSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-    radioCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
+    radioCircle: { width: 22, height: 22, borderRadius: 12, borderWidth: 2, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
     radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' },
 
     // Card form
@@ -847,11 +847,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
 
     // CTA
     ctaWrap: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.bgDeep + 'EE' },
-    ctaBtn: { borderRadius: 18, overflow: 'hidden', marginBottom: 4 },
-    ctaBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17, borderRadius: 18 },
+    ctaBtn: { borderRadius: 16, overflow: 'hidden', marginBottom: 4 },
+    ctaBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17, borderRadius: 16 },
     ctaBtnText: { ...typography.bodyStrong, color: '#fff', fontSize: 16 },
     ctaAmountPill: { backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99 },
-    ctaAmountText: { fontSize: 12, fontWeight: '800', color: '#fff' },
+    ctaAmountText: { fontSize: 12, fontWeight: '600', color: '#fff' },
 
     // Processing
     processingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
@@ -868,9 +868,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     successSub: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
     receiptCard: { width: '100%', backgroundColor: cardBg, borderRadius: 20, padding: spacing.lg, borderWidth: 1, borderColor: colors.borderMid },
     receiptHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    receiptHeaderText: { fontSize: 13, fontWeight: '700', color: colors.textMuted, letterSpacing: 0.5 },
+    receiptHeaderText: { fontSize: 13, fontWeight: '600', color: colors.textMuted, letterSpacing: 0.5 },
     receiptDivider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 10 },
-    successBtn: { width: '100%', borderRadius: 18, overflow: 'hidden' },
+    successBtn: { width: '100%', borderRadius: 16, overflow: 'hidden' },
     successBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
     successBtnText: { ...typography.bodyStrong, color: '#fff', fontSize: 16 },
   });

@@ -195,19 +195,19 @@ function createStyles(colors: ThemeColors) {
     invoiceTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
     invoiceNo: {
       ...typography.bodyStrong,
       color: colors.electricBright,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     section: { gap: spacing.sm },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
       marginBottom: spacing.xs,
@@ -233,7 +233,7 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'left',
       writingDirection: 'rtl',
     },
-    rowValueHighlight: { color: colors.success, fontWeight: '800' },
+    rowValueHighlight: { color: colors.success, fontWeight: '600' },
     grandTotal: {
       marginTop: spacing.sm,
       paddingTop: spacing.md,
@@ -250,7 +250,7 @@ function createStyles(colors: ThemeColors) {
     grandValue: {
       ...typography.h2,
       color: colors.electricBright,
-      fontWeight: '900',
+      fontWeight: '600',
     },
     footerNote: {
       ...typography.caption,

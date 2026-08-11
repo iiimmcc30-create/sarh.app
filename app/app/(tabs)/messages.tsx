@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-// SAFAT — Messages (hidden tab — use profile or deep links)
+// SAFAT — Messages (bottom tab)
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';

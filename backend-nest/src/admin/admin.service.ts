@@ -311,20 +311,123 @@ export class AdminService {
     return this.repo.listSections().then((sections) => ({ sections }));
   }
 
-  createSection(body: Record<string, unknown>) {
+  createSection(body: Record<string, unknown>, actorName?: string) {
     const parsed = createSectionSchema.safeParse(body);
     if (!parsed.success) {
       throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
     }
-    return this.repo.createSection(parsed.data).then((section) => ({ section }));
+    return this.repo
+      .createSection({
+        ...parsed.data,
+        updatedByName: actorName,
+        publishedAt: parsed.data.isActive === false ? null : new Date(),
+      })
+      .then(async (section) => {
+        await this.repo.createSectionVersion({
+          section: { connect: { id: section.id } },
+          titleAr: section.titleAr,
+          titleEn: section.titleEn,
+          bodyAr: section.bodyAr,
+          bodyEn: section.bodyEn,
+          version: 1,
+          isPublished: section.isActive,
+          createdByName: actorName,
+        });
+        return { section };
+      });
   }
 
-  updateSection(id: string, body: Record<string, unknown>) {
+  async updateSection(id: string, body: Record<string, unknown>, actorName?: string) {
     const parsed = updateSectionSchema.safeParse(body);
     if (!parsed.success) {
       throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
     }
-    return this.repo.updateSection(id, parsed.data).then((section) => ({ section }));
+    const current = await this.repo.getSection(id);
+    if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
+
+    const version = await this.repo.nextSectionVersion(id);
+    await this.repo.createSectionVersion({
+      section: { connect: { id } },
+      titleAr: current.titleAr,
+      titleEn: current.titleEn,
+      bodyAr: current.bodyAr,
+      bodyEn: current.bodyEn,
+      version,
+      isPublished: false,
+      createdByName: actorName,
+    });
+
+    const section = await this.repo.updateSection(id, {
+      ...parsed.data,
+      updatedByName: actorName,
+    });
+    return { section };
+  }
+
+  async publishSection(id: string, actorName?: string) {
+    const current = await this.repo.getSection(id);
+    if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
+    const version = await this.repo.nextSectionVersion(id);
+    await this.repo.createSectionVersion({
+      section: { connect: { id } },
+      titleAr: current.titleAr,
+      titleEn: current.titleEn,
+      bodyAr: current.bodyAr,
+      bodyEn: current.bodyEn,
+      version,
+      isPublished: true,
+      createdByName: actorName,
+    });
+    const section = await this.repo.updateSection(id, {
+      isActive: true,
+      publishedAt: new Date(),
+      updatedByName: actorName,
+    });
+    return { section };
+  }
+
+  async unpublishSection(id: string, actorName?: string) {
+    const section = await this.repo.updateSection(id, {
+      isActive: false,
+      updatedByName: actorName,
+    });
+    return { section };
+  }
+
+  async listSectionVersions(id: string) {
+    const current = await this.repo.getSection(id);
+    if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
+    const versions = await this.repo.listSectionVersions(id);
+    return { section: current, versions };
+  }
+
+  async restoreSectionVersion(id: string, versionId: string, actorName?: string) {
+    const current = await this.repo.getSection(id);
+    if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
+    const snap = await this.repo.getSectionVersion(versionId);
+    if (!snap || snap.sectionId !== id) throwApi(404, 'not_found', 'النسخة غير موجودة');
+
+    const version = await this.repo.nextSectionVersion(id);
+    await this.repo.createSectionVersion({
+      section: { connect: { id } },
+      titleAr: current.titleAr,
+      titleEn: current.titleEn,
+      bodyAr: current.bodyAr,
+      bodyEn: current.bodyEn,
+      version,
+      isPublished: false,
+      createdByName: actorName,
+    });
+
+    const section = await this.repo.updateSection(id, {
+      titleAr: snap.titleAr,
+      titleEn: snap.titleEn,
+      bodyAr: snap.bodyAr,
+      bodyEn: snap.bodyEn,
+      updatedByName: actorName,
+      isActive: false,
+    });
+    return { section, restoredFrom: snap.version };
   }
 
   async deleteSection(id: string) {

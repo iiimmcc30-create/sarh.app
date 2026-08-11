@@ -147,13 +147,13 @@ function createStyles(colors: ThemeColors) {
     headerFeature: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
       ...getRtlText(),
     },
     headerPlan: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       textAlign: 'center',
     },
     featureLabel: {

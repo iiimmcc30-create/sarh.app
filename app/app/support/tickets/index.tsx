@@ -99,7 +99,7 @@ function createStyles(colors: ThemeColors) {
     list: { gap: spacing.md, paddingBottom: spacing.huge },
     card: { gap: spacing.sm },
     cardTop: { ...getRtlRow(), justifyContent: 'space-between', alignItems: 'center' },
-    ticketNo: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '700' },
+    ticketNo: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '600' },
     statusPill: {
       backgroundColor: colors.bgSurface,
       borderRadius: 999,

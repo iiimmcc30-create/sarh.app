@@ -455,7 +455,7 @@ function createStyles(colors: ThemeColors) {
     closeBtn: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 16,
       backgroundColor: colors.bgGlass,
       alignItems: 'center',
       justifyContent: 'center',
@@ -478,7 +478,7 @@ function createStyles(colors: ThemeColors) {
     publishBannerTitle: {
       ...typography.body,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
     },
     publishBannerSub: {
       ...typography.caption,
@@ -499,7 +499,7 @@ function createStyles(colors: ThemeColors) {
     planSectionIcon: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -538,7 +538,7 @@ function createStyles(colors: ThemeColors) {
     planActionLabel: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     planActionQuota: {
       ...typography.micro,
@@ -547,7 +547,7 @@ function createStyles(colors: ThemeColors) {
     sectionLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
       marginTop: spacing.sm,
       marginBottom: spacing.xs,
     },
@@ -571,7 +571,7 @@ function createStyles(colors: ThemeColors) {
     },
     serviceTitle: {
       ...typography.body,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       ...getRtlText(),
     },
@@ -592,7 +592,7 @@ function createStyles(colors: ThemeColors) {
     servicePrice: {
       ...typography.caption,
       color: colors.textSecondary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     durationRow: {
       gap: spacing.sm,
@@ -608,7 +608,7 @@ function createStyles(colors: ThemeColors) {
     durationLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     durationPrice: {
       ...typography.h3,
@@ -627,7 +627,7 @@ function createStyles(colors: ThemeColors) {
     summaryTitle: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '800',
+      fontWeight: '600',
       marginBottom: 4,
     },
     summaryRow: {
@@ -645,7 +645,7 @@ function createStyles(colors: ThemeColors) {
     },
     summaryAmount: {
       color: colors.electricBright,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     methodRow: {
       flexWrap: 'wrap',
@@ -689,7 +689,7 @@ function createStyles(colors: ThemeColors) {
     payBtnText: {
       ...typography.body,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
     },
     footerActions: {
       alignItems: 'center',
@@ -703,7 +703,7 @@ function createStyles(colors: ThemeColors) {
     skipText: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     niBadge: {
       alignItems: 'center',

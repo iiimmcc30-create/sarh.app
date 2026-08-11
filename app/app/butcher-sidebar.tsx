@@ -4,7 +4,8 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   scrimColor,
@@ -15,7 +16,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
@@ -23,14 +24,15 @@ import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { confirmSignOut } from '@/lib/confirmSignOut';
+import { closeThenPush, safeReplace } from '@/lib/safeNavigate';
 import {
   SidebarLogoutButton,
   SidebarMenuRow,
   SidebarSection,
-  type SidebarMenuItem,
+  type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
 
-type MenuItem = SidebarMenuItem;
+type MenuItem = SidebarNavItem;
 
 export default function ButcherSidebarScreen() {
   const router = useRouter();
@@ -60,15 +62,14 @@ export default function ButcherSidebarScreen() {
   );
 
   const handleNav = (route: string) => {
-    router.back();
-    setTimeout(() => router.push(route as any), 120);
+    closeThenPush(route, undefined, router);
   };
 
   const handleSignOut = () => {
     confirmSignOut(async () => {
       router.back();
       await signOut();
-      setTimeout(() => router.replace('/auth/phone' as any), 300);
+      setTimeout(() => safeReplace('/auth/phone', { force: true }, router), 300);
     });
   };
 
@@ -204,10 +205,7 @@ export default function ButcherSidebarScreen() {
           </Pressable>
 
           <Pressable
-            onPress={() => {
-              router.back();
-              setTimeout(() => router.push('/(butcher)/profile'), 100);
-            }}
+            onPress={() => closeThenPush('/(butcher)/profile', { closeDelayMs: 100 }, router)}
             style={styles.profileCenter}
           >
             <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
@@ -219,11 +217,9 @@ export default function ButcherSidebarScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView
+        <AppScrollView
           style={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
           {ownerItems.length > 0 ? (
             <SidebarSection title="إدارة ملحمتي" colors={colors}>
@@ -280,6 +276,7 @@ export default function ButcherSidebarScreen() {
                 route: '/(tabs)',
               }}
               colors={colors}
+              isLast
               onPress={() => handleNav('/(tabs)')}
             />
           </SidebarSection>
@@ -287,7 +284,7 @@ export default function ButcherSidebarScreen() {
           <SidebarLogoutButton colors={colors} onPress={handleSignOut} />
 
           <SidebarFooterArt />
-        </ScrollView>
+        </AppScrollView>
       </SafeAreaView>
 
       <Pressable style={styles.backdropTap} onPress={() => router.back()} />
@@ -359,7 +356,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     usernameText: {
       ...typography.bodyStrong,
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',
@@ -367,7 +364,6 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     scroll: {
       flex: 1,
-      ...getRtlDirection(),
     },
     scrollContent: {
       paddingBottom: spacing.lg,

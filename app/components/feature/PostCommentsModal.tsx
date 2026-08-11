@@ -266,13 +266,13 @@ function createStyles(colors: ThemeColors) {
   avatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
   commentBody: { flex: 1, gap: 4 },
   commentHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
-  commentName: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
+  commentName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   commentTime: { ...typography.micro, color: colors.textMuted },
   commentText: { ...typography.body, color: colors.textSecondary, ...getRtlText(), lineHeight: 22 },
   inputRow: {

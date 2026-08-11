@@ -310,7 +310,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  typeBadgeText: { ...typography.micro, color: '#fff', fontWeight: '700' },
+  typeBadgeText: { ...typography.micro, color: '#fff', fontWeight: '600' },
 
   header: {
     position: 'absolute',
@@ -373,9 +373,9 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 11,
   },
-  orderCtaText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  orderCtaText: { ...typography.caption, color: '#fff', fontWeight: '600' },
   actionBtn: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 44, height: 44, borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',

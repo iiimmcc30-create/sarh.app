@@ -1117,12 +1117,12 @@ export default function ButcherManageScreen() {
                   </Text>
                   {order.paymentStatus !== 'paid' && (
                     <View style={{ marginBottom: 8, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.amber + '33', borderWidth: 1, borderColor: colors.amber + '66' }}>
-                      <Text style={{ color: colors.amber, fontSize: 11, fontWeight: '700' }}>بانتظار الدفع</Text>
+                      <Text style={{ color: colors.amber, fontSize: 11, fontWeight: '600' }}>بانتظار الدفع</Text>
                     </View>
                   )}
                   {order.paymentStatus === 'paid' && (
                     <View style={{ marginBottom: 8, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.success + '33', borderWidth: 1, borderColor: colors.success + '66' }}>
-                      <Text style={{ color: colors.success, fontSize: 11, fontWeight: '700' }}>مدفوع</Text>
+                      <Text style={{ color: colors.success, fontSize: 11, fontWeight: '600' }}>مدفوع</Text>
                     </View>
                   )}
 
@@ -1528,7 +1528,7 @@ function createMainStyles(colors: ThemeColors) {
   tabIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 20,
     backgroundColor: colors.bgSurface,
     borderWidth: 1.5,
     borderColor: colors.borderSoft,
@@ -1560,7 +1560,7 @@ function createMainStyles(colors: ThemeColors) {
   },
   tabCountText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#fff',
     lineHeight: 12,
   },
@@ -1575,7 +1575,7 @@ function createMainStyles(colors: ThemeColors) {
   },
   tabLabelActive: {
     color: colors.textBrandStrong,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
   locationCard: {
@@ -1601,7 +1601,7 @@ function createMainStyles(colors: ThemeColors) {
   locationEditBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 16,
     backgroundColor: colors.bgElevated,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1790,7 +1790,7 @@ function createOrderStyles(colors: ThemeColors) {
     paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: radius.pill, borderWidth: 1,
   },
-  statusText: { ...typography.micro, fontWeight: '700' },
+  statusText: { ...typography.micro, fontWeight: '600' },
   orderNumber: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
   detailRow: { flexDirection: 'row', gap: spacing.md },
   detail: { flex: 1, gap: 2 },
@@ -1814,7 +1814,7 @@ function createOrderStyles(colors: ThemeColors) {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 9,
   },
-  advanceBtnText: { ...typography.micro, color: '#fff', fontWeight: '700' },
+  advanceBtnText: { ...typography.micro, color: '#fff', fontWeight: '600' },
   rejectBtn: {
     width: 34, height: 34, borderRadius: 17,
     alignItems: 'center', justifyContent: 'center',
@@ -1850,7 +1850,7 @@ function createOrderStyles(colors: ThemeColors) {
     backgroundColor: colors.danger + '18',
   },
   reasonChipText: { ...typography.caption, color: colors.textSecondary, textAlign: 'right' },
-  reasonChipTextActive: { color: colors.danger, fontWeight: '700' },
+  reasonChipTextActive: { color: colors.danger, fontWeight: '600' },
   customReasonInput: {
     borderWidth: 1,
     borderColor: colors.borderSoft,
@@ -1877,7 +1877,7 @@ function createOrderStyles(colors: ThemeColors) {
     backgroundColor: colors.danger,
     alignItems: 'center',
   },
-  modalConfirmText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  modalConfirmText: { ...typography.caption, color: '#fff', fontWeight: '600' },
   });
 }
 
@@ -1893,9 +1893,9 @@ function createProductManageStyles(colors: ThemeColors) {
   name: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   cat: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  price: { ...typography.caption, color: colors.gold, fontWeight: '700' },
+  price: { ...typography.caption, color: colors.gold, fontWeight: '600' },
   stockBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
-  stockText: { ...typography.micro, fontWeight: '700' },
+  stockText: { ...typography.micro, fontWeight: '600' },
   actions: { gap: 6 },
   editBtn: {
     width: 32, height: 32, borderRadius: 16,
@@ -1924,10 +1924,10 @@ function createOfferManageStyles(colors: ThemeColors) {
   title: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   desc: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  price: { ...typography.caption, color: colors.gold, fontWeight: '700' },
+  price: { ...typography.caption, color: colors.gold, fontWeight: '600' },
   original: { ...typography.micro, color: colors.textMuted, textDecorationLine: 'line-through' },
   discBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: colors.danger },
-  discText: { ...typography.micro, color: '#fff', fontWeight: '700' },
+  discText: { ...typography.micro, color: '#fff', fontWeight: '600' },
   });
 }
 
@@ -1962,12 +1962,12 @@ const sto = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 7,
     borderRadius: radius.pill, backgroundColor: colors.gold,
   },
-  lockBtnText: { ...typography.micro, color: '#1A1300', fontWeight: '700' },
+  lockBtnText: { ...typography.micro, color: '#1A1300', fontWeight: '600' },
   activeList: { gap: spacing.sm, marginBottom: spacing.lg },
   activeListTitle: {
     ...typography.caption,
     color: colors.textMuted,
-    fontWeight: '700',
+    fontWeight: '600',
     ...getRtlText(),
     marginBottom: spacing.xs,
   },

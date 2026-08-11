@@ -1,13 +1,16 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { safePush } from '@/lib/safeNavigate';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 
 type SubItem = { icon: string; label: string; route: string };
 type Section = { key: string; icon: string; title: string; route: string; items: SubItem[] };
@@ -56,8 +59,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Header */}
-      <View style={[styles.header, getRtlRow()]}>
+      <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -65,10 +67,7 @@ export default function SettingsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, getRtlDirection()]}
-      >
+      <AppScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.intro}>
           <View style={styles.introIcon}>
             <AppIcon name="shield-check-outline" size={24} color={colors.textMuted} />
@@ -83,41 +82,25 @@ export default function SettingsScreen() {
 
         {SECTIONS.map((section) => (
           <View key={section.key} style={styles.sectionBlock}>
-            {/* Section header row — tapping navigates to the section page */}
-            <Pressable
-              onPress={() => router.push(section.route as any)}
-              style={({ pressed }) => [styles.sectionHeader, pressed && { opacity: 0.72 }]}
-            >
-              <View style={styles.sectionIcon}>
-                <AppIcon name={section.icon} size={20} color={colors.textMuted} />
-              </View>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
-            </Pressable>
-
-            {/* Sub-items preview */}
-            <View style={styles.subList}>
-              {section.items.map((item, idx) => (
-                <Pressable
-                  key={`${item.label}-${idx}`}
-                  onPress={() => router.push(section.route as any)}
-                  style={({ pressed }) => [
-                    styles.subRow,
-                    idx < section.items.length - 1 && styles.subRowDivider,
-                    pressed && { opacity: 0.72 },
-                  ]}
-                >
-                  <View style={styles.subIcon}>
-                    <AppIcon name={item.icon} size={17} color={colors.textSecondary} />
-                  </View>
-                  <Text style={styles.subLabel}>{item.label}</Text>
-                  <AppIcon name={rtlForwardIcon()} size={14} color={colors.textSubtle} />
-                </Pressable>
-              ))}
-            </View>
+            <SidebarMenuItem
+              icon={section.icon}
+              title={section.title}
+              colors={colors}
+              onPress={() => safePush(section.route, undefined, router)}
+            />
+            {section.items.map((item, idx) => (
+              <SidebarMenuItem
+                key={`${item.label}-${idx}`}
+                icon={item.icon}
+                title={item.label}
+                colors={colors}
+                showDivider={idx < section.items.length - 1}
+                onPress={() => safePush(section.route, undefined, router)}
+              />
+            ))}
           </View>
         ))}
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -127,6 +110,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     header: {
+      flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       minHeight: 60,
@@ -148,7 +132,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
     intro: {
-      ...getRtlRow(),
+      flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
@@ -168,8 +152,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
     introText: { flex: 1, gap: spacing.xs },
-    introTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-    introSubtitle: { ...typography.caption, color: colors.textSecondary, lineHeight: 19 },
+    introTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    introSubtitle: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      lineHeight: 19,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     sectionBlock: {
       backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,
       borderRadius: sarh.radius.lg,
@@ -177,44 +172,5 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : colors.borderSoft,
       overflow: 'hidden',
     },
-    sectionHeader: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      gap: spacing.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    sectionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: radius.md,
-      backgroundColor: colors.bgGlass,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1 },
-    subList: { paddingVertical: spacing.xs },
-    subRow: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      gap: spacing.sm,
-    },
-    subRowDivider: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    subIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: radius.sm,
-      backgroundColor: colors.bgSurface,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    subLabel: { ...typography.body, color: colors.textSecondary, flex: 1 },
   });
 }

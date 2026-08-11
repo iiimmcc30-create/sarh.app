@@ -188,6 +188,31 @@ export async function deleteSection(id: string) {
   return unwrap(res);
 }
 
+export async function publishSection(id: string) {
+  const res = await apiClient.post(`/admin/sections/${id}/publish`);
+  return unwrap(res);
+}
+
+export async function unpublishSection(id: string) {
+  const res = await apiClient.post(`/admin/sections/${id}/unpublish`);
+  return unwrap(res);
+}
+
+export async function fetchSectionVersions(id: string) {
+  const res = await apiClient.get(`/admin/sections/${id}/versions`);
+  return unwrap<{ section: Record<string, unknown>; versions: Record<string, unknown>[] }>(res);
+}
+
+export async function restoreSectionVersion(id: string, versionId: string) {
+  const res = await apiClient.post(`/admin/sections/${id}/restore/${versionId}`);
+  return unwrap(res);
+}
+
+export async function seedPolicies() {
+  const res = await apiClient.post('/content/seed-policies');
+  return unwrap(res);
+}
+
 // ─── Plans ───────────────────────────────────────────────────────────────────
 
 export type AdminPlan = {

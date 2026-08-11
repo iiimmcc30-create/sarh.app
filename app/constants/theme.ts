@@ -74,10 +74,11 @@ export type ThemeGradients = {
 
 const sharedAccents = {
   gold: '#F5C56A',
-  emerald: '#10B981',
+  emerald: '#20B66F',
   rose: '#F43F5E',
   amber: '#FBBF24',
-  success: '#10B981',
+  /** Align success with brand accent — one green identity */
+  success: '#20B66F',
   danger: '#F43F5E',
   warning: '#FBBF24',
   liveRed: '#EF4444',
@@ -89,12 +90,12 @@ const darkColors: BaseThemeColors = {
   bgSurface: luxuryDark.card,
   bgElevated: luxuryDark.surface,
   bgGlass: luxuryDark.tabGlass,
-  bgGlassStrong: 'rgba(11, 22, 34, 0.95)',
-  bgOverlay: 'rgba(11, 22, 34, 0.78)',
+  bgGlassStrong: 'rgba(12, 28, 39, 0.96)',
+  bgOverlay: 'rgba(7, 19, 28, 0.78)',
   royal: luxuryDark.surfaceAlt,
   royalDeep: luxuryDark.bg,
   electric: luxuryDark.accent,
-  electricBright: luxuryDark.accentPressed,
+  electricBright: luxuryDark.accent,
   glow: luxuryDark.accent,
   cyan: luxuryDark.accent,
   silver: luxuryDark.textSecondary,
@@ -105,35 +106,36 @@ const darkColors: BaseThemeColors = {
   textSubtle: luxuryDark.textMuted,
   borderSoft: luxuryDark.border,
   borderMid: luxuryDark.border,
-  borderStrong: 'rgba(150, 175, 185, 0.32)',
+  borderStrong: '#264556',
   borderHairline: luxuryDark.border,
   ...sharedAccents,
 };
 
 const lightColors: BaseThemeColors = {
-  bgDeep: '#FAFBF8',
-  bgPrimary: '#FAFBF8',
+  bgDeep: '#F5F7F9',
+  bgPrimary: '#F5F7F9',
   bgSurface: '#FFFFFF',
   bgElevated: '#FFFFFF',
-  bgGlass: 'rgba(255, 255, 255, 0.88)',
-  bgGlassStrong: 'rgba(255, 255, 255, 0.94)',
-  bgOverlay: 'rgba(0, 0, 0, 0.45)',
-  royal: '#E8F5EF',
-  royalDeep: '#D4EDE0',
-  electric: '#0B6B3A',
-  electricBright: '#0B6B3A',
-  glow: '#0D7A44',
-  cyan: '#10B981',
-  silver: '#374151',
-  silverBright: '#1F2937',
-  textPrimary: '#0A0F0C',
-  textSecondary: '#3D4A42',
-  textMuted: '#6B7A72',
-  textSubtle: '#9CA8A0',
-  borderSoft: 'rgba(0, 0, 0, 0.06)',
-  borderMid: 'rgba(11, 107, 58, 0.14)',
-  borderStrong: 'rgba(11, 107, 58, 0.32)',
-  borderHairline: 'rgba(0, 0, 0, 0.06)',
+  bgGlass: 'rgba(255, 255, 255, 0.90)',
+  bgGlassStrong: 'rgba(255, 255, 255, 0.96)',
+  bgOverlay: 'rgba(16, 24, 32, 0.45)',
+  royal: '#EAF3EE',
+  royalDeep: '#D8EBE0',
+  /** Keep existing brand accent (not a new identity color) */
+  electric: '#20B66F',
+  electricBright: '#20B66F',
+  glow: '#18965B',
+  cyan: '#20B66F',
+  silver: '#65727D',
+  silverBright: '#101820',
+  textPrimary: '#101820',
+  textSecondary: '#65727D',
+  textMuted: '#8D99A3',
+  textSubtle: '#8D99A3',
+  borderSoft: '#E6EBEF',
+  borderMid: '#E6EBEF',
+  borderStrong: '#D5DEE5',
+  borderHairline: '#E6EBEF',
   ...sharedAccents,
 };
 
@@ -141,26 +143,26 @@ const darkGradients: ThemeGradients = {
   hero: [luxuryDark.bg, luxuryDark.bg, luxuryDark.card],
   royal: [luxuryDark.bg, luxuryDark.surface, luxuryDark.surfaceAlt],
   glass: [luxuryDark.tabGlass, luxuryDark.bg],
-  liveOverlay: ['transparent', 'rgba(11,22,34,0.45)', 'rgba(11,22,34,0.96)'],
+  liveOverlay: ['transparent', 'rgba(7,19,28,0.45)', 'rgba(7,19,28,0.96)'],
   card: [luxuryDark.card, luxuryDark.card],
   cardHover: [luxuryDark.surface, luxuryDark.card],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
   electric: [luxuryDark.accent, luxuryDark.accent, luxuryDark.accent],
   primary: [luxuryDark.accent, luxuryDark.accentPressed, luxuryDark.surface],
-  rim: ['rgba(150,175,185,0.12)', 'rgba(150,175,185,0)'],
+  rim: ['rgba(27,52,66,0.55)', 'rgba(27,52,66,0)'],
 };
 
 const lightGradients: ThemeGradients = {
-  hero: ['#FAFBF8', '#F5F8F5', '#FFFFFF'],
-  royal: ['#E8F5EF', '#D4EDE0', '#0B6B3A'],
-  glass: ['rgba(255,255,255,0.95)', 'rgba(250,251,248,0.88)'],
-  liveOverlay: ['transparent', 'rgba(255,255,255,0.35)', 'rgba(250,251,248,0.96)'],
-  card: ['#FFFFFF', '#F8FAF7'],
-  cardHover: ['#FFFFFF', '#F0F4F2'],
+  hero: ['#F5F7F9', '#F5F7F9', '#FFFFFF'],
+  royal: ['#EAF3EE', '#D8EBE0', '#20B66F'],
+  glass: ['rgba(255,255,255,0.96)', 'rgba(245,247,249,0.90)'],
+  liveOverlay: ['transparent', 'rgba(255,255,255,0.35)', 'rgba(245,247,249,0.96)'],
+  card: ['#FFFFFF', '#FFFFFF'],
+  cardHover: ['#FFFFFF', '#F5F7F9'],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
-  electric: ['#0B6B3A', '#0D7A44', '#10B981'],
-  primary: ['#0D7A44', '#0B6B3A', '#E8F5EF'],
-  rim: ['rgba(11,107,58,0.2)', 'rgba(11,107,58,0)'],
+  electric: ['#20B66F', '#18965B', '#20B66F'],
+  primary: ['#20B66F', '#18965B', '#EAF3EE'],
+  rim: ['rgba(230,235,239,0.9)', 'rgba(230,235,239,0)'],
 };
 
 export function createShadow(palette: BaseThemeColors) {
@@ -168,31 +170,31 @@ export function createShadow(palette: BaseThemeColors) {
   return {
     glow: {
       shadowColor: palette.glow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isLight ? 0.2 : 0.32,
-      shadowRadius: 12,
-      elevation: 6,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isLight ? 0.12 : 0.18,
+      shadowRadius: 8,
+      elevation: 3,
     },
     soft: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isLight ? 0.04 : 0.12,
-      shadowRadius: isLight ? 8 : 6,
-      elevation: 2,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isLight ? 0.03 : 0.08,
+      shadowRadius: isLight ? 6 : 4,
+      elevation: 1,
     },
     card: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: isLight ? 6 : 2 },
-      shadowOpacity: isLight ? 0.06 : 0.12,
-      shadowRadius: isLight ? 14 : 6,
-      elevation: isLight ? 5 : 2,
+      shadowOffset: { width: 0, height: isLight ? 2 : 1 },
+      shadowOpacity: isLight ? 0.04 : 0.08,
+      shadowRadius: isLight ? 8 : 4,
+      elevation: isLight ? 2 : 1,
     },
     pressed: {
       shadowColor: palette.electric,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 6,
-      elevation: 3,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.16,
+      shadowRadius: 4,
+      elevation: 2,
     },
   };
 }
@@ -249,26 +251,26 @@ applyThemeScheme('dark');
 /** Gradients that must react to light/dark at runtime (not frozen in StyleSheet). */
 export function headerFadeGradient(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
-    ? ['rgba(250, 251, 248, 0.98)', 'rgba(250, 251, 248, 0)']
-    : ['rgba(11, 22, 34, 0.98)', 'rgba(11, 22, 34, 0)'];
+    ? ['rgba(245, 247, 249, 0.98)', 'rgba(245, 247, 249, 0)']
+    : ['rgba(7, 19, 28, 0.98)', 'rgba(7, 19, 28, 0)'];
 }
 
 export function imageCardOverlay(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
-    ? ['transparent', 'rgba(15, 23, 42, 0.72)']
-    : ['transparent', 'rgba(0, 0, 0, 0.92)'];
+    ? ['transparent', 'rgba(16, 24, 32, 0.68)']
+    : ['transparent', 'rgba(7, 19, 28, 0.88)'];
 }
 
 export function imageCardOverlayStrong(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
-    ? ['transparent', 'rgba(15, 23, 42, 0.82)']
-    : ['transparent', 'rgba(0, 0, 0, 0.95)'];
+    ? ['transparent', 'rgba(16, 24, 32, 0.78)']
+    : ['transparent', 'rgba(7, 19, 28, 0.94)'];
 }
 
 export function scrimColor(scheme: ColorScheme, opacity = 0.85): string {
   return scheme === 'light'
-    ? `rgba(250, 251, 248, ${opacity})`
-    : `rgba(11, 22, 34, ${opacity})`;
+    ? `rgba(245, 247, 249, ${opacity})`
+    : `rgba(7, 19, 28, ${opacity})`;
 }
 
 /** Raised panel surface — darker gray in dark mode, softer tint in light (sidebar, posts, etc.). */
@@ -294,7 +296,7 @@ export const radius = {
   md: sarh.radius.md,
   lg: sarh.radius.lg,
   xl: sarh.radius.xl,
-  xxl: 28,
+  xxl: sarh.radius.xl,
   pill: sarh.radius.pill,
 };
 
@@ -303,15 +305,67 @@ const directionalText = {
   writingDirection: 'rtl' as const,
 };
 
+/** IBM Plex Sans Arabic — prefer 600 for titles, 500 for item labels, 400 for body. */
 export const typography = {
-  display: { fontSize: 36, fontFamily: appFont.bold, fontWeight: '700' as const, letterSpacing: -0.6, ...directionalText },
-  h1: { fontSize: 28, fontFamily: appFont.bold, fontWeight: '700' as const, letterSpacing: -0.4, ...directionalText },
-  h2: { fontSize: 24, fontFamily: appFont.bold, fontWeight: '700' as const, ...directionalText },
-  h3: { fontSize: 20, fontFamily: appFont.medium, fontWeight: '600' as const, ...directionalText },
-  body: { fontSize: 15, fontFamily: appFont.regular, fontWeight: '400' as const, ...directionalText },
-  bodyStrong: { fontSize: 15, fontFamily: appFont.medium, fontWeight: '600' as const, ...directionalText },
-  caption: { fontSize: 13, fontFamily: appFont.medium, fontWeight: '500' as const, ...directionalText },
-  micro: { fontSize: 11, fontFamily: appFont.medium, fontWeight: '600' as const, letterSpacing: 0.3, ...directionalText },
+  display: {
+    fontSize: 36,
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
+    letterSpacing: -0.4,
+    lineHeight: 44,
+    ...directionalText,
+  },
+  h1: {
+    fontSize: 28,
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
+    letterSpacing: -0.3,
+    lineHeight: 36,
+    ...directionalText,
+  },
+  h2: {
+    fontSize: 22,
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
+    lineHeight: 30,
+    ...directionalText,
+  },
+  h3: {
+    fontSize: 18,
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
+    lineHeight: 26,
+    ...directionalText,
+  },
+  body: {
+    fontSize: 15,
+    fontFamily: appFont.regular,
+    fontWeight: '400' as const,
+    lineHeight: 22,
+    ...directionalText,
+  },
+  bodyStrong: {
+    fontSize: 15,
+    fontFamily: appFont.medium,
+    fontWeight: '500' as const,
+    lineHeight: 22,
+    ...directionalText,
+  },
+  caption: {
+    fontSize: 13,
+    fontFamily: appFont.regular,
+    fontWeight: '400' as const,
+    lineHeight: 18,
+    ...directionalText,
+  },
+  micro: {
+    fontSize: 11,
+    fontFamily: appFont.medium,
+    fontWeight: '500' as const,
+    letterSpacing: 0.2,
+    lineHeight: 15,
+    ...directionalText,
+  },
 };
 
 /** Shared 2026 layout metrics. Keep screens visually consistent across device sizes. */

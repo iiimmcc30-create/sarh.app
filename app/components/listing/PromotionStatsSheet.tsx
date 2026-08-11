@@ -151,7 +151,7 @@ function createStyles(colors: ThemeColors) {
     remainingValue: {
       ...typography.h3,
       color: '#7C3AED',
-      fontWeight: '800',
+      fontWeight: '600',
     },
     grid: {
       ...getRtlRow(),
@@ -172,7 +172,7 @@ function createStyles(colors: ThemeColors) {
     statValue: {
       ...typography.h3,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     statLabel: {
       ...typography.caption,

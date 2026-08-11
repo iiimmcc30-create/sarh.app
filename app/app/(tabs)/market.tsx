@@ -6,7 +6,6 @@ import { NotificationBellButton } from '@/components/notifications/NotificationB
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, useRef } from 'react';
 import {
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
@@ -23,6 +22,8 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { AppFlatList } from '@/components/ui/AppFlatList';
+import { safePush } from '@/lib/safeNavigate';
 import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
 import { useApp } from '@/hooks/useApp';
 import { Country, countries, Listing } from '@/services/types';
@@ -82,7 +83,9 @@ export default function MarketScreen() {
         listing={item}
         variant="list"
         listMode="market"
-        onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
+        onPress={() =>
+          safePush({ pathname: '/listing/[id]', params: { id: item.id } }, undefined, router)
+        }
       />
     ),
     [router],
@@ -122,7 +125,7 @@ export default function MarketScreen() {
             <Pressable
               style={styles.headerIconBtn}
               hitSlop={8}
-              onPress={() => router.push('/search')}
+              onPress={() => safePush('/search', undefined, router)}
             >
               <AppIcon name="search" size={20} color={colors.textPrimary} />
             </Pressable>
@@ -205,7 +208,7 @@ export default function MarketScreen() {
 
   return (
     <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
-      <FlatList
+      <AppFlatList
         data={filtered}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
@@ -213,8 +216,6 @@ export default function MarketScreen() {
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
         ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews
         initialNumToRender={12}
         maxToRenderPerBatch={10}
         windowSize={8}
@@ -247,7 +248,7 @@ function createMarketStyles(
     },
     pageTitle: {
       ...typography.h1,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
     },

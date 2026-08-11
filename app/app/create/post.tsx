@@ -418,7 +418,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg, paddingTop: spacing.lg,
   },
   avatar: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 44, height: 44, borderRadius: 20,
     borderWidth: 1, borderColor: colors.borderMid,
     marginTop: 4,
   },
@@ -459,7 +459,7 @@ function createStyles(colors: ThemeColors) {
   },
   previewHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   previewAvatar: { width: 32, height: 32, borderRadius: 16 },
-  previewName: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
+  previewName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   previewHandle: { ...typography.micro, color: colors.textMuted },
   previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, writingDirection: 'rtl' },
   previewImage: {
@@ -502,7 +502,7 @@ function createStyles(colors: ThemeColors) {
     right: 4,
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -543,6 +543,6 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 2, borderColor: colors.electric,
     alignItems: 'center', justifyContent: 'center',
   },
-  charCountText: { fontSize: 10, fontWeight: '700', color: colors.textBrandAlt },
+  charCountText: { fontSize: 10, fontWeight: '600', color: colors.textBrandAlt },
   });
 }

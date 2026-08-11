@@ -266,7 +266,7 @@ function createBarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       right: 0,
       width: 22,
       height: 22,
-      borderRadius: 11,
+      borderRadius: 12,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',
@@ -290,7 +290,7 @@ function createBarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     countText: {
       color: '#fff',
       fontSize: 10,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     label: {
       ...typography.caption,

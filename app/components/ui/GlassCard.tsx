@@ -13,7 +13,7 @@ interface GlassCardProps {
   padding?: number;
 }
 
-/** Premium flat card surface — Sarh 2026 */
+/** Premium flat card surface — Sarh design system */
 export function GlassCard({
   children,
   style,
@@ -25,8 +25,8 @@ export function GlassCard({
   }));
 
   return (
-    <View style={[styles.wrap, elevated && styles.elevated, style]}>
-      <View style={[styles.card, { padding }]}>{children}</View>
+    <View style={[styles.wrap, style]}>
+      <View style={[styles.card, elevated && styles.elevated, { padding }]}>{children}</View>
     </View>
   );
 }

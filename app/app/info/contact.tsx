@@ -62,7 +62,7 @@ export default function ContactScreen() {
             style={styles.channelCard}
             onPress={() => Linking.openURL('https://wa.me/966591298136')}
           >
-            <LinearGradient colors={['#065f46', '#10B981']} style={styles.channelIcon}>
+            <LinearGradient colors={['#18965B', '#20B66F']} style={styles.channelIcon}>
               <AppIcon name="whatsapp" size={22} color="#fff" />
             </LinearGradient>
             <View style={{ flex: 1 }}>

@@ -4,7 +4,6 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
   fetchOfficialServices,
   groupOfficialServicesByCategory,
@@ -14,11 +13,11 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SarhServicesScreen() {
@@ -60,9 +59,8 @@ export default function SarhServicesScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title="خدمات سرح" showBack />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
+      <AppScrollView
+        contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -79,11 +77,13 @@ export default function SarhServicesScreen() {
         </View>
 
         <View style={styles.notice}>
-          <AppIcon name="information-circle-outline" size={18} color={colors.electricBright} />
           <Text style={styles.noticeText}>
             تطبيق سرح يعرض معلومات الخدمة فقط ولا ينشئ طلبات ولا يخزن بياناتك.
-            عند الضغط على «طلب الخدمة» يُفتح الرابط الرسمي في المتصفح.
+            عند الضغط على الخدمة يُفتح الرابط الرسمي في المتصفح.
           </Text>
+          <View style={styles.noticeIcon}>
+            <AppIcon name="information-circle-outline" size={18} color={colors.electricBright} />
+          </View>
         </View>
 
         {loading ? (
@@ -102,14 +102,18 @@ export default function SarhServicesScreen() {
                 {group.emoji} {group.label}
               </Text>
               <View style={styles.sectionList}>
-                {group.items.map((service) => (
-                  <OfficialServiceCard key={service.id} service={service} />
+                {group.items.map((service, index) => (
+                  <OfficialServiceCard
+                    key={service.id}
+                    service={service}
+                    showDivider={index < group.items.length - 1}
+                  />
                 ))}
               </View>
             </View>
           ))
         )}
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -140,7 +144,8 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     notice: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'flex-start',
       gap: spacing.sm,
       padding: spacing.md,
@@ -149,13 +154,19 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
+    noticeIcon: {
+      width: 28,
+      alignItems: 'center',
+      paddingTop: 2,
+      flexShrink: 0,
+    },
     noticeText: {
       ...typography.caption,
       color: colors.textSecondary,
       flex: 1,
       lineHeight: 20,
-      ...getRtlText(),
-      ...getRtlText(),
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     loader: { marginTop: spacing.xl },
     errorBox: {
@@ -180,15 +191,25 @@ function createStyles(colors: ThemeColors) {
     retryText: {
       ...typography.caption,
       color: colors.electricBright,
-      fontWeight: '700',
+      fontWeight: '600',
     },
-    section: { gap: spacing.md },
+    section: { gap: spacing.sm },
     sectionTitle: {
-      ...typography.h3,
-      color: colors.textBrandStrong,
-      ...getRtlText(),
-      ...getRtlText(),
+      ...typography.caption,
+      fontWeight: '600',
+      fontSize: 12,
+      letterSpacing: 0.4,
+      color: colors.textMuted,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      paddingHorizontal: 4,
     },
-    sectionList: { gap: spacing.md },
+    sectionList: {
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
+      overflow: 'hidden',
+    },
   });
 }

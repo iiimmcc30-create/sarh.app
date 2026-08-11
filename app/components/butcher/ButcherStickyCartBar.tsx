@@ -88,7 +88,7 @@ function createStyles(colors: ThemeColors) {
     badgeText: {
       ...typography.micro,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
     },
     summary: {
       ...typography.bodyStrong,
@@ -108,7 +108,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       ...getRtlText(),
       color: 'rgba(255,255,255,0.9)',
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

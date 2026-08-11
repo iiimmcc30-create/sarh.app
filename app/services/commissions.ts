@@ -233,7 +233,7 @@ export interface CommissionTableRow {
 
 export const COMMISSION_TABLE: CommissionTableRow[] = [
   { icon: '🏪', nameAr: 'ملحمة (بدون اشتراك)', nameEn: 'Butcher (no sub)', ruleAr: '٥٪ من سعر البيع', ruleEn: '5% of sale', color: '#A855F7' },
-  { icon: '🏪✅', nameAr: 'ملحمة (باشتراك)', nameEn: 'Butcher (subscribed)', ruleAr: 'صفر عمولة', ruleEn: 'Zero commission', color: '#10B981', note: 'باقة Growth أو أعلى' },
+  { icon: '🏪✅', nameAr: 'ملحمة (باشتراك)', nameEn: 'Butcher (subscribed)', ruleAr: 'صفر عمولة', ruleEn: 'Zero commission', color: '#20B66F', note: 'باقة Growth أو أعلى' },
 ];
 
 // ─── نماذج رسوم تجريبية ──────────────────────────────────────────────────────

@@ -1,23 +1,27 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 import { ds } from '@/constants/designSystem';
-import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
 import { sarh } from '@/constants/sarhTokens';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow } from '@/lib/rtl';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HomeAppBarProps = {
   onMenu: () => void;
   onSearch: () => void;
   onLive?: () => void;
   showLive?: boolean;
+  searchPlaceholder?: string;
 };
 
-export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarProps) {
-  const { scheme } = useTheme();
+/** Reference header: menu (right) · search pill · notifications (left) */
+export function HomeAppBar({
+  onMenu,
+  onSearch,
+  searchPlaceholder = 'ابحث عن خدمة معينة',
+}: HomeAppBarProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
@@ -25,31 +29,27 @@ export function HomeAppBar({ onMenu, onSearch, onLive, showLive }: HomeAppBarPro
 
   return (
     <View style={[styles.bar, getRtlRow()]}>
-      <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8}>
+      <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8} accessibilityLabel="القائمة">
         <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
       </Pressable>
 
-      <View style={styles.logoWrap}>
-        <Text style={styles.logoAr}>{BRAND_NAME_AR}</Text>
-        <Text style={styles.logoSep}> | </Text>
-        <Text style={styles.logoEn}>{BRAND_NAME_EN}</Text>
-      </View>
+      <Pressable
+        onPress={onSearch}
+        style={[styles.searchPill, getRtlRow()]}
+        accessibilityRole="search"
+        accessibilityLabel={searchPlaceholder}
+      >
+        <Text style={styles.searchPlaceholder} numberOfLines={1}>
+          {searchPlaceholder}
+        </Text>
+        <AppIcon name="search" size={ds.icon.md} color={colors.textMuted} />
+      </Pressable>
 
-      <View style={[styles.actions, getRtlRow()]}>
-        {showLive && onLive ? (
-          <Pressable style={styles.iconBtn} hitSlop={8} onPress={onLive}>
-            <AppIcon name="signal-stream" size={ds.icon.sm} color={colors.liveRed} />
-          </Pressable>
-        ) : null}
-        <Pressable style={styles.iconBtn} hitSlop={8} onPress={onSearch}>
-          <AppIcon name="search" size={ds.icon.md} color={colors.textPrimary} />
-        </Pressable>
-        <NotificationBellButton
-          size={ds.iconBtn.md}
-          iconSize={ds.icon.md}
-          style={styles.iconBtn}
-        />
-      </View>
+      <NotificationBellButton
+        size={ds.iconBtn.md}
+        iconSize={ds.icon.md}
+        style={styles.iconBtn}
+      />
     </View>
   );
 }
@@ -63,52 +63,37 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.md,
       minHeight: 56,
+      gap: spacing.sm,
       backgroundColor: 'transparent',
     },
-    logoWrap: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      justifyContent: 'center',
+    searchPill: {
       flex: 1,
-      minWidth: 0,
-    },
-    logoAr: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-    },
-    logoSep: {
-      fontSize: 16,
-      fontWeight: '400',
-      color: colors.textMuted,
-    },
-    logoEn: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.textPrimary,
-    },
-    actions: {
+      minHeight: 44,
       alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      borderRadius: sarh.radius.pill,
+      backgroundColor: isDark ? sarh.color.surfaceRaised : ds.light.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: isDark ? sarh.color.border : ds.light.stroke,
       gap: spacing.sm,
+    },
+    searchPlaceholder: {
+      ...typography.body,
+      ...getRtlText(),
+      flex: 1,
+      color: colors.textMuted,
+      fontSize: 14,
     },
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
-      borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? 'rgba(16, 31, 44, 0.72)' : 'rgba(255,255,255,0.08)',
+      borderRadius: sarh.radius.md,
+      backgroundColor: isDark ? sarh.color.surfaceRaised : ds.light.card,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : 'rgba(255,255,255,0.1)',
-      ...(Platform.OS === 'ios'
-        ? {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: isDark ? 0.12 : 0.18,
-            shadowRadius: 4,
-          }
-        : { elevation: 1 }),
+      borderColor: isDark ? sarh.color.border : ds.light.stroke,
     },
   });
 }

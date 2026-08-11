@@ -729,7 +729,7 @@ function createViewerStyles(colors: ThemeColors) {
     reactionChip: {
       width: 44,
       height: 44,
-      borderRadius: 22,
+      borderRadius: 20,
       backgroundColor: 'rgba(0,0,0,0.45)',
       alignItems: 'center',
       justifyContent: 'center',

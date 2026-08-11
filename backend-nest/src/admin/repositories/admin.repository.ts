@@ -408,6 +408,29 @@ export class AdminRepository {
     return this.prisma.contentSection.findMany({
       where: notDeleted,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        versions: {
+          orderBy: { version: 'desc' },
+          take: 20,
+          select: {
+            id: true,
+            version: true,
+            isPublished: true,
+            createdByName: true,
+            createdAt: true,
+            titleAr: true,
+          },
+        },
+      },
+    });
+  }
+
+  getSection(id: string) {
+    return this.prisma.contentSection.findFirst({
+      where: { id, ...notDeleted },
+      include: {
+        versions: { orderBy: { version: 'desc' }, take: 50 },
+      },
     });
   }
 
@@ -423,6 +446,30 @@ export class AdminRepository {
     return this.prisma.contentSection.update({
       where: { id },
       data: { ...softDeleteFields(), isActive: false },
+    });
+  }
+
+  async nextSectionVersion(sectionId: string) {
+    const last = await this.prisma.contentSectionVersion.findFirst({
+      where: { sectionId },
+      orderBy: { version: 'desc' },
+      select: { version: true },
+    });
+    return (last?.version ?? 0) + 1;
+  }
+
+  createSectionVersion(data: Prisma.ContentSectionVersionCreateInput) {
+    return this.prisma.contentSectionVersion.create({ data });
+  }
+
+  getSectionVersion(id: string) {
+    return this.prisma.contentSectionVersion.findUnique({ where: { id } });
+  }
+
+  listSectionVersions(sectionId: string) {
+    return this.prisma.contentSectionVersion.findMany({
+      where: { sectionId },
+      orderBy: { version: 'desc' },
     });
   }
 

@@ -338,7 +338,7 @@ function createStyles(colors: ThemeColors) {
   },
   cameraBtn: {
     position: 'absolute', bottom: 0, right: 0,
-    width: 28, height: 28, borderRadius: 14,
+    width: 28, height: 28, borderRadius: 16,
     backgroundColor: colors.electric, alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: colors.bgDeep,
   },

@@ -216,7 +216,7 @@ function createStyles(colors: ThemeColors) {
     },
     statusText: {
       ...typography.micro,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     meta: {
       gap: spacing.xs,
@@ -244,7 +244,7 @@ function createStyles(colors: ThemeColors) {
     notesTitle: {
       ...typography.caption,
       color: colors.danger,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     notesText: {
       ...typography.body,

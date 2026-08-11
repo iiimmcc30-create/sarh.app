@@ -216,7 +216,7 @@ function createStyles(colors: ThemeColors) {
     cardIcon: {
       width: 44,
       height: 44,
-      borderRadius: 22,
+      borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.bgElevated,
@@ -239,7 +239,7 @@ function createStyles(colors: ThemeColors) {
     toggle: {
       width: 28,
       height: 28,
-      borderRadius: 14,
+      borderRadius: 16,
       backgroundColor: colors.bgDeep,
       alignItems: 'center',
       justifyContent: 'center',

@@ -154,7 +154,7 @@ const s = StyleSheet.create({
     backgroundColor: colors.amber + '33',
     borderWidth: 1, borderColor: colors.amber + '66',
   },
-  pendingText: { ...typography.micro, color: colors.amber, fontWeight: '700' },
+  pendingText: { ...typography.micro, color: colors.amber, fontWeight: '600' },
   paidBadge: {
     backgroundColor: colors.success + '33',
     borderColor: colors.success + '66',
@@ -170,7 +170,7 @@ const s = StyleSheet.create({
   },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepCircle: {
-    width: 28, height: 28, borderRadius: 14,
+    width: 28, height: 28, borderRadius: 16,
     backgroundColor: colors.bgElevated,
     borderWidth: 1.5, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',

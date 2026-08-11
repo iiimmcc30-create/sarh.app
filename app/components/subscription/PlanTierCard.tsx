@@ -164,7 +164,7 @@ function createStyles(colors: ThemeColors) {
     recommendedText: {
       ...typography.micro,
       color: colors.electric,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     currentBadge: {
       paddingHorizontal: 10,
@@ -175,7 +175,7 @@ function createStyles(colors: ThemeColors) {
     currentText: {
       ...typography.micro,
       color: colors.textSecondary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     head: {
       alignItems: 'flex-start',
@@ -210,12 +210,12 @@ function createStyles(colors: ThemeColors) {
     },
     priceFree: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.electric,
     },
     price: {
       fontSize: 32,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       lineHeight: 36,
     },
@@ -231,7 +231,7 @@ function createStyles(colors: ThemeColors) {
     discount: {
       ...typography.micro,
       color: colors.success,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     featureList: {
       gap: 8,
@@ -263,7 +263,7 @@ function createStyles(colors: ThemeColors) {
     selectedMarkText: {
       ...typography.caption,
       color: '#fff',
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  previewBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  previewBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   previewSide: {
     position: 'absolute',
     left: spacing.md,
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
   },
-  allowBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  allowBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   errorBanner: {
     position: 'absolute',
     bottom: 0,
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   },
   catChipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
   catChipText: { ...typography.caption, color: colors.textMuted },
-  catChipTextActive: { color: '#fff', fontWeight: '700' },
+  catChipTextActive: { color: '#fff', fontWeight: '600' },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-end' },
   statusPill: {
     paddingHorizontal: 10,
@@ -607,5 +607,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: radius.xl,
   },
-  startBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  startBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
 });

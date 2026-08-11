@@ -300,7 +300,7 @@ function createStyles(colors: ThemeColors) {
   locateBtnText: {
     ...typography.caption,
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   hintOverlay: {
     position: 'absolute',

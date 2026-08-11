@@ -28,7 +28,7 @@ export function sarhScreenStyles(colors: ThemeColors, scheme: ColorScheme) {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
       borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? 'rgba(16, 31, 44, 0.72)' : tokens.glass,
+      backgroundColor: isDark ? 'rgba(16, 38, 51, 0.72)' : tokens.glass,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       borderWidth: StyleSheet.hairlineWidth,

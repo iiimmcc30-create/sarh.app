@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   checkboxChecked: { backgroundColor: colors.liveRed, borderColor: colors.liveRed },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  checkmark: { color: '#fff', fontSize: 14, fontWeight: '600' },
   checkboxText: {
     flex: 1,
     ...typography.body,

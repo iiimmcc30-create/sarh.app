@@ -236,7 +236,7 @@ function createStyles(colors: ThemeColors) {
     screenTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 17,
     },
     scroll: {

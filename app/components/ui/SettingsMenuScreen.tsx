@@ -1,12 +1,14 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { sarh } from '@/constants/sarhTokens';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon, getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type SettingsMenuItem = {
@@ -39,10 +41,7 @@ export function SettingsMenuScreen({
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title={title} showBack />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
-      >
+      <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <AppIcon name={heroIcon} size={25} color={colors.textMuted} />
@@ -53,31 +52,21 @@ export function SettingsMenuScreen({
 
         <View style={styles.list}>
           {items.map((item, index) => (
-            <Pressable
+            <SidebarMenuItem
               key={`${item.route}-${index}`}
-              accessibilityRole="button"
+              icon={item.icon}
+              title={item.label}
+              subtitle={item.subtitle}
+              showDivider={index < items.length - 1}
+              colors={colors}
               onPress={() => {
                 if (onItemPress?.(item)) return;
-                router.push(item.route as any);
+                safePush(item.route, undefined, router);
               }}
-              style={({ pressed }) => [
-                styles.row,
-                index < items.length - 1 && styles.rowDivider,
-                pressed && styles.rowPressed,
-              ]}
-            >
-              <View style={styles.itemIcon}>
-                <AppIcon name={item.icon} size={19} color={colors.textBrandStrong} />
-              </View>
-              <View style={styles.textWrap}>
-                <Text style={styles.label}>{item.label}</Text>
-                {item.subtitle ? <Text style={styles.subtitle}>{item.subtitle}</Text> : null}
-              </View>
-              <AppIcon name={rtlForwardIcon()} size={16} color={colors.textSubtle} />
-            </Pressable>
+            />
           ))}
         </View>
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -125,35 +114,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : colors.borderSoft,
       overflow: 'hidden',
     },
-    row: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      minHeight: 76,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      gap: spacing.md,
-    },
-    rowDivider: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    rowPressed: {
-      backgroundColor: colors.bgSurface,
-      opacity: 0.86,
-    },
-    itemIcon: {
-      width: 42,
-      height: 42,
-      borderRadius: radius.md,
-      backgroundColor: colors.bgGlass,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    textWrap: { flex: 1, gap: 3 },
-    label: { ...typography.bodyStrong, color: colors.textPrimary },
-    subtitle: { ...typography.caption, color: colors.textMuted, lineHeight: 18 },
   });
 }
 

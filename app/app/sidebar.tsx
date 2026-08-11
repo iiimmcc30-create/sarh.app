@@ -1,10 +1,13 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
+import { Image } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { APP_LOGO } from '@/constants/branding';
+import { BRAND_NAME_AR } from '@/constants/brandCopy';
 import {
   scrimColor,
   spacing,
@@ -12,59 +15,48 @@ import {
   panelSurfaceBg,
   type ThemeColors,
 } from '@/constants/theme';
-import { pp } from '@/constants/pixelPerfect';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, alignInlineEnd, borderInlineEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { useApp } from '@/hooks/useApp';
+import { alignInlineEnd, borderInlineEnd, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
-import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
-import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { confirmSignOut } from '@/lib/confirmSignOut';
+import { closeThenPush, safeReplace } from '@/lib/safeNavigate';
 import {
   SidebarLogoutButton,
   SidebarMenuRow,
   SidebarSection,
   SidebarThemeToggle,
-  type SidebarMenuItem,
+  type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
 
-type MenuItem = SidebarMenuItem;
+type MenuItem = SidebarNavItem;
+
+const BRAND_TAGLINE = 'منصة المواشي السعودية';
 
 export default function SidebarScreen() {
   const router = useRouter();
-  const { me, refetchData } = useApp();
-  const { signOut, accessToken } = useAuth();
+  const { signOut } = useAuth();
   const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
-  const { unreadCount: notificationsUnread } = useUnreadNotificationCount();
-  const { threads } = useMessageThreads(accessToken, 'DIRECT');
   const { isButcherOwner, refresh } = useButcherOwnerAccess();
 
   useFocusEffect(
     useCallback(() => {
       void refresh();
-      void refetchData();
-    }, [refresh, refetchData]),
-  );
-
-  const messagesUnread = useMemo(
-    () => threads.reduce((sum, thread) => sum + (thread.unread ?? 0), 0),
-    [threads],
+    }, [refresh]),
   );
 
   const handleNav = (route: string) => {
-    router.back();
-    setTimeout(() => router.push(route as any), 120);
+    closeThenPush(route, undefined, router);
   };
 
   const handleSignOut = () => {
     confirmSignOut(async () => {
       router.back();
       await signOut();
-      setTimeout(() => router.replace('/auth/phone' as any), 300);
+      setTimeout(() => safeReplace('/auth/phone', { force: true }, router), 300);
     });
   };
 
@@ -72,31 +64,14 @@ export default function SidebarScreen() {
     setPreference(preference === 'dark' ? 'light' : 'dark');
   };
 
-  const accountItems: MenuItem[] = [
-    {
-      key: 'messages',
-      icon: 'chatbubble-outline',
-      label: 'الرسائل',
-      route: '/(tabs)/messages',
-      badge: messagesUnread,
-    },
-    {
-      key: 'notifications',
-      icon: 'notifications-outline',
-      label: 'الإشعارات',
-      route: '/notifications',
-      badge: notificationsUnread,
-    },
-    {
-      key: 'settings',
-      icon: 'settings-outline',
-      label: 'الإعدادات والخصوصية',
-      route: '/profile/settings',
-    },
-  ];
-
-  const serviceItems: MenuItem[] = useMemo(() => {
+  const accountItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [
+      {
+        key: 'profile',
+        icon: 'user',
+        label: 'الملف الشخصي',
+        route: '/(tabs)/profile',
+      },
       {
         key: 'butchers',
         icon: 'storefront-outline',
@@ -114,23 +89,57 @@ export default function SidebarScreen() {
       });
     }
 
-    items.push(
+    items.push({
+      key: 'favorites',
+      icon: 'heart',
+      label: 'المفضلة',
+      route: '/favorites',
+    });
+
+    return items;
+  }, [isButcherOwner]);
+
+  const serviceItems: MenuItem[] = useMemo(
+    () => [
+      {
+        key: 'posts',
+        icon: 'newspaper',
+        label: 'مجلس سرح',
+        route: '/(tabs)/posts',
+      },
+      {
+        key: 'promote',
+        icon: 'megaphone-outline',
+        label: 'تعزيز سرح',
+        route: '/promote',
+      },
       {
         key: 'sarh-services',
         icon: 'briefcase-outline',
         label: 'خدمات سرح',
         route: '/sarh-services',
       },
-      {
-        key: 'promotion',
-        icon: 'megaphone-outline',
-        label: 'الترويج',
-        route: '/promote',
-      },
-    );
+    ],
+    [],
+  );
 
-    return items;
-  }, [isButcherOwner]);
+  const supportItems: MenuItem[] = useMemo(
+    () => [
+      {
+        key: 'support',
+        icon: 'lifebuoy',
+        label: 'الدعم والمساعدة',
+        route: '/support',
+      },
+      {
+        key: 'settings',
+        icon: 'settings-outline',
+        label: 'الإعدادات والخصوصية',
+        route: '/profile/settings',
+      },
+    ],
+    [],
+  );
 
   const renderSectionItems = (items: MenuItem[]) =>
     items.map((item, index) => (
@@ -152,46 +161,29 @@ export default function SidebarScreen() {
           </Pressable>
         </View>
 
-        <Pressable
-          onPress={() => {
-            router.back();
-            setTimeout(() => router.push('/(tabs)/profile'), 100);
-          }}
-          style={[styles.profileRow, getRtlRow(), getRtlDirection()]}
-        >
-          <View style={styles.profileText}>
-            <Text style={styles.displayName} numberOfLines={1}>
-              {me.arabicName || me.displayName || me.username}
-            </Text>
-            <Text style={styles.usernameText} numberOfLines={1}>
-              @{me.username || 'user'}
-            </Text>
-            {me.verified ? (
-              <View style={styles.verifiedPill}>
-                <AppIcon name="shield-checkmark" size={12} color={pp.verifiedText} />
-                <Text style={styles.verifiedText}>عضو موثق</Text>
-              </View>
-            ) : null}
+        <View style={[styles.brandBanner, getRtlRow()]}>
+          <View style={styles.brandText}>
+            <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
+            <Text style={styles.brandTagline}>{BRAND_TAGLINE}</Text>
           </View>
-          <View style={styles.avatarWrap}>
-            <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-            <View style={styles.onlineDot} />
+          {/* Official mark — white waves + green diamond stay as-is (no tint). */}
+          <View style={styles.brandMarkWrap}>
+            <Image
+              source={APP_LOGO}
+              style={styles.brandMark}
+              contentFit="cover"
+              accessibilityLabel="شعار سرح"
+            />
           </View>
-        </Pressable>
+        </View>
 
-        <ScrollView
+        <AppScrollView
           style={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, getRtlDirection()]}
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
-          <SidebarSection title="الحساب" colors={colors}>
-            {renderSectionItems(accountItems)}
-          </SidebarSection>
-
-          <SidebarSection title="الخدمات" colors={colors}>
-            {renderSectionItems(serviceItems)}
-          </SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(accountItems)}</SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(serviceItems)}</SidebarSection>
+          <SidebarSection colors={colors}>{renderSectionItems(supportItems)}</SidebarSection>
 
           <SidebarThemeToggle
             preference={preference}
@@ -202,7 +194,7 @@ export default function SidebarScreen() {
           <SidebarLogoutButton colors={colors} onPress={handleSignOut} />
 
           <SidebarFooterArt />
-        </ScrollView>
+        </AppScrollView>
       </SafeAreaView>
 
       <Pressable style={styles.backdropTap} onPress={() => router.back()} />
@@ -246,75 +238,53 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    profileRow: {
+    brandBanner: {
       alignItems: 'center',
       gap: spacing.md,
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.lg,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      borderRadius: 16,
+      backgroundColor: panelBg,
     },
-    avatarWrap: {
-      position: 'relative',
+    brandMarkWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 20,
+      overflow: 'hidden',
+      backgroundColor: panelBg,
     },
-    avatar: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      borderWidth: 2,
-      borderColor: colors.electric,
-      backgroundColor: colors.bgElevated,
+    brandMark: {
+      width: 56,
+      height: 56,
     },
-    onlineDot: {
-      position: 'absolute',
-      bottom: 2,
-      right: 2,
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      backgroundColor: colors.emerald,
-      borderWidth: 2,
-      borderColor: panelBg,
-    },
-    profileText: {
+    brandText: {
       flex: 1,
       minWidth: 0,
       gap: 4,
       alignItems: 'flex-end',
     },
-    displayName: {
-      ...typography.h3,
-      fontSize: 18,
-      fontWeight: '800',
+    brandName: {
+      ...typography.h2,
+      fontSize: 28,
+      lineHeight: 34,
+      fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
       ...getRtlText(),
     },
-    usernameText: {
+    brandTagline: {
       ...typography.caption,
-      fontSize: 14,
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: '500',
       color: colors.textMuted,
       writingDirection: 'rtl',
       ...getRtlText(),
     },
-    verifiedPill: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 4,
-      marginTop: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 999,
-      backgroundColor: pp.verifiedBg,
-    },
-    verifiedText: {
-      ...typography.micro,
-      fontSize: 11,
-      fontWeight: '700',
-      color: pp.verifiedText,
-      writingDirection: 'rtl',
-    },
     scroll: {
       flex: 1,
-      ...getRtlDirection(),
     },
     scrollContent: {
       paddingBottom: spacing.lg,

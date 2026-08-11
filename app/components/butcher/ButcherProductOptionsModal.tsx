@@ -243,7 +243,7 @@ function createStyles(colors: ThemeColors) {
     },
     chipTextActive: {
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     weightRow: {
       ...getRtlRow(),

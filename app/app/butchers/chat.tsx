@@ -848,7 +848,7 @@ function createMessageStyles(colors: ThemeColors) {
   bubbleWrapMe: { justifyContent: 'flex-end' },
   bubbleWrapThem: { justifyContent: 'flex-start' },
   avatar: {
-    width: 28, height: 28, borderRadius: 14,
+    width: 28, height: 28, borderRadius: 16,
     backgroundColor: colors.bgElevated,
   },
   bubble: {

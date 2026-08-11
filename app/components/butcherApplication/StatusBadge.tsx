@@ -57,7 +57,7 @@ function createStyles() {
     },
     label: {
       ...typography.caption,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     compactLabel: {
       fontSize: 11,

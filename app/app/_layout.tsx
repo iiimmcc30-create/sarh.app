@@ -20,6 +20,7 @@ import { ListingCovenantHost } from '@/components/listing/ListingCovenantHost';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
+import { NavigationPathTracker } from '@/components/navigation/NavigationPathTracker';
 import { sarh } from '@/constants/sarhTokens';
 import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
@@ -103,6 +104,7 @@ function RootNavigator() {
         <Stack.Screen name="butcher-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="butchers-market-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="notifications/index" />
+        <Stack.Screen name="favorites" />
         <Stack.Screen name="promote" />
         <Stack.Screen name="subscription" />
         <Stack.Screen name="payment" />
@@ -118,6 +120,8 @@ function RootNavigator() {
         <Stack.Screen name="info/terms" />
         <Stack.Screen name="info/contact" />
         <Stack.Screen name="info/refund" />
+        <Stack.Screen name="info/policies" />
+        <Stack.Screen name="info/policy/[slug]" />
         <Stack.Screen name="settings/index" />
         <Stack.Screen name="settings/account" />
         <Stack.Screen name="settings/blocked" />
@@ -168,6 +172,7 @@ function RootLayoutBody() {
                 <NotificationManager />
                 <ButcherOwnerProvider>
                   <SubscriptionProvider>
+                    <NavigationPathTracker />
                     <RootNavigator />
                     <ActionSheetHost />
                     <ListingCovenantHost />
