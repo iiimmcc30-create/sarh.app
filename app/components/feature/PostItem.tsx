@@ -221,11 +221,14 @@ function PostItemComponent({
             disabled={!onPress || variant === 'detail'}
             style={({ pressed }) => [pressed && onPress ? styles.bodyPressed : null]}
           >
-            <PostBody
-              text={bodyText}
-              style={styles.body}
-              lines={expanded ? undefined : TEXT_COLLAPSE_LINES}
-            />
+            {/* LTR shell so textAlign:'right' stays on the visual right under app RTL. */}
+            <View style={styles.bodyShell}>
+              <PostBody
+                text={bodyText}
+                style={styles.body}
+                lines={expanded ? undefined : TEXT_COLLAPSE_LINES}
+              />
+            </View>
             {variant === 'feed' &&
             (bodyText.split('\n').length > TEXT_COLLAPSE_LINES || bodyText.length > 400) ? (
               !expanded ? (
@@ -442,13 +445,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
     menuBtnPressed: {
       backgroundColor: colors.bgElevated,
     },
+    bodyShell: {
+      width: '100%',
+      direction: 'ltr',
+      marginTop: 8,
+    },
     body: {
       ...typography.body,
       fontSize: 15,
       lineHeight: 24,
       color: colors.textPrimary,
-      ...getRtlText(),
-      marginTop: 8,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       alignSelf: 'stretch',
     },
     bodyPressed: {
