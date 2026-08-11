@@ -169,7 +169,7 @@ export default function HomeScreen() {
             onRefresh={() => void fetchStories(true)}
           />
 
-          <ButcherMiniSection size="hero" showStories={false} limit={8} />
+          <ButcherMiniSection size="grid" showStories={false} limit={12} />
 
           <SectionHeader
             title="الإعلانات"

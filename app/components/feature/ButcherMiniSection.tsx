@@ -1,9 +1,10 @@
 // Powered by OnSpace.AI
-// SAFAT — ButcherMiniSection — Hungerstation-style horizontal cards
+// SAFAT — ButcherMiniSection — dual horizontal rows + legacy hero/compact
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ButcherDeliveryCard } from '@/components/feature/ButcherDeliveryCard';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
@@ -15,7 +16,7 @@ import {
 } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { gccCurrencies } from '@/services/butcherData';
+import { gccCurrencies, type ButcherProfile } from '@/services/butcherData';
 import { countries } from '@/services/types';
 import { useButcher } from '@/hooks/useButcher';
 
@@ -26,15 +27,25 @@ const STORY_RING_COLORS = {
   update:          ['#3B82F6', '#2563EB'],
 } as const;
 
-// Card dimensions
 const CARD_W_COMPACT = 220;
 const COVER_H_COMPACT = 148;
-const STORY_SIZE  = 52;
+const STORY_SIZE = 52;
 
 interface ButcherMiniSectionProps {
-  limit?:       number;
+  limit?: number;
   showStories?: boolean;
-  size?:        'compact' | 'hero';
+  /** grid = two horizontal rows (~2 cards visible); hero/compact = legacy single row */
+  size?: 'compact' | 'hero' | 'grid';
+}
+
+function splitIntoRows(items: ButcherProfile[]): [ButcherProfile[], ButcherProfile[]] {
+  const row1: ButcherProfile[] = [];
+  const row2: ButcherProfile[] = [];
+  items.forEach((item, index) => {
+    if (index % 2 === 0) row1.push(item);
+    else row2.push(item);
+  });
+  return [row1, row2];
 }
 
 export function ButcherMiniSection({
@@ -42,26 +53,56 @@ export function ButcherMiniSection({
   showStories = true,
   size = 'compact',
 }: ButcherMiniSectionProps) {
-  const router      = useRouter();
+  const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const isHero = size === 'hero';
-  const s           = useThemedStyles(({ colors }) => createStyles(colors, isHero));
+  const isGrid = size === 'grid';
+  const s = useThemedStyles(({ colors: c }) => createStyles(c, isHero));
   const CARD_W = isHero ? Math.round(screenWidth * 0.84) : CARD_W_COMPACT;
   const COVER_H = isHero ? 210 : COVER_H_COMPACT;
 
+  // ~2 cards visible with a slight peek of the next column
+  const gridGap = spacing.md;
+  const gridPad = spacing.lg;
+  const GRID_CARD_W = Math.round((screenWidth - gridPad * 2 - gridGap) / 2 - 6);
+
   const { filteredButchers, stories, loading } = useButcher();
   const ranked = filteredButchers.slice(0, limit);
+  const [row1, row2] = splitIntoRows(ranked);
+
+  const openButcher = (id: string) => {
+    router.push({ pathname: '/butchers/[id]', params: { id } });
+  };
+
+  const renderGridRow = (items: ButcherProfile[], key: string) => (
+    <ScrollView
+      key={key}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={s.gridRow}
+      decelerationRate="fast"
+      snapToInterval={GRID_CARD_W + gridGap}
+      snapToAlignment="start"
+    >
+      {items.map((butcher) => (
+        <ButcherDeliveryCard
+          key={butcher.id}
+          butcher={butcher}
+          width={GRID_CARD_W}
+          onPress={() => openButcher(butcher.id)}
+        />
+      ))}
+    </ScrollView>
+  );
 
   return (
-    <View style={[s.wrapper, isHero && s.wrapperHero]}>
-
+    <View style={[s.wrapper, (isHero || isGrid) && s.wrapperHero]}>
       <SectionHeader
         title="الملاحم"
-        subtitle={!isHero ? 'لحوم طازجة قريبة منك' : undefined}
+        subtitle={isGrid ? 'لحوم طازجة قريبة منك' : !isHero ? 'لحوم طازجة قريبة منك' : undefined}
         onSeeAll={() => router.push('/butchers')}
       />
 
-      {/* ── Stories strip ──────────────────────────────────────────── */}
       {showStories && stories.length > 0 && (
         <ScrollView
           horizontal
@@ -108,112 +149,95 @@ export function ButcherMiniSection({
         </ScrollView>
       )}
 
-      {/* ── Butcher cards ──────────────────────────────────────────── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={s.cardsRow}
-        decelerationRate="fast"
-        snapToInterval={CARD_W + spacing.md}
-        snapToAlignment="start"
-      >
-        {loading && ranked.length === 0 ? (
-          <View style={[s.skeleton, { width: CARD_W, height: COVER_H + (isHero ? 0 : 80) }]}>
+      {isGrid ? (
+        loading && ranked.length === 0 ? (
+          <View style={[s.skeleton, { width: GRID_CARD_W * 2 + gridGap, height: 220, marginHorizontal: gridPad }]}>
             <Text style={s.skeletonText}>جاري التحميل...</Text>
           </View>
         ) : ranked.length === 0 ? (
           <Pressable
-            style={[s.skeleton, { width: CARD_W, height: COVER_H + (isHero ? 0 : 80) }]}
+            style={[s.skeleton, { width: GRID_CARD_W * 2 + gridGap, height: 220, marginHorizontal: gridPad }]}
             onPress={() => router.push('/butchers')}
           >
             <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
             <Text style={s.skeletonText}>لا توجد ملاحم حالياً</Text>
           </Pressable>
         ) : (
-          ranked.map((butcher) => {
-            const currency   = gccCurrencies[butcher.country];
-            const country    = countries[butcher.country];
-            const isFeatured = butcher.type === 'verified';
-            const isTopRated = butcher.rating >= 4.5;
-            const isNew      = (butcher.totalOrders ?? 0) < 20;
+          <View style={s.gridStack}>
+            {row1.length > 0 ? renderGridRow(row1, 'butcher-row-1') : null}
+            {row2.length > 0 ? renderGridRow(row2, 'butcher-row-2') : null}
+          </View>
+        )
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.cardsRow}
+          decelerationRate="fast"
+          snapToInterval={CARD_W + spacing.md}
+          snapToAlignment="start"
+        >
+          {loading && ranked.length === 0 ? (
+            <View style={[s.skeleton, { width: CARD_W, height: COVER_H + (isHero ? 0 : 80) }]}>
+              <Text style={s.skeletonText}>جاري التحميل...</Text>
+            </View>
+          ) : ranked.length === 0 ? (
+            <Pressable
+              style={[s.skeleton, { width: CARD_W, height: COVER_H + (isHero ? 0 : 80) }]}
+              onPress={() => router.push('/butchers')}
+            >
+              <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
+              <Text style={s.skeletonText}>لا توجد ملاحم حالياً</Text>
+            </Pressable>
+          ) : (
+            ranked.map((butcher) => {
+              const currency = gccCurrencies[butcher.country];
+              const country = countries[butcher.country];
+              const isFeatured = butcher.type === 'verified';
+              const isTopRated = butcher.rating >= 4.5;
+              const isNew = (butcher.totalOrders ?? 0) < 20;
 
-            return (
-              <Pressable
-                key={butcher.id}
-                style={({ pressed }) => [
-                  s.card,
-                  { width: CARD_W },
-                  isHero && s.cardHero,
-                  pressed && { opacity: 0.9 },
-                ]}
-                onPress={() =>
-                  router.push({ pathname: '/butchers/[id]', params: { id: butcher.id } })
-                }
-              >
-                <View style={[s.coverWrap, { height: COVER_H }]}>
-                  <Image
-                    source={uriSource(butcher.cover || butcher.logo)}
-                    style={s.cover}
-                    contentFit="cover"
-                  />
+              return (
+                <Pressable
+                  key={butcher.id}
+                  style={({ pressed }) => [
+                    s.card,
+                    { width: CARD_W },
+                    isHero && s.cardHero,
+                    pressed && { opacity: 0.9 },
+                  ]}
+                  onPress={() => openButcher(butcher.id)}
+                >
+                  <View style={[s.coverWrap, { height: COVER_H }]}>
+                    <Image
+                      source={uriSource(butcher.cover || butcher.logo)}
+                      style={s.cover}
+                      contentFit="cover"
+                    />
 
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.88)']}
-                    locations={[0.2, 0.55, 1]}
-                    style={StyleSheet.absoluteFill}
-                  />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.88)']}
+                      locations={[0.2, 0.55, 1]}
+                      style={StyleSheet.absoluteFill}
+                    />
 
-                  <View style={s.topRow}>
-                    {isNew ? (
-                      <View style={s.newBadge}>
-                        <Text style={s.newBadgeText}>جديد</Text>
+                    <View style={s.topRow}>
+                      {isNew ? (
+                        <View style={s.newBadge}>
+                          <Text style={s.newBadgeText}>جديد</Text>
+                        </View>
+                      ) : (
+                        <View />
+                      )}
+                      <View style={s.heartBtn}>
+                        <AppIcon name="heart-outline" size={isHero ? 17 : 15} color="#fff" />
                       </View>
-                    ) : (
-                      <View />
-                    )}
-                    <View style={s.heartBtn}>
-                      <AppIcon name="heart-outline" size={isHero ? 17 : 15} color="#fff" />
                     </View>
-                  </View>
 
-                  {!isHero ? (
-                    <View style={s.topRight}>
-                      <View style={s.ratingChip}>
-                        <AppIcon name="star" size={11} color={colors.gold} />
-                        <Text style={s.ratingText}>{butcher.rating.toFixed(1)}</Text>
-                        <Text style={s.ratingCount}>
-                          ({butcher.totalOrders > 999
-                            ? (butcher.totalOrders / 1000).toFixed(1) + 'k'
-                            : butcher.totalOrders})
-                        </Text>
-                      </View>
-                    </View>
-                  ) : null}
-
-                  <View
-                    style={[
-                      s.statusPill,
-                      isHero && s.statusPillHero,
-                      {
-                        backgroundColor: butcher.workingHours.isOpen
-                          ? isHero
-                            ? 'rgba(32, 182, 111, 0.92)'
-                            : 'rgba(32, 182, 111, 0.9)'
-                          : 'rgba(239,68,68,0.9)',
-                      },
-                    ]}
-                  >
-                    <View style={s.statusDot} />
-                    <Text style={s.statusText}>
-                      {butcher.workingHours.isOpen ? 'مفتوح' : 'مغلق'}
-                    </Text>
-                  </View>
-
-                  {isHero ? (
-                    <View style={s.heroOverlay}>
-                      <View style={s.heroRatingRow}>
+                    {!isHero ? (
+                      <View style={s.topRight}>
                         <View style={s.ratingChip}>
-                          <AppIcon name="star" size={12} color={colors.gold} />
+                          <AppIcon name="star" size={11} color={colors.gold} />
                           <Text style={s.ratingText}>{butcher.rating.toFixed(1)}</Text>
                           <Text style={s.ratingCount}>
                             ({butcher.totalOrders > 999
@@ -222,81 +246,114 @@ export function ButcherMiniSection({
                           </Text>
                         </View>
                       </View>
-                      <Text style={s.heroName} numberOfLines={1}>{butcher.nameAr}</Text>
-                      <View style={s.heroMetaRow}>
-                        <View style={s.metaItem}>
-                          <AppIcon name="map-marker-outline" size={12} color="rgba(255,255,255,0.9)" />
-                          <Text style={s.heroMetaText}>{butcher.cityAr}</Text>
+                    ) : null}
+
+                    <View
+                      style={[
+                        s.statusPill,
+                        isHero && s.statusPillHero,
+                        {
+                          backgroundColor: butcher.workingHours.isOpen
+                            ? isHero
+                              ? 'rgba(32, 182, 111, 0.92)'
+                              : 'rgba(32, 182, 111, 0.9)'
+                            : 'rgba(239,68,68,0.9)',
+                        },
+                      ]}
+                    >
+                      <View style={s.statusDot} />
+                      <Text style={s.statusText}>
+                        {butcher.workingHours.isOpen ? 'مفتوح' : 'مغلق'}
+                      </Text>
+                    </View>
+
+                    {isHero ? (
+                      <View style={s.heroOverlay}>
+                        <View style={s.heroRatingRow}>
+                          <View style={s.ratingChip}>
+                            <AppIcon name="star" size={12} color={colors.gold} />
+                            <Text style={s.ratingText}>{butcher.rating.toFixed(1)}</Text>
+                            <Text style={s.ratingCount}>
+                              ({butcher.totalOrders > 999
+                                ? (butcher.totalOrders / 1000).toFixed(1) + 'k'
+                                : butcher.totalOrders})
+                            </Text>
+                          </View>
                         </View>
-                        <View style={s.metaDotLight} />
+                        <Text style={s.heroName} numberOfLines={1}>{butcher.nameAr}</Text>
+                        <View style={s.heroMetaRow}>
+                          <View style={s.metaItem}>
+                            <AppIcon name="map-marker-outline" size={12} color="rgba(255,255,255,0.9)" />
+                            <Text style={s.heroMetaText}>{butcher.cityAr}</Text>
+                          </View>
+                          <View style={s.metaDotLight} />
+                          <View style={s.metaItem}>
+                            <AppIcon name="bicycle-outline" size={12} color="rgba(255,255,255,0.9)" />
+                            <Text style={s.heroMetaText}>
+                              {butcher.workingHours.isOpen ? '20-35 دقيقة' : 'مغلق حالياً'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {!isHero && (isTopRated || isFeatured) && (
+                      <View style={s.badgesRow}>
+                        {isTopRated && (
+                          <View style={s.badgePreferred}>
+                            <AppIcon name="checkmark-circle" size={10} color="#fff" />
+                            <Text style={s.badgeText}>الأعلى تقييماً</Text>
+                          </View>
+                        )}
+                        {isFeatured && (
+                          <View style={s.badgeFeatured}>
+                            <AppIcon name="star" size={10} color="#1A1300" />
+                            <Text style={[s.badgeText, { color: '#1A1300' }]}>مميز</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+
+                  {!isHero ? (
+                    <View style={s.info}>
+                      <Text style={s.name} numberOfLines={1}>{butcher.nameAr}</Text>
+                      <Text style={s.tagLine} numberOfLines={1}>
+                        {country?.flag} {butcher.cityAr}
+                        {currency ? `  ·  ${currency.symbol}` : ''}
+                      </Text>
+                      <View style={s.metaRow}>
                         <View style={s.metaItem}>
-                          <AppIcon name="bicycle-outline" size={12} color="rgba(255,255,255,0.9)" />
-                          <Text style={s.heroMetaText}>
-                            {butcher.workingHours.isOpen ? '20-35 دقيقة' : 'مغلق حالياً'}
+                          <AppIcon name="clock-outline" size={11} color={colors.textMuted} />
+                          <Text style={s.metaText}>
+                            {butcher.workingHours.isOpen ? '20-35 دق' : 'مغلق حالياً'}
+                          </Text>
+                        </View>
+                        <View style={s.metaDot} />
+                        <View style={s.metaItem}>
+                          <AppIcon name="people-outline" size={11} color={colors.textMuted} />
+                          <Text style={s.metaText}>
+                            {butcher.totalOrders.toLocaleString()} طلب
                           </Text>
                         </View>
                       </View>
                     </View>
                   ) : null}
-
-                  {!isHero && (isTopRated || isFeatured) && (
-                    <View style={s.badgesRow}>
-                      {isTopRated && (
-                        <View style={s.badgePreferred}>
-                          <AppIcon name="checkmark-circle" size={10} color="#fff" />
-                          <Text style={s.badgeText}>الأعلى تقييماً</Text>
-                        </View>
-                      )}
-                      {isFeatured && (
-                        <View style={s.badgeFeatured}>
-                          <AppIcon name="star" size={10} color="#1A1300" />
-                          <Text style={[s.badgeText, { color: '#1A1300' }]}>مميز</Text>
-                        </View>
-                      )}
-                    </View>
-                  )}
-                </View>
-
-                {!isHero ? (
-                  <View style={s.info}>
-                    <Text style={s.name} numberOfLines={1}>{butcher.nameAr}</Text>
-                    <Text style={s.tagLine} numberOfLines={1}>
-                      {country?.flag} {butcher.cityAr}
-                      {currency ? `  ·  ${currency.symbol}` : ''}
-                    </Text>
-                    <View style={s.metaRow}>
-                      <View style={s.metaItem}>
-                        <AppIcon name="clock-outline" size={11} color={colors.textMuted} />
-                        <Text style={s.metaText}>
-                          {butcher.workingHours.isOpen ? '20-35 دق' : 'مغلق حالياً'}
-                        </Text>
-                      </View>
-                      <View style={s.metaDot} />
-                      <View style={s.metaItem}>
-                        <AppIcon name="people-outline" size={11} color={colors.textMuted} />
-                        <Text style={s.metaText}>
-                          {butcher.totalOrders.toLocaleString()} طلب
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                ) : null}
-              </Pressable>
-            );
-          })
-        )}
-      </ScrollView>
+                </Pressable>
+              );
+            })
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
 function createStyles(colors: ThemeColors, isHero = false) {
   return StyleSheet.create({
     wrapper: { marginTop: isHero ? spacing.xs : spacing.sm, marginBottom: isHero ? spacing.lg : spacing.md },
     wrapperHero: { marginTop: spacing.xs, marginBottom: spacing.lg },
 
-    // Stories
     storiesRow: {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
@@ -346,7 +403,17 @@ function createStyles(colors: ThemeColors, isHero = false) {
       fontSize: 10,
     },
 
-    // Cards scroll
+    gridStack: {
+      gap: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    gridRow: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.lg,
+      gap: spacing.md,
+    },
+
     cardsRow: {
       flexDirection: 'row',
       paddingHorizontal: spacing.lg,
@@ -355,7 +422,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       paddingBottom: spacing.sm,
     },
 
-    // Card
     card: {
       backgroundColor: colors.bgSurface,
       borderRadius: isHero ? sarh.radius.card : radius.xl,
@@ -375,7 +441,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       elevation: 2,
     },
 
-    // Cover
     coverWrap: {
       position: 'relative',
     },
@@ -384,7 +449,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       height: '100%',
     },
 
-    // Top row overlays
     topRow: {
       position: 'absolute',
       top: 10,
@@ -447,7 +511,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       fontSize: 9,
     },
 
-    // Open/closed pill (bottom-left of cover)
     statusPill: {
       position: 'absolute',
       bottom: 8,
@@ -479,7 +542,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       fontSize: 10,
     },
 
-    // Bottom badges (top-rated, featured) on cover
     badgesRow: {
       position: 'absolute',
       bottom: 8,
@@ -548,7 +610,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       backgroundColor: 'rgba(255,255,255,0.45)',
     },
 
-    // Info section
     info: {
       padding: spacing.md,
       gap: spacing.xs,
@@ -590,7 +651,6 @@ function createStyles(colors: ThemeColors, isHero = false) {
       backgroundColor: colors.borderSoft,
     },
 
-    // Skeleton / empty
     skeleton: {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xl,
