@@ -21,10 +21,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { AppLogo } from '@/components/ui/AppLogo';
+import { Image } from '@/components/ui/AppImage';
+import { APP_LOGO } from '@/constants/branding';
 import { getRtlText, marginStart, marginEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
-import { BRAND_LOGIN_SUBTITLE_AR, BRAND_LOGIN_WELCOME_AR, BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
+import {
+  BRAND_LOGIN_SUBTITLE_AR,
+  BRAND_NAME_AR,
+  BRAND_TERMS_SHORT_AR,
+} from '@/constants/brandCopy';
 
 const COUNTRY_CODES = [
   { flag: '🇸🇦', code: '+966', label: 'السعودية' },
