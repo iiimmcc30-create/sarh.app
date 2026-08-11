@@ -147,15 +147,12 @@ export default function SidebarScreen() {
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
-            <AppIcon name="close" size={22} color={colors.textPrimary} />
-          </Pressable>
-        </View>
-
-        {/* Same brand stack as login: AppLogo → سرح → منصة المواشي السعودية */}
+        {/* Compact brand stack — close overlays the top corner to cut empty space. */}
         <View style={styles.brandBanner}>
-          <AppLogo size={72} />
+          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
+            <AppIcon name="close" size={20} color={colors.textPrimary} />
+          </Pressable>
+          <AppLogo size={64} />
           <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
           <Text style={styles.brandTagline}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
         </View>
@@ -203,30 +200,33 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       shadowRadius: 16,
       elevation: 10,
     },
-    header: {
-      ...alignInlineEnd(),
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    closeBtn: {
-      width: 36,
-      height: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     brandBanner: {
       alignItems: 'center',
-      gap: spacing.sm,
+      gap: 4,
       marginHorizontal: spacing.lg,
-      marginBottom: spacing.md,
+      marginTop: spacing.xs,
+      marginBottom: spacing.sm,
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      width: '100%',
-      alignSelf: 'center',
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+      alignSelf: 'stretch',
+      position: 'relative',
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 0,
+      end: spacing.xs,
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 2,
     },
     brandName: {
-      ...typography.h1,
+      ...typography.h2,
+      fontSize: 26,
+      lineHeight: 30,
+      fontWeight: '600',
       color: colors.textPrimary,
       textAlign: 'center',
     },
@@ -234,14 +234,15 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.caption,
       color: colors.textMuted,
       textAlign: 'center',
-      paddingHorizontal: 20,
-      lineHeight: 20,
+      paddingHorizontal: 12,
+      lineHeight: 18,
     },
     scroll: {
       flex: 1,
     },
     scrollContent: {
       paddingBottom: spacing.lg,
+      paddingTop: 0,
     },
   });
 }

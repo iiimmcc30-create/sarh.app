@@ -205,7 +205,7 @@ export function SidebarLogoutButton({
 const sectionStyles = StyleSheet.create({
   block: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
   },
   titleShell: {
     width: '100%',
