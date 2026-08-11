@@ -65,8 +65,14 @@ export default function PolicyDetailScreen() {
         <AppScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
           {sections.map((section, i) => (
             <View key={`${section.title}-${i}`} style={styles.section}>
-              {section.title ? <Text style={styles.sectionTitle}>{section.title}</Text> : null}
-              <Text style={styles.sectionBody}>{section.body}</Text>
+              {section.title ? (
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                </View>
+              ) : null}
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionBody}>{section.body}</Text>
+              </View>
             </View>
           ))}
           <Text style={styles.updated}>آخر تحديث: {updatedLabel}</Text>
@@ -96,9 +102,15 @@ function createStyles(colors: ThemeColors) {
     loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     content: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.huge },
     section: { gap: spacing.xs },
+    /** Physical LTR shell — same as SidebarMenuItem / listing title. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
@@ -106,6 +118,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 24,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },

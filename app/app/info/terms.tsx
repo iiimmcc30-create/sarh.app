@@ -71,15 +71,21 @@ export default function TermsScreen() {
           <View key={i} style={styles.section}>
             <View style={styles.titleRow}>
               <Text style={styles.sectionNum}>{i + 1}</Text>
-              <Text style={styles.sectionTitle}>{item.title}</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionTitle}>{item.title}</Text>
+              </View>
             </View>
-            <Text style={styles.sectionContent}>{item.content}</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionContent}>{item.content}</Text>
+            </View>
           </View>
         ))}
 
         {/* Contact */}
         <View style={styles.contactSection}>
-          <Text style={styles.sectionTitle}>للاستفسار</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.sectionTitle}>للاستفسار</Text>
+          </View>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>info@alsfat.com</Text>
@@ -133,8 +139,25 @@ function createStyles(colors: ThemeColors) {
     textAlign: 'center',
     color: colors.textBrandStrong,
   },
-  sectionTitle: { ...typography.bodyStrong, color: colors.gold, textAlign: 'right' },
-  sectionContent: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
+  rtlTextShell: {
+    width: '100%',
+    direction: 'ltr',
+  },
+  sectionTitle: {
+    ...typography.bodyStrong,
+    color: colors.gold,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  sectionContent: {
+    ...typography.body,
+    color: colors.textSecondary,
+    lineHeight: 26,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   contactSection: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, gap: spacing.sm },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
   contactLink: { ...typography.body, color: colors.textBrandStrong },
