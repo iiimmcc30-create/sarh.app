@@ -7,9 +7,13 @@
  *
  * Implementation isolates layout in a physical LTR row so app-level RTL
  * cannot reverse children again. Child order is left→right:
- *   [Chevron] [spacer] [Title][Icon]
+ *   [Chevron] [Title shell] [Icon]
+ *
+ * Title uses a width-bounded LTR shell (same pattern as listing title) so
+ * Arabic textAlign:'right' stays complete under overflow:hidden parents.
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isNavigationLocked } from '@/lib/safeNavigate';
@@ -100,23 +104,21 @@ export function SidebarMenuItem({
         </View>
       ) : null}
 
-      <View style={styles.spacer} />
-
-      {/* Physical RIGHT: title then icon (icon at the far right) */}
-      <View style={styles.rightContent}>
-        <View style={styles.textWrap}>
-          <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
-            {title}
+      {/* Flexible title shell — owns remaining width between chevron and icon */}
+      <View style={styles.textShell}>
+        <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+            {subtitle}
           </Text>
-          {subtitle ? (
-            <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
-        <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
-          <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
-        </View>
+        ) : null}
+      </View>
+
+      {/* Physical RIGHT: icon */}
+      <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
+        <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
       </View>
     </Pressable>
   );
@@ -125,7 +127,7 @@ export function SidebarMenuItem({
 const styles = StyleSheet.create({
   /**
    * Locked to physical LTR so I18nManager RTL cannot reverse the row.
-   * Left → Right children: chevron, spacer, title+icon.
+   * Left → Right children: chevron, title shell, icon.
    */
   row: {
     flexDirection: 'row',
@@ -133,6 +135,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'stretch',
     alignItems: 'center',
+    gap: SIDEBAR_MENU_ITEM.gap,
     paddingHorizontal: SIDEBAR_MENU_ITEM.paddingHorizontal,
     paddingVertical: SIDEBAR_MENU_ITEM.paddingVertical,
     minHeight: SIDEBAR_MENU_ITEM.minHeight,
@@ -143,15 +146,16 @@ const styles = StyleSheet.create({
   rowPressed: {
     opacity: 0.76,
   },
-  rightContent: {
-    flexDirection: 'row',
+  /**
+   * Physical LTR shell with bounded width — same pattern as listing title /
+   * SidebarMenuItem references across the app. Prevents Arabic glyphs from
+   * painting outside the box and getting clipped by overflow:hidden cards.
+   */
+  textShell: {
+    flex: 1,
+    minWidth: 0,
     direction: 'ltr',
-    alignItems: 'center',
-    gap: SIDEBAR_MENU_ITEM.gap,
-    // Prefer full title width; spacer shrinks first when the row is tight.
-    flexShrink: 0,
-    flexGrow: 0,
-    maxWidth: '78%',
+    gap: 2,
   },
   iconWrap: {
     width: SIDEBAR_MENU_ITEM.iconWrap,
@@ -161,33 +165,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  textWrap: {
-    // Physical LTR shell so Arabic textAlign:'right' stays visually correct.
-    direction: 'ltr',
-    flexShrink: 0,
-    flexGrow: 0,
-    gap: 2,
-  },
   title: {
     ...typography.bodyStrong,
+    fontFamily: appFont.semibold,
     fontSize: SIDEBAR_MENU_ITEM.titleSize,
     fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
+    width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
-    flexShrink: 0,
   },
   subtitle: {
     ...typography.caption,
     fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
     lineHeight: 18,
+    width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
-    flexShrink: 0,
-  },
-  spacer: {
-    flex: 1,
-    flexShrink: 1,
-    minWidth: 4,
   },
   badge: {
     minWidth: 24,
