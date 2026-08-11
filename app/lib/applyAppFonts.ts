@@ -1,9 +1,10 @@
 /**
- * Apply IBM Plex Sans Arabic as the default typeface for Text / TextInput.
- * Maps numeric/keyword fontWeight → the matching loaded font file (Expo Google Fonts).
+ * Apply IBM Plex Sans Arabic + default Arabic RTL reading direction for Text / TextInput.
+ * Matches سياسة الاسترداد: text starts on the right unless a style explicitly opts out.
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import { appFont } from '@/constants/fonts';
+import { isAppRtl } from '@/lib/rtl';
 
 type AnyTextProps = {
   style?: StyleProp<TextStyle>;
@@ -23,10 +24,25 @@ function resolveFontFamily(weight: TextStyle['fontWeight'] | undefined, existing
   return appFont.regular;
 }
 
-function withAppFont(style: StyleProp<TextStyle> | undefined): StyleProp<TextStyle> {
+function withAppTextDefaults(style: StyleProp<TextStyle> | undefined): StyleProp<TextStyle> {
   const flat = StyleSheet.flatten(style) as TextStyle | undefined;
   const family = resolveFontFamily(flat?.fontWeight, flat?.fontFamily);
-  return [{ fontFamily: family }, style];
+  const defaults: TextStyle = { fontFamily: family };
+
+  // Explicit LTR fields (phones, emails, numbers) keep their own direction/align.
+  const explicitLtr = flat?.writingDirection === 'ltr';
+
+  if (!explicitLtr && isAppRtl()) {
+    if (flat?.writingDirection == null) {
+      defaults.writingDirection = 'rtl';
+    }
+    // Only fill missing align — preserve center / left overrides.
+    if (flat?.textAlign == null) {
+      defaults.textAlign = 'right';
+    }
+  }
+
+  return [defaults, style];
 }
 
 let applied = false;
@@ -38,12 +54,12 @@ function patchHost(
   if (typeof Component.render === 'function') {
     const original = Component.render.bind(bindTarget);
     Component.render = (props: AnyTextProps, ref: unknown) =>
-      original({ ...props, style: withAppFont(props.style as StyleProp<TextStyle>) }, ref);
+      original({ ...props, style: withAppTextDefaults(props.style as StyleProp<TextStyle>) }, ref);
     return;
   }
   Component.defaultProps = {
     ...Component.defaultProps,
-    style: withAppFont(Component.defaultProps?.style as StyleProp<TextStyle>),
+    style: withAppTextDefaults(Component.defaultProps?.style as StyleProp<TextStyle>),
   };
 }
 

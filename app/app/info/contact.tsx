@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 
 export default function ContactScreen() {
   const { colors, gradients } = useTheme();
@@ -33,8 +33,8 @@ export default function ContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -42,12 +42,15 @@ export default function ContactScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, getRtlDirection()]}
+      >
         {/* Channels */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>قنوات التواصل</Text>
 
-          <Pressable style={styles.channelCard} onPress={() => Linking.openURL('tel:+966591298136')}>
+          <Pressable style={[styles.channelCard, getRtlRow()]} onPress={() => Linking.openURL('tel:+966591298136')}>
             <LinearGradient colors={['#162149', '#1E3A8A']} style={styles.channelIcon}>
               <AppIcon name="call" size={22} color={colors.electricBright} />
             </LinearGradient>
@@ -59,7 +62,7 @@ export default function ContactScreen() {
           </Pressable>
 
           <Pressable
-            style={styles.channelCard}
+            style={[styles.channelCard, getRtlRow()]}
             onPress={() => Linking.openURL('https://wa.me/966591298136')}
           >
             <LinearGradient colors={['#18965B', '#20B66F']} style={styles.channelIcon}>
@@ -72,7 +75,7 @@ export default function ContactScreen() {
             <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
 
-          <Pressable style={styles.channelCard} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
+          <Pressable style={[styles.channelCard, getRtlRow()]} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
             <LinearGradient colors={['#3730a3', '#6366f1']} style={styles.channelIcon}>
               <AppIcon name="mail" size={22} color="#fff" />
             </LinearGradient>
@@ -83,7 +86,7 @@ export default function ContactScreen() {
             <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
 
-          <Pressable style={styles.channelCard} onPress={() => Linking.openURL('https://alsfat.com')}>
+          <Pressable style={[styles.channelCard, getRtlRow()]} onPress={() => Linking.openURL('https://alsfat.com')}>
             <LinearGradient colors={['#0f4c75', '#1B6CA8']} style={styles.channelIcon}>
               <AppIcon name="globe" size={22} color="#fff" />
             </LinearGradient>
@@ -101,7 +104,7 @@ export default function ContactScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>الاسم</Text>
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, getRtlRow()]}>
               <TextInput
                 value={name}
                 onChangeText={setName}
@@ -115,7 +118,7 @@ export default function ContactScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>الرسالة</Text>
-            <View style={[styles.inputWrap, { alignItems: 'flex-start', paddingVertical: spacing.sm }]}>
+            <View style={[styles.inputWrap, getRtlRow(), { alignItems: 'flex-start', paddingVertical: spacing.sm }]}>
               <TextInput
                 value={message}
                 onChangeText={setMessage}
@@ -133,7 +136,7 @@ export default function ContactScreen() {
             onPress={handleSend}
             disabled={sending}
           >
-            <LinearGradient colors={gradients.royal} style={styles.sendBtnInner}>
+            <LinearGradient colors={gradients.royal} style={[styles.sendBtnInner, getRtlRow()]}>
               <AppIcon name="send" size={18} color="#fff" />
               <Text style={styles.sendBtnText}>{sending ? 'جارٍ الإرسال...' : 'إرسال عبر البريد'}</Text>
             </LinearGradient>
@@ -151,7 +154,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
@@ -160,16 +163,16 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
   scroll: { paddingBottom: 40 },
   section: {
     paddingHorizontal: spacing.lg, paddingVertical: spacing.lg,
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     gap: spacing.sm,
   },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText(), marginBottom: spacing.sm },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.sm, textAlign: 'right', writingDirection: 'rtl' },
   channelCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    alignItems: 'center', gap: spacing.md,
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.borderSoft,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
@@ -178,23 +181,23 @@ function createStyles(colors: ThemeColors) {
     width: 44, height: 44, borderRadius: radius.md,
     alignItems: 'center', justifyContent: 'center',
   },
-  channelLabel: { ...typography.caption, color: colors.textMuted },
-  channelValue: { ...typography.bodyStrong, color: colors.textPrimary },
+  channelLabel: { ...typography.caption, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
+  channelValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right', writingDirection: 'rtl' },
   fieldGroup: { gap: spacing.sm },
-  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600', textAlign: 'right' },
+  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600', textAlign: 'right', writingDirection: 'rtl' },
   inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
+    alignItems: 'center',
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.borderSoft,
   },
-  input: { flex: 1, ...typography.body, color: colors.textPrimary, paddingVertical: 12 },
-  inputRtl: { textAlign: 'right' },
+  input: { flex: 1, ...typography.body, color: colors.textPrimary, paddingVertical: 12, textAlign: 'right', writingDirection: 'rtl' },
+  inputRtl: { textAlign: 'right', writingDirection: 'rtl' },
   sendBtn: { borderRadius: radius.pill, overflow: 'hidden', marginTop: spacing.sm },
   sendBtnInner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     gap: spacing.sm, paddingVertical: spacing.md, borderRadius: radius.pill,
   },
-  sendBtnText: { ...typography.bodyStrong, color: '#fff' },
+  sendBtnText: { ...typography.bodyStrong, color: '#fff', textAlign: 'center' },
   footer: { ...typography.caption, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   });
 }

@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: spacing.xs / 2,
+    textAlign: 'center',
     writingDirection: isAppRtl() ? 'rtl' : 'ltr',
   },
   fabSlot: {

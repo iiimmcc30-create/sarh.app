@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, rtlBackIcon } from '@/lib/rtl';
 
 const SECTIONS = [
   {
@@ -47,8 +47,8 @@ export default function PrivacyScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -56,7 +56,10 @@ export default function PrivacyScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, getRtlDirection()]}
+      >
         <View style={styles.topBanner}>
           <AppIcon name="shield-checkmark" size={28} color={colors.electricBright} />
           <Text style={styles.bannerTitle}>خصوصيتك تهمّنا</Text>
@@ -74,11 +77,11 @@ export default function PrivacyScreen() {
         <View style={styles.contactSection}>
           <Text style={styles.sectionTitle}>تواصل معنا</Text>
           <Text style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</Text>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
+          <Pressable style={[styles.contactRow, getRtlRow()]} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>info@alsfat.com</Text>
           </Pressable>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('tel:+966591298136')}>
+          <Pressable style={[styles.contactRow, getRtlRow()]} onPress={() => Linking.openURL('tel:+966591298136')}>
             <AppIcon name="call-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>+966 591 298 136</Text>
           </Pressable>
@@ -95,7 +98,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
@@ -104,7 +107,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
   scroll: { paddingBottom: 40 },
   topBanner: {
     alignItems: 'center', gap: spacing.sm,
@@ -112,17 +115,17 @@ function createStyles(colors: ThemeColors) {
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     backgroundColor: `${colors.electric}08`,
   },
-  bannerTitle: { ...typography.h2, color: colors.textPrimary },
-  bannerDate: { ...typography.caption, color: colors.textMuted },
+  bannerTitle: { ...typography.h2, color: colors.textPrimary, textAlign: 'center' },
+  bannerDate: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
   section: {
     paddingHorizontal: spacing.lg, paddingVertical: spacing.lg,
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
-  sectionTitle: { ...typography.bodyStrong, color: colors.textBrandStrong, marginBottom: spacing.sm, textAlign: 'right' },
-  sectionContent: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
+  sectionTitle: { ...typography.bodyStrong, color: colors.textBrandStrong, marginBottom: spacing.sm, textAlign: 'right', writingDirection: 'rtl' },
+  sectionContent: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right', writingDirection: 'rtl' },
   contactSection: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, gap: spacing.sm },
-  contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
-  contactLink: { ...typography.body, color: colors.textBrandStrong },
+  contactRow: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
+  contactLink: { ...typography.body, color: colors.textBrandStrong, textAlign: 'right', writingDirection: 'rtl' },
   footer: { ...typography.micro, color: colors.textSubtle, textAlign: 'center', marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   });
 }

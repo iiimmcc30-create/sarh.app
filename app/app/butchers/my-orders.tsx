@@ -291,7 +291,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '600',
       flex: 1,
-      textAlign: 'left',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     totalRow: {

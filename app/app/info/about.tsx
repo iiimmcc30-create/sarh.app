@@ -10,7 +10,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { getRtlText, marginStart, rtlBackIcon } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, rtlBackIcon } from '@/lib/rtl';
 import {
   BRAND_FOOTER_AR,
   BRAND_GOAL_AR,
@@ -26,9 +26,9 @@ export default function AboutScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
@@ -36,7 +36,10 @@ export default function AboutScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, getRtlDirection()]}
+      >
         {/* Hero */}
         <LinearGradient colors={['#0B1330', '#162149', '#1E3A8A']} style={styles.hero}>
           <AppLogo size={96} showRing={false} />
@@ -70,7 +73,7 @@ export default function AboutScreen() {
             { icon: 'shield-check-outline', label: 'بيئة آمنة وموثوقة مع نظام تحقق للحسابات' },
             { icon: 'map-marker-outline', label: 'تغطية شاملة لدول الخليج العربي' },
           ].map((item, i) => (
-            <View key={i} style={styles.featureRow}>
+            <View key={i} style={[styles.featureRow, getRtlRow()]}>
               <View style={styles.featureIcon}>
                 <AppIcon name={item.icon} size={20} color={colors.electricBright} />
               </View>
@@ -83,17 +86,17 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>المالك والامتثال</Text>
           <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow, getRtlRow()]}>
               <Text style={styles.infoLabel}>المالك الرسمي</Text>
               <Text style={styles.infoValue}>مؤسسة ماد يونيت للتجارة</Text>
             </View>
             <View style={styles.divider} />
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow, getRtlRow()]}>
               <Text style={styles.infoLabel}>السجل التجاري</Text>
               <Text style={styles.infoValue}>مسجّلة في المركز السعودي للأعمال</Text>
             </View>
             <View style={styles.divider} />
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow, getRtlRow()]}>
               <Text style={styles.infoLabel}>الموقع</Text>
               <Text style={styles.infoValue}>المملكة العربية السعودية</Text>
             </View>
@@ -104,21 +107,21 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>تواصل معنا</Text>
           <Pressable
-            style={styles.contactBtn}
+            style={[styles.contactBtn, getRtlRow()]}
             onPress={() => Linking.openURL('tel:+966591298136')}
           >
             <AppIcon name="call-outline" size={20} color={colors.electricBright} />
             <Text style={styles.contactText}>+966 591 298 136</Text>
           </Pressable>
           <Pressable
-            style={styles.contactBtn}
+            style={[styles.contactBtn, getRtlRow()]}
             onPress={() => Linking.openURL('mailto:info@alsfat.com')}
           >
             <AppIcon name="mail-outline" size={20} color={colors.electricBright} />
             <Text style={styles.contactText}>info@alsfat.com</Text>
           </Pressable>
           <Pressable
-            style={styles.contactBtn}
+            style={[styles.contactBtn, getRtlRow()]}
             onPress={() => Linking.openURL('https://alsfat.com')}
           >
             <AppIcon name="globe-outline" size={20} color={colors.electricBright} />
@@ -140,7 +143,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.screenRoot },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
@@ -149,20 +152,20 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
   hero: {
     alignItems: 'center', justifyContent: 'center',
     paddingVertical: spacing.huge,
     gap: spacing.sm,
   },
-  heroTitle: { fontSize: 32, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.5 },
+  heroTitle: { fontSize: 32, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.5, textAlign: 'center' },
   heroSub: { ...typography.body, color: colors.textBrand, textAlign: 'center', paddingHorizontal: spacing.xl },
   scroll: { paddingBottom: 40 },
   section: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right' },
-  bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right', writingDirection: 'rtl' },
+  bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right', writingDirection: 'rtl' },
   featureRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    alignItems: 'center', gap: spacing.md,
     paddingVertical: spacing.sm,
   },
   featureIcon: {
@@ -171,27 +174,27 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  featureText: { flex: 1, ...typography.body, color: colors.textSecondary, textAlign: 'right' },
+  featureText: { flex: 1, ...typography.body, color: colors.textSecondary, textAlign: 'right', writingDirection: 'rtl' },
   infoCard: {
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
   infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
   },
-  infoLabel: { ...typography.caption, color: colors.textMuted },
-  infoValue: { ...typography.bodyStrong, color: colors.textPrimary, ...getRtlText(), flex: 1, ...marginStart(spacing.md) },
+  infoLabel: { ...typography.caption, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
+  infoValue: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1, textAlign: 'right', writingDirection: 'rtl', marginRight: spacing.md },
   divider: { height: 1, backgroundColor: colors.borderSoft, marginHorizontal: spacing.lg },
   contactBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    alignItems: 'center', gap: spacing.md,
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.borderSoft,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
     marginBottom: spacing.sm,
   },
-  contactText: { ...typography.body, color: colors.textBrandStrong },
+  contactText: { ...typography.body, color: colors.textBrandStrong, textAlign: 'right', writingDirection: 'rtl' },
   version: { ...typography.micro, color: colors.textSubtle, textAlign: 'center', marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   });
 }

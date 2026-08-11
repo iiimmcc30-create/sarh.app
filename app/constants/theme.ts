@@ -300,9 +300,14 @@ export const radius = {
   pill: sarh.radius.pill,
 };
 
-/** Text direction follows I18nManager — no hardcoded textAlign (avoids RTL mirror bugs). */
+/**
+ * App default reading direction (Arabic):
+ * user starts reading from the right — same visual as سياسة الاسترداد.
+ * Screens may override with textAlign: 'center' | 'left' when needed (e.g. LTR fields).
+ */
 const directionalText = {
   writingDirection: 'rtl' as const,
+  textAlign: 'right' as const,
 };
 
 /** IBM Plex Sans Arabic — prefer 600 for titles, 500 for item labels, 400 for body. */

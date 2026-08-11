@@ -93,11 +93,11 @@ function createStyles(colors: ThemeColors) {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { flex: 1 },
     content: { padding: spacing.xl, gap: spacing.lg },
-    intro: { ...typography.body, color: colors.textMuted, lineHeight: 22 },
-    section: { gap: spacing.xs },
-    sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-    sectionBody: { ...typography.body, color: colors.textSecondary, lineHeight: 24 },
+    intro: { ...typography.body, color: colors.textMuted, lineHeight: 22, textAlign: 'right', writingDirection: 'rtl' },
+    section: { gap: spacing.xs, alignItems: 'stretch' },
+    sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right', writingDirection: 'rtl' },
+    sectionBody: { ...typography.body, color: colors.textSecondary, lineHeight: 24, textAlign: 'right', writingDirection: 'rtl' },
     footer: { alignItems: 'center', marginTop: spacing.xl },
-    footerText: { ...typography.micro, color: colors.textSubtle },
+    footerText: { ...typography.micro, color: colors.textSubtle, textAlign: 'center' },
   });
 }
