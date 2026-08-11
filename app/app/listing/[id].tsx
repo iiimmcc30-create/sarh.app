@@ -468,7 +468,7 @@ export default function ListingDetailScreen() {
           {listing.price > 0 ? (
             <View style={styles.priceShell}>
               <Text style={styles.price}>
-                {`${Number.isInteger(listing.price) ? listing.price.toLocaleString('ar-SA') : listing.price.toLocaleString('ar-SA', { maximumFractionDigits: 2 })} ريال`}
+                {`${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
               </Text>
             </View>
           ) : (
