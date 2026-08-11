@@ -230,7 +230,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '600',
       flex: 1,
-      textAlign: 'right',
+      textAlign: 'left',
       writingDirection: 'rtl',
     },
     rowValueHighlight: { color: colors.success, fontWeight: '600' },

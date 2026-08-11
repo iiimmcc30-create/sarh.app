@@ -3,7 +3,6 @@ import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection } from '@/lib/rtl';
 
 type ScreenScaffoldProps = {
   children: ReactNode;
@@ -14,7 +13,7 @@ type ScreenScaffoldProps = {
   pattern?: boolean;
 };
 
-/** Unified screen shell — page background + safe area + RTL reading direction. */
+/** Unified screen shell — page background + safe area. UI only. */
 export function ScreenScaffold({
   children,
   edges = ['top'],
@@ -24,9 +23,9 @@ export function ScreenScaffold({
 }: ScreenScaffoldProps) {
   const styles = useThemedStyles(({ colors }) =>
     StyleSheet.create({
-      root: { flex: 1, backgroundColor: colors.screenRoot, ...getRtlDirection() },
-      rootTransparent: { flex: 1, backgroundColor: 'transparent', ...getRtlDirection() },
-      inner: { flex: 1, ...getRtlDirection() },
+      root: { flex: 1, backgroundColor: colors.screenRoot },
+      rootTransparent: { flex: 1, backgroundColor: 'transparent' },
+      inner: { flex: 1 },
     }),
   );
 

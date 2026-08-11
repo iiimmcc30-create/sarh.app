@@ -6,14 +6,13 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { getRtlDirection } from '@/lib/rtl';
 
 export type AppScrollViewProps = ScrollViewProps & {
   contentContainerStyle?: StyleProp<ViewStyle>;
 };
 
 /**
- * Shared scroll defaults for Sarh — iOS-like momentum / inertia + RTL direction.
+ * Shared scroll defaults for Sarh — iOS-like momentum / inertia.
  * Callers may override any prop (e.g. carousels using decelerationRate="fast").
  */
 export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
@@ -27,13 +26,10 @@ export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
       bounces = true,
       alwaysBounceVertical,
       overScrollMode,
-      style,
-      contentContainerStyle,
       ...rest
     },
     ref,
   ) {
-    const rtl = getRtlDirection();
     return (
       <ScrollView
         ref={ref}
@@ -45,8 +41,6 @@ export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
         bounces={bounces}
         alwaysBounceVertical={alwaysBounceVertical ?? bounces}
         overScrollMode={overScrollMode ?? (Platform.OS === 'android' ? 'always' : undefined)}
-        style={[rtl, style]}
-        contentContainerStyle={[rtl, contentContainerStyle]}
         {...rest}
       />
     );
