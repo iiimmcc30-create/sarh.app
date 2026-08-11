@@ -155,13 +155,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     introTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     introSubtitle: {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 19,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     sectionBlock: {
       backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,

@@ -4,7 +4,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { getRtlText, getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import {
@@ -573,12 +573,14 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       fontWeight: '600',
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     serviceDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     servicePriceChip: {
       alignSelf: 'flex-start',
       marginTop: 4,

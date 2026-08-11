@@ -654,7 +654,7 @@ function createStyles(colors: ThemeColors) {
   logoBadge: { bottom: 4, left: 4, width: 24, height: 24, borderRadius: 12 },
   form: { paddingHorizontal: spacing.lg, gap: spacing.md },
   fieldGroup: { gap: 6 },
-  fieldLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
+  fieldLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', textAlign: 'right' },
   input: {
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
@@ -694,7 +694,7 @@ function createStyles(colors: ThemeColors) {
   phoneCodeText: { ...typography.bodyStrong, color: colors.textPrimary },
   phoneInput: { flex: 1 },
   sectionDivider: { marginTop: spacing.sm, marginBottom: 4 },
-  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
+  sectionLabel: { ...typography.caption, color: colors.textBrand, fontWeight: '600', textAlign: 'right' },
   hoursRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   hourField: { flex: 1, gap: 6 },
   hourLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
@@ -732,6 +732,6 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.success + '33',
   },
-  coordsText: { ...typography.caption, color: colors.textBrandSuccess, flex: 1, writingDirection: 'rtl', textAlign: 'right', },
+  coordsText: { ...typography.caption, color: colors.textBrandSuccess, flex: 1, textAlign: 'right' },
 });
 }

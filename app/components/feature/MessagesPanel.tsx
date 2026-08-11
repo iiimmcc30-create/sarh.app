@@ -1,6 +1,6 @@
 // SAFAT — Messages panel (standalone tab or embedded in profile)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, marginEnd } from '@/lib/rtl';
+import { getRtlRow, getRtlText, marginEnd } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { useRouter } from 'expo-router';
@@ -467,7 +467,7 @@ function createStyles(colors: ThemeColors) {
   activityAvatar: { width: 40, height: 40, borderRadius: 20 },
   activityContent: { flex: 1 },
   activityTextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
-  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, writingDirection: 'rtl', textAlign: 'right', flex: 1 },
+  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, ...getRtlText(), flex: 1 },
   activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
   });

@@ -19,7 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { launchPaymentCheckout } from '@/services/payments';
@@ -731,7 +731,8 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      writingDirection: 'rtl', textAlign: 'right', fontSize: 15,
+      ...getRtlText(),
+      fontSize: 15,
     },
     hint: {
       ...typography.micro,
@@ -785,13 +786,15 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       flex: 1,
-      writingDirection: 'rtl', textAlign: 'right', },
-    productCat: { ...typography.micro, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
+    productCat: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
     productPrice: {
       ...typography.caption,
       color: colors.gold,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right', marginTop: 2,
+      ...getRtlText(),
+      marginTop: 2,
     },
     selectedDot: {
       width: 22,
@@ -903,7 +906,8 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     summaryRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -917,7 +921,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       flex: 1,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     summaryDivider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderSoft,

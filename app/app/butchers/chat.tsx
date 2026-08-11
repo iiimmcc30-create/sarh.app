@@ -772,7 +772,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingVertical: 8,
   },
-  orderStripText: { ...typography.caption, color: colors.textMuted, flex: 1, writingDirection: 'rtl', textAlign: 'right', },
+  orderStripText: { ...typography.caption, color: colors.textMuted, flex: 1, textAlign: 'right' },
 
   messagesList: {
     paddingHorizontal: spacing.lg,
@@ -883,7 +883,7 @@ function createMessageStyles(colors: ThemeColors) {
     overflow: 'hidden',
   },
   timeText: { ...typography.micro, marginTop: 4 },
-  timeTextMe: { color: 'rgba(255,255,255,0.55)', writingDirection: 'rtl', textAlign: 'right', },
+  timeTextMe: { color: 'rgba(255,255,255,0.55)', textAlign: 'right' },
   timeTextThem: { color: colors.textSubtle },
   });
 }

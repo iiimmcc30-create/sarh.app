@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-
+import { getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
@@ -168,12 +168,14 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       fontWeight: '600',
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     emptySub: {
       ...typography.body,
       color: colors.textMuted,
       textAlign: 'center',
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     emptyBtn: {
       marginTop: spacing.md,
       paddingHorizontal: spacing.lg,
@@ -185,6 +187,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       fontWeight: '600',
       color: '#fff',
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
   });
 }

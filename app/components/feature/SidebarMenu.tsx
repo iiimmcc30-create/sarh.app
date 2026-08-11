@@ -225,7 +225,8 @@ const sectionStyles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: spacing.sm,
     paddingHorizontal: 4,
-    writingDirection: 'rtl', textAlign: 'right',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   card: {
     borderRadius: radius.xl,
@@ -308,7 +309,8 @@ const logoutStyles = StyleSheet.create({
     ...typography.bodyStrong,
     fontWeight: '600',
     fontSize: 15,
-    writingDirection: 'rtl', textAlign: 'right',
+    textAlign: 'right',
+    writingDirection: 'rtl',
     flexShrink: 1,
   },
 });

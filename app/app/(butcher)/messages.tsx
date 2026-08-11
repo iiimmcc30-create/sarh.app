@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   activityAvatar: { width: 40, height: 40, borderRadius: 20 },
   activityContent: { flex: 1 },
-  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, writingDirection: 'rtl', textAlign: 'right', },
+  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, textAlign: 'right' },
   activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
 });

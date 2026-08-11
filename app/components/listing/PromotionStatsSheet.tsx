@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import {
   fetchPromotionStats,
   formatRemainingMs,
@@ -60,9 +60,9 @@ export function PromotionStatsSheet({
         <Pressable style={[styles.sheet, getRtlDirection()]} onPress={(e) => e.stopPropagation()}>
           <View style={[styles.header, getRtlRow()]}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.title, { writingDirection: 'rtl', textAlign: 'right' }]}>إحصائيات الترويج</Text>
+              <Text style={[styles.title, getRtlText()]}>إحصائيات الترويج</Text>
               {listingTitle ? (
-                <Text style={[styles.subtitle, { writingDirection: 'rtl', textAlign: 'right' }]} numberOfLines={1}>
+                <Text style={[styles.subtitle, getRtlText()]} numberOfLines={1}>
                   {listingTitle}
                 </Text>
               ) : null}
@@ -90,7 +90,7 @@ export function PromotionStatsSheet({
                   <View key={row.key} style={styles.statCard}>
                     <AppIcon name={row.icon} size={20} color="#7C3AED" />
                     <Text style={styles.statValue}>{row.value}</Text>
-                    <Text style={[styles.statLabel, { writingDirection: 'rtl', textAlign: 'right' }]}>{row.label}</Text>
+                    <Text style={[styles.statLabel, getRtlText()]}>{row.label}</Text>
                   </View>
                 ))}
               </View>
@@ -126,11 +126,13 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     subtitle: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', marginTop: 4,
+      ...getRtlText(),
+      marginTop: 4,
     },
     muted: { color: colors.textMuted },
     remainingCard: {

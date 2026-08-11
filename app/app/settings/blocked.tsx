@@ -5,7 +5,7 @@ import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { confirmDestructive, alertMessage } from '@/lib/actionSheet';
 import { showToast } from '@/lib/toast';
 import { fetchBlockedUsers, setBlockUser, type BlockedUser } from '@/services/users';
@@ -122,7 +122,9 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       lineHeight: 20,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+      ...getRtlText(),
+    },
     loader: { marginTop: spacing.xl },
     emptyBox: {
       alignItems: 'center',
@@ -154,7 +156,8 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     handle: {
       ...typography.caption,
       color: colors.textMuted,

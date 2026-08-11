@@ -23,7 +23,7 @@ import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeM
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { colors, radius, spacing, typography } from '@/constants/theme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { showLiveBroadcastComingSoonAlert, showLiveStreamEligibilityDeniedAlert } from '@/lib/liveStreamAccess';
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   errorBannerText: { color: '#fff', fontSize: 11, textAlign: 'center', lineHeight: 16 },
-  hint: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right', lineHeight: 18 },
+  hint: { ...typography.caption, color: colors.textMuted, ...getRtlText(), lineHeight: 18 },
   titleInput: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.lg,

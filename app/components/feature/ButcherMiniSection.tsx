@@ -529,7 +529,7 @@ function createStyles(colors: ThemeColors, isHero = false) {
       lineHeight: 24,
       fontWeight: '600',
       color: '#fff',
-      writingDirection: 'rtl', textAlign: 'right', },
+    },
     heroMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -558,12 +558,12 @@ function createStyles(colors: ThemeColors, isHero = false) {
       lineHeight: 20,
       color: colors.textPrimary,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right', },
+    },
     tagLine: {
       ...typography.caption,
       lineHeight: 18,
       color: colors.textSecondary,
-      writingDirection: 'rtl', textAlign: 'right', },
+    },
     metaRow: {
       flexDirection: 'row',
       alignItems: 'center',

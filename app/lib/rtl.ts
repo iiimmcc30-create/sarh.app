@@ -7,35 +7,24 @@ import {
   normalizeAppLocale,
 } from '@/lib/locale';
 
-/**
- * JS-side RTL flag for layout helpers.
- * Needed because `I18nManager.isRTL` is snapshotted once when RN loads, and on web
- * `NativeI18nManager` is missing so `isRTL` is always false and `forceRTL` is a no-op.
- */
-let rtlLayoutActive: boolean = localeUsesRtl(DEFAULT_LOCALE);
-
-/** Read layout direction for style helpers (web uses tracked locale; native uses I18nManager). */
+/** Read layout direction from React Native (always fresh). */
 export function isAppRtl(): boolean {
-  if (Platform.OS === 'web') {
-    return rtlLayoutActive;
-  }
-  return Boolean(I18nManager?.isRTL);
+  return I18nManager.isRTL;
 }
 
 /** @deprecated Use `isAppRtl()` — kept for existing imports. */
-export const isRTL = Boolean(I18nManager?.isRTL);
+export const isRTL = I18nManager.isRTL;
 
 /**
- * Configure RTL/LTR via official I18nManager + JS flag.
- * Call once before the app bundle renders (see `index.js` / root layout).
+ * Configure RTL/LTR via official I18nManager.
+ * Call once before the app bundle renders (see `index.js`).
  */
 export function setupRtl(locale: AppLocale = DEFAULT_LOCALE): void {
   const rtl = localeUsesRtl(locale);
-  rtlLayoutActive = rtl;
-  I18nManager?.allowRTL?.(true);
-  I18nManager?.forceRTL?.(rtl);
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(rtl);
   if (Platform.OS !== 'web') {
-    I18nManager?.swapLeftAndRightInRTL?.(rtl);
+    I18nManager.swapLeftAndRightInRTL(rtl);
   }
 }
 
@@ -51,7 +40,7 @@ export async function setupRtlFromStorage(
 /** Root / screen layout direction for the active locale. */
 export function getRtlDirection(): ViewStyle {
   if (isAppRtl()) {
-    return { direction: 'rtl' };
+    return Platform.OS === 'web' ? { direction: 'rtl' } : { direction: 'rtl' };
   }
   return Platform.OS === 'web' ? { direction: 'ltr' } : {};
 }
@@ -66,6 +55,13 @@ export function getRtlRow(): ViewStyle {
   return Platform.OS === 'web'
     ? { flexDirection: 'row', direction: 'ltr' }
     : { flexDirection: 'row' };
+}
+
+/** Primary body text — direction + alignment for the active locale. */
+export function getRtlText(): TextStyle {
+  return isAppRtl()
+    ? { writingDirection: 'rtl', textAlign: 'right' }
+    : { writingDirection: 'ltr', textAlign: 'left' };
 }
 
 /** Cross-axis alignment at inline start. */
@@ -154,10 +150,7 @@ export function rtlForwardIcon(): string {
   return isAppRtl() ? 'angle-left' : 'angle-right';
 }
 
-/**
- * Arabic / RTL input fields.
- * TextInput on Android does NOT mirror left/right like Text — keep physical 'right'.
- */
+/** Arabic / RTL input fields */
 export const rtlInputText: TextStyle = {
   writingDirection: 'rtl',
   textAlign: 'right',

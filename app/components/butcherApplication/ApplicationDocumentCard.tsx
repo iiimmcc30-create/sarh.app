@@ -11,7 +11,7 @@ import {
   formatApplicationDateTime,
 } from '@/lib/butcherApplicationLabels';
 import { maxBytesLabelForDocumentType } from '@/lib/butcherApplicationValidation';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import type {
   ApplicationDocument,
   ButcherApplicationDocumentType,
@@ -225,11 +225,13 @@ function createStyles(colors: ThemeColors) {
     metaText: {
       ...typography.caption,
       color: colors.textSecondary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     empty: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     notesBox: {
       marginTop: spacing.sm,
       backgroundColor: 'rgba(244, 63, 94, 0.1)',
@@ -261,7 +263,8 @@ function createStyles(colors: ThemeColors) {
     errorText: {
       ...typography.caption,
       color: colors.danger,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     actions: {
       flexDirection: 'row',
       flexWrap: 'wrap',

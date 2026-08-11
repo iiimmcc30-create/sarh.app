@@ -99,13 +99,15 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     sectionBody: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 24,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     updated: {
       ...typography.micro,

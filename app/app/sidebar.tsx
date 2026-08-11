@@ -17,7 +17,7 @@ import {
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
+import { alignInlineEnd, borderInlineEnd, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
@@ -272,7 +272,8 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     brandTagline: {
       ...typography.caption,
       fontSize: 12,
@@ -280,7 +281,8 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontWeight: '500',
       color: colors.textMuted,
       writingDirection: 'rtl',
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     scroll: {
       flex: 1,
     },

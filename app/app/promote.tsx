@@ -326,7 +326,8 @@ function createStyles(colors: ThemeColors) {
     createBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     listingsList: {
       borderRadius: radius.xl,
       borderWidth: StyleSheet.hairlineWidth,
@@ -379,7 +380,8 @@ function createStyles(colors: ThemeColors) {
       fontSize: SIDEBAR_MENU_ITEM.titleSize,
       fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       flexShrink: 1,
       lineHeight: 20,
     },
@@ -387,13 +389,15 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     reachText: {
       ...typography.micro,
       color: '#7C3AED',
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     thumbWrap: {
       width: 48,

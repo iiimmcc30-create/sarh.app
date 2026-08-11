@@ -5,7 +5,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { dismissToast, getToastState, subscribeToast } from '@/lib/toast';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 
 const ICONS = {
   success: 'checkmark-circle',
@@ -111,7 +111,9 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       flex: 1,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', fontSize: 14,
+      ...getRtlText(),
+      ...getRtlText(),
+      fontSize: 14,
       lineHeight: 20,
     },
     iconSuccess: { color: colors.electricBright },

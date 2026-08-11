@@ -133,7 +133,7 @@ function createStyles(colors: ThemeColors) {
     textAlign: 'center',
     color: colors.textBrandStrong,
   },
-  sectionTitle: { ...typography.bodyStrong, color: colors.gold, writingDirection: 'rtl', textAlign: 'right', },
+  sectionTitle: { ...typography.bodyStrong, color: colors.gold, textAlign: 'right' },
   sectionContent: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
   contactSection: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, gap: spacing.sm },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },

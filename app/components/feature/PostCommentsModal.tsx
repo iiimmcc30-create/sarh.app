@@ -2,7 +2,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { useCallback, useEffect, useState } from 'react';
-
+import { getRtlText } from '@/lib/rtl';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -274,7 +274,7 @@ function createStyles(colors: ThemeColors) {
   commentHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
   commentName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   commentTime: { ...typography.micro, color: colors.textMuted },
-  commentText: { ...typography.body, color: colors.textSecondary, writingDirection: 'rtl', textAlign: 'right', lineHeight: 22 },
+  commentText: { ...typography.body, color: colors.textSecondary, ...getRtlText(), lineHeight: 22 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',

@@ -1,6 +1,6 @@
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { StyleSheet, Text, View } from 'react-native';
 
 type ButcherStoreStatsRowProps = {
@@ -55,12 +55,14 @@ function createStyles(colors: ThemeColors) {
     },
     value: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
       fontSize: 16,
     },
     label: {
       ...typography.micro,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
+      ...getRtlText(),
+      color: colors.textMuted,
     },
   });
 }

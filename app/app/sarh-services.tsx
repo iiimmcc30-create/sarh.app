@@ -165,7 +165,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       flex: 1,
       lineHeight: 20,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     loader: { marginTop: spacing.xl },
     errorBox: {
@@ -199,7 +200,8 @@ function createStyles(colors: ThemeColors) {
       fontSize: 12,
       letterSpacing: 0.4,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       paddingHorizontal: 4,
     },
     sectionList: {

@@ -13,7 +13,7 @@ import { sarh } from '@/constants/sarhTokens';
 import { controls, motion, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 
 interface PrimaryButtonProps {
   title: string;
@@ -193,7 +193,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     label: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', textAlign: 'center',
+      ...getRtlText(),
+      textAlign: 'center',
     },
   });
 }

@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { inlineEnd, inlineStart, marginStart, getRtlRow } from '@/lib/rtl';
+import { getRtlText, inlineEnd, inlineStart, marginStart, getRtlRow } from '@/lib/rtl';
 import { LiveStream } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 
@@ -264,7 +264,8 @@ function createStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.textSecondary,
     marginBottom: spacing.md,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   commentsArea: {
     gap: 6,
   },

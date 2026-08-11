@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { resolveMediaUrl } from '@/services/media';
 import type { ButcherProduct, MeatCategory } from '@/services/butcherData';
 import { CATEGORY_LABELS } from '@/services/butcherData';
@@ -108,16 +108,19 @@ function createStyles(colors: ThemeColors) {
     },
     name: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     desc: {
       ...typography.caption,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
+      ...getRtlText(),
+      color: colors.textMuted,
       lineHeight: 18,
     },
     cat: {
       ...typography.micro,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
+      ...getRtlText(),
+      color: colors.textSecondary,
     },
     footer: {
       ...getRtlRow(),
@@ -127,7 +130,8 @@ function createStyles(colors: ThemeColors) {
     },
     price: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     actions: {
       ...getRtlRow(),
@@ -143,7 +147,8 @@ function createStyles(colors: ThemeColors) {
     },
     buyNowText: {
       ...typography.micro,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
+      ...getRtlText(),
+      color: colors.textSecondary,
       fontWeight: '600',
     },
     addBtn: {

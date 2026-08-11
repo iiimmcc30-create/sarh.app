@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Profile Screen (الملف الشخصي للملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlText } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -471,7 +472,8 @@ function createStyles(colors: ThemeColors) {
     color: colors.textSecondary,
     marginTop: 4,
     lineHeight: 22,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -578,7 +580,8 @@ function createStyles(colors: ThemeColors) {
     flex: 1,
     ...typography.body,
     color: colors.textSecondary,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   aboutValue: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
@@ -667,7 +670,8 @@ function createStyles(colors: ThemeColors) {
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 20,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   empty: {
     width: '100%',
     alignItems: 'center',

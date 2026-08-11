@@ -175,12 +175,14 @@ function createStyles(colors: ThemeColors) {
     headerTitle: {
       ...typography.h2,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     content: {
       paddingHorizontal: spacing.lg,
@@ -204,7 +206,8 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     langTrack: {
       flexDirection: 'row-reverse',
@@ -240,7 +243,8 @@ function createStyles(colors: ThemeColors) {
     sectionLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
   });
 }

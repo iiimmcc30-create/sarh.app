@@ -1,6 +1,6 @@
 // SAFAT — Forgot Password via OTP (نسيت كلمة المرور)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, inlineEnd, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -337,7 +337,7 @@ function createStyles(colors: ThemeColors) {
     width: '100%', borderRadius: 20, padding: spacing.xl,
     backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline, gap: spacing.md,
   },
-  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
+  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bgDeep, borderRadius: 12,
@@ -348,7 +348,7 @@ function createStyles(colors: ThemeColors) {
   countryCode: { fontSize: 14, color: '#fff', fontWeight: '600' },
   countryFlag: { fontSize: 16 },
   inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, fontSize: 14, color: '#fff', writingDirection: 'rtl', textAlign: 'right', },
+  phoneInput: { flex: 1, fontSize: 14, color: '#fff', textAlign: 'right' },
   textInput: { flex: 1, fontSize: 14, color: '#fff', textAlign: 'right' },
   pickerDropdown: {
     backgroundColor: colors.bgDeep, borderRadius: 12,
@@ -361,7 +361,7 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: '#fff', writingDirection: 'rtl', textAlign: 'right', marginHorizontal: 10 },
+  pickerLabel: { flex: 1, fontSize: 13, color: '#fff', ...getRtlText(), marginHorizontal: 10 },
   pickerCode: { fontSize: 13, color: colors.textMuted },
   otpHint: { fontSize: 13, color: colors.textMuted, textAlign: 'center' },
   devHint: { fontSize: 12, color: '#f59e0b', textAlign: 'center' },
@@ -379,7 +379,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
   },
-  errorText: { fontSize: 12, color: colors.danger, flex: 1, writingDirection: 'rtl', textAlign: 'right', },
+  errorText: { fontSize: 12, color: colors.danger, flex: 1, textAlign: 'right' },
   submitBtn: { borderRadius: 20, overflow: 'hidden', marginTop: 4 },
   submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
   submitText: { fontSize: 16, fontWeight: '600', color: '#fff' },

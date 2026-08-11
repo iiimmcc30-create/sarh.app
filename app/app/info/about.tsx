@@ -10,7 +10,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { marginStart, rtlBackIcon } from '@/lib/rtl';
+import { getRtlText, marginStart, rtlBackIcon } from '@/lib/rtl';
 import {
   BRAND_FOOTER_AR,
   BRAND_GOAL_AR,
@@ -159,8 +159,8 @@ function createStyles(colors: ThemeColors) {
   heroSub: { ...typography.body, color: colors.textBrand, textAlign: 'center', paddingHorizontal: spacing.xl },
   scroll: { paddingBottom: 40 },
   section: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, writingDirection: 'rtl', textAlign: 'right', },
-  bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, writingDirection: 'rtl', textAlign: 'right' },
+  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'right' },
+  bodyText: { ...typography.body, color: colors.textSecondary, lineHeight: 26, textAlign: 'right' },
   featureRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     paddingVertical: spacing.sm,
@@ -171,7 +171,7 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  featureText: { flex: 1, ...typography.body, color: colors.textSecondary, writingDirection: 'rtl', textAlign: 'right', },
+  featureText: { flex: 1, ...typography.body, color: colors.textSecondary, textAlign: 'right' },
   infoCard: {
     backgroundColor: colors.bgSurface, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.borderSoft,
@@ -182,7 +182,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
   },
   infoLabel: { ...typography.caption, color: colors.textMuted },
-  infoValue: { ...typography.bodyStrong, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', flex: 1, ...marginStart(spacing.md) },
+  infoValue: { ...typography.bodyStrong, color: colors.textPrimary, ...getRtlText(), flex: 1, ...marginStart(spacing.md) },
   divider: { height: 1, backgroundColor: colors.borderSoft, marginHorizontal: spacing.lg },
   contactBtn: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,

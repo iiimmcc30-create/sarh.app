@@ -16,7 +16,7 @@ import {
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { formatPostTimestampAr } from '@/lib/formatRelativeTime';
 import { Post } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
@@ -391,7 +391,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       fontWeight: '600',
       color: colors.textPrimary,
       flexShrink: 1,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     ratingMini: {
       ...getRtlRow(),
       alignItems: 'center',
@@ -410,7 +411,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       fontSize: 13,
       color: colors.textMuted,
       flexShrink: 1,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     metaDot: {
       fontSize: 13,
       color: colors.textSubtle,
@@ -445,7 +447,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       fontSize: 15,
       lineHeight: 24,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', marginTop: 8,
+      ...getRtlText(),
+      marginTop: 8,
       alignSelf: 'stretch',
     },
     bodyPressed: {
@@ -456,7 +459,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = 
       color: colors.textSecondary,
       fontWeight: '600',
       marginTop: 4,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     tagText: {
       color: colors.textMuted,
       opacity: 0.85,

@@ -1,5 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
+import { getRtlText } from '@/lib/rtl';
 import {
   Modal,
   Pressable,
@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A1530',
     borderColor: `${colors.electric}40`,
   },
-  cardTitle: { ...typography.bodyStrong, color: colors.textBrandStrong, writingDirection: 'rtl', textAlign: 'right', },
+  cardTitle: { ...typography.bodyStrong, color: colors.textBrandStrong, textAlign: 'right' },
   cardTitleBlue: { ...typography.bodyStrong, color: colors.textBrand, textAlign: 'right' },
-  ruleItem: { ...typography.body, color: colors.textSecondary, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right', },
+  ruleItem: { ...typography.body, color: colors.textSecondary, lineHeight: 24, textAlign: 'right' },
   oath: {
     ...typography.body,
     color: colors.textBrandStrong,
@@ -189,7 +189,8 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 22,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   footer: {
     flexDirection: 'row',
     gap: spacing.md,

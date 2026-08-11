@@ -21,7 +21,7 @@ import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
 import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
 
@@ -264,7 +264,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.textBrandStrong,
       fontWeight: '600',
       flex: 1,
-      writingDirection: 'rtl', textAlign: 'right', },
+      textAlign: 'right',
+    },
     count: {
       ...typography.caption,
       color: colors.textMuted,
@@ -277,7 +278,9 @@ function createStyles(colors: ThemeColors) {
     hint: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', lineHeight: 20,
+      ...getRtlText(),
+      ...getRtlText(),
+      lineHeight: 20,
     },
     errorBox: {
       alignItems: 'center',
@@ -362,7 +365,9 @@ function createStyles(colors: ThemeColors) {
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
-      writingDirection: 'rtl', textAlign: 'right', lineHeight: 22,
+      ...getRtlText(),
+      ...getRtlText(),
+      lineHeight: 22,
     },
     deleteBtn: {
       padding: 2,

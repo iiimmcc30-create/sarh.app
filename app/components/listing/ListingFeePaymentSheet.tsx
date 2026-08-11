@@ -9,7 +9,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
 import { initiateListingFeePayment } from '@/services/listingFeePayment';
 import { launchPaymentCheckout } from '@/services/payments';
 import type { NIPaymentMethod } from '@/services/network_international';
@@ -170,8 +170,8 @@ export function ListingFeePaymentSheet({
               <AppIcon name="close" size={20} color={colors.textMuted} />
             </Pressable>
             <View style={styles.headerText}>
-              <Text style={[styles.title, { writingDirection: 'rtl', textAlign: 'right' }]}>سداد رسوم سرح</Text>
-              <Text style={[styles.subtitle, { writingDirection: 'rtl', textAlign: 'right' }]}>
+              <Text style={[styles.title, getRtlText()]}>سداد رسوم سرح</Text>
+              <Text style={[styles.subtitle, getRtlText()]}>
                 يمكنك سداد عمولة سرح المستحقة على هذا الإعلان.
               </Text>
             </View>
@@ -185,7 +185,7 @@ export function ListingFeePaymentSheet({
               <View style={styles.successIcon}>
                 <AppIcon name="checkmark-circle" size={56} color={colors.emerald} />
               </View>
-              <Text style={[styles.resultTitle, { writingDirection: 'rtl', textAlign: 'right' }]}>
+              <Text style={[styles.resultTitle, getRtlText()]}>
                 تم سداد الرسوم بنجاح، شكراً لك.
               </Text>
               <PrimaryButton title="حسناً" onPress={handleClose} fullWidth />
@@ -195,8 +195,8 @@ export function ListingFeePaymentSheet({
               <View style={styles.errorIcon}>
                 <AppIcon name="alert-circle-outline" size={52} color={colors.danger} />
               </View>
-              <Text style={[styles.resultTitle, { writingDirection: 'rtl', textAlign: 'right' }]}>تعذّر إتمام الدفع</Text>
-              <Text style={[styles.errorBody, { writingDirection: 'rtl', textAlign: 'right' }]}>{errorMessage}</Text>
+              <Text style={[styles.resultTitle, getRtlText()]}>تعذّر إتمام الدفع</Text>
+              <Text style={[styles.errorBody, getRtlText()]}>{errorMessage}</Text>
               <PrimaryButton
                 title="إعادة المحاولة"
                 onPress={() => {
@@ -207,7 +207,7 @@ export function ListingFeePaymentSheet({
                 icon="refresh-outline"
               />
               <Pressable onPress={handleClose} style={styles.cancelBtn}>
-                <Text style={[styles.cancelText, { writingDirection: 'rtl', textAlign: 'right' }]}>إغلاق</Text>
+                <Text style={[styles.cancelText, getRtlText()]}>إغلاق</Text>
               </Pressable>
             </View>
           ) : (
@@ -217,7 +217,7 @@ export function ListingFeePaymentSheet({
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.fieldBlock}>
-                <Text style={[styles.fieldLabel, { writingDirection: 'rtl', textAlign: 'right' }]}>المبلغ (اختياري)</Text>
+                <Text style={[styles.fieldLabel, getRtlText()]}>المبلغ (اختياري)</Text>
                 <View style={[styles.amountRow, getRtlRow()]}>
                   <Text style={styles.currencyTag}>ر.س</Text>
                   <TextInput
@@ -226,15 +226,15 @@ export function ListingFeePaymentSheet({
                     placeholder="0.00"
                     placeholderTextColor={colors.textSubtle}
                     keyboardType="decimal-pad"
-                    style={[styles.amountInput, { writingDirection: 'rtl', textAlign: 'right' }]}
+                    style={[styles.amountInput, getRtlText()]}
                   />
                 </View>
-                <Text style={[styles.fieldHint, { writingDirection: 'rtl', textAlign: 'right' }]}>
+                <Text style={[styles.fieldHint, getRtlText()]}>
                   يمكنك ترك الحقل فارغاً والسداد لاحقاً، أو إدخال أي مبلغ ترغب بسداده الآن.
                 </Text>
               </View>
 
-              <Text style={[styles.sectionLabel, { writingDirection: 'rtl', textAlign: 'right' }]}>وسائل الدفع</Text>
+              <Text style={[styles.sectionLabel, getRtlText()]}>وسائل الدفع</Text>
               <View style={styles.methodsGrid}>
                 {FEE_PAYMENT_METHODS.map((item) => {
                   const active = method === item.id;
@@ -247,7 +247,7 @@ export function ListingFeePaymentSheet({
                       <PaymentBrandLogo id={item.id} size={28} />
                       <Text
                         style={[
-                          styles.methodLabel, { writingDirection: 'rtl', textAlign: 'right' },
+                          styles.methodLabel, getRtlText(),
                           active && styles.methodLabelActive,
                         ]}
                       >

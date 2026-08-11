@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   formatPlanFeatureText,
   planDisplayName,
@@ -110,7 +110,8 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     table: {
       borderRadius: ds.radius.lg,
       backgroundColor: colors.bgSurface,
@@ -147,7 +148,8 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     headerPlan: {
       ...typography.caption,
       color: colors.textPrimary,
@@ -157,7 +159,8 @@ function createStyles(colors: ThemeColors) {
     featureLabel: {
       ...typography.caption,
       color: colors.textSecondary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     cellValue: {
       ...typography.micro,
       color: colors.textPrimary,

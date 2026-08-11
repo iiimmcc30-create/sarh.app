@@ -22,7 +22,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { marginStart, marginEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, marginStart, marginEnd, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { BRAND_LOGIN_SUBTITLE_AR, BRAND_LOGIN_WELCOME_AR, BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
 
@@ -340,7 +340,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.md, height: 54, width: '100%',
   },
   inputIcon: marginStart(8),
-  textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', writingDirection: 'rtl', textAlign: 'right', },
+  textInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
 
   countryBtn: {
     ...getRtlRow(),
@@ -350,7 +350,7 @@ function createStyles(colors: ThemeColors) {
   countryCode: { fontSize: 14, color: colors.textPrimary, fontWeight: '600' },
   countryFlag: { fontSize: 16 },
   inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', writingDirection: 'rtl', textAlign: 'right', },
+  phoneInput: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', textAlign: 'right' },
 
   pickerDropdown: {
     backgroundColor: colors.bgGlassStrong, borderRadius: radius.lg,
@@ -365,7 +365,7 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: colors.bgGlass },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, writingDirection: 'rtl', textAlign: 'right', ...marginEnd(10) },
+  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
   pickerCode: { fontSize: 13, color: colors.textMuted },
 
   switchFlowBtn: { alignSelf: 'center', paddingVertical: 4 },
@@ -389,7 +389,7 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, writingDirection: 'rtl', textAlign: 'right', flex: 1 },
+  errorText: { fontSize: 12, color: colors.danger, ...getRtlText(), flex: 1 },
 
   rememberRow: {
     ...getRtlRow(),

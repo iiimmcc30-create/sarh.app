@@ -12,7 +12,7 @@ import {
 import { appFont } from '@/constants/fonts';
 import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
+import { getRtlText, ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
 
 interface AppTextInputProps extends TextInputProps {
   label?: string;
@@ -127,7 +127,8 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '500',
       color: colors.textSecondary,
       marginBottom: spacing.xs,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     wrap: {
       ...getRtlRow(),
       alignItems: 'center',
@@ -162,11 +163,13 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.danger,
       marginTop: spacing.xs,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     hint: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: spacing.xs,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
   });
 }

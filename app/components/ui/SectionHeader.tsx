@@ -86,12 +86,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: isDark ? 28 : 24,
       fontWeight: isDark ? '700' : '700',
       color: isDark ? colors.textPrimary : colors.electric,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     subtitle: {
       ...typography.caption,
       lineHeight: 18,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', },
+    },
     seeAll: {
       alignItems: 'center',
       gap: spacing.xs,
@@ -102,7 +103,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: 18,
       fontWeight: '500',
       color: isDark ? colors.textSecondary : colors.textBrandStrong,
-      writingDirection: 'rtl', textAlign: 'right', },
+    },
   });
 }
 

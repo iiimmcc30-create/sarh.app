@@ -3,7 +3,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { usePlanPromotionQuota } from '@/hooks/usePlanPromotionQuota';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type PlanPromotionOptionsProps = {
@@ -172,12 +172,14 @@ function createStyles(colors: ThemeColors) {
     headerTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     priorityBanner: {
       alignItems: 'center',
       gap: spacing.sm,
@@ -191,7 +193,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.electric,
       flex: 1,
       lineHeight: 18,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     grid: {
       gap: spacing.sm,
     },
@@ -225,12 +228,14 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     cardSub: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
     toggle: {
       width: 28,
       height: 28,
@@ -262,6 +267,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       marginTop: spacing.sm,
-      writingDirection: 'rtl', textAlign: 'right', },
+      ...getRtlText(),
+    },
   });
 }

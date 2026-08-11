@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   CUT_LABELS,
@@ -223,7 +223,9 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', marginBottom: spacing.xs,
+      writingDirection: 'rtl',
+      ...getRtlText(),
+      marginBottom: spacing.xs,
     },
     card: {
       backgroundColor: colors.bgSurface,
@@ -243,15 +245,21 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.electricBright,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+      ...getRtlText(),
+    },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+      ...getRtlText(),
+    },
     orderDate: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+      ...getRtlText(),
+    },
     statusBadge: {
       paddingHorizontal: 10,
       paddingVertical: 5,
@@ -261,7 +269,8 @@ function createStyles(colors: ThemeColors) {
     statusText: {
       ...typography.micro,
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderHairline,
@@ -275,7 +284,8 @@ function createStyles(colors: ThemeColors) {
     detailLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     detailValue: {
       ...typography.caption,
       color: colors.textPrimary,
@@ -294,7 +304,8 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.bodyStrong,
       color: colors.textSecondary,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     totalValue: {
       ...typography.h3,
       color: colors.electricBright,
@@ -325,6 +336,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: '#fff',
       fontWeight: '600',
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
   });
 }

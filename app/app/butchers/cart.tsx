@@ -20,7 +20,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatWeightLabel } from '@/lib/butcherOrderPricing';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow, getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -384,16 +384,19 @@ function createStyles(colors: ThemeColors) {
     headerCenter: { flex: 1, alignItems: 'center' },
     headerTitle: {
       ...typography.h3,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     headerSub: {
       ...typography.caption,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
+      ...getRtlText(),
+      color: colors.textMuted,
       marginTop: 2,
     },
     clearText: {
       ...typography.caption,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.danger,
+      ...getRtlText(),
+      color: colors.danger,
       fontWeight: '600',
       minWidth: 44,
       textAlign: 'center',
@@ -414,7 +417,8 @@ function createStyles(colors: ThemeColors) {
     },
     butcherName: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     emptyWrap: {
       alignItems: 'center',
@@ -424,11 +428,13 @@ function createStyles(colors: ThemeColors) {
     },
     emptyTitle: {
       ...typography.h3,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     emptyHint: {
       ...typography.caption,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
+      ...getRtlText(),
+      color: colors.textMuted,
       textAlign: 'center',
     },
     backLink: {
@@ -442,7 +448,8 @@ function createStyles(colors: ThemeColors) {
     },
     backLinkText: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
+      ...getRtlText(),
+      color: colors.textSecondary,
     },
     lines: { gap: spacing.sm, paddingTop: spacing.sm },
     lineCard: {
@@ -463,11 +470,13 @@ function createStyles(colors: ThemeColors) {
     },
     lineName: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     lineMeta: {
       ...typography.caption,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
+      ...getRtlText(),
+      color: colors.textMuted,
     },
     lineFooter: {
       ...getRtlRow(),
@@ -477,7 +486,8 @@ function createStyles(colors: ThemeColors) {
     },
     linePrice: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
+      ...getRtlText(),
+      color: colors.textSecondary,
     },
     removeBtn: { padding: 4 },
     fieldBlock: {
@@ -487,7 +497,8 @@ function createStyles(colors: ThemeColors) {
     },
     fieldLabel: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
+      ...getRtlText(),
+      color: colors.textSecondary,
     },
     input: {
       borderWidth: 1,
@@ -496,7 +507,8 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.md,
       backgroundColor: colors.bgSurface,
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right', minHeight: 48,
+      ...getRtlText(),
+      minHeight: 48,
     },
     summary: {
       marginHorizontal: spacing.lg,
@@ -515,15 +527,18 @@ function createStyles(colors: ThemeColors) {
     },
     summaryLabel: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textSecondary,
+      ...getRtlText(),
+      color: colors.textSecondary,
     },
     summaryValue: {
       ...typography.h3,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textPrimary,
+      ...getRtlText(),
+      color: colors.textPrimary,
     },
     summaryHint: {
       ...typography.micro,
-      writingDirection: 'rtl', textAlign: 'right', color: colors.textMuted,
+      ...getRtlText(),
+      color: colors.textMuted,
       lineHeight: 18,
     },
     footer: {
@@ -550,7 +565,8 @@ function createStyles(colors: ThemeColors) {
     payBtnDisabled: { opacity: 0.7 },
     payBtnText: {
       ...typography.bodyStrong,
-      writingDirection: 'rtl', textAlign: 'right', color: '#fff',
+      ...getRtlText(),
+      color: '#fff',
     },
     iconColor: { color: colors.textPrimary },
     mutedColor: { color: colors.textMuted },

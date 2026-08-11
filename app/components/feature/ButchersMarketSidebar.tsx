@@ -213,12 +213,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 17,
       fontWeight: '600',
       color: colors.textPrimary,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     brandPill: {
       marginTop: 4,
@@ -231,7 +233,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.micro,
       fontWeight: '600',
       color: isDark ? colors.textPrimary : '#3FA82E',
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
     scroll: {
       flex: 1,
     },
@@ -256,7 +259,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     footerText: {
       ...typography.micro,
       color: colors.textMuted,
-      writingDirection: 'rtl', textAlign: 'right', },
+      writingDirection: 'rtl',
+    },
   });
 }
 

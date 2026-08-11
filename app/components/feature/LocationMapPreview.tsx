@@ -1,5 +1,6 @@
 // SAFAT — Map preview with location pin (schematic + optional native)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlText } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useMemo } from 'react';
@@ -336,7 +337,8 @@ function createStyles(colors: ThemeColors) {
     ...typography.caption,
     color: '#fff',
     flex: 1,
-    writingDirection: 'rtl', textAlign: 'right', fontWeight: '600',
+    ...getRtlText(),
+    fontWeight: '600',
   },
 });
 }

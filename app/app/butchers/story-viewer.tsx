@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Story Viewer (مشاهد قصص الملاحم)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { getRtlText } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -357,7 +358,8 @@ const s = StyleSheet.create({
   caption: {
     ...typography.h3,
     color: '#fff',
-    writingDirection: 'rtl', textAlign: 'right', textShadowColor: 'rgba(0,0,0,0.8)',
+    ...getRtlText(),
+    textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },

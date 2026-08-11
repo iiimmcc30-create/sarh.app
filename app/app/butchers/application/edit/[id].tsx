@@ -47,7 +47,7 @@ import {
   validateWizardStep3,
 } from '@/lib/butcherApplicationValidation';
 import { hasValidCoords } from '@/lib/butcherLocation';
-import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import type {
   ApplicationDetail,
   ApplicationSnapshotInput,
@@ -889,7 +889,8 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontWeight: '600',
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   countryFixed: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.lg,
@@ -907,11 +908,13 @@ const s = StyleSheet.create({
   inlineError: {
     ...typography.caption,
     color: colors.danger,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   syncNotice: {
     ...typography.caption,
     color: colors.textBrandSuccess,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
   footer: {
     padding: spacing.lg,
     paddingBottom: spacing.lg,
@@ -986,5 +989,6 @@ const rv = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 22,
-    writingDirection: 'rtl', textAlign: 'right', },
+    ...getRtlText(),
+  },
 });

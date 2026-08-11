@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { countries, Country } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -860,7 +860,8 @@ export default function ButcherProfileScreen() {
                         borderRadius: radius.lg,
                         padding: spacing.md,
                         color: colors.textPrimary,
-                        writingDirection: 'rtl', textAlign: 'right', minHeight: 80,
+                        ...getRtlText(),
+                        minHeight: 80,
                       }}
                       placeholder="تعليق اختياري..."
                       placeholderTextColor={colors.textMuted}
@@ -1184,7 +1185,7 @@ function createAboutStyles(colors: ThemeColors) {
   wrap: { paddingHorizontal: spacing.lg },
   section: { marginBottom: spacing.xl },
   sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
-  bio: { ...typography.body, color: colors.textSecondary, lineHeight: 22, writingDirection: 'rtl', textAlign: 'right', },
+  bio: { ...typography.body, color: colors.textSecondary, lineHeight: 22, textAlign: 'right' },
   infoGrid: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.xl,
@@ -1203,7 +1204,7 @@ function createAboutStyles(colors: ThemeColors) {
     borderBottomColor: colors.borderSoft,
   },
   infoLabel: { ...typography.caption, color: colors.textMuted, flex: 1 },
-  infoValue: { ...typography.caption, color: colors.textPrimary, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right', },
+  infoValue: { ...typography.caption, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 14,
@@ -1254,7 +1255,7 @@ function createChatStyles(colors: ThemeColors) {
   bubbleText: { ...typography.body, lineHeight: 20 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
-  bubbleTime: { ...typography.micro, color: 'rgba(255,255,255,0.5)', marginTop: 4, writingDirection: 'rtl', textAlign: 'right', },
+  bubbleTime: { ...typography.micro, color: 'rgba(255,255,255,0.5)', marginTop: 4, textAlign: 'right' },
   openChatBtn: {
     marginTop: spacing.xl,
     borderRadius: radius.xl,
