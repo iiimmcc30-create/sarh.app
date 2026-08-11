@@ -603,7 +603,7 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.caption,
     fontWeight: '600',
     color: colors.textSecondary,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   headerMetaRow: {
     flexDirection: 'row',
@@ -628,12 +628,12 @@ function createScreenStyles(colors: ThemeColors) {
     ...typography.micro,
     fontWeight: '600',
     color: colors.electricBright,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   resultsCount: {
     ...typography.caption,
     color: colors.textMuted,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
 
   // Country chips

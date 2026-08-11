@@ -387,7 +387,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       fontWeight: '600',
       fontSize: 16,
       flexShrink: 1,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     verifiedPill: {
       flexShrink: 0,
@@ -403,7 +403,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       ...typography.caption,
       color: colors.textMuted,
       flexShrink: 1,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     ratingRow: {
       alignItems: 'center',

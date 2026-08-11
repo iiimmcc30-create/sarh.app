@@ -921,7 +921,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
       flex: 1,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     summaryDivider: {
       height: StyleSheet.hairlineWidth,

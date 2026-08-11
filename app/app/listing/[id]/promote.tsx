@@ -756,7 +756,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     sliderValue: {
       fontSize: 28,
@@ -809,13 +809,13 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     totalValue: {
       ...typography.h3,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     payBtnWrap: {
       flex: 1.2,

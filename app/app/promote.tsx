@@ -326,7 +326,7 @@ function createStyles(colors: ThemeColors) {
     createBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     listingsList: {
       borderRadius: radius.xl,

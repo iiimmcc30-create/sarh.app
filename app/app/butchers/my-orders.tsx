@@ -223,7 +223,7 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
       marginBottom: spacing.xs,
     },
@@ -245,19 +245,19 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.electricBright,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     butcherName: {
       ...typography.h3,
       color: colors.textPrimary,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     orderDate: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     statusBadge: {
@@ -269,7 +269,7 @@ function createStyles(colors: ThemeColors) {
     statusText: {
       ...typography.micro,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -284,7 +284,7 @@ function createStyles(colors: ThemeColors) {
     detailLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     detailValue: {
       ...typography.caption,
@@ -304,7 +304,7 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.bodyStrong,
       color: colors.textSecondary,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     totalValue: {
       ...typography.h3,
@@ -336,7 +336,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: '#fff',
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
   });
 }

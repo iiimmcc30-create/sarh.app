@@ -207,7 +207,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
     },
     ratingRow: { alignItems: 'center', gap: 4 },
@@ -219,7 +219,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    openText: { ...typography.micro, fontWeight: '600', writingDirection: 'rtl' },
+    openText: { ...typography.micro, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right' as const },
     actions: { marginTop: spacing.sm, gap: spacing.sm, alignItems: 'center' },
     visitBtn: {
       flex: 1,
@@ -234,7 +234,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.electricBright,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     removeBtn: {
       width: 40,
@@ -271,7 +271,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: '#fff',
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
   });
 }

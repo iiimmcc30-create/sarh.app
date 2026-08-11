@@ -250,14 +250,14 @@ function createMarketStyles(
       ...typography.h1,
       fontWeight: '600',
       color: colors.textPrimary,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     pageSubtitle: {
       ...typography.caption,
       fontSize: 13,
       lineHeight: 18,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     headerActions: {
       alignItems: 'center',
@@ -296,7 +296,7 @@ function createMarketStyles(
       ...typography.body,
       fontSize: 14,
       color: colors.textPrimary,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     filterRow: {
       paddingHorizontal: spacing.lg,
@@ -325,7 +325,7 @@ function createMarketStyles(
       fontSize: 12,
       color: colors.textSecondary,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     filterChipTextActive: {
       color: '#fff',
@@ -342,7 +342,7 @@ function createMarketStyles(
       ...typography.caption,
       fontSize: 12,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
     emptyIcon: { fontSize: 40 },

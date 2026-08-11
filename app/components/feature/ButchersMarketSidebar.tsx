@@ -233,7 +233,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.micro,
       fontWeight: '600',
       color: isDark ? colors.textPrimary : '#3FA82E',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     scroll: {
       flex: 1,
@@ -259,7 +259,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     footerText: {
       ...typography.micro,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
   });
 }

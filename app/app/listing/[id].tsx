@@ -622,7 +622,7 @@ function createStyles(colors: ThemeColors) {
     headerMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     headerPriceTimeCol: {
       alignItems: 'flex-end',
@@ -646,7 +646,7 @@ function createStyles(colors: ThemeColors) {
     specMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     galleryBlock: {
       gap: spacing.xs,

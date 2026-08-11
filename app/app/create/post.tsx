@@ -461,7 +461,7 @@ function createStyles(colors: ThemeColors) {
   previewAvatar: { width: 32, height: 32, borderRadius: 16 },
   previewName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   previewHandle: { ...typography.micro, color: colors.textMuted },
-  previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, writingDirection: 'rtl' },
+  previewText: { ...typography.body, color: colors.textPrimary, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' as const },
   previewImage: {
     width: '100%',
     height: 180,

@@ -233,7 +233,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: { flex: 1, textAlign: 'center', ...typography.h3, color: colors.textPrimary },
+  headerTitle: { flex: 1, ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
   scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
   card: {
     backgroundColor: colors.bgSurface,
@@ -246,7 +246,7 @@ const s = StyleSheet.create({
   orderNumber: {
     ...typography.h2,
     color: colors.textPrimary,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   badge: {
     alignSelf: 'flex-start',
@@ -255,11 +255,11 @@ const s = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  badgeText: { ...typography.caption, fontWeight: '600', writingDirection: 'rtl' },
+  badgeText: { ...typography.caption, fontWeight: '600', writingDirection: 'rtl', textAlign: 'right' as const },
   sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
     marginBottom: spacing.sm,
   },
   timelineItem: {
@@ -304,23 +304,23 @@ const s = StyleSheet.create({
     flex: 1,
     paddingBottom: spacing.sm,
   },
-  timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl' },
+  timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right' as const },
   timelineDone: { color: colors.textPrimary, fontWeight: '600' },
   timelineActive: { color: colors.electricBright, fontWeight: '600' },
-  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
+  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right' as const, marginTop: 2 },
   row: {
     ...getRtlRow(),
     justifyContent: 'space-between',
     gap: spacing.md,
     paddingVertical: 4,
   },
-  rowLabel: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
+  rowLabel: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', textAlign: 'right' as const },
   rowValue: {
     ...typography.caption,
     color: colors.textPrimary,
     fontWeight: '600',
     flex: 1,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   itemBlock: {
     borderTopWidth: 1,

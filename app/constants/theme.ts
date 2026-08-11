@@ -300,9 +300,14 @@ export const radius = {
   pill: sarh.radius.pill,
 };
 
-/** Text direction follows I18nManager — no hardcoded textAlign (avoids RTL mirror bugs). */
+/**
+ * Arabic text defaults — writingDirection tells the text engine the script direction,
+ * textAlign: 'right' ensures the glyph block is flush to the reading side.
+ * Elements that need center/left alignment override textAlign explicitly after spreading.
+ */
 const directionalText = {
   writingDirection: 'rtl' as const,
+  textAlign: 'right' as const,
 };
 
 /** IBM Plex Sans Arabic — prefer 600 for titles, 500 for item labels, 400 for body. */

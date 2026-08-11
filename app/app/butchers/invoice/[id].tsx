@@ -190,13 +190,13 @@ function createStyles(colors: ThemeColors) {
     brand: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     invoiceTitle: {
       ...typography.h3,
       color: colors.textPrimary,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     invoiceNo: {
       ...typography.bodyStrong,
@@ -208,7 +208,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
       ...getRtlText(),
       marginBottom: spacing.xs,
       paddingBottom: spacing.xs,
@@ -223,7 +223,7 @@ function createStyles(colors: ThemeColors) {
     rowLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     rowValue: {
       ...typography.caption,
@@ -245,7 +245,7 @@ function createStyles(colors: ThemeColors) {
     grandLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     grandValue: {
       ...typography.h2,

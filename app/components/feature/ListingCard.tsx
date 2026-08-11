@@ -381,7 +381,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 20,
     color: colors.textPrimary,
     fontWeight: '600',
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
     flex: 1,
   },
   listPriceRow: {
@@ -394,14 +394,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 24,
     color: colors.textPrimary,
     fontWeight: '600',
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   listPriceCurrency: {
     ...typography.caption,
     lineHeight: 18,
     color: colors.textMuted,
     fontWeight: '600',
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   listMetaRow: {
     ...getRtlRow(),
@@ -421,7 +421,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textSecondary,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
     flexShrink: 1,
   },
   listStatusNew: {
@@ -458,13 +458,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     lineHeight: 16,
     color: colors.textPrimary,
     flexShrink: 1,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   listStatText: {
     ...typography.caption,
     lineHeight: 16,
     color: colors.textSubtle,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   listThumbWrap: {
     width: ds.listingThumb,
@@ -721,7 +721,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   harajMetaText: {
     ...typography.caption,
     color: colors.textMuted,
-    writingDirection: 'rtl',
+    writingDirection: 'rtl', textAlign: 'right' as const,
   },
   harajSellerRow: {
     ...getRtlRow(),

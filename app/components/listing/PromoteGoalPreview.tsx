@@ -157,7 +157,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#7C3AED',
       fontWeight: '600',
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     reachDesc: {
       ...typography.caption,

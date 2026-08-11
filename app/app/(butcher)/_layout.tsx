@@ -45,7 +45,7 @@ export default function ButcherTabsLayout() {
               color: focused ? colors.textBrandStrong : colors.textMuted,
               fontSize: 10,
               fontWeight: '600',
-              writingDirection: 'rtl',
+              writingDirection: 'rtl', textAlign: 'right' as const,
             }}
           >
             {children}
@@ -69,7 +69,7 @@ export default function ButcherTabsLayout() {
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '600',
-          writingDirection: 'rtl',
+          writingDirection: 'rtl', textAlign: 'right' as const,
         },
       }}
     >

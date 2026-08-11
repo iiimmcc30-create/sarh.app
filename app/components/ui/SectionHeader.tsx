@@ -86,7 +86,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: isDark ? 28 : 24,
       fontWeight: isDark ? '700' : '700',
       color: isDark ? colors.textPrimary : colors.electric,
-      writingDirection: 'rtl',
+      writingDirection: 'rtl', textAlign: 'right' as const,
     },
     subtitle: {
       ...typography.caption,
