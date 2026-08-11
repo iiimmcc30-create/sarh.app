@@ -430,7 +430,7 @@ function createStyles(colors: ThemeColors) {
   editBtnText: {
     ...typography.caption,
     color: colors.textPrimary,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   shareBtn: {
     width: 38,
@@ -500,7 +500,7 @@ function createStyles(colors: ThemeColors) {
   statNum: {
     ...typography.h2,
     color: colors.textPrimary,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   statLabel: {
     ...typography.micro,
@@ -550,7 +550,7 @@ function createStyles(colors: ThemeColors) {
   },
   tabLabelActive: {
     color: colors.textBrandStrong,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   tabIndicator: {
     position: 'absolute',
@@ -623,7 +623,7 @@ function createStyles(colors: ThemeColors) {
   productPrice: {
     ...typography.caption,
     color: colors.gold,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   stockTag: {
     paddingHorizontal: 8,
@@ -632,7 +632,7 @@ function createStyles(colors: ThemeColors) {
   },
   stockTagText: {
     ...typography.micro,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   reviewsList: {
     gap: spacing.md,
@@ -650,13 +650,13 @@ function createStyles(colors: ThemeColors) {
   reviewAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 16,
     backgroundColor: colors.bgElevated,
   },
   reviewAuthor: {
     ...typography.caption,
     color: colors.textPrimary,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   reviewTime: {
     ...typography.micro,

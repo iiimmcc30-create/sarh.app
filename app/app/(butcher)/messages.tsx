@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   avatarWrap: { position: 'relative' },
-  avatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: colors.borderMid },
+  avatar: { width: 48, height: 48, borderRadius: 20, borderWidth: 1, borderColor: colors.borderMid },
   onlineDot: {
     position: 'absolute', bottom: 1, right: 1,
     width: 10, height: 10, borderRadius: 5,
@@ -306,11 +306,11 @@ const styles = StyleSheet.create({
   chatBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   lastMessage: { ...typography.caption, color: colors.textMuted, flex: 1 },
   unreadBadge: {
-    minWidth: 20, height: 20, borderRadius: 10,
+    minWidth: 20, height: 20, borderRadius: 12,
     backgroundColor: colors.electricBright, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  unreadCount: { fontSize: 11, fontWeight: '700', color: '#fff' },
+  unreadCount: { fontSize: 11, fontWeight: '600', color: '#fff' },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
   emptyIcon: { fontSize: 40 },
   emptyText: { ...typography.body, color: colors.textMuted },
@@ -327,6 +327,6 @@ const styles = StyleSheet.create({
   activityAvatar: { width: 40, height: 40, borderRadius: 20 },
   activityContent: { flex: 1 },
   activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, textAlign: 'right' },
-  activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
+  activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
 });

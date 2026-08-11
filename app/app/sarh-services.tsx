@@ -191,12 +191,12 @@ function createStyles(colors: ThemeColors) {
     retryText: {
       ...typography.caption,
       color: colors.electricBright,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     section: { gap: spacing.sm },
     sectionTitle: {
       ...typography.caption,
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 12,
       letterSpacing: 0.4,
       color: colors.textMuted,

@@ -277,7 +277,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 0,
     },
     tabText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-    tabTextActive: { color: '#FFFFFF', fontWeight: '700' },
+    tabTextActive: { color: '#FFFFFF', fontWeight: '600' },
     list: { paddingBottom: spacing.xl },
     emptyList: { flexGrow: 1 },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -293,7 +293,7 @@ function createStyles(colors: ThemeColors) {
     avatar: {
       width: 48,
       height: 48,
-      borderRadius: 24,
+      borderRadius: 20,
     },
     userInfo: { flex: 1, gap: 2 },
     nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -313,7 +313,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgDeep,
       borderColor: colors.electricBright,
     },
-    followBtnText: { ...typography.caption, color: '#FFFFFF', fontWeight: '700' },
+    followBtnText: { ...typography.caption, color: '#FFFFFF', fontWeight: '600' },
     followingText: { color: colors.electricBright },
     empty: {
       flex: 1,

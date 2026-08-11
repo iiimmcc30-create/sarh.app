@@ -48,7 +48,7 @@ const RANKING_FILTER_ICONS: Record<ButcherRankingCategory, { icon: string; emoji
 const STORY_TYPE_COLORS = {
   daily_slaughter: ['#EF4444', '#DC2626'],
   offer: ['#F59E0B', '#D97706'],
-  new_stock: ['#10B981', '#059669'],
+  new_stock: ['#20B66F', '#18965B'],
   update: ['#3B82F6', '#2563EB'],
 } as const;
 
@@ -465,7 +465,7 @@ function createScreenStyles(colors: ThemeColors) {
   headerTitle: {
     ...typography.h1,
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     ...getRtlText(),
     ...getRtlText(),
@@ -502,7 +502,7 @@ function createScreenStyles(colors: ThemeColors) {
   },
   headerIconInner: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: colors.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -527,7 +527,7 @@ function createScreenStyles(colors: ThemeColors) {
   filterInlineBtn: {
     width: 34,
     height: 34,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: colors.bgElevated,
     alignItems: 'center',
     justifyContent: 'center',
@@ -579,7 +579,7 @@ function createScreenStyles(colors: ThemeColors) {
   },
   quickFilterLabelActive: {
     color: colors.electricBright,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   quickFilterIndicator: {
     position: 'absolute',
@@ -601,7 +601,7 @@ function createScreenStyles(colors: ThemeColors) {
   },
   showAllText: {
     ...typography.caption,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.textSecondary,
     writingDirection: 'rtl',
   },
@@ -626,7 +626,7 @@ function createScreenStyles(colors: ThemeColors) {
   },
   mapLinkText: {
     ...typography.micro,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.electricBright,
     writingDirection: 'rtl',
   },
@@ -762,7 +762,7 @@ function createStoryStyles(colors: ThemeColors) {
     right: -2,
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 12,
     backgroundColor: colors.bgElevated,
     borderWidth: 1.5,
     borderColor: colors.bgDeep,

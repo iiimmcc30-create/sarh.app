@@ -148,7 +148,7 @@ function createStyles(colors: ThemeColors) {
     avatar: {
       width: 44,
       height: 44,
-      borderRadius: 22,
+      borderRadius: 20,
       backgroundColor: colors.bgElevated,
     },
     info: { flex: 1, gap: 2 },
@@ -175,7 +175,7 @@ function createStyles(colors: ThemeColors) {
     unblockText: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

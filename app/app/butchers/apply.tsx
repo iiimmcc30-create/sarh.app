@@ -249,7 +249,7 @@ function createStyles(colors: ThemeColors) {
   stepNum: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: colors.bgElevated,
     borderWidth: 1,
     borderColor: colors.borderMid,
@@ -259,7 +259,7 @@ function createStyles(colors: ThemeColors) {
   stepNumText: {
     ...typography.caption,
     color: colors.textBrand,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   stepText: {
     ...typography.body,

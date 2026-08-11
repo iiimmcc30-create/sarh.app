@@ -1,4 +1,6 @@
 import { APP_LOGO } from '@/constants/branding';
+import { appFont } from '@/constants/fonts';
+import { ds } from '@/constants/designSystem';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -17,10 +19,11 @@ const MIN_SHOW_MS = IS_WEB ? 850 : 1800;
 const FADE_MS = IS_WEB ? 260 : 420;
 const BOOT_ANIM_FAILSAFE_MS = IS_WEB ? 2200 : 5500;
 
-const BRAND_GREEN = '#163526';
-const BG = '#FFFFFF';
-const MUTED = '#6B7280';
-const ACCENT = '#1F6B4F';
+/** Splash stays light surface; accent = brand green only */
+const BRAND_GREEN = ds.light.primary;
+const BG = ds.light.card;
+const MUTED = ds.light.textMuted;
+const ACCENT = ds.light.primary;
 
 type AppBootSplashProps = {
   /** App fonts + auth/onboarding finished */
@@ -264,7 +267,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: 'rgba(31, 107, 79, 0.06)',
+    backgroundColor: 'rgba(32, 182, 111, 0.06)',
   },
   bgOrbBottom: {
     position: 'absolute',
@@ -273,31 +276,31 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(22, 53, 38, 0.04)',
+    backgroundColor: 'rgba(32, 182, 111, 0.04)',
   },
   glow: {
     position: 'absolute',
     width: LOGO_SIZE + 56,
     height: LOGO_SIZE + 56,
     borderRadius: (LOGO_SIZE + 56) / 2,
-    backgroundColor: 'rgba(31, 107, 79, 0.08)',
+    backgroundColor: 'rgba(32, 182, 111, 0.08)',
   },
   ring: {
     position: 'absolute',
     width: LOGO_SIZE + 24,
     height: LOGO_SIZE + 24,
     borderRadius: (LOGO_SIZE + 24) / 2,
-    borderWidth: 1.5,
-    borderColor: 'rgba(31, 107, 79, 0.18)',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(32, 182, 111, 0.22)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     ...Platform.select({
       ios: {
-        shadowColor: BRAND_GREEN,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 18,
+        shadowColor: '#101820',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
       },
-      android: { elevation: 6 },
+      android: { elevation: 2 },
       default: {},
     }),
   },
@@ -306,16 +309,18 @@ const styles = StyleSheet.create({
     height: LOGO_SIZE,
   },
   title: {
-    marginTop: 22,
+    marginTop: 20,
     fontSize: 30,
-    fontWeight: '800',
+    fontFamily: appFont.semibold,
+    fontWeight: '600',
     color: BRAND_GREEN,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   sub: {
     marginTop: 8,
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: appFont.regular,
+    fontWeight: '400',
     color: MUTED,
     textAlign: 'center',
     paddingHorizontal: 36,

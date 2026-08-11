@@ -481,11 +481,11 @@ function createStyles(colors: ThemeColors) {
   },
 
   header: { alignItems: 'center', marginBottom: 25, gap: 10, width: '100%' },
-  title: { fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, textAlign: 'center' },
+  title: { fontSize: 24, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
   sub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20, lineHeight: 18 },
 
   card: {
-    width: '100%', borderRadius: 24, padding: spacing.xl,
+    width: '100%', borderRadius: 20, padding: spacing.xl,
     backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline,
     gap: spacing.md,
   },
@@ -502,7 +502,7 @@ function createStyles(colors: ThemeColors) {
   inputWrapError: { borderColor: colors.danger },
   inputIcon: marginStart(8),
   input: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...getRtlText() },
-  atSign: { fontSize: 14, color: colors.textMuted, fontWeight: 'bold', ...marginStart(8) },
+  atSign: { fontSize: 14, color: colors.textMuted, fontWeight: '600', ...marginStart(8) },
   
   fieldError: { fontSize: 11, color: colors.danger, ...getRtlText(), marginTop: 2 },
   fieldHint: { fontSize: 11, color: colors.textMuted, ...getRtlText(), marginTop: 2, lineHeight: 16 },
@@ -531,7 +531,7 @@ function createStyles(colors: ThemeColors) {
     gap: 8, width: '100%', marginVertical: 4,
   },
   agreeText: { fontSize: 13, color: colors.textMuted, textAlign: 'right' },
-  agreeLink: { color: colors.textBrandStrong, fontWeight: 'bold' },
+  agreeLink: { color: colors.textBrandStrong, fontWeight: '600' },
   checkbox: {
     width: 20, height: 20, borderRadius: 5,
     borderWidth: 1.5, borderColor: colors.borderHairline,
@@ -539,22 +539,22 @@ function createStyles(colors: ThemeColors) {
   },
   checkboxChecked: { backgroundColor: colors.electric, borderColor: colors.electric },
 
-  submitBtn: { width: '100%', borderRadius: 25, overflow: 'hidden', marginTop: 5 },
+  submitBtn: { width: '100%', borderRadius: 20, overflow: 'hidden', marginTop: 5 },
   submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  submitText: { fontSize: 16, fontWeight: 'bold', color: colors.textPrimary },
+  submitText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
 
   otpVerifyContainer: {
     backgroundColor: 'rgba(30,111,241,0.05)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(30,111,241,0.15)',
     padding: spacing.md, gap: spacing.sm, width: '100%',
   },
-  otpInput: { flex: 1, fontSize: 18, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center', fontWeight: 'bold' },
+  otpInput: { flex: 1, fontSize: 18, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center', fontWeight: '600' },
   otpActionsRow: { ...getRtlRow(), gap: spacing.md, width: '100%' },
   otpVerifyBtn: {
     backgroundColor: colors.electric, borderRadius: 12,
     height: 44, alignItems: 'center', justifyContent: 'center', flex: 2,
   },
-  otpVerifyText: { fontSize: 13, color: colors.textPrimary, fontWeight: 'bold' },
+  otpVerifyText: { fontSize: 13, color: colors.textPrimary, fontWeight: '600' },
   otpEditBtn: {
     borderWidth: 1, borderColor: colors.borderHairline, borderRadius: 12,
     height: 44, alignItems: 'center', justifyContent: 'center', flex: 1,
@@ -571,7 +571,7 @@ function createStyles(colors: ThemeColors) {
 
   footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },
   footerLinkText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
-  footerLinkActive: { color: colors.textBrandStrong, fontWeight: 'bold' },
+  footerLinkActive: { color: colors.textBrandStrong, fontWeight: '600' },
   disclaimerText: { fontSize: 11, color: '#6b7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 16 },
   disclaimerLink: { color: colors.textBrandStrong, textDecorationLine: 'underline' },
   });

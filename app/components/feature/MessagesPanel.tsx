@@ -418,7 +418,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.bgGlass,
   },
   inboxTabLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '500' },
-  inboxTabLabelActive: { color: colors.textBrandStrong, fontWeight: '700' },
+  inboxTabLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     marginHorizontal: spacing.lg, marginVertical: spacing.md,
@@ -433,7 +433,7 @@ function createStyles(colors: ThemeColors) {
     borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   avatarWrap: { position: 'relative' },
-  avatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: colors.borderMid },
+  avatar: { width: 48, height: 48, borderRadius: 20, borderWidth: 1, borderColor: colors.borderMid },
   onlineDot: {
     position: 'absolute', bottom: 1, right: 1,
     width: 10, height: 10, borderRadius: 5,
@@ -447,11 +447,11 @@ function createStyles(colors: ThemeColors) {
   chatBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   lastMessage: { ...typography.caption, color: colors.textMuted, flex: 1 },
   unreadBadge: {
-    minWidth: 20, height: 20, borderRadius: 10,
+    minWidth: 20, height: 20, borderRadius: 12,
     backgroundColor: colors.electricBright, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  unreadCount: { fontSize: 11, fontWeight: '700', color: '#fff' },
+  unreadCount: { fontSize: 11, fontWeight: '600', color: '#fff' },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
   emptyIcon: { fontSize: 40 },
   emptyText: { ...typography.body, color: colors.textMuted },
@@ -468,7 +468,7 @@ function createStyles(colors: ThemeColors) {
   activityContent: { flex: 1 },
   activityTextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, ...getRtlText(), flex: 1 },
-  activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
+  activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
   });
 }

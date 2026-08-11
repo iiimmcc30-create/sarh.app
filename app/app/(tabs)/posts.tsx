@@ -259,7 +259,7 @@ function createPostsStyles(
     },
     tabTextActive: {
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     tabIndicator: {
       position: 'absolute',

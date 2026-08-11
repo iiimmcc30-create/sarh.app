@@ -248,7 +248,7 @@ function createMarketStyles(
     },
     pageTitle: {
       ...typography.h1,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
     },

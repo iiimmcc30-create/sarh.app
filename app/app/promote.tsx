@@ -243,7 +243,7 @@ function createStyles(colors: ThemeColors) {
     headerTitle: {
       ...typography.h2,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       textAlign: 'center',
       writingDirection: 'rtl',
       flex: 1,
@@ -262,7 +262,7 @@ function createStyles(colors: ThemeColors) {
     heroIconWrap: {
       width: 56,
       height: 56,
-      borderRadius: 28,
+      borderRadius: 20,
       backgroundColor: `${colors.electric}14`,
       alignItems: 'center',
       justifyContent: 'center',
@@ -271,7 +271,7 @@ function createStyles(colors: ThemeColors) {
     heroTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
@@ -395,7 +395,7 @@ function createStyles(colors: ThemeColors) {
     reachText: {
       ...typography.micro,
       color: '#7C3AED',
-      fontWeight: '700',
+      fontWeight: '600',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
@@ -420,7 +420,7 @@ function createStyles(colors: ThemeColors) {
     statsBtn: {
       width: 32,
       height: 32,
-      borderRadius: 10,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: '#7C3AED30',
       backgroundColor: '#7C3AED08',

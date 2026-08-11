@@ -251,7 +251,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     brandMarkWrap: {
       width: 56,
       height: 56,
-      borderRadius: 28,
+      borderRadius: 20,
       overflow: 'hidden',
       backgroundColor: panelBg,
     },
@@ -269,7 +269,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.h2,
       fontSize: 28,
       lineHeight: 34,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
       ...getRtlText(),

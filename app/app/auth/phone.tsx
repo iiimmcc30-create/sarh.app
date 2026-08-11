@@ -410,7 +410,7 @@ function createStyles(colors: ThemeColors) {
 
   footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },
   footerLinkText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
-  footerLinkActive: { color: colors.textBrandStrong, fontWeight: 'bold' },
+  footerLinkActive: { color: colors.textBrandStrong, fontWeight: '600' },
   disclaimerText: { fontSize: 11, color: colors.textSubtle, textAlign: 'center', paddingHorizontal: 20, lineHeight: 16 },
   disclaimerLink: { color: colors.textBrandStrong, textDecorationLine: 'underline' },
   });

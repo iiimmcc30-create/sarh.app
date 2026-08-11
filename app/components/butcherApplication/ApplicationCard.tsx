@@ -118,7 +118,7 @@ function createStyles(colors: ThemeColors) {
     link: {
       ...typography.caption,
       color: colors.textBrand,
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

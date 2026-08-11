@@ -83,7 +83,7 @@ function createStyles(colors: ThemeColors) {
     },
     chipTextSelected: {
       color: '#fff',
-      fontWeight: '700',
+      fontWeight: '600',
     },
   });
 }

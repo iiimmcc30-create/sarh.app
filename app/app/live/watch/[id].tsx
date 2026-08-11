@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
   },
   liveDot:   { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' },
-  liveText:  { color: '#fff', fontSize: 12, fontWeight: '700' },
+  liveText:  { color: '#fff', fontSize: 12, fontWeight: '600' },
   hostRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hostAvatar: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
   hostName:  { color: '#fff', fontSize: 13, fontWeight: '600' },
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   },
   viewerText: { color: '#fff', fontSize: 12 },
   closeBtn: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 36, height: 36, borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
   },
   streamTitle: {
@@ -363,8 +363,8 @@ const styles = StyleSheet.create({
     padding: spacing.sm, marginBottom: 6, alignSelf: 'flex-start',
   },
   offerBubble:  { backgroundColor: 'rgba(200,40,40,0.7)', borderWidth: 1, borderColor: colors.liveRed },
-  bubbleUser:   { color: colors.textBrandStrong, fontSize: 11, fontWeight: '700', marginBottom: 2 },
-  offerAmt:     { color: '#FFD700', fontSize: 13, fontWeight: '700' },
+  bubbleUser:   { color: colors.textBrandStrong, fontSize: 11, fontWeight: '600', marginBottom: 2 },
+  offerAmt:     { color: '#FFD700', fontSize: 13, fontWeight: '600' },
   bubbleText:   { color: '#fff', fontSize: 13 },
 
   bottomBar:    { position: 'absolute', bottom: 0, left: 0, right: 0 },

@@ -592,7 +592,7 @@ function createStyles(colors: ThemeColors) {
     pageTitle: {
       ...typography.h2,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
@@ -648,7 +648,7 @@ function createStyles(colors: ThemeColors) {
     listingHeroPrice: {
       ...typography.caption,
       color: colors.textBrandStrong,
-      fontWeight: '800',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -676,7 +676,7 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -687,7 +687,7 @@ function createStyles(colors: ThemeColors) {
     customBtnText: {
       ...typography.caption,
       color: colors.electric,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     goalList: { gap: spacing.sm },
     goalCard: {
@@ -704,7 +704,7 @@ function createStyles(colors: ThemeColors) {
     radioOuter: {
       width: 22,
       height: 22,
-      borderRadius: 11,
+      borderRadius: 12,
       borderWidth: 2,
       borderColor: colors.borderMid,
       alignItems: 'center',
@@ -748,7 +748,7 @@ function createStyles(colors: ThemeColors) {
     goalPreviewIcon: {
       width: 20,
       height: 20,
-      borderRadius: 10,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -761,7 +761,7 @@ function createStyles(colors: ThemeColors) {
     sliderValue: {
       fontSize: 28,
       lineHeight: 34,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textBrandStrong,
       ...getRtlText(),
       ...getRtlText(),
@@ -814,7 +814,7 @@ function createStyles(colors: ThemeColors) {
     totalValue: {
       ...typography.h3,
       color: colors.textBrandStrong,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
     payBtnWrap: {
@@ -847,12 +847,12 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       backgroundColor: colors.bgElevated,
       fontSize: 18,
-      fontWeight: '700' as const,
+      fontWeight: '600' as const,
     },
     minBudgetHint: {
       ...typography.caption,
       color: '#7C3AED',
-      fontWeight: '700' as const,
+      fontWeight: '600' as const,
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -867,7 +867,7 @@ function createStyles(colors: ThemeColors) {
     flowTitle: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -877,7 +877,7 @@ function createStyles(colors: ThemeColors) {
     flowStepActive: {
       ...typography.caption,
       color: colors.electric,
-      fontWeight: '700',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -902,14 +902,14 @@ function createStyles(colors: ThemeColors) {
     reachTitle: {
       ...typography.bodyStrong,
       color: '#7C3AED',
-      fontWeight: '800',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
     reachValue: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       lineHeight: 24,
       ...getRtlText(),
       ...getRtlText(),
@@ -939,7 +939,7 @@ function createStyles(colors: ThemeColors) {
     priceCardValue: {
       fontSize: 28,
       lineHeight: 34,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textBrandStrong,
       ...getRtlText(),
       ...getRtlText(),

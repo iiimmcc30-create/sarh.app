@@ -149,7 +149,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       ...getRtlText(),
       color: colors.textSecondary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     addBtn: {
       width: 34,

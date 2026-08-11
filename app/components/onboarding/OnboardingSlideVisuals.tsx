@@ -9,10 +9,10 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
 
 const FEATURE_ITEMS = [
-  { emoji: '🐑', label: 'المواشي', icon: 'sheep' as const, tint: '#10B981' },
-  { emoji: '🥩', label: 'الملاحم', icon: 'shop' as const, tint: '#006B3C' },
+  { emoji: '🐑', label: 'المواشي', icon: 'sheep' as const, tint: '#20B66F' },
+  { emoji: '🥩', label: 'الملاحم', icon: 'shop' as const, tint: '#20B66F' },
   { emoji: '🌾', label: 'الأعلاف', icon: 'box' as const, tint: '#34D399' },
-  { emoji: '🛠️', label: 'الخدمات', icon: 'tool-box' as const, tint: '#008F4C' },
+  { emoji: '🛠️', label: 'الخدمات', icon: 'tool-box' as const, tint: '#18965B' },
 ] as const;
 
 const MOCK_LISTINGS = [
@@ -179,7 +179,7 @@ function createStyles(colors: ThemeColors) {
       position: 'absolute',
       width: 44,
       height: 44,
-      borderRadius: 22,
+      borderRadius: 20,
       backgroundColor: colors.bgElevated,
       borderWidth: 1,
       borderColor: colors.borderSoft,
@@ -311,7 +311,7 @@ function createStyles(colors: ThemeColors) {
     postAvatar: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 16,
       backgroundColor: colors.bgElevated,
       borderWidth: 1,
       borderColor: colors.borderSoft,

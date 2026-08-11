@@ -328,7 +328,7 @@ function createStyles(colors: ThemeColors) {
     closeBtn: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 16,
       backgroundColor: colors.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
@@ -337,7 +337,7 @@ function createStyles(colors: ThemeColors) {
     headerIcon: {
       width: 44,
       height: 44,
-      borderRadius: 14,
+      borderRadius: 16,
       backgroundColor: `${colors.electric}16`,
       alignItems: 'center',
       justifyContent: 'center',
@@ -426,7 +426,7 @@ function createStyles(colors: ThemeColors) {
       left: 8,
       width: 20,
       height: 20,
-      borderRadius: 10,
+      borderRadius: 12,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',

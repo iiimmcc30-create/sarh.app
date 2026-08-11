@@ -1,16 +1,16 @@
 import {
-  Tajawal_400Regular,
-  Tajawal_500Medium,
-  Tajawal_700Bold,
+  IBMPlexSansArabic_400Regular,
+  IBMPlexSansArabic_500Medium,
+  IBMPlexSansArabic_600SemiBold,
   useFonts,
-} from '@expo-google-fonts/tajawal';
+} from '@expo-google-fonts/ibm-plex-sans-arabic';
 
-/** Loads Tajawal Arabic UI font (icons are SVG — no font preload). */
+/** Loads IBM Plex Sans Arabic (icons are SVG — no font preload). */
 export function useFlaticonFonts() {
   const [loaded, error] = useFonts({
-    Tajawal_400Regular,
-    Tajawal_500Medium,
-    Tajawal_700Bold,
+    IBMPlexSansArabic_400Regular,
+    IBMPlexSansArabic_500Medium,
+    IBMPlexSansArabic_600SemiBold,
   });
   return { loaded, error: error ?? null };
 }

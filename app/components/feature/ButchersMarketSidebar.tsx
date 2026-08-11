@@ -197,7 +197,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     avatar: {
       width: 58,
       height: 58,
-      borderRadius: 18,
+      borderRadius: 16,
       borderWidth: 2,
       borderColor: sarh.color.action,
       backgroundColor: colors.bgElevated,
@@ -211,7 +211,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayName: {
       ...typography.h3,
       fontSize: 17,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -231,7 +231,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     brandPillText: {
       ...typography.micro,
-      fontWeight: '700',
+      fontWeight: '600',
       color: isDark ? colors.textPrimary : '#3FA82E',
       writingDirection: 'rtl',
     },

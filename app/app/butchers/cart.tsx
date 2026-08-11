@@ -397,7 +397,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       ...getRtlText(),
       color: colors.danger,
-      fontWeight: '700',
+      fontWeight: '600',
       minWidth: 44,
       textAlign: 'center',
     },
@@ -411,7 +411,7 @@ function createStyles(colors: ThemeColors) {
     butcherLogo: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderSoft,
     },

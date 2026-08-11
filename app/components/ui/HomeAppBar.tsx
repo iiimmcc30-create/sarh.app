@@ -2,6 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 import { ds } from '@/constants/designSystem';
 import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
+import { appFont } from '@/constants/fonts';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -74,18 +75,21 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     logoAr: {
       fontSize: 22,
-      fontWeight: '700',
+      fontFamily: appFont.semibold,
+      fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
     },
     logoSep: {
       fontSize: 16,
+      fontFamily: appFont.regular,
       fontWeight: '400',
       color: colors.textMuted,
     },
     logoEn: {
       fontSize: 16,
-      fontWeight: '600',
+      fontFamily: appFont.medium,
+      fontWeight: '500',
       color: colors.textPrimary,
     },
     actions: {
@@ -96,19 +100,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
       borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? 'rgba(16, 31, 44, 0.72)' : 'rgba(255,255,255,0.08)',
+      backgroundColor: isDark ? 'rgba(16, 38, 51, 0.72)' : ds.light.glass,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : 'rgba(255,255,255,0.1)',
+      borderColor: isDark ? sarh.color.border : ds.light.stroke,
       ...(Platform.OS === 'ios'
         ? {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: isDark ? 0.12 : 0.18,
+            shadowColor: '#101820',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: isDark ? 0.08 : 0.04,
             shadowRadius: 4,
           }
-        : { elevation: 1 }),
+        : { elevation: isDark ? 1 : 0 }),
     },
   });
 }

@@ -265,7 +265,7 @@ function createCompactStyles(colors: ThemeColors) {
     name: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
       flex: 1,
     },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
@@ -277,7 +277,7 @@ function createCompactStyles(colors: ThemeColors) {
       borderRadius: 2,
       backgroundColor: colors.textSubtle,
     },
-    rating: { ...typography.micro, color: colors.gold, fontWeight: '700' },
+    rating: { ...typography.micro, color: colors.gold, fontWeight: '600' },
     statusDot: { width: 9, height: 9, borderRadius: 5 },
   });
 }
@@ -289,7 +289,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       alignItems: 'stretch',
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,
-      borderRadius: 22,
+      borderRadius: 20,
       backgroundColor: colors.bgSurface,
       borderWidth: 1,
       borderColor: isDark ? colors.borderSoft : colors.borderHairline,
@@ -327,7 +327,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
     statusBadgeText: {
       ...typography.micro,
       color: '#fff',
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 10,
     },
     favBtn: {
@@ -384,7 +384,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
     name: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 16,
       flexShrink: 1,
       writingDirection: 'rtl',
@@ -412,7 +412,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
     ratingValue: {
       ...typography.bodyStrong,
       color: colors.gold,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     ratingCount: {
       ...typography.caption,
@@ -453,7 +453,7 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
     statNum: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       fontSize: 13,
     },
     statLbl: {

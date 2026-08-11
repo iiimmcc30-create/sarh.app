@@ -67,7 +67,7 @@ function createStyles(colors: ThemeColors) {
     iconWrap: {
       width: 28,
       height: 28,
-      borderRadius: 14,
+      borderRadius: 16,
       backgroundColor: colors.bgElevated,
       borderWidth: 1,
       borderColor: colors.borderMid,

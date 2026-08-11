@@ -9,6 +9,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { appFont } from '@/constants/fonts';
 import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlText, ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
@@ -52,15 +53,17 @@ function AppTextInputComponent({
         style: focused
           ? {
               borderColor: colors.electric,
+              borderWidth: 1.5,
               backgroundColor: colors.bgSurface,
             }
           : {
               borderColor: colors.borderSoft,
-              backgroundColor: colors.bgElevated,
+              borderWidth: StyleSheet.hairlineWidth,
+              backgroundColor: colors.bgSurface,
             },
       });
     },
-    [colors.bgElevated, colors.bgSurface, colors.borderSoft, colors.electric],
+    [colors.bgSurface, colors.borderSoft, colors.electric],
   );
 
   const handleFocus = useCallback(
@@ -120,17 +123,18 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     label: {
       ...typography.caption,
+      fontFamily: appFont.medium,
+      fontWeight: '500',
       color: colors.textSecondary,
-      fontWeight: '600',
       marginBottom: spacing.xs,
       ...getRtlText(),
     },
     wrap: {
       ...getRtlRow(),
       alignItems: 'center',
-      backgroundColor: colors.bgElevated,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
       paddingHorizontal: spacing.sm,
       minHeight: controls.heightLg,

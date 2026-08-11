@@ -262,7 +262,7 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
-      fontWeight: '700',
+      fontWeight: '600',
       flex: 1,
       textAlign: 'right',
     },
@@ -356,7 +356,7 @@ function createStyles(colors: ThemeColors) {
     commentName: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     commentTime: {
       ...typography.micro,
@@ -396,7 +396,7 @@ function createStyles(colors: ThemeColors) {
     sendBtn: {
       width: 44,
       height: 44,
-      borderRadius: 22,
+      borderRadius: 20,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',

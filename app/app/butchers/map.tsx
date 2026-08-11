@@ -614,13 +614,13 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  miniLogo: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.bgElevated },
+  miniLogo: { width: 36, height: 36, borderRadius: 16, backgroundColor: colors.bgElevated },
   miniName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   miniMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   miniFlag: { fontSize: 11 },
   miniCity: { ...typography.micro, color: colors.textMuted },
   miniRating: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  miniRatingText: { ...typography.micro, color: colors.gold, fontWeight: '700' },
+  miniRatingText: { ...typography.micro, color: colors.gold, fontWeight: '600' },
 });
 
 // Map pin styles
@@ -635,7 +635,7 @@ const mp = StyleSheet.create({
   pinInner: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2.5,
@@ -686,7 +686,7 @@ const bc = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   logo: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 48, height: 48, borderRadius: 20,
     backgroundColor: colors.bgElevated,
     borderWidth: 1.5, borderColor: colors.borderMid,
   },
@@ -702,7 +702,7 @@ const bc = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  rating: { ...typography.caption, color: colors.gold, fontWeight: '700' },
+  rating: { ...typography.caption, color: colors.gold, fontWeight: '600' },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
   statusPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -710,7 +710,7 @@ const bc = StyleSheet.create({
     borderRadius: radius.pill,
   },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { ...typography.micro, fontWeight: '700' },
+  statusText: { ...typography.micro, fontWeight: '600' },
   hoursPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 5,
@@ -750,7 +750,7 @@ const bc = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 11,
   },
-  orderBtnText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  orderBtnText: { ...typography.caption, color: '#fff', fontWeight: '600' },
   profileBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 10,

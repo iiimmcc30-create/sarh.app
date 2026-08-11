@@ -167,7 +167,7 @@ function createStyles(colors: ThemeColors) {
     closeBtn: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 16,
       backgroundColor: 'rgba(255,255,255,0.22)',
       alignItems: 'center',
       justifyContent: 'center',
@@ -214,11 +214,11 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
     },
     brand: {
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textBrandStrong,
     },
     emphasis: {
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textBrandStrong,
     },
     checkboxRow: {
@@ -257,7 +257,7 @@ function createStyles(colors: ThemeColors) {
     },
     link: {
       color: colors.textBrandStrong,
-      fontWeight: '700',
+      fontWeight: '600',
       textDecorationLine: 'underline',
     },
     footer: {

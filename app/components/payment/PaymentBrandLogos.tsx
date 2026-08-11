@@ -16,7 +16,7 @@ export function MadaLogo({ size = 32 }: { size?: number }) {
       <Text
         style={{
           color: '#fff',
-          fontWeight: '900',
+          fontWeight: '600',
           fontSize: size * 0.45,
           letterSpacing: 1,
         }}
@@ -43,7 +43,7 @@ export function VisaLogo({ size = 32 }: { size?: number }) {
         style={{
           color: '#fff',
           fontStyle: 'italic',
-          fontWeight: '900',
+          fontWeight: '600',
           fontSize: size * 0.55,
           letterSpacing: -1,
         }}
@@ -89,7 +89,7 @@ export function StcPayLogo({ size = 32 }: { size?: number }) {
       <Text
         style={{
           color: '#fff',
-          fontWeight: '900',
+          fontWeight: '600',
           fontSize: size * 0.4,
           letterSpacing: 0.5,
         }}

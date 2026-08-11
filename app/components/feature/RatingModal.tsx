@@ -143,7 +143,7 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     subtitle: {
       ...typography.caption,

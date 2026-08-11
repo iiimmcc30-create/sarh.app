@@ -477,7 +477,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayName: {
       ...typography.h2,
       fontSize: 22,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       ...getRtlText(),
       flexShrink: 1,
@@ -496,7 +496,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     ratingText: {
       ...typography.caption,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       fontSize: 13,
     },
@@ -546,7 +546,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     statNum: {
       fontSize: 20,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       textAlign: 'center',
     },
@@ -609,7 +609,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       left: 0,
       width: 28,
       height: 28,
-      borderRadius: 14,
+      borderRadius: 16,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',
@@ -648,7 +648,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     btnFollowText: {
       ...typography.bodyStrong,
       color: '#fff',
-      fontWeight: '700',
+      fontWeight: '600',
       fontSize: 14,
     },
     btnFollowingText: {
@@ -662,7 +662,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     btnMessageText: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
       fontSize: 14,
     },
     contentCardTop: {
@@ -696,7 +696,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     tabLabel: {
       ...typography.bodyStrong,
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textMuted,
       ...getRtlText(),
     },

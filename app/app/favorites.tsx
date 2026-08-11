@@ -166,7 +166,7 @@ function createStyles(colors: ThemeColors) {
     },
     emptyTitle: {
       ...typography.h3,
-      fontWeight: '800',
+      fontWeight: '600',
       color: colors.textPrimary,
       ...getRtlText(),
     },
@@ -185,7 +185,7 @@ function createStyles(colors: ThemeColors) {
     },
     emptyBtnText: {
       ...typography.body,
-      fontWeight: '700',
+      fontWeight: '600',
       color: '#fff',
       ...getRtlText(),
     },

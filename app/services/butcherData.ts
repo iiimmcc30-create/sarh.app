@@ -24,7 +24,7 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   pending: '#F59E0B',
   confirmed: '#69D84F',
   preparing: '#06B6D4',
-  ready: '#10B981',
+  ready: '#20B66F',
   delivered: '#22C55E',
   cancelled: '#EF4444',
 };

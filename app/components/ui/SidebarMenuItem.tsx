@@ -34,11 +34,11 @@ export type SidebarMenuItemProps = {
 export const SIDEBAR_MENU_ITEM = {
   minHeight: 56,
   paddingHorizontal: spacing.md,
-  paddingVertical: 14,
+  paddingVertical: spacing.md,
   gap: spacing.md,
   iconSize: 20,
   iconWrap: 40,
-  iconRadius: 12,
+  iconRadius: radius.md,
   titleSize: 15,
   titleWeight: '600' as const,
   subtitleSize: 12,
@@ -190,9 +190,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   badgeText: {
-    color: '#fff',
+    color: '#F4F7F9',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });
 

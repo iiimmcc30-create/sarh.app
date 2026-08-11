@@ -1,8 +1,9 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ambientShadow, ds } from '@/constants/designSystem';
+import { appFont } from '@/constants/fonts';
 import { sarh } from '@/constants/sarhTokens';
-import { motion } from '@/constants/theme';
+import { motion, spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, isAppRtl } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -66,7 +67,8 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             styles.tabLabel,
             {
               color: tint,
-              fontWeight: focused ? '700' : '500',
+              fontFamily: focused ? appFont.semibold : appFont.medium,
+              fontWeight: focused ? '600' : '500',
             },
           ]}
         >
@@ -103,12 +105,12 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
               {isLight ? (
                 <LinearGradient
                   colors={gradients.electric}
-                  style={[styles.fab, { borderColor: tokens.page }]}
+                  style={[styles.fab, ambientShadow(scheme, 'fab'), { borderColor: tokens.page }]}
                 >
-                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color="#fff" />
+                  <AppIcon name="plus" variant="sr" size={ds.icon.fab} color={sarh.color.fab} />
                 </LinearGradient>
               ) : (
-                <View style={styles.fab}>
+                <View style={[styles.fab, ambientShadow(scheme, 'fab')]}>
                   <AppIcon
                     name="plus"
                     variant="sr"
@@ -138,13 +140,13 @@ const styles = StyleSheet.create({
   bar: {
     borderRadius: sarh.radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 10,
-    paddingHorizontal: 6,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   barDark: {
     backgroundColor: sarh.color.surface,
     borderColor: sarh.color.border,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   row: {
     alignItems: 'center',
@@ -156,11 +158,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 44,
     borderRadius: sarh.radius.md,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
   },
   tabLabel: {
     fontSize: 10,
-    marginTop: 2,
+    marginTop: spacing.xs / 2,
     writingDirection: isAppRtl() ? 'rtl' : 'ltr',
   },
   fabSlot: {
@@ -178,11 +180,6 @@ const styles = StyleSheet.create({
     backgroundColor: sarh.color.fab,
     borderWidth: 3,
     borderColor: sarh.color.bg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],

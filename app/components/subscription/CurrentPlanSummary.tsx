@@ -217,7 +217,7 @@ function createStyles(colors: ThemeColors) {
     usageVal: {
       ...typography.caption,
       color: colors.textPrimary,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     track: {
       height: 5,

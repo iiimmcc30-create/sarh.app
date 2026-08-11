@@ -220,7 +220,7 @@ const sectionStyles = StyleSheet.create({
   },
   title: {
     ...typography.caption,
-    fontWeight: '800',
+    fontWeight: '600',
     fontSize: 12,
     letterSpacing: 0.4,
     marginBottom: spacing.sm,
@@ -252,7 +252,7 @@ const themeStyles = StyleSheet.create({
   title: {
     ...typography.bodyStrong,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '600',
     flex: 1,
   },
   track: {
@@ -275,7 +275,7 @@ const themeStyles = StyleSheet.create({
   },
   optionText: {
     ...typography.caption,
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 13,
   },
 });
@@ -307,7 +307,7 @@ const logoutStyles = StyleSheet.create({
   },
   text: {
     ...typography.bodyStrong,
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 15,
     textAlign: 'right',
     writingDirection: 'rtl',

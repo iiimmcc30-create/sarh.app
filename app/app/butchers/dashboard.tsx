@@ -410,7 +410,7 @@ const s = StyleSheet.create({
     backgroundColor: colors.gold + '33',
     borderWidth: 1, borderColor: colors.gold + '66',
   },
-  manageBtnText: { ...typography.micro, color: colors.gold, fontWeight: '700' },
+  manageBtnText: { ...typography.micro, color: colors.gold, fontWeight: '600' },
 
   periodRow: {
     flexDirection: 'row',
@@ -438,14 +438,14 @@ const s = StyleSheet.create({
   },
   revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   revenueLabel: { ...typography.caption, color: 'rgba(255,255,255,0.75)' },
-  revenueValue: { fontSize: 34, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  revenueValue: { fontSize: 34, fontWeight: '600', color: '#fff', letterSpacing: -0.5 },
   revenueTrend: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 10, paddingVertical: 6,
     borderRadius: radius.pill,
   },
-  revenueTrendText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  revenueTrendText: { ...typography.caption, color: '#fff', fontWeight: '600' },
   revenueChartLabel: { ...typography.micro, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
 
   statsGrid: {
@@ -470,11 +470,11 @@ const s = StyleSheet.create({
     padding: spacing.md,
   },
   productRank: {
-    width: 28, height: 28, borderRadius: 14,
+    width: 28, height: 28, borderRadius: 16,
     backgroundColor: colors.electric + '33',
     alignItems: 'center', justifyContent: 'center',
   },
-  productRankText: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '700' },
+  productRankText: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '600' },
   productNameRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   productName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
   productSales: { ...typography.micro, color: colors.textMuted },
@@ -485,7 +485,7 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   progressFill: { height: '100%', borderRadius: 3 },
-  productRevenue: { ...typography.micro, color: colors.gold, fontWeight: '700' },
+  productRevenue: { ...typography.micro, color: colors.gold, fontWeight: '600' },
 
   actionsGrid: {
     flexDirection: 'row',
@@ -503,7 +503,7 @@ const s = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   actionIconWrap: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 44, height: 44, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
   },
   actionLabel: { ...typography.micro, color: colors.textSecondary, textAlign: 'center' },
@@ -525,11 +525,11 @@ const s = StyleSheet.create({
   rankTitle: { ...typography.bodyStrong, color: colors.gold },
   rankSub: { ...typography.micro, color: colors.textMuted, marginTop: 3, maxWidth: 220 },
   rankBadge: {
-    width: 56, height: 56, borderRadius: 28,
+    width: 56, height: 56, borderRadius: 20,
     backgroundColor: colors.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  rankNum: { fontSize: 22, fontWeight: '900', color: '#1A1300' },
+  rankNum: { fontSize: 22, fontWeight: '600', color: '#1A1300' },
 });
 
 const sc = StyleSheet.create({
@@ -550,10 +550,10 @@ const sc = StyleSheet.create({
   },
   icon: { fontSize: 18 },
   label: { ...typography.micro, color: colors.textMuted },
-  value: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
+  value: { fontSize: 22, fontWeight: '600', letterSpacing: -0.3 },
   sub: { ...typography.micro, color: colors.textMuted },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  trendText: { ...typography.micro, fontWeight: '700' },
+  trendText: { ...typography.micro, fontWeight: '600' },
 });
 
 const chart = StyleSheet.create({

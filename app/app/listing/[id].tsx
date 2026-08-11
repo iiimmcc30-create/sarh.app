@@ -635,7 +635,7 @@ function createStyles(colors: ThemeColors) {
     specsHeading: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
-      fontWeight: '700',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -655,7 +655,7 @@ function createStyles(colors: ThemeColors) {
     galleryHeading: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '700',
+      fontWeight: '600',
       writingDirection: 'rtl',
       textAlign: 'right',
       marginBottom: spacing.xs,
@@ -675,7 +675,7 @@ function createStyles(colors: ThemeColors) {
       fontSize: 28,
       lineHeight: 34,
       color: colors.textBrandStrong,
-      fontWeight: '800',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -690,7 +690,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       fontSize: 18,
       color: colors.textBrandStrong,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     featured: {
       alignItems: 'center',
@@ -701,7 +701,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
       marginBottom: 4,
     },
-    featuredText: { ...typography.micro, color: '#1A1300', fontWeight: '800' },
+    featuredText: { ...typography.micro, color: '#1A1300', fontWeight: '600' },
     pinned: {
       alignItems: 'center',
       gap: 4,
@@ -711,12 +711,12 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
       marginBottom: 4,
     },
-    pinnedText: { ...typography.micro, color: '#fff', fontWeight: '800' },
+    pinnedText: { ...typography.micro, color: '#fff', fontWeight: '600' },
     title: {
       fontSize: 20,
       lineHeight: 28,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
       ...getRtlText(),
       ...getRtlText(),
     },
@@ -734,7 +734,7 @@ function createStyles(colors: ThemeColors) {
     sellerInlineAvatar: {
       width: 28,
       height: 28,
-      borderRadius: 14,
+      borderRadius: 16,
       backgroundColor: colors.bgElevated,
       borderWidth: 1.5,
       borderColor: colors.electric,
@@ -742,7 +742,7 @@ function createStyles(colors: ThemeColors) {
     sellerInlineName: {
       ...typography.caption,
       color: colors.textSecondary,
-      fontWeight: '700',
+      fontWeight: '600',
       maxWidth: 180,
       ...getRtlText(),
       ...getRtlText(),
@@ -790,7 +790,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderMid,
     },
-    followPillText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+    followPillText: { ...typography.caption, color: '#fff', fontWeight: '600' },
     followingPillText: { color: colors.textMuted },
 
     desc: {

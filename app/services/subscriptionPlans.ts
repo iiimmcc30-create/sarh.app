@@ -88,7 +88,7 @@ export function planIcon(slug: string): string {
 }
 
 export function planGradientColors(sortOrder: number): [string, string] {
-  return sortOrder > 0 ? ['#0B6B3A', '#0E7A45'] : ['#334155', '#1E293B'];
+  return sortOrder > 0 ? ['#20B66F', '#18965B'] : ['#334155', '#1E293B'];
 }
 
 export function planDisplayName(slug: string, fallback?: string): string {

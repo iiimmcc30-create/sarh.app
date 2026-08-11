@@ -356,7 +356,7 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     usernameText: {
       ...typography.bodyStrong,
       fontSize: 17,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',

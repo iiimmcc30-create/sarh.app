@@ -145,7 +145,7 @@ function createStyles(colors: ThemeColors) {
     invoiceNo: {
       ...typography.bodyStrong,
       color: colors.electricBright,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
     },
@@ -172,7 +172,7 @@ function createStyles(colors: ThemeColors) {
     paidText: {
       ...typography.micro,
       color: colors.success,
-      fontWeight: '800',
+      fontWeight: '600',
       writingDirection: 'rtl',
     },
     divider: {
@@ -194,7 +194,7 @@ function createStyles(colors: ThemeColors) {
     totalValue: {
       ...typography.h3,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     empty: {
       alignItems: 'center',

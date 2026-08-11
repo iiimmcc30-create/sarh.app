@@ -323,7 +323,7 @@ function RatingDistribution({
     StyleSheet.create({
       wrap: { paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.md },
       summaryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-      avg: { fontSize: 36, fontWeight: '800', color: c.textPrimary },
+      avg: { fontSize: 36, fontWeight: '600', color: c.textPrimary },
       meta: { gap: 4 },
       count: { ...typography.caption, color: c.textMuted },
       barRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -879,7 +879,7 @@ export default function ButcherProfileScreen() {
                         alignItems: 'center',
                       }}
                     >
-                      <Text style={{ color: '#fff', fontWeight: '800' }}>
+                      <Text style={{ color: '#fff', fontWeight: '600' }}>
                         {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
                       </Text>
                     </Pressable>
@@ -981,7 +981,7 @@ function createMainStyles(colors: ThemeColors) {
     right: 2,
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 12,
     backgroundColor: colors.bgDeep,
     alignItems: 'center',
     justifyContent: 'center',
@@ -999,7 +999,7 @@ function createMainStyles(colors: ThemeColors) {
     paddingVertical: 3,
     borderRadius: radius.pill,
   },
-  verifiedText: { ...typography.micro, color: '#1A1300', fontWeight: '700' },
+  verifiedText: { ...typography.micro, color: '#1A1300', fontWeight: '600' },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
   countryFlag: { fontSize: 14 },
   locationText: { ...typography.caption, color: colors.textMuted },
@@ -1114,7 +1114,7 @@ function createOffersStyles(colors: ThemeColors) {
     borderRadius: radius.pill,
     marginBottom: spacing.sm,
   },
-  discountText: { ...typography.micro, color: '#fff', fontWeight: '700' },
+  discountText: { ...typography.micro, color: '#fff', fontWeight: '600' },
   offerTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: 4 },
   offerDesc: { ...typography.caption, color: colors.textSecondary, lineHeight: 18 },
   priceRow: {

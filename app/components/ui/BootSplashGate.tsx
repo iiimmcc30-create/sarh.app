@@ -2,6 +2,7 @@ import { AppBootSplash } from '@/components/ui/AppBootSplash';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useFlaticonFonts } from '@/hooks/useFlaticonFonts';
+import { applyAppFonts } from '@/lib/applyAppFonts';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 
@@ -21,6 +22,10 @@ export function BootSplashGate({ children }: BootSplashGateProps) {
 
   const fontsReady = IS_WEB ? true : fontsLoaded || Boolean(fontError);
   const appReady = fontsReady && !authLoading && !onboardingLoading;
+
+  useEffect(() => {
+    if (fontsReady) applyAppFonts();
+  }, [fontsReady]);
 
   useEffect(() => {
     const t = setTimeout(() => setShowBoot(false), BOOT_FAILSAFE_MS);

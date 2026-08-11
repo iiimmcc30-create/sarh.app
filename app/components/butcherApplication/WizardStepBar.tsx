@@ -61,7 +61,7 @@ function createStyles(colors: ThemeColors) {
     dot: {
       width: 26,
       height: 26,
-      borderRadius: 13,
+      borderRadius: 12,
       borderWidth: 1.5,
       borderColor: colors.borderMid,
       backgroundColor: colors.bgElevated,
@@ -79,7 +79,7 @@ function createStyles(colors: ThemeColors) {
     dotNum: {
       ...typography.micro,
       color: colors.textMuted,
-      fontWeight: '800',
+      fontWeight: '600',
     },
     dotNumActive: {
       color: '#fff',
