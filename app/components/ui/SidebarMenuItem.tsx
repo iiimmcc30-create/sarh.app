@@ -12,6 +12,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { isNavigationLocked } from '@/lib/safeNavigate';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 export type SidebarMenuItemProps = {
@@ -70,7 +71,11 @@ export function SidebarMenuItem({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ selected: active }}
-      onPress={onPress}
+      onPress={() => {
+        // Ignore rapid re-taps while a transition is already in flight.
+        if (isNavigationLocked()) return;
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.row,
         { borderBottomColor: colors.borderHairline },

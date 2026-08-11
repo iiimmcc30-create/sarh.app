@@ -4,7 +4,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   ListRenderItemInfo,
   Pressable,
   RefreshControl,
@@ -12,6 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { AppFlatList } from '@/components/ui/AppFlatList';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -21,6 +21,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
+import { safePush } from '@/lib/safeNavigate';
 import type { Post } from '@/services/types';
 
 export default function FavoritesScreen() {
@@ -102,7 +103,7 @@ export default function FavoritesScreen() {
       {loading && favorites.length === 0 ? (
         <ActivityIndicator size="large" color={colors.electricBright} style={styles.loader} />
       ) : (
-        <FlatList
+        <AppFlatList
           data={favorites}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
@@ -121,7 +122,10 @@ export default function FavoritesScreen() {
               <Text style={styles.emptySub}>
                 احفظ المنشورات من مجلس سرح لتظهر هنا
               </Text>
-              <Pressable style={styles.emptyBtn} onPress={() => router.push('/(tabs)/posts')}>
+              <Pressable
+                style={styles.emptyBtn}
+                onPress={() => safePush('/(tabs)/posts', undefined, router)}
+              >
                 <Text style={styles.emptyBtnText}>تصفح مجلس سرح</Text>
               </Pressable>
             </View>

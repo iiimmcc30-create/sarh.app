@@ -9,8 +9,10 @@ import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ProfileSettingsMenuScreenProps = {
@@ -37,18 +39,14 @@ export function ProfileSettingsMenuScreen({
       return;
     }
     if (item.route) {
-      router.push(item.route as any);
+      safePush(item.route, undefined, router);
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title={title} showBack />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+      <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.sections}>
           {sections.map((section) => (
             <SidebarSection key={section.title} title={section.title} colors={colors}>
@@ -67,7 +65,7 @@ export function ProfileSettingsMenuScreen({
 
         <SidebarLogoutButton colors={colors} onPress={onLogout} />
         <SidebarFooterArt />
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }

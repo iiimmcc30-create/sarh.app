@@ -4,7 +4,6 @@
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, useRef } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -22,10 +21,12 @@ import { ListingCard } from '@/components/feature/ListingCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { PostItem } from '@/components/feature/PostItem';
 import { HomeAppBar } from '@/components/ui/HomeAppBar';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
+import { safePush } from '@/lib/safeNavigate';
 
 const HOME_REFRESH_TTL_MS = 60_000;
 const HOME_POSTS_LIMIT = 6;
@@ -147,16 +148,13 @@ export default function HomeScreen() {
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <HomeAppBar
-          onMenu={() => router.push('/sidebar')}
-          onSearch={() => router.push('/search')}
-          onLive={() => router.push('/(tabs)/live')}
+          onMenu={() => safePush('/sidebar', undefined, router)}
+          onSearch={() => safePush('/search', undefined, router)}
+          onLive={() => safePush('/(tabs)/live', undefined, router)}
           showLive={canShowLive}
         />
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <AppScrollView contentContainerStyle={styles.scrollContent}>
           <StoriesBar
             feed={storiesFeed}
             myStories={myStories}
@@ -166,7 +164,7 @@ export default function HomeScreen() {
             loading={storiesLoading}
             onAddStory={() => {
               if (!requireAuth(isAuthenticated, 'نشر قصة')) return;
-              router.push('/create/story');
+              safePush('/create/story', undefined, router);
             }}
             onRefresh={() => void fetchStories(true)}
           />
@@ -175,7 +173,7 @@ export default function HomeScreen() {
 
           <SectionHeader
             title="الإعلانات"
-            onSeeAll={() => router.push('/(tabs)/market')}
+            onSeeAll={() => safePush('/(tabs)/market', undefined, router)}
           />
           <View style={styles.listingsSection}>
             {displayedListings.length === 0 ? (
@@ -190,7 +188,9 @@ export default function HomeScreen() {
                   listing={item}
                   variant="list"
                   listMode="market"
-                  onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
+                  onPress={() =>
+                    safePush({ pathname: '/listing/[id]', params: { id: item.id } }, undefined, router)
+                  }
                 />
               ))
             )}
@@ -198,7 +198,7 @@ export default function HomeScreen() {
 
           <SectionHeader
             title="المنشورات"
-            onSeeAll={() => router.push('/(tabs)/posts')}
+            onSeeAll={() => safePush('/(tabs)/posts', undefined, router)}
           />
           <View style={styles.postsSection}>
             {recentPosts.length === 0 ? (
@@ -229,7 +229,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={{ height: TAB_BAR_CLEARANCE }} />
-        </ScrollView>
+        </AppScrollView>
       </SafeAreaView>
     </View>
   );

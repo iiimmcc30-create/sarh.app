@@ -9,6 +9,7 @@ import { spacing, type ThemeColors } from '@/constants/theme';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { closeThenPush } from '@/lib/safeNavigate';
 
 type SidebarRouteItem = {
   icon: string;
@@ -80,8 +81,7 @@ export function ButchersSidebarEntry() {
   ]);
 
   const navigate = (route: string) => {
-    router.back();
-    setTimeout(() => router.push(route as any), 120);
+    closeThenPush(route, undefined, router);
   };
 
   return (

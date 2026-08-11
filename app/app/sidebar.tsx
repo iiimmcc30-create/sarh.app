@@ -3,8 +3,9 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { APP_LOGO } from '@/constants/branding';
 import { BRAND_NAME_AR } from '@/constants/brandCopy';
 import {
@@ -21,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
 import { confirmSignOut } from '@/lib/confirmSignOut';
+import { closeThenPush, safeReplace } from '@/lib/safeNavigate';
 import {
   SidebarLogoutButton,
   SidebarMenuRow,
@@ -47,15 +49,14 @@ export default function SidebarScreen() {
   );
 
   const handleNav = (route: string) => {
-    router.back();
-    setTimeout(() => router.push(route as any), 120);
+    closeThenPush(route, undefined, router);
   };
 
   const handleSignOut = () => {
     confirmSignOut(async () => {
       router.back();
       await signOut();
-      setTimeout(() => router.replace('/auth/phone' as any), 300);
+      setTimeout(() => safeReplace('/auth/phone', { force: true }, router), 300);
     });
   };
 
@@ -176,11 +177,9 @@ export default function SidebarScreen() {
           </View>
         </View>
 
-        <ScrollView
+        <AppScrollView
           style={styles.scroll}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
         >
           <SidebarSection colors={colors}>{renderSectionItems(accountItems)}</SidebarSection>
           <SidebarSection colors={colors}>{renderSectionItems(serviceItems)}</SidebarSection>
@@ -195,7 +194,7 @@ export default function SidebarScreen() {
           <SidebarLogoutButton colors={colors} onPress={handleSignOut} />
 
           <SidebarFooterArt />
-        </ScrollView>
+        </AppScrollView>
       </SafeAreaView>
 
       <Pressable style={styles.backdropTap} onPress={() => router.back()} />

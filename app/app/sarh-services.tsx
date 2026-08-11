@@ -13,11 +13,11 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SarhServicesScreen() {
@@ -59,8 +59,7 @@ export default function SarhServicesScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title="خدمات سرح" showBack />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <AppScrollView
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
@@ -114,7 +113,7 @@ export default function SarhServicesScreen() {
             </View>
           ))
         )}
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -154,9 +153,6 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgGlassStrong,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-    },
-    noticeSpacer: {
-      width: 0,
     },
     noticeIcon: {
       width: 28,

@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, isAppRtl } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
+import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,13 +30,14 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const activeRoute = state.routes[state.index]?.name;
 
   const onTabPress = (routeName: string, isFocused: boolean) => {
+    if (isFocused || isNavigationLocked()) return;
     const event = navigation.emit({
       type: 'tabPress',
       target: state.routes.find((r) => r.name === routeName)?.key,
       canPreventDefault: true,
     });
-    if (!isFocused && !event.defaultPrevented) {
-      navigation.navigate(routeName);
+    if (!event.defaultPrevented) {
+      safeNavigateTab((name) => navigation.navigate(name), routeName, isFocused);
     }
   };
 

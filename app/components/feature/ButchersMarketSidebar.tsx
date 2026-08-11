@@ -2,7 +2,8 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter, useSegments } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sarh } from '@/constants/sarhTokens';
 import {
@@ -14,6 +15,7 @@ import {
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
 import { borderInlineEnd } from '@/lib/rtl';
+import { closeThenPush } from '@/lib/safeNavigate';
 
 export type ButchersMarketMenuItem = {
   key: string;
@@ -92,8 +94,8 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
   const currentPath = `/${segments.join('/')}`;
 
   const handleNav = (route: string) => {
-    onClose();
-    setTimeout(() => router.push(route as any), 120);
+    // onClose = router.back via shell; closeThenPush handles back + guarded push
+    closeThenPush(route, undefined, router);
   };
 
   return (
@@ -125,9 +127,8 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
         </View>
       </Pressable>
 
-      <ScrollView
+      <AppScrollView
         style={styles.scroll}
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.menuCard}>
@@ -143,7 +144,7 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
             />
           ))}
         </View>
-      </ScrollView>
+      </AppScrollView>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>سرح · سوق الملاحم</Text>

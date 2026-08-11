@@ -20,6 +20,7 @@ import { ListingCovenantHost } from '@/components/listing/ListingCovenantHost';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
+import { NavigationPathTracker } from '@/components/navigation/NavigationPathTracker';
 import { sarh } from '@/constants/sarhTokens';
 import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 
@@ -169,6 +170,7 @@ function RootLayoutBody() {
                 <NotificationManager />
                 <ButcherOwnerProvider>
                   <SubscriptionProvider>
+                    <NavigationPathTracker />
                     <RootNavigator />
                     <ActionSheetHost />
                     <ListingCovenantHost />

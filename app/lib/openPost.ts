@@ -1,8 +1,11 @@
 import type { Router } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 
 function buildPostHref(postId: string, focusComment?: boolean): `/post/${string}` {
   const id = encodeURIComponent(postId.trim());
-  return focusComment ? (`/post/${id}?focusComment=1` as `/post/${string}`) : (`/post/${id}` as `/post/${string}`);
+  return focusComment
+    ? (`/post/${id}?focusComment=1` as `/post/${string}`)
+    : (`/post/${id}` as `/post/${string}`);
 }
 
 export function openPostDetail(
@@ -16,7 +19,7 @@ export function openPostDetail(
     return;
   }
 
-  router.push(buildPostHref(id, opts?.focusComment) as never);
+  safePush(buildPostHref(id, opts?.focusComment), undefined, router);
 }
 
 export function postDetailHref(postId: string, focusComment?: boolean): `/post/${string}` {

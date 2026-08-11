@@ -5,7 +5,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   ListRenderItemInfo,
   Pressable,
   RefreshControl,
@@ -13,6 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { AppFlatList } from '@/components/ui/AppFlatList';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
@@ -188,12 +188,11 @@ export default function PostsScreen() {
             <ActivityIndicator color={colors.electricBright} />
           </View>
         ) : (
-          <FlatList
+          <AppFlatList
             data={posts}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.scroll}
-            showsVerticalScrollIndicator={false}
             ListEmptyComponent={ListEmpty}
             ListFooterComponent={<View style={{ height: ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16 }} />}
             refreshControl={
@@ -203,7 +202,6 @@ export default function PostsScreen() {
                 tintColor={colors.electricBright}
               />
             }
-            removeClippedSubviews
             initialNumToRender={6}
             maxToRenderPerBatch={4}
             windowSize={7}

@@ -18,11 +18,11 @@ import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 
 const CATEGORY_ICONS: Record<Listing['category'], string> = {
   camels: '🐪',
@@ -92,7 +92,7 @@ export default function PromoteHubScreen() {
           </Pressable>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <AppScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.hero}>
             <View style={styles.heroIconWrap}>
               <AppIcon name="rocket-outline" size={28} color={colors.electric} />
@@ -202,7 +202,7 @@ export default function PromoteHubScreen() {
               })}
             </View>
           )}
-        </ScrollView>
+        </AppScrollView>
 
         <PromotionStatsSheet
           visible={!!statsListingId}

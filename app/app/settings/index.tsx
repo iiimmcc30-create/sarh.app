@@ -2,7 +2,9 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { safePush } from '@/lib/safeNavigate';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
@@ -65,10 +67,7 @@ export default function SettingsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
-      >
+      <AppScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.intro}>
           <View style={styles.introIcon}>
             <AppIcon name="shield-check-outline" size={24} color={colors.textMuted} />
@@ -87,7 +86,7 @@ export default function SettingsScreen() {
               icon={section.icon}
               title={section.title}
               colors={colors}
-              onPress={() => router.push(section.route as any)}
+              onPress={() => safePush(section.route, undefined, router)}
             />
             {section.items.map((item, idx) => (
               <SidebarMenuItem
@@ -96,12 +95,12 @@ export default function SettingsScreen() {
                 title={item.label}
                 colors={colors}
                 showDivider={idx < section.items.length - 1}
-                onPress={() => router.push(section.route as any)}
+                onPress={() => safePush(section.route, undefined, router)}
               />
             ))}
           </View>
         ))}
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }

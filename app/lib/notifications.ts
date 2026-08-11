@@ -6,6 +6,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import type { Router } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 
@@ -222,10 +223,13 @@ function navigateToPost(
   const id = String(postId ?? '').trim();
   if (!id) return false;
 
-  ctx.router.push(
-    openComments ? (`/post/${encodeURIComponent(id)}?focusComment=1` as never) : (`/post/${encodeURIComponent(id)}` as never),
+  return safePush(
+    openComments
+      ? (`/post/${encodeURIComponent(id)}?focusComment=1` as never)
+      : (`/post/${encodeURIComponent(id)}` as never),
+    undefined,
+    ctx.router,
   );
-  return true;
 }
 
 export type NotificationNavigationInput = {
@@ -246,16 +250,16 @@ export function handleNotificationNavigation(
     switch (event) {
       case 'butcher_application_received':
       case 'butcher_application_withdrawn':
-        ctx.router.push('/butchers/my-application' as never);
+        safePush('/butchers/my-application' as never, undefined, ctx.router);
         return true;
 
       case 'butcher_application_submitted': {
         const applicationId = stringField(data, 'applicationId');
         if (ctx.isAdmin && applicationId) {
-          ctx.router.push({
+          safePush({
             pathname: '/butchers/application/[id]',
             params: { id: applicationId },
-          } as never);
+          } as never, undefined, ctx.router);
           return true;
         }
         break;
@@ -264,34 +268,34 @@ export function handleNotificationNavigation(
       case 'butcher_application_approved': {
         const butcherId = stringField(data, 'butcherId');
         if (butcherId) {
-          ctx.router.push({
+          safePush({
             pathname: '/butchers/[id]',
             params: { id: butcherId },
-          } as never);
+          } as never, undefined, ctx.router);
           return true;
         }
         const applicationId = stringField(data, 'applicationId');
         if (applicationId) {
-          ctx.router.push({
+          safePush({
             pathname: '/butchers/application/[id]',
             params: { id: applicationId },
-          } as never);
+          } as never, undefined, ctx.router);
           return true;
         }
-        ctx.router.push('/butchers/dashboard' as never);
+        safePush('/butchers/dashboard' as never, undefined, ctx.router);
         return true;
       }
 
       case 'butcher_application_rejected': {
         const applicationId = stringField(data, 'applicationId');
         if (applicationId) {
-          ctx.router.push({
+          safePush({
             pathname: '/butchers/application/[id]',
             params: { id: applicationId },
-          } as never);
+          } as never, undefined, ctx.router);
           return true;
         }
-        ctx.router.push('/butchers/my-application' as never);
+        safePush('/butchers/my-application' as never, undefined, ctx.router);
         return true;
       }
 
@@ -302,13 +306,13 @@ export function handleNotificationNavigation(
       case 'support_ticket_closed': {
         const ticketId = stringField(data, 'ticketId');
         if (ticketId) {
-          ctx.router.push({
+          safePush({
             pathname: '/support/tickets/[id]',
             params: { id: ticketId },
-          } as never);
+          } as never, undefined, ctx.router);
           return true;
         }
-        ctx.router.push('/support/tickets' as never);
+        safePush('/support/tickets' as never, undefined, ctx.router);
         return true;
       }
 
@@ -317,7 +321,7 @@ export function handleNotificationNavigation(
       case 'account_verification_needs_amendments':
       case 'account_verification_approved':
       case 'account_verification_rejected':
-        ctx.router.push('/support/verification' as never);
+        safePush('/support/verification' as never, undefined, ctx.router);
         return true;
     }
   }
@@ -342,49 +346,49 @@ export function handleNotificationNavigation(
       break;
 
     case 'follow':
-      ctx.router.push({
+      safePush({
         pathname: '/(tabs)/profile',
         params: { tab: 'messages' },
-      } as never);
+      } as never, undefined, ctx.router);
       return true;
 
     case 'live_start':
       if (streamId) {
-        ctx.router.push({
+        safePush({
           pathname: '/live/watch/[id]',
           params: { id: streamId },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
       break;
 
     case 'order_update':
       if (orderId && butcherId) {
-        ctx.router.push({
+        safePush({
           pathname: '/butchers/order-success',
           params: { orderId, butcherId },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
       if (orderId) {
-        ctx.router.push('/butchers/manage' as never);
+        safePush('/butchers/manage' as never, undefined, ctx.router);
         return true;
       }
       break;
 
     case 'fee_due':
       if (listingId) {
-        ctx.router.push({
+        safePush({
           pathname: '/listing/[id]',
           params: { id: listingId },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
-      ctx.router.push('/subscription' as never);
+      safePush('/subscription' as never, undefined, ctx.router);
       return true;
 
     case 'subscription_renew':
-      ctx.router.push('/subscription' as never);
+      safePush('/subscription' as never, undefined, ctx.router);
       return true;
 
     case 'new_message':
@@ -392,7 +396,7 @@ export function handleNotificationNavigation(
         const senderId = stringField(data, 'senderId') ?? stringField(data, 'actorId');
         const threadType = stringField(data, 'threadType');
         const msgButcherId = stringField(data, 'butcherId');
-        ctx.router.push({
+        safePush({
           pathname: '/butchers/chat',
           params: {
             threadId,
@@ -400,25 +404,25 @@ export function handleNotificationNavigation(
             ...(threadType ? { threadType } : {}),
             ...(msgButcherId ? { butcherId: msgButcherId } : {}),
           },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
       if (stringField(data, 'threadType') === 'BUTCHER') {
-        ctx.router.push('/(butcher)/messages' as never);
+        safePush('/(butcher)/messages' as never, undefined, ctx.router);
         return true;
       }
-      ctx.router.push({
+      safePush({
         pathname: '/(tabs)/profile',
         params: { tab: 'messages' },
-      } as never);
+      } as never, undefined, ctx.router);
       return true;
 
     case 'offer':
       if (butcherId) {
-        ctx.router.push({
+        safePush({
           pathname: '/butchers/[id]',
           params: { id: butcherId },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
       break;
@@ -426,21 +430,21 @@ export function handleNotificationNavigation(
     case 'system':
       if (postId) return navigateToPost(ctx, postId);
       if (paymentId) {
-        ctx.router.push('/subscription' as never);
+        safePush('/subscription' as never, undefined, ctx.router);
         return true;
       }
       if (ctx.isAdmin && applicationId) {
-        ctx.router.push({
+        safePush({
           pathname: '/butchers/application/[id]',
           params: { id: applicationId },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
       if (applicationId) {
-        ctx.router.push({
+        safePush({
           pathname: '/butchers/application/[id]',
           params: { id: applicationId },
-        } as never);
+        } as never, undefined, ctx.router);
         return true;
       }
       break;
