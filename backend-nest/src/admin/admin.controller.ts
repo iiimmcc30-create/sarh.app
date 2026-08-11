@@ -300,8 +300,14 @@ export class AdminController {
   @RateLimit('api')
   @Post('sections/:id/publish')
   @HttpCode(HttpStatus.OK)
-  async publishSection(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    return successResponse(await this.admin.publishSection(id, user.username));
+  async publishSection(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(
+      await this.admin.publishSection(id, body ?? {}, user.username),
+    );
   }
 
   @Roles(...STAFF)

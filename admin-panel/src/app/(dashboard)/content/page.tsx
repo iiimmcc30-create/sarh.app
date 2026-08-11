@@ -213,7 +213,9 @@ export default function ContentPage() {
                     setBusy(true);
                     setError(null);
                     try {
-                      await publishSection(selected.id);
+                      // Persist the in-editor fields atomically with publish so the
+                      // latest edits are never dropped when skipping «حفظ التعديلات».
+                      await publishSection(selected.id, { titleAr, bodyAr, slug });
                       await load();
                       await refreshVersions(selected.id);
                     } catch (err) {

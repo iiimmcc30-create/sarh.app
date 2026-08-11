@@ -188,8 +188,18 @@ export async function deleteSection(id: string) {
   return unwrap(res);
 }
 
-export async function publishSection(id: string) {
-  const res = await apiClient.post(`/admin/sections/${id}/publish`);
+export async function publishSection(
+  id: string,
+  data?: {
+    titleAr?: string;
+    bodyAr?: string;
+    slug?: string;
+    titleEn?: string;
+    bodyEn?: string;
+    sortOrder?: number;
+  },
+) {
+  const res = await apiClient.post(`/admin/sections/${id}/publish`, data ?? {});
   return unwrap(res);
 }
 

@@ -364,16 +364,59 @@ export class AdminService {
     return { section };
   }
 
-  async publishSection(id: string, actorName?: string) {
+  async publishSection(
+    id: string,
+    body: Record<string, unknown> = {},
+    actorName?: string,
+  ) {
     const current = await this.repo.getSection(id);
     if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
+
+    // Apply latest editor fields before publishing so unsaved form edits are not dropped.
+    const pendingKeys = Object.keys(body ?? {}).filter((k) => body[k] !== undefined);
+    if (pendingKeys.length > 0) {
+      const parsed = updateSectionSchema.safeParse(body);
+      if (!parsed.success) {
+        throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      }
+      const d = parsed.data;
+      const contentChanged =
+        (d.titleAr !== undefined && d.titleAr !== current.titleAr) ||
+        (d.bodyAr !== undefined && d.bodyAr !== current.bodyAr) ||
+        (d.titleEn !== undefined && d.titleEn !== current.titleEn) ||
+        (d.bodyEn !== undefined && d.bodyEn !== current.bodyEn) ||
+        (d.slug !== undefined && d.slug !== current.slug) ||
+        (d.sortOrder !== undefined && d.sortOrder !== current.sortOrder);
+
+      if (contentChanged) {
+        const draftVersion = await this.repo.nextSectionVersion(id);
+        await this.repo.createSectionVersion({
+          section: { connect: { id } },
+          titleAr: current.titleAr,
+          titleEn: current.titleEn,
+          bodyAr: current.bodyAr,
+          bodyEn: current.bodyEn,
+          version: draftVersion,
+          isPublished: false,
+          createdByName: actorName,
+        });
+        await this.repo.updateSection(id, {
+          ...d,
+          updatedByName: actorName,
+        });
+      }
+    }
+
+    const latest = await this.repo.getSection(id);
+    if (!latest) throwApi(404, 'not_found', 'القسم غير موجود');
+
     const version = await this.repo.nextSectionVersion(id);
     await this.repo.createSectionVersion({
       section: { connect: { id } },
-      titleAr: current.titleAr,
-      titleEn: current.titleEn,
-      bodyAr: current.bodyAr,
-      bodyEn: current.bodyEn,
+      titleAr: latest.titleAr,
+      titleEn: latest.titleEn,
+      bodyAr: latest.bodyAr,
+      bodyEn: latest.bodyEn,
       version,
       isPublished: true,
       createdByName: actorName,
