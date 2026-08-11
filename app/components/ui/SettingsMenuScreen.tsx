@@ -46,8 +46,12 @@ export function SettingsMenuScreen({
           <View style={styles.heroIcon}>
             <AppIcon name={heroIcon} size={25} color={colors.textMuted} />
           </View>
-          <Text style={styles.heroTitle}>{title}</Text>
-          <Text style={styles.heroDescription}>{description}</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.heroTitle}>{title}</Text>
+          </View>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.heroDescription}>{description}</Text>
+          </View>
         </View>
 
         <View style={styles.list}>
@@ -99,11 +103,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
-    heroTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
+    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
+    heroTitle: {
+      ...typography.h3,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
     heroDescription: {
       ...typography.caption,
       color: colors.textSecondary,
+      width: '100%',
       textAlign: 'center',
+      writingDirection: 'rtl',
       lineHeight: 20,
       marginTop: spacing.xs,
     },
