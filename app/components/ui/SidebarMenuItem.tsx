@@ -148,7 +148,10 @@ const styles = StyleSheet.create({
     direction: 'ltr',
     alignItems: 'center',
     gap: SIDEBAR_MENU_ITEM.gap,
-    flexShrink: 1,
+    // Prefer full title width; spacer shrinks first when the row is tight.
+    flexShrink: 0,
+    flexGrow: 0,
+    maxWidth: '78%',
   },
   iconWrap: {
     width: SIDEBAR_MENU_ITEM.iconWrap,
@@ -159,7 +162,10 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   textWrap: {
-    flexShrink: 1,
+    // Physical LTR shell so Arabic textAlign:'right' stays visually correct.
+    direction: 'ltr',
+    flexShrink: 0,
+    flexGrow: 0,
     gap: 2,
   },
   title: {
@@ -168,6 +174,7 @@ const styles = StyleSheet.create({
     fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
     textAlign: 'right',
     writingDirection: 'rtl',
+    flexShrink: 0,
   },
   subtitle: {
     ...typography.caption,
@@ -175,10 +182,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'right',
     writingDirection: 'rtl',
+    flexShrink: 0,
   },
   spacer: {
     flex: 1,
-    minWidth: SIDEBAR_MENU_ITEM.gap,
+    flexShrink: 1,
+    minWidth: 4,
   },
   badge: {
     minWidth: 24,

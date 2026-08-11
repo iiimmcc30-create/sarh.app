@@ -191,7 +191,9 @@ export function SidebarLogoutButton({
       ]}
     >
       <View style={logoutStyles.spacer} />
-      <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
+      <View style={logoutStyles.textShell}>
+        <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
+      </View>
       <View style={[logoutStyles.iconWrap, { backgroundColor: `${colors.rose}14` }]}>
         <AppIcon name="log-out-outline" size={20} color={colors.rose} />
       </View>
@@ -293,6 +295,8 @@ const logoutStyles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
+    flexShrink: 1,
+    minWidth: 4,
   },
   iconWrap: {
     width: 40,
@@ -302,12 +306,17 @@ const logoutStyles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
+  /** Physical LTR shell — keeps full logout label visible and right-aligned. */
+  textShell: {
+    direction: 'ltr',
+    flexShrink: 0,
+  },
   text: {
     ...typography.bodyStrong,
     fontWeight: '600',
     fontSize: 15,
     textAlign: 'right',
     writingDirection: 'rtl',
-    flexShrink: 1,
+    flexShrink: 0,
   },
 });
