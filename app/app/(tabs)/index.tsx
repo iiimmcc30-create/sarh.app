@@ -29,7 +29,9 @@ import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
 import { safePush } from '@/lib/safeNavigate';
 
 const HOME_REFRESH_TTL_MS = 60_000;
-const HOME_POSTS_LIMIT = 6;
+const HOME_LISTINGS_LIMIT = 10;
+const HOME_BUTCHERS_LIMIT = 10;
+const HOME_POSTS_LIMIT = 10;
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 export default function HomeScreen() {
