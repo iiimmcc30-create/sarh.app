@@ -16,7 +16,12 @@ type Props<T extends { id: string }> = {
   title: string;
   description?: string;
   columns: Column<T>[];
-  fetchPage: (params: { page: number; search: string }) => Promise<Paginated<Record<string, unknown>>>;
+  fetchPage: (params: {
+    page: number;
+    search: string;
+    status?: string;
+    category?: string;
+  }) => Promise<Paginated<Record<string, unknown>>>;
   actions?: (row: T, reload: () => void) => React.ReactNode;
   filters?: React.ReactNode;
 };
