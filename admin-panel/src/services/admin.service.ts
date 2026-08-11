@@ -14,8 +14,26 @@ export type ListParams = {
   search?: string;
 };
 
+/** Drop empty/invalid list query values so the API receives clean params. */
+function cleanListParams<T extends Record<string, unknown>>(params: T): Partial<T> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === 'string' && value.trim() === '') continue;
+    if (key === 'page' || key === 'pageSize') {
+      const n = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(n) || n < 1) continue;
+      out[key] = Math.floor(n);
+      continue;
+    }
+    out[key] = value;
+  }
+  if (out.page === undefined) out.page = 1;
+  return out as Partial<T>;
+}
+
 export async function fetchUsers(params: ListParams = {}) {
-  const res = await apiClient.get('/admin/users', { params });
+  const res = await apiClient.get('/admin/users', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -35,7 +53,7 @@ export async function deleteUser(id: string) {
 }
 
 export async function fetchPosts(params: ListParams & { hidden?: string } = {}) {
-  const res = await apiClient.get('/admin/posts', { params });
+  const res = await apiClient.get('/admin/posts', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -50,7 +68,7 @@ export async function deletePost(id: string) {
 }
 
 export async function fetchListings(params: ListParams & { status?: string } = {}) {
-  const res = await apiClient.get('/admin/listings', { params });
+  const res = await apiClient.get('/admin/listings', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -65,7 +83,7 @@ export async function deleteListing(id: string) {
 }
 
 export async function fetchReports(params: ListParams & { status?: string; category?: string } = {}) {
-  const res = await apiClient.get('/admin/reports', { params });
+  const res = await apiClient.get('/admin/reports', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -85,7 +103,7 @@ export async function deleteReport(id: string) {
 }
 
 export async function fetchLiveStreams(params: ListParams & { live?: string } = {}) {
-  const res = await apiClient.get('/admin/livestreams', { params });
+  const res = await apiClient.get('/admin/livestreams', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -100,7 +118,7 @@ export async function deleteLiveStream(id: string) {
 }
 
 export async function fetchButchers(params: ListParams = {}) {
-  const res = await apiClient.get('/admin/butchers', { params });
+  const res = await apiClient.get('/admin/butchers', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -124,7 +142,7 @@ export async function fetchOrders(
     orderNumber?: string;
   } = {},
 ) {
-  const res = await apiClient.get('/admin/orders', { params });
+  const res = await apiClient.get('/admin/orders', { params: cleanListParams(params) });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
