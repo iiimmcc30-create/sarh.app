@@ -28,6 +28,7 @@ import { ReportsModule } from './reports/reports.module';
 import { OfficialServicesModule } from './official-services/official-services.module';
 import { SupportModule } from './support/support.module';
 import { ContentModule } from './content/content.module';
+import { EditorialStoriesModule } from './editorial-stories/editorial-stories.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ContentModule } from './content/content.module';
     OfficialServicesModule,
     SupportModule,
     ContentModule,
+    EditorialStoriesModule,
   ],
 })
 export class AppModule {}

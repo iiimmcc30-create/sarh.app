@@ -14,8 +14,8 @@ import { spacing, typography } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { StoriesBar } from '@/components/feature/StoriesBar';
-import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
+import { EditorialStoriesBar } from '@/components/feature/EditorialStoriesBar';
+import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
 import { ButcherMiniSection } from '@/components/feature/ButcherMiniSection';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -69,8 +69,7 @@ export default function HomeScreen() {
     fetchListings,
   } = useApp();
   const { accessToken, isAuthenticated } = useAuth();
-  const [storiesFeed, setStoriesFeed] = useState<StoryGroup[]>([]);
-  const [myStories, setMyStories] = useState<StoryGroup | null>(null);
+  const [editorialStories, setEditorialStories] = useState<EditorialStory[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(false);
   const [canShowLive, setCanShowLive] = useState(false);
   const lastStoriesAt = useRef(0);
@@ -114,17 +113,16 @@ export default function HomeScreen() {
     }
     setStoriesLoading(true);
     try {
-      const data = await fetchStoriesFeed(accessToken, { force });
-      setStoriesFeed(data.items ?? []);
-      setMyStories(data.myStories ?? null);
-      hasStoriesData.current = (data.items?.length ?? 0) > 0 || data.myStories != null;
+      const data = await fetchEditorialStories();
+      setEditorialStories(data);
+      hasStoriesData.current = data.length > 0;
       lastStoriesAt.current = Date.now();
     } catch (err) {
-      console.warn('[HomeScreen] Failed to fetch stories:', err);
+      console.warn('[HomeScreen] Failed to fetch editorial stories:', err);
     } finally {
       setStoriesLoading(false);
     }
-  }, [accessToken]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -161,19 +159,7 @@ export default function HomeScreen() {
         />
 
         <AppScrollView contentContainerStyle={styles.scrollContent}>
-          <StoriesBar
-            feed={storiesFeed}
-            myStories={myStories}
-            myAvatar={me.avatar}
-            currentUserId={me.id}
-            accessToken={accessToken}
-            loading={storiesLoading}
-            onAddStory={() => {
-              if (!requireAuth(isAuthenticated, 'نشر قصة')) return;
-              safePush('/create/story', undefined, router);
-            }}
-            onRefresh={() => void fetchStories(true)}
-          />
+          <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
 
           {/* 1) الإعلانات → 2) الملاحم → 3) المنشورات */}
           <SectionHeader
