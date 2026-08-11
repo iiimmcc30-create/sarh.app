@@ -363,9 +363,12 @@ export default function ListingDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.sellerInfoCard}>
-          <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-            {listing.arabicTitle || listing.title}
-          </Text>
+          {/* LTR shell so textAlign:'right' is physical right (same as SidebarMenuItem). */}
+          <View style={styles.titleWrap}>
+            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+              {listing.arabicTitle || listing.title}
+            </Text>
+          </View>
 
           <View style={[styles.headerMetaRow, getRtlRow()]}>
             <View style={[styles.headerMetaItem, getRtlRow()]}>
@@ -454,7 +457,9 @@ export default function ListingDetailScreen() {
 
         {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
           <View style={styles.specsBlock}>
-            <Text style={styles.specsHeading}>المواصفات</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.specsHeading}>المواصفات</Text>
+            </View>
             {categoryLabel || listing.breed || listing.age ? (
               <View style={[styles.specMetaLine, getRtlRow()]}>
                 {categoryLabel ? (
@@ -469,10 +474,14 @@ export default function ListingDetailScreen() {
               </View>
             ) : null}
             {listing.arabicDescription ? (
-              <Text style={styles.descArabic}>{listing.arabicDescription}</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.descArabic}>{listing.arabicDescription}</Text>
+              </View>
             ) : null}
             {listing.description && listing.description !== listing.arabicDescription ? (
-              <Text style={styles.desc}>{listing.description}</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.desc}>{listing.description}</Text>
+              </View>
             ) : null}
           </View>
         ) : null}
@@ -636,8 +645,9 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     specMetaLine: {
       flexWrap: 'wrap',
@@ -712,13 +722,23 @@ function createStyles(colors: ThemeColors) {
       marginBottom: 4,
     },
     pinnedText: { ...typography.micro, color: '#fff', fontWeight: '600' },
+    /** Physical LTR shell — same pattern as SidebarMenuItem — so textAlign:'right' stays on the visual right under app RTL. */
+    titleWrap: {
+      width: '100%',
+      direction: 'ltr',
+    },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     title: {
       fontSize: 20,
       lineHeight: 28,
       color: colors.textPrimary,
       fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     sellerRow: {
       alignItems: 'center',
@@ -798,16 +818,18 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       color: colors.textSecondary,
       lineHeight: 24,
-      ...getRtlText(),
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     descArabic: {
       ...typography.body,
       fontSize: 16,
       color: colors.textPrimary,
-      ...getRtlText(),
-      ...getRtlText(),
       lineHeight: 27,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
 
     // Bottom CTA
