@@ -190,19 +190,25 @@ export function EditorialStoryViewer({ stories, startIndex, onClose }: Props) {
           style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}
           pointerEvents="box-none"
         >
-          <Text style={styles.title}>{story.titleAr}</Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.title}>{story.titleAr}</Text>
+          </View>
           {expanded ? (
             <ScrollView
               style={styles.bodyScroll}
               contentContainerStyle={styles.bodyScrollContent}
               showsVerticalScrollIndicator={false}
             >
-              <Text style={styles.body}>{story.bodyAr}</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.body}>{story.bodyAr}</Text>
+              </View>
             </ScrollView>
           ) : (
-            <Text style={styles.body} numberOfLines={4}>
-              {snippet}
-            </Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.body} numberOfLines={4}>
+                {snippet}
+              </Text>
+            </View>
           )}
           {canToggle || expanded ? (
             <Pressable
@@ -279,22 +285,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 15,
     paddingHorizontal: spacing.lg,
-    gap: 8,
+    gap: spacing.sm,
+  },
+  rtlTextShell: {
+    width: '100%',
+    direction: 'ltr',
   },
   title: {
     ...typography.h3,
     color: '#fff',
-    fontWeight: '800',
+    width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
-    lineHeight: 28,
   },
   body: {
     ...typography.body,
     color: 'rgba(255,255,255,0.92)',
+    lineHeight: 24,
+    width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
-    lineHeight: 22,
   },
   bodyScroll: {
     maxHeight: SCREEN_H * 0.42,
@@ -307,10 +317,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   moreText: {
+    ...typography.bodyStrong,
     color: BRAND_GREEN,
-    fontSize: 14,
-    fontWeight: '700',
     textDecorationLine: 'underline',
     writingDirection: 'rtl',
+    textAlign: 'right',
   },
 });

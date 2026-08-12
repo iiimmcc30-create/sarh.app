@@ -83,9 +83,11 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                     locations={[0.35, 1]}
                     style={styles.gradient}
                   />
-                  <Text style={styles.cardTitle} numberOfLines={2}>
-                    {story.titleAr}
-                  </Text>
+                  <View style={styles.cardTitleShell}>
+                    <Text style={styles.cardTitle} numberOfLines={2}>
+                      {story.titleAr}
+                    </Text>
+                  </View>
                 </Pressable>
               ))}
         </ScrollView>
@@ -139,19 +141,24 @@ function createStyles(colors: ThemeColors) {
     gradient: {
       ...StyleSheet.absoluteFillObject,
     },
-    cardTitle: {
-      ...typography.caption,
-      color: '#fff',
-      fontWeight: '700',
-      textAlign: 'right',
+    cardTitleShell: {
+      width: '100%',
+      direction: 'ltr',
       paddingHorizontal: 10,
       paddingBottom: 10,
-      lineHeight: 17,
+      zIndex: 1,
+    },
+    cardTitle: {
+      ...typography.bodyStrong,
+      fontSize: 13,
+      lineHeight: 18,
+      color: '#fff',
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
       textShadowColor: 'rgba(0,0,0,0.45)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
-      zIndex: 1,
     },
     dots: {
       flexDirection: 'row',
