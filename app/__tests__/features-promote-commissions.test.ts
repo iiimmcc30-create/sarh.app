@@ -1,0 +1,154 @@
+import {
+  calculateCommission,
+  formatDueDate,
+  getFeesSummary,
+  isStoreExempt,
+  type PendingFee,
+} from '@/services/commissions';
+import {
+  buildPromoteCheckoutPayload,
+  clampPromoteAmount,
+  clampPromoteDurationHours,
+  computeBoostPrice,
+  computeVisibilityMinPrice,
+  estimatePromotionReach,
+  goalFromBoostType,
+  parsePromoteAmountInput,
+  parsePromoteDurationInput,
+  resolvePromoteAmount,
+  validatePromoteForm,
+} from '@/services/listingPromote';
+
+describe('commissions', () => {
+  it('treats non-store listings as free/exempt', () => {
+    const result = calculateCommission('sheep', 1000, 3);
+    expect(result.commission).toBe(0);
+    expect(result.isExempt).toBe(true);
+    expect(result.netAfterCommission).toBe(1000);
+  });
+
+  it('charges store commission unless subscription exempts it', () => {
+    const charged = calculateCommission('store', 1000);
+    expect(charged.isExempt).toBe(false);
+    expect(charged.commission).toBe(50);
+    expect(charged.netAfterCommission).toBe(950);
+
+    const exempt = calculateCommission('store', 1000, 1, { storeCommission: 0 });
+    expect(exempt.isExempt).toBe(true);
+    expect(exempt.commission).toBe(0);
+    expect(isStoreExempt({ storeCommission: 0 })).toBe(true);
+    expect(isStoreExempt({ storeCommission: 5 })).toBe(false);
+  });
+
+  it('summarizes pending/overdue/paid fees', () => {
+    const fees: PendingFee[] = [
+      {
+        id: '1',
+        listingId: 'l1',
+        listingTitleAr: 'أ',
+        category: 'store',
+        icon: '🏪',
+        quantity: 1,
+        price: 100,
+        commission: 10,
+        status: 'pending',
+        dueDate: '2099-01-01',
+      },
+      {
+        id: '2',
+        listingId: 'l2',
+        listingTitleAr: 'ب',
+        category: 'store',
+        icon: '🏪',
+        quantity: 1,
+        price: 100,
+        commission: 20,
+        status: 'overdue',
+        dueDate: '2020-01-01',
+      },
+      {
+        id: '3',
+        listingId: 'l3',
+        listingTitleAr: 'ج',
+        category: 'store',
+        icon: '🏪',
+        quantity: 1,
+        price: 100,
+        commission: 30,
+        status: 'paid',
+        dueDate: '2099-01-01',
+        paidAt: '2099-01-02',
+      },
+    ];
+    expect(getFeesSummary(fees)).toEqual({
+      totalPending: 10,
+      totalOverdue: 20,
+      totalPaid: 30,
+      pendingCount: 1,
+      overdueCount: 1,
+      paidCount: 1,
+    });
+  });
+
+  it('formats due dates with urgency flags', () => {
+    const overdue = formatDueDate(new Date(Date.now() - 2 * 864e5).toISOString());
+    expect(overdue.isOverdue).toBe(true);
+    expect(overdue.urgent).toBe(true);
+
+    const far = formatDueDate(new Date(Date.now() + 10 * 864e5).toISOString());
+    expect(far.isOverdue).toBe(false);
+    expect(far.urgent).toBe(false);
+  });
+});
+
+describe('listingPromote', () => {
+  it('computes boost and visibility prices', () => {
+    expect(computeBoostPrice('pinned', 12)).toBeGreaterThan(0);
+    expect(computeBoostPrice('featured', 24)).toBeGreaterThan(
+      computeBoostPrice('featured', 12),
+    );
+    expect(computeVisibilityMinPrice(1)).toBe(10);
+    expect(computeVisibilityMinPrice(24)).toBe(10);
+    expect(computeVisibilityMinPrice(25)).toBe(20);
+  });
+
+  it('clamps and parses amount/duration inputs', () => {
+    expect(clampPromoteAmount(1)).toBe(10);
+    expect(clampPromoteAmount(999)).toBe(500);
+    expect(clampPromoteDurationHours(0)).toBe(1);
+    expect(clampPromoteDurationHours(999)).toBe(168);
+    expect(parsePromoteAmountInput('abc')).toBeNull();
+    expect(parsePromoteAmountInput('25 ريال')).toBe(25);
+    expect(parsePromoteDurationInput('6h')).toBe(6);
+  });
+
+  it('estimates reach and resolves amount by goal', () => {
+    const reach = estimatePromotionReach(20, 6);
+    expect(reach.max).toBeGreaterThan(reach.min);
+    expect(resolvePromoteAmount('visibility', 24, 5)).toBe(10);
+    expect(resolvePromoteAmount('pinned', 12, 999)).toBe(computeBoostPrice('pinned', 12));
+  });
+
+  it('validates form and builds checkout payload', () => {
+    expect(validatePromoteForm(null, 20, 6)).toMatch(/هدف/);
+    expect(validatePromoteForm('visibility', 5, 24)).toMatch(/الحد الأدنى/);
+    expect(validatePromoteForm('visibility', 20, 24)).toBeNull();
+
+    const payload = buildPromoteCheckoutPayload('ad-1', 'visibility', 20, 6);
+    expect(payload.adId).toBe('ad-1');
+    expect(payload.promotionGoal).toBe('visibility');
+    expect(payload.promotionDurationHours).toBe(6);
+    expect(payload.reachEstimate).toBeDefined();
+    expect(new Date(payload.endTime).getTime()).toBeGreaterThan(
+      new Date(payload.startTime).getTime(),
+    );
+  });
+
+  it('maps boost types to promotion goals', () => {
+    expect(goalFromBoostType('promotion')).toBe('visibility');
+    expect(goalFromBoostType('visibility')).toBe('visibility');
+    expect(goalFromBoostType('pinned')).toBe('pinned');
+    expect(goalFromBoostType('featured')).toBe('featured');
+    expect(goalFromBoostType('nope')).toBeNull();
+  });
+});
