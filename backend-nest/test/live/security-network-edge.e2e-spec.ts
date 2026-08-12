@@ -151,4 +151,26 @@ describe('§21/§23/§25 Error codes, permissions, and edge cases', () => {
       .send(sampleListing({ images: many }));
     expect(res.status).toBe(400);
   });
+
+  // ── §17 Account deletion (settings → account info) ──────────
+  t('user cannot delete another account (403)', async () => {
+    const victim = await registerUser('e2e_victim');
+    const res = await request(API)
+      .delete(`/api/users/${victim.id}`)
+      .set(authHeader(user.accessToken));
+    expect(res.status).toBe(403);
+  });
+
+  t('user can delete their own account and can no longer log in', async () => {
+    const doomed = await registerUser('e2e_selfdel');
+    const del = await request(API)
+      .delete(`/api/users/${doomed.id}`)
+      .set(authHeader(doomed.accessToken));
+    expect([200, 204]).toContain(del.status);
+
+    const login = await request(API)
+      .post('/api/auth/login')
+      .send({ login: doomed.username, password: doomed.password });
+    expect(login.status).toBe(401);
+  });
 });

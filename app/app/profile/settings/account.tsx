@@ -5,9 +5,10 @@ import { AppTextInput } from '@/components/ui/AppTextInput';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { alertMessage } from '@/lib/actionSheet';
+import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
 import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
+  deleteAccount,
   fetchAccountSettings,
   updateAccountSettings,
   type AccountSettings,
@@ -38,10 +39,11 @@ function formatBirthDate(value: string | null | undefined) {
 
 export default function AccountInfoScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [account, setAccount] = useState<AccountSettings | null>(null);
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -102,6 +104,26 @@ export default function AccountInfoScreen() {
     setAccount(result.account);
     setBirthDate(result.account.birthDate ?? '');
     await alertMessage('تم الحفظ', 'تم تحديث تاريخ الميلاد');
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = await confirmDestructive(
+      'حذف الحساب نهائياً',
+      'سيتم حذف حسابك وبياناتك وإعلاناتك ومنشوراتك نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+      'حذف حسابي',
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    const result = await deleteAccount(user?.id ?? '');
+    if (!result.ok) {
+      setDeleting(false);
+      await alertMessage('تعذّر حذف الحساب', result.message ?? 'حاول مجدداً لاحقاً');
+      return;
+    }
+
+    await signOut();
+    router.replace('/auth/phone' as any);
   };
 
   return (
@@ -189,6 +211,34 @@ export default function AccountInfoScreen() {
                 لتغيير رقم الجوال ستحتاج إلى التحقق برمز OTP المرسل إلى الرقم الجديد.
               </Text>
             </View>
+          </View>
+
+          <View style={styles.dangerCard}>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.dangerTitle}>حذف الحساب</Text>
+            </View>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.dangerText}>
+                عند حذف حسابك سيتم إلغاء تفعيله وإزالة بياناتك وإعلاناتك ومنشوراتك بشكل
+                نهائي. لا يمكن التراجع عن هذا الإجراء.
+              </Text>
+            </View>
+            <Pressable
+              style={[styles.deleteBtn, deleting && styles.deleteBtnDisabled]}
+              onPress={() => void handleDeleteAccount()}
+              disabled={deleting}
+              accessibilityRole="button"
+              accessibilityLabel="حذف الحساب نهائياً"
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color={styles.deleteBtnText.color} />
+              ) : (
+                <>
+                  <AppIcon name="trash-outline" size={18} color={styles.deleteBtnText.color} />
+                  <Text style={styles.deleteBtnText}>حذف حسابي نهائياً</Text>
+                </>
+              )}
+            </Pressable>
           </View>
         </ScrollView>
       )}
@@ -286,6 +336,50 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'right',
       writingDirection: 'rtl',
       lineHeight: 22,
+    },
+    dangerCard: {
+      backgroundColor: `${colors.danger}12`,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: `${colors.danger}55`,
+      padding: spacing.lg,
+      gap: spacing.md,
+      marginTop: spacing.sm,
+    },
+    dangerTitle: {
+      ...typography.bodyStrong,
+      color: colors.danger,
+      fontSize: 15,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    dangerText: {
+      ...typography.body,
+      color: colors.textSecondary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      lineHeight: 22,
+    },
+    deleteBtn: {
+      ...getRtlRow(),
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: colors.danger,
+    },
+    deleteBtnDisabled: {
+      opacity: 0.6,
+    },
+    deleteBtnText: {
+      ...typography.bodyStrong,
+      color: '#fff',
+      fontSize: 15,
+      textAlign: 'center',
+      writingDirection: 'rtl',
     },
   });
 }

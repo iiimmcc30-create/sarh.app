@@ -284,6 +284,34 @@ export async function updateAccountSettings(
   }
 }
 
+/** Permanently delete (deactivate) the signed-in user's own account. */
+export async function deleteAccount(
+  userId: string,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!userId?.trim()) {
+    return { ok: false, message: 'معرّف المستخدم غير صالح' };
+  }
+  try {
+    const res = await authFetch(
+      `${API_BASE}/api/users/${encodeURIComponent(userId.trim())}`,
+      { method: 'DELETE' },
+    );
+    const json = await res.json().catch(() => ({} as Record<string, unknown>));
+    if (res.ok && json.success !== false) {
+      return { ok: true };
+    }
+    if (res.status === 401) {
+      return { ok: false, message: 'يجب تسجيل الدخول' };
+    }
+    const message = await parseApiError(
+      new Response(JSON.stringify(json), { status: res.status }),
+    );
+    return { ok: false, message };
+  } catch {
+    return { ok: false, message: 'تعذّر الاتصال بالخادم' };
+  }
+}
+
 export async function changeAccountPhone(
   phone: string,
   phoneToken: string,
