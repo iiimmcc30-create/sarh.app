@@ -1,9 +1,9 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { menuCardStyle } from '@/components/feature/SidebarMenu';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import type { MarketCategory } from '@/services/categories';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { getRtlDirection } from '@/lib/rtl';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   categories: MarketCategory[];
@@ -11,12 +11,11 @@ type Props = {
 };
 
 /**
- * Compact main-category grid for the market hub — elevated cards, RTL labels.
+ * Horizontal category chips — same elevated rounded surface as listing cards, text only.
  */
 export function MarketCategoriesGrid({ categories, onSelect }: Props) {
-  const { styles, colors } = useThemedStyles((theme) => ({
+  const { styles } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
-    colors: theme.colors,
   }));
 
   return (
@@ -24,33 +23,25 @@ export function MarketCategoriesGrid({ categories, onSelect }: Props) {
       <View style={styles.titleShell}>
         <Text style={styles.title}>التصنيفات</Text>
       </View>
-      <View style={styles.grid}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[styles.row, getRtlDirection()]}
+      >
         {categories.map((cat) => (
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat)}
-            style={({ pressed }) => [
-              styles.card,
-              menuCardStyle(colors),
-              pressed && styles.cardPressed,
-            ]}
+            style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
           >
-            <View style={styles.iconWrap}>
-              {cat.icon ? (
-                <AppIcon name={cat.icon} size={22} color={colors.textPrimary} />
-              ) : (
-                <Text style={styles.emoji}>{cat.emoji || '📦'}</Text>
-              )}
-            </View>
             <View style={styles.labelShell}>
               <Text style={styles.label} numberOfLines={1}>
-                {cat.emoji ? `${cat.emoji} ` : ''}
                 {cat.nameAr}
               </Text>
             </View>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -58,66 +49,51 @@ export function MarketCategoriesGrid({ categories, onSelect }: Props) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      gap: spacing.sm,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+      gap: spacing.xs,
     },
     titleShell: {
       width: '100%',
       direction: 'ltr',
+      paddingHorizontal: spacing.md,
     },
     title: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
+      ...typography.caption,
+      fontWeight: '600',
+      color: colors.textSecondary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    grid: {
+    row: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
       gap: spacing.sm,
     },
-    card: {
-      width: '48%',
-      flexGrow: 1,
-      flexBasis: '46%',
-      minWidth: 140,
-      maxWidth: '48%',
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: spacing.sm,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
-    },
-    cardPressed: {
-      opacity: 0.88,
-      transform: [{ scale: 0.99 }],
-    },
-    iconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      alignItems: 'center',
+    chip: {
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 11,
+      minHeight: 40,
       justifyContent: 'center',
-      backgroundColor: colors.bgDeep,
+      borderWidth: 0,
     },
-    emoji: {
-      fontSize: 18,
+    chipPressed: {
+      opacity: 0.92,
     },
     labelShell: {
-      flex: 1,
       direction: 'ltr',
-      minWidth: 0,
     },
     label: {
-      ...typography.caption,
+      ...typography.bodyStrong,
+      fontSize: 13,
+      lineHeight: 18,
       fontWeight: '600',
-      color: colors.textPrimary,
-      width: '100%',
+      color: colors.textBrandStrong,
       textAlign: 'right',
       writingDirection: 'rtl',
     },

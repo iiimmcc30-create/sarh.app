@@ -12,12 +12,16 @@ type NotificationBellButtonProps = {
   size?: number;
   iconSize?: number;
   style?: object;
+  iconColor?: string;
+  badgeBorderColor?: string;
 };
 
 export function NotificationBellButton({
   size = 48,
   iconSize = 20,
   style,
+  iconColor,
+  badgeBorderColor,
 }: NotificationBellButtonProps) {
   const router = useRouter();
   const { unreadCount } = useUnreadNotificationCount();
@@ -34,9 +38,9 @@ export function NotificationBellButton({
       accessibilityLabel="الإشعارات"
       accessibilityRole="button"
     >
-      <AppIcon name="bell" size={iconSize} color={colors.textPrimary} />
+      <AppIcon name="bell" size={iconSize} color={iconColor ?? colors.textPrimary} />
       {unreadCount > 0 ? (
-        <View style={styles.badge}>
+        <View style={[styles.badge, badgeBorderColor ? { borderColor: badgeBorderColor } : null]}>
           <Text style={styles.badgeText}>
             {unreadCount > 99 ? '٩٩+' : unreadCount}
           </Text>

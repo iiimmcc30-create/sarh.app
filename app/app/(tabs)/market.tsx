@@ -1,111 +1,166 @@
 // Powered by OnSpace.AI
 // SAFAT — Market Tab (السوق)
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
+import { MarketAppBar } from '@/components/market/MarketAppBar';
+import { MarketCategoryNav } from '@/components/market/MarketCategoryNav';
+import { MarketFilterBar } from '@/components/market/MarketFilterBar';
+import { RegionCityPicker } from '@/components/market/RegionCityPicker';
 
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
-  Pressable,
+  Alert,
+  FlatList,
   StyleSheet,
   Text,
-  TextInput,
   View,
   ListRenderItemInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Location from 'expo-location';
 import { ds } from '@/constants/designSystem';
+import type { RegionSelection } from '@/constants/saudiRegions';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
-import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
+import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
+import { listingMatchesRegionSelection } from '@/lib/saudiRegionSearch';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
 import { safePush } from '@/lib/safeNavigate';
-import { MarketCategoriesGrid } from '@/components/feature/MarketCategoriesGrid';
+import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { useApp } from '@/hooks/useApp';
-import { Country, countries, Listing } from '@/services/types';
-import {
-  fetchMarketCategories,
-  type MarketCategory,
-} from '@/services/categories';
+import { Listing } from '@/services/types';
+import type { MarketCategory } from '@/services/categories';
 
-/** Card height 118 + vertical margins (2 + 2). */
-const LISTING_ROW_HEIGHT = 122;
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
+
+type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
 export default function MarketScreen() {
   const router = useRouter();
-  const { styles, colors } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
+  const { styles } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
     styles: createMarketStyles(colors, scheme, screenStyles),
-    colors,
   }));
   const { listings, fetchListings } = useApp();
+  const { categories, loading: categoriesLoading, reload: reloadCategories } = useMarketCategories();
   const lastListingsFocusAt = useRef(0);
+  const listRef = useRef<FlatList<Listing>>(null);
 
-  const [categories, setCategories] = useState<MarketCategory[]>([]);
-  const [search, setSearch] = useState('');
-  const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
+  const [activeParentId, setActiveParentId] = useState<string | null>(null);
+  const [activeSubId, setActiveSubId] = useState<string | null>(null);
+  const [regionSelection, setRegionSelection] = useState<RegionSelection>({ type: 'all' });
+  const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>('newest');
 
   useFocusEffect(
     useCallback(() => {
+      void reloadCategories();
       const now = Date.now();
       if (now - lastListingsFocusAt.current < 60_000) return;
       lastListingsFocusAt.current = now;
       void fetchListings();
-    }, [fetchListings]),
+    }, [fetchListings, reloadCategories]),
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchMarketCategories()
-      .then((cats) => {
-        if (!cancelled) setCategories(cats.filter((c) => !c.parentId && c.isActive));
-      })
-      .catch(() => {
-        if (!cancelled) setCategories([]);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const activeParent = useMemo(
+    () => categories.find((c) => c.id === activeParentId) ?? null,
+    [categories, activeParentId],
+  );
+  const activeSub = useMemo(() => {
+    if (!activeSubId || !activeParent) return null;
+    return activeParent.children?.find((c) => c.id === activeSubId) ?? null;
+  }, [activeParent, activeSubId]);
+
+  const onSelectParent = useCallback((cat: MarketCategory | null) => {
+    setActiveParentId(cat?.id ?? null);
+    setActiveSubId(null);
   }, []);
 
-  const filtered = useMemo(
-    () =>
-      interleavePromotedListings(
-        listings
-          .filter((l) => {
-            if (l.country === 'EG') return false;
-            if (activeCountry !== 'ALL' && l.country !== activeCountry) return false;
-            if (showFeaturedOnly && !l.featured) return false;
-            if (search.trim()) {
-              const q = search.toLowerCase();
-              return (
-                l.title.toLowerCase().includes(q) ||
-                l.arabicTitle.includes(q) ||
-                l.arabicLocation.includes(q)
-              );
-            }
-            return true;
-          })
-          .sort(compareListingBoostPriority),
-      ),
-    [listings, activeCountry, showFeaturedOnly, search],
-  );
+  const onSelectSub = useCallback((sub: MarketCategory | null) => {
+    setActiveSubId(sub?.id ?? null);
+  }, []);
 
-  const onSelectCategory = useCallback(
-    (cat: MarketCategory) => {
-      safePush(
-        { pathname: '/market/categories/[id]', params: { id: cat.id } },
-        undefined,
-        router,
-      );
-    },
-    [router],
-  );
+  useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [activeParentId, activeSubId]);
+
+  const filtered = useMemo(() => {
+    let list = listings.filter((l) => {
+      if (l.country === 'EG') return false;
+      if (showFeaturedOnly && !l.featured) return false;
+      if (activeParent && !listingMatchesMarketSelection(l, activeParent, activeSub)) {
+        return false;
+      }
+      if (
+        !listingMatchesRegionSelection(l.arabicLocation || l.location || '', regionSelection)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    list = [...list].sort((a, b) => {
+      if (sortMode === 'oldest') return (a.createdAt || '').localeCompare(b.createdAt || '');
+      if (sortMode === 'price_asc') return a.price - b.price;
+      if (sortMode === 'price_desc') return b.price - a.price;
+      return compareListingBoostPriority(a, b);
+    });
+
+    return interleavePromotedListings(list);
+  }, [listings, showFeaturedOnly, activeParent, activeSub, regionSelection, sortMode]);
+
+  const sortLabel =
+    sortMode === 'newest'
+      ? 'الأحدث'
+      : sortMode === 'oldest'
+        ? 'الأقدم'
+        : sortMode === 'price_asc'
+          ? 'السعر ↑'
+          : 'السعر ↓';
+
+  const cycleSort = () => {
+    setSortMode((prev) => {
+      if (prev === 'newest') return 'oldest';
+      if (prev === 'oldest') return 'price_asc';
+      if (prev === 'price_asc') return 'price_desc';
+      return 'newest';
+    });
+  };
+
+  const onNearby = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('إذن الموقع', 'يرجى السماح بالوصول للموقع لعرض الإعلانات القريبة');
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const [geo] = await Location.reverseGeocodeAsync({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      });
+      const city = geo?.city || geo?.subregion || geo?.region;
+      if (!city) {
+        Alert.alert('الموقع', 'تعذّر تحديد مدينتك');
+        return;
+      }
+      setRegionSelection({
+        type: 'city',
+        region: {
+          id: 'nearby',
+          nameAr: 'بالقرب منك',
+          nameEn: 'Nearby',
+          cities: [{ id: 'nearby-city', nameAr: city, nameEn: city }],
+        },
+        city: { id: 'nearby-city', nameAr: city, nameEn: city },
+      });
+    } catch {
+      Alert.alert('خطأ', 'تعذّر الحصول على موقعك');
+    }
+  };
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Listing>) => (
@@ -121,131 +176,82 @@ export default function MarketScreen() {
     [router],
   );
 
-  const keyExtractor = useCallback((item: Listing) => item.id, []);
-
-  const getItemLayout = useCallback(
-    (_: unknown, index: number) => ({
-      length: LISTING_ROW_HEIGHT,
-      offset: LISTING_ROW_HEIGHT * index,
-      index,
-    }),
-    [],
-  );
-
-  const ListEmpty = useMemo(
-    () => (
-      <View style={styles.empty}>
-        <Text style={styles.emptyIcon}>🔍</Text>
-        <Text style={styles.emptyText}>لا توجد إعلانات مطابقة</Text>
-      </View>
-    ),
-    [styles.empty, styles.emptyIcon, styles.emptyText],
-  );
-
   const ListHeader = useCallback(
     () => (
-      <View>
-        <View style={[styles.pageHeader, getRtlRow()]}>
-          <View style={styles.pageTitleBlock}>
-            <Text style={styles.pageTitle}>السوق</Text>
-            <Text style={styles.pageSubtitle}>اكتشف أحدث الإعلانات من مجتمع سرح</Text>
+      <View style={styles.listingsHead}>
+        <View style={[styles.listingsHeadRow, getRtlRow()]}>
+          <View style={styles.listingsTitleShell}>
+            <Text style={styles.listingsTitle}>أحدث الإعلانات</Text>
           </View>
-          <View style={[styles.headerActions, getRtlRow()]}>
-            <NotificationBellButton size={ds.iconBtn.md} iconSize={ds.icon.md} style={styles.headerIconBtn} />
-            <Pressable
-              style={styles.headerIconBtn}
-              hitSlop={8}
-              onPress={() => safePush('/search', undefined, router)}
-            >
-              <AppIcon name="search" size={20} color={colors.textPrimary} />
-            </Pressable>
+          <View style={styles.listingsCountShell}>
+            <Text style={styles.listingsCount}>{filtered.length} إعلان</Text>
           </View>
-        </View>
-
-        <View style={[styles.searchRow, getRtlRow()]}>
-          <Pressable
-            style={[styles.filterStarBtn, showFeaturedOnly && styles.filterStarBtnActive]}
-            onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
-          >
-            <AppIcon
-              name="star"
-              size={18}
-              color={showFeaturedOnly ? colors.gold : colors.textPrimary}
-              variant={showFeaturedOnly ? 'sr' : 'rr'}
-            />
-          </Pressable>
-          <View style={[styles.searchBox, getRtlRow()]}>
-            <AppIcon name="search" size={18} color={colors.textPrimary} />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder="ابحث في السوق"
-              placeholderTextColor={colors.textMuted}
-              style={styles.searchInput}
-            />
-            {search.length > 0 ? (
-              <Pressable onPress={() => setSearch('')} hitSlop={8}>
-                <AppIcon name="close-circle" size={16} color={colors.textPrimary} />
-              </Pressable>
-            ) : null}
-          </View>
-        </View>
-
-        {categories.length > 0 ? (
-          <MarketCategoriesGrid categories={categories} onSelect={onSelectCategory} />
-        ) : null}
-
-        <View style={[styles.filterRow, getRtlRow()]}>
-          <Pressable
-            style={[styles.filterChip, getRtlRow(), activeCountry === 'SA' && styles.filterChipActive]}
-            onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
-          >
-            <Text style={styles.filterFlag}>{countries.SA.flag}</Text>
-            <Text style={[styles.filterChipText, activeCountry === 'SA' && styles.filterChipTextActive]}>
-              السعودية
-            </Text>
-          </Pressable>
-          <View style={[styles.filterChip, getRtlRow()]}>
-            <Text style={styles.filterChipText}>الأحدث</Text>
-            <AppIcon name="sort-alt" size={14} color={colors.textSecondary} />
-          </View>
-        </View>
-
-        <View style={styles.sectionTitleShell}>
-          <Text style={styles.sectionTitle}>أحدث الإعلانات</Text>
-        </View>
-
-        <View style={[styles.countRow, getRtlRow()]}>
-          <Text style={styles.count}>{filtered.length} إعلان</Text>
         </View>
       </View>
     ),
-    [
-      activeCountry,
-      categories,
-      colors,
-      filtered.length,
-      onSelectCategory,
-      router,
-      search,
-      showFeaturedOnly,
-      styles,
-    ],
+    [filtered.length, styles],
   );
 
   return (
     <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
+      {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
+      <View style={styles.stickyChrome}>
+        <MarketAppBar
+          onMenu={() => safePush('/sidebar', undefined, router)}
+          onSearch={() => safePush('/search', undefined, router)}
+        />
+
+        {categories.length > 0 ? (
+          <MarketCategoryNav
+            categories={categories}
+            activeParentId={activeParentId}
+            activeSubId={activeSubId}
+            onSelectParent={onSelectParent}
+            onSelectSub={onSelectSub}
+          />
+        ) : categoriesLoading ? (
+          <View style={styles.categoriesLoading}>
+            <Text style={styles.categoriesLoadingText}>جاري تحميل التصنيفات...</Text>
+          </View>
+        ) : null}
+
+        <MarketFilterBar
+          regionSelection={regionSelection}
+          onRegionPress={() => setRegionPickerOpen(true)}
+          onFilterPress={() => setShowFeaturedOnly((v) => !v)}
+          onNearbyPress={() => void onNearby()}
+          onSortPress={cycleSort}
+          sortLabel={sortLabel}
+          filterActive={showFeaturedOnly}
+        />
+      </View>
+
       <AppFlatList
+        ref={listRef}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
         data={filtered}
         renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        getItemLayout={getItemLayout}
+        keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeader}
-        ListEmptyComponent={ListEmpty}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyIcon}>🔍</Text>
+            <Text style={styles.emptyText}>لا توجد إعلانات مطابقة</Text>
+          </View>
+        }
         ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
+        removeClippedSubviews={false}
         initialNumToRender={12}
         maxToRenderPerBatch={10}
         windowSize={8}
+      />
+
+      <RegionCityPicker
+        visible={regionPickerOpen}
+        selection={regionSelection}
+        onClose={() => setRegionPickerOpen(false)}
+        onSelect={setRegionSelection}
       />
     </SafeAreaView>
   );
@@ -253,132 +259,68 @@ export default function MarketScreen() {
 
 function createMarketStyles(
   colors: ThemeColors,
-  scheme: 'light' | 'dark',
+  _scheme: 'light' | 'dark',
   screenStyles: ReturnType<typeof sarhScreenStyles>,
 ) {
-  const isDark = scheme === 'dark';
   return StyleSheet.create({
     container: screenStyles.screenRoot,
-    pageHeader: {
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-      gap: spacing.md,
+    stickyChrome: {
+      flexGrow: 0,
+      flexShrink: 0,
+      zIndex: 2,
     },
-    pageTitleBlock: {
+    list: {
+      flex: 1,
+      flexGrow: 1,
+      flexShrink: 1,
+      minHeight: 0,
+    },
+    listContent: {
+      flexGrow: 0,
+    },
+    listingsHead: {
+      width: '100%',
+      direction: 'ltr',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    listingsHeadRow: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    listingsTitleShell: {
       flex: 1,
       minWidth: 0,
-      gap: 4,
-    },
-    pageTitle: {
-      ...typography.h1,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-    },
-    pageSubtitle: {
-      ...typography.caption,
-      fontSize: 13,
-      lineHeight: 18,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    headerActions: {
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    headerIconBtn: {
-      ...screenStyles.iconBtn,
-    },
-    searchRow: {
-      gap: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.sm,
-      alignItems: 'center',
-    },
-    filterStarBtn: {
-      ...screenStyles.iconBtn,
-    },
-    filterStarBtnActive: {
-      borderColor: colors.gold,
-      backgroundColor: `${colors.gold}12`,
-    },
-    searchBox: {
-      flex: 1,
-      alignItems: 'center',
-      gap: spacing.sm,
-      backgroundColor: colors.bgElevated,
-      borderRadius: 14,
-      paddingHorizontal: spacing.md,
-      minHeight: 44,
-      borderWidth: 0,
-    },
-    searchInput: {
-      flex: 1,
-      ...typography.body,
-      fontSize: 14,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      textAlign: 'right',
-    },
-    filterRow: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      gap: spacing.sm,
-      alignItems: 'center',
-    },
-    filterChip: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      minHeight: 36,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 0,
-    },
-    filterChipActive: {
-      backgroundColor: isDark ? sarh.color.action : colors.electric,
-      borderColor: isDark ? sarh.color.action : colors.electric,
-    },
-    filterChipText: {
-      ...typography.caption,
-      fontSize: 12,
-      color: colors.textSecondary,
-      fontWeight: '600',
-      writingDirection: 'rtl',
-    },
-    filterChipTextActive: {
-      color: '#fff',
-    },
-    filterFlag: {
-      fontSize: 14,
-    },
-    sectionTitleShell: {
-      width: '100%',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
       direction: 'ltr',
     },
-    sectionTitle: {
+    listingsTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    countRow: {
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.sm,
-      justifyContent: 'flex-end',
+    listingsCountShell: {
+      direction: 'ltr',
+      flexShrink: 0,
     },
-    count: {
+    listingsCount: {
       ...typography.caption,
-      fontSize: 12,
       color: colors.textMuted,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    categoriesLoading: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
+    categoriesLoadingText: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },

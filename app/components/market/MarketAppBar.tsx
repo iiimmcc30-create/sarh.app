@@ -7,20 +7,18 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-type HomeAppBarProps = {
+type Props = {
   onMenu: () => void;
   onSearch: () => void;
-  onLive?: () => void;
-  showLive?: boolean;
   searchPlaceholder?: string;
 };
 
-/** Home header — matches MarketAppBar (menu · search pill · notifications). */
-export function HomeAppBar({
+/** Haraj-style market header: menu · search pill · notifications (physical left). */
+export function MarketAppBar({
   onMenu,
   onSearch,
-  searchPlaceholder = 'ابحث عن خدمة معينة',
-}: HomeAppBarProps) {
+  searchPlaceholder = 'ابحث في السوق',
+}: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
     colors: theme.colors,
@@ -61,6 +59,7 @@ export function HomeAppBar({
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    /** Same elevated surface as listing cards (listRow). */
     shell: {
       backgroundColor: colors.bgElevated,
       borderBottomWidth: 0,
@@ -115,4 +114,4 @@ function createStyles(colors: ThemeColors) {
   });
 }
 
-export default HomeAppBar;
+export default MarketAppBar;
