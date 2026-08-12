@@ -42,9 +42,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   goats: 'ماعز',
   cows: 'أبقار',
   horses: 'خيول',
-  birds: 'طيور',
+  birds: 'دواجن',
   feed: 'أعلاف',
   equipment: 'معدات',
+  livestock: 'المواشي',
+  transport: 'النقل',
+  slaughter: 'الذبائح',
 };
 
 export default function ListingDetailScreen() {
@@ -83,12 +86,21 @@ export default function ListingDetailScreen() {
         price: raw.price,
         currency: raw.currency || 'SAR',
         category: raw.category,
+        categoryId: raw.categoryId ?? raw.marketCategory?.id,
+        subcategoryId: raw.subcategoryId ?? raw.marketSubcategory?.id,
+        categoryNameAr: raw.marketCategory?.nameAr,
+        subcategoryNameAr: raw.marketSubcategory?.nameAr,
         breed: raw.breed || '',
         age: raw.age || '',
         location: raw.location,
         arabicLocation: raw.arabicLocation,
         country: raw.country,
         contactPhone: raw.contactPhone || undefined,
+        weightKg: typeof raw.weightKg === 'number' ? raw.weightKg : undefined,
+        requiresWeight:
+          raw.marketCategory?.requiresWeight === true ||
+          raw.marketSubcategory?.requiresWeight === true ||
+          raw.category === 'slaughter',
         images: raw.images?.length ? raw.images : [],
         description: raw.description,
         arabicDescription: raw.arabicDescription,
@@ -375,10 +387,10 @@ export default function ListingDetailScreen() {
               <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
               <Text style={styles.headerMetaText}>{listing.arabicLocation || listing.location}</Text>
             </View>
-            {listing.weightKg ? (
+            {listing.weightKg != null && listing.weightKg > 0 ? (
               <View style={[styles.headerMetaItem, getRtlRow()]}>
                 <Text style={styles.headerMetaText}>
-                  {listing.weightKg.toLocaleString('ar-SA')} كجم
+                  الوزن: {listing.weightKg.toLocaleString('ar-SA')} كجم
                 </Text>
               </View>
             ) : null}

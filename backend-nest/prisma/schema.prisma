@@ -217,6 +217,31 @@ model Payment {
   @@index([userId, referenceId, referenceType, status])
 }
 
+model MarketCategory {
+  id                    String           @id @default(uuid())
+  nameAr                String
+  nameEn                String?
+  slug                  String           @unique
+  icon                  String?
+  emoji                 String?
+  parentId              String?
+  sortOrder             Int              @default(0)
+  isActive              Boolean          @default(true)
+  requiresWeight        Boolean          @default(false)
+  legacyCategory        String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  deletedAt             DateTime?
+  parent                MarketCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children              MarketCategory[] @relation("CategoryTree")
+  listingsAsCategory    Listing[]        @relation("ListingMarketCategory")
+  listingsAsSubcategory Listing[]        @relation("ListingMarketSubcategory")
+
+  @@index([parentId])
+  @@index([isActive, sortOrder])
+  @@index([deletedAt])
+}
+
 model Listing {
   id                String          @id @default(uuid())
   sellerId          String
@@ -227,6 +252,8 @@ model Listing {
   price             Float
   currency          String          @default("SAR")
   category          ListingCategory
+  categoryId        String?
+  subcategoryId     String?
   breed             String?
   age               String?
   quantity          Int             @default(1)
@@ -252,6 +279,8 @@ model Listing {
   updatedAt         DateTime        @updatedAt
   deletedAt         DateTime?
   seller            User            @relation(fields: [sellerId], references: [id])
+  marketCategory    MarketCategory? @relation("ListingMarketCategory", fields: [categoryId], references: [id])
+  marketSubcategory MarketCategory? @relation("ListingMarketSubcategory", fields: [subcategoryId], references: [id])
   fee               ListingFee?
   boosts            ListingBoost[]
   promotions        ListingPromotion[]
@@ -261,6 +290,8 @@ model Listing {
 
   @@index([sellerId])
   @@index([category])
+  @@index([categoryId])
+  @@index([subcategoryId])
   @@index([country])
   @@index([status])
   @@index([featured])
@@ -1025,6 +1056,9 @@ enum ListingCategory {
   birds
   feed
   equipment
+  livestock
+  transport
+  slaughter
 }
 
 enum ListingStatus {

@@ -147,6 +147,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       price: l.price,
       currency: l.currency || 'SAR',
       category: l.category,
+      categoryId: l.categoryId ?? l.marketCategory?.id,
+      subcategoryId: l.subcategoryId ?? l.marketSubcategory?.id,
+      categoryNameAr: l.marketCategory?.nameAr,
+      subcategoryNameAr: l.marketSubcategory?.nameAr,
       breed: l.breed || '',
       age: l.age || '',
       location: l.location,
@@ -154,6 +158,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       country: l.country,
       contactPhone: l.contactPhone || undefined,
       weightKg: typeof l.weightKg === 'number' ? l.weightKg : undefined,
+      requiresWeight:
+        l.marketCategory?.requiresWeight === true ||
+        l.marketSubcategory?.requiresWeight === true ||
+        l.category === 'slaughter',
       images: l.images && l.images.length > 0 ? l.images : [],
       description: l.description,
       arabicDescription: l.arabicDescription,

@@ -6,7 +6,7 @@ import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
@@ -33,20 +33,11 @@ import { uploadImageFromUri } from '@/services/upload';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import * as Location from 'expo-location';
 import { hasValidCoords } from '@/lib/butcherLocation';
-import { isLivestockCategory } from '@/lib/listingCategories';
-
-type Category = 'camels' | 'sheep' | 'goats' | 'cows' | 'horses' | 'birds' | 'feed' | 'equipment';
-
-const CATEGORIES: { id: Category; ar: string; icon: string }[] = [
-  { id: 'camels', ar: 'إبل', icon: '🐪' },
-  { id: 'sheep', ar: 'أغنام', icon: '🐑' },
-  { id: 'goats', ar: 'معز', icon: '🐐' },
-  { id: 'cows', ar: 'بقر', icon: '🐄' },
-  { id: 'horses', ar: 'خيول', icon: '🐎' },
-  { id: 'birds', ar: 'طيور', icon: '🦅' },
-  { id: 'feed', ar: 'علف', icon: '🌾' },
-  { id: 'equipment', ar: 'معدات', icon: '⚙️' },
-];
+import { categoryRequiresWeight } from '@/lib/listingCategories';
+import {
+  fetchMarketCategories,
+  type MarketCategory,
+} from '@/services/categories';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string; currency: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦', currency: 'SAR' },
@@ -78,7 +69,9 @@ export default function CreateListingScreen() {
   const { accessToken } = useAuth();
 
   const [step, setStep] = useState(0);
-  const [category, setCategory] = useState<Category | null>(null);
+  const [parents, setParents] = useState<MarketCategory[]>([]);
+  const [parentCategory, setParentCategory] = useState<MarketCategory | null>(null);
+  const [subCategory, setSubCategory] = useState<MarketCategory | null>(null);
   const [titleAr, setTitleAr] = useState('');
   const [descAr, setDescAr] = useState('');
   const [breed, setBreed] = useState('');
@@ -97,6 +90,37 @@ export default function CreateListingScreen() {
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
 
   const selectedCountry = GCC_COUNTRIES.find((c) => c.code === country)!;
+
+  const subOptions = useMemo(
+    () => parentCategory?.children?.filter((c) => c.isActive) ?? [],
+    [parentCategory],
+  );
+
+  const needsWeight = categoryRequiresWeight({
+    category: parentCategory?.legacyCategory || parentCategory?.slug,
+    requiresWeight: parentCategory?.requiresWeight,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMarketCategories()
+      .then((cats) => {
+        if (cancelled) return;
+        setParents(cats.filter((c) => !c.parentId && c.isActive));
+      })
+      .catch(() => {
+        if (!cancelled) setParents([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectParent = (cat: MarketCategory) => {
+    setParentCategory(cat);
+    setSubCategory(null);
+    setWeightKg('');
+  };
 
   const pickImages = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -153,9 +177,8 @@ export default function CreateListingScreen() {
   };
 
   const canContinue = () => {
-    if (step === 0) return !!category;
+    if (step === 0) return !!parentCategory && !!subCategory;
     if (step === 1) {
-      const needsWeight = category ? isLivestockCategory(category) : false;
       const weightValid =
         !needsWeight ||
         (/^\d+(\.\d{1,2})?$/.test(weightKg.trim()) && Number(weightKg) > 0);
@@ -184,7 +207,7 @@ export default function CreateListingScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!category || !accessToken) return;
+    if (!parentCategory || !subCategory || !accessToken) return;
     setSubmitting(true);
 
     try {
@@ -209,6 +232,10 @@ export default function CreateListingScreen() {
       }
 
       const title = titleAr.trim();
+      const weightNum =
+        weightKg.trim() && /^\d+(\.\d{1,2})?$/.test(weightKg.trim())
+          ? Number(weightKg)
+          : undefined;
       const result = await addListing({
         title,
         arabicTitle: title,
@@ -216,7 +243,8 @@ export default function CreateListingScreen() {
         arabicDescription: descAr.trim(),
         price: Number(price),
         currency: selectedCountry.currency,
-        category,
+        categoryId: parentCategory.id,
+        subcategoryId: subCategory.id,
         breed: breed.trim() || undefined,
         age: age.trim() || undefined,
         quantity: 1,
@@ -226,10 +254,7 @@ export default function CreateListingScreen() {
         contactPhone: contactPhone.trim()
           ? normalizeContactPhone(contactPhone, country)
           : undefined,
-        weightKg:
-          category && isLivestockCategory(category)
-            ? Number(weightKg)
-            : undefined,
+        weightKg: weightNum && weightNum > 0 ? weightNum : undefined,
         images: uploadedUrls,
       });
 
@@ -309,19 +334,29 @@ export default function CreateListingScreen() {
           {step === 0 && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>ما نوع الإعلان؟</Text>
-              <Text style={styles.stepSubtitle}>اختر تصنيف إعلانك</Text>
+              <Text style={styles.stepSubtitle}>اختر التصنيف ثم النوع</Text>
+
+              <Text style={[styles.fieldLabel, { marginBottom: spacing.sm }]}>التصنيف</Text>
               <View style={styles.catGrid}>
-                {CATEGORIES.map((cat) => (
+                {parents.map((cat) => (
                   <Pressable
                     key={cat.id}
-                    onPress={() => setCategory(cat.id)}
-                    style={[styles.catCard, category === cat.id && styles.catCardActive]}
+                    onPress={() => selectParent(cat)}
+                    style={[
+                      styles.catCard,
+                      parentCategory?.id === cat.id && styles.catCardActive,
+                    ]}
                   >
-                    <Text style={styles.catIcon}>{cat.icon}</Text>
-                    <Text style={[styles.catLabel, category === cat.id && styles.catLabelActive]}>
-                      {cat.ar}
+                    <Text style={styles.catIcon}>{cat.emoji || '📦'}</Text>
+                    <Text
+                      style={[
+                        styles.catLabel,
+                        parentCategory?.id === cat.id && styles.catLabelActive,
+                      ]}
+                    >
+                      {cat.nameAr}
                     </Text>
-                    {category === cat.id && (
+                    {parentCategory?.id === cat.id && (
                       <View style={styles.catCheck}>
                         <AppIcon name="checkmark-circle" size={16} color={colors.electricBright} />
                       </View>
@@ -329,6 +364,34 @@ export default function CreateListingScreen() {
                   </Pressable>
                 ))}
               </View>
+
+              {parentCategory ? (
+                <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+                  <Text style={styles.fieldLabel}>النوع *</Text>
+                  <View style={styles.subList}>
+                    {subOptions.map((sub) => (
+                      <Pressable
+                        key={sub.id}
+                        onPress={() => setSubCategory(sub)}
+                        style={[
+                          styles.subChip,
+                          subCategory?.id === sub.id && styles.subChipActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.subChipText,
+                            subCategory?.id === sub.id && styles.subChipTextActive,
+                          ]}
+                        >
+                          {sub.emoji ? `${sub.emoji} ` : ''}
+                          {sub.nameAr}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
             </View>
           )}
 
@@ -393,9 +456,11 @@ export default function CreateListingScreen() {
                 </View>
               </View>
 
-              {category && isLivestockCategory(category) ? (
+              {needsWeight || parentCategory?.slug === 'livestock' ? (
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>الوزن (كجم) *</Text>
+                  <Text style={styles.fieldLabel}>
+                    الوزن (كجم){needsWeight ? ' *' : ' (اختياري)'}
+                  </Text>
                   <View style={styles.inputWrap}>
                     <TextInput
                       value={weightKg}
@@ -407,9 +472,11 @@ export default function CreateListingScreen() {
                     />
                     <Text style={styles.currencyLabel}>كجم</Text>
                   </View>
-                  <Text style={styles.fieldHint}>
-                    إلزامي للمواشي الحية وفق متطلبات وزارة البيئة والمياه والزراعة
-                  </Text>
+                  {needsWeight ? (
+                    <Text style={styles.fieldHint}>
+                      إلزامي لتصنيف الذبائح
+                    </Text>
+                  ) : null}
                 </View>
               ) : null}
 
@@ -542,8 +609,11 @@ export default function CreateListingScreen() {
                 <View style={styles.reviewRow}>
                   <Text style={styles.reviewLabel}>التصنيف</Text>
                   <Text style={styles.reviewValue}>
-                    {CATEGORIES.find((c) => c.id === category)?.icon}{' '}
-                    {CATEGORIES.find((c) => c.id === category)?.ar}
+                    {parentCategory?.emoji ? `${parentCategory.emoji} ` : ''}
+                    {parentCategory?.nameAr || '—'}
+                    {subCategory
+                      ? ` / ${subCategory.emoji ? `${subCategory.emoji} ` : ''}${subCategory.nameAr}`
+                      : ''}
                   </Text>
                 </View>
                 <View style={styles.reviewRow}>
@@ -688,6 +758,32 @@ function createStyles(colors: ThemeColors) {
   catLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
   catLabelActive: { color: colors.textBrandStrong },
   catCheck: { position: 'absolute', top: 4, right: 4 },
+  subList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'flex-end',
+  },
+  subChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderRadius: radius.lg,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  subChipActive: {
+    borderColor: colors.electric,
+    backgroundColor: `${colors.electric}15`,
+  },
+  subChipText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    fontWeight: '600',
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  subChipTextActive: { color: colors.textBrandStrong },
   fieldGroup: { gap: spacing.sm },
   fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
   inputWrap: {

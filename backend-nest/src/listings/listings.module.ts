@@ -10,9 +10,10 @@ import { PromoteQuoteService } from './promotion/promote-quote.service';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MarketCategoriesModule } from '../market-categories/market-categories.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, PrismaModule],
+  imports: [AuthModule, UsersModule, PrismaModule, MarketCategoriesModule],
   controllers: [ListingsController, ListingBoostController, ListingPromotionController],
   providers: [
     ListingsService,

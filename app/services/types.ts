@@ -65,15 +65,32 @@ export interface Listing {
   arabicTitle: string;
   price: number;
   currency: string;
-  category: 'camels' | 'sheep' | 'goats' | 'cows' | 'horses' | 'birds' | 'feed' | 'equipment';
+  category:
+    | 'camels'
+    | 'sheep'
+    | 'goats'
+    | 'cows'
+    | 'horses'
+    | 'birds'
+    | 'feed'
+    | 'equipment'
+    | 'livestock'
+    | 'transport'
+    | 'slaughter';
+  categoryId?: string;
+  subcategoryId?: string;
+  categoryNameAr?: string;
+  subcategoryNameAr?: string;
   breed: string;
   age: string;
   location: string;
   arabicLocation: string;
   country: Country;
   contactPhone?: string;
-  /** Weight in kg — required for live livestock categories */
+  /** Weight in kg — required for ذبائح (slaughter) only */
   weightKg?: number;
+  /** Parent category requires weight (ذبائح) */
+  requiresWeight?: boolean;
   images: string[];
   description: string;
   arabicDescription: string;

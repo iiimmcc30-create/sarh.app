@@ -29,6 +29,7 @@ import { OfficialServicesModule } from './official-services/official-services.mo
 import { SupportModule } from './support/support.module';
 import { ContentModule } from './content/content.module';
 import { EditorialStoriesModule } from './editorial-stories/editorial-stories.module';
+import { MarketCategoriesModule } from './market-categories/market-categories.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { EditorialStoriesModule } from './editorial-stories/editorial-stories.mo
     GatewaySharedModule,
     AuthModule,
     UsersModule,
+    MarketCategoriesModule,
     ListingsModule,
     PostsModule,
     StoriesModule,
