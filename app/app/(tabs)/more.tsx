@@ -103,10 +103,12 @@ export default function MoreScreen() {
         {/* اللغة */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.cardTitle}>اللغة</Text>
+            <View style={styles.coverTrail}>
+              <View style={styles.rtlTextShellFlex}>
+                <Text style={styles.cardTitle}>اللغة</Text>
+              </View>
+              <AppIcon name="globe-outline" size={22} color={colors.textPrimary} />
             </View>
-            <AppIcon name="globe-outline" size={22} color={colors.textPrimary} />
           </View>
           <View style={styles.langTrack}>
             <Pressable
@@ -229,12 +231,17 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     cardHeader: {
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
+    },
+    coverTrail: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 10,
+      width: '100%',
     },
     cardTitle: {
       ...typography.bodyStrong,
@@ -272,7 +279,7 @@ function createStyles(colors: ThemeColors) {
     },
     sectionLabelWrap: {
       marginTop: spacing.xs,
-      paddingHorizontal: spacing.xs,
+      paddingHorizontal: spacing.lg,
     },
     sectionLabel: {
       ...typography.bodyStrong,
