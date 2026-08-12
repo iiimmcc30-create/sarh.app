@@ -14,7 +14,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { ds } from '@/constants/designSystem';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -430,9 +431,6 @@ export function ProfileScreenLayout({
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
-  const cardShadow = ambientShadow(scheme, 'card');
-
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -460,13 +458,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
-      borderRadius: ds.radius.pill,
-      backgroundColor: tokens.glass,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      borderWidth: 0,
     },
     identityRow: {
       alignItems: 'flex-start',
@@ -552,13 +548,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     statsCard: {
       marginTop: 6,
-      backgroundColor: colors.bgSurface,
-      borderRadius: ds.radius.lg,
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.xs,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
-      ...cardShadow,
+      borderWidth: 0,
     },
     statsRow: {
       alignItems: 'stretch',
@@ -679,9 +673,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: colors.electric,
     },
     btnFollowing: {
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderMid,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
     },
     btnFollowText: {
       ...typography.bodyStrong,
@@ -693,9 +686,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textPrimary,
     },
     btnMessage: {
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderMid,
-      backgroundColor: colors.bgSurface,
+      borderWidth: 0,
+      backgroundColor: colors.bgElevated,
     },
     btnMessageText: {
       ...typography.bodyStrong,
@@ -706,10 +698,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     contentCardTop: {
       marginHorizontal: spacing.lg,
       marginTop: spacing.sm,
-      borderRadius: ds.radius.lg,
-      backgroundColor: colors.bgSurface,
+      borderRadius: MENU_CARD.radius,
+      backgroundColor: colors.bgElevated,
       overflow: 'hidden',
-      ...ambientShadow(scheme, 'soft'),
+      borderWidth: 0,
     },
     postsFeed: {
       paddingHorizontal: spacing.lg,
@@ -719,7 +711,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 4,
     },
     tabsBar: {
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgElevated,
     },
     tabsRow: {
       paddingHorizontal: spacing.lg,

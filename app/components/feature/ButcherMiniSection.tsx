@@ -14,6 +14,7 @@ import {
   typography,
   type ThemeColors,
 } from '@/constants/theme';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { gccCurrencies } from '@/services/butcherData';
@@ -401,22 +402,13 @@ function createStyles(colors: ThemeColors, isHero = false) {
     },
 
     card: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: isHero ? sarh.radius.card : radius.xl,
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
       overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: isHero ? 2 : 4 },
-      shadowOpacity: isHero ? 0.08 : 0.1,
-      shadowRadius: isHero ? 4 : 8,
-      elevation: isHero ? 1 : 4,
+      borderWidth: 0,
     },
     cardHero: {
-      borderRadius: sarh.radius.card,
-      shadowOpacity: 0.1,
-      shadowRadius: 6,
-      elevation: 2,
+      borderRadius: MENU_CARD.radius,
     },
 
     coverWrap: {
@@ -630,13 +622,12 @@ function createStyles(colors: ThemeColors, isHero = false) {
     },
 
     skeleton: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.xl,
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderWidth: 0,
     },
     skeletonText: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
   });

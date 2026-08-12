@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ds } from '@/constants/designSystem';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlRow } from '@/lib/rtl';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 
@@ -70,8 +69,7 @@ export function CategoryChips({ value, onChange }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const chipBg = scheme === 'light' ? '#ECEFF1' : ds.dark.elevated;
+function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   return StyleSheet.create({
     wrap: {
       paddingVertical: spacing.sm,
@@ -88,8 +86,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       height: 36,
-      borderRadius: radius.pill,
-      backgroundColor: chipBg,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
     },
     chipSelected: {
       backgroundColor: colors.electric,

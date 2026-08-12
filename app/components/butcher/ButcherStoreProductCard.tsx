@@ -90,11 +90,10 @@ function createStyles(colors: ThemeColors) {
       ...getRtlRow(),
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
       overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderWidth: 0,
     },
     image: {
       width: 108,
@@ -141,14 +140,14 @@ function createStyles(colors: ThemeColors) {
     buyNowBtn: {
       paddingHorizontal: 10,
       paddingVertical: 6,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderRadius: 14,
+      borderWidth: 0,
+      backgroundColor: colors.bgDeep,
     },
     buyNowText: {
       ...typography.micro,
       ...getRtlText(),
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       fontWeight: '600',
     },
     addBtn: {

@@ -1,6 +1,6 @@
 // Powered by OnSpace.AI
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import { Country, countries } from '@/services/types';
@@ -64,22 +64,20 @@ function createStyles(colors: ThemeColors) {
       gap: 6,
       paddingHorizontal: spacing.lg,
       paddingVertical: 8,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgGlass,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
       height: 36,
     },
     chipSelected: {
       backgroundColor: colors.electric,
-      borderColor: colors.glow,
     },
     flag: {
       fontSize: 14,
     },
     chipText: {
       ...typography.caption,
-      color: colors.textSecondary,
+      color: colors.textPrimary,
     },
     chipTextSelected: {
       color: '#fff',
