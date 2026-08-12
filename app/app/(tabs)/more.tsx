@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
-import { SidebarThemeToggle } from '@/components/feature/SidebarMenu';
+import { SidebarThemeToggle, menuCardStyle } from '@/components/feature/SidebarMenu';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { ds } from '@/constants/designSystem';
 import { LOCALE_STORAGE_KEY, type AppLocale, normalizeAppLocale } from '@/lib/locale';
@@ -97,7 +97,6 @@ export default function MoreScreen() {
           preference={preference}
           colors={colors}
           onToggle={onToggleTheme}
-          variant="outline"
         />
 
         {/* اللغة */}
@@ -137,7 +136,6 @@ export default function MoreScreen() {
             icon="file-document-outline"
             title="السياسات والشروط"
             colors={colors}
-            variant="outline"
             showDivider={false}
             onPress={() => safePush('/info/policies', undefined, router)}
           />
@@ -154,7 +152,6 @@ export default function MoreScreen() {
             icon="information-outline"
             title="من نحن"
             colors={colors}
-            variant="outline"
             showDivider
             onPress={() => safePush('/info/about', undefined, router)}
           />
@@ -162,7 +159,6 @@ export default function MoreScreen() {
             icon="lifebuoy"
             title="الدعم والمساعدة"
             colors={colors}
-            variant="outline"
             showDivider
             onPress={() => safePush('/support/index', undefined, router)}
           />
@@ -170,7 +166,6 @@ export default function MoreScreen() {
             icon="mail-outline"
             title="تواصل معنا"
             colors={colors}
-            variant="outline"
             showDivider
             onPress={() => safePush('/info/contact', undefined, router)}
           />
@@ -178,7 +173,6 @@ export default function MoreScreen() {
             icon="star-outline"
             title="تقييم التطبيق"
             colors={colors}
-            variant="outline"
             showDivider={false}
             onPress={openStoreRating}
           />
@@ -225,11 +219,7 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: TAB_CLEARANCE,
       gap: spacing.lg,
     },
-    card: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: 14,
-      overflow: 'hidden',
-    },
+    card: menuCardStyle(colors),
     cardHeader: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,

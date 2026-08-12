@@ -1,3 +1,4 @@
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
@@ -80,7 +81,7 @@ export default function BlockedUsersScreen() {
           </View>
         ) : (
           users.map((user) => (
-            <View key={user.id} style={[styles.row, getRtlRow()]}>
+            <View key={user.id} style={[styles.row, menuCardStyle(colors), getRtlRow()]}>
               <Image source={uriSource(user.avatar)} style={styles.avatar} contentFit="cover" />
               <View style={styles.info}>
                 <View style={[styles.nameRow, getRtlRow()]}>
@@ -140,10 +141,6 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgGlassStrong,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
     },
     avatar: {
       width: 44,

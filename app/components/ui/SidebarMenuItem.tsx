@@ -57,6 +57,7 @@ function OutlineMenuItem({
   subtitle,
   onPress,
   badge,
+  active = false,
   showDivider,
   showChevron,
   iconColor,
@@ -72,6 +73,7 @@ function OutlineMenuItem({
   subtitle?: string;
   onPress: () => void;
   badge?: number;
+  active?: boolean;
   showDivider: boolean;
   showChevron: boolean;
   iconColor?: string;
@@ -83,17 +85,24 @@ function OutlineMenuItem({
   testID?: string;
 }) {
   const showBadge = typeof badge === 'number' && badge > 0;
+  const iconTint = iconColor ?? (active ? colors.electric : tint);
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityState={{ selected: active }}
       onPress={() => {
         if (isNavigationLocked()) return;
         onPress();
       }}
-      style={({ pressed }) => [styles.outlineWrap, pressed && styles.rowPressed, style]}
+      style={({ pressed }) => [
+        styles.outlineWrap,
+        active && { backgroundColor: `${colors.electric}10` },
+        pressed && styles.rowPressed,
+        style,
+      ]}
     >
       <View style={styles.outlineRow}>
         <View style={styles.chevronSlot}>
@@ -128,7 +137,7 @@ function OutlineMenuItem({
             <AppIcon
               name={icon}
               size={SIDEBAR_MENU_ITEM.outlineIconSize}
-              color={iconColor ?? tint}
+              color={iconTint}
             />
           </View>
         </View>
@@ -151,7 +160,7 @@ export function SidebarMenuItem({
   showDivider = true,
   showChevron = true,
   iconColor,
-  variant = 'default',
+  variant = 'outline',
   colors: colorsProp,
   style,
   accessibilityLabel,
@@ -161,7 +170,14 @@ export function SidebarMenuItem({
   const colors = colorsProp ?? theme.colors;
   const isOutline = variant === 'outline';
   const tint =
-    iconColor ?? (isOutline ? colors.textPrimary : active ? colors.electric : colors.textMuted);
+    iconColor ??
+    (isOutline
+      ? active
+        ? colors.electric
+        : colors.textPrimary
+      : active
+        ? colors.electric
+        : colors.textMuted);
   const chevronColor = isOutline ? colors.textMuted : colors.textSubtle;
   const showBadge = typeof badge === 'number' && badge > 0;
 
@@ -173,6 +189,7 @@ export function SidebarMenuItem({
         subtitle={subtitle}
         onPress={onPress}
         badge={badge}
+        active={active}
         showDivider={showDivider}
         showChevron={showChevron}
         iconColor={iconColor}

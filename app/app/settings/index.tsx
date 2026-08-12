@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
@@ -68,10 +69,8 @@ export default function SettingsScreen() {
       </View>
 
       <AppScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.intro}>
-          <View style={styles.introIcon}>
-            <AppIcon name="shield-check-outline" size={24} color={colors.textMuted} />
-          </View>
+        <View style={[styles.intro, menuCardStyle(colors)]}>
+          <AppIcon name="shield-check-outline" size={24} color={colors.textPrimary} />
           <View style={styles.introText}>
             <Text style={styles.introTitle}>إدارة تجربتك بأمان</Text>
             <Text style={styles.introSubtitle}>
@@ -132,24 +131,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
     intro: {
-      flexDirection: 'row',
+      flexDirection: 'row-reverse',
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
-      backgroundColor: isDark ? sarh.color.surface : colors.royal,
-      borderRadius: sarh.radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderMid,
-    },
-    introIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: radius.lg,
-      backgroundColor: isDark ? sarh.color.surfaceRaised : colors.bgGlassStrong,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
     },
     introText: { flex: 1, gap: spacing.xs },
     introTitle: {
@@ -165,12 +150,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    sectionBlock: {
-      backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,
-      borderRadius: sarh.radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
-      overflow: 'hidden',
-    },
+    sectionBlock: menuCardStyle(colors),
   });
 }

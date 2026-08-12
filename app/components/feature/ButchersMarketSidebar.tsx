@@ -1,8 +1,9 @@
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { SidebarCloseHeader } from '@/components/feature/SidebarCloseHeader';
 import { SidebarProfileRow } from '@/components/feature/SidebarProfileRow';
 import { useRouter, useSegments } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sarh } from '@/constants/sarhTokens';
@@ -165,11 +166,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     menuCard: {
       marginHorizontal: spacing.lg,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
-      overflow: 'hidden',
+      ...menuCardStyle(colors),
     },
     footer: {
       paddingVertical: spacing.md,
