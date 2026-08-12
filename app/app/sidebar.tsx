@@ -117,9 +117,15 @@ export default function SidebarScreen() {
     [],
   );
 
-  /** الإعدادات والخصوصية */
+  /** الدعم والمساعدة · الإعدادات والخصوصية — بطاقة واحدة */
   const settingsItems: MenuItem[] = useMemo(
     () => [
+      {
+        key: 'support',
+        icon: 'lifebuoy',
+        label: 'الدعم والمساعدة',
+        route: '/support',
+      },
       {
         key: 'settings',
         icon: 'settings-outline',
