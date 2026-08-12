@@ -103,22 +103,29 @@ export function SidebarThemeToggle({
   preference,
   colors,
   onToggle,
+  variant = 'default',
 }: {
   preference: 'light' | 'dark' | 'system';
   colors: ThemeColors;
   onToggle: () => void;
+  variant?: 'default' | 'outline';
 }) {
   const isDark = preference !== 'light';
   const isRtl = I18nManager.isRTL;
+  const isOutline = variant === 'outline';
+  const iconTint = isOutline ? colors.textPrimary : colors.textMuted;
+  const cardBg = isOutline ? colors.bgElevated : colors.bgSurface;
+  const cardBorder = isOutline ? 'transparent' : colors.borderSoft;
 
   return (
     <View
       style={[
         themeStyles.wrap,
+        isOutline && themeStyles.wrapOutline,
         {
           direction: isRtl ? 'rtl' : 'ltr',
-          backgroundColor: colors.bgSurface,
-          borderColor: colors.borderSoft,
+          backgroundColor: cardBg,
+          borderColor: cardBorder,
         },
       ]}
     >
@@ -127,7 +134,7 @@ export function SidebarThemeToggle({
         <View style={themeStyles.titleShell}>
           <Text style={[themeStyles.title, { color: colors.textPrimary }]}>المظهر</Text>
         </View>
-        <AppIcon name={isDark ? 'weather-night' : 'sunny-outline'} size={20} color={colors.textMuted} />
+        <AppIcon name={isDark ? 'weather-night' : 'sunny-outline'} size={22} color={iconTint} />
       </View>
       <View
         style={[
@@ -237,6 +244,14 @@ const themeStyles = StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     gap: spacing.sm,
+  },
+  wrapOutline: {
+    marginHorizontal: 0,
+    marginTop: 0,
+    borderRadius: 14,
+    borderWidth: 0,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   header: {
     alignItems: 'center',

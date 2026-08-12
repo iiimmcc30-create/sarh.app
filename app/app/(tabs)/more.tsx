@@ -93,7 +93,12 @@ export default function MoreScreen() {
 
       <AppScrollView contentContainerStyle={styles.content}>
         {/* المظهر */}
-        <SidebarThemeToggle preference={preference} colors={colors} onToggle={onToggleTheme} />
+        <SidebarThemeToggle
+          preference={preference}
+          colors={colors}
+          onToggle={onToggleTheme}
+          variant="outline"
+        />
 
         {/* اللغة */}
         <View style={styles.card}>
@@ -101,7 +106,7 @@ export default function MoreScreen() {
             <View style={styles.rtlTextShellFlex}>
               <Text style={styles.cardTitle}>اللغة</Text>
             </View>
-            <AppIcon name="globe-outline" size={20} color={colors.textMuted} />
+            <AppIcon name="globe-outline" size={22} color={colors.textPrimary} />
           </View>
           <View style={styles.langTrack}>
             <Pressable
@@ -130,6 +135,7 @@ export default function MoreScreen() {
             icon="file-document-outline"
             title="السياسات والشروط"
             colors={colors}
+            variant="outline"
             showDivider={false}
             onPress={() => safePush('/info/policies', undefined, router)}
           />
@@ -146,6 +152,7 @@ export default function MoreScreen() {
             icon="information-outline"
             title="من نحن"
             colors={colors}
+            variant="outline"
             showDivider
             onPress={() => safePush('/info/about', undefined, router)}
           />
@@ -153,6 +160,7 @@ export default function MoreScreen() {
             icon="lifebuoy"
             title="الدعم والمساعدة"
             colors={colors}
+            variant="outline"
             showDivider
             onPress={() => safePush('/support/index', undefined, router)}
           />
@@ -160,6 +168,7 @@ export default function MoreScreen() {
             icon="mail-outline"
             title="تواصل معنا"
             colors={colors}
+            variant="outline"
             showDivider
             onPress={() => safePush('/info/contact', undefined, router)}
           />
@@ -167,6 +176,7 @@ export default function MoreScreen() {
             icon="star-outline"
             title="تقييم التطبيق"
             colors={colors}
+            variant="outline"
             showDivider={false}
             onPress={openStoreRating}
           />
@@ -211,21 +221,20 @@ function createStyles(colors: ThemeColors) {
     content: {
       paddingHorizontal: spacing.lg,
       paddingBottom: TAB_CLEARANCE,
-      gap: spacing.md,
+      gap: spacing.lg,
     },
     card: {
       backgroundColor: colors.bgElevated,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderRadius: 14,
       overflow: 'hidden',
-      padding: spacing.md,
-      gap: spacing.sm,
     },
     cardHeader: {
       flexDirection: 'row-reverse',
       alignItems: 'center',
       justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
     },
     cardTitle: {
       ...typography.bodyStrong,
@@ -238,8 +247,8 @@ function createStyles(colors: ThemeColors) {
       flexDirection: 'row-reverse',
       backgroundColor: colors.bgDeep,
       borderRadius: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderHairline,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
       padding: 4,
       gap: 4,
     },
@@ -266,8 +275,8 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.xs,
     },
     sectionLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',

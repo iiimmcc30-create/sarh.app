@@ -29,6 +29,8 @@ export type SidebarMenuItemProps = {
   showDivider?: boolean;
   showChevron?: boolean;
   iconColor?: string;
+  /** Reference More-tab look: white outline icons, inset dividers, no icon tint box. */
+  variant?: 'default' | 'outline';
   colors?: ThemeColors;
   style?: ViewStyle;
   accessibilityLabel?: string;
@@ -37,10 +39,14 @@ export type SidebarMenuItemProps = {
 
 export const SIDEBAR_MENU_ITEM = {
   minHeight: 56,
+  outlineMinHeight: 52,
   paddingHorizontal: spacing.md,
+  outlinePaddingHorizontal: spacing.lg,
   paddingVertical: spacing.md,
+  outlinePaddingVertical: 14,
   gap: spacing.md,
   iconSize: 20,
+  outlineIconSize: 22,
   iconWrap: 40,
   iconRadius: radius.md,
   titleSize: 15,
@@ -59,6 +65,7 @@ export function SidebarMenuItem({
   showDivider = true,
   showChevron = true,
   iconColor,
+  variant = 'default',
   colors: colorsProp,
   style,
   accessibilityLabel,
@@ -66,7 +73,10 @@ export function SidebarMenuItem({
 }: SidebarMenuItemProps) {
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
-  const tint = iconColor ?? (active ? colors.electric : colors.textMuted);
+  const isOutline = variant === 'outline';
+  const tint =
+    iconColor ?? (isOutline ? colors.textPrimary : active ? colors.electric : colors.textMuted);
+  const chevronColor = isOutline ? colors.textMuted : colors.textSubtle;
   const showBadge = typeof badge === 'number' && badge > 0;
 
   return (
@@ -82,9 +92,11 @@ export function SidebarMenuItem({
       }}
       style={({ pressed }) => [
         styles.row,
-        { borderBottomColor: colors.borderHairline },
+        isOutline && styles.rowOutline,
+        { borderBottomColor: isOutline ? colors.borderSoft : colors.borderHairline },
         showDivider && styles.rowDivider,
-        active && { backgroundColor: `${colors.electric}14` },
+        showDivider && isOutline && styles.rowDividerInset,
+        active && !isOutline && { backgroundColor: `${colors.electric}14` },
         pressed && styles.rowPressed,
         style,
       ]}
@@ -94,7 +106,7 @@ export function SidebarMenuItem({
         <AppIcon
           name="angle-left"
           size={SIDEBAR_MENU_ITEM.chevronSize}
-          color={colors.textSubtle}
+          color={chevronColor}
         />
       ) : null}
 
@@ -117,8 +129,17 @@ export function SidebarMenuItem({
       </View>
 
       {/* Physical RIGHT: icon */}
-      <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
-        <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
+      <View
+        style={[
+          isOutline ? styles.iconWrapOutline : styles.iconWrap,
+          !isOutline && { backgroundColor: `${tint}18` },
+        ]}
+      >
+        <AppIcon
+          name={icon}
+          size={isOutline ? SIDEBAR_MENU_ITEM.outlineIconSize : SIDEBAR_MENU_ITEM.iconSize}
+          color={tint}
+        />
       </View>
     </Pressable>
   );
@@ -140,8 +161,16 @@ const styles = StyleSheet.create({
     paddingVertical: SIDEBAR_MENU_ITEM.paddingVertical,
     minHeight: SIDEBAR_MENU_ITEM.minHeight,
   },
+  rowOutline: {
+    paddingHorizontal: SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,
+    paddingVertical: SIDEBAR_MENU_ITEM.outlinePaddingVertical,
+    minHeight: SIDEBAR_MENU_ITEM.outlineMinHeight,
+  },
   rowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  rowDividerInset: {
+    marginHorizontal: spacing.lg,
   },
   rowPressed: {
     opacity: 0.76,
@@ -161,6 +190,13 @@ const styles = StyleSheet.create({
     width: SIDEBAR_MENU_ITEM.iconWrap,
     height: SIDEBAR_MENU_ITEM.iconWrap,
     borderRadius: SIDEBAR_MENU_ITEM.iconRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  iconWrapOutline: {
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
