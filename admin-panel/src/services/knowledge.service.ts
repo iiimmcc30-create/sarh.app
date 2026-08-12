@@ -63,6 +63,26 @@ export async function syncKnowledge() {
   return unwrap(res);
 }
 
+export async function activateKnowledgeCenter(options?: { sync?: boolean }) {
+  const res = await apiClient.post('/admin/knowledge/activate', {
+    sync: options?.sync !== false,
+  });
+  return unwrap<{
+    user: {
+      id: string;
+      username: string;
+      arabicName: string | null;
+      isAI: boolean;
+      verified: boolean;
+      isActive: boolean;
+    };
+    sources: { seeded: number; total: number };
+    follows: { users: number; followsCreated: number };
+    sourcesEnabled: number;
+    sync: Record<string, number> | null;
+  }>(res);
+}
+
 export async function syncKnowledgeSource(id: string) {
   const res = await apiClient.post(`/admin/knowledge/sources/${id}/sync`);
   return unwrap(res);

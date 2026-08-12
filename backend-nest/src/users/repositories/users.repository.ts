@@ -10,6 +10,7 @@ const listUserSelect = {
   arabicName: true,
   avatar: true,
   verified: true,
+  isAI: true,
   bio: true,
   country: true,
   _count: {
@@ -26,6 +27,7 @@ const profileSelect = {
   coverImage: true,
   bio: true,
   verified: true,
+  isAI: true,
   country: true,
   role: true,
   rating: true,

@@ -139,6 +139,28 @@ export class AuthRepository {
     });
   }
 
+  /** Auto-follow the official Knowledge Center so new users see and can interact with its posts. */
+  async followKnowledgeCenter(userId: string) {
+    const knowledge = await this.prisma.user.findFirst({
+      where: { username: 'knowledge_center', deletedAt: null, isActive: true },
+      select: { id: true },
+    });
+    if (!knowledge || knowledge.id === userId) return;
+    await this.prisma.follow.upsert({
+      where: {
+        followerId_followingId: {
+          followerId: userId,
+          followingId: knowledge.id,
+        },
+      },
+      create: {
+        followerId: userId,
+        followingId: knowledge.id,
+      },
+      update: {},
+    });
+  }
+
   findUserByPhone(phone: string) {
     return this.prisma.user.findFirst({
       where: { phone, isActive: true },

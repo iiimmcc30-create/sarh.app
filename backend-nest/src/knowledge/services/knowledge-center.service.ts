@@ -8,6 +8,7 @@ import { KnowledgeRepository } from '../repositories/knowledge.repository';
 import { NewsFetcherService } from './news-fetcher.service';
 import { AISummarizerService } from './ai-summarizer.service';
 import { PublisherService } from './publisher.service';
+import { DEFAULT_KNOWLEDGE_SOURCES } from '../constants/default-sources';
 import {
   CreateKnowledgeSourceDto,
   UpdateKnowledgeSourceDto,
@@ -27,11 +28,17 @@ export class KnowledgeCenterService implements OnModuleInit {
 
   async onModuleInit() {
     await this.ensureKnowledgeUser();
+    await this.ensureDefaultSources();
   }
 
   async ensureKnowledgeUser() {
     const existing = await this.repo.findKnowledgeUser();
-    if (existing) return existing;
+    if (existing) {
+      if (!existing.isActive || !existing.isAI || !existing.verified) {
+        return this.repo.updateKnowledgeUserFlags(existing.id);
+      }
+      return existing;
+    }
 
     const passwordHash = await bcrypt.hash(randomBytes(48).toString('hex'), 12);
     const user = await this.repo.createKnowledgeUser({ passwordHash });
@@ -42,6 +49,98 @@ export class KnowledgeCenterService implements OnModuleInit {
       meta: { userId: user.id },
     });
     return user;
+  }
+
+  async ensureDefaultSources() {
+    const count = await this.repo.countSources();
+    if (count > 0) return { seeded: 0, total: count };
+
+    let seeded = 0;
+    for (const source of DEFAULT_KNOWLEDGE_SOURCES) {
+      const existing = await this.repo.findSourceByUrl(source.url);
+      if (existing) continue;
+      await this.repo.createSource({
+        name: source.name,
+        url: source.url,
+        type: source.type,
+        enabled: true,
+      });
+      seeded += 1;
+    }
+
+    if (seeded > 0) {
+      await this.repo.createSyncLog({
+        level: 'info',
+        message: `تمت إضافة ${seeded} مصادر افتراضية لمركز المعرفة`,
+        meta: { seeded },
+      });
+      this.logger.info({ seeded }, 'Default knowledge sources seeded');
+    }
+
+    return { seeded, total: count + seeded };
+  }
+
+  /**
+   * Activate Knowledge Center for in-app publishing + interaction:
+   * ensure AI user, seed sources, auto-follow for all users, optional sync.
+   */
+  async activateAccount(options?: { sync?: boolean }) {
+    const user = await this.ensureKnowledgeUser();
+    const sources = await this.ensureDefaultSources();
+    const follows = await this.repo.ensureFollowedByAllActiveUsers(user.id);
+
+    // Ensure default sources are enabled so publishing can run
+    const defaultUrls = new Set(DEFAULT_KNOWLEDGE_SOURCES.map((s) => s.url));
+    const allSources = await this.repo.listSources();
+    let enabled = 0;
+    for (const source of allSources) {
+      if (!source.enabled && defaultUrls.has(source.url)) {
+        await this.repo.updateSource(source.id, { enabled: true });
+        enabled += 1;
+      }
+    }
+
+    await this.repo.createSyncLog({
+      level: 'info',
+      message: 'تم تفعيل حساب مركز المعرفة للنشر والتفاعل',
+      meta: {
+        userId: user.id,
+        sourcesSeeded: sources.seeded,
+        followsCreated: follows.followsCreated,
+        sourcesEnabled: enabled,
+      },
+    });
+
+    let syncStats: Awaited<ReturnType<KnowledgeCenterService['syncAll']>> | null =
+      null;
+    if (options?.sync !== false) {
+      syncStats = await this.syncAll();
+    }
+
+    this.logger.info(
+      { userId: user.id, sources, follows, syncStats },
+      'Knowledge Center account activated',
+    );
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        arabicName: user.arabicName,
+        isAI: user.isAI,
+        verified: user.verified,
+        isActive: user.isActive,
+      },
+      sources,
+      follows,
+      sourcesEnabled: enabled,
+      sync: syncStats,
+    };
+  }
+
+  async ensureFollowedByUser(userId: string) {
+    const knowledge = await this.ensureKnowledgeUser();
+    await this.repo.ensureFollowedByUser(userId, knowledge.id);
   }
 
   listSources() {

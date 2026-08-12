@@ -210,6 +210,7 @@ export default function UserProfileScreen() {
     arabicName: profile.arabicName,
     avatar: profile.avatar,
     verified: profile.verified,
+    isAI: profile.isAI,
     bio: profile.bio,
     country: profile.country,
     followersCount: profile.followersCount,

@@ -40,6 +40,21 @@ export class KnowledgeRepository {
     });
   }
 
+  updateKnowledgeUserFlags(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        isAI: true,
+        verified: true,
+        isActive: true,
+        emailVerified: true,
+        arabicName: 'مركز المعرفة',
+        displayName: 'Knowledge Center',
+        bio: 'حساب رسمي مدعوم بالذكاء الاصطناعي لنشر الأخبار الموثوقة في قطاع الثروة الحيوانية والزراعة.',
+      },
+    });
+  }
+
   listSources() {
     return this.prisma.knowledgeSource.findMany({
       orderBy: { createdAt: 'desc' },
@@ -174,6 +189,86 @@ export class KnowledgeRepository {
         content: data.content,
         arabicContent: data.arabicContent,
       },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            arabicName: true,
+            avatar: true,
+            verified: true,
+            isAI: true,
+          },
+        },
+      },
+    });
+  }
+
+  findFollowerIds(userId: string) {
+    return this.prisma.follow.findMany({
+      where: { followingId: userId },
+      select: { followerId: true },
+    });
+  }
+
+  countSources() {
+    return this.prisma.knowledgeSource.count();
+  }
+
+  findSourceByUrl(url: string) {
+    return this.prisma.knowledgeSource.findFirst({ where: { url } });
+  }
+
+  /**
+   * Ensure every active (non-AI) user follows the Knowledge Center account
+   * so published posts appear in Following and are interactable in-app.
+   */
+  async ensureFollowedByAllActiveUsers(knowledgeUserId: string) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        isActive: true,
+        isAI: false,
+        id: { not: knowledgeUserId },
+      },
+      select: { id: true },
+    });
+
+    const existing = await this.prisma.follow.findMany({
+      where: { followingId: knowledgeUserId },
+      select: { followerId: true },
+    });
+    const already = new Set(existing.map((f) => f.followerId));
+    const missing = users.filter((u) => !already.has(u.id));
+
+    if (missing.length > 0) {
+      await this.prisma.follow.createMany({
+        data: missing.map((u) => ({
+          followerId: u.id,
+          followingId: knowledgeUserId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return { users: users.length, followsCreated: missing.length };
+  }
+
+  async ensureFollowedByUser(userId: string, knowledgeUserId: string) {
+    if (userId === knowledgeUserId) return;
+    await this.prisma.follow.upsert({
+      where: {
+        followerId_followingId: {
+          followerId: userId,
+          followingId: knowledgeUserId,
+        },
+      },
+      create: {
+        followerId: userId,
+        followingId: knowledgeUserId,
+      },
+      update: {},
     });
   }
 

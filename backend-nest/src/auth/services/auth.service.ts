@@ -206,6 +206,8 @@ export class AuthService {
       verified: !!dto.googleId,
     });
 
+    await this.repo.followKnowledgeCenter(user.id).catch(() => undefined);
+
     const accessToken = this.jwt.signAccessToken({
       userId: user.id,
       username: user.username,

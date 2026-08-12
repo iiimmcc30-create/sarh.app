@@ -31,6 +31,7 @@ export type ProfileDisplayUser = {
   arabicName: string;
   avatar?: string;
   verified: boolean;
+  isAI?: boolean;
   bio?: string;
   country?: string;
   followersCount: number;
@@ -257,6 +258,11 @@ export function ProfileScreenLayout({
                       </Text>
                     </View>
                     {user.verified ? <VerificationBadge size={18} /> : null}
+                    {user.isAI ? (
+                      <View style={styles.aiBadge}>
+                        <Text style={styles.aiBadgeText}>AI</Text>
+                      </View>
+                    ) : null}
                   </View>
                   <View style={styles.nameMetaRow}>
                     <View style={styles.handleShell}>
@@ -490,6 +496,18 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       direction: 'ltr',
       flex: 1,
       minWidth: 0,
+    },
+    aiBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 6,
+      backgroundColor: `${colors.electric}22`,
+    },
+    aiBadgeText: {
+      ...typography.micro,
+      fontWeight: '700',
+      color: colors.electric,
+      fontSize: 10,
     },
     displayName: {
       ...typography.h2,
