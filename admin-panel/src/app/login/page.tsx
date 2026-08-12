@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { adminLogin, persistSession, clearSession } from '@/services/auth.service';
+import { adminLogin, persistSession, clearSession, tryRestoreSession } from '@/services/auth.service';
 import { getApiErrorMessage } from '@/services/api.client';
 import { Button } from '@/components/ui/Button';
 import {
@@ -16,17 +16,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [backendDown, setBackendDown] = useState(false);
 
   useEffect(() => {
-    // Stale cookie without localStorage breaks middleware (redirect loop).
-    if (!localStorage.getItem('admin_access_token')) {
-      document.cookie = 'admin_token=; path=/; max-age=0';
-    }
+    let cancelled = false;
+
+    (async () => {
+      const status = await tryRestoreSession();
+      if (cancelled) return;
+      if (status === 'restored') {
+        window.location.assign('/');
+        return;
+      }
+      setCheckingSession(false);
+    })();
 
     fetch('/api/health', { cache: 'no-store' })
-      .then((r) => setBackendDown(!r.ok))
-      .catch(() => setBackendDown(true));
+      .then((r) => {
+        if (!cancelled) setBackendDown(!r.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setBackendDown(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -55,6 +71,14 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4">
+        <p className="text-sm text-slate-400">جارٍ التحقق من الجلسة...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4">

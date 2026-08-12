@@ -7,11 +7,10 @@ export function middleware(request: NextRequest) {
   const token = rawToken ? decodeURIComponent(rawToken) : undefined;
   const isLogin = pathname.startsWith('/login');
 
+  // Login page validates/restores sessions client-side; stale cookies must not
+  // bounce users away before the page can clear or refresh them.
   if (!token && !isLogin) {
     return NextResponse.redirect(new URL('/login', request.url));
-  }
-  if (token && isLogin) {
-    return NextResponse.redirect(new URL('/', request.url));
   }
   return NextResponse.next();
 }

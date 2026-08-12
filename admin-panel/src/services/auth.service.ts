@@ -26,12 +26,17 @@ export async function adminMe(): Promise<{ user: AdminUser }> {
   return unwrap(res);
 }
 
+const SESSION_COOKIE_MAX_AGE = 60 * 60 * 12;
+
+export function setSessionCookie(accessToken: string) {
+  document.cookie = `admin_token=${encodeURIComponent(accessToken)}; path=/; max-age=${SESSION_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
 export function persistSession(data: LoginResult) {
   localStorage.setItem('admin_access_token', data.accessToken);
   localStorage.setItem('admin_refresh_token', data.refreshToken);
   localStorage.setItem('admin_user', JSON.stringify(data.user));
-  const maxAge = 60 * 60 * 12;
-  document.cookie = `admin_token=${encodeURIComponent(data.accessToken)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  setSessionCookie(data.accessToken);
 }
 
 export function clearSession() {
@@ -39,6 +44,27 @@ export function clearSession() {
   localStorage.removeItem('admin_refresh_token');
   localStorage.removeItem('admin_user');
   document.cookie = 'admin_token=; path=/; max-age=0';
+}
+
+/** Validate stored token, sync cookie, or clear broken session. */
+export async function tryRestoreSession(): Promise<'restored' | 'none' | 'cleared'> {
+  if (typeof window === 'undefined') return 'none';
+
+  const token = localStorage.getItem('admin_access_token');
+  if (!token) {
+    document.cookie = 'admin_token=; path=/; max-age=0';
+    return 'none';
+  }
+
+  setSessionCookie(token);
+  try {
+    const { user } = await adminMe();
+    localStorage.setItem('admin_user', JSON.stringify(user));
+    return 'restored';
+  } catch {
+    clearSession();
+    return 'cleared';
+  }
 }
 
 export function getStoredUser(): AdminUser | null {
