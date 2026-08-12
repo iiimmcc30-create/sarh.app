@@ -276,7 +276,7 @@ export default function ButchersScreen() {
               <AppIcon
                 name="options-outline"
                 size={18}
-                color={showCountryFilter ? colors.electricBright : colors.textMuted}
+                color={showCountryFilter ? colors.electricBright : colors.textPrimary}
               />
             </Pressable>
             <TextInput
@@ -287,10 +287,10 @@ export default function ButchersScreen() {
               onChangeText={setSearchQuery}
               textAlign="right"
             />
-            <AppIcon name="search-outline" size={20} color={colors.textMuted} />
+            <AppIcon name="search-outline" size={20} color={colors.textPrimary} />
             {searchQuery.length > 0 ? (
               <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                <AppIcon name="close-circle" size={18} color={colors.textMuted} />
+                <AppIcon name="close-circle" size={18} color={colors.textPrimary} />
               </Pressable>
             ) : null}
           </View>
@@ -446,8 +446,8 @@ function createScreenStyles(colors: ThemeColors) {
   stickyHeader: {
     paddingBottom: spacing.sm,
     backgroundColor: colors.screenRoot,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderHairline,
   },
   headerRow: {
     flexDirection: 'row',
@@ -486,24 +486,22 @@ function createScreenStyles(colors: ThemeColors) {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerIconBox: {
     width: 52,
     height: 52,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 1.5,
-    borderWidth: 1,
-    borderColor: colors.electric + '66',
+    borderWidth: 0,
   },
   headerIconInner: {
     flex: 1,
-    borderRadius: 16,
-    backgroundColor: colors.bgSurface,
+    borderRadius: 14,
+    backgroundColor: colors.bgElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -516,10 +514,9 @@ function createScreenStyles(colors: ThemeColors) {
     gap: 10,
     marginHorizontal: spacing.lg,
     marginVertical: spacing.sm,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    borderRadius: 20,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 0,
+    borderRadius: 14,
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
     minHeight: 52,
@@ -528,7 +525,7 @@ function createScreenStyles(colors: ThemeColors) {
     width: 34,
     height: 34,
     borderRadius: 12,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.bgDeep,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -552,28 +549,21 @@ function createScreenStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.sm,
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
-    borderRadius: 16,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderRadius: 14,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 0,
     alignItems: 'center',
     gap: 4,
     position: 'relative',
   },
   quickFilterCardActive: {
     backgroundColor: colors.electric + '14',
-    borderColor: colors.electric,
-    shadowColor: colors.electric,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
   },
   quickFilterEmoji: { fontSize: 18 },
   quickFilterLabel: {
     ...typography.micro,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: colors.textPrimary,
     textAlign: 'center',
     writingDirection: 'rtl',
   },
@@ -593,16 +583,15 @@ function createScreenStyles(colors: ThemeColors) {
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    backgroundColor: colors.bgGlass,
+    borderRadius: 14,
+    borderWidth: 0,
+    backgroundColor: colors.bgElevated,
     alignSelf: 'center',
   },
   showAllText: {
     ...typography.caption,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.textPrimary,
     writingDirection: 'rtl',
   },
   headerMetaRow: {
@@ -619,10 +608,9 @@ function createScreenStyles(colors: ThemeColors) {
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: radius.pill,
+    borderRadius: 14,
     backgroundColor: colors.electric + '12',
-    borderWidth: 1,
-    borderColor: colors.electric + '33',
+    borderWidth: 0,
   },
   mapLinkText: {
     ...typography.micro,
@@ -649,17 +637,15 @@ function createScreenStyles(colors: ThemeColors) {
     gap: 5,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderRadius: 14,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 0,
   },
   countryChipActive: {
     backgroundColor: colors.electric,
-    borderColor: colors.electric,
   },
   countryChipFlag: { fontSize: 14 },
-  countryChipLabel: { ...typography.caption, color: colors.textMuted },
+  countryChipLabel: { ...typography.caption, color: colors.textPrimary },
   countryChipLabelActive: { color: '#fff', fontWeight: '600' },
 
   // Sections

@@ -1,8 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { gccCurrencies, type ButcherProfile } from '@/services/butcherData';
@@ -110,11 +110,11 @@ export function ButcherDeliveryCard({ butcher, width, onPress }: ButcherDelivery
 
         <View style={styles.pillsRow}>
           <View style={styles.metaPill}>
-            <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
+            <AppIcon name="clock-outline" size={12} color={colors.textPrimary} />
             <Text style={styles.metaPillText}>{timeLabel}</Text>
           </View>
           <View style={styles.metaPill}>
-            <AppIcon name="people-outline" size={12} color={colors.textMuted} />
+            <AppIcon name="people-outline" size={12} color={colors.textPrimary} />
             <Text style={styles.metaPillText}>{feeLabel}</Text>
           </View>
         </View>
@@ -126,16 +126,10 @@ export function ButcherDeliveryCard({ butcher, width, onPress }: ButcherDelivery
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: sarh.radius.card,
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
       overflow: 'hidden',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
+      borderWidth: 0,
     },
     pressed: {
       opacity: 0.92,
@@ -300,12 +294,12 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 7,
       paddingVertical: 3,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgDeep,
     },
     metaPillText: {
       ...typography.micro,
       fontSize: 10,
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       fontWeight: '600',
     },
   });

@@ -5,6 +5,7 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -191,14 +192,14 @@ export function ButcherCard({ butcher, variant = 'full', onPress, onOrder }: But
               ) : null}
             </View>
             <View style={[f.locationRow, getRtlRow()]}>
-              <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
+              <AppIcon name="map-marker-outline" size={13} color={colors.textPrimary} />
               <Text style={f.locationText} numberOfLines={1}>
                 {butcher.cityAr} · {country.ar}
               </Text>
             </View>
           </View>
           <Pressable style={f.bookmarkBtn} hitSlop={8}>
-            <AppIcon name="bookmark-outline" size={18} color={colors.textMuted} />
+            <AppIcon name="bookmark-outline" size={18} color={colors.textPrimary} />
           </Pressable>
         </View>
 
@@ -247,19 +248,17 @@ function createCompactStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      borderRadius: radius.xl,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderRadius: MENU_CARD.radius,
+      borderWidth: 0,
       padding: spacing.md,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgElevated,
     },
     logo: {
       width: 46,
       height: 46,
       borderRadius: 23,
       backgroundColor: colors.bgElevated,
-      borderWidth: 1.5,
-      borderColor: colors.borderMid,
+      borderWidth: 0,
     },
     nameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     name: {
@@ -282,24 +281,18 @@ function createCompactStyles(colors: ThemeColors) {
   });
 }
 
-function createFullStyles(colors: ThemeColors, isDark: boolean) {
+function createFullStyles(colors: ThemeColors, _isDark: boolean) {
   return StyleSheet.create({
     card: {
       ...getRtlRow(),
       alignItems: 'stretch',
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,
-      borderRadius: 20,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: isDark ? colors.borderSoft : colors.borderHairline,
+      borderRadius: MENU_CARD.radius,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
       overflow: 'hidden',
       minHeight: 176,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: isDark ? 0.28 : 0.08,
-      shadowRadius: 14,
-      elevation: 4,
     },
     cardPressed: {
       opacity: 0.94,
@@ -428,13 +421,12 @@ function createFullStyles(colors: ThemeColors, isDark: boolean) {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgDeep,
+      borderWidth: 0,
     },
     chipText: {
       ...typography.micro,
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       fontWeight: '600',
     },
     statsRow: {
