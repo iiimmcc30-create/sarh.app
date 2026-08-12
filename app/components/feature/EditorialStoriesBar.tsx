@@ -17,10 +17,12 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_W = Math.min(148, SCREEN_W * 0.38);
+const CARD_W = Math.min(124, SCREEN_W * 0.32);
 const CARD_H = CARD_W * (4 / 3);
-const CARD_GAP = 10;
+const CARD_GAP = 12;
 const SIDE_PAD = spacing.lg;
+const DOT_SIZE = 6;
+const DOT_ACTIVE_W = 22;
 
 type Props = {
   stories: EditorialStory[];
@@ -81,7 +83,7 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                     locations={[0.35, 1]}
                     style={styles.gradient}
                   />
-                  <Text style={styles.cardTitle} numberOfLines={3}>
+                  <Text style={styles.cardTitle} numberOfLines={2}>
                     {story.titleAr}
                   </Text>
                 </Pressable>
@@ -125,7 +127,7 @@ function createStyles(colors: ThemeColors) {
     card: {
       width: CARD_W,
       height: CARD_H,
-      borderRadius: 18,
+      borderRadius: 16,
       overflow: 'hidden',
       backgroundColor: colors.bgElevated,
       justifyContent: 'flex-end',
@@ -141,10 +143,10 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#fff',
       fontWeight: '700',
-      textAlign: 'center',
+      textAlign: 'right',
       paddingHorizontal: 10,
-      paddingBottom: 12,
-      lineHeight: 18,
+      paddingBottom: 10,
+      lineHeight: 17,
       writingDirection: 'rtl',
       textShadowColor: 'rgba(0,0,0,0.45)',
       textShadowOffset: { width: 0, height: 1 },
@@ -155,21 +157,20 @@ function createStyles(colors: ThemeColors) {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: 6,
-      marginTop: 2,
+      gap: 7,
+      marginTop: spacing.sm,
     },
     dot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: colors.textMuted,
-      opacity: 0.45,
+      width: DOT_SIZE,
+      height: DOT_SIZE,
+      borderRadius: DOT_SIZE / 2,
+      backgroundColor: '#FFFFFF',
     },
     dotActive: {
-      width: 18,
-      borderRadius: 4,
+      width: DOT_ACTIVE_W,
+      height: DOT_SIZE,
+      borderRadius: DOT_SIZE / 2,
       backgroundColor: colors.emerald,
-      opacity: 1,
     },
   });
 }
