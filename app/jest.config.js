@@ -31,6 +31,8 @@ module.exports = {
     '^expo-linking$': '<rootDir>/__tests__/mocks/expo-linking.ts',
     '^expo-web-browser$': '<rootDir>/__tests__/mocks/expo-web-browser.ts',
     '^expo-constants$': '<rootDir>/__tests__/mocks/expo-constants.ts',
+    '^expo-asset$': '<rootDir>/__tests__/mocks/expo-asset.ts',
+    '^expo-location$': '<rootDir>/__tests__/mocks/expo-location.ts',
     '^\\./devHost$': '<rootDir>/__tests__/mocks/devHost.ts',
     '^.*/services/devHost$': '<rootDir>/__tests__/mocks/devHost.ts',
   },
