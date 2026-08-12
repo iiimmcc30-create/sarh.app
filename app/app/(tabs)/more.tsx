@@ -129,7 +129,6 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="file-document-outline"
             title="السياسات والشروط"
-            subtitle="الشروط، الخصوصية، الملكية الفكرية والمزيد"
             colors={colors}
             showDivider={false}
             onPress={() => safePush('/info/policies', undefined, router)}
@@ -146,7 +145,6 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="information-outline"
             title="من نحن"
-            subtitle="تعرّف على سرح ورؤيتنا"
             colors={colors}
             showDivider
             onPress={() => safePush('/info/about', undefined, router)}
@@ -154,7 +152,6 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="lifebuoy"
             title="الدعم والمساعدة"
-            subtitle="مركز الدعم والأسئلة الشائعة"
             colors={colors}
             showDivider
             onPress={() => safePush('/support/index', undefined, router)}
@@ -162,7 +159,6 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="mail-outline"
             title="تواصل معنا"
-            subtitle="تواصل مع فريق سرح"
             colors={colors}
             showDivider
             onPress={() => safePush('/info/contact', undefined, router)}
@@ -170,7 +166,6 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="star-outline"
             title="تقييم التطبيق"
-            subtitle="أخبرنا برأيك وساعدنا في التطوير"
             colors={colors}
             showDivider={false}
             onPress={openStoreRating}
