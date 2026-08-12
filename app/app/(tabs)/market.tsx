@@ -194,38 +194,42 @@ export default function MarketScreen() {
 
   return (
     <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
-      <MarketAppBar
-        onMenu={() => safePush('/sidebar', undefined, router)}
-        onSearch={() => safePush('/search', undefined, router)}
-      />
-
-      {categories.length > 0 ? (
-        <MarketCategoryNav
-          categories={categories}
-          activeParentId={activeParentId}
-          activeSubId={activeSubId}
-          onSelectParent={onSelectParent}
-          onSelectSub={onSelectSub}
+      {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
+      <View style={styles.stickyChrome}>
+        <MarketAppBar
+          onMenu={() => safePush('/sidebar', undefined, router)}
+          onSearch={() => safePush('/search', undefined, router)}
         />
-      ) : categoriesLoading ? (
-        <View style={styles.categoriesLoading}>
-          <Text style={styles.categoriesLoadingText}>جاري تحميل التصنيفات...</Text>
-        </View>
-      ) : null}
 
-      <MarketFilterBar
-        regionSelection={regionSelection}
-        onRegionPress={() => setRegionPickerOpen(true)}
-        onFilterPress={() => setShowFeaturedOnly((v) => !v)}
-        onNearbyPress={() => void onNearby()}
-        onSortPress={cycleSort}
-        sortLabel={sortLabel}
-        filterActive={showFeaturedOnly}
-      />
+        {categories.length > 0 ? (
+          <MarketCategoryNav
+            categories={categories}
+            activeParentId={activeParentId}
+            activeSubId={activeSubId}
+            onSelectParent={onSelectParent}
+            onSelectSub={onSelectSub}
+          />
+        ) : categoriesLoading ? (
+          <View style={styles.categoriesLoading}>
+            <Text style={styles.categoriesLoadingText}>جاري تحميل التصنيفات...</Text>
+          </View>
+        ) : null}
+
+        <MarketFilterBar
+          regionSelection={regionSelection}
+          onRegionPress={() => setRegionPickerOpen(true)}
+          onFilterPress={() => setShowFeaturedOnly((v) => !v)}
+          onNearbyPress={() => void onNearby()}
+          onSortPress={cycleSort}
+          sortLabel={sortLabel}
+          filterActive={showFeaturedOnly}
+        />
+      </View>
 
       <AppFlatList
         ref={listRef}
         style={styles.list}
+        contentContainerStyle={styles.listContent}
         data={filtered}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -237,6 +241,7 @@ export default function MarketScreen() {
           </View>
         }
         ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
+        removeClippedSubviews={false}
         initialNumToRender={12}
         maxToRenderPerBatch={10}
         windowSize={8}
@@ -259,8 +264,19 @@ function createMarketStyles(
 ) {
   return StyleSheet.create({
     container: screenStyles.screenRoot,
+    stickyChrome: {
+      flexGrow: 0,
+      flexShrink: 0,
+      zIndex: 2,
+    },
     list: {
       flex: 1,
+      flexGrow: 1,
+      flexShrink: 1,
+      minHeight: 0,
+    },
+    listContent: {
+      flexGrow: 0,
     },
     listingsHead: {
       width: '100%',

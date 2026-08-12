@@ -15,6 +15,7 @@ type Props = {
 
 /**
  * Haraj-style two-row category nav: text tabs + subcategory chips.
+ * Horizontal ScrollViews must stay flexGrow:0 so they never eat vertical space.
  */
 export function MarketCategoryNav({
   categories,
@@ -35,6 +36,7 @@ export function MarketCategoryNav({
     <View style={styles.wrap}>
       <ScrollView
         horizontal
+        style={styles.hScroll}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={[styles.tabRow, getRtlDirection()]}
       >
@@ -60,6 +62,7 @@ export function MarketCategoryNav({
       {activeParent && subs.length > 0 ? (
         <ScrollView
           horizontal
+          style={styles.hScroll}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={[styles.chipRow, getRtlDirection()]}
         >
@@ -95,6 +98,13 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
       gap: spacing.xs,
       paddingBottom: spacing.xs,
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    /** Prevent RN Web ScrollView default flexGrow:1 from opening a vertical gap. */
+    hScroll: {
+      flexGrow: 0,
+      flexShrink: 0,
     },
     tabRow: {
       flexDirection: 'row',

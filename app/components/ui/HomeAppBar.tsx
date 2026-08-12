@@ -4,7 +4,7 @@ import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type HomeAppBarProps = {
@@ -40,9 +40,11 @@ export function HomeAppBar({
           accessibilityLabel={searchPlaceholder}
         >
           <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
-          <Text style={styles.searchPlaceholder} numberOfLines={1}>
-            {searchPlaceholder}
-          </Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.searchPlaceholder} numberOfLines={1}>
+              {searchPlaceholder}
+            </Text>
+          </View>
         </Pressable>
 
         <NotificationBellButton
@@ -62,6 +64,8 @@ function createStyles(colors: ThemeColors) {
     shell: {
       backgroundColor: colors.bgElevated,
       borderBottomWidth: 0,
+      flexGrow: 0,
+      flexShrink: 0,
     },
     bar: {
       alignItems: 'center',
@@ -81,10 +85,17 @@ function createStyles(colors: ThemeColors) {
       borderRadius: MENU_CARD.controlRadius,
       borderWidth: 0,
     },
+    /** Physical LTR shell — same as AppTextInput / listing titles. */
+    rtlTextShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     searchPlaceholder: {
       ...typography.body,
-      ...getRtlText(),
-      flex: 1,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       color: colors.textMuted,
       fontSize: 14,
     },
