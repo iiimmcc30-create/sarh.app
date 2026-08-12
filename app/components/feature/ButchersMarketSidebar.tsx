@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { useRouter, useSegments } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
@@ -244,11 +245,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     menuCard: {
       marginHorizontal: spacing.lg,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
-      overflow: 'hidden',
+      ...menuCardStyle(colors),
     },
     footer: {
       paddingVertical: spacing.md,

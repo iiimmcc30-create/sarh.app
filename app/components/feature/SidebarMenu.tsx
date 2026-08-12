@@ -6,7 +6,21 @@ import {
 } from '@/components/ui/SidebarMenuItem';
 import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+
+/** Shared elevated menu card — More tab / reference style. */
+export const MENU_CARD = {
+  radius: 14,
+  sectionTitlePad: spacing.lg,
+} as const;
+
+export function menuCardStyle(colors: ThemeColors): ViewStyle {
+  return {
+    backgroundColor: colors.bgElevated,
+    borderRadius: MENU_CARD.radius,
+    overflow: 'hidden',
+  };
+}
 
 /**
  * Data shape for building sidebar/settings menus.
@@ -37,21 +51,10 @@ export function SidebarSection({
     <View style={sectionStyles.block}>
       {title ? (
         <View style={sectionStyles.titleShell}>
-          <Text style={[sectionStyles.title, { color: colors.textMuted }]}>{title}</Text>
+          <Text style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</Text>
         </View>
       ) : null}
-      <View
-        style={[
-          sectionStyles.card,
-          {
-            // Same card surface as listing/post cards across the app.
-            backgroundColor: colors.bgSurface,
-            borderColor: colors.borderSoft,
-          },
-        ]}
-      >
-        {children}
-      </View>
+      <View style={[sectionStyles.card, menuCardStyle(colors)]}>{children}</View>
     </View>
   );
 }
@@ -91,6 +94,7 @@ export function SidebarMenuRow({
       showChevron={showChevron}
       iconColor={iconColor ?? item.accent}
       colors={colors}
+      variant="outline"
     />
   );
 }
@@ -103,7 +107,7 @@ export function SidebarThemeToggle({
   preference,
   colors,
   onToggle,
-  variant = 'default',
+  variant = 'outline',
 }: {
   preference: 'light' | 'dark' | 'system';
   colors: ThemeColors;
@@ -114,18 +118,17 @@ export function SidebarThemeToggle({
   const isRtl = I18nManager.isRTL;
   const isOutline = variant === 'outline';
   const iconTint = isOutline ? colors.textPrimary : colors.textMuted;
-  const cardBg = isOutline ? colors.bgElevated : colors.bgSurface;
-  const cardBorder = isOutline ? 'transparent' : colors.borderSoft;
 
   return (
     <View
       style={[
         themeStyles.wrap,
         isOutline && themeStyles.wrapOutline,
+        isOutline ? menuCardStyle(colors) : null,
         {
           direction: isRtl ? 'rtl' : 'ltr',
-          backgroundColor: cardBg,
-          borderColor: cardBorder,
+          backgroundColor: isOutline ? undefined : colors.bgSurface,
+          borderColor: isOutline ? 'transparent' : colors.borderSoft,
         },
       ]}
     >
@@ -193,18 +196,18 @@ export function SidebarLogoutButton({
       onPress={onPress}
       style={({ pressed }) => [
         logoutStyles.btn,
-        {
-          backgroundColor: colors.bgSurface,
-          borderColor: colors.borderSoft,
-        },
+        menuCardStyle(colors),
         pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
       ]}
     >
-      <View style={logoutStyles.textShell}>
-        <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
-      </View>
-      <View style={[logoutStyles.iconWrap, { backgroundColor: `${colors.rose}14` }]}>
-        <AppIcon name="log-out-outline" size={20} color={colors.rose} />
+      <View style={logoutStyles.chevronSlot} />
+      <View style={logoutStyles.coverTrail}>
+        <View style={logoutStyles.textShell}>
+          <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
+        </View>
+        <View style={logoutStyles.iconWrapOutline}>
+          <AppIcon name="log-out-outline" size={22} color={colors.rose} />
+        </View>
       </View>
     </Pressable>
   );
@@ -219,22 +222,15 @@ const sectionStyles = StyleSheet.create({
     width: '100%',
     direction: 'ltr',
     marginBottom: spacing.sm,
-    paddingHorizontal: 4,
+    paddingHorizontal: MENU_CARD.sectionTitlePad,
   },
   title: {
-    ...typography.caption,
-    fontWeight: '600',
-    fontSize: 12,
-    letterSpacing: 0.4,
+    ...typography.bodyStrong,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
-  card: {
-    borderRadius: radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
+  card: {},
 });
 
 const themeStyles = StyleSheet.create({
@@ -312,19 +308,28 @@ const logoutStyles = StyleSheet.create({
     flexDirection: 'row',
     direction: 'ltr',
     alignItems: 'center',
-    gap: spacing.md,
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 14,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 56,
+    minHeight: 52,
   },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  chevronSlot: {
+    width: 18,
+    flexShrink: 0,
+  },
+  coverTrail: {
+    flex: 1,
+    flexDirection: 'row',
+    direction: 'ltr',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
+    minWidth: 0,
+  },
+  iconWrapOutline: {
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,

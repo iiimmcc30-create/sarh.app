@@ -1,8 +1,8 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
-import { sarh } from '@/constants/sarhTokens';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppScrollView } from '@/components/ui/AppScrollView';
@@ -43,9 +43,7 @@ export function SettingsMenuScreen({
       <ScreenHeader title={title} showBack />
       <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <View style={styles.heroIcon}>
-            <AppIcon name={heroIcon} size={25} color={colors.textMuted} />
-          </View>
+          <AppIcon name={heroIcon} size={28} color={colors.textPrimary} />
           <View style={styles.rtlTextShell}>
             <Text style={styles.heroTitle}>{title}</Text>
           </View>
@@ -75,8 +73,7 @@ export function SettingsMenuScreen({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const isDark = scheme === 'dark';
+function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     content: {
@@ -87,21 +84,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     hero: {
       alignItems: 'center',
       padding: spacing.xl,
-      borderRadius: sarh.radius.lg,
-      backgroundColor: isDark ? sarh.color.surface : colors.royal,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderMid,
-    },
-    heroIcon: {
-      width: 54,
-      height: 54,
-      borderRadius: radius.lg,
-      backgroundColor: isDark ? sarh.color.surfaceRaised : colors.bgGlassStrong,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.md,
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      gap: spacing.sm,
     },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
     rtlTextShell: {
@@ -124,13 +109,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: 20,
       marginTop: spacing.xs,
     },
-    list: {
-      backgroundColor: isDark ? sarh.color.surface : colors.bgGlassStrong,
-      borderRadius: sarh.radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
-      overflow: 'hidden',
-    },
+    list: menuCardStyle(colors),
   });
 }
 

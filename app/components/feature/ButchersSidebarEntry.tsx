@@ -2,6 +2,7 @@
 // SAFAT — ButchersSidebarEntry
 // Public butcher discovery + owner tools when application is approved.
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -104,11 +105,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
       marginHorizontal: spacing.lg,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
-      overflow: 'hidden',
+      ...menuCardStyle(colors),
     },
   });
 }

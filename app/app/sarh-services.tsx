@@ -1,3 +1,4 @@
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { OfficialServiceCard } from '@/components/feature/OfficialServiceCard';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -101,7 +102,7 @@ export default function SarhServicesScreen() {
               <Text style={styles.sectionTitle}>
                 {group.emoji} {group.label}
               </Text>
-              <View style={styles.sectionList}>
+              <View style={[styles.sectionList, menuCardStyle(colors)]}>
                 {group.items.map((service, index) => (
                   <OfficialServiceCard
                     key={service.id}
@@ -149,10 +150,8 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'flex-start',
       gap: spacing.sm,
       padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgGlassStrong,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
     },
     noticeIcon: {
       width: 28,
@@ -205,10 +204,6 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 4,
     },
     sectionList: {
-      borderRadius: radius.xl,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
       overflow: 'hidden',
     },
   });
