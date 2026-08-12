@@ -1,12 +1,11 @@
 import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
-import { VerificationBadge } from '@/components/ui/VerificationBadge';
+import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlDirection } from '@/lib/rtl';
 import { confirmDestructive, alertMessage } from '@/lib/actionSheet';
 import { showToast } from '@/lib/toast';
 import { fetchBlockedUsers, setBlockUser, type BlockedUser } from '@/services/users';
@@ -81,28 +80,32 @@ export default function BlockedUsersScreen() {
           </View>
         ) : (
           users.map((user) => (
-            <View key={user.id} style={[styles.row, menuCardStyle(colors), getRtlRow()]}>
-              <Image source={uriSource(user.avatar)} style={styles.avatar} contentFit="cover" />
-              <View style={styles.info}>
-                <View style={[styles.nameRow, getRtlRow()]}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {user.arabicName || user.displayName}
-                  </Text>
-                  {user.verified ? <VerificationBadge size={14} /> : null}
-                </View>
-                <Text style={styles.handle} numberOfLines={1}>@{user.username}</Text>
-              </View>
-              <Pressable
-                style={styles.unblockBtn}
-                onPress={() => void handleUnblock(user)}
-                disabled={actionId === user.id}
-              >
-                {actionId === user.id ? (
-                  <ActivityIndicator size="small" color={colors.textPrimary} />
-                ) : (
-                  <Text style={styles.unblockText}>إلغاء الحظر</Text>
-                )}
-              </Pressable>
+            <View key={user.id} style={[styles.row, menuCardStyle(colors)]}>
+              <UserIdentityRow
+                avatarUri={user.avatar}
+                displayName={user.arabicName || user.displayName}
+                username={user.username}
+                verified={user.verified}
+                avatarSize={USER_IDENTITY.listAvatarSize}
+                avatarRadius={USER_IDENTITY.listAvatarRadius}
+                avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+                colors={colors}
+                nameLines={2}
+                style={styles.identity}
+                trailing={
+                  <Pressable
+                    style={styles.unblockBtn}
+                    onPress={() => void handleUnblock(user)}
+                    disabled={actionId === user.id}
+                  >
+                    {actionId === user.id ? (
+                      <ActivityIndicator size="small" color={colors.textPrimary} />
+                    ) : (
+                      <Text style={styles.unblockText}>إلغاء الحظر</Text>
+                    )}
+                  </Pressable>
+                }
+              />
             </View>
           ))
         )}
@@ -138,26 +141,10 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'center',
     },
     row: {
-      alignItems: 'center',
-      gap: spacing.md,
       padding: spacing.md,
     },
-    avatar: {
-      width: 44,
-      height: 44,
-      borderRadius: 20,
-      backgroundColor: colors.bgElevated,
-    },
-    info: { flex: 1, gap: 2 },
-    nameRow: { alignItems: 'center', gap: 4 },
-    name: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-    },
-    handle: {
-      ...typography.caption,
-      color: colors.textMuted,
+    identity: {
+      width: '100%',
     },
     unblockBtn: {
       paddingHorizontal: spacing.md,

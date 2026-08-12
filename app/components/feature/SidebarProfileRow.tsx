@@ -1,21 +1,15 @@
 import type { ReactNode } from 'react';
-import { Image, uriSource } from '@/components/ui/AppImage';
+import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 export const SIDEBAR_PROFILE = {
-  avatarSize: 58,
-  avatarRadius: 16,
-  avatarBorder: 2,
+  avatarSize: USER_IDENTITY.sidebarAvatarSize,
+  avatarRadius: USER_IDENTITY.sidebarAvatarRadius,
+  avatarBorder: USER_IDENTITY.sidebarAvatarBorder,
   nameLines: 2,
 } as const;
 
@@ -32,10 +26,7 @@ export type SidebarProfileRowProps = {
   style?: ViewStyle;
 };
 
-/**
- * Canonical sidebar profile row — avatar beside name with LTR text shells
- * so long Arabic names render fully under app RTL.
- */
+/** Sidebar wrapper over UserIdentityRow — padding, divider, section badge. */
 export function SidebarProfileRow({
   avatarUri,
   displayName,
@@ -53,66 +44,39 @@ export function SidebarProfileRow({
     createStyles(colors, scheme === 'dark'),
   );
 
-  const handle = username
-    ? username.startsWith('@')
-      ? username
-      : `@${username}`
-    : null;
-
-  const content = (
+  const footer = (
     <>
-      <Image
-        source={uriSource(avatarUri)}
-        style={styles.avatar}
-        contentFit="cover"
-      />
-      <View style={styles.profileText}>
-        <View style={styles.nameShell}>
-          <Text style={styles.displayName} numberOfLines={SIDEBAR_PROFILE.nameLines}>
-            {displayName}
-          </Text>
+      {badgeLabel ? (
+        <View style={styles.badgePill}>
+          <Text style={styles.badgePillText}>{badgeLabel}</Text>
         </View>
-        {handle ? (
-          <View style={styles.handleShell}>
-            <Text style={styles.usernameText} numberOfLines={1}>
-              {handle}
-            </Text>
-          </View>
-        ) : null}
-        {badgeLabel ? (
-          <View style={styles.badgePill}>
-            <Text style={styles.badgePillText}>{badgeLabel}</Text>
-          </View>
-        ) : null}
-        {badge}
-      </View>
+      ) : null}
+      {badge}
     </>
   );
 
-  const rowStyle = [
-    styles.row,
-    showDivider && styles.rowDivider,
-    style,
-  ];
-
-  if (onPress) {
-    return (
-      <Pressable onPress={onPress} style={rowStyle}>
-        {content}
-      </Pressable>
-    );
-  }
-
-  return <View style={rowStyle}>{content}</View>;
+  return (
+    <UserIdentityRow
+      avatarUri={avatarUri}
+      displayName={displayName}
+      username={username}
+      onPress={onPress}
+      colors={colors}
+      avatarSize={SIDEBAR_PROFILE.avatarSize}
+      avatarRadius={SIDEBAR_PROFILE.avatarRadius}
+      avatarBorderWidth={SIDEBAR_PROFILE.avatarBorder}
+      avatarBorderColor={sarh.color.action}
+      nameLines={SIDEBAR_PROFILE.nameLines}
+      nameStyle={styles.displayName}
+      footer={badgeLabel || badge ? footer : undefined}
+      style={[styles.row, showDivider && styles.rowDivider, style]}
+    />
+  );
 }
 
 function createStyles(colors: ThemeColors, isDark: boolean) {
   return StyleSheet.create({
     row: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: spacing.md,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.lg,
     },
@@ -120,45 +84,10 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderMid,
     },
-    avatar: {
-      width: SIDEBAR_PROFILE.avatarSize,
-      height: SIDEBAR_PROFILE.avatarSize,
-      borderRadius: SIDEBAR_PROFILE.avatarRadius,
-      borderWidth: SIDEBAR_PROFILE.avatarBorder,
-      borderColor: sarh.color.action,
-      backgroundColor: colors.bgElevated,
-      flexShrink: 0,
-    },
-    profileText: {
-      flex: 1,
-      minWidth: 0,
-      gap: 3,
-    },
-    nameShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
-    },
-    handleShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
-    },
     displayName: {
       ...typography.h3,
       fontSize: 17,
       fontWeight: '600',
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    usernameText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     badgePill: {
       marginTop: 4,

@@ -190,9 +190,11 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
                 <View style={[styles.commentHeader, getRtlRow()]}>
                   <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
                     <View style={styles.nameTimeShell}>
-                      <Text style={styles.commentName} numberOfLines={1}>
-                        {c.author.arabicName || c.author.displayName}
-                      </Text>
+                      <View style={styles.nameShell}>
+                        <Text style={styles.commentName} numberOfLines={1}>
+                          {c.author.arabicName || c.author.displayName}
+                        </Text>
+                      </View>
                       {c.author.verified ? (
                         <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
                       ) : null}
@@ -388,11 +390,16 @@ function createStyles(colors: ThemeColors) {
       alignSelf: 'flex-end',
       maxWidth: '100%',
     },
+    nameShell: {
+      direction: 'ltr',
+      flex: 1,
+      minWidth: 0,
+    },
     commentName: {
       ...typography.caption,
       color: colors.textPrimary,
       fontWeight: '600',
-      flexShrink: 1,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
