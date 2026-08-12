@@ -11,11 +11,12 @@ import {
 import { Transform, Type } from 'class-transformer';
 
 export class CreateEditorialStoryDto {
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(200)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  titleAr!: string;
+  titleAr?: string;
 
   @IsString()
   @MinLength(10)

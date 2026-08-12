@@ -1,9 +1,11 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Power, RefreshCw, Trash2, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
+import { EditorialStoryImagePicker } from '@/components/editorial-stories/EditorialStoryImagePicker';
+import { deriveEditorialStoryTitle } from '@/lib/editorialStoryTitle';
 import { getApiErrorMessage } from '@/services/api.client';
 import {
   createEditorialStory,
@@ -12,9 +14,9 @@ import {
   updateEditorialStory,
   type EditorialStoryRecord,
 } from '@/services/editorial-stories.service';
+import { uploadEditorialStoryImage } from '@/services/upload.service';
 
 const EMPTY_FORM = {
-  titleAr: '',
   bodyAr: '',
   imageUrl: '',
   duration: 20,
@@ -26,9 +28,15 @@ export default function EditorialStoriesAdminPage() {
   const [stories, setStories] = useState<EditorialStoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const previewTitle = useMemo(
+    () => deriveEditorialStoryTitle(form.bodyAr),
+    [form.bodyAr],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,7 +62,6 @@ export default function EditorialStoriesAdminPage() {
   function startEdit(story: EditorialStoryRecord) {
     setEditingId(story.id);
     setForm({
-      titleAr: story.titleAr,
       bodyAr: story.bodyAr,
       imageUrl: story.imageUrl,
       duration: story.duration,
@@ -63,14 +70,35 @@ export default function EditorialStoriesAdminPage() {
     });
   }
 
+  async function onPickImage(file: File) {
+    setUploadingImage(true);
+    setError(null);
+    try {
+      const url = await uploadEditorialStoryImage(file);
+      setForm((prev) => ({ ...prev, imageUrl: url }));
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'تعذر رفع الصورة'));
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!form.imageUrl) {
+      setError('اختر صورة للستوري');
+      return;
+    }
+    if (!form.bodyAr.trim()) {
+      setError('أدخل نص المقال');
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
       const payload = {
-        titleAr: form.titleAr,
-        bodyAr: form.bodyAr,
+        bodyAr: form.bodyAr.trim(),
         imageUrl: form.imageUrl,
         duration: Number(form.duration) || 20,
         sortOrder: Number(form.sortOrder) || 0,
@@ -122,7 +150,7 @@ export default function EditorialStoriesAdminPage() {
     <div>
       <PageHeader
         title="ستوريات الصفحة الرئيسية"
-        description="صور إخبارية تظهر في شريط أفقي على الرئيسية — المدة الافتراضية 20 ثانية"
+        description="صور إخبارية تظهر في شريط أفقي على الرئيسية — العنوان يُستخرج تلقائيًا من بداية نص المقال"
         actions={
           <Button variant="ghost" onClick={() => void load()} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
@@ -145,21 +173,28 @@ export default function EditorialStoriesAdminPage() {
           {editingId ? 'تعديل ستوري' : 'إضافة ستوري'}
         </h3>
         <div className="grid gap-3 md:grid-cols-2">
-          <input
-            placeholder="العنوان"
-            value={form.titleAr}
-            onChange={(e) => setForm({ ...form, titleAr: e.target.value })}
-            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
+          <EditorialStoryImagePicker
+            imageUrl={form.imageUrl}
+            uploading={uploadingImage}
+            onPick={(file) => void onPickImage(file)}
+            onClear={() => setForm((prev) => ({ ...prev, imageUrl: '' }))}
+          />
+
+          <textarea
+            placeholder="نص المقال — يظهر العنوان على الصورة تلقائيًا من بداية هذا النص"
+            value={form.bodyAr}
+            onChange={(e) => setForm({ ...form, bodyAr: e.target.value })}
+            className="min-h-[180px] rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
             required
           />
-          <input
-            placeholder="رابط الصورة"
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
-            required
-            dir="ltr"
-          />
+
+          {previewTitle ? (
+            <div className="rounded-xl border border-slate-700/80 bg-slate-950/80 px-3 py-2 md:col-span-2">
+              <p className="mb-1 text-xs text-slate-500">العنوان على الصورة (تلقائي)</p>
+              <p className="text-sm font-semibold text-emerald-300">{previewTitle}</p>
+            </div>
+          ) : null}
+
           <input
             type="number"
             min={5}
@@ -179,13 +214,6 @@ export default function EditorialStoriesAdminPage() {
             className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
             dir="ltr"
           />
-          <textarea
-            placeholder="نص المقال"
-            value={form.bodyAr}
-            onChange={(e) => setForm({ ...form, bodyAr: e.target.value })}
-            className="min-h-[140px] rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
-            required
-          />
           <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
               type="checkbox"
@@ -196,7 +224,7 @@ export default function EditorialStoriesAdminPage() {
           </label>
         </div>
         <div className="mt-4 flex gap-2">
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy || uploadingImage}>
             <Plus className="h-4 w-4" />
             {editingId ? 'حفظ التعديل' : 'إضافة'}
           </Button>
