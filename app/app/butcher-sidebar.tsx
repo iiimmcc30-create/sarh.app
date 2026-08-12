@@ -1,27 +1,26 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher sidebar (owner management + butcher services)
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   scrimColor,
   spacing,
-  typography,
   panelSurfaceBg,
   type ThemeColors,
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { alignInlineEnd, borderInlineEnd, getRtlRow } from '@/lib/rtl';
+import { borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
+import { SidebarCloseHeader } from '@/components/feature/SidebarCloseHeader';
+import { SidebarProfileRow } from '@/components/feature/SidebarProfileRow';
 import { confirmSignOut } from '@/lib/confirmSignOut';
 import { closeThenPush, safeReplace } from '@/lib/safeNavigate';
 import {
@@ -147,23 +146,16 @@ export default function ButcherSidebarScreen() {
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        <View style={[styles.header, getRtlRow()]}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
-            <AppIcon name="close" size={22} color={colors.textPrimary} />
-          </Pressable>
+        <SidebarCloseHeader onClose={() => router.back()} colors={colors} />
 
-          <Pressable
-            onPress={() => closeThenPush('/(butcher)/profile', { closeDelayMs: 100 }, router)}
-            style={styles.profileCenter}
-          >
-            <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-            <Text style={styles.usernameText} numberOfLines={1}>
-              @{me.username || 'user'}
-            </Text>
-          </Pressable>
-
-          <View style={styles.headerSpacer} />
-        </View>
+        <SidebarProfileRow
+          avatarUri={me.avatar}
+          displayName={me.arabicName || me.displayName || me.username}
+          username={me.username || 'user'}
+          badgeLabel="إدارة الملحمة"
+          colors={colors}
+          onPress={() => closeThenPush('/(butcher)/profile', { closeDelayMs: 100 }, router)}
+        />
 
         <AppScrollView
           style={styles.scroll}
@@ -244,57 +236,12 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       shadowRadius: 20,
       elevation: 12,
     },
-    header: {
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-    },
-    closeBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: colors.bgGlass,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    profileCenter: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingHorizontal: spacing.sm,
-      minWidth: 0,
-    },
-    headerSpacer: {
-      width: 40,
-      height: 40,
-    },
-    avatar: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      borderWidth: 2,
-      borderColor: colors.electric,
-      backgroundColor: colors.bgElevated,
-    },
-    usernameText: {
-      ...typography.bodyStrong,
-      fontSize: 17,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      maxWidth: '100%',
-    },
     scroll: {
       flex: 1,
     },
     scrollContent: {
       paddingBottom: spacing.lg,
+      paddingTop: spacing.md,
     },
   });
 }
