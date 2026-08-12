@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../common/services/logger.service';
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
+import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 import { throwApi } from '../../common/exceptions/api.exception';
 import { KnowledgeRepository } from '../repositories/knowledge.repository';
 
@@ -9,6 +10,7 @@ export class PublisherService {
   constructor(
     private readonly repo: KnowledgeRepository,
     private readonly cache: RedisCacheService,
+    private readonly notifications: AppNotificationsService,
     private readonly logger: LoggerService,
   ) {}
 
@@ -81,11 +83,31 @@ export class PublisherService {
       errorMessage: null,
     });
 
+    const followers = await this.repo.findFollowerIds(author.id);
+    if (followers.length > 0) {
+      await this.notifications
+        .notifyUsers(
+          followers.map((f) => f.followerId),
+          {
+            type: 'system',
+            titleAr: 'منشور جديد من مركز المعرفة',
+            bodyAr: `${author.arabicName || 'مركز المعرفة'} نشر منشوراً جديداً`,
+            data: { postId: post.id, authorId: author.id },
+          },
+        )
+        .catch((err) => {
+          this.logger.warn(
+            { err, postId: post.id },
+            'Knowledge publish notify failed',
+          );
+        });
+    }
+
     await this.cache.del('posts:feed:first').catch(() => undefined);
     await this.cache.delPattern('posts:feed:*').catch(() => 0);
     await this.cache.delPattern('posts:feed:following:*').catch(() => 0);
     this.logger.info(
-      { articleId, postId: post.id },
+      { articleId, postId: post.id, followers: followers.length },
       'Knowledge article published as post',
     );
     return updated;

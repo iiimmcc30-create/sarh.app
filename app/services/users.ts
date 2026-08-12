@@ -15,6 +15,7 @@ export type PublicUserProfile = {
   coverImage?: string;
   bio?: string;
   verified: boolean;
+  isAI?: boolean;
   country?: string;
   role?: string;
   /** Derived: USER | BUTCHER | LIVESTOCK_TRADER */

@@ -211,12 +211,25 @@ describe('admin feature API wiring — login to every section', () => {
       .mockResolvedValueOnce(
         ok({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 }),
       );
+    (apiClient.post as jest.Mock).mockResolvedValueOnce(
+      ok({
+        user: { id: 'kc', username: 'knowledge_center', isAI: true },
+        sources: { seeded: 3, total: 3 },
+        follows: { users: 10, followsCreated: 10 },
+        sourcesEnabled: 0,
+        sync: { published: 2 },
+      }),
+    );
     await knowledge.fetchKnowledgeSources();
     await knowledge.syncKnowledge();
     await knowledge.fetchKnowledgeArticles({ status: 'PENDING' });
     await knowledge.approveKnowledgeArticle('a1');
+    await knowledge.activateKnowledgeCenter({ sync: true });
     expect(apiClient.get).toHaveBeenCalledWith('/admin/knowledge/sources');
     expect(apiClient.post).toHaveBeenCalledWith('/admin/knowledge/sync');
+    expect(apiClient.post).toHaveBeenCalledWith('/admin/knowledge/activate', {
+      sync: true,
+    });
   });
 
   it('official services', async () => {

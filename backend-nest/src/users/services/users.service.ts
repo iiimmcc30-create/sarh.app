@@ -537,6 +537,7 @@ export class UsersService {
       coverImage: user.coverImage,
       bio: user.bio,
       verified: user.verified,
+      isAI: user.isAI ?? false,
       country: user.country,
       role: user.role,
       accountType: this.resolveAccountType(user),

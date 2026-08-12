@@ -10,8 +10,10 @@ import {
   Check,
   X,
   Upload,
+  Sparkles,
 } from 'lucide-react';
 import {
+  activateKnowledgeCenter,
   createKnowledgeSource,
   deleteKnowledgeSource,
   fetchKnowledgeArticles,
@@ -99,25 +101,53 @@ export default function KnowledgeCenterPage() {
             إدارة المصادر والأخبار الموثوقة والنشر التلقائي
           </p>
         </div>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              await syncKnowledge();
-              await load();
-            } catch (err) {
-              setError(err instanceof Error ? err.message : 'فشلت المزامنة');
-            } finally {
-              setBusy(false);
-            }
-          }}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
-          إعادة مزامنة الكل
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError(null);
+              try {
+                const result = await activateKnowledgeCenter({ sync: true });
+                await load();
+                setError(
+                  `تم التفعيل: مصادر ${result.sources.total} · متابعات جديدة ${result.follows.followsCreated}` +
+                    (result.sync
+                      ? ` · نُشر ${result.sync.published ?? 0}`
+                      : ''),
+                );
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'فشل التفعيل');
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+          >
+            <Sparkles className={`h-4 w-4 ${busy ? 'animate-pulse' : ''}`} />
+            تفعيل الحساب والنشر
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await syncKnowledge();
+                await load();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'فشلت المزامنة');
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
+            إعادة مزامنة الكل
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 border-b border-slate-800 pb-2">
@@ -144,7 +174,13 @@ export default function KnowledgeCenterPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-rose-800 bg-rose-950/40 px-4 py-3 text-sm text-rose-300">
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            error.startsWith('تم التفعيل')
+              ? 'border-emerald-800 bg-emerald-950/40 text-emerald-300'
+              : 'border-rose-800 bg-rose-950/40 text-rose-300'
+          }`}
+        >
           {error}
         </div>
       ) : null}

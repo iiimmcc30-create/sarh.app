@@ -2,6 +2,7 @@ import { PublisherService } from './publisher.service';
 import { KnowledgeRepository } from '../repositories/knowledge.repository';
 import { LoggerService } from '../../common/services/logger.service';
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
+import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 
 describe('PublisherService', () => {
   const repo = {
@@ -10,6 +11,7 @@ describe('PublisherService', () => {
     createPost: jest.fn(),
     updateArticle: jest.fn(),
     softHidePost: jest.fn(),
+    findFollowerIds: jest.fn().mockResolvedValue([]),
   } as unknown as KnowledgeRepository;
 
   const cache = {
@@ -17,16 +19,21 @@ describe('PublisherService', () => {
     delPattern: jest.fn().mockResolvedValue(0),
   } as unknown as RedisCacheService;
 
+  const notifications = {
+    notifyUsers: jest.fn().mockResolvedValue(undefined),
+  } as unknown as AppNotificationsService;
+
   const logger = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
   } as unknown as LoggerService;
 
-  const service = new PublisherService(repo, cache, logger);
+  const service = new PublisherService(repo, cache, notifications, logger);
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (repo.findFollowerIds as jest.Mock).mockResolvedValue([]);
   });
 
   it('builds post body with trusted tag and source metadata', () => {
@@ -53,17 +60,31 @@ describe('PublisherService', () => {
       publishedAt: new Date(),
       source: { name: 'MEWA' },
     });
-    (repo.findKnowledgeUser as jest.Mock).mockResolvedValue({ id: 'u-ai' });
+    (repo.findKnowledgeUser as jest.Mock).mockResolvedValue({
+      id: 'u-ai',
+      arabicName: 'مركز المعرفة',
+    });
     (repo.createPost as jest.Mock).mockResolvedValue({ id: 'p1' });
     (repo.updateArticle as jest.Mock).mockResolvedValue({
       id: 'a1',
       status: 'PUBLISHED',
       postId: 'p1',
     });
+    (repo.findFollowerIds as jest.Mock).mockResolvedValue([
+      { followerId: 'u1' },
+      { followerId: 'u2' },
+    ]);
 
     const result = await service.publishArticle('a1');
     expect(repo.createPost).toHaveBeenCalled();
     expect(repo.updateArticle).toHaveBeenCalled();
+    expect(notifications.notifyUsers).toHaveBeenCalledWith(
+      ['u1', 'u2'],
+      expect.objectContaining({
+        titleAr: 'منشور جديد من مركز المعرفة',
+        data: { postId: 'p1', authorId: 'u-ai' },
+      }),
+    );
     expect(result.status).toBe('PUBLISHED');
     expect(cache.del).toHaveBeenCalledWith('posts:feed:first');
   });

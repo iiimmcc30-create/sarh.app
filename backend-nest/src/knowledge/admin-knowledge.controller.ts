@@ -90,6 +90,19 @@ export class AdminKnowledgeController {
     });
   }
 
+  @Roles('ADMIN')
+  @Post('activate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Activate Knowledge Center account: ensure AI user, seed sources, auto-follow users, sync',
+  })
+  async activate(@Body() body?: { sync?: boolean }) {
+    return successResponse(
+      await this.knowledge.activateAccount({ sync: body?.sync !== false }),
+    );
+  }
+
   @Roles(...STAFF)
   @Post('sync')
   @HttpCode(HttpStatus.OK)
