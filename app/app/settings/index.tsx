@@ -46,9 +46,14 @@ const SECTIONS: Section[] = [
     title: 'الدعم والمساعدة',
     route: '/settings/support',
     items: [
-      { icon: 'email-outline', label: 'تواصل معنا', route: '/settings/support' },
-      { icon: 'alert-circle-outline', label: 'الإبلاغ عن مشكلة', route: '/settings/support' },
-      { icon: 'ticket-outline', label: 'تذاكر الدعم', route: '/settings/support' },
+      { icon: 'ticket-outline', label: 'تذاكر الدعم', route: '/support/tickets' },
+      {
+        icon: 'check-decagram-outline',
+        label: 'إنشاء طلب توثيق الحسابات',
+        route: '/support/verification',
+      },
+      { icon: 'help-circle-outline', label: 'الأسئلة الشائعة', route: '/support/faq' },
+      { icon: 'email-outline', label: 'تواصل معنا', route: '/info/contact' },
     ],
   },
 ];

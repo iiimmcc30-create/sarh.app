@@ -15,8 +15,8 @@ export default function SupportHubScreen() {
         },
         {
           icon: 'verified',
-          label: 'طلب توثيق الحساب',
-          subtitle: 'تقديم ومتابعة طلب التوثيق',
+          label: 'إنشاء طلب توثيق الحسابات',
+          subtitle: 'تقديم ومتابعة طلب توثيق الحساب',
           route: '/support/verification',
         },
         {
