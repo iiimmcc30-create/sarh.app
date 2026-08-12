@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { ResourcePage, Badge } from '@/components/ui/ResourcePage';
 import { Button } from '@/components/ui/Button';
@@ -22,13 +23,48 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: 'مرفوض',
 };
 
+const FILTER_STATUSES = ['', 'UNDER_REVIEW', 'NEEDS_AMENDMENTS', 'VERIFIED', 'REJECTED', 'DRAFT'] as const;
+
 export default function VerificationRequestsPage() {
+  const [status, setStatus] = useState('UNDER_REVIEW');
+
+  const fetchPage = useCallback(
+    ({ page, search }: { page: number; search: string }) =>
+      fetchVerificationRequests({
+        page,
+        search,
+        status: status || undefined,
+      }),
+    [status],
+  );
+
   return (
     <ResourcePage<Row>
       title="طلبات توثيق الحساب"
       description="مراجعة وقبول أو رفض طلبات التوثيق"
-      fetchPage={({ page, search, status }) =>
-        fetchVerificationRequests({ page, search, status })
+      fetchPage={fetchPage}
+      status={status || undefined}
+      filters={
+        <div className="flex flex-wrap gap-2 text-sm">
+          {FILTER_STATUSES.map((s) => {
+            const active = status === s;
+            const label = s ? STATUS_LABEL[s] : 'الكل';
+            return (
+              <button
+                key={s || 'all'}
+                type="button"
+                onClick={() => setStatus(s)}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  active
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'text-slate-400 border border-slate-700 hover:border-slate-500'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       }
       columns={[
         {

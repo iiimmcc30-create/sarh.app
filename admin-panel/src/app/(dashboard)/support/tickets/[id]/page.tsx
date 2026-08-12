@@ -5,12 +5,22 @@ import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { getApiErrorMessage } from '@/services/api.client';
 import {
   fetchSupportTicket,
   fetchSupportStaff,
   replySupportTicket,
   updateSupportTicket,
 } from '@/services/support.service';
+
+const STATUS_LABEL: Record<string, string> = {
+  OPEN: 'جديدة',
+  IN_REVIEW: 'قيد المراجعة',
+  IN_PROGRESS: 'قيد المعالجة',
+  AWAITING_USER: 'بانتظار المستخدم',
+  RESOLVED: 'تم الحل',
+  CLOSED: 'مغلقة',
+};
 
 export default function SupportTicketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,26 +29,42 @@ export default function SupportTicketDetailPage() {
   const [staff, setStaff] = useState<Record<string, unknown>[]>([]);
   const [notes, setNotes] = useState('');
   const [reply, setReply] = useState('');
+  const [internalNote, setInternalNote] = useState('');
   const [assignedToId, setAssignedToId] = useState('');
   const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    const [ticketRes, staffRes] = await Promise.all([
-      fetchSupportTicket(id),
-      fetchSupportStaff(),
-    ]);
-    setTicket(ticketRes.ticket);
-    setStaff(staffRes.staff);
-    setNotes(String(ticketRes.ticket.adminNotes ?? ''));
-    setAssignedToId(String(ticketRes.ticket.assignedToId ?? ''));
-    setStatus(String(ticketRes.ticket.status ?? 'OPEN'));
+    setError('');
+    try {
+      const [ticketRes, staffRes] = await Promise.all([
+        fetchSupportTicket(id),
+        fetchSupportStaff(),
+      ]);
+      setTicket(ticketRes.ticket);
+      setStaff(staffRes.staff);
+      setNotes(String(ticketRes.ticket.adminNotes ?? ''));
+      setAssignedToId(String(ticketRes.ticket.assignedToId ?? ''));
+      setStatus(String(ticketRes.ticket.status ?? 'OPEN'));
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, 'تعذّر تحميل التذكرة'));
+    }
   };
 
   useEffect(() => {
     void load();
   }, [id]);
 
-  if (!ticket) return <p className="text-slate-400">جارٍ التحميل...</p>;
+  if (!ticket && !error) return <p className="text-slate-400">جارٍ التحميل...</p>;
+  if (!ticket) {
+    return (
+      <div className="space-y-3">
+        <p className="text-rose-400">{error}</p>
+        <Button variant="ghost" onClick={() => router.back()}>رجوع</Button>
+      </div>
+    );
+  }
 
   const messages = (ticket.messages as Record<string, unknown>[] | undefined) ?? [];
 
@@ -49,6 +75,7 @@ export default function SupportTicketDetailPage() {
         description={String(ticket.subject)}
         actions={<Button variant="ghost" onClick={() => router.back()}>رجوع</Button>}
       />
+      {error ? <p className="mb-4 text-rose-400">{error}</p> : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
           <p><Badge>{String(ticket.category)}</Badge></p>
@@ -72,11 +99,20 @@ export default function SupportTicketDetailPage() {
             rows={4}
           />
           <Button
+            disabled={saving || !reply.trim()}
             onClick={async () => {
               if (!reply.trim()) return;
-              await replySupportTicket(id, { body: reply.trim() });
-              setReply('');
-              await load();
+              setSaving(true);
+              setError('');
+              try {
+                await replySupportTicket(id, { body: reply.trim() });
+                setReply('');
+                await load();
+              } catch (e: unknown) {
+                setError(getApiErrorMessage(e, 'تعذّر إرسال الرد'));
+              } finally {
+                setSaving(false);
+              }
             }}
           >
             إرسال رد
@@ -90,8 +126,8 @@ export default function SupportTicketDetailPage() {
             onChange={(e) => setStatus(e.target.value)}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-white"
           >
-            {['OPEN', 'IN_REVIEW', 'IN_PROGRESS', 'AWAITING_USER', 'RESOLVED', 'CLOSED'].map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {Object.entries(STATUS_LABEL).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
             ))}
           </select>
 
@@ -109,36 +145,63 @@ export default function SupportTicketDetailPage() {
             ))}
           </select>
 
-          <label className="text-sm text-slate-400">ملاحظات داخلية</label>
+          <label className="text-sm text-slate-400">ملاحظات داخلية (تُحفظ مع التذكرة)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-white"
-            rows={5}
+            rows={4}
           />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={async () => {
+          <Button
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              setError('');
+              try {
                 await updateSupportTicket(id, {
                   status,
                   adminNotes: notes,
                   assignedToId: assignedToId || null,
                 });
                 await load();
-              }}
-            >
-              حفظ
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                await replySupportTicket(id, { body: notes, isInternal: true });
+              } catch (e: unknown) {
+                setError(getApiErrorMessage(e, 'تعذّر الحفظ'));
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            حفظ
+          </Button>
+
+          <label className="text-sm text-slate-400">إضافة ملاحظة داخلية سريعة</label>
+          <textarea
+            value={internalNote}
+            onChange={(e) => setInternalNote(e.target.value)}
+            placeholder="ملاحظة للفريق فقط..."
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-white"
+            rows={3}
+          />
+          <Button
+            variant="secondary"
+            disabled={saving || !internalNote.trim()}
+            onClick={async () => {
+              if (!internalNote.trim()) return;
+              setSaving(true);
+              setError('');
+              try {
+                await replySupportTicket(id, { body: internalNote.trim(), isInternal: true });
+                setInternalNote('');
                 await load();
-              }}
-            >
-              إضافة ملاحظة داخلية
-            </Button>
-          </div>
+              } catch (e: unknown) {
+                setError(getApiErrorMessage(e, 'تعذّر إضافة الملاحظة'));
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            إضافة ملاحظة داخلية
+          </Button>
         </div>
       </div>
     </div>
