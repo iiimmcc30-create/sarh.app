@@ -36,8 +36,13 @@ export type UserIdentityRowProps = {
   nameLines?: number;
   /** Renders under username (e.g. section badge pill). */
   footer?: ReactNode;
-  /** Right-side slot (follow button, unblock, counts, …). */
+  /** Action slot (follow button, unblock, counts, …). */
   trailing?: ReactNode;
+  /**
+   * `start` — avatar on physical left (lists).
+   * `end` — cover style: avatar on physical right like sidebar menu icons.
+   */
+  avatarSide?: 'start' | 'end';
   onPress?: () => void;
   colors?: ThemeColors;
   style?: ViewStyle;
@@ -62,6 +67,7 @@ export function UserIdentityRow({
   nameLines = 2,
   footer,
   trailing,
+  avatarSide = 'start',
   onPress,
   colors: colorsProp,
   style,
@@ -72,6 +78,7 @@ export function UserIdentityRow({
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const coverStyle = avatarSide === 'end';
 
   const handle = username
     ? username.startsWith('@')
@@ -83,44 +90,66 @@ export function UserIdentityRow({
     avatarBorderColor ??
     (avatarBorderWidth > 0 ? sarh.color.action : colors.borderMid);
 
-  const content = (
-    <>
-      <Image
-        source={uriSource(avatarUri)}
-        style={[
-          styles.avatar,
-          {
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: avatarRadius,
-            borderWidth: avatarBorderWidth,
-            borderColor,
-          },
-        ]}
-        contentFit="cover"
-      />
-      <View style={[styles.profileText, contentStyle]}>
-        <View style={styles.nameRow}>
-          <View style={styles.nameShell}>
-            <Text
-              style={[styles.displayName, nameStyle]}
-              numberOfLines={nameLines}
-            >
-              {displayName}
-            </Text>
-          </View>
-          {verified ? <VerificationBadge size={14} /> : null}
+  const avatar = (
+    <Image
+      source={uriSource(avatarUri)}
+      style={[
+        styles.avatar,
+        {
+          width: avatarSize,
+          height: avatarSize,
+          borderRadius: avatarRadius,
+          borderWidth: avatarBorderWidth,
+          borderColor,
+        },
+      ]}
+      contentFit="cover"
+    />
+  );
+
+  const textBlock = (
+    <View style={[styles.profileText, contentStyle]}>
+      <View style={styles.nameRow}>
+        <View style={styles.nameShell}>
+          <Text
+            style={[styles.displayName, nameStyle]}
+            numberOfLines={nameLines}
+          >
+            {displayName}
+          </Text>
         </View>
-        {handle ? (
-          <View style={styles.handleShell}>
-            <Text style={[styles.usernameText, usernameStyle]} numberOfLines={1}>
-              {handle}
-            </Text>
-          </View>
-        ) : null}
-        {footer}
+        {verified ? <VerificationBadge size={14} /> : null}
       </View>
-      {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+      {handle ? (
+        <View style={styles.handleShell}>
+          <Text style={[styles.usernameText, usernameStyle]} numberOfLines={1}>
+            {handle}
+          </Text>
+        </View>
+      ) : null}
+      {footer}
+    </View>
+  );
+
+  const trailingSlot = trailing ? (
+    <View style={styles.trailing}>{trailing}</View>
+  ) : null;
+
+  /**
+   * Cover (end): [trailing?][name][avatar] — avatar aligns with sidebar menu icons.
+   * List (start): [avatar][name][trailing?]
+   */
+  const content = coverStyle ? (
+    <>
+      {trailingSlot}
+      {textBlock}
+      {avatar}
+    </>
+  ) : (
+    <>
+      {avatar}
+      {textBlock}
+      {trailingSlot}
     </>
   );
 

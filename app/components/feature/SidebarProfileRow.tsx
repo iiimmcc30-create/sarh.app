@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
+import { SIDEBAR_MENU_ITEM } from '@/components/ui/SidebarMenuItem';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -26,7 +27,10 @@ export type SidebarProfileRowProps = {
   style?: ViewStyle;
 };
 
-/** Sidebar wrapper over UserIdentityRow — padding, divider, section badge. */
+/**
+ * Sidebar profile header — cover layout matching menu rows:
+ * name shell + avatar on the physical right (same side as outline icons).
+ */
 export function SidebarProfileRow({
   avatarUri,
   displayName,
@@ -62,6 +66,7 @@ export function SidebarProfileRow({
       username={username}
       onPress={onPress}
       colors={colors}
+      avatarSide="end"
       avatarSize={SIDEBAR_PROFILE.avatarSize}
       avatarRadius={SIDEBAR_PROFILE.avatarRadius}
       avatarBorderWidth={SIDEBAR_PROFILE.avatarBorder}
@@ -77,7 +82,11 @@ export function SidebarProfileRow({
 function createStyles(colors: ThemeColors, isDark: boolean) {
   return StyleSheet.create({
     row: {
-      paddingHorizontal: spacing.lg,
+      /**
+       * Match SidebarSection card inset + OutlineMenuItem horizontal padding
+       * so the avatar sits on the same vertical line as menu icons.
+       */
+      paddingHorizontal: spacing.lg + SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,
       paddingBottom: spacing.lg,
     },
     rowDivider: {
@@ -91,7 +100,7 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
     },
     badgePill: {
       marginTop: 4,
-      alignSelf: 'flex-start',
+      alignSelf: 'flex-end',
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 999,
