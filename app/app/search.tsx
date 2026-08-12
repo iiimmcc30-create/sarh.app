@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -140,7 +140,7 @@ export default function SearchScreen() {
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.inputWrap}>
-          <AppIcon name="search" size={16} color={colors.textMuted} />
+          <AppIcon name="search" size={16} color={colors.textPrimary} />
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -154,7 +154,7 @@ export default function SearchScreen() {
           />
           {hasQuery && (
             <Pressable onPress={() => setQuery('')} hitSlop={8}>
-              <AppIcon name="close-circle" size={16} color={colors.textMuted} />
+              <AppIcon name="close-circle" size={16} color={colors.textPrimary} />
             </Pressable>
           )}
         </View>
@@ -188,10 +188,10 @@ export default function SearchScreen() {
               </View>
               {recentSearches.map((term) => (
                 <Pressable key={term} style={styles.recentRow} onPress={() => setQuery(term)}>
-                  <AppIcon name="time-outline" size={16} color={colors.textMuted} />
+                  <AppIcon name="time-outline" size={16} color={colors.textPrimary} />
                   <Text style={styles.recentText}>{term}</Text>
                   <Pressable onPress={() => saveRecent(recentSearches.filter((r) => r !== term))} hitSlop={8} style={marginAutoStart()}>
-                    <AppIcon name="close" size={14} color={colors.textMuted} />
+                    <AppIcon name="close" size={14} color={colors.textPrimary} />
                   </Pressable>
                 </Pressable>
               ))}
@@ -325,17 +325,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     backgroundColor: colors.bgDeep,
   },
   backBtn: {
-    width: ds.iconBtn.md, height: ds.iconBtn.md, borderRadius: ds.radius.pill,
-    backgroundColor: tokens.glass, alignItems: 'center', justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth, borderColor: tokens.stroke,
-    ...ambientShadow(scheme, 'soft'),
+    width: ds.iconBtn.md, height: ds.iconBtn.md, borderRadius: 12,
+    backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 0,
   },
   inputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    minHeight: 44, backgroundColor: colors.bgSurface, borderRadius: ds.radius.lg,
+    minHeight: 44, backgroundColor: colors.bgElevated, borderRadius: 14,
     paddingHorizontal: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: tokens.stroke,
-    ...ambientShadow(scheme, 'soft'),
+    borderWidth: 0,
   },
   input: {
     flex: 1, ...typography.body, color: colors.textPrimary,
@@ -347,22 +345,20 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   filterChip: {
     paddingHorizontal: spacing.lg, minHeight: 36, justifyContent: 'center',
-    borderRadius: ds.radius.pill, backgroundColor: colors.bgSurface,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: tokens.stroke,
+    borderRadius: 14, backgroundColor: colors.bgElevated,
+    borderWidth: 0,
   },
-  filterChipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-  filterLabel: { ...typography.caption, color: colors.textMuted },
+  filterChipActive: { backgroundColor: colors.electric, borderWidth: 0 },
+  filterLabel: { ...typography.caption, color: colors.textPrimary },
   filterLabelActive: { color: '#fff' },
   scroll: { paddingBottom: 20 },
   section: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.lg,
     padding: spacing.lg,
-    borderRadius: ds.radius.xl,
-    backgroundColor: colors.bgSurface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.stroke,
-    ...ambientShadow(scheme, 'card'),
+    borderRadius: 14,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 0,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
   sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },

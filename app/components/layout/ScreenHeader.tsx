@@ -2,8 +2,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ambientShadow, ds } from '@/constants/designSystem';
-import { controls, layout, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ds } from '@/constants/designSystem';
+import { controls, layout, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alignInlineEnd, getRtlRow, rtlBackIcon } from '@/lib/rtl';
 
@@ -79,8 +79,7 @@ export function ScreenHeader({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
+function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   return StyleSheet.create({
     container: {
       ...getRtlRow(),
@@ -117,17 +116,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     iconBtn: {
       width: controls.iconButton,
       height: controls.iconButton,
-      borderRadius: ds.radius.pill,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tokens.glass,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
     },
     iconBtnPressed: {
       transform: [{ scale: 0.94 }],
-      backgroundColor: colors.bgElevated,
       opacity: 0.82,
     },
   });

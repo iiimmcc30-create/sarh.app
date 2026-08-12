@@ -3,7 +3,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { spacing, radius, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { inlineStart } from '@/lib/rtl';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -49,12 +49,11 @@ export function NotificationBellButton({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     iconBtn: {
-      borderRadius: radius.md,
-      backgroundColor: colors.bgGlassStrong,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      borderWidth: 0,
     },
     badge: {
       position: 'absolute',

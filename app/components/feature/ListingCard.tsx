@@ -12,8 +12,7 @@ import {
   typography,
   type ThemeColors,
 } from '@/constants/theme';
-import { ambientShadow, ds } from '@/constants/designSystem';
-import { sarh } from '@/constants/sarhTokens';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
@@ -139,14 +138,14 @@ function ListingCardInner({
               ) : null}
             </View>
             <View style={styles.listMetaCenter}>
-              <AppIcon name="time-outline" size={11} color={colors.textMuted} />
+              <AppIcon name="time-outline" size={11} color={colors.textPrimary} />
               <Text style={styles.listMetaText} numberOfLines={1}>
                 {displayTime}
               </Text>
             </View>
             <View style={styles.listMetaSideRight}>
               <View style={styles.listLocationCluster}>
-                <AppIcon name="map-marker-outline" size={11} color={colors.textMuted} />
+                <AppIcon name="map-marker-outline" size={11} color={colors.textPrimary} />
                 <Text style={styles.listMetaText} numberOfLines={1} ellipsizeMode="tail">
                   {location}
                 </Text>
@@ -293,11 +292,11 @@ function ListingCardInner({
 
       <View style={[styles.harajMeta, getRtlRow()]}>
         <View style={[styles.harajMetaItem, getRtlRow()]}>
-          <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
+          <AppIcon name="map-marker-outline" size={13} color={colors.textPrimary} />
           <Text style={styles.harajMetaText}>{location}</Text>
         </View>
         <View style={[styles.harajMetaItem, getRtlRow()]}>
-          <AppIcon name="time-outline" size={13} color={colors.textMuted} />
+          <AppIcon name="time-outline" size={13} color={colors.textPrimary} />
           <Text style={styles.harajMetaText}>{timeLabel || 'الآن'}</Text>
         </View>
       </View>
@@ -352,14 +351,13 @@ function ListingCardInner({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
+function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   return StyleSheet.create({
   pressed: {
     opacity: 0.92,
   },
 
-  // External listing card — compact row matching reference proportions
+  // Elevated listing card — More-tab contrast (bgElevated, no border)
   listRow: {
     ...getRtlRow(),
     alignItems: 'stretch',
@@ -368,14 +366,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     paddingStart: spacing.md,
     paddingEnd: 0,
     gap: spacing.sm,
-    backgroundColor: colors.bgSurface,
-    borderRadius: sarh.radius.card,
+    backgroundColor: colors.bgElevated,
+    borderRadius: MENU_CARD.radius,
     marginHorizontal: spacing.md,
     marginVertical: 2,
-    borderWidth: scheme === 'dark' ? 1 : StyleSheet.hairlineWidth,
-    borderColor: scheme === 'dark' ? colors.borderSoft : tokens.stroke,
+    borderWidth: 0,
     overflow: 'hidden',
-    ...ambientShadow(scheme, scheme === 'dark' ? 'soft' : 'card'),
   },
   listContent: {
     flex: 1,
@@ -581,11 +577,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
 
   profileCard: {
-    borderRadius: radius.xl,
+    borderRadius: MENU_CARD.radius,
     overflow: 'hidden',
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 0,
     aspectRatio: 0.82,
   },
   profileImg: {
@@ -645,17 +640,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   feature: {
     width: 280,
     height: 380,
-    borderRadius: radius.xxl,
+    borderRadius: MENU_CARD.radius,
     overflow: 'hidden',
     marginEnd: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    backgroundColor: colors.bgSurface,
+    borderWidth: 0,
+    backgroundColor: colors.bgElevated,
   },
   featureCompact: {
     width: 248,
     height: 268,
-    borderRadius: radius.xl,
+    borderRadius: MENU_CARD.radius,
     marginEnd: spacing.md,
   },
   featureImg: {
