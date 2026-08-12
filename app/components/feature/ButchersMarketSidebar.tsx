@@ -65,7 +65,7 @@ export const BUTCHERS_MARKET_MENU: ButchersMarketMenuItem[] = [
     key: 'support',
     icon: 'chatbubble-ellipses-outline',
     label: 'الدعم والمساعدة',
-    route: '/support/index',
+    route: '/support',
   },
   {
     key: 'privacy',

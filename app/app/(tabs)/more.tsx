@@ -160,7 +160,7 @@ export default function MoreScreen() {
             title="الدعم والمساعدة"
             colors={colors}
             showDivider
-            onPress={() => safePush('/support/index', undefined, router)}
+            onPress={() => safePush('/support', undefined, router)}
           />
           <SidebarMenuItem
             icon="mail-outline"

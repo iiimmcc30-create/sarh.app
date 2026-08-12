@@ -124,7 +124,7 @@ export default function SidebarScreen() {
         key: 'support',
         icon: 'lifebuoy',
         label: 'الدعم والمساعدة',
-        route: '/support/index',
+        route: '/support',
       },
       {
         key: 'settings',
