@@ -8,19 +8,19 @@ export default function SupportScreen() {
       heroIcon="lifebuoy"
       items={[
         {
-          icon: 'ticket',
+          icon: 'ticket-outline',
           label: 'تذاكر الدعم',
           subtitle: 'إنشاء ومتابعة تذاكر الدعم',
           route: '/support/tickets',
         },
         {
-          icon: 'verified',
+          icon: 'shield-check-outline',
           label: 'إنشاء طلب توثيق الحسابات',
           subtitle: 'تقديم ومتابعة طلب توثيق الحساب',
           route: '/support/verification',
         },
         {
-          icon: 'help-circle',
+          icon: 'help-circle-outline',
           label: 'الأسئلة الشائعة',
           subtitle: 'إجابات سريعة عن استخدام التطبيق',
           route: '/support/faq',
