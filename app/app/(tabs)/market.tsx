@@ -4,7 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useMemo, useState, useRef } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -25,12 +25,10 @@ import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
 import { safePush } from '@/lib/safeNavigate';
 import { MarketCategoriesGrid } from '@/components/feature/MarketCategoriesGrid';
+import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { useApp } from '@/hooks/useApp';
 import { Country, countries, Listing } from '@/services/types';
-import {
-  fetchMarketCategories,
-  type MarketCategory,
-} from '@/services/categories';
+import type { MarketCategory } from '@/services/categories';
 
 /** Card height 118 + vertical margins (2 + 2). */
 const LISTING_ROW_HEIGHT = 122;
@@ -43,35 +41,22 @@ export default function MarketScreen() {
     colors,
   }));
   const { listings, fetchListings } = useApp();
+  const { categories, loading: categoriesLoading, reload: reloadCategories } = useMarketCategories();
   const lastListingsFocusAt = useRef(0);
 
-  const [categories, setCategories] = useState<MarketCategory[]>([]);
   const [search, setSearch] = useState('');
   const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
+      void reloadCategories();
       const now = Date.now();
       if (now - lastListingsFocusAt.current < 60_000) return;
       lastListingsFocusAt.current = now;
       void fetchListings();
-    }, [fetchListings]),
+    }, [fetchListings, reloadCategories]),
   );
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchMarketCategories()
-      .then((cats) => {
-        if (!cancelled) setCategories(cats.filter((c) => !c.parentId && c.isActive));
-      })
-      .catch(() => {
-        if (!cancelled) setCategories([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const filtered = useMemo(
     () =>
@@ -193,6 +178,10 @@ export default function MarketScreen() {
 
         {categories.length > 0 ? (
           <MarketCategoriesGrid categories={categories} onSelect={onSelectCategory} />
+        ) : categoriesLoading ? (
+          <View style={styles.categoriesLoading}>
+            <Text style={styles.categoriesLoadingText}>جاري تحميل التصنيفات...</Text>
+          </View>
         ) : null}
 
         <View style={[styles.filterRow, getRtlRow()]}>
@@ -223,6 +212,7 @@ export default function MarketScreen() {
     [
       activeCountry,
       categories,
+      categoriesLoading,
       colors,
       filtered.length,
       onSelectCategory,
@@ -379,6 +369,16 @@ function createMarketStyles(
       ...typography.caption,
       fontSize: 12,
       color: colors.textMuted,
+      writingDirection: 'rtl',
+    },
+    categoriesLoading: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
+    categoriesLoadingText: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },

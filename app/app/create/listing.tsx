@@ -6,7 +6,7 @@ import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
@@ -34,10 +34,9 @@ import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import * as Location from 'expo-location';
 import { hasValidCoords } from '@/lib/butcherLocation';
 import { categoryRequiresWeight } from '@/lib/listingCategories';
-import {
-  fetchMarketCategories,
-  type MarketCategory,
-} from '@/services/categories';
+import { resolveLegacyListingCategory } from '@/lib/marketCategoriesFallback';
+import { useMarketCategories } from '@/hooks/useMarketCategories';
+import type { MarketCategory } from '@/services/categories';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string; currency: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦', currency: 'SAR' },
@@ -69,7 +68,7 @@ export default function CreateListingScreen() {
   const { accessToken } = useAuth();
 
   const [step, setStep] = useState(0);
-  const [parents, setParents] = useState<MarketCategory[]>([]);
+  const { categories: parents, loading: categoriesLoading } = useMarketCategories();
   const [parentCategory, setParentCategory] = useState<MarketCategory | null>(null);
   const [subCategory, setSubCategory] = useState<MarketCategory | null>(null);
   const [titleAr, setTitleAr] = useState('');
@@ -100,21 +99,6 @@ export default function CreateListingScreen() {
     category: parentCategory?.legacyCategory || parentCategory?.slug,
     requiresWeight: parentCategory?.requiresWeight,
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchMarketCategories()
-      .then((cats) => {
-        if (cancelled) return;
-        setParents(cats.filter((c) => !c.parentId && c.isActive));
-      })
-      .catch(() => {
-        if (!cancelled) setParents([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const selectParent = (cat: MarketCategory) => {
     setParentCategory(cat);
@@ -236,6 +220,7 @@ export default function CreateListingScreen() {
         weightKg.trim() && /^\d+(\.\d{1,2})?$/.test(weightKg.trim())
           ? Number(weightKg)
           : undefined;
+      const legacyCategory = resolveLegacyListingCategory(subCategory, parentCategory);
       const result = await addListing({
         title,
         arabicTitle: title,
@@ -243,6 +228,7 @@ export default function CreateListingScreen() {
         arabicDescription: descAr.trim(),
         price: Number(price),
         currency: selectedCountry.currency,
+        category: legacyCategory,
         categoryId: parentCategory.id,
         subcategoryId: subCategory.id,
         breed: breed.trim() || undefined,
@@ -335,6 +321,10 @@ export default function CreateListingScreen() {
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>ما نوع الإعلان؟</Text>
               <Text style={styles.stepSubtitle}>اختر التصنيف ثم النوع</Text>
+
+              {categoriesLoading && parents.length === 0 ? (
+                <ActivityIndicator color={colors.electricBright} style={{ marginVertical: spacing.lg }} />
+              ) : null}
 
               <Text style={[styles.fieldLabel, { marginBottom: spacing.sm }]}>التصنيف</Text>
               <View style={styles.catGrid}>

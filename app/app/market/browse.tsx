@@ -8,7 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { safePush } from '@/lib/safeNavigate';
+import { fetchMarketCategories } from '@/services/categories';
 import { searchListings } from '@/services/listings';
 import { countries, type Country, type Listing } from '@/services/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -74,7 +76,7 @@ export default function MarketBrowseScreen() {
     }
     setLoading(true);
     try {
-      const listings = await searchListings(
+      let listings = await searchListings(
         {
           categoryId,
           subcategoryId,
@@ -83,7 +85,22 @@ export default function MarketBrowseScreen() {
         },
         accessToken,
       );
-      setItems(listings.filter((l) => l.country !== 'EG'));
+      listings = listings.filter((l) => l.country !== 'EG');
+
+      if (categoryId) {
+        const tree = await fetchMarketCategories();
+        const parent = tree.find((c) => c.id === categoryId);
+        const sub =
+          parent?.children?.find((c) => c.id === subcategoryId) ??
+          tree.flatMap((p) => p.children ?? []).find((c) => c.id === subcategoryId);
+        if (parent) {
+          listings = listings.filter((l) =>
+            listingMatchesMarketSelection(l, parent, sub ?? null),
+          );
+        }
+      }
+
+      setItems(listings);
     } catch {
       setItems([]);
     } finally {

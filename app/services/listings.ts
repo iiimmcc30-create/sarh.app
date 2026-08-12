@@ -1,4 +1,4 @@
-import { API_BASE } from './api';
+import { ensureApiReachable } from './api';
 import { countries, type Listing, type Country } from './types';
 
 type BackendListing = {
@@ -122,6 +122,7 @@ export async function searchListings(
   params: ListingSearchParams,
   accessToken?: string | null,
 ): Promise<Listing[]> {
+  const base = await ensureApiReachable();
   const qs = new URLSearchParams();
   if (params.search && params.search.length >= 2) qs.set('search', params.search);
   if (params.category) qs.set('category', params.category);
@@ -136,7 +137,7 @@ export async function searchListings(
   const headers: HeadersInit = accessToken
     ? { Authorization: `Bearer ${accessToken}` }
     : {};
-  const res = await fetch(`${API_BASE}/api/listings?${qs.toString()}`, { headers });
+  const res = await fetch(`${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`, { headers });
   if (!res.ok) return [];
 
   const json = await res.json();
