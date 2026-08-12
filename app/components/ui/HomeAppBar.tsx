@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { elevatedControlStyle, MENU_CARD } from '@/components/feature/SidebarMenu';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -15,7 +15,7 @@ type HomeAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** Reference header: menu (right) · search pill · notifications (left) */
+/** Home header — matches MarketAppBar (menu · search pill · notifications). */
 export function HomeAppBar({
   onMenu,
   onSearch,
@@ -27,52 +27,59 @@ export function HomeAppBar({
   }));
 
   return (
-    <View style={[styles.bar, getRtlRow()]}>
-      <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8} accessibilityLabel="القائمة">
-        <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
-      </Pressable>
+    <View style={styles.shell}>
+      <View style={[styles.bar, getRtlRow()]}>
+        <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8} accessibilityLabel="القائمة">
+          <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
+        </Pressable>
 
-      <Pressable
-        onPress={onSearch}
-        style={[styles.searchPill, getRtlRow()]}
-        accessibilityRole="search"
-        accessibilityLabel={searchPlaceholder}
-      >
-        <Text style={styles.searchPlaceholder} numberOfLines={1}>
-          {searchPlaceholder}
-        </Text>
-        <AppIcon name="search" size={ds.icon.md} color={colors.textPrimary} />
-      </Pressable>
+        <Pressable
+          onPress={onSearch}
+          style={[styles.searchPill, getRtlRow()]}
+          accessibilityRole="search"
+          accessibilityLabel={searchPlaceholder}
+        >
+          <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
+          <Text style={styles.searchPlaceholder} numberOfLines={1}>
+            {searchPlaceholder}
+          </Text>
+        </Pressable>
 
-      <NotificationBellButton
-        size={ds.iconBtn.md}
-        iconSize={ds.icon.md}
-        style={styles.iconBtn}
-      />
+        <NotificationBellButton
+          size={ds.iconBtn.md}
+          iconSize={ds.icon.md}
+          style={styles.notifBtn}
+          iconColor={colors.textPrimary}
+          badgeBorderColor={colors.bgElevated}
+        />
+      </View>
     </View>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    shell: {
+      backgroundColor: colors.bgElevated,
+      borderBottomWidth: 0,
+    },
     bar: {
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.md,
-      minHeight: 56,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      minHeight: 52,
       gap: spacing.sm,
-      backgroundColor: 'transparent',
     },
     searchPill: {
       flex: 1,
       minHeight: 44,
       alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
       gap: spacing.sm,
-      ...elevatedControlStyle(colors),
+      paddingHorizontal: spacing.md,
+      backgroundColor: colors.bgDeep,
       borderRadius: MENU_CARD.controlRadius,
+      borderWidth: 0,
     },
     searchPlaceholder: {
       ...typography.body,
@@ -86,7 +93,12 @@ function createStyles(colors: ThemeColors) {
       height: ds.iconBtn.md,
       alignItems: 'center',
       justifyContent: 'center',
-      ...elevatedControlStyle(colors),
+      backgroundColor: colors.bgDeep,
+      borderRadius: 12,
+      borderWidth: 0,
+    },
+    notifBtn: {
+      backgroundColor: colors.bgDeep,
       borderRadius: 12,
     },
   });

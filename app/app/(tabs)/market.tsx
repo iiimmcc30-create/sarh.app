@@ -6,9 +6,10 @@ import { MarketFilterBar } from '@/components/market/MarketFilterBar';
 import { RegionCityPicker } from '@/components/market/RegionCityPicker';
 
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   Alert,
+  FlatList,
   StyleSheet,
   Text,
   View,
@@ -33,7 +34,6 @@ import { useApp } from '@/hooks/useApp';
 import { Listing } from '@/services/types';
 import type { MarketCategory } from '@/services/categories';
 
-const LISTING_ROW_HEIGHT = 122;
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
@@ -46,6 +46,7 @@ export default function MarketScreen() {
   const { listings, fetchListings } = useApp();
   const { categories, loading: categoriesLoading, reload: reloadCategories } = useMarketCategories();
   const lastListingsFocusAt = useRef(0);
+  const listRef = useRef<FlatList<Listing>>(null);
 
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -81,6 +82,10 @@ export default function MarketScreen() {
   const onSelectSub = useCallback((sub: MarketCategory | null) => {
     setActiveSubId(sub?.id ?? null);
   }, []);
+
+  useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [activeParentId, activeSubId]);
 
   const filtered = useMemo(() => {
     let list = listings.filter((l) => {
@@ -219,14 +224,11 @@ export default function MarketScreen() {
       />
 
       <AppFlatList
+        ref={listRef}
+        style={styles.list}
         data={filtered}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        getItemLayout={(_, index) => ({
-          length: LISTING_ROW_HEIGHT,
-          offset: LISTING_ROW_HEIGHT * index,
-          index,
-        })}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -257,6 +259,9 @@ function createMarketStyles(
 ) {
   return StyleSheet.create({
     container: screenStyles.screenRoot,
+    list: {
+      flex: 1,
+    },
     listingsHead: {
       width: '100%',
       direction: 'ltr',
