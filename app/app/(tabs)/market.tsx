@@ -1,7 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — Market Tab (السوق)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, useRef } from 'react';

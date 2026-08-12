@@ -1,5 +1,4 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { ds } from '@/constants/designSystem';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import type { MarketCategory } from '@/services/categories';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -11,15 +10,12 @@ type Props = {
   onSelect: (category: MarketCategory) => void;
 };
 
-const TILE = ds.categoryTile;
-
 /**
- * Compact horizontal main-category strip for the market hub — RTL scroll, small tiles.
+ * Horizontal category chips — same elevated rounded surface as listing cards, text only.
  */
 export function MarketCategoriesGrid({ categories, onSelect }: Props) {
-  const { styles, colors } = useThemedStyles((theme) => ({
+  const { styles } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
-    colors: theme.colors,
   }));
 
   return (
@@ -36,17 +32,10 @@ export function MarketCategoriesGrid({ categories, onSelect }: Props) {
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat)}
-            style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
+            style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
           >
-            <View style={styles.iconBox}>
-              {cat.icon ? (
-                <AppIcon name={cat.icon} size={18} color={colors.textPrimary} variant="rr" />
-              ) : (
-                <Text style={styles.emoji}>{cat.emoji || '📦'}</Text>
-              )}
-            </View>
             <View style={styles.labelShell}>
-              <Text style={styles.label} numberOfLines={2}>
+              <Text style={styles.label} numberOfLines={1}>
                 {cat.nameAr}
               </Text>
             </View>
@@ -67,7 +56,7 @@ function createStyles(colors: ThemeColors) {
     titleShell: {
       width: '100%',
       direction: 'ltr',
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: spacing.md,
     },
     title: {
       ...typography.caption,
@@ -79,44 +68,33 @@ function createStyles(colors: ThemeColors) {
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      paddingHorizontal: spacing.lg,
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       gap: spacing.sm,
     },
-    tile: {
-      width: TILE,
-      alignItems: 'center',
-      gap: 4,
-    },
-    tilePressed: {
-      opacity: 0.88,
-      transform: [{ scale: 0.97 }],
-    },
-    iconBox: {
-      width: TILE,
-      height: TILE,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
+    chip: {
       backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 11,
+      minHeight: 40,
+      justifyContent: 'center',
+      borderWidth: 0,
     },
-    emoji: {
-      fontSize: 20,
-      lineHeight: 24,
+    chipPressed: {
+      opacity: 0.92,
     },
     labelShell: {
-      width: '100%',
       direction: 'ltr',
     },
     label: {
-      ...typography.micro,
-      fontSize: 11,
-      lineHeight: 14,
+      ...typography.bodyStrong,
+      fontSize: 13,
+      lineHeight: 18,
       fontWeight: '600',
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'center',
+      color: colors.textBrandStrong,
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
   });
