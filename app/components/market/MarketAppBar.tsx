@@ -1,9 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { elevatedControlStyle, MENU_CARD } from '@/components/feature/SidebarMenu';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -29,7 +28,7 @@ export function MarketAppBar({
     <View style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
         <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8} accessibilityLabel="القائمة">
-          <AppIcon name="menu" size={ds.icon.md} color="#FFFFFF" />
+          <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
         </Pressable>
 
         <Pressable
@@ -38,7 +37,7 @@ export function MarketAppBar({
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
-          <AppIcon name="search" size={ds.icon.sm} color={colors.textMuted} />
+          <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
           <Text style={styles.searchPlaceholder} numberOfLines={1}>
             {searchPlaceholder}
           </Text>
@@ -48,8 +47,8 @@ export function MarketAppBar({
           size={ds.iconBtn.md}
           iconSize={ds.icon.md}
           style={styles.notifBtn}
-          iconColor="#FFFFFF"
-          badgeBorderColor={sarh.color.action}
+          iconColor={colors.textPrimary}
+          badgeBorderColor={colors.bgElevated}
         />
       </View>
     </View>
@@ -58,8 +57,10 @@ export function MarketAppBar({
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    /** Same elevated surface as listing cards (listRow). */
     shell: {
-      backgroundColor: colors.electric,
+      backgroundColor: colors.bgElevated,
+      borderBottomWidth: 0,
     },
     bar: {
       alignItems: 'center',
@@ -71,12 +72,13 @@ function createStyles(colors: ThemeColors) {
     },
     searchPill: {
       flex: 1,
-      minHeight: 40,
+      minHeight: 44,
       alignItems: 'center',
       gap: spacing.sm,
       paddingHorizontal: spacing.md,
       backgroundColor: colors.bgDeep,
-      borderRadius: 20,
+      borderRadius: MENU_CARD.controlRadius,
+      borderWidth: 0,
     },
     searchPlaceholder: {
       ...typography.body,
@@ -90,9 +92,13 @@ function createStyles(colors: ThemeColors) {
       height: ds.iconBtn.md,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.bgDeep,
+      borderRadius: 12,
+      borderWidth: 0,
     },
     notifBtn: {
-      backgroundColor: 'transparent',
+      backgroundColor: colors.bgDeep,
+      borderRadius: 12,
     },
   });
 }

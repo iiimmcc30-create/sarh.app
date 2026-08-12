@@ -21,7 +21,7 @@ import type { RegionSelection } from '@/constants/saudiRegions';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { listingMatchesRegionSelection } from '@/lib/saudiRegionSearch';
@@ -173,14 +173,18 @@ export default function MarketScreen() {
 
   const ListHeader = useCallback(
     () => (
-      <View>
-        <View style={styles.listingsHead}>
-          <Text style={styles.listingsTitle}>أحدث الإعلانات</Text>
-          <Text style={styles.listingsCount}>{filtered.length} إعلان</Text>
+      <View style={styles.listingsHead}>
+        <View style={[styles.listingsHeadRow, getRtlRow()]}>
+          <View style={styles.listingsTitleShell}>
+            <Text style={styles.listingsTitle}>أحدث الإعلانات</Text>
+          </View>
+          <View style={styles.listingsCountShell}>
+            <Text style={styles.listingsCount}>{filtered.length} إعلان</Text>
+          </View>
         </View>
       </View>
     ),
-    [filtered.length, styles.listingsCount, styles.listingsHead, styles.listingsTitle],
+    [filtered.length, styles],
   );
 
   return (
@@ -254,22 +258,38 @@ function createMarketStyles(
   return StyleSheet.create({
     container: screenStyles.screenRoot,
     listingsHead: {
-      flexDirection: 'row',
+      width: '100%',
       direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
       paddingTop: spacing.xs,
       paddingBottom: spacing.sm,
     },
+    listingsHeadRow: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    listingsTitleShell: {
+      flex: 1,
+      minWidth: 0,
+      direction: 'ltr',
+    },
     listingsTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
+    },
+    listingsCountShell: {
+      direction: 'ltr',
+      flexShrink: 0,
     },
     listingsCount: {
       ...typography.caption,
       color: colors.textMuted,
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     categoriesLoading: {
