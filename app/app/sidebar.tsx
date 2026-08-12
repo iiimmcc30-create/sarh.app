@@ -1,15 +1,11 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { AppLogo } from '@/components/ui/AppLogo';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppScrollView } from '@/components/ui/AppScrollView';
-import {
-  BRAND_LOGIN_SUBTITLE_AR,
-  BRAND_NAME_AR,
-} from '@/constants/brandCopy';
 import {
   scrimColor,
   spacing,
@@ -17,8 +13,10 @@ import {
   panelSurfaceBg,
   type ThemeColors,
 } from '@/constants/theme';
+import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { useApp } from '@/hooks/useApp';
 import { borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
@@ -37,6 +35,7 @@ type MenuItem = SidebarNavItem;
 export default function SidebarScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
+  const { me } = useApp();
   const { colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
   const { isButcherOwner, refresh } = useButcherOwnerAccess();
@@ -147,15 +146,26 @@ export default function SidebarScreen() {
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        {/* Compact brand stack — close overlays the top corner to cut empty space. */}
-        <View style={styles.brandBanner}>
+        <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
-            <AppIcon name="close" size={20} color={colors.textPrimary} />
+            <AppIcon name="close" size={22} color={colors.textPrimary} />
           </Pressable>
-          <AppLogo size={64} />
-          <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
-          <Text style={styles.brandTagline}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
         </View>
+
+        <Pressable
+          onPress={() => handleNav('/(tabs)/profile')}
+          style={styles.profileRow}
+        >
+          <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
+          <View style={styles.profileText}>
+            <Text style={styles.displayName} numberOfLines={2}>
+              {me.arabicName || me.displayName || me.username}
+            </Text>
+            <Text style={styles.usernameText} numberOfLines={1}>
+              @{me.username || 'user'}
+            </Text>
+          </View>
+        </Pressable>
 
         <AppScrollView
           style={styles.scroll}
@@ -177,6 +187,7 @@ export default function SidebarScreen() {
 }
 
 function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const isDark = scheme === 'dark';
   const panelBg = panelSurfaceBg(scheme, colors);
 
   return StyleSheet.create({
@@ -195,54 +206,70 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...borderInlineEnd(StyleSheet.hairlineWidth, colors.borderMid),
       overflow: 'hidden',
       shadowColor: '#000',
-      shadowOffset: { width: scheme === 'dark' ? -4 : -2, height: 0 },
-      shadowOpacity: scheme === 'dark' ? 0.35 : 0.1,
-      shadowRadius: 16,
+      shadowOffset: { width: isDark ? -4 : -2, height: 0 },
+      shadowOpacity: isDark ? 0.35 : 0.1,
+      shadowRadius: isDark ? 16 : 20,
       elevation: 10,
     },
-    brandBanner: {
-      alignItems: 'center',
-      gap: 4,
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.xs,
-      marginBottom: spacing.sm,
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-      alignSelf: 'stretch',
-      position: 'relative',
+    header: {
+      alignItems: 'flex-end',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xs,
     },
     closeBtn: {
-      position: 'absolute',
-      top: 0,
-      end: spacing.xs,
-      width: 32,
-      height: 32,
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 2,
+      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
+      borderColor: isDark ? sarh.color.border : 'transparent',
     },
-    brandName: {
-      ...typography.h2,
-      fontSize: 26,
-      lineHeight: 30,
+    profileRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderMid,
+    },
+    avatar: {
+      width: 58,
+      height: 58,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: sarh.color.action,
+      backgroundColor: colors.bgElevated,
+    },
+    profileText: {
+      flex: 1,
+      minWidth: 0,
+      gap: 3,
+      alignItems: 'flex-start',
+    },
+    displayName: {
+      ...typography.h3,
+      fontSize: 17,
       fontWeight: '600',
       color: colors.textPrimary,
-      textAlign: 'center',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
-    brandTagline: {
+    usernameText: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'center',
-      paddingHorizontal: 12,
-      lineHeight: 18,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     scroll: {
       flex: 1,
     },
     scrollContent: {
       paddingBottom: spacing.lg,
-      paddingTop: 0,
+      paddingTop: spacing.md,
     },
   });
 }
