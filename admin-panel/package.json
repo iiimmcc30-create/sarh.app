@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest --config jest.config.js --forceExit",
-    "test:cov": "jest --config jest.config.js --coverage --forceExit"
+    "test:cov": "jest --config jest.config.js --coverage --forceExit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "axios": "^1.18.1",
@@ -21,6 +23,7 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
