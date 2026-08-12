@@ -49,6 +49,7 @@ import {
   Images,
   Info,
   LayoutGrid,
+  Leaf,
   LifeBuoy,
   Link,
   List,
@@ -104,15 +105,18 @@ import {
   TrendingDown,
   TrendingUp,
   TriangleAlert,
+  Truck,
   User,
   UserCog,
   UserPlus,
   Users,
+  UtensilsCrossed,
   Video,
   VideoOff,
   Volume2,
   VolumeX,
   Wand2,
+  Wrench,
   X,
   XCircle,
 } from 'lucide-react-native';
@@ -401,7 +405,10 @@ const MAP: Record<string, LucideIcon> = {
   horse: PawPrint,
   'horse-variant': PawPrint,
   paw: PawPrint,
-  'shield-check-outline': ShieldCheck,
+  leaf: Leaf,
+  truck: Truck,
+  restaurant: UtensilsCrossed,
+  construct: Wrench,
 };
 
 export function resolveLucideIcon(name: string): LucideIcon {

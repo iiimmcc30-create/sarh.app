@@ -29,6 +29,7 @@ describe('admin navigation & feature routes inventory', () => {
       '/knowledge',
       '/official-services',
       '/listings',
+      '/categories',
       '/reports',
       '/support',
       '/live',

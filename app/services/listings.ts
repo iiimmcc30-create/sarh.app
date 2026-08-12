@@ -1,16 +1,6 @@
 import { API_BASE } from './api';
 import { countries, type Listing, type Country } from './types';
 
-export type ListingSearchParams = {
-  search?: string;
-  category?: string;
-  country?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  cursor?: string;
-  sellerId?: string;
-};
-
 type BackendListing = {
   id: string;
   title: string;
@@ -18,6 +8,20 @@ type BackendListing = {
   price: number;
   currency?: string;
   category: Listing['category'];
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  marketCategory?: {
+    id: string;
+    nameAr: string;
+    slug: string;
+    requiresWeight?: boolean;
+  } | null;
+  marketSubcategory?: {
+    id: string;
+    nameAr: string;
+    slug: string;
+    requiresWeight?: boolean;
+  } | null;
   breed?: string;
   age?: string;
   location: string;
@@ -59,6 +63,10 @@ function mapListing(l: BackendListing): Listing {
     price: l.price,
     currency: l.currency || 'SAR',
     category: l.category,
+    categoryId: l.categoryId ?? l.marketCategory?.id,
+    subcategoryId: l.subcategoryId ?? l.marketSubcategory?.id,
+    categoryNameAr: l.marketCategory?.nameAr,
+    subcategoryNameAr: l.marketSubcategory?.nameAr,
     breed: l.breed || '',
     age: l.age || '',
     location: l.location,
@@ -66,6 +74,10 @@ function mapListing(l: BackendListing): Listing {
     country: l.country,
     contactPhone: l.contactPhone,
     weightKg: l.weightKg,
+    requiresWeight:
+      l.marketCategory?.requiresWeight === true ||
+      l.marketSubcategory?.requiresWeight === true ||
+      l.category === 'slaughter',
     images: l.images?.length ? l.images : [],
     description: l.description,
     arabicDescription: l.arabicDescription,
@@ -94,6 +106,18 @@ function mapListing(l: BackendListing): Listing {
   };
 }
 
+export type ListingSearchParams = {
+  search?: string;
+  category?: string;
+  categoryId?: string;
+  subcategoryId?: string;
+  country?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  cursor?: string;
+  sellerId?: string;
+};
+
 export async function searchListings(
   params: ListingSearchParams,
   accessToken?: string | null,
@@ -101,6 +125,8 @@ export async function searchListings(
   const qs = new URLSearchParams();
   if (params.search && params.search.length >= 2) qs.set('search', params.search);
   if (params.category) qs.set('category', params.category);
+  if (params.categoryId) qs.set('categoryId', params.categoryId);
+  if (params.subcategoryId) qs.set('subcategoryId', params.subcategoryId);
   if (params.country) qs.set('country', params.country);
   if (params.minPrice != null) qs.set('minPrice', String(params.minPrice));
   if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));

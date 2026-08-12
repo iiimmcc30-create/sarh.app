@@ -83,8 +83,8 @@ VALUES
   ('a2000000-0000-4000-8000-000000000012', 'شعير', 'Barley', 'barley', 'leaf', '🌾', 'a1000000-0000-4000-8000-000000000002', 1, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000013', 'تبن', 'Hay', 'hay', 'leaf', '🌾', 'a1000000-0000-4000-8000-000000000002', 2, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000014', 'برسيم', 'Clover', 'clover', 'leaf', '🍀', 'a1000000-0000-4000-8000-000000000002', 3, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('a2000000-0000-4000-8000-000000000015', 'مركزات', 'Concentrate', 'concentrate', 'leaf', '🥣', 'a1000000-0000-4000-8000-000000000002', 4, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('a2000000-0000-4000-8000-000000000016', 'إضافات', 'Supplements', 'supplements', 'leaf', '💊', 'a1000000-0000-4000-8000-000000000002', 5, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('a2000000-0000-4000-8000-000000000015', 'أعلاف مركزة', 'Concentrate', 'concentrate', 'leaf', '🥣', 'a1000000-0000-4000-8000-000000000002', 4, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('a2000000-0000-4000-8000-000000000016', 'مكملات غذائية', 'Supplements', 'supplements', 'leaf', '💊', 'a1000000-0000-4000-8000-000000000002', 5, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000017', 'أخرى', 'Other', 'feed-other', 'leaf', '📦', 'a1000000-0000-4000-8000-000000000002', 6, true, false, 'feed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
   -- Transport children
@@ -92,7 +92,7 @@ VALUES
   ('a2000000-0000-4000-8000-000000000022', 'نقل أعلاف', 'Feed transport', 'feed-transport', 'truck', '🚚', 'a1000000-0000-4000-8000-000000000003', 1, true, false, 'transport', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000023', 'نقل مبرد', 'Cold transport', 'cold-transport', 'truck', '❄️', 'a1000000-0000-4000-8000-000000000003', 2, true, false, 'transport', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000024', 'نقل عام', 'General transport', 'general-transport', 'truck', '🚛', 'a1000000-0000-4000-8000-000000000003', 3, true, false, 'transport', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('a2000000-0000-4000-8000-000000000025', 'سطحة ونش', 'Flatbed winch', 'flatbed-winch', 'truck', '🔧', 'a1000000-0000-4000-8000-000000000003', 4, true, false, 'transport', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('a2000000-0000-4000-8000-000000000025', 'سطحات وونش', 'Flatbed winch', 'flatbed-winch', 'truck', '🔧', 'a1000000-0000-4000-8000-000000000003', 4, true, false, 'transport', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000026', 'أخرى', 'Other', 'transport-other', 'truck', '📦', 'a1000000-0000-4000-8000-000000000003', 5, true, false, 'transport', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
   -- Slaughter children
@@ -108,8 +108,8 @@ VALUES
   ('a2000000-0000-4000-8000-000000000042', 'معالف ومشارب', 'Feeders & drinkers', 'feeders-drinkers', 'construct', '🪣', 'a1000000-0000-4000-8000-000000000005', 1, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000043', 'معدات تربية', 'Breeding equipment', 'breeding-equipment', 'construct', '🔧', 'a1000000-0000-4000-8000-000000000005', 2, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000044', 'أدوات بيطرية', 'Vet tools', 'vet-tools', 'construct', '🩺', 'a1000000-0000-4000-8000-000000000005', 3, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('a2000000-0000-4000-8000-000000000045', 'جزّ', 'Shearing', 'shearing', 'construct', '✂️', 'a1000000-0000-4000-8000-000000000005', 4, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('a2000000-0000-4000-8000-000000000046', 'تحميل', 'Loading', 'loading', 'construct', '📦', 'a1000000-0000-4000-8000-000000000005', 5, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('a2000000-0000-4000-8000-000000000045', 'معدات قص وصوف', 'Shearing', 'shearing', 'construct', '✂️', 'a1000000-0000-4000-8000-000000000005', 4, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('a2000000-0000-4000-8000-000000000046', 'معدات تحميل', 'Loading', 'loading', 'construct', '📦', 'a1000000-0000-4000-8000-000000000005', 5, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('a2000000-0000-4000-8000-000000000047', 'أخرى', 'Other', 'equipment-other', 'construct', '📦', 'a1000000-0000-4000-8000-000000000005', 6, true, false, 'equipment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT ("slug") DO NOTHING;
 
@@ -133,3 +133,9 @@ WHERE l."categoryId" IS NULL
   AND p."parentId" IS NULL
   AND p.slug = l.category::text
   AND l.category::text IN ('feed', 'equipment');
+
+-- Normalize equipment subcategory labels (idempotent)
+UPDATE "MarketCategory" SET "nameAr" = 'معدات قص وصوف' WHERE slug = 'shearing';
+UPDATE "MarketCategory" SET "nameAr" = 'معدات تحميل' WHERE slug = 'loading';
+UPDATE "MarketCategory" SET emoji = '🐔' WHERE slug = 'birds';
+UPDATE "MarketCategory" SET emoji = '🐎' WHERE slug = 'horses';

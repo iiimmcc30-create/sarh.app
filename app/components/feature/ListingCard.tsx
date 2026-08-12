@@ -37,9 +37,12 @@ const CATEGORY_ICONS: Record<Listing['category'], string> = {
   goats: '🐐',
   cows: '🐄',
   horses: '🐎',
-  birds: '🦅',
+  birds: '🐔',
   feed: '🌾',
-  equipment: '⚙️',
+  equipment: '🔧',
+  livestock: '🐪',
+  transport: '🚚',
+  slaughter: '🥩',
 };
 
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)(\?|$)/i;

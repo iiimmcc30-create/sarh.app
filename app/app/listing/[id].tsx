@@ -375,10 +375,10 @@ export default function ListingDetailScreen() {
               <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
               <Text style={styles.headerMetaText}>{listing.arabicLocation || listing.location}</Text>
             </View>
-            {listing.weightKg ? (
+            {listing.weightKg != null && listing.weightKg > 0 ? (
               <View style={[styles.headerMetaItem, getRtlRow()]}>
                 <Text style={styles.headerMetaText}>
-                  {listing.weightKg.toLocaleString('ar-SA')} كجم
+                  الوزن: {listing.weightKg.toLocaleString('ar-SA')} كجم
                 </Text>
               </View>
             ) : null}

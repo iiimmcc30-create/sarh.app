@@ -4,7 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -24,9 +24,13 @@ import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/l
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
 import { safePush } from '@/lib/safeNavigate';
-import { MarketCategoryTiles } from '@/components/feature/MarketCategoryTiles';
+import { MarketCategoriesGrid } from '@/components/feature/MarketCategoriesGrid';
 import { useApp } from '@/hooks/useApp';
 import { Country, countries, Listing } from '@/services/types';
+import {
+  fetchMarketCategories,
+  type MarketCategory,
+} from '@/services/categories';
 
 /** Card height 118 + vertical margins (2 + 2). */
 const LISTING_ROW_HEIGHT = 122;
@@ -41,6 +45,11 @@ export default function MarketScreen() {
   const { listings, fetchListings } = useApp();
   const lastListingsFocusAt = useRef(0);
 
+  const [categories, setCategories] = useState<MarketCategory[]>([]);
+  const [search, setSearch] = useState('');
+  const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       const now = Date.now();
@@ -49,10 +58,20 @@ export default function MarketScreen() {
       void fetchListings();
     }, [fetchListings]),
   );
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [activeCountry, setActiveCountry] = useState<Country | 'ALL'>('ALL');
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMarketCategories()
+      .then((cats) => {
+        if (!cancelled) setCategories(cats.filter((c) => !c.parentId && c.isActive));
+      })
+      .catch(() => {
+        if (!cancelled) setCategories([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = useMemo(
     () =>
@@ -60,7 +79,6 @@ export default function MarketScreen() {
         listings
           .filter((l) => {
             if (l.country === 'EG') return false;
-            if (activeCategory !== 'all' && l.category !== activeCategory) return false;
             if (activeCountry !== 'ALL' && l.country !== activeCountry) return false;
             if (showFeaturedOnly && !l.featured) return false;
             if (search.trim()) {
@@ -75,7 +93,18 @@ export default function MarketScreen() {
           })
           .sort(compareListingBoostPriority),
       ),
-    [listings, activeCategory, activeCountry, showFeaturedOnly, search],
+    [listings, activeCountry, showFeaturedOnly, search],
+  );
+
+  const onSelectCategory = useCallback(
+    (cat: MarketCategory) => {
+      safePush(
+        { pathname: '/market/categories/[id]', params: { id: cat.id } },
+        undefined,
+        router,
+      );
+    },
+    [router],
   );
 
   const renderItem = useCallback(
@@ -150,7 +179,7 @@ export default function MarketScreen() {
             <TextInput
               value={search}
               onChangeText={setSearch}
-              placeholder="ابحث عن حيوانات، أعلاف، منتجات..."
+              placeholder="ابحث في السوق"
               placeholderTextColor={colors.textMuted}
               style={styles.searchInput}
             />
@@ -162,19 +191,11 @@ export default function MarketScreen() {
           </View>
         </View>
 
-        <MarketCategoryTiles value={activeCategory} onChange={setActiveCategory} />
+        {categories.length > 0 ? (
+          <MarketCategoriesGrid categories={categories} onSelect={onSelectCategory} />
+        ) : null}
 
         <View style={[styles.filterRow, getRtlRow()]}>
-          <Pressable
-            style={styles.filterChip}
-            onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
-          >
-            <AppIcon name="settings-sliders" size={16} color={colors.textPrimary} />
-          </Pressable>
-          <Pressable style={[styles.filterChip, getRtlRow()]}>
-            <AppIcon name="map-marker-outline" size={14} color={colors.textSecondary} />
-            <Text style={styles.filterChipText}>الموقع</Text>
-          </Pressable>
           <Pressable
             style={[styles.filterChip, getRtlRow(), activeCountry === 'SA' && styles.filterChipActive]}
             onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
@@ -190,20 +211,25 @@ export default function MarketScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionTitleShell}>
+          <Text style={styles.sectionTitle}>أحدث الإعلانات</Text>
+        </View>
+
         <View style={[styles.countRow, getRtlRow()]}>
           <Text style={styles.count}>{filtered.length} إعلان</Text>
         </View>
       </View>
     ),
     [
-      activeCategory,
       activeCountry,
+      categories,
+      colors,
       filtered.length,
+      onSelectCategory,
+      router,
       search,
       showFeaturedOnly,
       styles,
-      colors,
-      router,
     ],
   );
 
@@ -295,6 +321,7 @@ function createMarketStyles(
       fontSize: 14,
       color: colors.textPrimary,
       writingDirection: 'rtl',
+      textAlign: 'right',
     },
     filterRow: {
       paddingHorizontal: spacing.lg,
@@ -329,6 +356,19 @@ function createMarketStyles(
     },
     filterFlag: {
       fontSize: 14,
+    },
+    sectionTitleShell: {
+      width: '100%',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      direction: 'ltr',
+    },
+    sectionTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     countRow: {
       paddingHorizontal: spacing.lg,
