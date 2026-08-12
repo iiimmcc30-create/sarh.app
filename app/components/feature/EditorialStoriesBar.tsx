@@ -17,10 +17,12 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_W = Math.min(148, SCREEN_W * 0.38);
+const CARD_W = Math.min(124, SCREEN_W * 0.32);
 const CARD_H = CARD_W * (4 / 3);
-const CARD_GAP = 10;
+const CARD_GAP = 12;
 const SIDE_PAD = spacing.lg;
+const DOT_SIZE = 6;
+const DOT_ACTIVE_W = 22;
 
 type Props = {
   stories: EditorialStory[];
@@ -81,9 +83,11 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                     locations={[0.35, 1]}
                     style={styles.gradient}
                   />
-                  <Text style={styles.cardTitle} numberOfLines={3}>
-                    {story.titleAr}
-                  </Text>
+                  <View style={styles.cardTitleShell}>
+                    <Text style={styles.cardTitle} numberOfLines={2}>
+                      {story.titleAr}
+                    </Text>
+                  </View>
                 </Pressable>
               ))}
         </ScrollView>
@@ -125,7 +129,7 @@ function createStyles(colors: ThemeColors) {
     card: {
       width: CARD_W,
       height: CARD_H,
-      borderRadius: 18,
+      borderRadius: 16,
       overflow: 'hidden',
       backgroundColor: colors.bgElevated,
       justifyContent: 'flex-end',
@@ -137,39 +141,43 @@ function createStyles(colors: ThemeColors) {
     gradient: {
       ...StyleSheet.absoluteFillObject,
     },
-    cardTitle: {
-      ...typography.caption,
-      color: '#fff',
-      fontWeight: '700',
-      textAlign: 'center',
+    cardTitleShell: {
+      width: '100%',
+      direction: 'ltr',
       paddingHorizontal: 10,
-      paddingBottom: 12,
+      paddingBottom: 10,
+      zIndex: 1,
+    },
+    cardTitle: {
+      ...typography.bodyStrong,
+      fontSize: 13,
       lineHeight: 18,
+      color: '#fff',
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
       textShadowColor: 'rgba(0,0,0,0.45)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
-      zIndex: 1,
     },
     dots: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: 6,
-      marginTop: 2,
+      gap: 7,
+      marginTop: spacing.sm,
     },
     dot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: colors.textMuted,
-      opacity: 0.45,
+      width: DOT_SIZE,
+      height: DOT_SIZE,
+      borderRadius: DOT_SIZE / 2,
+      backgroundColor: '#FFFFFF',
     },
     dotActive: {
-      width: 18,
-      borderRadius: 4,
+      width: DOT_ACTIVE_W,
+      height: DOT_SIZE,
+      borderRadius: DOT_SIZE / 2,
       backgroundColor: colors.emerald,
-      opacity: 1,
     },
   });
 }
