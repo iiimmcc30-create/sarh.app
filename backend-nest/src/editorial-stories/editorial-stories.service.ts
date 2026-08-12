@@ -4,6 +4,7 @@ import {
   CreateEditorialStoryDto,
   UpdateEditorialStoryDto,
 } from './dto/editorial-stories.dto';
+import { deriveEditorialStoryTitle } from './editorial-story-title.util';
 import { EditorialStoriesRepository } from './repositories/editorial-stories.repository';
 
 @Injectable()
@@ -19,8 +20,14 @@ export class EditorialStoriesService {
   }
 
   async create(dto: CreateEditorialStoryDto) {
+    const titleAr =
+      dto.titleAr?.trim() || deriveEditorialStoryTitle(dto.bodyAr);
+    if (!titleAr) {
+      throwApi(400, 'validation_error', 'أدخل نص المقال');
+    }
+
     return this.repo.create({
-      titleAr: dto.titleAr,
+      titleAr,
       bodyAr: dto.bodyAr,
       imageUrl: dto.imageUrl,
       duration: dto.duration ?? 20,
@@ -34,8 +41,15 @@ export class EditorialStoriesService {
     const existing = await this.repo.findById(id);
     if (!existing) throwApi(404, 'not_found', 'الستوري غير موجود');
 
+    const titleAr =
+      dto.titleAr !== undefined
+        ? dto.titleAr.trim() || deriveEditorialStoryTitle(dto.bodyAr ?? existing.bodyAr)
+        : dto.bodyAr !== undefined
+          ? deriveEditorialStoryTitle(dto.bodyAr)
+          : undefined;
+
     return this.repo.update(id, {
-      ...(dto.titleAr !== undefined ? { titleAr: dto.titleAr } : {}),
+      ...(titleAr !== undefined ? { titleAr } : {}),
       ...(dto.bodyAr !== undefined ? { bodyAr: dto.bodyAr } : {}),
       ...(dto.imageUrl !== undefined ? { imageUrl: dto.imageUrl } : {}),
       ...(dto.duration !== undefined ? { duration: dto.duration } : {}),

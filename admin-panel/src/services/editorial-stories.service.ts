@@ -19,9 +19,9 @@ export async function fetchEditorialStoriesAdmin() {
 }
 
 export async function createEditorialStory(data: {
-  titleAr: string;
   bodyAr: string;
   imageUrl: string;
+  titleAr?: string;
   duration?: number;
   sortOrder?: number;
   isActive?: boolean;
