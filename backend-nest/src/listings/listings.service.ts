@@ -25,7 +25,11 @@ import { SubscriptionEntitlementService } from '../subscriptions/services/subscr
 import { PlanResolverService } from '../plans/plan-resolver.service';
 import { PlanPermissionService } from '../plans/plan-permission.service';
 import { notDeleted } from '../common/utils/soft-delete.util';
-import { isLivestockCategory } from './listing-categories';
+import {
+  categoryRequiresWeight,
+  resolveLegacyListingCategory,
+} from './listing-categories';
+import { MarketCategoriesService } from '../market-categories/services/market-categories.service';
 
 const PAGE_SIZE = 20;
 
@@ -42,6 +46,7 @@ export class ListingsService {
     private readonly planResolver: PlanResolverService,
     private readonly planPermissions: PlanPermissionService,
     private readonly promotions: ListingPromotionService,
+    private readonly marketCategories: MarketCategoriesService,
   ) {}
 
   private sellerPriorityBoost(
@@ -59,13 +64,17 @@ export class ListingsService {
     return seller?.verified ? 1 : 0;
   }
 
-  private assertWeightForCategory(category: string, weightKg?: number | null) {
-    if (isLivestockCategory(category)) {
+  private assertWeightForCategory(
+    category: string,
+    weightKg?: number | null,
+    parentRequiresWeight?: boolean | null,
+  ) {
+    if (categoryRequiresWeight(category, parentRequiresWeight)) {
       if (weightKg == null || weightKg <= 0) {
         throwApi(
           400,
           'weight_required',
-          'الوزن مطلوب للمواشي الحية ويجب أن يكون بالكيلوغرام',
+          'الوزن مطلوب للذبائح ويجب أن يكون بالكيلوغرام',
         );
       }
       return;
@@ -78,11 +87,31 @@ export class ListingsService {
   async list(query: ListListingsQueryDto, viewerId?: string) {
     await this.promotions.expireStalePromotions().catch(() => {});
 
-    const { cursor, category, country, search, featured, sellerId, minPrice, maxPrice, suggested, promoted } = query;
+    const {
+      cursor,
+      category,
+      categoryId,
+      subcategoryId,
+      country,
+      search,
+      featured,
+      sellerId,
+      minPrice,
+      maxPrice,
+      suggested,
+      promoted,
+    } = query;
 
-    const cacheKey = search || minPrice != null || maxPrice != null || suggested || promoted
-      ? null
-      : `listings:v2:${JSON.stringify({ cursor, category, country, featured, sellerId })}`;
+    const cacheKey =
+      search ||
+      minPrice != null ||
+      maxPrice != null ||
+      suggested ||
+      promoted ||
+      categoryId ||
+      subcategoryId
+        ? null
+        : `listings:v2:${JSON.stringify({ cursor, category, country, featured, sellerId })}`;
 
     if (cacheKey) {
       const cached = await this.cache.get<{
@@ -100,6 +129,18 @@ export class ListingsService {
     if (suggested || promoted) where.promoted = true;
     if (sellerId) where.sellerId = sellerId;
 
+    const andFilters: Prisma.ListingWhereInput[] = [];
+    if (subcategoryId) {
+      andFilters.push({ subcategoryId });
+    } else if (categoryId) {
+      andFilters.push({
+        OR: [
+          { categoryId },
+          { marketSubcategory: { parentId: categoryId } },
+        ],
+      });
+    }
+
     if (viewerId) {
       const blockedIds = await this.usersRepo.findBlockedRelationshipIds(viewerId);
       if (blockedIds.length > 0) {
@@ -113,13 +154,19 @@ export class ListingsService {
     }
 
     if (search && search.length >= 2) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { arabicTitle: { contains: search } },
-        { arabicLocation: { contains: search } },
-        { location: { contains: search, mode: 'insensitive' } },
-        { breed: { contains: search, mode: 'insensitive' } },
-      ];
+      andFilters.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { arabicTitle: { contains: search } },
+          { arabicLocation: { contains: search } },
+          { location: { contains: search, mode: 'insensitive' } },
+          { breed: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (andFilters.length > 0) {
+      where.AND = andFilters;
     }
 
     if (minPrice != null || maxPrice != null) {
@@ -210,6 +257,43 @@ export class ListingsService {
     const featured = dto.featured ?? false;
     const pinned = dto.pinned ?? false;
 
+    let legacyCategory = dto.category;
+    let categoryId = dto.categoryId ?? null;
+    let subcategoryId = dto.subcategoryId ?? null;
+    let parentRequiresWeight: boolean | null = null;
+
+    if (subcategoryId) {
+      const sub = await this.marketCategories.findSubcategoryWithParent(subcategoryId);
+      if (!sub || !sub.parent) {
+        throwApi(400, 'invalid_subcategory', 'التصنيف الفرعي غير صالح');
+      }
+      categoryId = sub.parent.id;
+      subcategoryId = sub.id;
+      legacyCategory = resolveLegacyListingCategory(sub);
+      parentRequiresWeight =
+        sub.parent.requiresWeight || sub.requiresWeight || null;
+    } else if (categoryId) {
+      const parent = await this.marketCategories.findByIdRaw(categoryId);
+      if (!parent || parent.parentId) {
+        throwApi(400, 'invalid_category', 'التصنيف الرئيسي غير صالح');
+      }
+      parentRequiresWeight = parent.requiresWeight;
+      if (!legacyCategory) {
+        legacyCategory = resolveLegacyListingCategory({
+          slug: parent.slug,
+          legacyCategory: parent.legacyCategory,
+        });
+      }
+    }
+
+    if (!legacyCategory) {
+      throwApi(
+        400,
+        'category_required',
+        'يجب تحديد التصنيف أو التصنيف الرئيسي والفرعي',
+      );
+    }
+
     const effectivePlanSlug = await this.entitlements.assertCanCreateListing(
       user.userId,
       { images: dto.images, featured, pinned },
@@ -219,19 +303,23 @@ export class ListingsService {
     const audience = await this.entitlements.getAudienceForUser(user.userId);
 
     const { commission, dueDate } = calculateCommission(
-      dto.category as ListingCat,
+      legacyCategory as ListingCat,
       dto.price,
       quantity,
       permissions,
       audience,
     );
     const createFee = shouldCreateFee(
-      dto.category as ListingCat,
+      legacyCategory as ListingCat,
       permissions,
       audience,
     );
 
-    this.assertWeightForCategory(dto.category, dto.weightKg);
+    this.assertWeightForCategory(
+      legacyCategory,
+      dto.weightKg,
+      parentRequiresWeight,
+    );
 
     try {
       const listing = await this.repo.createListingWithFee({
@@ -246,7 +334,9 @@ export class ListingsService {
           arabicDescription: dto.arabicDescription,
           price: dto.price,
           currency,
-          category: dto.category,
+          category: legacyCategory,
+          categoryId: categoryId ?? undefined,
+          subcategoryId: subcategoryId ?? undefined,
           breed: dto.breed,
           age: dto.age,
           quantity,
@@ -254,14 +344,14 @@ export class ListingsService {
           arabicLocation: dto.arabicLocation,
           country: dto.country,
           contactPhone: dto.contactPhone,
-          weightKg: isLivestockCategory(dto.category) ? dto.weightKg : null,
+          weightKg: dto.weightKg ?? null,
           images: dto.images,
           featured,
           pinned,
         },
         commission,
         dueDate,
-        category: dto.category,
+        category: legacyCategory,
         quantity,
         price: dto.price,
       });
@@ -297,7 +387,7 @@ export class ListingsService {
       await this.cache.delPattern('listings:v2:*');
 
       this.logger.info(
-        { listingId: listing.id, userId: user.userId, commission },
+        { listingId: listing.id, userId: user.userId, commission, plan: effectivePlanSlug },
         'Listing created',
       );
       return listing;
@@ -326,10 +416,42 @@ export class ListingsService {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
-    const category = dto.category ?? listing.category;
+    let category = dto.category ?? listing.category;
+    let categoryId = dto.categoryId !== undefined ? dto.categoryId : listing.categoryId;
+    let subcategoryId =
+      dto.subcategoryId !== undefined ? dto.subcategoryId : listing.subcategoryId;
+    let parentRequiresWeight = listing.marketCategory?.requiresWeight ?? null;
+
+    if (dto.subcategoryId) {
+      const sub = await this.marketCategories.findSubcategoryWithParent(
+        dto.subcategoryId,
+      );
+      if (!sub || !sub.parent) {
+        throwApi(400, 'invalid_subcategory', 'التصنيف الفرعي غير صالح');
+      }
+      categoryId = sub.parent.id;
+      subcategoryId = sub.id;
+      category = resolveLegacyListingCategory(sub);
+      parentRequiresWeight =
+        sub.parent.requiresWeight || sub.requiresWeight || null;
+    } else if (dto.categoryId) {
+      const parent = await this.marketCategories.findByIdRaw(dto.categoryId);
+      if (!parent || parent.parentId) {
+        throwApi(400, 'invalid_category', 'التصنيف الرئيسي غير صالح');
+      }
+      categoryId = parent.id;
+      parentRequiresWeight = parent.requiresWeight;
+      if (!dto.category) {
+        category = resolveLegacyListingCategory({
+          slug: parent.slug,
+          legacyCategory: parent.legacyCategory,
+        });
+      }
+    }
+
     const weightKg =
       dto.weightKg !== undefined ? dto.weightKg : listing.weightKg ?? undefined;
-    this.assertWeightForCategory(category, weightKg);
+    this.assertWeightForCategory(category, weightKg, parentRequiresWeight);
 
     const updateData: Prisma.ListingUpdateInput = {};
     if (dto.title !== undefined) updateData.title = dto.title;
@@ -345,14 +467,21 @@ export class ListingsService {
     if (dto.location !== undefined) updateData.location = dto.location;
     if (dto.arabicLocation !== undefined) updateData.arabicLocation = dto.arabicLocation;
     if (dto.contactPhone !== undefined) updateData.contactPhone = dto.contactPhone;
-    if (dto.category !== undefined) updateData.category = dto.category;
-
-    if (isLivestockCategory(category)) {
-      if (dto.weightKg !== undefined) {
-        updateData.weightKg = dto.weightKg;
-      }
-    } else {
-      updateData.weightKg = null;
+    if (dto.category !== undefined || dto.subcategoryId || dto.categoryId) {
+      updateData.category = category;
+    }
+    if (dto.categoryId !== undefined || dto.subcategoryId) {
+      updateData.marketCategory = categoryId
+        ? { connect: { id: categoryId } }
+        : { disconnect: true };
+    }
+    if (dto.subcategoryId !== undefined) {
+      updateData.marketSubcategory = subcategoryId
+        ? { connect: { id: subcategoryId } }
+        : { disconnect: true };
+    }
+    if (dto.weightKg !== undefined) {
+      updateData.weightKg = dto.weightKg;
     }
 
     const updated = await this.repo.update(id, updateData);

@@ -9,27 +9,21 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  IsUUID,
   Length,
   Matches,
   Max,
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { SUPPORTED_COUNTRIES } from '../../lib/countries';
 import { MEDIA_URL_OPTS } from '../../shared/lib/media-url';
+import { LISTING_CATEGORIES } from '../listing-categories';
 
-const LISTING_CATEGORIES = [
-  'camels',
-  'sheep',
-  'goats',
-  'cows',
-  'horses',
-  'birds',
-  'feed',
-  'equipment',
-] as const;
+export { LISTING_CATEGORIES };
 
 export class ListListingsQueryDto {
   @IsOptional()
@@ -39,6 +33,14 @@ export class ListListingsQueryDto {
   @IsOptional()
   @IsEnum(LISTING_CATEGORIES)
   category?: (typeof LISTING_CATEGORIES)[number];
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  subcategoryId?: string;
 
   @IsOptional()
   @IsEnum(SUPPORTED_COUNTRIES)
@@ -117,8 +119,20 @@ export class CreateListingDto {
   @Length(3, 3)
   currency?: string;
 
+  /** Legacy enum — optional when categoryId and/or subcategoryId are provided. */
+  @ValidateIf(
+    (o: CreateListingDto) => !o.categoryId && !o.subcategoryId,
+  )
   @IsEnum(LISTING_CATEGORIES)
-  category!: (typeof LISTING_CATEGORIES)[number];
+  category?: (typeof LISTING_CATEGORIES)[number];
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  subcategoryId?: string;
 
   @IsOptional()
   @IsString()
@@ -233,6 +247,14 @@ export class UpdateListingDto {
   @IsOptional()
   @IsEnum(LISTING_CATEGORIES)
   category?: (typeof LISTING_CATEGORIES)[number];
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  subcategoryId?: string;
 
   @IsOptional()
   @IsArray()

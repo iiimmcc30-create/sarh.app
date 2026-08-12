@@ -18,6 +18,15 @@ const SELLER_DETAIL_SELECT = {
   bio: true,
 } as const;
 
+const MARKET_CATEGORY_SELECT = {
+  id: true,
+  nameAr: true,
+  slug: true,
+  emoji: true,
+  icon: true,
+  requiresWeight: true,
+} as const;
+
 @Injectable()
 export class ListingsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -43,6 +52,8 @@ export class ListingsRepository {
             },
           },
         },
+        marketCategory: { select: MARKET_CATEGORY_SELECT },
+        marketSubcategory: { select: MARKET_CATEGORY_SELECT },
       },
     });
   }
@@ -53,6 +64,8 @@ export class ListingsRepository {
       include: {
         seller: { select: SELLER_DETAIL_SELECT },
         fee: { select: { status: true, commission: true, dueDate: true } },
+        marketCategory: { select: MARKET_CATEGORY_SELECT },
+        marketSubcategory: { select: MARKET_CATEGORY_SELECT },
       },
     });
   }
@@ -63,10 +76,13 @@ export class ListingsRepository {
       select: {
         sellerId: true,
         category: true,
+        categoryId: true,
+        subcategoryId: true,
         country: true,
         weightKg: true,
         pinned: true,
         featured: true,
+        marketCategory: { select: { requiresWeight: true, slug: true } },
       },
     });
   }
