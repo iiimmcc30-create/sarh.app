@@ -184,7 +184,7 @@ describe('admin feature API wiring — login to every section', () => {
     await support.replySupportTicket('t1', { body: 'رد' });
     await support.fetchVerificationRequests();
     await support.fetchVerificationRequest('v1');
-    await support.updateVerificationRequest('v1', { status: 'APPROVED' });
+    await support.updateVerificationRequest('v1', { status: 'VERIFIED' });
     await support.fetchSupportFaqs();
     await support.createSupportFaq({ questionAr: '؟' });
     expect(apiClient.get).toHaveBeenCalledWith('/admin/support/tickets', expect.any(Object));

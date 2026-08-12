@@ -75,8 +75,12 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
   t('support meta + public FAQs', async () => {
     const meta = await request(API).get('/api/support/meta');
     expect(meta.status).toBe(200);
+    expect(meta.body.success).toBe(true);
+    expect(meta.body.data?.tickets?.categories?.length).toBeGreaterThan(0);
     const faqs = await request(API).get('/api/support/faqs');
     expect(faqs.status).toBe(200);
+    expect(faqs.body.success).toBe(true);
+    expect(Array.isArray(faqs.body.data?.faqs ?? faqs.body.data?.items ?? [])).toBe(true);
   });
 
   t('create a support ticket, list it, and reply', async () => {
@@ -90,15 +94,26 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
       });
     expect([200, 201, 400]).toContain(create.status);
     if (create.status >= 200 && create.status < 300) {
-      const ticketId = create.body.data.id ?? create.body.data.ticket?.id;
+      expect(create.body.success).toBe(true);
+      const ticketId = create.body.data?.ticket?.id ?? create.body.data?.id;
+      expect(ticketId).toBeTruthy();
       const list = await request(API).get('/api/support/tickets').set(authHeader(user.accessToken));
       expect(list.status).toBe(200);
+      expect(list.body.success).toBe(true);
+      expect(Array.isArray(list.body.data?.items)).toBe(true);
       if (ticketId) {
+        const detail = await request(API)
+          .get(`/api/support/tickets/${ticketId}`)
+          .set(authHeader(user.accessToken));
+        expect(detail.status).toBe(200);
+        expect(detail.body.data?.ticket?.id).toBe(ticketId);
+
         const reply = await request(API)
           .post(`/api/support/tickets/${ticketId}/messages`)
           .set(authHeader(user.accessToken))
           .send({ body: 'رسالة رد اختبار' });
         expect([200, 201]).toContain(reply.status);
+        expect(reply.body.success).toBe(true);
       }
     }
   });
@@ -113,6 +128,8 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
   t('verification request endpoint (auth)', async () => {
     const res = await request(API).get('/api/support/verification').set(authHeader(user.accessToken));
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data?.request).toBeTruthy();
   });
 
   // ── Sarh official services (§19) ────────────────────────────

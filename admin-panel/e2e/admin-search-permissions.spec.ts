@@ -43,6 +43,13 @@ test.describe('Admin panel — search, filters, permissions (§24)', () => {
     await loginAsAdmin(page);
     await page.getByRole('link', { name: 'الدعم والمساعدة', exact: true }).click();
     await expect(page).toHaveURL(/\/support/);
-    await expect(page.locator('aside')).toBeVisible();
+    await expect(page.getByText('تذاكر الدعم').first()).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('link', { name: 'تذاكر الدعم' }).click();
+    await expect(page).toHaveURL(/\/support\/tickets/);
+    await expect(page.getByText('الكل')).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('link', { name: 'الدعم والمساعدة', exact: true }).click();
+    await page.getByRole('link', { name: 'طلبات التوثيق' }).click();
+    await expect(page).toHaveURL(/\/support\/verification/);
+    await expect(page.getByText('طلبات توثيق الحساب').first()).toBeVisible({ timeout: 20_000 });
   });
 });

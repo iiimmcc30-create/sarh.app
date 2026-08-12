@@ -260,6 +260,7 @@ export class AdminRepository {
     const { page, pageSize, search, status, category } = query;
     const where: Prisma.SupportTicketWhereInput = {
       ...notDeleted,
+      type: 'REPORT',
       ...(status ? { status: status as TicketStatus } : {}),
       ...(category ? { category } : {}),
       ...(search?.trim()
@@ -510,12 +511,21 @@ export class AdminRepository {
       this.prisma.liveStream.count({ where: notDeleted }),
       this.prisma.liveStream.count({ where: { ...notDeleted, isLive: true } }),
       this.prisma.supportTicket.count({
-        where: { ...notDeleted, status: { in: ['OPEN', 'IN_REVIEW', 'IN_PROGRESS'] } },
+        where: {
+          ...notDeleted,
+          type: 'REPORT',
+          status: { in: ['OPEN', 'IN_REVIEW', 'IN_PROGRESS'] },
+        },
       }),
       this.prisma.supportTicket.count({
-        where: { ...notDeleted, priority: 'URGENT', status: { not: 'CLOSED' } },
+        where: {
+          ...notDeleted,
+          type: 'REPORT',
+          priority: 'URGENT',
+          status: { not: 'CLOSED' },
+        },
       }),
-      this.prisma.supportTicket.count({ where: notDeleted }),
+      this.prisma.supportTicket.count({ where: { ...notDeleted, type: 'REPORT' } }),
       this.prisma.butcher.count({ where: notDeleted }),
       this.prisma.butcher.count({ where: { ...notDeleted, type: 'verified' } }),
       this.prisma.user.findMany({
@@ -524,7 +534,7 @@ export class AdminRepository {
       }),
       this.prisma.supportTicket.groupBy({
         by: ['category'],
-        where: notDeleted,
+        where: { ...notDeleted, type: 'REPORT' },
         _count: { category: true },
       }),
     ]);

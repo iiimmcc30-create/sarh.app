@@ -48,89 +48,89 @@ export class SupportController {
   @RateLimit('api')
   @Get('faqs')
   @HttpCode(HttpStatus.OK)
-  listFaqs(@Query() query: Record<string, unknown>) {
-    return successResponse(this.faq.listPublic(query));
+  async listFaqs(@Query() query: Record<string, unknown>) {
+    return successResponse(await this.faq.listPublic(query));
   }
 
   @RateLimit('api')
   @Get('tickets')
   @HttpCode(HttpStatus.OK)
-  listTickets(
+  async listTickets(
     @CurrentUser() user: JwtPayload,
     @Query() query: Record<string, unknown>,
   ) {
-    return successResponse(this.tickets.listUserTickets(user, query));
+    return successResponse(await this.tickets.listUserTickets(user, query));
   }
 
   @RateLimit('api')
   @Get('tickets/:id')
   @HttpCode(HttpStatus.OK)
-  getTicket(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return successResponse(this.tickets.getUserTicket(user, id));
+  async getTicket(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return successResponse(await this.tickets.getUserTicket(user, id));
   }
 
   @RateLimit('api')
   @Post('tickets')
   @HttpCode(HttpStatus.CREATED)
-  createTicket(
+  async createTicket(
     @CurrentUser() user: JwtPayload,
     @Body() body: CreateSupportTicketDto,
   ) {
-    return successResponse(this.tickets.createTicket(user, body));
+    return successResponse(await this.tickets.createTicket(user, body));
   }
 
   @RateLimit('api')
   @Post('tickets/:id/messages')
   @HttpCode(HttpStatus.OK)
-  replyTicket(
+  async replyTicket(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() body: ReplySupportTicketDto,
   ) {
-    return successResponse(this.tickets.replyAsUser(user, id, body));
+    return successResponse(await this.tickets.replyAsUser(user, id, body));
   }
 
   @RateLimit('api')
   @Get('verification')
   @HttpCode(HttpStatus.OK)
-  getVerification(@CurrentUser() user: JwtPayload) {
-    return successResponse(this.verification.getUserRequest(user));
+  async getVerification(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.verification.getUserRequest(user));
   }
 
   @RateLimit('api')
   @Patch('verification')
   @HttpCode(HttpStatus.OK)
-  upsertVerification(
+  async upsertVerification(
     @CurrentUser() user: JwtPayload,
     @Body() body: UpsertVerificationDto,
   ) {
-    return successResponse(this.verification.upsertDraft(user, body));
+    return successResponse(await this.verification.upsertDraft(user, body));
   }
 
   @RateLimit('api')
   @Post('verification/documents')
   @HttpCode(HttpStatus.CREATED)
-  addVerificationDocument(
+  async addVerificationDocument(
     @CurrentUser() user: JwtPayload,
     @Body() body: VerificationDocumentDto,
   ) {
-    return successResponse(this.verification.addDocument(user, body));
+    return successResponse(await this.verification.addDocument(user, body));
   }
 
   @RateLimit('api')
   @Delete('verification/documents/:documentId')
   @HttpCode(HttpStatus.OK)
-  removeVerificationDocument(
+  async removeVerificationDocument(
     @CurrentUser() user: JwtPayload,
     @Param('documentId') documentId: string,
   ) {
-    return successResponse(this.verification.removeDocument(user, documentId));
+    return successResponse(await this.verification.removeDocument(user, documentId));
   }
 
   @RateLimit('api')
   @Post('verification/submit')
   @HttpCode(HttpStatus.OK)
-  submitVerification(@CurrentUser() user: JwtPayload) {
-    return successResponse(this.verification.submit(user));
+  async submitVerification(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.verification.submit(user));
   }
 }
