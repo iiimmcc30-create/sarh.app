@@ -93,15 +93,22 @@ export default function MoreScreen() {
 
       <AppScrollView contentContainerStyle={styles.content}>
         {/* المظهر */}
-        <SidebarThemeToggle preference={preference} colors={colors} onToggle={onToggleTheme} />
+        <SidebarThemeToggle
+          preference={preference}
+          colors={colors}
+          onToggle={onToggleTheme}
+          variant="outline"
+        />
 
         {/* اللغة */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.cardTitle}>اللغة</Text>
+            <View style={styles.coverTrail}>
+              <View style={styles.rtlTextShellFlex}>
+                <Text style={styles.cardTitle}>اللغة</Text>
+              </View>
+              <AppIcon name="globe-outline" size={22} color={colors.textPrimary} />
             </View>
-            <AppIcon name="globe-outline" size={20} color={colors.textMuted} />
           </View>
           <View style={styles.langTrack}>
             <Pressable
@@ -129,8 +136,8 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="file-document-outline"
             title="السياسات والشروط"
-            subtitle="الشروط، الخصوصية، الملكية الفكرية والمزيد"
             colors={colors}
+            variant="outline"
             showDivider={false}
             onPress={() => safePush('/info/policies', undefined, router)}
           />
@@ -146,32 +153,32 @@ export default function MoreScreen() {
           <SidebarMenuItem
             icon="information-outline"
             title="من نحن"
-            subtitle="تعرّف على سرح ورؤيتنا"
             colors={colors}
+            variant="outline"
             showDivider
             onPress={() => safePush('/info/about', undefined, router)}
           />
           <SidebarMenuItem
             icon="lifebuoy"
             title="الدعم والمساعدة"
-            subtitle="مركز الدعم والأسئلة الشائعة"
             colors={colors}
+            variant="outline"
             showDivider
             onPress={() => safePush('/support/index', undefined, router)}
           />
           <SidebarMenuItem
             icon="mail-outline"
             title="تواصل معنا"
-            subtitle="تواصل مع فريق سرح"
             colors={colors}
+            variant="outline"
             showDivider
             onPress={() => safePush('/info/contact', undefined, router)}
           />
           <SidebarMenuItem
             icon="star-outline"
             title="تقييم التطبيق"
-            subtitle="أخبرنا برأيك وساعدنا في التطوير"
             colors={colors}
+            variant="outline"
             showDivider={false}
             onPress={openStoreRating}
           />
@@ -216,21 +223,25 @@ function createStyles(colors: ThemeColors) {
     content: {
       paddingHorizontal: spacing.lg,
       paddingBottom: TAB_CLEARANCE,
-      gap: spacing.md,
+      gap: spacing.lg,
     },
     card: {
       backgroundColor: colors.bgElevated,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderRadius: 14,
       overflow: 'hidden',
-      padding: spacing.md,
-      gap: spacing.sm,
     },
     cardHeader: {
-      flexDirection: 'row-reverse',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    coverTrail: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
+      gap: 10,
+      width: '100%',
     },
     cardTitle: {
       ...typography.bodyStrong,
@@ -243,8 +254,8 @@ function createStyles(colors: ThemeColors) {
       flexDirection: 'row-reverse',
       backgroundColor: colors.bgDeep,
       borderRadius: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderHairline,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
       padding: 4,
       gap: 4,
     },
@@ -268,11 +279,11 @@ function createStyles(colors: ThemeColors) {
     },
     sectionLabelWrap: {
       marginTop: spacing.xs,
-      paddingHorizontal: spacing.xs,
+      paddingHorizontal: spacing.lg,
     },
     sectionLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',

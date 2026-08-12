@@ -5,12 +5,8 @@
  *   RIGHT                                         LEFT
  *   [ Icon ] [ Title ] ————————————— [ > ]
  *
- * Implementation isolates layout in a physical LTR row so app-level RTL
- * cannot reverse children again. Child order is left→right:
- *   [Chevron] [Title shell] [Icon]
- *
- * Title uses a width-bounded LTR shell (same pattern as listing title) so
- * Arabic textAlign:'right' stays complete under overflow:hidden parents.
+ * Outline variant (More tab): cover-style trailing cluster — icon on physical
+ * right, title in rtlTextShell hugging the icon (same pattern as listing cover).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { appFont } from '@/constants/fonts';
@@ -29,6 +25,8 @@ export type SidebarMenuItemProps = {
   showDivider?: boolean;
   showChevron?: boolean;
   iconColor?: string;
+  /** More-tab reference: white outline icons, cover alignment, inset dividers. */
+  variant?: 'default' | 'outline';
   colors?: ThemeColors;
   style?: ViewStyle;
   accessibilityLabel?: string;
@@ -37,10 +35,14 @@ export type SidebarMenuItemProps = {
 
 export const SIDEBAR_MENU_ITEM = {
   minHeight: 56,
+  outlineMinHeight: 52,
   paddingHorizontal: spacing.md,
+  outlinePaddingHorizontal: spacing.lg,
   paddingVertical: spacing.md,
+  outlinePaddingVertical: 14,
   gap: spacing.md,
   iconSize: 20,
+  outlineIconSize: 22,
   iconWrap: 40,
   iconRadius: radius.md,
   titleSize: 15,
@@ -48,6 +50,96 @@ export const SIDEBAR_MENU_ITEM = {
   subtitleSize: 12,
   chevronSize: 14,
 } as const;
+
+function OutlineMenuItem({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  badge,
+  showDivider,
+  showChevron,
+  iconColor,
+  colors,
+  tint,
+  chevronColor,
+  style,
+  accessibilityLabel,
+  testID,
+}: {
+  icon: string;
+  title: string;
+  subtitle?: string;
+  onPress: () => void;
+  badge?: number;
+  showDivider: boolean;
+  showChevron: boolean;
+  iconColor?: string;
+  colors: ThemeColors;
+  tint: string;
+  chevronColor: string;
+  style?: ViewStyle;
+  accessibilityLabel?: string;
+  testID?: string;
+}) {
+  const showBadge = typeof badge === 'number' && badge > 0;
+
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      onPress={() => {
+        if (isNavigationLocked()) return;
+        onPress();
+      }}
+      style={({ pressed }) => [styles.outlineWrap, pressed && styles.rowPressed, style]}
+    >
+      <View style={styles.outlineRow}>
+        <View style={styles.chevronSlot}>
+          {showChevron ? (
+            <AppIcon
+              name="angle-left"
+              size={SIDEBAR_MENU_ITEM.chevronSize}
+              color={chevronColor}
+            />
+          ) : null}
+        </View>
+
+        {showBadge ? (
+          <View style={[styles.badge, { backgroundColor: colors.electric }]}>
+            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+          </View>
+        ) : null}
+
+        {/* Cover cluster: icon on physical right, title shell adjacent (RTL). */}
+        <View style={styles.coverTrail}>
+          <View style={styles.textShell}>
+            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
+          <View style={styles.iconWrapOutline}>
+            <AppIcon
+              name={icon}
+              size={SIDEBAR_MENU_ITEM.outlineIconSize}
+              color={iconColor ?? tint}
+            />
+          </View>
+        </View>
+      </View>
+
+      {showDivider ? (
+        <View style={[styles.dividerInset, { backgroundColor: colors.borderSoft }]} />
+      ) : null}
+    </Pressable>
+  );
+}
 
 export function SidebarMenuItem({
   icon,
@@ -59,6 +151,7 @@ export function SidebarMenuItem({
   showDivider = true,
   showChevron = true,
   iconColor,
+  variant = 'default',
   colors: colorsProp,
   style,
   accessibilityLabel,
@@ -66,8 +159,32 @@ export function SidebarMenuItem({
 }: SidebarMenuItemProps) {
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
-  const tint = iconColor ?? (active ? colors.electric : colors.textMuted);
+  const isOutline = variant === 'outline';
+  const tint =
+    iconColor ?? (isOutline ? colors.textPrimary : active ? colors.electric : colors.textMuted);
+  const chevronColor = isOutline ? colors.textMuted : colors.textSubtle;
   const showBadge = typeof badge === 'number' && badge > 0;
+
+  if (isOutline) {
+    return (
+      <OutlineMenuItem
+        icon={icon}
+        title={title}
+        subtitle={subtitle}
+        onPress={onPress}
+        badge={badge}
+        showDivider={showDivider}
+        showChevron={showChevron}
+        iconColor={iconColor}
+        colors={colors}
+        tint={tint}
+        chevronColor={chevronColor}
+        style={style}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+      />
+    );
+  }
 
   return (
     <Pressable
@@ -76,7 +193,6 @@ export function SidebarMenuItem({
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ selected: active }}
       onPress={() => {
-        // Ignore rapid re-taps while a transition is already in flight.
         if (isNavigationLocked()) return;
         onPress();
       }}
@@ -89,12 +205,11 @@ export function SidebarMenuItem({
         style,
       ]}
     >
-      {/* Physical LEFT: quiet chevron */}
       {showChevron ? (
         <AppIcon
           name="angle-left"
           size={SIDEBAR_MENU_ITEM.chevronSize}
-          color={colors.textSubtle}
+          color={chevronColor}
         />
       ) : null}
 
@@ -104,7 +219,6 @@ export function SidebarMenuItem({
         </View>
       ) : null}
 
-      {/* Flexible title shell — owns remaining width between chevron and icon */}
       <View style={styles.textShell}>
         <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
           {title}
@@ -116,7 +230,6 @@ export function SidebarMenuItem({
         ) : null}
       </View>
 
-      {/* Physical RIGHT: icon */}
       <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
         <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
       </View>
@@ -125,10 +238,6 @@ export function SidebarMenuItem({
 }
 
 const styles = StyleSheet.create({
-  /**
-   * Locked to physical LTR so I18nManager RTL cannot reverse the row.
-   * Left → Right children: chevron, title shell, icon.
-   */
   row: {
     flexDirection: 'row',
     direction: 'ltr',
@@ -143,14 +252,42 @@ const styles = StyleSheet.create({
   rowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  outlineWrap: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
+  outlineRow: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    alignItems: 'center',
+    gap: SIDEBAR_MENU_ITEM.gap,
+    paddingHorizontal: SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,
+    paddingVertical: SIDEBAR_MENU_ITEM.outlinePaddingVertical,
+    minHeight: SIDEBAR_MENU_ITEM.outlineMinHeight,
+    minWidth: 0,
+  },
+  coverTrail: {
+    flex: 1,
+    flexDirection: 'row',
+    direction: 'ltr',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
+    minWidth: 0,
+  },
+  chevronSlot: {
+    width: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  dividerInset: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,
+  },
   rowPressed: {
     opacity: 0.76,
   },
-  /**
-   * Physical LTR shell with bounded width — same pattern as listing title /
-   * SidebarMenuItem references across the app. Prevents Arabic glyphs from
-   * painting outside the box and getting clipped by overflow:hidden cards.
-   */
   textShell: {
     flex: 1,
     minWidth: 0,
@@ -161,6 +298,13 @@ const styles = StyleSheet.create({
     width: SIDEBAR_MENU_ITEM.iconWrap,
     height: SIDEBAR_MENU_ITEM.iconWrap,
     borderRadius: SIDEBAR_MENU_ITEM.iconRadius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  iconWrapOutline: {
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
