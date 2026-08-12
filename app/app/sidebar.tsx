@@ -1,19 +1,15 @@
 // Powered by OnSpace.AI
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import {
   scrimColor,
   spacing,
-  typography,
   panelSurfaceBg,
   type ThemeColors,
 } from '@/constants/theme';
-import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
@@ -21,6 +17,8 @@ import { borderInlineEnd, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
+import { SidebarCloseHeader } from '@/components/feature/SidebarCloseHeader';
+import { SidebarProfileRow } from '@/components/feature/SidebarProfileRow';
 import { confirmSignOut } from '@/lib/confirmSignOut';
 import { closeThenPush, safeReplace } from '@/lib/safeNavigate';
 import {
@@ -146,30 +144,15 @@ export default function SidebarScreen() {
   return (
     <View style={[styles.backdrop, getRtlRow()]}>
       <SafeAreaView style={styles.panel} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.closeBtn}>
-            <AppIcon name="close" size={22} color={colors.textPrimary} />
-          </Pressable>
-        </View>
+        <SidebarCloseHeader onClose={() => router.back()} colors={colors} />
 
-        <Pressable
+        <SidebarProfileRow
+          avatarUri={me.avatar}
+          displayName={me.arabicName || me.displayName || me.username}
+          username={me.username || 'user'}
+          colors={colors}
           onPress={() => handleNav('/(tabs)/profile')}
-          style={styles.profileRow}
-        >
-          <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-          <View style={styles.profileText}>
-            <View style={styles.nameShell}>
-              <Text style={styles.displayName} numberOfLines={2}>
-                {me.arabicName || me.displayName || me.username}
-              </Text>
-            </View>
-            <View style={styles.handleShell}>
-              <Text style={styles.usernameText} numberOfLines={1}>
-                @{me.username || 'user'}
-              </Text>
-            </View>
-          </View>
-        </Pressable>
+        />
 
         <AppScrollView
           style={styles.scroll}
@@ -214,71 +197,6 @@ function createSidebarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       shadowOpacity: isDark ? 0.35 : 0.1,
       shadowRadius: isDark ? 16 : 20,
       elevation: 10,
-    },
-    header: {
-      alignItems: 'flex-end',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    closeBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
-    },
-    profileRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: spacing.md,
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.lg,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderMid,
-    },
-    avatar: {
-      width: 58,
-      height: 58,
-      borderRadius: 16,
-      borderWidth: 2,
-      borderColor: sarh.color.action,
-      backgroundColor: colors.bgElevated,
-    },
-    profileText: {
-      flex: 1,
-      minWidth: 0,
-      gap: 3,
-    },
-    nameShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
-    },
-    handleShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
-    },
-    displayName: {
-      ...typography.h3,
-      fontSize: 17,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    usernameText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     scroll: {
       flex: 1,

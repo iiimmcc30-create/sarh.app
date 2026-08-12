@@ -1,6 +1,6 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
+import { SidebarCloseHeader } from '@/components/feature/SidebarCloseHeader';
+import { SidebarProfileRow } from '@/components/feature/SidebarProfileRow';
 import { useRouter, useSegments } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
@@ -103,33 +103,16 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
       style={[styles.panel, borderInlineEnd(StyleSheet.hairlineWidth, colors.borderMid)]}
       edges={['top', 'bottom']}
     >
-      <View style={styles.header}>
-        <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-          <AppIcon name="close" size={22} color={colors.textPrimary} />
-        </Pressable>
-      </View>
+      <SidebarCloseHeader onClose={onClose} colors={colors} />
 
-      <Pressable
+      <SidebarProfileRow
+        avatarUri={me.avatar}
+        displayName={me.arabicName || me.displayName || me.username}
+        username={me.username || 'user'}
+        badgeLabel="قسم الملاحم"
+        colors={colors}
         onPress={() => handleNav('/(tabs)/profile')}
-        style={styles.profileRow}
-      >
-        <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-        <View style={styles.profileText}>
-          <View style={styles.nameShell}>
-            <Text style={styles.displayName} numberOfLines={1}>
-              {me.arabicName || me.displayName || me.username}
-            </Text>
-          </View>
-          <View style={styles.handleShell}>
-            <Text style={styles.usernameText} numberOfLines={1}>
-              @{me.username || 'user'}
-            </Text>
-          </View>
-          <View style={styles.brandPill}>
-            <Text style={styles.brandPillText}>قسم الملاحم</Text>
-          </View>
-        </View>
-      </Pressable>
+      />
 
       <AppScrollView
         style={styles.scroll}
@@ -172,84 +155,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       shadowOpacity: isDark ? 0.35 : 0.12,
       shadowRadius: isDark ? 16 : 20,
       elevation: 12,
-    },
-    header: {
-      alignItems: 'flex-end',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    closeBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
-    },
-    profileRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: spacing.md,
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.lg,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderMid,
-    },
-    avatar: {
-      width: 58,
-      height: 58,
-      borderRadius: 16,
-      borderWidth: 2,
-      borderColor: sarh.color.action,
-      backgroundColor: colors.bgElevated,
-    },
-    profileText: {
-      flex: 1,
-      minWidth: 0,
-      gap: 3,
-    },
-    nameShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
-    },
-    handleShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
-    },
-    displayName: {
-      ...typography.h3,
-      fontSize: 17,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    usernameText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    brandPill: {
-      marginTop: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 999,
-      backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
-    },
-    brandPillText: {
-      ...typography.micro,
-      fontWeight: '600',
-      color: isDark ? colors.textPrimary : '#3FA82E',
-      writingDirection: 'rtl',
     },
     scroll: {
       flex: 1,
