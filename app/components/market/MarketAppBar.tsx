@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
+import { elevatedControlStyle, MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarh } from '@/constants/sarhTokens';
