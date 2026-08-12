@@ -21,6 +21,7 @@
     "lint": "expo lint",
     "test": "jest --config jest.config.js --forceExit",
     "test:cov": "jest --config jest.config.js --coverage --forceExit",
+    "test:e2e": "playwright test",
     "sync:icons": "python scripts/generate-circular-branding.py",
     "prebuild": "expo prebuild"
   },
@@ -69,6 +70,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@playwright/test": "^1.62.1",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
     "eslint": "^9.39.4",

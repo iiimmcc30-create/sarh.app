@@ -24,25 +24,31 @@ import {
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
+import { ADMIN_NAV, isAdminNavActive } from '@/constants/adminNav';
 
-const nav = [
-  { href: '/', label: 'لوحة التحكم', icon: LayoutDashboard },
-  { href: '/users', label: 'المستخدمون', icon: Users },
-  { href: '/posts', label: 'المنشورات', icon: FileText },
-  { href: '/editorial-stories', label: 'ستوريات', icon: Images },
-  { href: '/knowledge', label: 'مركز المعرفة', icon: BookOpen },
-  { href: '/official-services', label: 'خدمات سرح', icon: Briefcase },
-  { href: '/listings', label: 'الإعلانات', icon: Tag },
-  { href: '/reports', label: 'البلاغات', icon: Flag },
-  { href: '/support', label: 'الدعم والمساعدة', icon: LifeBuoy },
-  { href: '/live', label: 'البث المباشر', icon: Radio },
-  { href: '/butchers', label: 'الملاحم', icon: Store },
-  { href: '/applications', label: 'طلبات الملاحم', icon: ClipboardList },
-  { href: '/orders', label: 'الطلبات', icon: ReceiptText },
-  { href: '/plans', label: 'الباقات', icon: CreditCard },
-  { href: '/content', label: 'السياسات والمحتوى', icon: Layers },
-  { href: '/settings', label: 'الإعدادات', icon: Settings },
-];
+const NAV_ICONS = {
+  '/': LayoutDashboard,
+  '/users': Users,
+  '/posts': FileText,
+  '/editorial-stories': Images,
+  '/knowledge': BookOpen,
+  '/official-services': Briefcase,
+  '/listings': Tag,
+  '/reports': Flag,
+  '/support': LifeBuoy,
+  '/live': Radio,
+  '/butchers': Store,
+  '/applications': ClipboardList,
+  '/orders': ReceiptText,
+  '/plans': CreditCard,
+  '/content': Layers,
+  '/settings': Settings,
+} as const;
+
+const nav = ADMIN_NAV.map((item) => ({
+  ...item,
+  icon: NAV_ICONS[item.href as keyof typeof NAV_ICONS],
+}));
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -57,7 +63,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+          const active = isAdminNavActive(pathname, href);
           return (
             <Link
               key={href}

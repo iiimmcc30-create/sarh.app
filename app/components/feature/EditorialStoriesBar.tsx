@@ -17,10 +17,14 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_W = Math.min(124, SCREEN_W * 0.32);
-const CARD_H = CARD_W * (4 / 3);
 const CARD_GAP = 12;
 const SIDE_PAD = spacing.lg;
+// Show 3 full cards + half of the 4th peeking to hint horizontal scroll.
+const VISIBLE_CARDS = 3.5;
+const CARD_W = Math.round(
+  (SCREEN_W - SIDE_PAD - CARD_GAP * 3) / VISIBLE_CARDS,
+);
+const CARD_H = Math.round(CARD_W * (4 / 3));
 const DOT_SIZE = 6;
 const DOT_ACTIVE_W = 22;
 

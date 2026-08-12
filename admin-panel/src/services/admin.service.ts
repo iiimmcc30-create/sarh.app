@@ -15,7 +15,7 @@ export type ListParams = {
 };
 
 /** Drop empty/invalid list query values so the API receives clean params. */
-function cleanListParams<T extends Record<string, unknown>>(params: T): Partial<T> {
+export function cleanListParams<T extends Record<string, unknown>>(params: T): Partial<T> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
     if (value === undefined || value === null) continue;

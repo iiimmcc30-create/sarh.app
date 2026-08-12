@@ -8,3 +8,9 @@ web-build/
 expo-env.d.ts
 expo-qr.png
 # @end expo-cli
+
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

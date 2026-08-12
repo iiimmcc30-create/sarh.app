@@ -17,7 +17,7 @@ import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import { SupportTicketsService } from './services/support-tickets.service';
 import { AccountVerificationService } from './services/account-verification.service';
 import { FaqService } from './services/faq.service';
-import type {
+import {
   CreateSupportTicketDto,
   ReplySupportTicketDto,
   UpsertVerificationDto,

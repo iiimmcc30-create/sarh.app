@@ -6,7 +6,11 @@ import { LoggerService } from '../../common/services/logger.service';
 import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
-import { createNiCheckout, isNiSandboxMockMode } from '../../payments/ni-client';
+import {
+  createNiCheckout,
+  formatNiGatewayError,
+  isNiSandboxMockMode,
+} from '../../payments/ni-client';
 import { BOOST_PLANS } from './boost-plans.config';
 import {
   boostPriceForHours,
@@ -261,9 +265,9 @@ export class ListingBoostService {
           data: { checkoutUrl, transactionId: niOrderReference },
         });
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
+        const message = formatNiGatewayError(err);
         this.logger.error({ err: message, boostId: boost.id }, 'NI boost checkout failed');
-        throwApi(502, 'payment_gateway_error', 'تعذر الاتصال ببوابة الدفع');
+        throwApi(502, 'payment_gateway_error', message);
       }
     }
 
