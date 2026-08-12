@@ -13,7 +13,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
@@ -214,7 +214,7 @@ function PostItemComponent({
               onPress={onMenu}
               style={({ pressed }) => [styles.menuBtn, pressed && styles.menuBtnPressed]}
             >
-              <AppIcon name="ellipsis-horizontal" size={18} color={colors.textSubtle} />
+              <AppIcon name="ellipsis-horizontal" size={18} color={colors.textPrimary} />
             </Pressable>
           </View>
 
@@ -254,8 +254,8 @@ function PostItemComponent({
           <View style={[styles.actions, getRtlRow()]}>
             <ActionBtn
               icon="chatbubble-ellipses-outline"
-              iconColor={colors.textSubtle}
-              textColor={colors.textSubtle}
+              iconColor={colors.textPrimary}
+              textColor={colors.textPrimary}
               count={post.comments}
               label="تعليق"
               onPress={onComment}
@@ -264,8 +264,8 @@ function PostItemComponent({
             />
             <ActionBtn
               icon={post.liked ? 'heart' : 'heart-outline'}
-              iconColor={post.liked ? colors.rose : colors.textSubtle}
-              textColor={post.liked ? colors.rose : colors.textSubtle}
+              iconColor={post.liked ? colors.rose : colors.textPrimary}
+              textColor={post.liked ? colors.rose : colors.textPrimary}
               count={post.likes}
               label="إعجاب"
               onPress={onLike}
@@ -274,8 +274,8 @@ function PostItemComponent({
             />
             <ActionBtn
               icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}
-              iconColor={post.bookmarked ? colors.electric : colors.textSubtle}
-              textColor={colors.textSubtle}
+              iconColor={post.bookmarked ? colors.electric : colors.textPrimary}
+              textColor={colors.textPrimary}
               label="حفظ"
               onPress={onBookmark ?? (() => {})}
               style={styles.actionSlot}
@@ -283,8 +283,8 @@ function PostItemComponent({
             />
             <ActionBtn
               icon="paper-plane-outline"
-              iconColor={colors.textSubtle}
-              textColor={colors.textSubtle}
+              iconColor={colors.textPrimary}
+              textColor={colors.textPrimary}
               label="مشاركة"
               onPress={onShare}
               style={styles.actionSlot}
@@ -327,41 +327,26 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
 
 export const PostItem = memo(PostItemComponent, arePropsEqual);
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark', feedCard = false) {
-  const cardShadow = feedCard
-    ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 2,
-      }
-    : ambientShadow(scheme, 'soft');
-
+function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard = false) {
   return StyleSheet.create({
     card: {
-      marginHorizontal: feedCard ? spacing.md : spacing.md,
+      marginHorizontal: spacing.md,
       marginTop: feedCard ? 6 : 4,
       marginBottom: feedCard ? 2 : 0,
-      borderRadius: ds.radius.xl,
-      backgroundColor: colors.bgSurface,
-      borderWidth: feedCard ? 1 : 0,
-      borderColor: feedCard ? colors.borderSoft : 'transparent',
-      ...cardShadow,
+      borderRadius: MENU_CARD.radius,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
       overflow: 'hidden',
     },
     cardDetail: {
       marginHorizontal: 0,
       marginTop: 0,
       borderRadius: 0,
-      shadowOpacity: 0,
-      elevation: 0,
     },
     cardProfile: {
       marginHorizontal: 0,
       marginTop: 0,
-      backgroundColor: colors.bgSurface,
-      ...cardShadow,
+      backgroundColor: colors.bgElevated,
     },
     row: {
       alignItems: 'flex-start',

@@ -14,8 +14,8 @@ import {
   ListRenderItemInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ambientShadow, ds } from '@/constants/designSystem';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ds } from '@/constants/designSystem';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -141,12 +141,12 @@ export default function MarketScreen() {
             <AppIcon
               name="star"
               size={18}
-              color={showFeaturedOnly ? colors.gold : colors.textMuted}
+              color={showFeaturedOnly ? colors.gold : colors.textPrimary}
               variant={showFeaturedOnly ? 'sr' : 'rr'}
             />
           </Pressable>
           <View style={[styles.searchBox, getRtlRow()]}>
-            <AppIcon name="search" size={18} color={colors.textMuted} />
+            <AppIcon name="search" size={18} color={colors.textPrimary} />
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -156,7 +156,7 @@ export default function MarketScreen() {
             />
             {search.length > 0 ? (
               <Pressable onPress={() => setSearch('')} hitSlop={8}>
-                <AppIcon name="close-circle" size={16} color={colors.textMuted} />
+                <AppIcon name="close-circle" size={16} color={colors.textPrimary} />
               </Pressable>
             ) : null}
           </View>
@@ -230,7 +230,6 @@ function createMarketStyles(
   scheme: 'light' | 'dark',
   screenStyles: ReturnType<typeof sarhScreenStyles>,
 ) {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
   const isDark = scheme === 'dark';
   return StyleSheet.create({
     container: screenStyles.screenRoot,
@@ -284,13 +283,11 @@ function createMarketStyles(
       flex: 1,
       alignItems: 'center',
       gap: spacing.sm,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderRadius: ds.radius.lg,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
       paddingHorizontal: spacing.md,
       minHeight: 44,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      borderWidth: 0,
     },
     searchInput: {
       flex: 1,
@@ -312,10 +309,9 @@ function createMarketStyles(
       paddingHorizontal: spacing.md,
       paddingVertical: 8,
       minHeight: 36,
-      borderRadius: radius.pill,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : tokens.stroke,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
     },
     filterChipActive: {
       backgroundColor: isDark ? sarh.color.action : colors.electric,

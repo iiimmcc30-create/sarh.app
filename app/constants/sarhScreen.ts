@@ -1,9 +1,9 @@
 /**
  * Sarh screen shell — matches ProfileScreenLayout dark-mode look.
- * Use screenRoot for page backgrounds; bgSurface for cards.
+ * Use screenRoot for page backgrounds; bgElevated for cards/controls.
  */
-import { StyleSheet, type ViewStyle } from 'react-native';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { type ViewStyle } from 'react-native';
+import { ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, type ColorScheme, type ThemeColors } from '@/constants/theme';
 
@@ -13,9 +13,6 @@ export function sarhScreenRoot(scheme: ColorScheme, colors: ThemeColors): string
 }
 
 export function sarhScreenStyles(colors: ThemeColors, scheme: ColorScheme) {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
-  const isDark = scheme === 'dark';
-
   return {
     screenRoot: {
       flex: 1,
@@ -27,29 +24,24 @@ export function sarhScreenStyles(colors: ThemeColors, scheme: ColorScheme) {
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
-      borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? 'rgba(16, 38, 51, 0.72)' : tokens.glass,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      borderWidth: 0,
     } satisfies ViewStyle,
     card: {
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderRadius: sarh.radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
-      ...ambientShadow(scheme, 'soft'),
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
+      borderWidth: 0,
+      overflow: 'hidden' as const,
     } satisfies ViewStyle,
     sectionCard: {
       marginHorizontal: spacing.lg,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderRadius: sarh.radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
+      borderWidth: 0,
       overflow: 'hidden' as const,
-      ...ambientShadow(scheme, 'soft'),
     } satisfies ViewStyle,
   };
 }

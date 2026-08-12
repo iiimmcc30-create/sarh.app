@@ -8,17 +8,28 @@ import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { I18nManager, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
-/** Shared elevated menu card — More tab / reference style. */
+/** Shared elevated surface — More tab / reference contrast style. */
 export const MENU_CARD = {
   radius: 14,
+  controlRadius: 14,
   sectionTitlePad: spacing.lg,
 } as const;
 
+/** Elevated card surface: no border, high contrast on screenRoot. */
 export function menuCardStyle(colors: ThemeColors): ViewStyle {
   return {
     backgroundColor: colors.bgElevated,
     borderRadius: MENU_CARD.radius,
     overflow: 'hidden',
+  };
+}
+
+/** Elevated control (search bars, icon buttons) — same contrast, no border. */
+export function elevatedControlStyle(colors: ThemeColors): ViewStyle {
+  return {
+    backgroundColor: colors.bgElevated,
+    borderRadius: MENU_CARD.controlRadius,
+    borderWidth: 0,
   };
 }
 

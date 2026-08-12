@@ -1,10 +1,9 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
+import { elevatedControlStyle, MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
-import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -23,7 +22,7 @@ export function HomeAppBar({
   searchPlaceholder = 'ابحث عن خدمة معينة',
 }: HomeAppBarProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors, theme.scheme),
+    styles: createStyles(theme.colors),
     colors: theme.colors,
   }));
 
@@ -42,7 +41,7 @@ export function HomeAppBar({
         <Text style={styles.searchPlaceholder} numberOfLines={1}>
           {searchPlaceholder}
         </Text>
-        <AppIcon name="search" size={ds.icon.md} color={colors.textMuted} />
+        <AppIcon name="search" size={ds.icon.md} color={colors.textPrimary} />
       </Pressable>
 
       <NotificationBellButton
@@ -54,8 +53,7 @@ export function HomeAppBar({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const isDark = scheme === 'dark';
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     bar: {
       alignItems: 'center',
@@ -72,11 +70,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
-      borderRadius: sarh.radius.pill,
-      backgroundColor: isDark ? sarh.color.surfaceRaised : ds.light.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : ds.light.stroke,
       gap: spacing.sm,
+      ...elevatedControlStyle(colors),
+      borderRadius: MENU_CARD.controlRadius,
     },
     searchPlaceholder: {
       ...typography.body,
@@ -88,12 +84,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
-      borderRadius: sarh.radius.md,
-      backgroundColor: isDark ? sarh.color.surfaceRaised : ds.light.card,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : ds.light.stroke,
+      ...elevatedControlStyle(colors),
+      borderRadius: 12,
     },
   });
 }

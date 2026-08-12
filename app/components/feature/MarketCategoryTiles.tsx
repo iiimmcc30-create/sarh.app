@@ -1,5 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { ambientShadow, ds } from '@/constants/designSystem';
+import { ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -97,13 +97,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     iconBox: {
       width: tile,
       height: tile,
-      borderRadius: ds.radius.md,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : tokens.stroke,
-      ...ambientShadow(scheme, 'soft'),
+      borderWidth: 0,
     },
     iconBoxActive: {
       borderColor: sarh.color.action,

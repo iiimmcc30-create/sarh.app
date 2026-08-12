@@ -240,10 +240,9 @@ function createPostsStyles(
     tabs: {
       flexDirection: 'row',
       padding: 3,
-      borderRadius: radius.lg,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isDark ? sarh.color.border : colors.borderSoft,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
     },
     tab: {
       flex: 1,
