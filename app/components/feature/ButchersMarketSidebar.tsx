@@ -115,12 +115,16 @@ export function ButchersMarketSidebarPanel({ onClose }: Props) {
       >
         <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
         <View style={styles.profileText}>
-          <Text style={styles.displayName} numberOfLines={1}>
-            {me.arabicName || me.displayName || me.username}
-          </Text>
-          <Text style={styles.usernameText} numberOfLines={1}>
-            @{me.username || 'user'}
-          </Text>
+          <View style={styles.nameShell}>
+            <Text style={styles.displayName} numberOfLines={1}>
+              {me.arabicName || me.displayName || me.username}
+            </Text>
+          </View>
+          <View style={styles.handleShell}>
+            <Text style={styles.usernameText} numberOfLines={1}>
+              @{me.username || 'user'}
+            </Text>
+          </View>
           <View style={styles.brandPill}>
             <Text style={styles.brandPillText}>قسم الملاحم</Text>
           </View>
@@ -187,6 +191,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     profileRow: {
       flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       gap: spacing.md,
       paddingHorizontal: spacing.lg,
@@ -206,19 +211,30 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       flex: 1,
       minWidth: 0,
       gap: 3,
-      alignItems: 'flex-start',
+    },
+    nameShell: {
+      direction: 'ltr',
+      width: '100%',
+      minWidth: 0,
+    },
+    handleShell: {
+      direction: 'ltr',
+      width: '100%',
+      minWidth: 0,
     },
     displayName: {
       ...typography.h3,
       fontSize: 17,
       fontWeight: '600',
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
