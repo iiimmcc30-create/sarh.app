@@ -1,7 +1,7 @@
 // SAFAT — Followers / Following lists
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
-import { UserAvatar } from '@/components/ui/UserAvatar';
+import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
@@ -131,42 +131,41 @@ export default function ProfileConnectionsScreen() {
         style={styles.userRow}
         onPress={() => openUserProfile(router, item.id)}
       >
-        <UserAvatar
-          uri={item.avatar}
-          name={item.arabicName || item.displayName || item.username}
-          size={48}
-          style={styles.avatar}
+        <UserIdentityRow
+          avatarUri={item.avatar}
+          displayName={item.arabicName || item.displayName || item.username}
+          username={item.username}
+          verified={item.verified}
+          avatarSize={USER_IDENTITY.listAvatarSize}
+          avatarRadius={USER_IDENTITY.listAvatarRadius}
+          avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+          nameLines={2}
+          colors={colors}
+          style={styles.identity}
+          trailing={
+            showFollowBtn ? (
+              <Pressable
+                style={[styles.followBtn, item.isFollowing && styles.followingBtn]}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  handleFollowToggle(item);
+                }}
+                disabled={followLoadingId === item.id}
+              >
+                {followLoadingId === item.id ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={item.isFollowing ? colors.electricBright : '#FFFFFF'}
+                  />
+                ) : (
+                  <Text style={[styles.followBtnText, item.isFollowing && styles.followingText]}>
+                    {item.isFollowing ? 'متابَع' : 'متابعة'}
+                  </Text>
+                )}
+              </Pressable>
+            ) : null
+          }
         />
-        <View style={styles.userInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>
-              {item.arabicName || item.displayName || item.username}
-            </Text>
-            {item.verified && (
-              <AppIcon name="checkmark-circle" size={14} color={colors.electricBright} />
-            )}
-          </View>
-          <Text style={styles.handle} numberOfLines={1}>@{item.username}</Text>
-        </View>
-
-        {showFollowBtn ? (
-          <Pressable
-            style={[styles.followBtn, item.isFollowing && styles.followingBtn]}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              handleFollowToggle(item);
-            }}
-            disabled={followLoadingId === item.id}
-          >
-            {followLoadingId === item.id ? (
-              <ActivityIndicator size="small" color={item.isFollowing ? colors.electricBright : '#FFFFFF'} />
-            ) : (
-              <Text style={[styles.followBtnText, item.isFollowing && styles.followingText]}>
-                {item.isFollowing ? 'متابَع' : 'متابعة'}
-              </Text>
-            )}
-          </Pressable>
-        ) : null}
       </Pressable>
     );
   };
@@ -282,23 +281,14 @@ function createStyles(colors: ThemeColors) {
     emptyList: { flexGrow: 1 },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     userRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: colors.borderSoft,
     },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 20,
+    identity: {
+      width: '100%',
     },
-    userInfo: { flex: 1, gap: 2 },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    name: { ...typography.bodyStrong, color: colors.textPrimary, flexShrink: 1 },
-    handle: { ...typography.caption, color: colors.textMuted },
     followBtn: {
       paddingHorizontal: spacing.md,
       paddingVertical: 7,

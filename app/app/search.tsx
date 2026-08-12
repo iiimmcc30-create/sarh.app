@@ -2,7 +2,7 @@
 // SAFAT — Search Screen (البحث)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
-import { Image } from '@/components/ui/AppImage';
+import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -218,21 +218,24 @@ export default function SearchScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🏆 أبرز المربّين</Text>
             {dbUsers.slice(0, 4).map((user) => (
-              <Pressable
+              <UserIdentityRow
                 key={user.id}
-                style={styles.userRow}
+                avatarUri={user.avatar}
+                displayName={user.arabicName || user.displayName || user.username}
+                username={user.username}
+                verified={user.verified}
+                avatarSize={USER_IDENTITY.listAvatarSize}
+                avatarRadius={USER_IDENTITY.listAvatarRadius}
+                avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+                nameLines={2}
                 onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as any)}
-              >
-                <Image source={user.avatar ? { uri: user.avatar } : undefined} style={styles.userAvatar} contentFit="cover" />
-                <View style={styles.userInfo}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.userName}>{user.arabicName || user.displayName || user.username}</Text>
-                    {user.verified && <AppIcon name="checkmark-circle" size={13} color="#1D9BF0" />}
-                  </View>
-                  <Text style={styles.userHandle}>@{user.username}</Text>
-                </View>
-                <Text style={styles.followersText}>{((user.followers || 0) / 1000).toFixed(1)}k</Text>
-              </Pressable>
+                style={styles.userRow}
+                trailing={
+                  <Text style={styles.followersText}>
+                    {((user.followers || 0) / 1000).toFixed(1)}k
+                  </Text>
+                }
+              />
             ))}
           </View>
           <View style={{ height: 80 }} />
@@ -259,20 +262,19 @@ export default function SearchScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>المستخدمون ({filteredUsers.length})</Text>
               {filteredUsers.map((user) => (
-                <Pressable
+                <UserIdentityRow
                   key={user.id}
-                  style={styles.userRow}
+                  avatarUri={user.avatar}
+                  displayName={user.arabicName || user.displayName || user.username}
+                  username={user.username}
+                  verified={user.verified}
+                  avatarSize={USER_IDENTITY.listAvatarSize}
+                  avatarRadius={USER_IDENTITY.listAvatarRadius}
+                  avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+                  nameLines={2}
                   onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as any)}
-                >
-                  <Image source={user.avatar ? { uri: user.avatar } : undefined} style={styles.userAvatar} contentFit="cover" />
-                  <View style={styles.userInfo}>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.userName}>{user.arabicName || user.displayName || user.username}</Text>
-                      {user.verified && <AppIcon name="checkmark-circle" size={13} color="#1D9BF0" />}
-                    </View>
-                    <Text style={styles.userHandle}>@{user.username}</Text>
-                  </View>
-                </Pressable>
+                  style={styles.userRow}
+                />
               ))}
             </View>
           )}
@@ -376,14 +378,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   trendingText: { ...typography.caption, color: colors.textSecondary },
   userRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
   },
-  userAvatar: { width: 44, height: 44, borderRadius: 20, borderWidth: 1, borderColor: colors.borderMid },
-  userInfo: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  userName: { ...typography.bodyStrong, color: colors.textPrimary },
-  userHandle: { ...typography.caption, color: colors.textMuted },
   followersText: { ...typography.caption, color: colors.textSecondary },
   listingsFeed: { gap: spacing.md },
   liveRow: {
