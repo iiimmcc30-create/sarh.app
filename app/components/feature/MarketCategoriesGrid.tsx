@@ -1,17 +1,20 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { menuCardStyle } from '@/components/feature/SidebarMenu';
+import { ds } from '@/constants/designSystem';
 import type { MarketCategory } from '@/services/categories';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { getRtlDirection } from '@/lib/rtl';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   categories: MarketCategory[];
   onSelect: (category: MarketCategory) => void;
 };
 
+const TILE = ds.categoryTile;
+
 /**
- * Compact main-category grid for the market hub — elevated cards, RTL labels.
+ * Compact horizontal main-category strip for the market hub — RTL scroll, small tiles.
  */
 export function MarketCategoriesGrid({ categories, onSelect }: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
@@ -24,33 +27,32 @@ export function MarketCategoriesGrid({ categories, onSelect }: Props) {
       <View style={styles.titleShell}>
         <Text style={styles.title}>التصنيفات</Text>
       </View>
-      <View style={styles.grid}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[styles.row, getRtlDirection()]}
+      >
         {categories.map((cat) => (
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat)}
-            style={({ pressed }) => [
-              styles.card,
-              menuCardStyle(colors),
-              pressed && styles.cardPressed,
-            ]}
+            style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
           >
-            <View style={styles.iconWrap}>
+            <View style={styles.iconBox}>
               {cat.icon ? (
-                <AppIcon name={cat.icon} size={22} color={colors.textPrimary} />
+                <AppIcon name={cat.icon} size={18} color={colors.textPrimary} variant="rr" />
               ) : (
                 <Text style={styles.emoji}>{cat.emoji || '📦'}</Text>
               )}
             </View>
             <View style={styles.labelShell}>
-              <Text style={styles.label} numberOfLines={1}>
-                {cat.emoji ? `${cat.emoji} ` : ''}
+              <Text style={styles.label} numberOfLines={2}>
                 {cat.nameAr}
               </Text>
             </View>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -58,67 +60,63 @@ export function MarketCategoriesGrid({ categories, onSelect }: Props) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      gap: spacing.sm,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+      gap: spacing.xs,
     },
     titleShell: {
       width: '100%',
       direction: 'ltr',
+      paddingHorizontal: spacing.lg,
     },
     title: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
+      ...typography.caption,
+      fontWeight: '600',
+      color: colors.textSecondary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    grid: {
+    row: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.xs,
       gap: spacing.sm,
     },
-    card: {
-      width: '48%',
-      flexGrow: 1,
-      flexBasis: '46%',
-      minWidth: 140,
-      maxWidth: '48%',
-      flexDirection: 'row',
-      direction: 'ltr',
+    tile: {
+      width: TILE,
       alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: spacing.sm,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
+      gap: 4,
     },
-    cardPressed: {
+    tilePressed: {
       opacity: 0.88,
-      transform: [{ scale: 0.99 }],
+      transform: [{ scale: 0.97 }],
     },
-    iconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+    iconBox: {
+      width: TILE,
+      height: TILE,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.bgElevated,
     },
     emoji: {
-      fontSize: 18,
+      fontSize: 20,
+      lineHeight: 24,
     },
     labelShell: {
-      flex: 1,
+      width: '100%',
       direction: 'ltr',
-      minWidth: 0,
     },
     label: {
-      ...typography.caption,
+      ...typography.micro,
+      fontSize: 11,
+      lineHeight: 14,
       fontWeight: '600',
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
+      textAlign: 'center',
       writingDirection: 'rtl',
     },
   });
