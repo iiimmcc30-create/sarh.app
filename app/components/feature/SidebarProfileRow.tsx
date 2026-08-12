@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
+import { MENU_CARD, menuCardStyle } from '@/components/feature/SidebarMenu';
 import { SIDEBAR_MENU_ITEM } from '@/components/ui/SidebarMenuItem';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -22,14 +23,15 @@ export type SidebarProfileRowProps = {
   /** Small pill under the username (e.g. «قسم الملاحم»). */
   badgeLabel?: string;
   badge?: ReactNode;
+  /** @deprecated Card surface replaces the old hairline divider. */
   showDivider?: boolean;
   colors?: ThemeColors;
   style?: ViewStyle;
 };
 
 /**
- * Sidebar profile header — cover layout matching menu rows:
- * name shell + avatar on the physical right (same side as outline icons).
+ * Sidebar profile header — avatar + name inside the same elevated card
+ * surface used by SidebarSection / category menu cards.
  */
 export function SidebarProfileRow({
   avatarUri,
@@ -38,7 +40,6 @@ export function SidebarProfileRow({
   onPress,
   badgeLabel,
   badge,
-  showDivider = true,
   colors: colorsProp,
   style,
 }: SidebarProfileRowProps) {
@@ -60,38 +61,44 @@ export function SidebarProfileRow({
   );
 
   return (
-    <UserIdentityRow
-      avatarUri={avatarUri}
-      displayName={displayName}
-      username={username}
-      onPress={onPress}
-      colors={colors}
-      avatarSide="end"
-      avatarSize={SIDEBAR_PROFILE.avatarSize}
-      avatarRadius={SIDEBAR_PROFILE.avatarRadius}
-      avatarBorderWidth={SIDEBAR_PROFILE.avatarBorder}
-      avatarBorderColor={sarh.color.action}
-      nameLines={SIDEBAR_PROFILE.nameLines}
-      nameStyle={styles.displayName}
-      footer={badgeLabel || badge ? footer : undefined}
-      style={[styles.row, showDivider && styles.rowDivider, style]}
-    />
+    <View style={[styles.wrap, style]}>
+      <View style={[styles.card, menuCardStyle(colors)]}>
+        <UserIdentityRow
+          avatarUri={avatarUri}
+          displayName={displayName}
+          username={username}
+          onPress={onPress}
+          colors={colors}
+          avatarSide="end"
+          avatarSize={SIDEBAR_PROFILE.avatarSize}
+          avatarRadius={SIDEBAR_PROFILE.avatarRadius}
+          avatarBorderWidth={SIDEBAR_PROFILE.avatarBorder}
+          avatarBorderColor={sarh.color.action}
+          nameLines={SIDEBAR_PROFILE.nameLines}
+          nameStyle={styles.displayName}
+          footer={badgeLabel || badge ? footer : undefined}
+          style={styles.row}
+        />
+      </View>
+    </View>
   );
 }
 
 function createStyles(colors: ThemeColors, isDark: boolean) {
   return StyleSheet.create({
-    row: {
-      /**
-       * Match SidebarSection card inset + OutlineMenuItem horizontal padding
-       * so the avatar sits on the same vertical line as menu icons.
-       */
-      paddingHorizontal: spacing.lg + SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,
-      paddingBottom: spacing.lg,
+    /** Match SidebarSection horizontal inset. */
+    wrap: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
     },
-    rowDivider: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderMid,
+    card: {
+      borderRadius: MENU_CARD.radius,
+    },
+    row: {
+      /** Match OutlineMenuItem padding so avatar lines up with menu icons. */
+      paddingHorizontal: SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,
+      paddingVertical: SIDEBAR_MENU_ITEM.outlinePaddingVertical + 4,
     },
     displayName: {
       ...typography.h3,
