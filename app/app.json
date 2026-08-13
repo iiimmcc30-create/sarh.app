@@ -30,7 +30,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#284E39"
+        "backgroundColor": "#183526"
       },
       "edgeToEdgeEnabled": true
     },
@@ -48,12 +48,12 @@
           "image": "./assets/images/splash-circle.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#183526",
           "dark": {
             "image": "./assets/images/splash-circle.png",
             "imageWidth": 280,
             "resizeMode": "contain",
-            "backgroundColor": "#0B1622"
+            "backgroundColor": "#183526"
           }
         }
       ],
@@ -73,7 +73,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#006B3C",
+          "color": "#183526",
           "defaultChannel": "default",
           "enableBackgroundRemoteNotifications": true
         }
