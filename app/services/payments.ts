@@ -265,8 +265,8 @@ export async function launchPaymentCheckout(
     return sessionResult === 'success' ? 'opened' : 'cancelled';
   }
 
+  // In-app WebView already navigated to /payment/result on success.
   if (sessionResult === 'success') {
-    goToPaymentResult(paymentId, context, returnParams);
     return 'opened';
   }
 
@@ -276,8 +276,18 @@ export async function launchPaymentCheckout(
     return 'paid';
   }
 
+  // User closed the in-app sheet / cancelled — avoid stacking cancel alerts
+  // when checkout already moved to /payment/cancel.
+  if (sessionResult === 'cancel' && context === 'butcher_order') {
+    return 'cancelled';
+  }
+
   if (context !== 'butcher_order') {
-    navigateAfterPaymentCancelled(context, returnParams);
+    // Checkout screen already shows /payment/cancel for explicit gateway cancel.
+    // Only alert when the sheet was dismissed without a gateway redirect.
+    if (sessionResult === 'dismiss') {
+      navigateAfterPaymentCancelled(context, returnParams);
+    }
   }
   return 'cancelled';
 }

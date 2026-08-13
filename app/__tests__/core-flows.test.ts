@@ -13,7 +13,7 @@ import {
   mapApiPlan,
   isStoreExemptFromPermissions,
 } from '../services/subscriptionPlans';
-import { paymentResultDeepLink } from '../services/paymentCheckout';
+import { isPaymentReturnUrl, paymentResultDeepLink } from '../services/paymentCheckout';
 import { syncPaymentStatus } from '../services/payments';
 
 function listing(partial: Partial<Listing> & { id: string }): Listing {
@@ -136,6 +136,16 @@ describe('paymentCheckout deep link', () => {
     expect(url).toContain('safat://payment/result?');
     expect(url).toContain('paymentId=p1');
     expect(url).toContain('context=boost');
+  });
+
+  it('detects NI return and cancel URLs', () => {
+    expect(isPaymentReturnUrl('safat://payment/result?paymentId=1')).toBe('result');
+    expect(isPaymentReturnUrl('https://sarh-new4.onrender.com/payment/result?paymentId=1')).toBe(
+      'result',
+    );
+    expect(isPaymentReturnUrl('safat://payment/cancel')).toBe('cancel');
+    expect(isPaymentReturnUrl('https://sarh-new4.onrender.com/payment/cancel')).toBe('cancel');
+    expect(isPaymentReturnUrl('https://paypage.ksa.ngenius-payments.com/?code=abc')).toBe(null);
   });
 });
 
