@@ -24,8 +24,8 @@ MASTER_SOURCE = ASSETS / "brand-master.png"
 ARABIC_ALIAS = ASSETS / "ايقونه.png"
 
 # Sampled from master edge — matches adaptive / splash brand surface.
-BRAND_BG = (24, 53, 38, 255)  # #183526
-BRAND_BG_HEX = "#183526"
+BRAND_BG = (2, 27, 18, 255)  # #021B12
+BRAND_BG_HEX = "#021B12"
 
 LAUNCHER_EMBLEM_SCALE = 1.0
 ADAPTIVE_EMBLEM_SCALE = 1.0

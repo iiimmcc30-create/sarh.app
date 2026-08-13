@@ -24,7 +24,7 @@ async function main() {
     path.join('android', 'app', 'src', 'main', 'res', 'drawable', 'ic_launcher_background.xml'),
     `<?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-  <solid android:color="#183526"/>
+  <solid android:color="#021B12"/>
 </shape>
 `,
   );

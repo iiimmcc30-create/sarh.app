@@ -48,12 +48,12 @@
           "image": "./assets/images/splash-circle.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#183526",
+          "backgroundColor": "#021B12",
           "dark": {
             "image": "./assets/images/splash-circle.png",
             "imageWidth": 280,
             "resizeMode": "contain",
-            "backgroundColor": "#183526"
+            "backgroundColor": "#021B12"
           }
         }
       ],
@@ -73,7 +73,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#183526",
+          "color": "#021B12",
           "defaultChannel": "default",
           "enableBackgroundRemoteNotifications": true
         }
