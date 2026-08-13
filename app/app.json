@@ -30,7 +30,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#183526"
+        "backgroundColor": "#021B12"
       },
       "edgeToEdgeEnabled": true
     },
