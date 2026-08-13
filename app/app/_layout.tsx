@@ -110,6 +110,9 @@ function RootNavigator() {
         <Stack.Screen name="promote" />
         <Stack.Screen name="subscription" />
         <Stack.Screen name="payment" />
+        <Stack.Screen name="payment/checkout" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
+        <Stack.Screen name="payment/result" />
+        <Stack.Screen name="payment/cancel" />
         <Stack.Screen name="fees" />
         <Stack.Screen name="profile/edit" />
         <Stack.Screen name="profile/connections" />
