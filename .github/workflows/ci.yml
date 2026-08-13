@@ -32,6 +32,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sarouh_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sarouh_test
       JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
       JWT_REFRESH_SECRET: ci-refresh-secret-minimum-32-chars
       REDIS_ENABLED: "false"

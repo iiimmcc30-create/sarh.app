@@ -6,6 +6,11 @@ if [ -z "${DATABASE_URL:-}" ]; then
   exit 1
 fi
 
+if [ -z "${DIRECT_URL:-}" ]; then
+  echo "WARN: DIRECT_URL not set — using DATABASE_URL for migrations."
+  export DIRECT_URL="$DATABASE_URL"
+fi
+
 echo "Checking database connectivity..."
 if ! node <<'NODE'
 const net = require('net');

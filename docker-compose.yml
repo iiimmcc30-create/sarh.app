@@ -38,6 +38,7 @@ services:
       - ./backend-nest/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sarouh
+      DIRECT_URL: postgresql://postgres:postgres@postgres:5432/sarouh
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_ENABLED: "true"
