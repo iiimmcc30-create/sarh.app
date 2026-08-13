@@ -2,7 +2,7 @@ const sharp = require('../../backend-nest/node_modules/sharp');
 const fs = require('fs');
 const path = require('path');
 
-const src = path.join('assets', 'images', 'adaptive-icon.png');
+const src = path.join('assets', 'images', 'brand-master.png');
 const sizes = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
 const fgSizes = { mdpi: 108, hdpi: 162, xhdpi: 216, xxhdpi: 324, xxxhdpi: 432 };
 
