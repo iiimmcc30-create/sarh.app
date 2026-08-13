@@ -25,7 +25,7 @@ export async function getStoryVideoThumbnailUri(
 }
 
 async function getFallbackStoryThumbnailUri(): Promise<string> {
-  const asset = Asset.fromModule(require('@/assets/images/brand-master.png'));
+  const asset = Asset.fromModule(require('@/assets/images/icon.png'));
   await asset.downloadAsync();
   return asset.localUri ?? asset.uri;
 }

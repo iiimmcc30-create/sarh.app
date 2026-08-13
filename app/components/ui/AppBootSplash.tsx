@@ -1,5 +1,6 @@
-import { APP_BRAND_BG, APP_LOGO } from '@/constants/branding';
+import { APP_LOGO } from '@/constants/branding';
 import { appFont } from '@/constants/fonts';
+import { ds } from '@/constants/designSystem';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -18,12 +19,11 @@ const MIN_SHOW_MS = IS_WEB ? 850 : 1800;
 const FADE_MS = IS_WEB ? 260 : 420;
 const BOOT_ANIM_FAILSAFE_MS = IS_WEB ? 2200 : 5500;
 
-/** Boot splash matches the official Sarh icon surface. */
-const BRAND_GREEN = '#20B66F';
-const BG = APP_BRAND_BG;
-const MUTED = 'rgba(255,255,255,0.72)';
-const ACCENT = BRAND_GREEN;
-const TITLE = '#FFFFFF';
+/** Splash stays light surface; accent = brand green only */
+const BRAND_GREEN = ds.light.primary;
+const BG = ds.light.card;
+const MUTED = ds.light.textMuted;
+const ACCENT = ds.light.primary;
 
 type AppBootSplashProps = {
   /** App fonts + auth/onboarding finished */
@@ -78,7 +78,7 @@ function LoadingDots({ opacity }: { opacity: Animated.Value }) {
   );
 }
 
-/** Official Sarh boot splash — brand-green surface + circular emblem. */
+/** Minimal white boot splash with brand-green accents. */
 export function AppBootSplash({ ready, onComplete }: AppBootSplashProps) {
   const overlayOpacity = useRef(new Animated.Value(1)).current;
   const ringScale = useRef(new Animated.Value(0.88)).current;
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: 'rgba(32, 182, 111, 0.12)',
+    backgroundColor: 'rgba(32, 182, 111, 0.06)',
   },
   bgOrbBottom: {
     position: 'absolute',
@@ -276,14 +276,14 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(32, 182, 111, 0.08)',
+    backgroundColor: 'rgba(32, 182, 111, 0.04)',
   },
   glow: {
     position: 'absolute',
     width: LOGO_SIZE + 56,
     height: LOGO_SIZE + 56,
     borderRadius: (LOGO_SIZE + 56) / 2,
-    backgroundColor: 'rgba(32, 182, 111, 0.16)',
+    backgroundColor: 'rgba(32, 182, 111, 0.08)',
   },
   ring: {
     position: 'absolute',
@@ -291,13 +291,13 @@ const styles = StyleSheet.create({
     height: LOGO_SIZE + 24,
     borderRadius: (LOGO_SIZE + 24) / 2,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(32, 182, 111, 0.22)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#101820',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.06,
         shadowRadius: 12,
       },
       android: { elevation: 2 },
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontFamily: appFont.semibold,
     fontWeight: '600',
-    color: TITLE,
+    color: BRAND_GREEN,
     letterSpacing: 0.3,
   },
   sub: {

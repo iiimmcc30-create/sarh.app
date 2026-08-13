@@ -4,7 +4,7 @@
     "slug": "safat",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/brand-master.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "safat",
     "owner": "alsafa00",
     "userInterfaceStyle": "automatic",
@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.safat.app",
-      "icon": "./assets/images/brand-master.png",
+      "icon": "./assets/images/icon.png",
       "infoPlist": {
         "CFBundleDisplayName": "سرح | Sarh"
       }
@@ -29,8 +29,8 @@
         "android.permission.POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/brand-master.png",
-        "backgroundColor": "#021B12"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#284E39"
       },
       "edgeToEdgeEnabled": true
     },
@@ -45,15 +45,15 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/brand-master.png",
+          "image": "./assets/images/splash-circle.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#021B12",
+          "backgroundColor": "#FFFFFF",
           "dark": {
-            "image": "./assets/images/brand-master.png",
+            "image": "./assets/images/splash-circle.png",
             "imageWidth": 280,
             "resizeMode": "contain",
-            "backgroundColor": "#021B12"
+            "backgroundColor": "#0B1622"
           }
         }
       ],
@@ -72,8 +72,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/brand-master.png",
-          "color": "#021B12",
+          "icon": "./assets/images/icon.png",
+          "color": "#006B3C",
           "defaultChannel": "default",
           "enableBackgroundRemoteNotifications": true
         }

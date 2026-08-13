@@ -2,7 +2,7 @@ const sharp = require('../../backend-nest/node_modules/sharp');
 const fs = require('fs');
 const path = require('path');
 
-const src = path.join('assets', 'images', 'brand-master.png');
+const src = path.join('assets', 'images', 'adaptive-icon.png');
 const sizes = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
 const fgSizes = { mdpi: 108, hdpi: 162, xhdpi: 216, xxhdpi: 324, xxxhdpi: 432 };
 
@@ -24,7 +24,7 @@ async function main() {
     path.join('android', 'app', 'src', 'main', 'res', 'drawable', 'ic_launcher_background.xml'),
     `<?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-  <solid android:color="#021B12"/>
+  <solid android:color="#284E39"/>
 </shape>
 `,
   );
