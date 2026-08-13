@@ -17,7 +17,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: "3001"
+        value: "10000"
       - key: REDIS_ENABLED
         value: "false"
       # Supabase — paste from Supabase Dashboard → Connect → Pooler
