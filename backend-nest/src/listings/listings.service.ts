@@ -30,6 +30,7 @@ import {
   resolveLegacyListingCategory,
 } from './listing-categories';
 import { MarketCategoriesService } from '../market-categories/services/market-categories.service';
+import { PaidServicesService } from '../settings/paid-services.service';
 
 const PAGE_SIZE = 20;
 
@@ -47,6 +48,7 @@ export class ListingsService {
     private readonly planPermissions: PlanPermissionService,
     private readonly promotions: ListingPromotionService,
     private readonly marketCategories: MarketCategoriesService,
+    private readonly paidServices: PaidServicesService,
   ) {}
 
   private sellerPriorityBoost(
@@ -501,8 +503,16 @@ export class ListingsService {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
-    const wantsFeatured = Boolean(dto.featured) && !listing.featured;
-    const wantsPinned = Boolean(dto.pinned) && !listing.pinned;
+    let wantsFeatured = Boolean(dto.featured) && !listing.featured;
+    let wantsPinned = Boolean(dto.pinned) && !listing.pinned;
+
+    const flags = await this.paidServices.getFlags();
+    if (wantsFeatured && !flags.featureEnabled) {
+      throwApi(403, 'service_disabled', 'خدمة تمييز الإعلان غير مفعّلة حالياً');
+    }
+    if (wantsPinned && !flags.pinEnabled) {
+      throwApi(403, 'service_disabled', 'خدمة تثبيت الإعلان غير مفعّلة حالياً');
+    }
 
     if (!wantsFeatured && !wantsPinned) {
       throwApi(400, 'already_promoted', 'الإعلان مُفعَّل بالفعل أو لم تُحدَّد ترقية جديدة');

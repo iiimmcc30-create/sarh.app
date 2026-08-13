@@ -22,7 +22,12 @@ import {
   fetchPromotionPlans,
 } from '@/services/listingPromotion';
 import { launchPaymentCheckout } from '@/services/payments';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePaidServices } from '@/hooks/usePaidServices';
+import {
+  firstEnabledBoostType,
+  isBoostTypeEnabled,
+} from '@/services/paidServices';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -69,6 +74,11 @@ export function ListingBoostSheet({
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { accessToken } = useAuth();
+  const { flags: paidFlags, hasAnyBoostService } = usePaidServices();
+  const enabledTypes = useMemo(
+    () => (getServiceTypeOrder() ?? []).filter((key) => isBoostTypeEnabled(key, paidFlags)),
+    [paidFlags],
+  );
 
   const [plans, setPlans] = useState<BoostPlansMap>(FALLBACK_BOOST_PLANS);
   const [promotionPlans, setPromotionPlans] = useState<PromotionPlanOption[]>(
@@ -108,16 +118,19 @@ export function ListingBoostSheet({
   };
 
   useEffect(() => {
-    if (!visible) return;
-    setBoostType(initialBoostType);
+    if (!visible || !hasAnyBoostService) return;
+    const preferred = isBoostTypeEnabled(initialBoostType, paidFlags)
+      ? initialBoostType
+      : firstEnabledBoostType(paidFlags) ?? initialBoostType;
+    setBoostType(preferred);
     const defaults =
-      initialBoostType === 'promotion'
+      preferred === 'promotion'
         ? FALLBACK_PROMOTION_PLANS
-        : FALLBACK_BOOST_PLANS[initialBoostType];
+        : FALLBACK_BOOST_PLANS[preferred];
     setDurationDays(defaults[0]?.durationDays ?? 1);
     void fetchBoostPlans().then(setPlans);
     void fetchPromotionPlans().then(setPromotionPlans);
-  }, [visible, initialBoostType]);
+  }, [visible, initialBoostType, hasAnyBoostService, paidFlags]);
 
   useEffect(() => {
     if (visible) {
@@ -255,7 +268,7 @@ export function ListingBoostSheet({
 
             <Text style={styles.sectionLabel}>اختر الخدمة</Text>
             <View style={styles.serviceGrid}>
-              {(getServiceTypeOrder() ?? []).map((key) => {
+              {enabledTypes.map((key) => {
                 const meta = getServiceMeta(key);
                 if (!meta) return null;
                 const accent = accentFor(key);

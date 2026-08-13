@@ -34,6 +34,8 @@ import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
+import { usePaidServices } from '@/hooks/usePaidServices';
+import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -68,6 +70,7 @@ export default function ListingDetailScreen() {
 
   // ─── Boost / promote ────────────────────────────────────────────────────
   const [feeModalVisible, setFeeModalVisible] = useState(false);
+  const { flags: paidFlags, hasAnyBoostService } = usePaidServices();
 
   const loadListing = useCallback(async () => {
     if (!id) return;
@@ -234,8 +237,15 @@ export default function ListingDetailScreen() {
 
   const isOwner = !!me.id && listing.seller.id === me.id;
 
-  const openPromote = (promoteGoal: 'visibility' | 'pinned' | 'featured') => {
-    router.push(`/listing/${listing.id}/promote?goal=${promoteGoal}` as never);
+  const openPromote = (promoteGoal?: 'visibility' | 'pinned' | 'featured') => {
+    // زر ترقية الإعلان يتبع تبديل الرسوم/الترقية في لوحة الإدارة
+    if (!paidFlags.listingFeesEnabled) return;
+    const goal =
+      promoteGoal && isPromoteGoalEnabled(promoteGoal, paidFlags)
+        ? promoteGoal
+        : firstEnabledPromoteGoal(paidFlags);
+    if (!goal) return;
+    router.push(`/listing/${listing.id}/promote?goal=${goal}` as never);
   };
 
   const timeLabel = listing.createdAt
@@ -288,20 +298,28 @@ export default function ListingDetailScreen() {
       onPress: handleEdit,
       danger: false,
     },
-    {
-      key: 'pay-fee',
-      icon: 'receipt-outline',
-      label: 'سداد الرسوم',
-      onPress: () => setFeeModalVisible(true),
-      danger: false,
-    },
-    {
-      key: 'promote',
-      icon: 'rocket-outline',
-      label: 'ترقية الإعلان',
-      onPress: () => openPromote('visibility'),
-      danger: false,
-    },
+    ...(paidFlags.listingFeesEnabled
+      ? [
+          {
+            key: 'pay-fee',
+            icon: 'receipt-outline',
+            label: 'سداد الرسوم',
+            onPress: () => setFeeModalVisible(true),
+            danger: false,
+          },
+          ...(hasAnyBoostService
+            ? [
+                {
+                  key: 'promote',
+                  icon: 'rocket-outline',
+                  label: 'ترقية الإعلان',
+                  onPress: () => openPromote(),
+                  danger: false,
+                },
+              ]
+            : []),
+        ]
+      : []),
     {
       key: 'delete',
       icon: 'trash-outline',
@@ -317,15 +335,21 @@ export default function ListingDetailScreen() {
       message: 'اختر الإجراء المطلوب',
       items: [
         { key: 'edit', label: 'تعديل الإعلان', icon: 'create-outline' },
-        { key: 'pay-fee', label: 'سداد الرسوم', icon: 'receipt-outline' },
-        { key: 'promote', label: 'ترقية الإعلان', icon: 'rocket-outline' },
+        ...(paidFlags.listingFeesEnabled
+          ? [
+              { key: 'pay-fee', label: 'سداد الرسوم', icon: 'receipt-outline' },
+              ...(hasAnyBoostService
+                ? [{ key: 'promote', label: 'ترقية الإعلان', icon: 'rocket-outline' }]
+                : []),
+            ]
+          : []),
         { key: 'delete', label: 'حذف الإعلان', icon: 'trash-outline', destructive: true },
         { key: 'cancel', label: 'إلغاء', cancel: true },
       ],
     });
     if (key === 'edit') handleEdit();
-    if (key === 'pay-fee') setFeeModalVisible(true);
-    if (key === 'promote') openPromote('visibility');
+    if (key === 'pay-fee' && paidFlags.listingFeesEnabled) setFeeModalVisible(true);
+    if (key === 'promote' && paidFlags.listingFeesEnabled) openPromote();
     if (key === 'delete') void handleDelete();
   };
 
@@ -601,7 +625,7 @@ export default function ListingDetailScreen() {
 
       {listing ? (
         <ListingFeePaymentSheet
-          visible={feeModalVisible}
+          visible={feeModalVisible && paidFlags.listingFeesEnabled}
           listingId={listing.id}
           listingTitle={listing.arabicTitle || listing.title}
           onClose={() => setFeeModalVisible(false)}

@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
 import { useButcherStats, StatsPeriod } from '@/hooks/useButcherStats';
 import { useRequireApprovedButcher } from '@/hooks/useRequireApprovedButcher';
+import { usePaidServices } from '@/hooks/usePaidServices';
 
 type Period = StatsPeriod;
 
@@ -90,6 +91,7 @@ export default function ButcherDashboardScreen() {
   const { hasApprovedApplication, loading: accessLoading } = useRequireApprovedButcher();
   const [period, setPeriod] = useState<Period>('month');
   const { stats, loading, error } = useButcherStats(accessToken, period);
+  const { hasAnyBoostService } = usePaidServices();
 
   if (accessLoading || !hasApprovedApplication) {
     return (
@@ -169,12 +171,16 @@ export default function ButcherDashboardScreen() {
       color: colors.cyan,
       onPress: () => router.push('/(butcher)/messages'),
     },
-    {
-      icon: 'megaphone-outline',
-      label: 'الترويج',
-      color: colors.gold,
-      onPress: () => router.push('/promote'),
-    },
+    ...(hasAnyBoostService
+      ? [
+          {
+            icon: 'megaphone-outline',
+            label: 'الترويج',
+            color: colors.gold,
+            onPress: () => router.push('/promote'),
+          },
+        ]
+      : []),
   ];
 
   return (

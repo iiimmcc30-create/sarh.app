@@ -36,6 +36,7 @@ import { hasValidCoords } from '@/lib/butcherLocation';
 import { categoryRequiresWeight } from '@/lib/listingCategories';
 import { resolveLegacyListingCategory } from '@/lib/marketCategoriesFallback';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
+import { usePaidServices } from '@/hooks/usePaidServices';
 import type { MarketCategory } from '@/services/categories';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string; currency: string }[] = [
@@ -87,6 +88,7 @@ export default function CreateListingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [showBoostUpsell, setShowBoostUpsell] = useState(false);
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
+  const { hasAnyBoostService } = usePaidServices();
 
   const selectedCountry = GCC_COUNTRIES.find((c) => c.code === country)!;
 
@@ -244,7 +246,7 @@ export default function CreateListingScreen() {
         images: uploadedUrls,
       });
 
-      if (result.ok && result.listingId) {
+      if (result.ok && result.listingId && hasAnyBoostService) {
         setPublishedListingId(result.listingId);
         setShowBoostUpsell(true);
       } else if (result.ok) {
@@ -664,7 +666,7 @@ export default function CreateListingScreen() {
           </Pressable>
         </View>
 
-        {publishedListingId ? (
+        {publishedListingId && hasAnyBoostService ? (
           <ListingBoostSheet
             visible={showBoostUpsell}
             listingId={publishedListingId}

@@ -27,6 +27,7 @@ import {
   verifyNiOrderForCheckout,
   type NiLogFn,
 } from './ni-client';
+import { PaidServicesService } from '../settings/paid-services.service';
 
 function buildNIOrderReference(userId: string): string {
   const ts = Date.now().toString(36).toUpperCase();
@@ -91,6 +92,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     private readonly entitlements: SubscriptionEntitlementService,
     private readonly plans: PlansService,
     private readonly cache: RedisCacheService,
+    private readonly paidServices: PaidServicesService,
   ) {}
 
   private async invalidateListingCaches(listingId?: string) {
@@ -136,6 +138,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     }
 
     if (type === 'fee' || type === 'listing_fee') {
+      await this.paidServices.assertListingFeesEnabled();
       const fee = await this.repo.findPendingFee(referenceId, userId);
       if (!fee) {
         throwApi(404, 'fee_not_found', 'الرسوم غير موجودة أو مسددة بالفعل');
@@ -170,6 +173,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     }
 
     if (type === 'commission') {
+      await this.paidServices.assertListingFeesEnabled();
       // Custom commission payments — user enters any amount; no linked record required.
       return;
     }

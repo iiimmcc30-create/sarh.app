@@ -37,6 +37,11 @@ import {
   type ReachEstimate,
   computeVisibilityMinPrice,
 } from '@/services/listingPromote';
+import { usePaidServices } from '@/hooks/usePaidServices';
+import {
+  firstEnabledPromoteGoal,
+  isPromoteGoalEnabled,
+} from '@/services/paidServices';
 import Slider from '@react-native-community/slider';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -96,9 +101,20 @@ export default function ListingPromoteScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
+  const { flags: paidFlags, hasAnyBoostService } = usePaidServices();
   const initialGoal = goalFromBoostType(goalParam ?? null);
 
   const [goal, setGoal] = useState<PromotionGoal | null>(initialGoal);
+  const enabledGoals = useMemo(
+    () => PROMOTE_GOAL_OPTIONS.filter((option) => isPromoteGoalEnabled(option.key, paidFlags)),
+    [paidFlags],
+  );
+
+  useEffect(() => {
+    if (!hasAnyBoostService) return;
+    if (goal && isPromoteGoalEnabled(goal, paidFlags)) return;
+    setGoal(firstEnabledPromoteGoal(paidFlags));
+  }, [goal, hasAnyBoostService, paidFlags]);
   const [amount, setAmount] = useState(PROMOTE_AMOUNT_DEFAULT);
   const [durationHours, setDurationHours] = useState(PROMOTE_DURATION_HOURS_DEFAULT);
   const [processing, setProcessing] = useState(false);
@@ -324,7 +340,14 @@ export default function ListingPromoteScreen() {
               <Text style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</Text>
             </View>
             <View style={styles.goalList}>
-              {PROMOTE_GOAL_OPTIONS.map((option) => {
+              {!hasAnyBoostService ? (
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.sectionHint}>
+                    خدمات الترقية غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
+                  </Text>
+                </View>
+              ) : null}
+              {enabledGoals.map((option) => {
                 const selected = goal === option.key;
                 const accent = goalAccentColor(option.accent, colors);
                 return (
@@ -520,7 +543,7 @@ export default function ListingPromoteScreen() {
               <PrimaryButton
                 title="الدفع"
                 onPress={handlePay}
-                disabled={!canPay}
+                disabled={!canPay || !hasAnyBoostService || !goal}
                 loading={processing}
                 fullWidth
               />

@@ -27,6 +27,7 @@ import {
   SidebarSection,
   type SidebarNavItem,
 } from '@/components/feature/SidebarMenu';
+import { usePaidServices } from '@/hooks/usePaidServices';
 
 type MenuItem = SidebarNavItem;
 
@@ -37,6 +38,7 @@ export default function SidebarScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles((theme) => createSidebarStyles(theme.colors, theme.scheme));
   const { isButcherOwner, refresh } = useButcherOwnerAccess();
+  const { hasAnyBoostService } = usePaidServices();
 
   useFocusEffect(
     useCallback(() => {
@@ -99,23 +101,24 @@ export default function SidebarScreen() {
   }, [isButcherOwner]);
 
   /** تعزيز سرح · خدمات سرح */
-  const sarhItems: MenuItem[] = useMemo(
-    () => [
-      {
+  const sarhItems: MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [];
+    if (hasAnyBoostService) {
+      items.push({
         key: 'promote',
         icon: 'megaphone-outline',
         label: 'تعزيز سرح',
         route: '/promote',
-      },
-      {
-        key: 'sarh-services',
-        icon: 'briefcase-outline',
-        label: 'خدمات سرح',
-        route: '/sarh-services',
-      },
-    ],
-    [],
-  );
+      });
+    }
+    items.push({
+      key: 'sarh-services',
+      icon: 'briefcase-outline',
+      label: 'خدمات سرح',
+      route: '/sarh-services',
+    });
+    return items;
+  }, [hasAnyBoostService]);
 
   /** الدعم والمساعدة · الإعدادات والخصوصية — بطاقة واحدة */
   const settingsItems: MenuItem[] = useMemo(

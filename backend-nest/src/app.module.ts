@@ -30,6 +30,7 @@ import { SupportModule } from './support/support.module';
 import { ContentModule } from './content/content.module';
 import { EditorialStoriesModule } from './editorial-stories/editorial-stories.module';
 import { MarketCategoriesModule } from './market-categories/market-categories.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MarketCategoriesModule } from './market-categories/market-categories.mo
     GatewaySharedModule,
     AuthModule,
     UsersModule,
+    SettingsModule,
     MarketCategoriesModule,
     ListingsModule,
     PostsModule,

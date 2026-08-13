@@ -11,9 +11,10 @@ import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MarketCategoriesModule } from '../market-categories/market-categories.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, PrismaModule, MarketCategoriesModule],
+  imports: [AuthModule, UsersModule, PrismaModule, MarketCategoriesModule, SettingsModule],
   controllers: [ListingsController, ListingBoostController, ListingPromotionController],
   providers: [
     ListingsService,

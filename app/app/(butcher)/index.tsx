@@ -19,6 +19,7 @@ import { gradients, radius, spacing, typography, type ThemeColors } from '@/cons
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useButcherStats, StatsPeriod } from '@/hooks/useButcherStats';
+import { usePaidServices } from '@/hooks/usePaidServices';
 
 type Period = StatsPeriod;
 
@@ -95,6 +96,7 @@ export default function ButcherDashboardScreen() {
   const { accessToken } = useAuth();
   const [period, setPeriod] = useState<Period>('month');
   const { stats, loading, error } = useButcherStats(accessToken, period);
+  const { hasAnyBoostService } = usePaidServices();
 
   const data = stats ?? {
     revenue: 0,
@@ -166,12 +168,16 @@ export default function ButcherDashboardScreen() {
       color: colors.cyan,
       onPress: () => router.push('/(butcher)/messages'),
     },
-    {
-      icon: 'megaphone-outline',
-      label: 'الترويج',
-      color: colors.gold,
-      onPress: () => router.push('/promote'),
-    },
+    ...(hasAnyBoostService
+      ? [
+          {
+            icon: 'megaphone-outline',
+            label: 'الترويج',
+            color: colors.gold,
+            onPress: () => router.push('/promote'),
+          },
+        ]
+      : []),
   ];
 
   return (

@@ -23,6 +23,7 @@ import {
   View,
 } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
+import { usePaidServices } from '@/hooks/usePaidServices';
 
 const CATEGORY_ICONS: Record<Listing['category'], string> = {
   camels: '🐪',
@@ -51,6 +52,7 @@ export default function PromoteHubScreen() {
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
   const [statsListingId, setStatsListingId] = useState<string | null>(null);
+  const { hasAnyBoostService } = usePaidServices();
 
   const userId = resolveCurrentUserId(user, me);
 
@@ -78,6 +80,7 @@ export default function PromoteHubScreen() {
   );
 
   const openPromote = (listingId: string) => {
+    if (!hasAnyBoostService) return;
     router.push(`/listing/${listingId}/promote` as never);
   };
 
@@ -93,115 +96,127 @@ export default function PromoteHubScreen() {
         </View>
 
         <AppScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.hero}>
-            <View style={styles.heroIconWrap}>
-              <AppIcon name="rocket-outline" size={28} color={colors.electric} />
-            </View>
-            <Text style={styles.heroTitle}>اختر إعلاناً لبدء الترويج</Text>
-            <Text style={styles.heroSub}>
-              زِد ظهور إعلانك، ثبّته في الأعلى، أو أضف نجمة مميزة — كل خيار له تأثير مختلف
-            </Text>
-          </View>
-
-          {loadingListings ? (
-            <ActivityIndicator color={colors.electric} style={{ marginVertical: spacing.xl }} />
-          ) : myListings.length === 0 ? (
-            <View style={styles.emptyBox}>
-              <View style={styles.emptyIconWrap}>
-                <AppIcon name="megaphone-outline" size={36} color={colors.textMuted} />
+          {!hasAnyBoostService ? (
+            <View style={styles.hero}>
+              <View style={styles.heroIconWrap}>
+                <AppIcon name="rocket-outline" size={28} color={colors.textMuted} />
               </View>
-              <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
-              <Text style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</Text>
-              <Pressable style={styles.createBtn} onPress={() => void navigateToCreateListing()}>
-                <Text style={styles.createBtnText}>إنشاء إعلان</Text>
-                <AppIcon name="add-circle-outline" size={18} color="#fff" />
-              </Pressable>
+              <Text style={styles.heroTitle}>خدمات الترقية غير مفعّلة حالياً</Text>
+              <Text style={styles.heroSub}>يمكنك العودة لاحقاً عند تفعيلها من الإدارة.</Text>
             </View>
-          ) : (
-            <View style={styles.listingsList}>
-              {myListings.map((listing, index) => {
-                const thumb = listingThumb(listing);
-                const title = listing.arabicTitle || listing.title;
-                const location = listing.arabicLocation || listing.location;
-                const metaParts = [
-                  listing.price > 0
-                    ? `${listing.price.toLocaleString('ar-SA')} ${listing.currency}`
-                    : null,
-                  location || null,
-                ].filter(Boolean);
+          ) : null}
 
-                return (
-                  <Pressable
-                    key={listing.id}
-                    style={({ pressed }) => [
-                      styles.listingRow,
-                      index < myListings.length - 1 && styles.listingRowDivider,
-                      pressed && styles.listingRowPressed,
-                    ]}
-                    onPress={() => openPromote(listing.id)}
-                  >
-                    {/* Physical LEFT: chevron + optional stats */}
-                    <AppIcon
-                      name="angle-left"
-                      size={SIDEBAR_MENU_ITEM.chevronSize}
-                      color={colors.textSubtle}
-                    />
+          {hasAnyBoostService ? (
+            <>
+              <View style={styles.hero}>
+                <View style={styles.heroIconWrap}>
+                  <AppIcon name="rocket-outline" size={28} color={colors.electric} />
+                </View>
+                <Text style={styles.heroTitle}>اختر إعلاناً لبدء الترويج</Text>
+                <Text style={styles.heroSub}>
+                  زِد ظهور إعلانك، ثبّته في الأعلى، أو أضف نجمة مميزة — كل خيار له تأثير مختلف
+                </Text>
+              </View>
 
-                    {listing.promoted ? (
-                      <Pressable
-                        style={styles.statsBtn}
-                        onPress={(e) => {
-                          e.stopPropagation?.();
-                          setStatsListingId(listing.id);
-                        }}
-                        hitSlop={8}
-                        accessibilityLabel="إحصائيات الترويج"
-                      >
-                        <AppIcon name="stats-chart-outline" size={16} color="#7C3AED" />
-                      </Pressable>
-                    ) : null}
-
-                    <View style={styles.spacer} />
-
-                    {/* Physical RIGHT: title meta + thumb/icon */}
-                    <View style={styles.listingContent}>
-                      <View style={styles.textWrap}>
-                        <View style={styles.titleRow}>
-                          <ListingBoostTitleIcons
-                            pinned={listing.pinned}
-                            featured={listing.featured}
-                          />
-                          <Text style={styles.listingTitle} numberOfLines={2}>
-                            {title}
-                          </Text>
-                        </View>
-                        {metaParts.length > 0 ? (
-                          <Text style={styles.listingMeta} numberOfLines={1}>
-                            {metaParts.join(' · ')}
-                          </Text>
-                        ) : null}
-                        {listing.promoted ? (
-                          <Text style={styles.reachText}>ترويج نشط — زيادة ظهور</Text>
-                        ) : null}
-                      </View>
-
-                      <View style={styles.thumbWrap}>
-                        {thumb ? (
-                          <Image source={uriSource(thumb)} style={styles.thumb} contentFit="cover" />
-                        ) : (
-                          <View style={styles.thumbPlaceholder}>
-                            <Text style={styles.thumbEmoji}>
-                              {CATEGORY_ICONS[listing.category] || '📦'}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
+              {loadingListings ? (
+                <ActivityIndicator color={colors.electric} style={{ marginVertical: spacing.xl }} />
+              ) : myListings.length === 0 ? (
+                <View style={styles.emptyBox}>
+                  <View style={styles.emptyIconWrap}>
+                    <AppIcon name="megaphone-outline" size={36} color={colors.textMuted} />
+                  </View>
+                  <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
+                  <Text style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</Text>
+                  <Pressable style={styles.createBtn} onPress={() => void navigateToCreateListing()}>
+                    <Text style={styles.createBtnText}>إنشاء إعلان</Text>
+                    <AppIcon name="add-circle-outline" size={18} color="#fff" />
                   </Pressable>
-                );
-              })}
-            </View>
-          )}
+                </View>
+              ) : (
+                <View style={styles.listingsList}>
+                  {myListings.map((listing, index) => {
+                    const thumb = listingThumb(listing);
+                    const title = listing.arabicTitle || listing.title;
+                    const location = listing.arabicLocation || listing.location;
+                    const metaParts = [
+                      listing.price > 0
+                        ? `${listing.price.toLocaleString('ar-SA')} ${listing.currency}`
+                        : null,
+                      location || null,
+                    ].filter(Boolean);
+
+                    return (
+                      <Pressable
+                        key={listing.id}
+                        style={({ pressed }) => [
+                          styles.listingRow,
+                          index < myListings.length - 1 && styles.listingRowDivider,
+                          pressed && styles.listingRowPressed,
+                        ]}
+                        onPress={() => openPromote(listing.id)}
+                      >
+                        <AppIcon
+                          name="angle-left"
+                          size={SIDEBAR_MENU_ITEM.chevronSize}
+                          color={colors.textSubtle}
+                        />
+
+                        {listing.promoted ? (
+                          <Pressable
+                            style={styles.statsBtn}
+                            onPress={(e) => {
+                              e.stopPropagation?.();
+                              setStatsListingId(listing.id);
+                            }}
+                            hitSlop={8}
+                            accessibilityLabel="إحصائيات الترويج"
+                          >
+                            <AppIcon name="stats-chart-outline" size={16} color="#7C3AED" />
+                          </Pressable>
+                        ) : null}
+
+                        <View style={styles.spacer} />
+
+                        <View style={styles.listingContent}>
+                          <View style={styles.textWrap}>
+                            <View style={styles.titleRow}>
+                              <ListingBoostTitleIcons
+                                pinned={listing.pinned}
+                                featured={listing.featured}
+                              />
+                              <Text style={styles.listingTitle} numberOfLines={2}>
+                                {title}
+                              </Text>
+                            </View>
+                            {metaParts.length > 0 ? (
+                              <Text style={styles.listingMeta} numberOfLines={1}>
+                                {metaParts.join(' · ')}
+                              </Text>
+                            ) : null}
+                            {listing.promoted ? (
+                              <Text style={styles.reachText}>ترويج نشط — زيادة ظهور</Text>
+                            ) : null}
+                          </View>
+
+                          <View style={styles.thumbWrap}>
+                            {thumb ? (
+                              <Image source={uriSource(thumb)} style={styles.thumb} contentFit="cover" />
+                            ) : (
+                              <View style={styles.thumbPlaceholder}>
+                                <Text style={styles.thumbEmoji}>
+                                  {CATEGORY_ICONS[listing.category] || '📦'}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </>
+          ) : null}
         </AppScrollView>
 
         <PromotionStatsSheet
