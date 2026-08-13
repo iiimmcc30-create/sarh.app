@@ -9,8 +9,10 @@ import { PaymentRedirectController } from './payment-redirect.controller';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PaymentsRepository } from './repositories/payments.repository';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
+  imports: [SettingsModule],
   controllers: [PaymentsController, PaymentRedirectController],
   providers: [PaymentsService, PaymentsRepository],
 })

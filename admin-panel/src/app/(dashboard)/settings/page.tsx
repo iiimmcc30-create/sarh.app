@@ -46,6 +46,7 @@ export default function SettingsPage() {
   }, {});
 
   const categoryLabel: Record<string, string> = {
+    paid_services: 'الخدمات المدفوعة للإعلانات',
     system: 'النظام',
     auth: 'المصادقة',
     features: 'الميزات',
@@ -53,15 +54,31 @@ export default function SettingsPage() {
     general: 'عام',
   };
 
+  const categoryOrder = ['paid_services', 'features', 'pricing', 'auth', 'system', 'general'];
+  const orderedCategories = [
+    ...categoryOrder.filter((cat) => groupedSettings[cat]?.length),
+    ...Object.keys(groupedSettings).filter((cat) => !categoryOrder.includes(cat)),
+  ];
+
   return (
     <div>
-      <PageHeader title="إعدادات النظام" description="Feature Flags وإعدادات التسعير" />
+      <PageHeader
+        title="إعدادات النظام"
+        description="تشغيل وإخفاء الخدمات المدفوعة، وFeature Flags، والتسعير"
+      />
       <div className="space-y-8">
-        {Object.entries(groupedSettings).map(([cat, items]) => (
+        {orderedCategories.map((cat) => {
+          const items = groupedSettings[cat] ?? [];
+          return (
           <div key={cat} className="space-y-3">
             <h2 className="text-slate-400 text-sm font-semibold uppercase tracking-wider">
               {categoryLabel[cat] ?? cat}
             </h2>
+            {cat === 'paid_services' ? (
+              <p className="text-sm text-slate-500 -mt-1">
+                عند التعطيل تختفي الخدمة من التطبيق ويمنع الدفع عليها. التعطيل لا يحذف الكود أو البيانات.
+              </p>
+            ) : null}
             {items.map((s) => {
               const key = String(s.key);
               const val = s.value;
@@ -84,7 +101,12 @@ export default function SettingsPage() {
                       variant={val ? 'primary' : 'secondary'}
                       size="sm"
                       onClick={async () => {
-                        await updateSetting({ key, value: !val, labelAr: String(s.labelAr ?? '') });
+                        await updateSetting({
+                          key,
+                          value: !val,
+                          labelAr: String(s.labelAr ?? ''),
+                          category: String(s.category ?? 'general'),
+                        });
                         load();
                       }}
                     >
@@ -136,7 +158,8 @@ export default function SettingsPage() {
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

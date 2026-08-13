@@ -24,6 +24,7 @@ import {
   PROMOTE_DURATION_HOURS_MIN,
   durationDaysFromHours,
 } from '../promotion/promotion-limits.config';
+import { PaidServicesService } from '../../settings/paid-services.service';
 
 export { BOOST_PLANS } from './boost-plans.config';
 
@@ -80,6 +81,7 @@ export class ListingBoostService {
     private readonly logger: LoggerService,
     private readonly notifications: AppNotificationsService,
     private readonly cache: RedisCacheService,
+    private readonly paidServices: PaidServicesService,
   ) {}
 
   /** Return available boost plans for the frontend. */
@@ -117,6 +119,7 @@ export class ListingBoostService {
     options: InitiateBoostOptions,
   ) {
     const { boostType, method } = options;
+    await this.paidServices.assertBoostTypeEnabled(boostType);
 
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, sellerId: user.userId, deletedAt: null },

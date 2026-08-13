@@ -32,6 +32,7 @@ import {
   promotionPriceForHours,
   PROMOTION_DEFAULT_BASE_PER_24H,
 } from '../boost/boost-pricing.util';
+import { PaidServicesService } from '../../settings/paid-services.service';
 
 type InitiatePromotionOptions = {
   durationDays?: number;
@@ -56,6 +57,7 @@ export class ListingPromotionService {
     private readonly logger: LoggerService,
     private readonly notifications: AppNotificationsService,
     private readonly cache: RedisCacheService,
+    private readonly paidServices: PaidServicesService,
   ) {}
 
   getPromotionPlans() {
@@ -114,6 +116,8 @@ export class ListingPromotionService {
     listingId: string,
     options: InitiatePromotionOptions,
   ) {
+    await this.paidServices.assertPromotionEnabled();
+
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, sellerId: user.userId, deletedAt: null },
       select: { id: true, arabicTitle: true, status: true, views: true },

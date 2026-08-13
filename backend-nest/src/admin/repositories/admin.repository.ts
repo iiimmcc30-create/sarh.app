@@ -650,6 +650,31 @@ export class AdminRepository {
       { key: 'allowRegistration', value: true, labelAr: 'السماح بالتسجيل', category: 'auth' },
       { key: 'liveStreamsEnabled', value: true, labelAr: 'تفعيل البث المباشر', category: 'features' },
       { key: 'butcherApplicationsEnabled', value: true, labelAr: 'طلبات الملاحم', category: 'features' },
+      // Paid listing services — show/hide independently in the app
+      {
+        key: 'features.paidPromotionEnabled',
+        value: true,
+        labelAr: 'ترويج الإعلان (الظهور المدفوع)',
+        category: 'paid_services',
+      },
+      {
+        key: 'features.paidPinEnabled',
+        value: true,
+        labelAr: 'تثبيت الإعلان',
+        category: 'paid_services',
+      },
+      {
+        key: 'features.paidFeatureEnabled',
+        value: true,
+        labelAr: 'تمييز الإعلان',
+        category: 'paid_services',
+      },
+      {
+        key: 'features.listingFeesEnabled',
+        value: true,
+        labelAr: 'سداد الرسوم والتعهد وزر ترقية الإعلان',
+        category: 'paid_services',
+      },
       // Listing paid-services pricing (SAR)
       { key: 'pricing.boost.pin.per12h', value: 6, labelAr: 'تثبيت الإعلان — سعر كل 12 ساعة (ر.س)', category: 'pricing' },
       { key: 'pricing.boost.feature.per12h', value: 5, labelAr: 'تمييز الإعلان — سعر كل 12 ساعة (ر.س)', category: 'pricing' },
