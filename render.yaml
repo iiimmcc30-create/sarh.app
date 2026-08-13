@@ -1,0 +1,54 @@
+# Render Blueprint — Sarh NestJS API
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: Render Dashboard → New → Blueprint → connect repo → set secret env vars.
+# Or: New Web Service → Docker, Root Directory = backend-nest
+
+services:
+  - type: web
+    name: sarh-api
+    runtime: docker
+    region: singapore
+    plan: starter
+    rootDir: backend-nest
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: REDIS_ENABLED
+        value: "false"
+      # Supabase — paste from Supabase Dashboard → Connect → Pooler
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      # Set after first deploy to your Render URL, e.g. https://sarh-api.onrender.com
+      - key: APP_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: NI_BASE_URL
+        sync: false
+      - key: NI_API_KEY
+        sync: false
+      - key: NI_OUTLET_ID
+        sync: false
+      - key: NI_BASIC_AUTH
+        sync: false
+      - key: NI_CHAIN_ID
+        sync: false
+      - key: NI_REALM
+        sync: false
+      - key: NI_WEBHOOK_SECRET
+        sync: false
