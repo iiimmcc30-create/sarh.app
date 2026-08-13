@@ -13,6 +13,7 @@
     "start:prod": "node dist/main",
     "start:fast": "ts-node --transpile-only -r tsconfig-paths/register src/main.ts",
     "test:promote-payment": "node scripts/test-promote-payment-flow.js",
+    "test:ni-gateway": "node scripts/test-ni-gateway.js",
     "socket:dev": "ts-node --transpile-only -r tsconfig-paths/register src/gateway/socket.main.ts",
     "socket:start": "node -r tsconfig-paths/register dist/gateway/socket.main.js",
     "worker:dev": "ts-node --transpile-only -r tsconfig-paths/register src/queue/worker.main.ts",

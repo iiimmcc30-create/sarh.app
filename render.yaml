@@ -43,7 +43,7 @@ services:
       - key: NI_API_KEY
         sync: false
       - key: NI_OUTLET_ID
-        sync: false
+        value: 36a1f0d3-6a8f-4287-958f-f151ae17146d
       - key: NI_BASIC_AUTH
         sync: false
       - key: NI_CHAIN_ID
