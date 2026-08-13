@@ -8,10 +8,8 @@
  *   - If the NI outlet is INACTIVE / unreachable → a STRUCTURED 502
  *     `payment_gateway_error` (never a crash / 500), surfacing the NI reason.
  *
- * NOTE (environment finding): with the bundled credentials the NI outlet is
- * inactive, so real charges cannot be created here. Auth to the gateway works;
- * order creation returns 422 `inactiveOutlet`. Activating the outlet on the
- * Network International side is required for live charges — not a code change.
+ * Outlet reference: 36a1f0d3-6a8f-4287-958f-f151ae17146d (NI_OUTLET_ID).
+ * Live check: `node scripts/test-ni-gateway.js` — auth + hosted checkout URL.
  */
 import request from 'supertest';
 import {
