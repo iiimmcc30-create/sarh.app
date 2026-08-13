@@ -1,4 +1,4 @@
-// App branding assets — circular logo from official SAFAT emblem (ايقونه.png)
+// Official Sarh icon — assets/images/images/ChatGPT Image 13 أغسطس 2026، 11_27_28 م.png
 
-export const APP_LOGO = require('@/assets/images/logo-circle.png');
+export const APP_LOGO = require('@/assets/images/icon.png');
 export const APP_ICON = require('@/assets/images/icon.png');
