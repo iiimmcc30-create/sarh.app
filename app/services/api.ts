@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import { resolveDevServiceUrl, RAILWAY_API } from './devHost';
+import { resolveDevServiceUrl, PRODUCTION_API } from './devHost';
 
 function usesSameOriginWebApi(): boolean {
   if (Platform.OS !== 'web') return false;
@@ -48,9 +48,9 @@ export async function ensureApiReachable(): Promise<string> {
     return API_BASE;
   }
 
-  if (!API_BASE.includes('railway.app') && (await probeApiHealth(RAILWAY_API))) {
-    console.warn('[سرح] Local API unreachable — switched to Railway');
-    API_BASE = RAILWAY_API;
+  if (!API_BASE.includes('onrender.com') && (await probeApiHealth(PRODUCTION_API))) {
+    console.warn('[سرح] Local API unreachable — switched to production (Render)');
+    API_BASE = PRODUCTION_API;
   }
 
   return API_BASE;
@@ -62,9 +62,9 @@ if (__DEV__) {
   if (API_BASE.includes('127.0.0.1')) {
     console.log('[سرح] USB — إذا فشل الاتصال: npm run adb:reverse (أو أعدي تشغيل Metro)');
   }
-  if (API_BASE.includes('railway.app')) {
-    console.log('[سرح] API → Railway (بيانات الإنتاج)');
+  if (API_BASE.includes('onrender.com')) {
+    console.log('[سرح] API → Render (بيانات الإنتاج)');
   }
 }
 
-export { RAILWAY_API };
+export { PRODUCTION_API };

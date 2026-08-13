@@ -1,7 +1,9 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const RAILWAY_API = 'https://sarh-app.up.railway.app';
+const PRODUCTION_API = 'https://sarh-new4.onrender.com';
+/** @deprecated Railway is decommissioned; kept as alias for imports. */
+const RAILWAY_API = PRODUCTION_API;
 
 function getExpoDevHost(): string | null {
   if (!__DEV__) return null;
@@ -45,7 +47,7 @@ export function resolveDevServiceUrl(envUrl: string | undefined, port: number): 
   }
 
   if (__DEV__ && Constants.isDevice) {
-    return RAILWAY_API;
+    return PRODUCTION_API;
   }
 
   if (Platform.OS === 'android' && !Constants.isDevice) {
@@ -55,4 +57,4 @@ export function resolveDevServiceUrl(envUrl: string | undefined, port: number): 
   return `http://localhost:${port}`;
 }
 
-export { RAILWAY_API };
+export { PRODUCTION_API, RAILWAY_API };

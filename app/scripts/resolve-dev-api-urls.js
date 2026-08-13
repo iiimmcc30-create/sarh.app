@@ -1,6 +1,8 @@
 const API_PORT = 3001;
 const SOCKET_PORT = 3002;
-const RAILWAY_API = 'https://sarh-app.up.railway.app';
+const PRODUCTION_API = 'https://sarh-new4.onrender.com';
+// Back-compat alias — Railway is decommissioned.
+const RAILWAY_API = PRODUCTION_API;
 
 function isRemoteUrl(url) {
   return typeof url === 'string' && /^https:\/\//i.test(url.trim());
@@ -84,12 +86,12 @@ async function resolveDevApiUrlsAsync(lanIp) {
 
   if (loopbackOk && lanIp) {
     console.warn(
-      '[dev-api] Backend on localhost only — phone cannot reach it. Using Railway.',
+      '[dev-api] Backend on localhost only — phone cannot reach it. Using production (Render).',
     );
     return {
-      apiUrl: RAILWAY_API,
-      socketUrl: RAILWAY_API,
-      mode: 'railway-fallback',
+      apiUrl: PRODUCTION_API,
+      socketUrl: PRODUCTION_API,
+      mode: 'render-fallback',
     };
   }
 
@@ -101,11 +103,11 @@ async function resolveDevApiUrlsAsync(lanIp) {
     };
   }
 
-  console.warn('[dev-api] No local backend — using Railway.');
+  console.warn('[dev-api] No local backend — using production (Render).');
   return {
-    apiUrl: RAILWAY_API,
-    socketUrl: RAILWAY_API,
-    mode: 'railway-fallback',
+    apiUrl: PRODUCTION_API,
+    socketUrl: PRODUCTION_API,
+    mode: 'render-fallback',
   };
 }
 
@@ -113,6 +115,7 @@ module.exports = {
   resolveDevApiUrls,
   resolveDevApiUrlsAsync,
   probeApiHealth,
+  PRODUCTION_API,
   RAILWAY_API,
   API_PORT,
   SOCKET_PORT,

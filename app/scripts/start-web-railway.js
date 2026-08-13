@@ -11,15 +11,15 @@ const https = require('https');
 const path = require('path');
 const { URL } = require('url');
 
-const RAILWAY_API = (
-  process.env.RAILWAY_API_URL || 'https://sarh-app.up.railway.app'
+const PRODUCTION_API = (
+  process.env.RAILWAY_API_URL || 'https://sarh-new4.onrender.com'
 ).replace(/\/$/, '');
 const LOCAL_API = (process.env.LOCAL_API_URL || 'http://127.0.0.1:3001').replace(
   /\/$/,
   '',
 );
 const useLocal = process.env.WEB_USE_LOCAL_API !== 'false';
-const BACKEND = (useLocal ? LOCAL_API : RAILWAY_API).replace(/\/$/, '');
+const BACKEND = (useLocal ? LOCAL_API : PRODUCTION_API).replace(/\/$/, '');
 const PROXY_PORT = Number(process.env.WEB_DEV_PROXY_PORT || 8787);
 const LOCAL_SOCKET = (process.env.LOCAL_SOCKET_URL || 'http://127.0.0.1:3002').replace(
   /\/$/,
@@ -79,7 +79,7 @@ proxy.listen(PROXY_PORT, '127.0.0.1', () => {
 process.env.EXPO_PUBLIC_API_URL = `http://127.0.0.1:${PROXY_PORT}`;
 process.env.EXPO_PUBLIC_SOCKET_URL = useLocal
   ? LOCAL_SOCKET
-  : process.env.EXPO_PUBLIC_SOCKET_URL || RAILWAY_API;
+  : process.env.EXPO_PUBLIC_SOCKET_URL || PRODUCTION_API;
 process.env.EXPO_PUBLIC_SKIP_ADB = 'true';
 
 const child = spawn('npx', ['expo', 'start', '--web', '--clear'], {
