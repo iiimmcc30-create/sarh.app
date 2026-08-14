@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/SidebarMenuItem';
 import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { I18nManager, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
 
 /** Shared elevated surface — More tab / reference contrast style. */
 export const MENU_CARD = {
@@ -113,6 +113,27 @@ export function SidebarMenuRow({
 /** Canonical design-system row — preferred for new code. */
 export { SidebarMenuItemRow as SidebarMenuItem };
 export type { SidebarMenuItemProps };
+
+/** iOS-style brand toggle — green track when on, white thumb. */
+export function BrandSwitch({
+  value,
+  onValueChange,
+  colors,
+}: {
+  value: boolean;
+  onValueChange: (next: boolean) => void;
+  colors: ThemeColors;
+}) {
+  return (
+    <Switch
+      value={value}
+      onValueChange={onValueChange}
+      trackColor={{ false: colors.bgDeep, true: colors.success }}
+      thumbColor="#FFFFFF"
+      ios_backgroundColor={colors.bgDeep}
+    />
+  );
+}
 
 export function SidebarThemeToggle({
   preference,

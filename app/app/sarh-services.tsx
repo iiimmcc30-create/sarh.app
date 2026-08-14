@@ -24,7 +24,7 @@ import { AppScrollView } from '@/components/ui/AppScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SarhServicesScreen() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,8 +72,8 @@ export default function SarhServicesScreen() {
           />
         }
       >
-        <View style={styles.hero}>
-          <View style={styles.logoPlate}>
+        <View style={[styles.hero, menuCardStyle(colors)]}>
+          <View style={[styles.logoPlate, scheme === 'dark' && styles.logoPlateDark]}>
             <Image
               source={MEWA_LOGO}
               style={styles.logo}
@@ -140,17 +140,20 @@ function createStyles(colors: ThemeColors) {
     hero: {
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
     },
     logoPlate: {
       width: '100%',
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: '#FFFFFF',
-      borderRadius: 16,
+      borderRadius: 14,
       paddingVertical: spacing.lg,
       paddingHorizontal: spacing.lg,
-      marginBottom: spacing.xs,
+    },
+    logoPlateDark: {
+      backgroundColor: 'transparent',
     },
     logo: {
       width: 260,
@@ -208,9 +211,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
     },
     retryText: {
       ...typography.caption,
