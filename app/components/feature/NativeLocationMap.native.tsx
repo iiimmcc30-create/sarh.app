@@ -29,13 +29,14 @@ export function NativeLocationMap({ lat, lng, cityLabel, height }: NativeLocatio
     );
   }
 
-  const { default: MapView, Marker } = MapModule;
+  const { default: MapView, Marker, PROVIDER_GOOGLE } = MapModule;
   const center = COUNTRY_MAP_CENTER.SA;
 
   return (
     <View style={[styles.map, { height }]}>
       <MapView
         style={StyleSheet.absoluteFill}
+        provider={PROVIDER_GOOGLE}
         initialRegion={{
           latitude: lat,
           longitude: lng,
@@ -47,7 +48,7 @@ export function NativeLocationMap({ lat, lng, cityLabel, height }: NativeLocatio
         rotateEnabled={false}
         pitchEnabled={false}
       >
-        <Marker coordinate={{ latitude: lat, longitude: lng }} title={cityLabel} />
+        <Marker coordinate={{ latitude: lat, longitude: lng }} title={cityLabel} pinColor={colors.electric} />
       </MapView>
     </View>
   );

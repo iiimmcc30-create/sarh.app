@@ -244,11 +244,7 @@ export default function ButcherOffersScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader
-        title="العروض"
-        rightIcon="menu-burger"
-        onRightPress={() => router.push('/butchers-market-sidebar')}
-      />
+      <ScreenHeader title="العروض" />
 
       {loading ? (
         <View style={styles.center}>

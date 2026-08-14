@@ -227,7 +227,6 @@ export default function ButchersMapScreen() {
   const router = useRouter();
   const { accessToken } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [countryFilter, setCountryFilter] = useState<Country | 'all'>('all');
   const [butchersList, setButchersList] = useState<ButcherProfile[]>([]);
 
   useEffect(() => {
@@ -285,9 +284,7 @@ export default function ButchersMapScreen() {
   }, [accessToken]);
 
   const ranked = rankButchers(butchersList);
-  const filtered = countryFilter === 'all'
-    ? ranked
-    : ranked.filter((b) => b.country === countryFilter);
+  const filtered = ranked;
 
   const mappableButchers = filtered.filter((b) => hasValidCoords(b.lat, b.lng));
   const selectedButcher = filtered.find((b) => b.id === selectedId) ?? null;
@@ -311,21 +308,14 @@ export default function ButchersMapScreen() {
         longitudeDelta: 0.45,
       };
     }
-    const center = countryFilter !== 'all'
-      ? COUNTRY_MAP_CENTER[countryFilter as Country]
-      : COUNTRY_MAP_CENTER.SA;
+    const center = COUNTRY_MAP_CENTER.SA;
     return {
       latitude: center.lat,
       longitude: center.lng,
       latitudeDelta: center.delta * 2.5,
       longitudeDelta: center.delta * 2.5,
     };
-  }, [mappableButchers, selectedButcher, countryFilter]);
-
-  const GCC: { code: Country | 'all'; flag: string; label: string }[] = [
-    { code: 'all', flag: '🌍', label: 'الكل' },
-    { code: 'SA',  flag: '🇸🇦', label: 'السعودية' },
-  ];
+  }, [mappableButchers, selectedButcher]);
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
@@ -333,37 +323,21 @@ export default function ButchersMapScreen() {
 
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
+        <Pressable onPress={() => router.replace('/(tabs)')} hitSlop={12} style={s.backBtn}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={s.headerTitle}>خريطة الملاحم</Text>
           <Text style={s.headerSub}>{filtered.length} ملحمة متاحة</Text>
         </View>
-        <Pressable onPress={() => router.push('/butchers')} style={s.listBtn}>
-          <AppIcon name="view-list" size={20} color={colors.electricBright} />
+        <Pressable
+          onPress={() => router.push('/butchers/cart')}
+          style={s.listBtn}
+          accessibilityLabel="السلة"
+        >
+          <AppIcon name="cart-outline" size={20} color={colors.electricBright} />
         </Pressable>
       </View>
-
-      {/* Country filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={s.filterRow}
-      >
-        {GCC.map((c) => (
-          <Pressable
-            key={c.code}
-            onPress={() => { setCountryFilter(c.code as Country | 'all'); setSelectedId(null); }}
-            style={[s.filterChip, countryFilter === c.code && s.filterChipActive]}
-          >
-            <Text style={s.filterFlag}>{c.flag}</Text>
-            <Text style={[s.filterLabel, countryFilter === c.code && s.filterLabelActive]}>
-              {c.label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
 
       {/* Map area */}
       <View style={s.mapContainer}>

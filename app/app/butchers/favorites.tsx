@@ -79,8 +79,6 @@ export default function ButcherFavoritesScreen() {
       <ScreenHeader
         title="تفضيلاتي"
         showBack
-        rightIcon="menu-burger"
-        onRightPress={() => router.push('/butchers-market-sidebar')}
       />
 
       {loading ? (
