@@ -34,6 +34,7 @@ describe('admin navigation & feature routes inventory', () => {
       '/support',
       '/live',
       '/butchers',
+      '/butcher-banners',
       '/applications',
       '/orders',
       '/plans',

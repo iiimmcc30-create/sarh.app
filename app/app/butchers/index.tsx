@@ -1,8 +1,5 @@
-// Powered by OnSpace.AI
-// SAFAT — Butchers Listing Screen (قسم الملاحم)
+// SAFAT — Butchers market home: banners · picks · nearby
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Location from 'expo-location';
@@ -21,46 +18,19 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
-import {
-  ButcherProfile,
-  ButcherStory,
-  BUTCHER_RANKING_TABS,
-  type ButcherRankingCategory,
-  mapButcherFromApi,
-} from '@/services/butcherData';
-import { ButcherDeliveryCard } from '@/components/feature/ButcherDeliveryCard';
+import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
+import { fetchButcherMarketBanners, type ButcherMarketBanner } from '@/services/butcherMarketBanners';
 import { ButchersAppBar } from '@/components/butchers/ButchersAppBar';
 import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
+import { ButcherMarketBannerSlider } from '@/components/butchers/ButcherMarketBannerSlider';
+import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
+import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getRtlText } from '@/lib/rtl';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 
-const STORY_CIRCLE = 62;
 const SECTION_LIMIT = 12;
-
-const STORY_TYPE_COLORS = {
-  daily_slaughter: ['#EF4444', '#DC2626'],
-  offer: ['#F59E0B', '#D97706'],
-  new_stock: ['#20B66F', '#18965B'],
-  update: ['#3B82F6', '#2563EB'],
-} as const;
-
-const STORY_TYPE_ICONS = {
-  daily_slaughter: '🔪',
-  offer: '🏷️',
-  new_stock: '📦',
-  update: '📢',
-};
-
-const EMPTY_SECTIONS = (): Record<ButcherRankingCategory, ButcherProfile[]> => ({
-  rank: [],
-  rating: [],
-  favorites: [],
-  orders: [],
-  distance: [],
-  new: [],
-});
 
 function filterButchers(list: ButcherProfile[], query: string): ButcherProfile[] {
   const q = query.trim().toLowerCase();
@@ -74,110 +44,6 @@ function filterButchers(list: ButcherProfile[], query: string): ButcherProfile[]
   );
 }
 
-function StoriesRow({
-  stories,
-  onStoryPress,
-}: {
-  stories: ButcherStory[];
-  onStoryPress: (story: ButcherStory) => void;
-}) {
-  const { colors } = useTheme();
-  const st = useThemedStyles(({ colors }) => createStoryStyles(colors));
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={st.storiesContent}
-    >
-      {stories.map((story) => {
-        const typeColors = STORY_TYPE_COLORS[story.type];
-        return (
-          <Pressable key={story.id} onPress={() => onStoryPress(story)} style={st.storyItem}>
-            <LinearGradient
-              colors={story.seen ? [colors.borderSoft, colors.borderSoft] : typeColors}
-              style={st.storyRing}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={st.storyInner}>
-                <Image
-                  source={{ uri: story.butcherLogo }}
-                  style={st.storyAvatar}
-                  contentFit="cover"
-                />
-                {story.isVerified && (
-                  <View style={st.storyVerifiedDot}>
-                    <AppIcon name="shield-checkmark" size={9} color={colors.electricBright} />
-                  </View>
-                )}
-              </View>
-            </LinearGradient>
-            <View style={st.storyTypeChip}>
-              <Text style={st.storyTypeIcon}>{STORY_TYPE_ICONS[story.type]}</Text>
-            </View>
-            <Text style={st.storyName} numberOfLines={1}>
-              {story.butcherNameAr.split(' ').slice(0, 2).join(' ')}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
-function ButcherCategoryRow({
-  butchers,
-  cardWidth,
-  cardGap,
-  loading,
-  onPressButcher,
-}: {
-  butchers: ButcherProfile[];
-  cardWidth: number;
-  cardGap: number;
-  loading: boolean;
-  onPressButcher: (id: string) => void;
-}) {
-  const { colors } = useTheme();
-  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
-
-  if (loading && butchers.length === 0) {
-    return (
-      <View style={[s.rowSkeleton, { width: cardWidth, marginHorizontal: spacing.lg }]}>
-        <ActivityIndicator color={colors.electricBright} />
-      </View>
-    );
-  }
-
-  if (butchers.length === 0) {
-    return (
-      <View style={[s.rowEmpty, { marginHorizontal: spacing.lg }]}>
-        <Text style={s.rowEmptyText}>لا توجد ملاحم في هذا التصنيف</Text>
-      </View>
-    );
-  }
-
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[s.categoryRow, { gap: cardGap }]}
-      decelerationRate="fast"
-      snapToInterval={cardWidth + cardGap}
-      snapToAlignment="start"
-    >
-      {butchers.map((butcher) => (
-        <ButcherDeliveryCard
-          key={butcher.id}
-          butcher={butcher}
-          width={cardWidth}
-          onPress={() => onPressButcher(butcher.id)}
-        />
-      ))}
-    </ScrollView>
-  );
-}
-
 export default function ButchersScreen() {
   const { colors } = useTheme();
   const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
@@ -185,19 +51,17 @@ export default function ButchersScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const { accessToken, isAuthenticated } = useAuth();
   const { itemCount, butcherId } = useButcherCart();
-  const [sections, setSections] = useState(EMPTY_SECTIONS);
-  const [loadingSections, setLoadingSections] = useState(true);
+  const [picks, setPicks] = useState<ButcherProfile[]>([]);
+  const [nearby, setNearby] = useState<ButcherProfile[]>([]);
+  const [banners, setBanners] = useState<ButcherMarketBanner[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [seenStories, setSeenStories] = useState<Set<string>>(new Set());
-  const [butcherStories, setButcherStories] = useState<ButcherStory[]>([]);
 
-  const cardGap = spacing.md;
-  const cardPad = spacing.lg;
-  const cardWidth = Math.round((screenWidth - cardPad - cardGap) / 1.5);
+  const pickWidth = Math.round((screenWidth - spacing.lg * 2) * 0.72);
 
-  const fetchButchersForSort = useCallback(
-    async (sort: ButcherRankingCategory): Promise<ButcherProfile[]> => {
+  const fetchSorted = useCallback(
+    async (sort: 'rating' | 'distance'): Promise<ButcherProfile[]> => {
       const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
       const params = new URLSearchParams({ sort });
       if (sort === 'distance' && userCoords) {
@@ -224,96 +88,39 @@ export default function ButchersScreen() {
         const pos = await Location.getCurrentPositionAsync({});
         setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       } catch {
-        // Distance section falls back to server order without coords.
+        /* nearby falls back to rating order */
       }
     })();
   }, []);
 
   useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const res = await fetch(`${API_BASE}/api/butchers/stories`, { headers });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data)) {
-            const mapped = json.data.map((story: Record<string, unknown>) => ({
-              id: String(story.id),
-              butcherId: String(story.butcherId),
-              butcherName: (story.butcher as { nameAr?: string; nameEn?: string })?.nameAr ||
-                (story.butcher as { nameEn?: string })?.nameEn ||
-                'ملحمة',
-              butcherNameAr: (story.butcher as { nameAr?: string })?.nameAr || 'ملحمة',
-              butcherLogo: (story.butcher as { logo?: string })?.logo || undefined,
-              isVerified: Boolean((story.butcher as { subscriptionActive?: boolean })?.subscriptionActive),
-              thumbnail: story.thumbnail as string,
-              caption: story.caption as string,
-              captionAr: story.captionAr as string,
-              postedAt: String(story.createdAt),
-              duration: Number(story.duration) || 15,
-              seen: false,
-              type: story.type as ButcherStory['type'],
-            }));
-            setButcherStories(mapped);
-          }
-        }
-      } catch (err) {
-        console.warn('[ButchersScreen] Failed to fetch stories:', err);
-      }
-    };
-    void fetchStories();
-  }, [accessToken]);
-
-  useEffect(() => {
     let cancelled = false;
     void (async () => {
-      setLoadingSections(true);
+      setLoading(true);
       try {
-        const tabs = BUTCHER_RANKING_TABS.map((tab) => tab.id);
-        const results = await Promise.all(tabs.map((sort) => fetchButchersForSort(sort)));
+        const [rated, near, promo] = await Promise.all([
+          fetchSorted('rating'),
+          fetchSorted('distance'),
+          fetchButcherMarketBanners(),
+        ]);
         if (cancelled) return;
-        const next = EMPTY_SECTIONS();
-        tabs.forEach((sort, index) => {
-          next[sort] = results[index] ?? [];
-        });
-        setSections(next);
+        setPicks(rated);
+        setNearby(near.length ? near : rated);
+        setBanners(promo);
       } catch (err) {
-        console.warn('[ButchersScreen] Failed to fetch butchers:', err);
+        console.warn('[ButchersScreen] Failed to fetch home:', err);
       } finally {
-        if (!cancelled) setLoadingSections(false);
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [fetchButchersForSort]);
+  }, [fetchSorted]);
 
-  const filteredSections = useMemo(() => {
-    const next = EMPTY_SECTIONS();
-    for (const tab of BUTCHER_RANKING_TABS) {
-      next[tab.id] = filterButchers(sections[tab.id], searchQuery);
-    }
-    return next;
-  }, [sections, searchQuery]);
-
-  const storiesWithSeen = butcherStories.map((story) => ({
-    ...story,
-    seen: seenStories.has(story.id),
-  }));
-
-  const handleStoryPress = (story: ButcherStory) => {
-    setSeenStories((prev) => new Set([...prev, story.id]));
-    router.push({
-      pathname: '/butchers/story-viewer',
-      params: { butcherId: story.butcherId, storyId: story.id },
-    });
-  };
-
-  const openButcher = (id: string) => {
-    router.push({ pathname: '/butchers/[id]', params: { id } });
-  };
-
-  const hasAnyResults = BUTCHER_RANKING_TABS.some((tab) => filteredSections[tab.id].length > 0);
+  const filteredPicks = useMemo(() => filterButchers(picks, searchQuery), [picks, searchQuery]);
+  const filteredNearby = useMemo(() => filterButchers(nearby, searchQuery), [nearby, searchQuery]);
+  const openButcher = (id: string) => router.push({ pathname: '/butchers/[id]', params: { id } });
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
@@ -340,47 +147,53 @@ export default function ButchersScreen() {
           />
         </View>
 
-        {storiesWithSeen.length > 0 ? (
-          <View style={s.section}>
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>قصص اليوم</Text>
-              <View style={s.liveDotRow}>
-                <View style={s.liveDot} />
-                <Text style={s.sectionSub}>
-                  {storiesWithSeen.filter((story) => !story.seen).length} جديد
-                </Text>
-              </View>
-            </View>
-            <StoriesRow stories={storiesWithSeen} onStoryPress={handleStoryPress} />
+        <ButcherMarketBannerSlider banners={banners} />
+
+        {loading && picks.length === 0 ? (
+          <View style={s.loader}>
+            <ActivityIndicator color={colors.electricBright} />
           </View>
         ) : null}
 
-        {!loadingSections && searchQuery.trim() && !hasAnyResults ? (
+        {!loading && searchQuery.trim() && filteredPicks.length === 0 && filteredNearby.length === 0 ? (
           <View style={s.emptyState}>
-            <Text style={s.emptyIcon}>🔍</Text>
             <Text style={s.emptyTitle}>لا توجد نتائج</Text>
             <Text style={s.emptySub}>جرّب كلمة بحث أخرى</Text>
           </View>
         ) : (
-          BUTCHER_RANKING_TABS.map((tab) => {
-            const items = filteredSections[tab.id];
-            if (!loadingSections && searchQuery.trim() && items.length === 0) return null;
-            return (
-              <View key={tab.id} style={s.categorySection}>
-                <SectionHeader
-                  title={tab.label}
-                  onSeeAll={items.length > 0 ? () => router.push('/butchers/map') : undefined}
+          <>
+            <SectionHeader title="مختارات سرح" />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={s.picksRow}
+            >
+              {filteredPicks.map((butcher, i) => (
+                <ButcherPickCard
+                  key={butcher.id}
+                  butcher={butcher}
+                  width={pickWidth}
+                  promoted={i < 2 || butcher.subscriptionActive}
+                  onPress={() => openButcher(butcher.id)}
                 />
-                <ButcherCategoryRow
-                  butchers={items}
-                  cardWidth={cardWidth}
-                  cardGap={cardGap}
-                  loading={loadingSections}
-                  onPressButcher={openButcher}
+              ))}
+            </ScrollView>
+
+            <SectionHeader
+              title="الأقرب إليك"
+              onSeeAll={() => router.push('/butchers/map')}
+            />
+            <View style={s.nearbyList}>
+              {filteredNearby.map((butcher, index) => (
+                <ButcherNearbyRow
+                  key={butcher.id}
+                  butcher={butcher}
+                  onPress={() => openButcher(butcher.id)}
+                  showDivider={index < filteredNearby.length - 1}
                 />
-              </View>
-            );
-          })
+              ))}
+            </View>
+          </>
         )}
 
         <View style={s.footerActions}>
@@ -402,8 +215,6 @@ export default function ButchersScreen() {
             <Text style={s.addBtnText}>سجّل ملحمتك</Text>
           </Pressable>
         </View>
-
-        <View style={{ height: spacing.xl }} />
       </ScrollView>
 
       <ButchersTabBar active="home" />
@@ -416,59 +227,14 @@ function createScreenStyles(colors: ThemeColors) {
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
     scroll: { paddingBottom: 20 },
-    stickyHeader: {
-      backgroundColor: colors.bgElevated,
-    },
-
-    section: { marginTop: spacing.lg },
-    categorySection: {
-      marginTop: spacing.lg,
-      marginBottom: spacing.xs,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+    stickyHeader: { backgroundColor: colors.bgElevated },
+    loader: { paddingVertical: 40, alignItems: 'center' },
+    picksRow: {
       paddingHorizontal: spacing.lg,
-      marginBottom: spacing.md,
-    },
-    sectionTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText() },
-    sectionSub: { ...typography.caption, color: colors.textMuted },
-    liveDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    liveDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
-      backgroundColor: colors.success,
-    },
-
-    categoryRow: {
-      flexDirection: 'row',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
       paddingBottom: spacing.sm,
+      gap: spacing.md,
     },
-    rowSkeleton: {
-      height: 220,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    rowEmpty: {
-      minHeight: 72,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-    },
-    rowEmptyText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      ...getRtlText(),
-    },
-
+    nearbyList: { backgroundColor: colors.screenRoot },
     footerActions: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -504,86 +270,8 @@ function createScreenStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '11',
     },
     addBtnText: { ...typography.micro, color: colors.textBrandStrong },
-
-    emptyState: {
-      alignItems: 'center',
-      paddingVertical: 60,
-      gap: spacing.sm,
-    },
-    emptyIcon: { fontSize: 48 },
+    emptyState: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
     emptyTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText() },
     emptySub: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
-  });
-}
-
-function createStoryStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    storiesContent: {
-      flexDirection: 'row',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      gap: spacing.md,
-    },
-    storyItem: {
-      alignItems: 'center',
-      gap: 4,
-      width: STORY_CIRCLE + 8,
-      position: 'relative',
-    },
-    storyRing: {
-      width: STORY_CIRCLE + 4,
-      height: STORY_CIRCLE + 4,
-      borderRadius: (STORY_CIRCLE + 4) / 2,
-      padding: 2.5,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    storyInner: {
-      width: STORY_CIRCLE,
-      height: STORY_CIRCLE,
-      borderRadius: STORY_CIRCLE / 2,
-      borderWidth: 2,
-      borderColor: colors.bgDeep,
-      overflow: 'hidden',
-      position: 'relative',
-      backgroundColor: colors.bgSurface,
-    },
-    storyAvatar: {
-      width: '100%',
-      height: '100%',
-    },
-    storyVerifiedDot: {
-      position: 'absolute',
-      bottom: 2,
-      right: 2,
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      backgroundColor: colors.bgDeep,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.electricBright + '55',
-    },
-    storyTypeChip: {
-      position: 'absolute',
-      top: -2,
-      right: -2,
-      width: 22,
-      height: 22,
-      borderRadius: 12,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 1.5,
-      borderColor: colors.bgDeep,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    storyTypeIcon: { fontSize: 10 },
-    storyName: {
-      ...typography.micro,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      maxWidth: STORY_CIRCLE + 8,
-    },
   });
 }

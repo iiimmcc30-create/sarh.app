@@ -40,10 +40,11 @@ import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar'
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import {
-  butcherChatRouteParams,
-  fetchButcherChatAccess,
-  type ButcherChatAccess,
-} from '@/services/butcherChat';
+  butcherEtaLabel,
+  butcherFeeLabel,
+  butcherMinOrderLabel,
+  butcherPickupLabel,
+} from '@/lib/butcherStoreMeta';
 
 type Tab = 'products' | 'offers' | 'stories' | 'about' | 'chat';
 
@@ -66,12 +67,17 @@ function StoreProductsTab({
   onOpenOptions: (p: ButcherProduct) => void;
 }) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [menuQuery, setMenuQuery] = useState('');
+  const colors = useTheme().colors;
   const categories = ['all', ...new Set(products.map((p) => p.category))];
+  const q = menuQuery.trim();
 
-  const filtered =
-    activeCategory === 'all'
-      ? products
-      : products.filter((p) => p.category === activeCategory);
+  const filtered = products.filter((p) => {
+    const catOk = activeCategory === 'all' || p.category === activeCategory;
+    if (!catOk) return false;
+    if (!q) return true;
+    return p.nameAr.includes(q) || p.name.toLowerCase().includes(q.toLowerCase());
+  });
 
   const emptyStyles = useThemedStyles(({ colors }) => createEmptyStyles(colors));
 
@@ -86,6 +92,37 @@ function StoreProductsTab({
 
   return (
     <View>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xs }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            direction: 'ltr',
+            alignItems: 'center',
+            gap: 8,
+            minHeight: 44,
+            paddingHorizontal: spacing.md,
+            backgroundColor: colors.bgElevated,
+            borderRadius: 14,
+          }}
+        >
+          <AppIcon name="search" size={16} color={colors.textMuted} />
+          <TextInput
+            value={menuQuery}
+            onChangeText={setMenuQuery}
+            placeholder="البحث في القائمة..."
+            placeholderTextColor={colors.textMuted}
+            style={{
+              flex: 1,
+              ...typography.body,
+              fontSize: 14,
+              color: colors.textPrimary,
+              textAlign: 'right',
+              writingDirection: 'rtl',
+              paddingVertical: 8,
+            }}
+          />
+        </View>
+      </View>
       <ButcherCategoryBar
         categories={categories}
         active={activeCategory}
@@ -715,7 +752,6 @@ export default function ButcherProfileScreen() {
 
   const stories = storiesList.filter((s) => s.butcherId === butcher.id);
   const currency = gccCurrencies[butcher.country as Country] || gccCurrencies['SA'];
-  const country = countries[butcher.country as Country] || countries['SA'];
 
   const handleOpenOptions = (product: ButcherProduct) => {
     if (!product.inStock) {
@@ -745,7 +781,7 @@ export default function ButcherProfileScreen() {
         <View style={styles.coverWrap}>
           <Image source={{ uri: butcher.cover }} style={styles.cover} contentFit="cover" />
           <LinearGradient
-            colors={['rgba(6,9,26,0.5)', 'transparent', 'rgba(6,9,26,0.85)']}
+            colors={['rgba(8,14,10,0.35)', 'transparent', 'rgba(8,14,10,0.55)']}
             style={StyleSheet.absoluteFill}
           />
           <Pressable
@@ -757,7 +793,7 @@ export default function ButcherProfileScreen() {
           </Pressable>
           <View style={styles.coverActions}>
             <Pressable style={styles.coverAction}>
-              <AppIcon name="share-social-outline" size={20} color="#fff" />
+              <AppIcon name="information-circle-outline" size={18} color="#fff" />
             </Pressable>
             <Pressable style={styles.coverAction}>
               <AppIcon name="heart-outline" size={20} color="#fff" />
@@ -765,47 +801,44 @@ export default function ButcherProfileScreen() {
           </View>
         </View>
 
-        {/* ── Profile Header ── */}
+        {/* ── Profile Header (cover trail: logo physical right) ── */}
         <View style={styles.profileHeader}>
-          {/* Logo */}
-          <View style={styles.logoWrap}>
-            <Image source={{ uri: butcher.logo }} style={styles.logo} contentFit="cover" />
-            {butcher.subscriptionActive && (
-              <View style={styles.verifiedRing}>
-                <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
-              </View>
-            )}
-          </View>
-
-          {/* Name + badges */}
-          <View style={styles.nameBlock}>
-            <View style={styles.nameRow}>
+          <View style={styles.identityTrail}>
+            <View style={styles.nameBlock}>
               <Text style={styles.name}>{butcher.nameAr}</Text>
+              <View style={styles.ratingRow}>
+                <AppIcon name="star" size={14} color={colors.gold} />
+                <Text style={styles.ratingScore}>{butcher.rating.toFixed(1)}</Text>
+                <Text style={styles.ratingCount}>({butcher.reviewCount} + التقييمات)</Text>
+              </View>
+            </View>
+            <View style={styles.logoWrap}>
+              <Image source={{ uri: butcher.logo }} style={styles.logo} contentFit="cover" />
               {butcher.subscriptionActive && (
-                <LinearGradient
-                  colors={[colors.gold, '#F59E0B']}
-                  style={styles.verifiedBadge}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <AppIcon name="shield-checkmark" size={11} color="#1A1300" />
-                  <Text style={styles.verifiedText}>موثّق</Text>
-                </LinearGradient>
+                <View style={styles.verifiedRing}>
+                  <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
+                </View>
               )}
             </View>
-            <View style={styles.locationRow}>
-              <Text style={styles.countryFlag}>{country.flag}</Text>
-              <Text style={styles.locationText}>{butcher.cityAr}، {country.ar}</Text>
-            </View>
           </View>
 
-          {/* Rating */}
-          <View style={styles.ratingBlock}>
-            <View style={styles.ratingRow}>
-              <AppIcon name="star" size={16} color={colors.gold} />
-              <Text style={styles.ratingScore}>{butcher.rating.toFixed(1)}</Text>
+          <View style={styles.serviceRow}>
+            <View style={styles.serviceItem}>
+              <AppIcon name="bicycle-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.serviceText}>{butcherFeeLabel(butcher)}</Text>
             </View>
-            <Text style={styles.ratingCount}>({butcher.reviewCount})</Text>
+            <View style={styles.serviceItem}>
+              <AppIcon name="clock-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.serviceText}>{butcherEtaLabel(butcher)}</Text>
+            </View>
+            <View style={styles.serviceItem}>
+              <AppIcon name="receipt-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.serviceText}>{butcherMinOrderLabel(butcher)}</Text>
+            </View>
+            <View style={styles.serviceItem}>
+              <AppIcon name="storefront-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.serviceText}>{butcherPickupLabel(butcher)}</Text>
+            </View>
           </View>
         </View>
 
@@ -981,25 +1014,23 @@ function createMainStyles(colors: ThemeColors) {
   return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
 
-  coverWrap: { height: 240, position: 'relative' },
+  coverWrap: { height: 200, position: 'relative' },
   cover: { width: '100%', height: '100%' },
   backBtn: {
     position: 'absolute',
     top: spacing.lg,
-    left: spacing.lg,
+    right: spacing.lg,
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(6,9,26,0.7)',
+    backgroundColor: 'rgba(8,14,10,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
   },
   coverActions: {
     position: 'absolute',
     top: spacing.lg,
-    right: spacing.lg,
+    left: spacing.lg,
     flexDirection: 'row',
     gap: spacing.sm,
   },
@@ -1007,26 +1038,30 @@ function createMainStyles(colors: ThemeColors) {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(6,9,26,0.7)',
+    backgroundColor: 'rgba(8,14,10,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
   },
 
   profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: 0,
+    marginTop: -28,
+    gap: spacing.md,
+  },
+  identityTrail: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
     gap: spacing.md,
   },
   logoWrap: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    borderWidth: 2.5,
-    borderColor: colors.borderMid,
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: colors.screenRoot,
     backgroundColor: colors.bgElevated,
     overflow: 'hidden',
     position: 'relative',
@@ -1045,25 +1080,43 @@ function createMainStyles(colors: ThemeColors) {
     borderWidth: 1.5,
     borderColor: colors.gold,
   },
-  nameBlock: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  name: { ...typography.h2, color: colors.textPrimary },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
+  nameBlock: { flex: 1, minWidth: 0, direction: 'ltr', paddingBottom: 4 },
+  name: {
+    ...typography.h2,
+    fontSize: 20,
+    color: colors.textPrimary,
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
-  verifiedText: { ...typography.micro, color: '#1A1300', fontWeight: '600' },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
-  countryFlag: { fontSize: 14 },
-  locationText: { ...typography.caption, color: colors.textMuted },
-  ratingBlock: { alignItems: 'center' },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingScore: { ...typography.h3, color: colors.gold },
-  ratingCount: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
+  ratingRow: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  ratingScore: { ...typography.bodyStrong, color: colors.textPrimary },
+  ratingCount: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
+  serviceRow: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  serviceItem: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    alignItems: 'center',
+    gap: 4,
+  },
+  serviceText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    writingDirection: 'rtl',
+  },
 
   statsStrip: {
     flexDirection: 'row',

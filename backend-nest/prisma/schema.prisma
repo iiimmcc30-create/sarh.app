@@ -1525,3 +1525,18 @@ model EditorialStory {
   @@index([publishedAt])
   @@index([createdAt])
 }
+
+/// Admin-managed promotional banners on the butchers market home slider (3 slots).
+model ButcherMarketBanner {
+  id         String   @id @default(uuid())
+  slot       Int      @unique
+  titleAr    String
+  subtitleAr String
+  captionAr  String   @default("")
+  imageUrl   String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, slot])
+}
