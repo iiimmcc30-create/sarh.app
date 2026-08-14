@@ -1,4 +1,8 @@
-const DEFAULT_TIMEOUT_MS = 30_000;
+/**
+ * 60s timeout: Render free tier can take 60-90s to wake from cold start.
+ * Production requests respond in < 1s when the server is warm.
+ */
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 export async function fetchWithTimeout(
   input: string,

@@ -9,7 +9,7 @@ type AuthFetchDeps = {
 
 let deps: AuthFetchDeps | null = null;
 
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 export function registerAuthFetch(next: AuthFetchDeps) {
   deps = next;
