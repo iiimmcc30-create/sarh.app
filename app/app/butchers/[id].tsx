@@ -59,12 +59,10 @@ const TABS: { id: Tab; labelAr: string; icon: string }[] = [
 function StoreProductsTab({
   products,
   currencySymbol,
-  onOrder,
   onOpenOptions,
 }: {
   products: ButcherProduct[];
   currencySymbol: string;
-  onOrder: (p: ButcherProduct) => void;
   onOpenOptions: (p: ButcherProduct) => void;
 }) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -100,7 +98,6 @@ function StoreProductsTab({
           currencySymbol={currencySymbol}
           onPress={() => onOpenOptions(product)}
           onAdd={() => onOpenOptions(product)}
-          onBuyNow={() => onOrder(product)}
         />
       ))}
     </View>
@@ -696,13 +693,6 @@ export default function ButcherProfileScreen() {
   const currency = gccCurrencies[butcher.country as Country] || gccCurrencies['SA'];
   const country = countries[butcher.country as Country] || countries['SA'];
 
-  const handleOrder = (product: ButcherProduct) => {
-    router.push({
-      pathname: '/butchers/order',
-      params: { productId: product.id, butcherId: butcher.id },
-    });
-  };
-
   const handleOpenOptions = (product: ButcherProduct) => {
     if (!product.inStock) {
       Alert.alert('غير متوفر', 'هذا المنتج غير متوفر حالياً');
@@ -820,11 +810,12 @@ export default function ButcherProfileScreen() {
           </View>
         </View>
 
-        {/* ── Chat + Order CTAs ── */}
+        {/* ── Chat CTA ── */}
         <View style={styles.ctaRow}>
           <Pressable
             style={[
               styles.chatCta,
+              styles.chatCtaFull,
               chatAccess?.allowed && styles.chatCtaActive,
             ]}
             onPress={() => {
@@ -837,20 +828,6 @@ export default function ButcherProfileScreen() {
           >
             <AppIcon name="chatbubble-outline" size={18} color={colors.electricBright} />
             <Text style={styles.chatCtaText}>محادثة</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.orderCta, pressed && { opacity: 0.88 }]}
-            onPress={() => router.push({ pathname: '/butchers/order', params: { butcherId: butcher.id } })}
-          >
-            <LinearGradient
-              colors={[colors.electric, colors.cyan]}
-              style={styles.orderCtaGrad}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <AppIcon name="bag-add-outline" size={18} color="#fff" />
-              <Text style={styles.orderCtaText}>اطلب الآن</Text>
-            </LinearGradient>
           </Pressable>
         </View>
 
@@ -880,7 +857,6 @@ export default function ButcherProfileScreen() {
             <StoreProductsTab
               products={products}
               currencySymbol={currency.symbol}
-              onOrder={handleOrder}
               onOpenOptions={handleOpenOptions}
             />
           )}
@@ -1098,7 +1074,6 @@ function createMainStyles(colors: ThemeColors) {
     marginTop: spacing.lg,
   },
   chatCta: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1109,21 +1084,12 @@ function createMainStyles(colors: ThemeColors) {
     borderColor: colors.electricBright + '88',
     backgroundColor: colors.electric + '11',
   },
+  chatCtaFull: { flex: 1 },
   chatCtaText: { ...typography.bodyStrong, color: colors.textBrandStrong },
   chatCtaActive: {
     borderColor: colors.electricBright,
     backgroundColor: colors.electric + '22',
   },
-  orderCta: { flex: 2, borderRadius: radius.xl, overflow: 'hidden' },
-  orderCtaGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 13,
-    borderRadius: radius.xl,
-  },
-  orderCtaText: { ...typography.bodyStrong, color: '#fff' },
 
   tabsRow: {
     flexDirection: 'row',
