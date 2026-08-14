@@ -2,6 +2,7 @@
 // SAFAT — Create Listing Screen (إنشاء إعلان)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
+import { elevatedControlStyle, menuCardStyle } from '@/components/feature/SidebarMenu';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -313,7 +314,7 @@ export default function CreateListingScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Header */}
+        {/* Header — cover-style elevated control */}
         <View style={styles.header}>
           <Pressable
             onPress={() => (step > 0 ? setStep((s) => s - 1) : router.back())}
@@ -322,8 +323,10 @@ export default function CreateListingScreen() {
           >
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>إنشاء إعلان</Text>
-          <View style={{ width: 38 }} />
+          <View style={styles.headerTitleShell}>
+            <Text style={styles.headerTitle}>إنشاء إعلان</Text>
+          </View>
+          <View style={styles.headerSide} />
         </View>
 
         {/* Step bar — fixed height, no vertical flex expansion */}
@@ -753,22 +756,36 @@ function createStyles(colors: ThemeColors) {
   container: { flex: 1, backgroundColor: colors.screenRoot },
   flex: { flex: 1 },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    minHeight: 56,
     flexShrink: 0,
+    backgroundColor: colors.screenRoot,
   },
   backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.borderSoft,
+    ...elevatedControlStyle(colors),
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerSide: { width: 44 },
+  headerTitleShell: {
+    flex: 1,
+    direction: 'ltr',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    width: '100%',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   stepBarWrap: {
     flexShrink: 0,
     flexGrow: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
   },
   stepBarScroll: {
     flexGrow: 0,
@@ -802,12 +819,11 @@ function createStyles(colors: ThemeColors) {
   catCard: {
     width: CAT_CARD_SIZE,
     height: CAT_CARD_SIZE,
-    backgroundColor: colors.bgSurface, borderRadius: radius.lg,
-    borderWidth: 1, borderColor: colors.borderSoft,
+    ...menuCardStyle(colors),
     alignItems: 'center', justifyContent: 'center', gap: 4,
     position: 'relative',
   },
-  catCardActive: { borderColor: colors.electric, backgroundColor: `${colors.electric}15` },
+  catCardActive: { backgroundColor: `${colors.success}18` },
   catIcon: { fontSize: 24 },
   catLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
   catLabelActive: { color: colors.textBrandStrong },
@@ -821,14 +837,11 @@ function createStyles(colors: ThemeColors) {
   subChip: {
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    borderRadius: radius.lg,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderRadius: 14,
+    backgroundColor: colors.bgElevated,
   },
   subChipActive: {
-    borderColor: colors.electric,
-    backgroundColor: `${colors.electric}15`,
+    backgroundColor: `${colors.success}18`,
   },
   subChipText: {
     ...typography.caption,
@@ -893,21 +906,20 @@ function createStyles(colors: ThemeColors) {
   featuredTitle: { ...typography.bodyStrong, color: colors.gold },
   featuredSub: { ...typography.caption, color: colors.textMuted },
   toggle: {
-    width: 44, height: 24, borderRadius: 12,
-    backgroundColor: colors.bgElevated, justifyContent: 'center',
-    paddingHorizontal: 2, borderWidth: 1, borderColor: colors.borderSoft,
+    width: 51, height: 31, borderRadius: 16,
+    backgroundColor: colors.bgDeep, justifyContent: 'center',
+    paddingHorizontal: 2,
   },
-  toggleOn: { backgroundColor: colors.electric, borderColor: colors.electric },
-  toggleThumb: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.textMuted },
-  toggleThumbOn: { backgroundColor: '#fff', alignSelf: 'flex-end' },
+  toggleOn: { backgroundColor: colors.success },
+  toggleThumb: { width: 27, height: 27, borderRadius: 14, backgroundColor: '#FFFFFF' },
+  toggleThumbOn: { alignSelf: 'flex-end' },
   reviewCard: {
-    backgroundColor: colors.bgSurface, borderRadius: radius.xl,
-    borderWidth: 1, borderColor: colors.borderSoft, overflow: 'hidden',
+    ...menuCardStyle(colors),
   },
   reviewRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft,
   },
   reviewLabel: { ...typography.caption, color: colors.textMuted },
   reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right' },
