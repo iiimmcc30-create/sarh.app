@@ -39,11 +39,13 @@ export function ButcherDeliverySegment({ value, onChange }: ButcherDeliverySegme
           );
         })}
       </View>
-      <Text style={styles.hint}>
-        {value === 'delivery'
-          ? 'أدخل عنوان التوصيل عند الدفع من السلة.'
-          : 'استلام من موقع الملحمة.'}
-      </Text>
+      <View style={styles.rtlTextShell}>
+        <Text style={styles.hint}>
+          {value === 'delivery'
+            ? 'أدخل عنوان التوصيل عند الدفع من السلة.'
+            : 'استلام من موقع الملحمة.'}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -84,10 +86,16 @@ function createStyles(colors: ThemeColors) {
     optionTextActive: {
       color: '#fff',
     },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     hint: {
-      ...typography.caption,
-      ...getRtlText(),
-      color: colors.textMuted,
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
       paddingHorizontal: spacing.xs,
     },
   });

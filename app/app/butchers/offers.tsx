@@ -282,9 +282,11 @@ export default function ButcherOffersScreen() {
             </View>
           ) : (
             <>
-              <View style={styles.heroHeader}>
-                <Text style={styles.heroTitle}>عروض بالقرب منك</Text>
-                <Text style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</Text>
+              <View style={styles.sectionLabelWrap}>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.heroTitle}>عروض بالقرب منك</Text>
+                  <Text style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</Text>
+                </View>
               </View>
               {data.map((item) => (
                 <ButcherOffersCard
@@ -312,9 +314,28 @@ function createStyles(colors: ThemeColors) {
     scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.lg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
     loadingText: { ...typography.caption, color: colors.textMuted },
-    heroHeader: { gap: 2 },
-    heroTitle: { ...typography.h2, color: colors.textPrimary, ...getRtlText() },
-    heroSub: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
+    sectionLabelWrap: {
+      paddingHorizontal: 0,
+    },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
+    heroTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    heroSub: {
+      ...typography.caption,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginTop: 2,
+    },
     card: {
       backgroundColor: colors.bgElevated,
       borderRadius: radius.xl,

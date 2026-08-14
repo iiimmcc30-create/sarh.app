@@ -309,7 +309,9 @@ export default function ButcherCartScreen() {
             ) : null}
 
             <View style={styles.fieldBlock}>
-              <Text style={styles.fieldLabel}>ملاحظات (اختياري)</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.fieldLabel}>ملاحظات (اختياري)</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="تعليمات خاصة للملحمة..."
@@ -497,8 +499,14 @@ function createStyles(colors: ThemeColors) {
     },
     fieldLabel: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: colors.textSecondary,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
     },
     input: {
       borderWidth: 1,
