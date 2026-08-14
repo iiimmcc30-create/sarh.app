@@ -30,6 +30,7 @@ import { API_BASE } from '@/services/api';
 import { hasValidCoords, COUNTRY_MAP_CENTER } from '@/lib/butcherLocation';
 import { isNativeMapsEnabled } from '@/lib/maps';
 import { NativeButchersMap } from '@/components/feature/NativeButchersMap';
+import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 
 // ─── Map pin layout coordinates (% of map container) ─────────────────────────────
 const GCC_COORDINATES: Record<Country, { x: number; y: number }> = {
@@ -375,9 +376,9 @@ export default function ButchersMapScreen() {
           />
         ) : (
           <>
-        {/* SVG-style map background of GCC region */}
+        {/* Calm schematic map background — Sarh surface tones */}
         <LinearGradient
-          colors={['#0B1A4E', '#102260', '#0B1A4E']}
+          colors={[colors.bgDeep, colors.bgSurface, colors.bgDeep]}
           style={StyleSheet.absoluteFill}
         />
         {/* Grid lines (simulated map grid) */}
@@ -390,7 +391,7 @@ export default function ButchersMapScreen() {
 
         {/* Region label */}
         <View style={s.regionLabel}>
-          <Text style={s.regionText}>الخليج العربي · GCC Region</Text>
+          <Text style={s.regionText}>المملكة العربية السعودية</Text>
         </View>
 
         {/* Map pins */}
@@ -482,6 +483,8 @@ export default function ButchersMapScreen() {
           </ScrollView>
         </View>
       )}
+
+      <ButchersTabBar active="map" />
     </SafeAreaView>
   );
 }
@@ -550,7 +553,7 @@ const s = StyleSheet.create({
   },
   gridLine: {
     position: 'absolute',
-    backgroundColor: 'rgba(125,211,252,0.05)',
+    backgroundColor: 'rgba(32,182,111,0.06)',
   },
   gridLineH: { left: 0, right: 0, height: 1 },
   gridLineV: { top: 0, bottom: 0, width: 1 },

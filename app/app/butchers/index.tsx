@@ -30,6 +30,8 @@ import {
 } from '@/services/butcherData';
 import { ButcherDeliveryCard } from '@/components/feature/ButcherDeliveryCard';
 import { ButchersAppBar } from '@/components/butchers/ButchersAppBar';
+import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
+import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getRtlText } from '@/lib/rtl';
 
@@ -314,16 +316,20 @@ export default function ButchersScreen() {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <ScrollView
+        style={s.flex}
         stickyHeaderIndices={[0]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
       >
-        <ButchersAppBar
-          onMenu={() => router.push('/butchers-market-sidebar')}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
+        <View style={s.stickyHeader}>
+          <ButcherLocationBar />
+          <ButchersAppBar
+            onMenu={() => router.push('/butchers-market-sidebar')}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </View>
 
         {storiesWithSeen.length > 0 ? (
           <View style={s.section}>
@@ -388,8 +394,10 @@ export default function ButchersScreen() {
           </Pressable>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: spacing.xl }} />
       </ScrollView>
+
+      <ButchersTabBar active="home" />
     </SafeAreaView>
   );
 }
@@ -397,7 +405,11 @@ export default function ButchersScreen() {
 function createScreenStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
+    flex: { flex: 1 },
     scroll: { paddingBottom: 20 },
+    stickyHeader: {
+      backgroundColor: colors.bgElevated,
+    },
 
     section: { marginTop: spacing.lg },
     categorySection: {
