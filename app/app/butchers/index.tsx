@@ -1,50 +1,41 @@
 // Powered by OnSpace.AI
 // SAFAT — Butchers Listing Screen (قسم الملاحم)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Location from 'expo-location';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { countries } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import {
   ButcherProfile,
   ButcherStory,
-  Country,
   BUTCHER_RANKING_TABS,
   type ButcherRankingCategory,
   mapButcherFromApi,
 } from '@/services/butcherData';
-import { ButcherCard } from '@/components/feature/ButcherCard';
-import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { ButcherDeliveryCard } from '@/components/feature/ButcherDeliveryCard';
+import { ButchersAppBar } from '@/components/butchers/ButchersAppBar';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { getRtlText } from '@/lib/rtl';
 
 const STORY_CIRCLE = 62;
+const SECTION_LIMIT = 12;
 
-const RANKING_FILTER_ICONS: Record<ButcherRankingCategory, { icon: string; emoji: string }> = {
-  rating: { icon: 'star', emoji: '⭐' },
-  favorites: { icon: 'heart', emoji: '❤️' },
-  orders: { icon: 'flame', emoji: '🔥' },
-  distance: { icon: 'navigate-outline', emoji: '📍' },
-  new: { icon: 'sparkles-outline', emoji: '🆕' },
-};
-
-// ─── Story Type Colors ────────────────────────────────────────────────────────
 const STORY_TYPE_COLORS = {
   daily_slaughter: ['#EF4444', '#DC2626'],
   offer: ['#F59E0B', '#D97706'],
@@ -59,9 +50,31 @@ const STORY_TYPE_ICONS = {
   update: '📢',
 };
 
-// ─── Components ───────────────────────────────────────────────────────────────
+const EMPTY_SECTIONS = (): Record<ButcherRankingCategory, ButcherProfile[]> => ({
+  rank: [],
+  rating: [],
+  favorites: [],
+  orders: [],
+  distance: [],
+  new: [],
+});
 
-function StoriesRow({ stories, onStoryPress }: {
+function filterButchers(list: ButcherProfile[], query: string): ButcherProfile[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return list;
+  return list.filter(
+    (b) =>
+      b.nameAr.includes(q) ||
+      b.name.toLowerCase().includes(q) ||
+      b.cityAr.includes(q) ||
+      b.specialties.some((sp) => sp.includes(q)),
+  );
+}
+
+function StoriesRow({
+  stories,
+  onStoryPress,
+}: {
   stories: ButcherStory[];
   onStoryPress: (story: ButcherStory) => void;
 }) {
@@ -109,25 +122,108 @@ function StoriesRow({ stories, onStoryPress }: {
   );
 }
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+function ButcherCategoryRow({
+  butchers,
+  cardWidth,
+  cardGap,
+  loading,
+  onPressButcher,
+}: {
+  butchers: ButcherProfile[];
+  cardWidth: number;
+  cardGap: number;
+  loading: boolean;
+  onPressButcher: (id: string) => void;
+}) {
+  const { colors } = useTheme();
+  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
 
-const GCC_COUNTRIES: { code: Country; label: string; flag: string }[] = [
-  { code: 'SA', label: 'السعودية', flag: '🇸🇦' },
-];
+  if (loading && butchers.length === 0) {
+    return (
+      <View style={[s.rowSkeleton, { width: cardWidth, marginHorizontal: spacing.lg }]}>
+        <ActivityIndicator color={colors.electricBright} />
+      </View>
+    );
+  }
+
+  if (butchers.length === 0) {
+    return (
+      <View style={[s.rowEmpty, { marginHorizontal: spacing.lg }]}>
+        <Text style={s.rowEmptyText}>لا توجد ملاحم في هذا التصنيف</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[s.categoryRow, { gap: cardGap }]}
+      decelerationRate="fast"
+      snapToInterval={cardWidth + cardGap}
+      snapToAlignment="start"
+    >
+      {butchers.map((butcher) => (
+        <ButcherDeliveryCard
+          key={butcher.id}
+          butcher={butcher}
+          width={cardWidth}
+          onPress={() => onPressButcher(butcher.id)}
+        />
+      ))}
+    </ScrollView>
+  );
+}
 
 export default function ButchersScreen() {
   const { colors } = useTheme();
   const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
   const { accessToken, isAuthenticated } = useAuth();
-  const [butchersList, setButchersList] = useState<ButcherProfile[]>([]);
-  const [selectedCountry, setSelectedCountry] = useState<Country | 'all'>('all');
+  const [sections, setSections] = useState(EMPTY_SECTIONS);
+  const [loadingSections, setLoadingSections] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [rankingTab, setRankingTab] = useState<ButcherRankingCategory>('rating');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [seenStories, setSeenStories] = useState<Set<string>>(new Set());
   const [butcherStories, setButcherStories] = useState<ButcherStory[]>([]);
-  const [showCountryFilter, setShowCountryFilter] = useState(false);
+
+  const cardGap = spacing.md;
+  const cardPad = spacing.lg;
+  const cardWidth = Math.round((screenWidth - cardPad - cardGap) / 1.5);
+
+  const fetchButchersForSort = useCallback(
+    async (sort: ButcherRankingCategory): Promise<ButcherProfile[]> => {
+      const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+      const params = new URLSearchParams({ sort });
+      if (sort === 'distance' && userCoords) {
+        params.set('lat', String(userCoords.lat));
+        params.set('lng', String(userCoords.lng));
+      }
+      const res = await fetch(`${API_BASE}/api/butchers?${params.toString()}`, { headers });
+      if (!res.ok) return [];
+      const json = await res.json();
+      if (!json.success || !Array.isArray(json.data?.butchers)) return [];
+      return json.data.butchers
+        .filter((b: Record<string, unknown>) => (b.country || 'SA') !== 'EG')
+        .map((b: Record<string, unknown>) => mapButcherFromApi(b))
+        .slice(0, SECTION_LIMIT);
+    },
+    [accessToken, userCoords],
+  );
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const pos = await Location.getCurrentPositionAsync({});
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      } catch {
+        // Distance section falls back to server order without coords.
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchStories = async () => {
@@ -137,20 +233,22 @@ export default function ButchersScreen() {
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
-            const mapped = json.data.map((s: any) => ({
-              id: s.id,
-              butcherId: s.butcherId,
-              butcherName: s.butcher?.nameAr || s.butcher?.nameEn || 'ملحمة',
-              butcherNameAr: s.butcher?.nameAr || 'ملحمة',
-              butcherLogo: s.butcher?.logo || undefined,
-              isVerified: s.butcher?.subscriptionActive || false,
-              thumbnail: s.thumbnail,
-              caption: s.caption,
-              captionAr: s.captionAr,
-              postedAt: s.createdAt,
-              duration: s.duration || 15,
+            const mapped = json.data.map((story: Record<string, unknown>) => ({
+              id: String(story.id),
+              butcherId: String(story.butcherId),
+              butcherName: (story.butcher as { nameAr?: string; nameEn?: string })?.nameAr ||
+                (story.butcher as { nameEn?: string })?.nameEn ||
+                'ملحمة',
+              butcherNameAr: (story.butcher as { nameAr?: string })?.nameAr || 'ملحمة',
+              butcherLogo: (story.butcher as { logo?: string })?.logo || undefined,
+              isVerified: Boolean((story.butcher as { subscriptionActive?: boolean })?.subscriptionActive),
+              thumbnail: story.thumbnail as string,
+              caption: story.caption as string,
+              captionAr: story.captionAr as string,
+              postedAt: String(story.createdAt),
+              duration: Number(story.duration) || 15,
               seen: false,
-              type: s.type,
+              type: story.type as ButcherStory['type'],
             }));
             setButcherStories(mapped);
           }
@@ -159,69 +257,44 @@ export default function ButchersScreen() {
         console.warn('[ButchersScreen] Failed to fetch stories:', err);
       }
     };
-    fetchStories();
+    void fetchStories();
   }, [accessToken]);
 
   useEffect(() => {
-    if (rankingTab !== 'distance') return;
+    let cancelled = false;
     void (async () => {
+      setLoadingSections(true);
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
-        const pos = await Location.getCurrentPositionAsync({});
-        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      } catch {
-        // Location unavailable — distance tab falls back to server rank order.
-      }
-    })();
-  }, [rankingTab]);
-
-  useEffect(() => {
-    const fetchButchers = async () => {
-      try {
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const params = new URLSearchParams({ sort: rankingTab });
-        if (rankingTab === 'distance' && userCoords) {
-          params.set('lat', String(userCoords.lat));
-          params.set('lng', String(userCoords.lng));
-        }
-        const res = await fetch(`${API_BASE}/api/butchers?${params.toString()}`, { headers });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data?.butchers) {
-            const mapped = json.data.butchers
-              .filter((b: any) => (b.country || 'SA') !== 'EG')
-              .map((b: any) => mapButcherFromApi(b));
-            setButchersList(mapped);
-          }
-        }
+        const tabs = BUTCHER_RANKING_TABS.map((tab) => tab.id);
+        const results = await Promise.all(tabs.map((sort) => fetchButchersForSort(sort)));
+        if (cancelled) return;
+        const next = EMPTY_SECTIONS();
+        tabs.forEach((sort, index) => {
+          next[sort] = results[index] ?? [];
+        });
+        setSections(next);
       } catch (err) {
         console.warn('[ButchersScreen] Failed to fetch butchers:', err);
+      } finally {
+        if (!cancelled) setLoadingSections(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-    fetchButchers();
-  }, [accessToken, rankingTab, userCoords]);
+  }, [fetchButchersForSort]);
 
-  const filtered = butchersList.filter((b) => {
-    if (selectedCountry !== 'all' && b.country !== selectedCountry) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        b.nameAr.includes(q) ||
-        b.name.toLowerCase().includes(q) ||
-        b.cityAr.includes(q) ||
-        b.specialties.some((sp) => sp.includes(q))
-      );
+  const filteredSections = useMemo(() => {
+    const next = EMPTY_SECTIONS();
+    for (const tab of BUTCHER_RANKING_TABS) {
+      next[tab.id] = filterButchers(sections[tab.id], searchQuery);
     }
-    return true;
-  });
+    return next;
+  }, [sections, searchQuery]);
 
-  const activeTabLabel =
-    BUTCHER_RANKING_TABS.find((t) => t.id === rankingTab)?.label ?? 'الملاحم';
-
-  const storiesWithSeen = butcherStories.map((s) => ({
-    ...s,
-    seen: seenStories.has(s.id),
+  const storiesWithSeen = butcherStories.map((story) => ({
+    ...story,
+    seen: seenStories.has(story.id),
   }));
 
   const handleStoryPress = (story: ButcherStory) => {
@@ -232,535 +305,264 @@ export default function ButchersScreen() {
     });
   };
 
+  const openButcher = (id: string) => {
+    router.push({ pathname: '/butchers/[id]', params: { id } });
+  };
+
+  const hasAnyResults = BUTCHER_RANKING_TABS.some((tab) => filteredSections[tab.id].length > 0);
+
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <ScrollView
         stickyHeaderIndices={[0]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.scroll}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* ── Premium Header ── */}
-        <View style={s.stickyHeader}>
-          <View style={[s.headerRow, getRtlRow()]}>
-            <View style={[s.headerActions, getRtlRow()]}>
-              <Pressable style={s.iconBtn} onPress={() => router.push('/butchers-market-sidebar')} hitSlop={8}>
-                <AppIcon name="menu" size={22} color={colors.textPrimary} />
-              </Pressable>
-              <NotificationBellButton size={40} iconSize={20} style={s.iconBtn} />
-            </View>
+        <ButchersAppBar
+          onMenu={() => router.push('/butchers-market-sidebar')}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
-            <View style={s.headerTextBlock}>
-              <Text style={s.headerTitle}>الملاحم</Text>
-              <Text style={s.headerSub}>ابحث عن أفضل الملاحم القريبة منك</Text>
-            </View>
-
-            <LinearGradient
-              colors={[colors.electric + '55', colors.electric + '18']}
-              style={s.headerIconBox}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={s.headerIconInner}>
-                <Text style={s.headerIconEmoji}>🥩</Text>
-              </View>
-            </LinearGradient>
-          </View>
-
-          {/* Search */}
-          <View style={[s.searchWrap, getRtlRow()]}>
-            <Pressable
-              style={s.filterInlineBtn}
-              onPress={() => setShowCountryFilter((v) => !v)}
-              hitSlop={8}
-            >
-              <AppIcon
-                name="options-outline"
-                size={18}
-                color={showCountryFilter ? colors.electricBright : colors.textPrimary}
-              />
-            </Pressable>
-            <TextInput
-              style={s.searchInput}
-              placeholder="ابحث عن ملحمة، مدينة، أو نوع لحم..."
-              placeholderTextColor={colors.textSubtle}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              textAlign="right"
-            />
-            <AppIcon name="search-outline" size={20} color={colors.textPrimary} />
-            {searchQuery.length > 0 ? (
-              <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                <AppIcon name="close-circle" size={18} color={colors.textPrimary} />
-              </Pressable>
-            ) : null}
-          </View>
-
-          {showCountryFilter ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.countryRow}
-            >
-              <Pressable
-                onPress={() => setSelectedCountry('all')}
-                style={[s.countryChip, selectedCountry === 'all' && s.countryChipActive]}
-              >
-                <Text style={s.countryChipFlag}>🌍</Text>
-                <Text style={[s.countryChipLabel, selectedCountry === 'all' && s.countryChipLabelActive]}>
-                  الكل
+        {storiesWithSeen.length > 0 ? (
+          <View style={s.section}>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>قصص اليوم</Text>
+              <View style={s.liveDotRow}>
+                <View style={s.liveDot} />
+                <Text style={s.sectionSub}>
+                  {storiesWithSeen.filter((story) => !story.seen).length} جديد
                 </Text>
-              </Pressable>
-              {GCC_COUNTRIES.map((c) => (
-                <Pressable
-                  key={c.code}
-                  onPress={() => setSelectedCountry(c.code)}
-                  style={[s.countryChip, selectedCountry === c.code && s.countryChipActive]}
-                >
-                  <Text style={s.countryChipFlag}>{c.flag}</Text>
-                  <Text style={[s.countryChipLabel, selectedCountry === c.code && s.countryChipLabelActive]}>
-                    {c.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          ) : null}
+              </View>
+            </View>
+            <StoriesRow stories={storiesWithSeen} onStoryPress={handleStoryPress} />
+          </View>
+        ) : null}
 
-          {/* Quick filter cards */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.quickFiltersRow}
+        {!loadingSections && searchQuery.trim() && !hasAnyResults ? (
+          <View style={s.emptyState}>
+            <Text style={s.emptyIcon}>🔍</Text>
+            <Text style={s.emptyTitle}>لا توجد نتائج</Text>
+            <Text style={s.emptySub}>جرّب كلمة بحث أخرى</Text>
+          </View>
+        ) : (
+          BUTCHER_RANKING_TABS.map((tab) => {
+            const items = filteredSections[tab.id];
+            if (!loadingSections && searchQuery.trim() && items.length === 0) return null;
+            return (
+              <View key={tab.id} style={s.categorySection}>
+                <SectionHeader
+                  title={tab.label}
+                  onSeeAll={items.length > 0 ? () => router.push('/butchers/map') : undefined}
+                />
+                <ButcherCategoryRow
+                  butchers={items}
+                  cardWidth={cardWidth}
+                  cardGap={cardGap}
+                  loading={loadingSections}
+                  onPressButcher={openButcher}
+                />
+              </View>
+            );
+          })
+        )}
+
+        <View style={s.footerActions}>
+          <Pressable style={s.mapLinkBtn} onPress={() => router.push('/butchers/map')}>
+            <AppIcon name="map-outline" size={16} color={colors.electricBright} />
+            <Text style={s.mapLinkText}>عرض على الخريطة</Text>
+          </Pressable>
+          <Pressable
+            style={s.addBtn}
+            onPress={() => {
+              if (!isAuthenticated) {
+                router.push('/auth/phone');
+                return;
+              }
+              router.push('/butchers/apply');
+            }}
           >
-            {BUTCHER_RANKING_TABS.map((tab) => {
-              const active = rankingTab === tab.id;
-              const meta = RANKING_FILTER_ICONS[tab.id];
-              return (
-                <Pressable
-                  key={tab.id}
-                  onPress={() => setRankingTab(tab.id)}
-                  style={[s.quickFilterCard, active && s.quickFilterCardActive]}
-                >
-                  <Text style={s.quickFilterEmoji}>{meta.emoji}</Text>
-                  <Text style={[s.quickFilterLabel, active && s.quickFilterLabelActive]}>
-                    {tab.label}
-                  </Text>
-                  {active ? <View style={s.quickFilterIndicator} /> : null}
-                </Pressable>
-              );
-            })}
-            <Pressable
-              style={s.showAllBtn}
-              onPress={() => {
-                setRankingTab('rating');
-                setSelectedCountry('all');
-                setSearchQuery('');
-              }}
-            >
-              <Text style={s.showAllText}>عرض الكل</Text>
-            </Pressable>
-          </ScrollView>
-
-          <View style={[s.headerMetaRow, getRtlRow()]}>
-            <Pressable style={s.mapLinkBtn} onPress={() => router.push('/butchers/map')}>
-              <AppIcon name="map-outline" size={16} color={colors.electricBright} />
-              <Text style={s.mapLinkText}>الخريطة</Text>
-            </Pressable>
-            <Text style={s.resultsCount}>{filtered.length} ملحمة</Text>
-          </View>
+            <AppIcon name="add" size={14} color={colors.electricBright} />
+            <Text style={s.addBtnText}>سجّل ملحمتك</Text>
+          </Pressable>
         </View>
 
-        {/* ── Stories ── */}
-        <View style={s.section}>
-          <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>قصص اليوم</Text>
-            <View style={s.liveDotRow}>
-              <View style={s.liveDot} />
-              <Text style={s.sectionSub}>{storiesWithSeen.filter((s) => !s.seen).length} جديد</Text>
-            </View>
-          </View>
-          <StoriesRow stories={storiesWithSeen} onStoryPress={handleStoryPress} />
-        </View>
-
-        {/* ── Listing ── */}
-        <View style={s.section}>
-          <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>{activeTabLabel} ({filtered.length})</Text>
-            <Pressable
-              style={s.addBtn}
-              onPress={() => {
-                if (!isAuthenticated) {
-                  router.push('/auth/phone');
-                  return;
-                }
-                router.push('/butchers/apply');
-              }}
-            >
-              <AppIcon name="add" size={14} color={colors.electricBright} />
-              <Text style={s.addBtnText}>سجّل ملحمتك</Text>
-            </Pressable>
-          </View>
-
-          {filtered.length === 0 ? (
-            <View style={s.emptyState}>
-              <Text style={s.emptyIcon}>🥩</Text>
-              <Text style={s.emptyTitle}>لا توجد ملاحم</Text>
-              <Text style={s.emptySub}>جرّب تغيير الفلتر أو البلد</Text>
-            </View>
-          ) : (
-            filtered.map((butcher) => (
-              <ButcherCard
-                key={butcher.id}
-                butcher={butcher}
-                onPress={() =>
-                  router.push({
-                    pathname: '/butchers/[id]',
-                    params: { id: butcher.id },
-                  })
-                }
-                onOrder={() =>
-                  router.push({
-                    pathname: '/butchers/order',
-                    params: { butcherId: butcher.id },
-                  })
-                }
-              />
-            ))
-          )}
-        </View>
-
-        {/* Bottom padding */}
         <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 function createScreenStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  scroll: { paddingBottom: 20 },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
+    scroll: { paddingBottom: 20 },
 
-  // Sticky header
-  stickyHeader: {
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.screenRoot,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderHairline,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    gap: spacing.md,
-  },
-  headerTextBlock: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  headerTitle: {
-    ...typography.h1,
-    fontSize: 26,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    ...getRtlText(),
-    ...getRtlText(),
-  },
-  headerSub: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2,
-    ...getRtlText(),
-    ...getRtlText(),
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerIconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    padding: 1.5,
-    borderWidth: 0,
-  },
-  headerIconInner: {
-    flex: 1,
-    borderRadius: 14,
-    backgroundColor: colors.bgElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerIconEmoji: { fontSize: 24 },
+    section: { marginTop: spacing.lg },
+    categorySection: {
+      marginTop: spacing.lg,
+      marginBottom: spacing.xs,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    sectionTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText() },
+    sectionSub: { ...typography.caption, color: colors.textMuted },
+    liveDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    liveDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: colors.success,
+    },
 
-  // Search
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: spacing.lg,
-    marginVertical: spacing.sm,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 0,
-    borderRadius: 14,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    minHeight: 52,
-  },
-  filterInlineBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: colors.bgDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    color: colors.textPrimary,
-    ...getRtlText(),
-    ...getRtlText(),
-  },
+    categoryRow: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    rowSkeleton: {
+      height: 220,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rowEmpty: {
+      minHeight: 72,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    rowEmptyText: {
+      ...typography.caption,
+      color: colors.textMuted,
+      ...getRtlText(),
+    },
 
-  quickFiltersRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-    alignItems: 'flex-start',
-  },
-  quickFilterCard: {
-    minWidth: 88,
-    paddingHorizontal: spacing.sm,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    borderRadius: 14,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 0,
-    alignItems: 'center',
-    gap: 4,
-    position: 'relative',
-  },
-  quickFilterCardActive: {
-    backgroundColor: colors.electric + '14',
-  },
-  quickFilterEmoji: { fontSize: 18 },
-  quickFilterLabel: {
-    ...typography.micro,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  quickFilterLabelActive: {
-    color: colors.electricBright,
-    fontWeight: '600',
-  },
-  quickFilterIndicator: {
-    position: 'absolute',
-    bottom: 6,
-    width: 20,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.electric,
-  },
-  showAllBtn: {
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 14,
-    borderWidth: 0,
-    backgroundColor: colors.bgElevated,
-    alignSelf: 'center',
-  },
-  showAllText: {
-    ...typography.caption,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    writingDirection: 'rtl',
-  },
-  headerMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-  },
-  mapLinkBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: colors.electric + '12',
-    borderWidth: 0,
-  },
-  mapLinkText: {
-    ...typography.micro,
-    fontWeight: '600',
-    color: colors.electricBright,
-    writingDirection: 'rtl',
-  },
-  resultsCount: {
-    ...typography.caption,
-    color: colors.textMuted,
-    writingDirection: 'rtl',
-  },
+    footerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xl,
+      gap: spacing.md,
+    },
+    mapLinkBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 14,
+      backgroundColor: colors.electric + '12',
+    },
+    mapLinkText: {
+      ...typography.caption,
+      fontWeight: '600',
+      color: colors.electricBright,
+      writingDirection: 'rtl',
+    },
+    addBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.electricBright + '66',
+      backgroundColor: colors.electric + '11',
+    },
+    addBtnText: { ...typography.micro, color: colors.textBrandStrong },
 
-  // Country chips
-  countryRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  countryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 0,
-  },
-  countryChipActive: {
-    backgroundColor: colors.electric,
-  },
-  countryChipFlag: { fontSize: 14 },
-  countryChipLabel: { ...typography.caption, color: colors.textPrimary },
-  countryChipLabelActive: { color: '#fff', fontWeight: '600' },
-
-  // Sections
-  section: { marginTop: spacing.xl },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary },
-  sectionSub: { ...typography.caption, color: colors.textMuted },
-  liveDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.success,
-  },
-
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.electricBright + '66',
-    backgroundColor: colors.electric + '11',
-  },
-  addBtnText: { ...typography.micro, color: colors.textBrandStrong },
-
-  // Empty state
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    gap: spacing.sm,
-  },
-  emptyIcon: { fontSize: 48 },
-  emptyTitle: { ...typography.h3, color: colors.textPrimary },
-  emptySub: { ...typography.caption, color: colors.textMuted },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: 60,
+      gap: spacing.sm,
+    },
+    emptyIcon: { fontSize: 48 },
+    emptyTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText() },
+    emptySub: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
   });
 }
 
-// Stories
 function createStoryStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  storiesContent: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    gap: spacing.md,
-  },
-  storyItem: {
-    alignItems: 'center',
-    gap: 4,
-    width: STORY_CIRCLE + 8,
-    position: 'relative',
-  },
-  storyRing: {
-    width: STORY_CIRCLE + 4,
-    height: STORY_CIRCLE + 4,
-    borderRadius: (STORY_CIRCLE + 4) / 2,
-    padding: 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  storyInner: {
-    width: STORY_CIRCLE,
-    height: STORY_CIRCLE,
-    borderRadius: STORY_CIRCLE / 2,
-    borderWidth: 2,
-    borderColor: colors.bgDeep,
-    overflow: 'hidden',
-    position: 'relative',
-    backgroundColor: colors.bgSurface,
-  },
-  storyAvatar: {
-    width: '100%',
-    height: '100%',
-  },
-  storyVerifiedDot: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.bgDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.electricBright + '55',
-  },
-  storyTypeChip: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 22,
-    height: 22,
-    borderRadius: 12,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 1.5,
-    borderColor: colors.bgDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  storyTypeIcon: { fontSize: 10 },
-  storyName: {
-    ...typography.micro,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    maxWidth: STORY_CIRCLE + 8,
-  },
+    storiesContent: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      gap: spacing.md,
+    },
+    storyItem: {
+      alignItems: 'center',
+      gap: 4,
+      width: STORY_CIRCLE + 8,
+      position: 'relative',
+    },
+    storyRing: {
+      width: STORY_CIRCLE + 4,
+      height: STORY_CIRCLE + 4,
+      borderRadius: (STORY_CIRCLE + 4) / 2,
+      padding: 2.5,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    storyInner: {
+      width: STORY_CIRCLE,
+      height: STORY_CIRCLE,
+      borderRadius: STORY_CIRCLE / 2,
+      borderWidth: 2,
+      borderColor: colors.bgDeep,
+      overflow: 'hidden',
+      position: 'relative',
+      backgroundColor: colors.bgSurface,
+    },
+    storyAvatar: {
+      width: '100%',
+      height: '100%',
+    },
+    storyVerifiedDot: {
+      position: 'absolute',
+      bottom: 2,
+      right: 2,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: colors.bgDeep,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.electricBright + '55',
+    },
+    storyTypeChip: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      width: 22,
+      height: 22,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1.5,
+      borderColor: colors.bgDeep,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    storyTypeIcon: { fontSize: 10 },
+    storyName: {
+      ...typography.micro,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      maxWidth: STORY_CIRCLE + 8,
+    },
   });
 }
