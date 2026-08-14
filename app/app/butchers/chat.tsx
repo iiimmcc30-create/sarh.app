@@ -291,9 +291,6 @@ export default function ButcherChatScreen() {
       }
     };
     fetchButcher();
-  }, [butcherId, isThreadMode, router]);
-
-    fetchButcher();
   }, [butcherId, isThreadMode, isDirectMode, isButcherPeerMode, chatAccessChecked, router]);
 
   useEffect(() => {
