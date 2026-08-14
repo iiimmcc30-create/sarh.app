@@ -64,6 +64,11 @@ if (__DEV__) {
   }
   if (API_BASE.includes('onrender.com')) {
     console.log('[سرح] API → Render (بيانات الإنتاج)');
+    // Wake Render from cold start in the background — free tier sleeps after 15min inactivity.
+    void probeApiHealth(API_BASE, 90_000).then((ok) => {
+      if (ok) console.log('[سرح] Render ready ✓');
+      else console.warn('[سرح] Render health probe failed — requests may be slow');
+    });
   }
 }
 
