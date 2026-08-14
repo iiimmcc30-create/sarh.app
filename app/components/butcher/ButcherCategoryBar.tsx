@@ -25,14 +25,18 @@ export function ButcherCategoryBar({
       {categories.map((cat) => {
         const meta =
           cat === 'all'
-            ? { ar: 'الكل', icon: '' }
+            ? { ar: 'الكل' }
             : CATEGORY_LABELS[cat as MeatCategory];
         const isActive = active === cat;
         return (
           <Pressable key={cat} onPress={() => onChange(cat)} style={styles.item}>
-            <Text style={[styles.label, isActive && styles.labelActive]}>
-              {cat === 'all' ? 'الكل' : meta?.ar ?? cat}
-            </Text>
+            <View style={styles.coverTrail}>
+              <View style={styles.rtlTextShell}>
+                <Text style={[styles.label, isActive && styles.labelActive]}>
+                  {cat === 'all' ? 'الكل' : meta?.ar ?? cat}
+                </Text>
+              </View>
+            </View>
             <View style={[styles.underline, isActive && styles.underlineActive]} />
           </Pressable>
         );
@@ -46,18 +50,28 @@ function createStyles(colors: ThemeColors) {
     row: {
       flexDirection: 'row',
       direction: 'ltr',
+      justifyContent: 'flex-end',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
       gap: spacing.lg,
     },
     item: {
-      alignItems: 'center',
+      alignItems: 'stretch',
       paddingBottom: 2,
+    },
+    coverTrail: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+    },
+    rtlTextShell: {
+      direction: 'ltr',
     },
     label: {
       ...typography.bodyStrong,
       fontSize: 14,
       color: colors.textMuted,
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     labelActive: {

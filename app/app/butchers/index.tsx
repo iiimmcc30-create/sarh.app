@@ -1,11 +1,9 @@
 // SAFAT — Butchers market home: banners · picks · nearby
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Location from 'expo-location';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,7 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,7 +47,7 @@ export default function ButchersScreen() {
   const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
-  const { accessToken, isAuthenticated } = useAuth();
+  const { accessToken } = useAuth();
   const { itemCount, butcherId } = useButcherCart();
   const [picks, setPicks] = useState<ButcherProfile[]>([]);
   const [nearby, setNearby] = useState<ButcherProfile[]>([]);
@@ -162,7 +160,10 @@ export default function ButchersScreen() {
           </View>
         ) : (
           <>
-            <SectionHeader title="مختارات سرح" />
+            <SectionHeader
+              title="مختارات سرح"
+              onSeeAll={() => router.push('/butchers/all')}
+            />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -181,40 +182,19 @@ export default function ButchersScreen() {
 
             <SectionHeader
               title="الأقرب إليك"
-              onSeeAll={() => router.push('/butchers/map')}
+              onSeeAll={() => router.push('/butchers/all')}
             />
             <View style={s.nearbyList}>
-              {filteredNearby.map((butcher, index) => (
+              {filteredNearby.map((butcher) => (
                 <ButcherNearbyRow
                   key={butcher.id}
                   butcher={butcher}
                   onPress={() => openButcher(butcher.id)}
-                  showDivider={index < filteredNearby.length - 1}
                 />
               ))}
             </View>
           </>
         )}
-
-        <View style={s.footerActions}>
-          <Pressable style={s.mapLinkBtn} onPress={() => router.push('/butchers/map')}>
-            <AppIcon name="map-outline" size={16} color={colors.electricBright} />
-            <Text style={s.mapLinkText}>عرض على الخريطة</Text>
-          </Pressable>
-          <Pressable
-            style={s.addBtn}
-            onPress={() => {
-              if (!isAuthenticated) {
-                router.push('/auth/phone');
-                return;
-              }
-              router.push('/butchers/apply');
-            }}
-          >
-            <AppIcon name="add" size={14} color={colors.electricBright} />
-            <Text style={s.addBtnText}>سجّل ملحمتك</Text>
-          </Pressable>
-        </View>
       </ScrollView>
 
       <ButchersTabBar active="home" />
@@ -234,42 +214,7 @@ function createScreenStyles(colors: ThemeColors) {
       paddingBottom: spacing.sm,
       gap: spacing.md,
     },
-    nearbyList: { backgroundColor: colors.screenRoot },
-    footerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl,
-      gap: spacing.md,
-    },
-    mapLinkBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 14,
-      backgroundColor: colors.electric + '12',
-    },
-    mapLinkText: {
-      ...typography.caption,
-      fontWeight: '600',
-      color: colors.electricBright,
-      writingDirection: 'rtl',
-    },
-    addBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.electricBright + '66',
-      backgroundColor: colors.electric + '11',
-    },
-    addBtnText: { ...typography.micro, color: colors.textBrandStrong },
+    nearbyList: { backgroundColor: colors.screenRoot, paddingBottom: spacing.sm },
     emptyState: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
     emptyTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText() },
     emptySub: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
