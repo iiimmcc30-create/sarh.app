@@ -347,6 +347,51 @@ export class ButchersService {
     return butcher;
   }
 
+  async getChatAccess(butcherId: string, user?: JwtPayload) {
+    if (!butcherId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+    const butcher = await this.repo.findButcherById(butcherId);
+    if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
+
+    if (!user?.userId) {
+      return {
+        allowed: false,
+        reason: 'login_required',
+        messageAr: 'سجّل دخولك للمحادثة مع الملحمة بعد قبول طلبك',
+      };
+    }
+
+    if (butcher.userId === user.userId) {
+      return {
+        allowed: true,
+        orderId: null,
+        receiverId: null,
+        reason: null,
+        messageAr: null,
+      };
+    }
+
+    const order = await this.repo.findAcceptedOrderForChat(
+      user.userId,
+      butcherId,
+    );
+    if (!order) {
+      return {
+        allowed: false,
+        reason: 'order_not_accepted',
+        messageAr: 'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
+        receiverId: butcher.userId,
+      };
+    }
+
+    return {
+      allowed: true,
+      orderId: order.id,
+      receiverId: butcher.userId,
+      reason: null,
+      messageAr: null,
+    };
+  }
+
   async updateButcher(id: string, user: JwtPayload, body: unknown) {
     if (!id) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
@@ -703,13 +748,8 @@ export class ButchersService {
     }
 
     const orderInput = parsed.data;
-    const {
-      butcherId,
-      deliveryType,
-      deliveryAddress,
-      notes,
-      currency,
-    } = orderInput;
+    const { butcherId, deliveryType, deliveryAddress, notes, currency } =
+      orderInput;
 
     const rawLines =
       'items' in orderInput
@@ -725,9 +765,7 @@ export class ButchersService {
     const validatedLines = [];
     for (const line of rawLines) {
       const product = await this.repo.findProductForOrder(line.productId);
-      validatedLines.push(
-        validateAndPriceOrderLine(product, butcherId, line),
-      );
+      validatedLines.push(validateAndPriceOrderLine(product, butcherId, line));
     }
 
     const totalPrice = sumOrderLinePrices(validatedLines);
@@ -744,7 +782,11 @@ export class ButchersService {
     });
 
     logger.info(
-      { orderId: order.id, customerId: user.userId, itemCount: validatedLines.length },
+      {
+        orderId: order.id,
+        customerId: user.userId,
+        itemCount: validatedLines.length,
+      },
       'Butcher order placed',
     );
     return order;
@@ -795,7 +837,7 @@ export class ButchersService {
       nextStatus: statusInput.status as OrderStatus,
       cancellationReason:
         statusInput.status === 'cancelled'
-          ? statusInput.cancellationReason ?? 'Order cancelled by actor'
+          ? (statusInput.cancellationReason ?? 'Order cancelled by actor')
           : null,
     });
 

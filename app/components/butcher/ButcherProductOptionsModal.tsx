@@ -162,7 +162,7 @@ export function ButcherProductOptionsModal({
             pressed && { opacity: 0.9 },
           ]}
         >
-          <AppIcon name="cart-outline" size={18} color="#fff" />
+          <AppIcon name="cart-outline" size={15} color="#fff" />
           <Text style={styles.ctaText}>إضافة للسلة</Text>
         </Pressable>
       </View>
@@ -298,17 +298,21 @@ function createStyles(colors: ThemeColors) {
       ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.sm,
+      gap: spacing.xs,
       backgroundColor: colors.electric,
       borderRadius: radius.pill,
-      paddingVertical: 14,
+      paddingVertical: 11,
+      paddingHorizontal: spacing.lg,
       marginTop: spacing.sm,
+      alignSelf: 'center',
+      minWidth: '55%',
     },
     ctaDisabled: { opacity: 0.5 },
     ctaText: {
-      ...typography.bodyStrong,
+      ...typography.caption,
       ...getRtlText(),
       color: '#fff',
+      fontWeight: '600',
     },
   });
 }

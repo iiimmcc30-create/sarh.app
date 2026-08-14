@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { notDeleted, softDeleteFields } from '../../common/utils/soft-delete.util';
+import {
+  notDeleted,
+  softDeleteFields,
+} from '../../common/utils/soft-delete.util';
 
 export type ButcherListSort =
-  | 'rank'
-  | 'rating'
-  | 'favorites'
-  | 'orders'
-  | 'distance'
-  | 'new';
+  'rank' | 'rating' | 'favorites' | 'orders' | 'distance' | 'new';
 
 const BUTCHER_LIST_INCLUDE = {
   user: { select: { id: true, username: true, avatar: true } },
@@ -61,7 +59,9 @@ export class ButchersRepository {
     });
   }
 
-  private buildOrderBy(sort: ButcherListSort): Prisma.ButcherOrderByWithRelationInput[] {
+  private buildOrderBy(
+    sort: ButcherListSort,
+  ): Prisma.ButcherOrderByWithRelationInput[] {
     const tieBreakers: Prisma.ButcherOrderByWithRelationInput[] = [
       { completedOrdersCount: 'desc' },
       { rating: 'desc' },
@@ -75,11 +75,23 @@ export class ButchersRepository {
       case 'rating':
         return [{ rating: 'desc' }, { rankingScore: 'desc' }, ...tieBreakers];
       case 'favorites':
-        return [{ favoritesCount: 'desc' }, { rankingScore: 'desc' }, ...tieBreakers];
+        return [
+          { favoritesCount: 'desc' },
+          { rankingScore: 'desc' },
+          ...tieBreakers,
+        ];
       case 'orders':
-        return [{ completedOrdersCount: 'desc' }, { rankingScore: 'desc' }, ...tieBreakers];
+        return [
+          { completedOrdersCount: 'desc' },
+          { rankingScore: 'desc' },
+          ...tieBreakers,
+        ];
       case 'new':
-        return [{ newButcherBoost: 'desc' }, { createdAt: 'desc' }, { rankingScore: 'desc' }];
+        return [
+          { newButcherBoost: 'desc' },
+          { createdAt: 'desc' },
+          { rankingScore: 'desc' },
+        ];
       case 'rank':
       default:
         return [{ rankingScore: 'desc' }, ...tieBreakers];
@@ -101,9 +113,7 @@ export class ButchersRepository {
     if (ids.length === 0) return [];
 
     const idList = ids.map((r) => r.id);
-    const rows = await this.prisma.$queryRaw<
-      { id: string; dist_km: number }[]
-    >`
+    const rows = await this.prisma.$queryRaw<{ id: string; dist_km: number }[]>`
       SELECT b.id,
         (
           6371 * acos(
@@ -309,6 +319,18 @@ export class ButchersRepository {
         items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
+    });
+  }
+
+  findAcceptedOrderForChat(customerId: string, butcherId: string) {
+    return this.prisma.butcherOrder.findFirst({
+      where: {
+        customerId,
+        butcherId,
+        status: { in: ['confirmed', 'preparing', 'ready', 'delivered'] },
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, status: true },
     });
   }
 

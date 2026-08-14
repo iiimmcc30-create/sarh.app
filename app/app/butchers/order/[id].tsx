@@ -17,6 +17,7 @@ import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { CUT_LABELS, CutType } from '@/services/butcherData';
+import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -163,6 +164,25 @@ export default function OrderDetailsScreen() {
             })
           )}
         </View>
+
+        {isOrderChatEligible(order.status) && order.butcherId ? (
+          <Pressable
+            style={s.chatBtn}
+            onPress={() =>
+              router.push(
+                butcherChatRouteParams({
+                  butcherId: order.butcherId,
+                  orderId: order.id,
+                  receiverName: order.butcher?.nameAr,
+                  receiverAvatar: order.butcher?.logo,
+                }),
+              )
+            }
+          >
+            <AppIcon name="chatbubbles-outline" size={20} color="#fff" />
+            <Text style={s.chatBtnText}>محادثة الملحمة</Text>
+          </Pressable>
+        ) : null}
 
         <View style={s.card}>
           <Text style={s.sectionTitle}>تفاصيل الطلب</Text>
@@ -330,4 +350,19 @@ const s = StyleSheet.create({
     gap: 2,
   },
   errorText: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
+  chatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.electric,
+    borderRadius: radius.xxl,
+    paddingVertical: 14,
+    marginBottom: spacing.xs,
+  },
+  chatBtnText: {
+    ...typography.bodyStrong,
+    color: '#fff',
+    writingDirection: 'rtl',
+  },
 });

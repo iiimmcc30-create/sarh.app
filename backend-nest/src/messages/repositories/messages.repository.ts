@@ -108,6 +108,19 @@ export class MessagesRepository {
     });
   }
 
+  /** Latest accepted+ order linking a customer to a butcher (enables shop chat). */
+  findAcceptedButcherOrderForChat(customerId: string, butcherId: string) {
+    return this.prisma.butcherOrder.findFirst({
+      where: {
+        customerId,
+        butcherId,
+        status: { in: ['confirmed', 'preparing', 'ready', 'delivered'] },
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, status: true },
+    });
+  }
+
   upsertThread(params: {
     participant1: string;
     participant2: string;

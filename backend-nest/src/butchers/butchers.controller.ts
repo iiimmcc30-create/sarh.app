@@ -192,10 +192,7 @@ export class ButchersController {
   @RateLimit('api')
   @Post(':id/favorite')
   @HttpCode(HttpStatus.OK)
-  async addFavorite(
-    @Param('id') id: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  async addFavorite(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return successResponse(await this.butchers.addFavorite(id, user));
   }
 
@@ -217,6 +214,17 @@ export class ButchersController {
     @CurrentUser() user: JwtPayload,
   ) {
     return successResponse(await this.butchers.getFavoriteStatus(id, user));
+  }
+
+  @OptionalAuth()
+  @RateLimit('api')
+  @Get(':id/chat-access')
+  @HttpCode(HttpStatus.OK)
+  async getChatAccess(
+    @Param('id') id: string,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    return successResponse(await this.butchers.getChatAccess(id, user));
   }
 
   @OptionalAuth()

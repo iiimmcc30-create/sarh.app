@@ -16,7 +16,6 @@ type ButcherStoreProductCardProps = {
   currencySymbol: string;
   onPress: () => void;
   onAdd: () => void;
-  onBuyNow: () => void;
 };
 
 export function ButcherStoreProductCard({
@@ -24,7 +23,6 @@ export function ButcherStoreProductCard({
   currencySymbol,
   onPress,
   onAdd,
-  onBuyNow,
 }: ButcherStoreProductCardProps) {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const cat = CATEGORY_LABELS[product.category as MeatCategory];
@@ -60,22 +58,12 @@ export function ButcherStoreProductCard({
             <Pressable
               onPress={(e) => {
                 e.stopPropagation?.();
-                onBuyNow();
-              }}
-              style={styles.buyNowBtn}
-              hitSlop={6}
-            >
-              <Text style={styles.buyNowText}>الآن</Text>
-            </Pressable>
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation?.();
                 onAdd();
               }}
               style={styles.addBtn}
               hitSlop={6}
             >
-              <AppIcon name="add" size={18} color="#fff" />
+              <AppIcon name="cart-outline" size={13} color="#fff" />
             </Pressable>
           </View>
         </View>
@@ -135,25 +123,11 @@ function createStyles(colors: ThemeColors) {
     actions: {
       ...getRtlRow(),
       alignItems: 'center',
-      gap: spacing.xs,
-    },
-    buyNowBtn: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 14,
-      borderWidth: 0,
-      backgroundColor: colors.bgDeep,
-    },
-    buyNowText: {
-      ...typography.micro,
-      ...getRtlText(),
-      color: colors.textPrimary,
-      fontWeight: '600',
     },
     addBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',
