@@ -189,6 +189,40 @@ export class CreateListingDto {
   @IsUrl(MEDIA_URL_OPTS, { each: true })
   images!: string[];
 
+  /** Optional video — one per listing, max 45 s, uploaded before listing creation. */
+  @IsOptional()
+  @IsUrl(MEDIA_URL_OPTS)
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsUrl(MEDIA_URL_OPTS)
+  thumbnailUrl?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(45)
+  @Type(() => Number)
+  videoDuration?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  videoWidth?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  videoHeight?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  videoFileSize?: number;
+
   @IsOptional()
   @IsBoolean()
   featured?: boolean;

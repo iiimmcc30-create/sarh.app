@@ -39,7 +39,7 @@ const ALLOWED_DIRECT_FOLDERS: UploadFolder[] = [
   'messages',
 ];
 
-const MEDIA_FOLDERS = new Set<UploadFolder>(['stories', 'messages']);
+const MEDIA_FOLDERS = new Set<UploadFolder>(['stories', 'messages', 'listings']);
 
 const IMAGE_MIMES = new Set(IMAGE_MIME_TYPES);
 const STORY_VIDEO_MIMES = new Set(STORY_VIDEO_MIME_TYPES);
