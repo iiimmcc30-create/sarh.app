@@ -7,6 +7,7 @@ import * as admin from '@/services/admin.service';
 import * as dashboard from '@/services/dashboard.service';
 import * as support from '@/services/support.service';
 import * as editorial from '@/services/editorial-stories.service';
+import * as butcherBanners from '@/services/butcher-banners.service';
 import * as knowledge from '@/services/knowledge.service';
 import * as official from '@/services/official-services.service';
 import * as auth from '@/services/auth.service';
@@ -203,6 +204,14 @@ describe('admin feature API wiring — login to every section', () => {
     await editorial.deleteEditorialStory('s1');
     expect(apiClient.get).toHaveBeenCalledWith('/admin/editorial-stories');
     expect(apiClient.post).toHaveBeenCalledWith('/admin/editorial-stories', expect.any(Object));
+  });
+
+  it('butcher market banners', async () => {
+    (apiClient.get as jest.Mock).mockResolvedValueOnce(ok({ banners: [] }));
+    await butcherBanners.fetchButcherBannersAdmin();
+    await butcherBanners.updateButcherBanner('b1', { titleAr: 'عنوان' });
+    expect(apiClient.get).toHaveBeenCalledWith('/admin/butcher-banners');
+    expect(apiClient.patch).toHaveBeenCalledWith('/admin/butcher-banners/b1', { titleAr: 'عنوان' });
   });
 
   it('knowledge center', async () => {

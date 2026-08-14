@@ -1,8 +1,7 @@
 import { CATEGORY_LABELS, type MeatCategory } from '@/services/butcherData';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type ButcherCategoryBarProps = {
   categories: string[];
@@ -15,7 +14,7 @@ export function ButcherCategoryBar({
   active,
   onChange,
 }: ButcherCategoryBarProps) {
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
     <ScrollView
@@ -26,19 +25,15 @@ export function ButcherCategoryBar({
       {categories.map((cat) => {
         const meta =
           cat === 'all'
-            ? { ar: 'الكل', icon: '🥩' }
+            ? { ar: 'الكل', icon: '' }
             : CATEGORY_LABELS[cat as MeatCategory];
         const isActive = active === cat;
         return (
-          <Pressable
-            key={cat}
-            onPress={() => onChange(cat)}
-            style={[styles.chip, isActive && styles.chipActive]}
-          >
-            {cat !== 'all' ? <Text style={styles.icon}>{meta?.icon}</Text> : null}
+          <Pressable key={cat} onPress={() => onChange(cat)} style={styles.item}>
             <Text style={[styles.label, isActive && styles.labelActive]}>
               {cat === 'all' ? 'الكل' : meta?.ar ?? cat}
             </Text>
+            <View style={[styles.underline, isActive && styles.underlineActive]} />
           </Pressable>
         );
       })}
@@ -46,38 +41,37 @@ export function ButcherCategoryBar({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      gap: spacing.sm,
+      paddingTop: spacing.sm,
+      gap: spacing.lg,
     },
-    chip: {
-      ...getRtlRow(),
+    item: {
       alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      paddingBottom: 2,
     },
-    chipActive: {
-      backgroundColor: colors.electric + '22',
-      borderColor: colors.electric,
-    },
-    icon: { fontSize: 14 },
     label: {
-      ...typography.caption,
-      ...getRtlText(),
-      color: colors.textSecondary,
-      fontWeight: '600',
+      ...typography.bodyStrong,
+      fontSize: 14,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
     },
     labelActive: {
-      color: scheme === 'dark' ? colors.textPrimary : colors.electricBright,
+      color: colors.electricBright,
+    },
+    underline: {
+      marginTop: 6,
+      height: 3,
+      width: '100%',
+      borderRadius: 2,
+      backgroundColor: 'transparent',
+    },
+    underlineActive: {
+      backgroundColor: colors.electric,
     },
   });
 }

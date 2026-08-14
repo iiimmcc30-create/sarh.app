@@ -21,6 +21,7 @@ import {
   LogOut,
   LifeBuoy,
   Images,
+  PanelsTopLeft,
   FolderTree,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
@@ -40,6 +41,7 @@ const NAV_ICONS = {
   '/support': LifeBuoy,
   '/live': Radio,
   '/butchers': Store,
+  '/butcher-banners': PanelsTopLeft,
   '/applications': ClipboardList,
   '/orders': ReceiptText,
   '/plans': CreditCard,

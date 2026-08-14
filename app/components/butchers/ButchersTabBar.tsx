@@ -61,10 +61,10 @@ export function ButchersTabBar({ active }: { active: ButchersTab }) {
               style={({ pressed }) => [styles.slot, pressed && styles.pressed]}
             >
               <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-                <AppIcon name={tab.icon} size={21} color={tint} />
+                <AppIcon name={tab.icon} size={24} color={tint} />
               </View>
               <Text
-                style={[styles.label, { color: tint, fontWeight: focused ? '700' : '500' }]}
+                style={[styles.label, { color: tint }, focused && styles.labelActive]}
                 numberOfLines={1}
               >
                 {tab.label}
@@ -83,8 +83,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.borderSoft,
-      paddingTop: spacing.sm,
-      paddingHorizontal: spacing.xs,
+      paddingTop: 10,
+      paddingHorizontal: 2,
     },
     row: {
       alignItems: 'flex-start',
@@ -94,27 +94,32 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'flex-start',
-      gap: 3,
-      paddingVertical: 2,
-      minHeight: 44,
+      gap: 4,
+      paddingVertical: 4,
+      minHeight: 56,
     },
     iconWrap: {
-      width: 40,
-      height: 28,
-      borderRadius: 14,
+      width: 44,
+      height: 32,
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
     },
     iconWrapActive: {
-      backgroundColor: colors.electric + '18',
+      backgroundColor: colors.electric + '22',
     },
     pressed: { opacity: 0.6 },
     label: {
-      ...typography.micro,
-      fontSize: 11,
-      lineHeight: 14,
+      ...typography.caption,
+      fontSize: 12,
+      lineHeight: 16,
+      fontWeight: '600',
       textAlign: 'center',
       writingDirection: 'rtl',
+    },
+    labelActive: {
+      fontWeight: '800',
+      fontSize: 13,
     },
   });
 }

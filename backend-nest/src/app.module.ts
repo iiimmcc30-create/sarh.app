@@ -29,6 +29,7 @@ import { OfficialServicesModule } from './official-services/official-services.mo
 import { SupportModule } from './support/support.module';
 import { ContentModule } from './content/content.module';
 import { EditorialStoriesModule } from './editorial-stories/editorial-stories.module';
+import { ButcherBannersModule } from './butcher-banners/butcher-banners.module';
 import { MarketCategoriesModule } from './market-categories/market-categories.module';
 import { SettingsModule } from './settings/settings.module';
 
@@ -66,6 +67,7 @@ import { SettingsModule } from './settings/settings.module';
     SupportModule,
     ContentModule,
     EditorialStoriesModule,
+    ButcherBannersModule,
   ],
 })
 export class AppModule {}
