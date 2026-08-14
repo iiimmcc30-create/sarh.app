@@ -63,8 +63,6 @@ export default function ButcherInvoicesScreen() {
       <ScreenHeader
         title="الفواتير"
         showBack
-        rightIcon="menu-burger"
-        onRightPress={() => router.push('/butchers-market-sidebar')}
       />
 
       {loading ? (

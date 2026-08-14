@@ -1,22 +1,25 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 type ButchersAppBarProps = {
-  onMenu: () => void;
+  onBack: () => void;
+  onCart: () => void;
+  cartCount?: number;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
 };
 
-/** Butchers header — menu · inline search · notifications (same chrome as home/market). */
+/** Butchers header — back to main app · search · cart. */
 export function ButchersAppBar({
-  onMenu,
+  onBack,
+  onCart,
+  cartCount = 0,
   searchQuery,
   onSearchChange,
   searchPlaceholder = 'ابحث عن ملحمة، مدينة، أو نوع لحم...',
@@ -29,8 +32,8 @@ export function ButchersAppBar({
   return (
     <View style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
-        <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8} accessibilityLabel="القائمة">
-          <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
+        <Pressable onPress={onBack} style={styles.iconBtn} hitSlop={8} accessibilityLabel="رجوع للتطبيق">
+          <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
         </Pressable>
 
         <View style={[styles.searchPill, getRtlRow()]}>
@@ -54,13 +57,14 @@ export function ButchersAppBar({
           ) : null}
         </View>
 
-        <NotificationBellButton
-          size={ds.iconBtn.md}
-          iconSize={ds.icon.md}
-          style={styles.notifBtn}
-          iconColor={colors.textPrimary}
-          badgeBorderColor={colors.bgElevated}
-        />
+        <Pressable onPress={onCart} style={styles.iconBtn} hitSlop={8} accessibilityLabel="السلة">
+          <AppIcon name="cart-outline" size={ds.icon.md} color={colors.textPrimary} />
+          {cartCount > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+            </View>
+          ) : null}
+        </Pressable>
       </View>
     </View>
   );
@@ -114,10 +118,26 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgDeep,
       borderRadius: 12,
       borderWidth: 0,
+      position: 'relative',
     },
-    notifBtn: {
-      backgroundColor: colors.bgDeep,
-      borderRadius: 12,
+    badge: {
+      position: 'absolute',
+      top: 4,
+      left: 4,
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      paddingHorizontal: 3,
+      backgroundColor: colors.electric,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeText: {
+      ...typography.micro,
+      color: '#fff',
+      fontSize: 9,
+      fontWeight: '700',
+      lineHeight: 12,
     },
   });
 }

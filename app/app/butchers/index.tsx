@@ -34,6 +34,7 @@ import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getRtlText } from '@/lib/rtl';
+import { useButcherCart } from '@/contexts/ButcherCartContext';
 
 const STORY_CIRCLE = 62;
 const SECTION_LIMIT = 12;
@@ -183,6 +184,7 @@ export default function ButchersScreen() {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const { accessToken, isAuthenticated } = useAuth();
+  const { itemCount, butcherId } = useButcherCart();
   const [sections, setSections] = useState(EMPTY_SECTIONS);
   const [loadingSections, setLoadingSections] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -325,7 +327,14 @@ export default function ButchersScreen() {
         <View style={s.stickyHeader}>
           <ButcherLocationBar />
           <ButchersAppBar
-            onMenu={() => router.push('/butchers-market-sidebar')}
+            onBack={() => router.replace('/(tabs)')}
+            onCart={() =>
+              router.push({
+                pathname: '/butchers/cart',
+                params: butcherId ? { butcherId } : {},
+              })
+            }
+            cartCount={itemCount}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />

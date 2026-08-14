@@ -45,17 +45,23 @@ export function NativeButchersMap({
     );
   }
 
-  const { default: MapView, Marker } = MapModule;
+  const { default: MapView, Marker, PROVIDER_GOOGLE } = MapModule;
 
   return (
-    <MapView style={StyleSheet.absoluteFill} region={region}>
+    <MapView
+      style={StyleSheet.absoluteFill}
+      provider={PROVIDER_GOOGLE}
+      region={region}
+      showsUserLocation
+      showsMyLocationButton
+    >
       {butchers.map((butcher) => (
         <Marker
           key={butcher.id}
           coordinate={{ latitude: butcher.lat, longitude: butcher.lng }}
           title={butcher.nameAr}
           description={butcher.cityAr}
-          pinColor={butcher.subscriptionActive ? '#F59E0B' : '#3B82F6'}
+          pinColor={butcher.subscriptionActive ? colors.gold : colors.electric}
           onPress={() => onSelect(selectedId === butcher.id ? null : butcher.id)}
         />
       ))}

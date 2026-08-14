@@ -215,11 +215,7 @@ export default function MyOrdersScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader
-        title="طلباتي"
-        rightIcon="menu-burger"
-        onRightPress={() => router.push('/butchers-market-sidebar')}
-      />
+      <ScreenHeader title="طلباتي" />
 
       {loading ? (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
