@@ -35,7 +35,6 @@ import {
   type CutType,
 } from '@/services/butcherData';
 import { ButcherCategoryBar } from '@/components/butcher/ButcherCategoryBar';
-import { ButcherDeliverySegment } from '@/components/butcher/ButcherDeliverySegment';
 import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
 import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
@@ -415,8 +414,6 @@ export default function ButcherProfileScreen() {
   const { accessToken, user } = useAuth();
   const {
     setButcherMeta,
-    deliveryType,
-    setDeliveryType,
     itemCount,
     subtotal,
     addLine,
@@ -791,8 +788,6 @@ export default function ButcherProfileScreen() {
             </LinearGradient>
           </Pressable>
         </View>
-
-        <ButcherDeliverySegment value={deliveryType} onChange={setDeliveryType} />
 
         {/* ── Tabs ── */}
         <ScrollView
