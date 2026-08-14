@@ -82,11 +82,12 @@ export default function ButchersAllScreen() {
               </View>
             </View>
           ) : (
-            butchers.map((butcher) => (
+            butchers.map((butcher, index) => (
               <ButcherNearbyRow
                 key={butcher.id}
                 butcher={butcher}
                 onPress={() => router.push({ pathname: '/butchers/[id]', params: { id: butcher.id } })}
+                showDivider={index < butchers.length - 1}
               />
             ))
           )}

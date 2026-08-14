@@ -185,11 +185,12 @@ export default function ButchersScreen() {
               onSeeAll={() => router.push('/butchers/all')}
             />
             <View style={s.nearbyList}>
-              {filteredNearby.map((butcher) => (
+              {filteredNearby.map((butcher, index) => (
                 <ButcherNearbyRow
                   key={butcher.id}
                   butcher={butcher}
                   onPress={() => openButcher(butcher.id)}
+                  showDivider={index < filteredNearby.length - 1}
                 />
               ))}
             </View>

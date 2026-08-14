@@ -2,6 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { BrandSwitch, menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { ds } from '@/constants/designSystem';
 import { LOCALE_STORAGE_KEY, type AppLocale, normalizeAppLocale } from '@/lib/locale';
 import { setupRtl } from '@/lib/rtl';
