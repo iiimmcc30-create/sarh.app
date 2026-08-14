@@ -40,7 +40,7 @@ const EXTRA_FEATURE_LABELS_AR: Record<string, string> = {
 };
 
 export default function PlanEditPage() {
-  const params = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>()!;
   const router = useRouter();
   const isNew = params.id === 'new';
 

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { fetchReport, updateReport } from '@/services/admin.service';
 
 export default function ReportDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>()!;
   const router = useRouter();
   const [ticket, setTicket] = useState<Record<string, unknown> | null>(null);
   const [notes, setNotes] = useState('');

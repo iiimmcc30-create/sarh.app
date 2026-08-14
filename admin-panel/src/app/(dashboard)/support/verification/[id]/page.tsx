@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function VerificationDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>()!;
   const router = useRouter();
   const [request, setRequest] = useState<Record<string, unknown> | null>(null);
   const [reviewReason, setReviewReason] = useState('');

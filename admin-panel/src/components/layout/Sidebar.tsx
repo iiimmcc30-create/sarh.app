@@ -21,6 +21,7 @@ import {
   LogOut,
   LifeBuoy,
   Images,
+  FolderTree,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
@@ -34,6 +35,7 @@ const NAV_ICONS = {
   '/knowledge': BookOpen,
   '/official-services': Briefcase,
   '/listings': Tag,
+  '/categories': FolderTree,
   '/reports': Flag,
   '/support': LifeBuoy,
   '/live': Radio,
@@ -63,7 +65,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active = isAdminNavActive(pathname, href);
+          const active = isAdminNavActive(pathname ?? '', href);
           return (
             <Link
               key={href}

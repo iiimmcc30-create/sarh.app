@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { fetchUser, updateUser } from '@/services/admin.service';
 
 export default function UserDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>()!;
   const router = useRouter();
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
 
