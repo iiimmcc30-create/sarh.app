@@ -124,9 +124,11 @@ export default function ButcherLocationScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.hint}>
-            حدّد موقعك على الخريطة لعرض أقرب الملاحم وتسهيل التوصيل.
-          </Text>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.hint}>
+              اضغط على الخريطة لتحديد موقعك، أو استخدم «موقعي الحالي».
+            </Text>
+          </View>
 
           <LocationMapPreview
             country="SA"
@@ -137,6 +139,10 @@ export default function ButcherLocationScreen() {
             showLocateButton
             onLocate={() => void locate()}
             locating={locating}
+            onPick={(lat, lng) => {
+              setCoords({ lat, lng });
+              void applyReverseGeocode(lat, lng);
+            }}
           />
 
           {initializing ? (
@@ -145,7 +151,9 @@ export default function ButcherLocationScreen() {
 
           {/* Label chips */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>نوع العنوان</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.fieldLabel}>نوع العنوان</Text>
+            </View>
             <View style={styles.chipsRow}>
               {LABEL_OPTIONS.map((opt) => {
                 const activeChip = label === opt;
@@ -166,7 +174,9 @@ export default function ButcherLocationScreen() {
 
           {/* House number */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>رقم المنزل / المبنى</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.fieldLabel}>رقم المنزل / المبنى</Text>
+            </View>
             <TextInput
               style={styles.input}
               value={houseNumber}
@@ -179,7 +189,9 @@ export default function ButcherLocationScreen() {
 
           {/* Address */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>العنوان / الحي</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.fieldLabel}>العنوان / الحي</Text>
+            </View>
             <TextInput
               style={[styles.input, styles.inputMultiline]}
               value={address}
@@ -216,18 +228,26 @@ function createStyles(colors: ThemeColors) {
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
     scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     hint: {
-      ...typography.caption,
-      color: colors.textMuted,
-      lineHeight: 20,
-      ...getRtlText(),
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      lineHeight: 22,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     field: { gap: spacing.sm },
     fieldLabel: {
       ...typography.bodyStrong,
-      fontSize: 14,
+      fontSize: 15,
       color: colors.textPrimary,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     chipsRow: { flexDirection: 'row-reverse', gap: spacing.sm },
     chip: {

@@ -3,6 +3,8 @@ export interface NativeLocationMapProps {
   lng: number;
   cityLabel?: string;
   height: number;
+  interactive?: boolean;
+  onPick?: (lat: number, lng: number) => void;
 }
 
 /** Web stub — schematic map is used instead */

@@ -2,6 +2,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { DeliveryMapAddressField } from '@/components/butchers/DeliveryMapAddressField';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
@@ -39,6 +40,7 @@ import {
   type ButcherProfile,
 } from '@/services/butcherData';
 import { PAYMENT_METHODS, NIPaymentMethod } from '@/services/network_international';
+import { formatDeliveryAddressLine, loadDeliveryLocation } from '@/services/butcherDeliveryLocation';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -85,12 +87,16 @@ export default function ButcherOrderScreen() {
           ? { Authorization: `Bearer ${accessToken}` }
           : {};
 
-        const [resButcher, resProducts] = await Promise.all([
+        const [resButcher, savedLoc] = await Promise.all([
           fetch(`${API_BASE}/api/butchers/${butcherId}`, { headers }),
-          fetch(`${API_BASE}/api/butchers/products?butcherId=${butcherId}`, { headers }),
+          loadDeliveryLocation(),
         ]);
 
         if (!active) return;
+
+        if (savedLoc) {
+          setAddress(formatDeliveryAddressLine(savedLoc));
+        }
 
         let butcherJson: { success?: boolean; data?: Record<string, unknown> } | null = null;
 
@@ -102,18 +108,25 @@ export default function ButcherOrderScreen() {
         }
 
         let mapped: ButcherProduct[] = [];
-        if (resProducts.ok) {
-          const json = await resProducts.json();
-          const rows = Array.isArray(json.data) ? json.data : json.data?.products;
-          if (json.success && Array.isArray(rows)) {
-            mapped = rows.map((p: Record<string, unknown>) => mapButcherProductFromApi(p));
-          }
-        }
-
-        if (mapped.length === 0 && Array.isArray(butcherJson?.data?.products)) {
+        if (Array.isArray(butcherJson?.data?.products)) {
           mapped = (butcherJson!.data!.products as Record<string, unknown>[]).map((p) =>
             mapButcherProductFromApi(p),
           );
+        }
+
+        if (mapped.length === 0) {
+          const resProducts = await fetch(
+            `${API_BASE}/api/butchers/products?butcherId=${butcherId}`,
+            { headers },
+          );
+          if (!active) return;
+          if (resProducts.ok) {
+            const json = await resProducts.json();
+            const rows = Array.isArray(json.data) ? json.data : json.data?.products;
+            if (json.success && Array.isArray(rows)) {
+              mapped = rows.map((p: Record<string, unknown>) => mapButcherProductFromApi(p));
+            }
+          }
         }
 
         setProducts(mapped.filter((p) => p.inStock));
@@ -166,17 +179,15 @@ export default function ButcherOrderScreen() {
 
   const goSuccess = (orderId: string, orderNumber: string, paymentStatus: string) => {
     setSubmitted(true);
-    setTimeout(() => {
-      router.replace({
-        pathname: '/butchers/order-success',
-        params: {
-          orderId: orderId ?? '',
-          orderNumber: orderNumber ?? '',
-          butcherId: butcherId ?? '',
-          paymentStatus: paymentStatus ?? 'unpaid',
-        },
-      });
-    }, 600);
+    router.replace({
+      pathname: '/butchers/order-success',
+      params: {
+        orderId: orderId ?? '',
+        orderNumber: orderNumber ?? '',
+        butcherId: butcherId ?? '',
+        paymentStatus: paymentStatus ?? 'unpaid',
+      },
+    });
   };
 
   const handleSubmit = async () => {
@@ -189,7 +200,7 @@ export default function ButcherOrderScreen() {
       return;
     }
     if (deliveryType === 'delivery' && !address.trim()) {
-      Alert.alert('العنوان مطلوب', 'أدخل عنوان التوصيل قبل إتمام الدفع');
+      Alert.alert('العنوان مطلوب', 'حدّد موقع التوصيل على الخريطة قبل إتمام الدفع');
       return;
     }
     if (computedTotal <= 0 || !Number.isFinite(computedTotal)) {
@@ -503,15 +514,7 @@ export default function ButcherOrderScreen() {
             })}
           </View>
           {deliveryType === 'delivery' ? (
-            <TextInput
-              style={styles.textArea}
-              placeholder="عنوان التوصيل..."
-              placeholderTextColor={colors.textSubtle}
-              value={address}
-              onChangeText={setAddress}
-              multiline
-              textAlign="right"
-            />
+            <DeliveryMapAddressField onAddressChange={setAddress} />
           ) : null}
         </Section>
 

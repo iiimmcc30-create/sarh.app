@@ -19,6 +19,7 @@ import {
   formatCoords,
   getLocationPinPosition,
   hasValidCoords,
+  COUNTRY_MAP_CENTER,
 } from '@/lib/butcherLocation';
 import { isNativeMapsEnabled } from '@/lib/maps';
 import { Country } from '@/services/types';
@@ -38,6 +39,8 @@ interface LocationMapPreviewProps {
   locating?: boolean;
   /** Stable id for pin jitter when no GPS (e.g. listing id) */
   pinSeed?: string;
+  /** Tap the map to drop a pin (delivery address picker). */
+  onPick?: (lat: number, lng: number) => void;
 }
 
 function SchematicMap({
@@ -107,21 +110,34 @@ export function LocationMapPreview({
   onLocate,
   locating = false,
   pinSeed,
+  onPick,
 }: LocationMapPreviewProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const interactive = Boolean(onPick);
+  const hasCoords = hasValidCoords(lat, lng);
+  const center = COUNTRY_MAP_CENTER.SA;
+  const pinLat = hasCoords ? lat! : center.lat;
+  const pinLng = hasCoords ? lng! : center.lng;
   const useNative =
     Platform.OS !== 'web' &&
     isNativeMapsEnabled() &&
-    hasValidCoords(lat, lng);
+    (hasCoords || interactive);
 
-  const useOsm = hasValidCoords(lat, lng) && !useNative;
+  const useOsm = hasCoords && !useNative && !interactive;
   const locationCaption = formatLocationLabel(cityLabel, undefined, lat, lng);
 
   return (
     <View style={styles.wrap}>
       {useNative ? (
-        <NativeLocationMap lat={lat!} lng={lng!} cityLabel={cityLabel} height={height} />
+        <NativeLocationMap
+          lat={pinLat}
+          lng={pinLng}
+          cityLabel={cityLabel}
+          height={height}
+          interactive={interactive}
+          onPick={onPick}
+        />
       ) : useOsm ? (
         <OsmMapView lat={lat!} lng={lng!} height={height} />
       ) : (

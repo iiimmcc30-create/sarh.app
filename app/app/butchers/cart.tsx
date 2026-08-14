@@ -3,6 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ButcherDeliverySegment } from '@/components/butcher/ButcherDeliverySegment';
+import { DeliveryMapAddressField } from '@/components/butchers/DeliveryMapAddressField';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -86,7 +87,7 @@ export default function ButcherCartScreen() {
       return;
     }
     if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
-      Alert.alert('العنوان مطلوب', 'أدخل عنوان التوصيل قبل إتمام الدفع');
+      Alert.alert('العنوان مطلوب', 'حدّد موقع التوصيل على الخريطة قبل إتمام الدفع');
       return;
     }
     if (subtotal <= 0 || !Number.isFinite(subtotal)) {
@@ -296,20 +297,14 @@ export default function ButcherCartScreen() {
 
             {deliveryType === 'delivery' ? (
               <View style={styles.fieldBlock}>
-                <Text style={styles.fieldLabel}>عنوان التوصيل</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="الحي، الشارع، رقم المبنى..."
-                  placeholderTextColor={styles.mutedColor.color}
-                  value={deliveryAddress}
-                  onChangeText={setDeliveryAddress}
-                  multiline
-                />
+                <DeliveryMapAddressField onAddressChange={setDeliveryAddress} />
               </View>
             ) : null}
 
             <View style={styles.fieldBlock}>
-              <Text style={styles.fieldLabel}>ملاحظات (اختياري)</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.fieldLabel}>ملاحظات (اختياري)</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="تعليمات خاصة للملحمة..."
@@ -497,8 +492,14 @@ function createStyles(colors: ThemeColors) {
     },
     fieldLabel: {
       ...typography.bodyStrong,
-      ...getRtlText(),
-      color: colors.textSecondary,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
     },
     input: {
       borderWidth: 1,

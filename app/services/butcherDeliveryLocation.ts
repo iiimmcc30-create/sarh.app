@@ -48,3 +48,12 @@ export function deliveryLocationSummary(location: DeliveryLocation | null): stri
     .filter(Boolean);
   return parts.join('، ');
 }
+
+/** Full address line stored on the butcher order (max 300 on API). */
+export function formatDeliveryAddressLine(location: DeliveryLocation | null): string {
+  if (!location) return '';
+  const parts = [location.label, location.houseNumber, location.address, location.cityAr]
+    .map((p) => p?.trim())
+    .filter(Boolean);
+  return parts.join('، ').slice(0, 300);
+}
