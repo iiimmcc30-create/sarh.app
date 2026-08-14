@@ -33,6 +33,7 @@ export default function ButchersLayout() {
       <Stack.Screen name="edit" />
       <Stack.Screen name="dashboard" />
       <Stack.Screen name="manage" />
+      <Stack.Screen name="manage-order/[id]" />
       <Stack.Screen name="map" />
       <Stack.Screen name="my-orders" />
       <Stack.Screen name="offers" />

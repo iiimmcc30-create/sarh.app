@@ -1,13 +1,7 @@
-// Powered by OnSpace.AI
-// SAFAT — Butcher Manage Screen (إدارة الملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, marginEnd, rtlForwardIcon } from '@/lib/rtl';
-
 import { Image } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
-import * as ImagePicker from 'expo-image-picker';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -18,35 +12,37 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { confirmDestructive } from '@/lib/actionSheet';
 import { API_BASE } from '@/services/api';
-import { uploadImageFromUri } from '@/services/upload';
-import {
-  CATEGORY_LABELS,
-  CUT_LABELS,
-  CutType,
-  MeatCategory,
-  Country,
-} from '@/services/butcherData';
+import { CATEGORY_LABELS, Country } from '@/services/butcherData';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
-import { hasValidCoords, formatCoords } from '@/lib/butcherLocation';
+import { hasValidCoords } from '@/lib/butcherLocation';
 import { formatLocationLabel } from '@/lib/formatAddress';
 import type { ResolvedAddress } from '@/lib/formatAddress';
 import { storyTimeLeftLabel } from '@/constants/stories';
-import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { connectSocket } from '@/lib/socket';
-
-type ManageTab = 'products' | 'offers' | 'stories' | 'orders';
-
-const MANAGE_TABS: ManageTab[] = ['orders', 'products', 'offers', 'stories'];
+import { AddOfferForm, AddProductForm } from '@/components/butcher/ops/ButcherManageForms';
+import { OpsOrderCard } from '@/components/butcher/ops/OpsOrderCard';
+import {
+  OPS_MANAGE_TABS,
+  OPS_ORDER_FILTERS,
+  groupOrdersByHour,
+  isSameLocalDay,
+  matchesOpsFilter,
+  orderCustomerName,
+  orderShortId,
+  productStock,
+  summarizeOrders,
+  type OpsManageTab,
+  type OpsOrderFilter,
+} from '@/lib/butcherOps';
 
 const CANCEL_REASONS = [
   'المنتج غير متوفر',
@@ -55,645 +51,32 @@ const CANCEL_REASONS = [
   'طلب خارج نطاق الخدمة',
 ] as const;
 
-function parseManageTab(value: string | undefined): ManageTab | null {
-  return MANAGE_TABS.includes(value as ManageTab) ? (value as ManageTab) : null;
+function parseManageTab(value: string | undefined): OpsManageTab | null {
+  return OPS_MANAGE_TABS.some((t) => t.id === value) ? (value as OpsManageTab) : null;
 }
 
-// ─── Order status badge ───────────────────────────────────────────────────────
-const STATUS_LABELS: Record<string, string> = {
-  pending:   'قيد الانتظار',
-  confirmed: 'مؤكد',
-  preparing: 'جارٍ التحضير',
-  ready:     'جاهز',
-  delivered: 'تم التسليم',
-  cancelled: 'ملغى',
-};
-
-function isLocalImageUri(uri: string) {
-  return (
-    uri.startsWith('file://') ||
-    uri.startsWith('content://') ||
-    uri.startsWith('ph://') ||
-    uri.startsWith('assets-library://')
-  );
-}
-
-// ─── Add / Edit Product Form ───────────────────────────────────────────────────
-function AddProductForm({
-  onClose,
-  onSuccess,
-  butcherCountry,
-  product,
-}: {
-  onClose: () => void;
-  onSuccess: () => void;
-  butcherCountry: string;
-  product?: any;
-}) {
-  const { accessToken } = useAuth();
-  const { colors } = useTheme();
-  const apf = useThemedStyles(({ colors }) => createProductFormStyles(colors));
-  const [loading, setLoading] = useState(false);
-  const [imageUris, setImageUris] = useState<string[]>(
-    Array.isArray(product?.images) ? product.images.filter(Boolean) : [],
-  );
-  const [form, setForm] = useState({
-    nameAr: product?.nameAr ?? '',
-    category: (product?.category ?? 'lamb') as MeatCategory,
-    pricePerKg: product?.pricePerKg?.toString() ?? '',
-    priceFixed: product?.priceFixed?.toString() ?? '',
-    availableQuantity: product?.availableQuantity?.toString() ?? '',
-    freshness: product?.freshness ?? 'fresh',
-    inStock: product?.inStock ?? true,
-  });
-
-  const ALL_CATEGORIES = Object.entries(CATEGORY_LABELS) as [MeatCategory, any][];
-  const ALL_CUTS: CutType[] = ['whole','half','quarter','ribs','leg','shoulder','liver','mixed','custom'];
-  const [selectedCuts, setSelectedCuts] = useState<CutType[]>(
-    (product?.availableCuts?.length ? product.availableCuts : ['whole']) as CutType[]
-  );
-
-  const toggleCut = (cut: CutType) => {
-    setSelectedCuts((prev) =>
-      prev.includes(cut) ? prev.filter((c) => c !== cut) : [...prev, cut]
-    );
-  };
-
-  const pickImages = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('إذن مطلوب', 'يرجى السماح بالوصول إلى الصور لإضافتها للمنتج');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: true,
-      selectionLimit: 5 - imageUris.length,
-      quality: 0.85,
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      setImageUris((prev) =>
-        [...prev, ...result.assets.map((a) => a.uri)].slice(0, 5),
-      );
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImageUris((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    if (!form.nameAr.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال اسم المنتج');
-      return;
-    }
-    if (!form.pricePerKg && !form.priceFixed) {
-      Alert.alert('خطأ', 'يرجى تحديد السعر');
-      return;
-    }
-    if (!accessToken) {
-      Alert.alert('خطأ', 'يرجى تسجيل الدخول أولاً');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const uploadedImages: string[] = [];
-      for (const uri of imageUris) {
-        if (isLocalImageUri(uri)) {
-          uploadedImages.push(await uploadImageFromUri(accessToken, uri, 'butchers'));
-        } else {
-          uploadedImages.push(uri);
-        }
-      }
-
-      const payload: Record<string, unknown> = {
-        nameAr: form.nameAr,
-        nameEn: form.nameAr,
-        category: form.category,
-        pricePerKg: form.pricePerKg ? parseFloat(form.pricePerKg) : null,
-        priceFixed: form.priceFixed ? parseFloat(form.priceFixed) : null,
-        availableQuantity: form.availableQuantity.trim()
-          ? parseFloat(form.availableQuantity)
-          : undefined,
-        availableCuts: selectedCuts,
-        freshness: form.freshness,
-        descriptionAr: form.nameAr,
-        descriptionEn: form.nameAr,
-        inStock: form.inStock,
-        images: uploadedImages,
-      };
-
-      if (!product) {
-        payload.country = butcherCountry || 'SA';
-      }
-
-      const url = product
-        ? `${API_BASE}/api/butchers/products/${product.id}`
-        : `${API_BASE}/api/butchers/products`;
-      const res = await fetch(url, {
-        method: product ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.success) {
-        Alert.alert('نجاح', product ? 'تم تحديث المنتج' : 'تمت إضافة المنتج بنجاح');
-        onSuccess();
-        onClose();
-      } else {
-        Alert.alert('خطأ', data.messageAr || data.message || (product ? 'فشل تحديث المنتج' : 'فشل إضافة المنتج'));
-      }
-    } catch (err) {
-      console.error(err);
-      Alert.alert('خطأ', err instanceof Error ? err.message : 'تعذر الاتصال بالخادم');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={apf.wrap}>
-      <View style={apf.handle} />
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.title}>{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</Text>
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>اسم المنتج بالعربي</Text>
-      </View>
-      <TextInput
-        style={apf.input}
-        placeholder="مثال: خروف كامل طازج"
-        placeholderTextColor={colors.textSubtle}
-        value={form.nameAr}
-        onChangeText={(v) => setForm({ ...form, nameAr: v })}
-        textAlign="right"
-      />
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الفئة</Text>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.lg }}>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          {ALL_CATEGORIES.map(([cat, info]) => (
-            <Pressable
-              key={cat}
-              onPress={() => setForm({ ...form, category: cat })}
-              style={[apf.catChip, form.category === cat && apf.catChipActive]}
-            >
-              <Text style={apf.catIcon}>{info.icon}</Text>
-              <View style={apf.chipTextShell}>
-                <Text style={[apf.catLabel, form.category === cat && apf.catLabelActive]}>{info.ar}</Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>التسعير</Text>
-      </View>
-      <View style={apf.priceRow}>
-        <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>سعر/كغ</Text>
-          </View>
-          <TextInput
-            style={apf.input}
-            placeholder="0"
-            placeholderTextColor={colors.textSubtle}
-            value={form.pricePerKg}
-            onChangeText={(v) => setForm({ ...form, pricePerKg: v })}
-            keyboardType="numeric"
-            textAlign="center"
-          />
-        </View>
-        <View style={apf.orShell}>
-          <Text style={apf.orText}>أو</Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>سعر ثابت</Text>
-          </View>
-          <TextInput
-            style={apf.input}
-            placeholder="0"
-            placeholderTextColor={colors.textSubtle}
-            value={form.priceFixed}
-            onChangeText={(v) => setForm({ ...form, priceFixed: v })}
-            keyboardType="numeric"
-            textAlign="center"
-          />
-        </View>
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الكمية المتاحة (كغ)</Text>
-      </View>
-      <TextInput
-        style={apf.input}
-        placeholder="مثال: 50"
-        placeholderTextColor={colors.textSubtle}
-        value={form.availableQuantity}
-        onChangeText={(v) => setForm({ ...form, availableQuantity: v })}
-        keyboardType="numeric"
-        textAlign="center"
-      />
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>طرق التقطيع المتاحة</Text>
-      </View>
-      <View style={apf.cutsGrid}>
-        {ALL_CUTS.map((cut) => (
-          <Pressable
-            key={cut}
-            onPress={() => toggleCut(cut)}
-            style={[apf.cutChip, selectedCuts.includes(cut) && apf.cutChipActive]}
-          >
-            <View style={apf.chipTextShell}>
-              <Text style={[apf.cutLabel, selectedCuts.includes(cut) && apf.cutLabelActive]}>
-                {CUT_LABELS[cut].ar}
-              </Text>
-            </View>
-          </Pressable>
-        ))}
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الطزاجة</Text>
-      </View>
-      <View style={apf.freshnessRow}>
-        {[
-          { id: 'fresh',   label: '🟢 طازج'  },
-          { id: 'chilled', label: '🔵 مبرد'  },
-          { id: 'frozen',  label: '❄️ مجمد'  },
-        ].map((opt) => (
-          <Pressable
-            key={opt.id}
-            onPress={() => setForm({ ...form, freshness: opt.id })}
-            style={[apf.freshnessBtn, form.freshness === opt.id && apf.freshnessBtnActive]}
-          >
-            <View style={apf.chipTextShell}>
-              <Text style={apf.freshnessLabel}>{opt.label}</Text>
-            </View>
-          </Pressable>
-        ))}
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>التوفر</Text>
-      </View>
-      <View style={apf.freshnessRow}>
-        {[
-          { id: true,  label: '✅ متوفر' },
-          { id: false, label: '❌ غير متوفر' },
-        ].map((opt) => (
-          <Pressable
-            key={String(opt.id)}
-            onPress={() => setForm({ ...form, inStock: opt.id })}
-            style={[apf.freshnessBtn, form.inStock === opt.id && apf.freshnessBtnActive]}
-          >
-            <View style={apf.chipTextShell}>
-              <Text style={apf.freshnessLabel}>{opt.label}</Text>
-            </View>
-          </Pressable>
-        ))}
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>صور المنتج</Text>
-      </View>
-      <View style={apf.imageGrid}>
-        {imageUris.map((uri, idx) => (
-          <View key={`${uri}-${idx}`} style={apf.imageThumbWrap}>
-            <Image source={{ uri }} style={apf.imageThumb} contentFit="cover" />
-            <Pressable style={apf.imageRemove} onPress={() => removeImage(idx)} hitSlop={6}>
-              <AppIcon name="close-circle" size={22} color={colors.danger} />
-            </Pressable>
-          </View>
-        ))}
-        {imageUris.length < 5 && (
-          <Pressable style={apf.uploadBox} onPress={pickImages} disabled={loading}>
-            <AppIcon name="camera-outline" size={28} color={colors.electricBright} />
-            <View style={apf.chipTextShell}>
-              <Text style={apf.uploadText}>إضافة صورة</Text>
-            </View>
-          </Pressable>
-        )}
-      </View>
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.uploadHint}>حتى 5 صور · JPG أو PNG</Text>
-      </View>
-
-      <View style={apf.actions}>
-        <Pressable style={apf.cancelBtn} onPress={onClose} disabled={loading}>
-          <View style={apf.chipTextShell}>
-            <Text style={apf.cancelText}>إلغاء</Text>
-          </View>
-        </Pressable>
-        <Pressable style={apf.saveBtn} onPress={handleSave} disabled={loading}>
-          <LinearGradient colors={[colors.electric, colors.cyan]} style={apf.saveBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <View style={apf.chipTextShell}>
-                <Text style={apf.saveBtnText}>{product ? 'تحديث المنتج' : 'حفظ المنتج'}</Text>
-              </View>
-            )}
-          </LinearGradient>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-// ─── Add / Edit Offer Form ───────────────────────────────────────────────────
-function AddOfferForm({
-  onClose,
-  onSuccess,
-  butcherCountry,
-  offer,
-}: {
-  onClose: () => void;
-  onSuccess: () => void;
-  butcherCountry: string;
-  offer?: any;
-}) {
-  const { accessToken } = useAuth();
-  const { colors } = useTheme();
-  const apf = useThemedStyles(({ colors }) => createProductFormStyles(colors));
-  const [loading, setLoading] = useState(false);
-  const [imageUri, setImageUri] = useState<string>(offer?.image ?? '');
-  const [form, setForm] = useState({
-    titleAr: offer?.titleAr ?? '',
-    descriptionAr: offer?.descriptionAr ?? '',
-    originalPrice: offer?.originalPrice?.toString() ?? '',
-    offerPrice: offer?.offerPrice?.toString() ?? '',
-    discountPercent: offer?.discountPercent?.toString() ?? '',
-    validUntil: offer?.validUntil
-      ? new Date(offer.validUntil).toISOString().slice(0, 10)
-      : '',
-  });
-
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('إذن مطلوب', 'يرجى السماح بالوصول إلى الصور لإرفاق صورة العرض');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: false,
-      quality: 0.85,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!form.titleAr.trim() || !form.descriptionAr.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال عنوان ووصف العرض');
-      return;
-    }
-    if (!imageUri.trim()) {
-      Alert.alert('خطأ', 'يرجى إرفاق صورة العرض');
-      return;
-    }
-    if (!form.validUntil.trim()) {
-      Alert.alert('خطأ', 'يرجى تحديد تاريخ انتهاء العرض');
-      return;
-    }
-
-    const originalPrice = form.originalPrice ? parseFloat(form.originalPrice) : null;
-    const offerPrice = form.offerPrice ? parseFloat(form.offerPrice) : null;
-    let discountPercent = form.discountPercent ? parseInt(form.discountPercent, 10) : null;
-    if (!discountPercent && originalPrice && offerPrice && originalPrice > 0) {
-      discountPercent = Math.round((1 - offerPrice / originalPrice) * 100);
-    }
-
-    const validUntil = new Date(`${form.validUntil}T23:59:59.000Z`).toISOString();
-
-    setLoading(true);
-    try {
-      let imageUrl = imageUri.trim();
-      if (isLocalImageUri(imageUrl)) {
-        imageUrl = await uploadImageFromUri(accessToken!, imageUrl, 'butchers');
-      }
-
-      const payload = {
-        titleAr: form.titleAr,
-        titleEn: form.titleAr,
-        descriptionAr: form.descriptionAr,
-        descriptionEn: form.descriptionAr,
-        originalPrice,
-        offerPrice,
-        discountPercent,
-        image: imageUrl,
-        validUntil,
-        country: butcherCountry || 'SA',
-      };
-      const url = offer
-        ? `${API_BASE}/api/butchers/offers/${offer.id}`
-        : `${API_BASE}/api/butchers/offers`;
-      const res = await fetch(url, {
-        method: offer ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.success) {
-        Alert.alert('نجاح', offer ? 'تم تحديث العرض' : 'تمت إضافة العرض');
-        onSuccess();
-        onClose();
-      } else {
-        Alert.alert('خطأ', data.messageAr || data.message || 'فشل حفظ العرض');
-      }
-    } catch (err) {
-      console.error(err);
-      Alert.alert('خطأ', 'تعذر الاتصال بالخادم');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={apf.wrap}>
-      <View style={apf.handle} />
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.title}>{offer ? 'تعديل العرض' : 'إضافة عرض جديد'}</Text>
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>عنوان العرض</Text>
-      </View>
-      <TextInput
-        style={apf.input}
-        placeholder="مثال: عرض نهاية الأسبوع"
-        placeholderTextColor={colors.textSubtle}
-        value={form.titleAr}
-        onChangeText={(v) => setForm({ ...form, titleAr: v })}
-        textAlign="right"
-      />
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الوصف</Text>
-      </View>
-      <TextInput
-        style={[apf.input, { minHeight: 72 }]}
-        placeholder="وصف مختصر للعرض"
-        placeholderTextColor={colors.textSubtle}
-        value={form.descriptionAr}
-        onChangeText={(v) => setForm({ ...form, descriptionAr: v })}
-        textAlign="right"
-        multiline
-      />
-
-      <View style={apf.priceRow}>
-        <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>السعر الأصلي</Text>
-          </View>
-          <TextInput
-            style={apf.input}
-            placeholder="0"
-            placeholderTextColor={colors.textSubtle}
-            value={form.originalPrice}
-            onChangeText={(v) => setForm({ ...form, originalPrice: v })}
-            keyboardType="numeric"
-            textAlign="center"
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>سعر العرض</Text>
-          </View>
-          <TextInput
-            style={apf.input}
-            placeholder="0"
-            placeholderTextColor={colors.textSubtle}
-            value={form.offerPrice}
-            onChangeText={(v) => setForm({ ...form, offerPrice: v })}
-            keyboardType="numeric"
-            textAlign="center"
-          />
-        </View>
-      </View>
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>نسبة الخصم % (اختياري)</Text>
-      </View>
-      <TextInput
-        style={apf.input}
-        placeholder="20"
-        placeholderTextColor={colors.textSubtle}
-        value={form.discountPercent}
-        onChangeText={(v) => setForm({ ...form, discountPercent: v })}
-        keyboardType="numeric"
-        textAlign="center"
-      />
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>صورة العرض</Text>
-      </View>
-      <Pressable onPress={pickImage} style={apf.uploadBoxWide}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} style={apf.previewImgWide} contentFit="cover" />
-        ) : (
-          <>
-            <AppIcon name="image-outline" size={28} color={colors.textMuted} />
-            <View style={apf.chipTextShell}>
-              <Text style={apf.uploadText}>إرفاق صورة</Text>
-            </View>
-          </>
-        )}
-      </Pressable>
-      {imageUri ? (
-        <Pressable onPress={() => setImageUri('')} style={apf.removeImageLink}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.removeImageText}>إزالة الصورة</Text>
-          </View>
-        </Pressable>
-      ) : null}
-
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>تاريخ الانتهاء (YYYY-MM-DD)</Text>
-      </View>
-      <TextInput
-        style={apf.input}
-        placeholder="2026-12-31"
-        placeholderTextColor={colors.textSubtle}
-        value={form.validUntil}
-        onChangeText={(v) => setForm({ ...form, validUntil: v })}
-        textAlign="center"
-      />
-
-      <View style={apf.actions}>
-        <Pressable style={apf.cancelBtn} onPress={onClose} disabled={loading}>
-          <View style={apf.chipTextShell}>
-            <Text style={apf.cancelText}>إلغاء</Text>
-          </View>
-        </Pressable>
-        <Pressable style={apf.saveBtn} onPress={handleSave} disabled={loading}>
-          <LinearGradient colors={[colors.gold, colors.amber]} style={apf.saveBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <View style={apf.chipTextShell}>
-                <Text style={apf.saveBtnText}>{offer ? 'تحديث العرض' : 'حفظ العرض'}</Text>
-              </View>
-            )}
-          </LinearGradient>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ButcherManageScreen() {
   const router = useRouter();
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createMainStyles(colors));
-  const pm = useThemedStyles(({ colors }) => createProductManageStyles(colors));
-  const ord = useThemedStyles(({ colors }) => createOrderStyles(colors));
-  const of = useThemedStyles(({ colors }) => createOfferManageStyles(colors));
-  const statusColors: Record<string, string> = {
-    pending: colors.amber,
-    confirmed: colors.electricBright,
-    preparing: colors.cyan,
-    ready: colors.success,
-    delivered: colors.success,
-    cancelled: colors.danger,
-  };
   const { tab, action } = useLocalSearchParams<{ tab?: string; action?: string }>();
-  const { accessToken } = useAuth();
-  const initialTab = parseManageTab(tab) ?? 'orders';
-  const [activeTab, setActiveTab] = useState<ManageTab>(initialTab);
+  const { accessToken, user } = useAuth();
+  const initialTab = parseManageTab(tab) ?? 'home';
+  const [activeTab, setActiveTab] = useState<OpsManageTab>(initialTab);
+  const [orderFilter, setOrderFilter] = useState<OpsOrderFilter>('all');
+  const [orderQuery, setOrderQuery] = useState('');
   const [showProductForm, setShowProductForm] = useState(action === 'add' && initialTab === 'products');
   const [showOfferForm, setShowOfferForm] = useState(action === 'add' && initialTab === 'offers');
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingOffer, setEditingOffer] = useState<any>(null);
+  const [offerScope, setOfferScope] = useState<'active' | 'expired'>('active');
 
   const [showLocationEditor, setShowLocationEditor] = useState(false);
   const [locationLat, setLocationLat] = useState<number | null>(null);
   const [locationLng, setLocationLng] = useState<number | null>(null);
   const [locationAddress, setLocationAddress] = useState<ResolvedAddress | null>(null);
   const [savingLocation, setSavingLocation] = useState(false);
+  const [savingOpen, setSavingOpen] = useState(false);
 
   const [butcher, setButcher] = useState<any>(null);
   const [butcherStories, setButcherStories] = useState<any[]>([]);
@@ -711,9 +94,7 @@ export default function ButcherManageScreen() {
       const resOrders = await fetch(`${API_BASE}/api/butchers/orders`, { headers });
       if (resOrders.ok) {
         const json = await resOrders.json();
-        if (json.success && json.data) {
-          setOrders(json.data);
-        }
+        if (json.success && json.data) setOrders(json.data);
       }
     } catch (err) {
       console.warn('[ButcherManage] Reload orders failed:', err);
@@ -739,9 +120,7 @@ export default function ButcherManageScreen() {
       }
       if (resOrders.ok) {
         const json = await resOrders.json();
-        if (json.success && json.data) {
-          setOrders(json.data);
-        }
+        if (json.success && json.data) setOrders(json.data);
       }
       if (resStories.ok && butcherId) {
         const json = await resStories.json();
@@ -757,11 +136,8 @@ export default function ButcherManageScreen() {
   };
 
   useEffect(() => {
-    if (accessToken) {
-      loadData();
-    } else {
-      setLoading(false);
-    }
+    if (accessToken) loadData();
+    else setLoading(false);
   }, [accessToken, refreshTrigger]);
 
   useEffect(() => {
@@ -806,15 +182,19 @@ export default function ButcherManageScreen() {
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok && json.success) {
-        setButcher((prev: any) => prev ? {
-          ...prev,
-          lat: locationLat,
-          lng: locationLng,
-          ...(locationAddress?.cityAr ? { cityAr: locationAddress.cityAr } : {}),
-          ...(locationAddress?.addressAr ? { addressAr: locationAddress.addressAr } : {}),
-        } : prev);
+        setButcher((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                lat: locationLat,
+                lng: locationLng,
+                ...(locationAddress?.cityAr ? { cityAr: locationAddress.cityAr } : {}),
+                ...(locationAddress?.addressAr ? { addressAr: locationAddress.addressAr } : {}),
+              }
+            : prev,
+        );
         setShowLocationEditor(false);
-        Alert.alert('تم الحفظ', 'تم تحديث موقع الملحمة على الخريطة');
+        Alert.alert('تم الحفظ', 'تم تحديث موقع الملحمة');
       } else {
         Alert.alert('خطأ', json.messageAr || json.message || 'فشل حفظ الموقع');
       }
@@ -825,12 +205,40 @@ export default function ButcherManageScreen() {
     }
   };
 
-  const transitionOrder = async (
-    orderId: string,
-    nextStatus: string,
-    cancellationReason?: string,
-  ) => {
+  const setShopOpen = async (isOpen: boolean) => {
+    if (!accessToken) return;
+    if (!isOpen) {
+      const ok = await confirmDestructive(
+        'إيقاف استقبال الطلبات',
+        'لن تظهر الملحمة كمتاحة لاستقبال طلبات جديدة. يمكنك إعادة الفتح في أي وقت.',
+        'إيقاف الاستقبال',
+      );
+      if (!ok) return;
+    }
+    setSavingOpen(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/butchers/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ isOpen }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success) {
+        setButcher((prev: any) => (prev ? { ...prev, isOpen } : prev));
+      } else {
+        Alert.alert('خطأ', json.messageAr || json.message || 'فشل تحديث حالة الملحمة');
+      }
+    } catch {
+      Alert.alert('خطأ', 'تعذر الاتصال بالخادم');
+    } finally {
+      setSavingOpen(false);
+    }
+  };
 
+  const transitionOrder = async (orderId: string, nextStatus: string, cancellationReason?: string) => {
     try {
       const res = await fetch(`${API_BASE}/api/butchers/orders/${orderId}`, {
         method: 'PUT',
@@ -843,20 +251,10 @@ export default function ButcherManageScreen() {
           ...(cancellationReason ? { cancellationReason } : {}),
         }),
       });
-
       const json = await res.json().catch(() => ({}));
-
       if (res.ok && json.success) {
         setOrders((prev) =>
-          prev.map((o) =>
-            o.id === orderId
-              ? {
-                  ...o,
-                  ...json.data,
-                  status: nextStatus,
-                }
-              : o,
-          )
+          prev.map((o) => (o.id === orderId ? { ...o, ...json.data, status: nextStatus } : o)),
         );
       } else {
         Alert.alert('خطأ', json.messageAr || json.message || 'فشل تحديث حالة الطلب');
@@ -867,18 +265,10 @@ export default function ButcherManageScreen() {
     }
   };
 
-  const cancelOrder = (orderId: string) => {
-    setCancelOrderId(orderId);
-    setCancelReasonPreset(CANCEL_REASONS[0]);
-    setCancelReasonCustom('');
-  };
-
   const confirmCancelOrder = async () => {
     if (!cancelOrderId) return;
     const reason =
-      cancelReasonPreset === 'custom'
-        ? cancelReasonCustom.trim()
-        : cancelReasonPreset;
+      cancelReasonPreset === '__custom__' ? cancelReasonCustom.trim() : cancelReasonPreset;
     if (!reason) {
       Alert.alert('خطأ', 'يرجى تحديد سبب الإلغاء');
       return;
@@ -917,13 +307,29 @@ export default function ButcherManageScreen() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = await res.json().catch(() => ({}));
-      if (res.ok && json.success) {
-        setRefreshTrigger((prev) => prev + 1);
-      } else {
-        Alert.alert('خطأ', json.messageAr || json.message || 'فشل حذف العرض');
-      }
-    } catch (err) {
-      console.error(err);
+      if (res.ok && json.success) setRefreshTrigger((prev) => prev + 1);
+      else Alert.alert('خطأ', json.messageAr || json.message || 'فشل حذف العرض');
+    } catch {
+      Alert.alert('خطأ', 'تعذر الاتصال بالخادم');
+    }
+  };
+
+  const pauseOffer = async (offer: any) => {
+    const confirmed = await confirmDestructive('إيقاف العرض', 'سيتم إنهاء صلاحية هذا العرض الآن.', 'إيقاف العرض');
+    if (!confirmed || !accessToken) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/butchers/offers/${offer.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ validUntil: new Date().toISOString() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success) setRefreshTrigger((prev) => prev + 1);
+      else Alert.alert('خطأ', json.messageAr || json.message || 'فشل إيقاف العرض');
+    } catch {
       Alert.alert('خطأ', 'تعذر الاتصال بالخادم');
     }
   };
@@ -937,13 +343,9 @@ export default function ButcherManageScreen() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = await res.json().catch(() => ({}));
-      if (res.ok && json.success) {
-        setRefreshTrigger((prev) => prev + 1);
-      } else {
-        Alert.alert('خطأ', json.messageAr || json.message || 'فشل حذف المنتج');
-      }
-    } catch (err) {
-      console.error(err);
+      if (res.ok && json.success) setRefreshTrigger((prev) => prev + 1);
+      else Alert.alert('خطأ', json.messageAr || json.message || 'فشل حذف المنتج');
+    } catch {
       Alert.alert('خطأ', 'تعذر الاتصال بالخادم');
     }
   };
@@ -952,17 +354,14 @@ export default function ButcherManageScreen() {
     setEditingProduct(product ?? null);
     setShowProductForm(true);
   };
-
   const closeProductForm = () => {
     setShowProductForm(false);
     setEditingProduct(null);
   };
-
   const openOfferForm = (offer?: any) => {
     setEditingOffer(offer ?? null);
     setShowOfferForm(true);
   };
-
   const closeOfferForm = () => {
     setShowOfferForm(false);
     setEditingOffer(null);
@@ -977,24 +376,66 @@ export default function ButcherManageScreen() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = await res.json().catch(() => ({}));
-      if (res.ok && json.success) {
-        setButcherStories((prev) => prev.filter((s) => s.id !== storyId));
-      } else {
-        Alert.alert('خطأ', json.messageAr || json.message || 'فشل حذف القصة');
-      }
-    } catch (err) {
-      console.error(err);
+      if (res.ok && json.success) setButcherStories((prev) => prev.filter((s) => s.id !== storyId));
+      else Alert.alert('خطأ', json.messageAr || json.message || 'فشل حذف القصة');
+    } catch {
       Alert.alert('خطأ', 'تعذر الاتصال بالخادم');
     }
   };
 
+  const openChat = (order: any) => {
+    const customerId = order.customer?.id;
+    if (!customerId) {
+      Alert.alert('خطأ', 'لا يمكن فتح المحادثة لعدم توفر بيانات العميل');
+      return;
+    }
+    router.push({
+      pathname: '/butchers/chat',
+      params: {
+        receiverId: customerId,
+        receiverName: orderCustomerName(order),
+        receiverAvatar: order.customer?.avatar || '',
+        threadType: 'BUTCHER',
+        ...(butcher?.id ? { butcherId: butcher.id } : {}),
+      },
+    });
+  };
+
+  const summary = useMemo(() => summarizeOrders(orders), [orders]);
+  const products = butcher?.products || [];
+  const offers = butcher?.offers || [];
+  const accountName = user?.arabicName || user?.displayName || '';
+  const butcherAddress = [butcher?.addressAr, butcher?.cityAr]
+    .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
+    .filter(Boolean)
+    .join('، ');
+
+  const filteredOrders = useMemo(() => {
+    const q = orderQuery.trim();
+    return orders.filter((order) => {
+      if (!matchesOpsFilter(order, orderFilter)) return false;
+      if (!q) return true;
+      const hay = `${orderShortId(order)} ${orderCustomerName(order)}`.toLowerCase();
+      return hay.includes(q.toLowerCase());
+    });
+  }, [orders, orderFilter, orderQuery]);
+
+  const actionOrders = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed');
+  const todayActive = orders.filter(
+    (o) => isSameLocalDay(o.createdAt) && o.status !== 'cancelled' && o.status !== 'delivered',
+  );
+  const hourGroups = groupOrdersByHour(todayActive);
+  const lowStock = products.filter((p: any) => {
+    const s = productStock(p);
+    return s.kind === 'low' || s.kind === 'out';
+  });
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={colors.electricBright} />
-          <Text style={{ marginTop: spacing.md, color: colors.textMuted, ...typography.body }}>جاري تحميل البيانات...</Text>
+      <SafeAreaView style={styles.screen} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.electric} />
+          <Text style={styles.mutedCenter}>جاري تحميل التشغيل...</Text>
         </View>
       </SafeAreaView>
     );
@@ -1003,571 +444,469 @@ export default function ButcherManageScreen() {
   if (!butcher) {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.md }}>
-          <Text style={{ fontSize: 60 }}>🥩</Text>
-          <Text style={{ ...typography.h2, color: colors.textPrimary, textAlign: 'center' }}>سجّل ملحمتك في سرح</Text>
-          <Text style={{ ...typography.body, color: colors.textMuted, textAlign: 'center', paddingHorizontal: spacing.lg, lineHeight: 22 }}>
-            ابدأ بعرض منتجاتك الحيوانية واللحوم الطازجة لآلاف المشترين في منطقة الخليج العربي.
-          </Text>
-          <Pressable
-            style={{
-              marginTop: spacing.md,
-              paddingHorizontal: spacing.xxl,
-              paddingVertical: spacing.md,
-              borderRadius: radius.xl,
-              backgroundColor: colors.electric,
-            }}
-            onPress={() => router.push('/butchers/apply')}
-          >
-            <Text style={{ ...typography.bodyStrong, color: '#fff' }}>سجل ملحمتك الآن</Text>
+        <View style={styles.centered}>
+          <AppIcon name="storefront-outline" size={42} color={colors.electric} />
+          <Text style={styles.emptyTitle}>سجّل ملحمتك في سرح</Text>
+          <Text style={styles.emptySub}>ابدأ بعرض منتجاتك واستقبال الطلبات من العملاء.</Text>
+          <Pressable style={styles.primaryBtn} onPress={() => router.push('/butchers/apply')}>
+            <Text style={styles.primaryBtnText}>سجل ملحمتك الآن</Text>
           </Pressable>
         </View>
       </SafeAreaView>
     );
   }
 
-  const products = butcher.products || [];
-  const offers = butcher.offers || [];
-
-  const TABS: { id: ManageTab; label: string; icon: string; count?: number }[] = [
-    { id: 'orders',   label: 'الطلبات',   icon: 'clipboard-outline', count: orders.filter((o) => o.status === 'pending').length },
-    { id: 'products', label: 'المنتجات',  icon: 'cube-outline',      count: products.length },
-    { id: 'offers',   label: 'العروض',    icon: 'pricetag-outline',  count: offers.length },
-    { id: 'stories',  label: 'القصص',     icon: 'camera-outline' },
-  ];
+  const goOrders = (filter: OpsOrderFilter) => {
+    setOrderFilter(filter);
+    setActiveTab('orders');
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-
-      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.push('/butcher-sidebar')} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name="menu" size={22} color={colors.textPrimary} />
+        <Pressable onPress={() => router.push('/butcher-sidebar')} hitSlop={12} style={styles.iconBtn}>
+          <AppIcon name="menu" size={20} color={colors.textPrimary} />
         </Pressable>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>إدارة الملحمة</Text>
-          <Text style={styles.headerSub}>{butcher?.nameAr}</Text>
+        <View style={styles.headerText}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{butcher.nameAr}</Text>
+          {accountName ? <Text style={styles.headerSub} numberOfLines={1}>{accountName}</Text> : null}
         </View>
-        <Pressable onPress={() => router.push('/butchers/edit')} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name="create-outline" size={20} color={colors.textPrimary} />
+        <Pressable onPress={() => router.push('/butchers/edit')} hitSlop={12} style={styles.iconBtn}>
+          <AppIcon name="create-outline" size={18} color={colors.textPrimary} />
         </Pressable>
       </View>
 
-      {/* Status strip */}
-      {butcher ? (
-        <View style={styles.verifiedStrip}>
-          <LinearGradient colors={[colors.electric + '18', colors.electric + '08']} style={StyleSheet.absoluteFill} />
-          <AppIcon name="storefront-outline" size={14} color={colors.electric} />
-          <Text style={styles.verifiedText}>{butcher.nameAr}</Text>
-          <View style={styles.onlineDot} />
-          <Text style={styles.onlineText}>
-            {butcher.isOpen ? 'مفتوح الآن' : 'مغلق'}
+      <View style={styles.statusBar}>
+        <View style={styles.statusLeft}>
+          <View style={[styles.liveDot, { backgroundColor: butcher.isOpen ? '#20B66F' : colors.textMuted }]} />
+          <Text style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
+            {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
           </Text>
         </View>
-      ) : null}
+        <Pressable
+          disabled={savingOpen}
+          onPress={() => void setShopOpen(!butcher.isOpen)}
+          style={[styles.openToggle, butcher.isOpen ? styles.openToggleOn : styles.openToggleOff]}
+        >
+          {savingOpen ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.openToggleText}>{butcher.isOpen ? 'إيقاف الاستقبال' : 'فتح الملحمة'}</Text>
+          )}
+        </Pressable>
+      </View>
 
-      {/* Tabs */}
-      <View style={styles.tabsGrid}>
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
+        {OPS_MANAGE_TABS.map((item) => {
+          const active = activeTab === item.id;
+          const count = item.id === 'orders' ? summary.newCount : undefined;
           return (
-            <Pressable
-              key={tab.id}
-              onPress={() => setActiveTab(tab.id)}
-              style={({ pressed }) => [styles.tabItem, pressed && { opacity: 0.85 }]}
-            >
-              <View style={[styles.tabIconCircle, isActive && styles.tabIconCircleActive]}>
-                <AppIcon
-                  name={tab.icon}
-                  size={20}
-                  color={isActive ? '#fff' : colors.textMuted}
-                />
-                {!!tab.count && tab.count > 0 && (
-                  <View style={[styles.tabCountBadge, isActive && styles.tabCountBadgeActive]}>
-                    <Text style={[styles.tabCountText, isActive && styles.tabCountTextActive]}>
-                      {tab.count > 99 ? '99+' : tab.count}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]} numberOfLines={1}>
-                {tab.label}
-              </Text>
+            <Pressable key={item.id} onPress={() => setActiveTab(item.id)} style={[styles.navChip, active && styles.navChipOn]}>
+              <AppIcon name={item.icon} size={14} color={active ? '#F4F6F5' : colors.textMuted} />
+              <Text style={[styles.navChipText, active && styles.navChipTextOn]}>{item.label}</Text>
+              {!!count && count > 0 ? (
+                <View style={[styles.navBadge, active && styles.navBadgeOn]}>
+                  <Text style={[styles.navBadgeText, active && styles.navBadgeTextOn]}>{count > 99 ? '99+' : count}</Text>
+                </View>
+              ) : null}
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
-        {/* Location */}
-        <View style={styles.locationCard}>
-          <View style={styles.locationHeader}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>📍 موقع الملحمة</Text>
-              <Text style={styles.locationSub}>
-                {hasValidCoords(butcher?.lat, butcher?.lng)
-                  ? formatLocationLabel(butcher?.cityAr, butcher?.addressAr ?? butcher?.address, butcher.lat, butcher.lng)
-                  : 'لم يتم تحديد الموقع بعد — أضف موقعك ليظهر على الخريطة'}
-              </Text>
+        {activeTab === 'home' && (
+          <View>
+            <View style={styles.kpiRow}>
+              {[
+                { label: 'جديدة', value: summary.newCount, color: '#D4A017', filter: 'pending' as const },
+                { label: 'قيد التجهيز', value: summary.preparing, color: '#5B8FA8', filter: 'preparing' as const },
+                { label: 'جاهزة', value: summary.readyPickup, color: '#20B66F', filter: 'ready' as const },
+                { label: 'قيد التوصيل', value: summary.delivering, color: '#20B66F', filter: 'delivering' as const },
+                { label: 'مكتملة اليوم', value: summary.completedToday, color: '#94A3AC', filter: 'delivered' as const },
+              ].map((kpi) => (
+                <Pressable key={kpi.label} onPress={() => goOrders(kpi.filter)} style={styles.kpi}>
+                  <Text style={[styles.kpiValue, { color: kpi.color }]}>{kpi.value}</Text>
+                  <Text style={styles.kpiLabel}>{kpi.label}</Text>
+                </Pressable>
+              ))}
             </View>
-            <Pressable
-              style={styles.locationEditBtn}
-              onPress={() => setShowLocationEditor((v) => !v)}
-            >
-              <AppIcon
-                name={showLocationEditor ? 'chevron-up' : 'pencil-outline'}
-                size={18}
-                color={colors.electricBright}
-              />
-            </Pressable>
+
+            <View style={styles.insightRow}>
+              <View style={styles.insight}>
+                <Text style={styles.insightValue}>{summary.salesToday.toLocaleString()} ر.س</Text>
+                <Text style={styles.insightLabel}>مبيعات اليوم</Text>
+              </View>
+              <View style={styles.insight}>
+                <Text style={styles.insightValue}>{summary.deliveryNow}</Text>
+                <Text style={styles.insightLabel}>توصيل يحتاج خروج</Text>
+              </View>
+              <View style={styles.insight}>
+                <Text style={styles.insightValue}>{lowStock.length}</Text>
+                <Text style={styles.insightLabel}>مخزون منخفض</Text>
+              </View>
+            </View>
+
+            <Text style={styles.sectionTitle}>الطلبات التي تحتاج إجراء</Text>
+            {actionOrders.length === 0 ? (
+              <Text style={styles.emptyInline}>لا توجد طلبات بانتظار إجراءك</Text>
+            ) : (
+              actionOrders.map((order) => (
+                <OpsOrderCard
+                  key={order.id}
+                  order={order}
+                  butcherAddress={butcherAddress}
+                  onOpen={() => router.push({ pathname: '/butchers/manage-order/[id]', params: { id: order.id } })}
+                  onAdvance={(next) => void transitionOrder(order.id, next)}
+                  onCancel={() => setCancelOrderId(order.id)}
+                  onChat={() => openChat(order)}
+                />
+              ))
+            )}
+
+            {hourGroups.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>طلبات اليوم حسب الوقت</Text>
+                {hourGroups.map((g) => (
+                  <Pressable key={g.key} onPress={() => goOrders('all')} style={styles.slotRow}>
+                    <Text style={styles.slotCount}>{g.count}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.slotLabel}>{g.label}</Text>
+                      <Text style={styles.slotSub}>{g.count} طلبات</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </>
+            ) : null}
+
+            {lowStock.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>منتجات تحتاج متابعة</Text>
+                {lowStock.slice(0, 4).map((p: any) => {
+                  const stock = productStock(p);
+                  return (
+                    <Pressable key={p.id} onPress={() => { setActiveTab('products'); }} style={styles.stockRow}>
+                      <View style={[styles.stockDot, stock.kind === 'out' ? styles.stockOut : styles.stockLow]} />
+                      <Text style={styles.stockName} numberOfLines={1}>{p.nameAr}</Text>
+                      <Text style={styles.stockLabel}>{stock.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </>
+            ) : null}
           </View>
+        )}
 
-          {!showLocationEditor && hasValidCoords(butcher?.lat, butcher?.lng) ? (
-            <LocationMapPreview
-              country={(butcher?.country as Country) ?? 'SA'}
-              lat={butcher.lat}
-              lng={butcher.lng}
-              cityLabel={butcher?.cityAr}
-              height={180}
-            />
-          ) : null}
-
-          {showLocationEditor && (
-            <View style={styles.locationEditor}>
-              <ButcherLocationPicker
-                country={(butcher?.country as Country) ?? 'SA'}
-                lat={locationLat}
-                lng={locationLng}
-                cityLabel={butcher?.cityAr}
-                addressLabel={butcher?.addressAr ?? butcher?.address}
-                onChange={({ lat, lng }) => {
-                  setLocationLat(lat);
-                  setLocationLng(lng);
-                }}
-                onAddressResolved={setLocationAddress}
-                height={240}
-              />
-              <Pressable
-                style={[styles.locationSaveBtn, savingLocation && { opacity: 0.7 }]}
-                onPress={saveLocation}
-                disabled={savingLocation}
-              >
-                {savingLocation ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.locationSaveText}>حفظ الموقع</Text>
-                )}
-              </Pressable>
-            </View>
-          )}
-        </View>
-
-        {/* ── Orders Tab ── */}
         {activeTab === 'orders' && (
           <View>
-            <Text style={styles.sectionTitle}>
-              الطلبات الواردة ({orders.length})
-            </Text>
-            {orders.map((order) => {
-              const status = order.status;
-              const statusColor = statusColors[status] ?? colors.textMuted;
-              const customerName = order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
-              const customerPhone = order.customer?.phone as string | undefined;
-              const isPickup = order.deliveryType !== 'delivery';
-              const pickupLocation = [butcher?.addressAr, butcher?.cityAr]
-                .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
-                .filter(Boolean)
-                .join('، ');
-              const locationLine = isPickup
-                ? pickupLocation || 'استلام من الملحمة'
-                : (order.deliveryAddress as string | undefined) || 'لم يُحدد موقع التوصيل';
-              const productName = order.product?.nameAr || 'منتج لحم';
-              const formattedDate = new Date(order.createdAt).toLocaleDateString('ar-SA');
-              const allowedNext: string[] = Array.isArray(order.allowedNextStatuses)
-                ? order.allowedNextStatuses
-                : [];
+            <Text style={styles.pageTitle}>الطلبات</Text>
+            <TextInput
+              style={styles.search}
+              placeholder="بحث برقم الطلب أو اسم العميل"
+              placeholderTextColor={colors.textSubtle}
+              value={orderQuery}
+              onChangeText={setOrderQuery}
+              textAlign="right"
+            />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+              {OPS_ORDER_FILTERS.map((f) => (
+                <Pressable
+                  key={f.id}
+                  onPress={() => setOrderFilter(f.id)}
+                  style={[styles.filterChip, orderFilter === f.id && styles.filterChipOn]}
+                >
+                  <Text style={[styles.filterText, orderFilter === f.id && styles.filterTextOn]}>{f.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+            {filteredOrders.map((order) => (
+              <OpsOrderCard
+                key={order.id}
+                order={order}
+                compact
+                butcherAddress={butcherAddress}
+                onOpen={() => router.push({ pathname: '/butchers/manage-order/[id]', params: { id: order.id } })}
+                onAdvance={(next) => void transitionOrder(order.id, next)}
+                onCancel={() => setCancelOrderId(order.id)}
+                onChat={() => openChat(order)}
+              />
+            ))}
+            {filteredOrders.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <AppIcon name="clipboard-outline" size={28} color={colors.textMuted} />
+                <Text style={styles.emptyTitle}>لا توجد طلبات</Text>
+              </View>
+            ) : null}
+          </View>
+        )}
+
+        {activeTab === 'products' && (
+          <View>
+            <View style={styles.tabHeader}>
+              <Text style={styles.pageTitle}>المنتجات</Text>
+              <Pressable style={styles.addBtn} onPress={() => openProductForm()}>
+                <AppIcon name="add" size={16} color="#F4F6F5" />
+                <Text style={styles.addBtnText}>إضافة منتج</Text>
+              </Pressable>
+            </View>
+            {products.map((p: any) => {
+              const stock = productStock(p);
+              const price = p.pricePerKg ? `${p.pricePerKg} ر.س/كغ` : `${p.priceFixed?.toLocaleString() ?? '—'} ر.س`;
               return (
-                <View key={order.id} style={ord.card}>
-                  <View style={ord.header}>
-                    <View style={ord.customerWrap}>
-                      <View style={[ord.statusDot, { backgroundColor: statusColor }]} />
-                      <UserProfileLink userId={order.customer?.id}>
-                        <Text style={ord.customerName}>{customerName}</Text>
-                      </UserProfileLink>
+                <View key={p.id} style={styles.productCard}>
+                  {p.images?.[0] ? (
+                    <Image source={{ uri: p.images[0] }} style={styles.productImg} contentFit="cover" />
+                  ) : (
+                    <View style={[styles.productImg, styles.productImgEmpty]}>
+                      <AppIcon name="image-outline" size={20} color={colors.textMuted} />
                     </View>
-                    <View style={[ord.statusBadge, { backgroundColor: statusColor + '33', borderColor: statusColor + '66' }]}>
-                      <Text style={[ord.statusText, { color: statusColor }]}>
-                        {STATUS_LABELS[status] || status}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text style={ord.orderNumber}>
-                    رقم الطلب: {order.orderNumber || `#${order.id.slice(0, 8).toUpperCase()}`}
-                  </Text>
-                  {customerPhone ? (
-                    <Pressable
-                      onPress={() => void Linking.openURL(`tel:${customerPhone}`)}
-                      style={ord.contactRow}
-                    >
-                      <AppIcon name="call-outline" size={14} color={colors.electricBright} />
-                      <Text style={ord.contactText}>{customerPhone}</Text>
-                    </Pressable>
-                  ) : null}
-                  <View style={ord.contactRow}>
-                    <AppIcon name="location" size={14} color={colors.textMuted} />
-                    <Text style={ord.locationText}>
-                      {isPickup ? `موقع الاستلام: ${locationLine}` : `موقع التوصيل: ${locationLine}`}
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.productName}>{p.nameAr}</Text>
+                    <Text style={styles.productMeta}>
+                      {CATEGORY_LABELS[p.category as keyof typeof CATEGORY_LABELS]?.ar || p.category}
+                      {p.availableQuantity != null ? ` · ${p.availableQuantity} كغ` : ''}
                     </Text>
-                  </View>
-                  {order.paymentStatus !== 'paid' && (
-                    <View style={{ marginBottom: 8, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.amber + '33', borderWidth: 1, borderColor: colors.amber + '66' }}>
-                      <Text style={{ color: colors.amber, fontSize: 11, fontWeight: '600' }}>بانتظار الدفع</Text>
-                    </View>
-                  )}
-                  {order.paymentStatus === 'paid' && (
-                    <View style={{ marginBottom: 8, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.success + '33', borderWidth: 1, borderColor: colors.success + '66' }}>
-                      <Text style={{ color: colors.success, fontSize: 11, fontWeight: '600' }}>مدفوع</Text>
-                    </View>
-                  )}
-
-                  <View style={ord.detailRow}>
-                    <View style={ord.detail}>
-                      <Text style={ord.detailLabel}>المنتج</Text>
-                      <Text style={ord.detailValue}>{productName}</Text>
-                    </View>
-                    <View style={ord.detail}>
-                      <Text style={ord.detailLabel}>التقطيع</Text>
-                      <Text style={ord.detailValue}>{CUT_LABELS[order.cutType as CutType]?.ar ?? order.cutType}</Text>
-                    </View>
-                    <View style={ord.detail}>
-                      <Text style={ord.detailLabel}>الوزن</Text>
-                      <Text style={ord.detailValue}>{order.weightKg} كغ</Text>
+                    <View style={styles.productFooter}>
+                      <Text style={styles.productPrice}>{price}</Text>
+                      <View style={[styles.stockPill, stock.kind === 'ok' ? styles.stockOkBg : stock.kind === 'low' ? styles.stockLowBg : styles.stockOutBg]}>
+                        <Text style={styles.stockPillText}>{stock.label}</Text>
+                      </View>
                     </View>
                   </View>
-
-                  <View style={ord.footer}>
-                    <View style={ord.footerLeft}>
-                      <AppIcon
-                        name={order.deliveryType === 'delivery' ? 'truck-delivery-outline' : 'store-outline'}
-                        size={14}
-                        color={colors.textMuted}
-                      />
-                      <Text style={ord.footerText}>
-                        {order.deliveryType === 'delivery' ? 'توصيل' : 'استلام'} · {formattedDate}
-                      </Text>
-                    </View>
-                    <Text style={ord.total}>{order.totalPrice.toLocaleString()} {order.currency || 'ر.س'}</Text>
-                  </View>
-
-                  {/* Action buttons */}
-                  <View style={ord.actions}>
-                    <Pressable
-                      style={ord.chatBtn}
-                      onPress={() => {
-                        const customerId = order.customer?.id;
-                        if (!customerId) {
-                          Alert.alert('خطأ', 'لا يمكن فتح المحادثة لعدم توفر بيانات العميل');
-                          return;
-                        }
-                        router.push({
-                          pathname: '/butchers/chat',
-                          params: {
-                            receiverId: customerId,
-                            receiverName: customerName,
-                            receiverAvatar: order.customer?.avatar || '',
-                            threadType: 'BUTCHER',
-                            ...(butcher?.id ? { butcherId: butcher.id } : {}),
-                          },
-                        });
-                      }}
-                    >
-                      <AppIcon name="chatbubble-outline" size={16} color={colors.electricBright} />
-                      <Text style={ord.chatBtnText}>محادثة</Text>
+                  <View style={styles.rowActions}>
+                    <Pressable style={styles.iconBtn} onPress={() => openProductForm(p)}>
+                      <AppIcon name="pencil-outline" size={16} color={colors.electric} />
                     </Pressable>
-
-                    {allowedNext
-                      .filter((next) => next !== 'cancelled')
-                      .filter((next) => !(next === 'confirmed' && order.paymentStatus !== 'paid'))
-                      .map((next) => (
-                      <Pressable
-                        key={`${order.id}-${next}`}
-                        style={ord.advanceBtn}
-                        onPress={() => transitionOrder(order.id, next)}
-                      >
-                        <LinearGradient
-                          colors={[statusColor, statusColor + 'BB']}
-                          style={ord.advanceBtnGrad}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                        >
-                          <Text style={ord.advanceBtnText}>
-                            {next === 'confirmed'
-                              ? 'تأكيد'
-                              : next === 'preparing'
-                                ? 'بدء التحضير'
-                                : next === 'ready'
-                                  ? 'جاهز'
-                                  : 'تم التسليم'}
-                          </Text>
-                          <AppIcon name={rtlForwardIcon()} size={14} color="#fff" />
-                        </LinearGradient>
-                      </Pressable>
-                    ))}
-
-                    {allowedNext.includes('cancelled') && (
-                      <Pressable
-                        style={ord.rejectBtn}
-                        onPress={() => cancelOrder(order.id)}
-                      >
-                        <AppIcon name="close" size={16} color={colors.danger} />
-                      </Pressable>
-                    )}
+                    <Pressable style={styles.iconBtn} onPress={() => void deleteProduct(p.id)}>
+                      <AppIcon name="trash-outline" size={16} color={colors.danger} />
+                    </Pressable>
                   </View>
                 </View>
               );
             })}
-            {orders.length === 0 && (
-              <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>📋</Text>
-                <Text style={styles.emptyTitle}>لا توجد طلبات بعد</Text>
-                <Text style={styles.emptySub}>ستظهر هنا الطلبات الواردة من العملاء</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* ── Products Tab ── */}
-        {activeTab === 'products' && (
-          <View>
-            <View style={styles.tabHeader}>
-              <Text style={styles.sectionTitle}>منتجاتي ({products.length})</Text>
-              <Pressable style={styles.addBtn} onPress={() => openProductForm()}>
-                <AppIcon name="add" size={16} color={colors.electricBright} />
-                <Text style={styles.addBtnText}>إضافة منتج</Text>
-              </Pressable>
-            </View>
-
-            {showProductForm && (
-              <View style={styles.formCard}>
-                <AddProductForm
-                  product={editingProduct ?? undefined}
-                  onClose={closeProductForm}
-                  onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
-                  butcherCountry={butcher?.country || 'SA'}
-                />
-              </View>
-            )}
-
-            {products.map((p: any) => (
-              <View key={p.id} style={pm.card}>
-                {p.images?.[0] ? (
-                  <Image source={{ uri: p.images[0] }} style={pm.img} contentFit="cover" />
-                ) : (
-                  <View style={[pm.img, { backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' }]}>
-                    <Text style={{ fontSize: 28 }}>🥩</Text>
-                  </View>
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={pm.name}>{p.nameAr}</Text>
-                  <Text style={pm.cat}>{CATEGORY_LABELS[p.category as keyof typeof CATEGORY_LABELS]?.icon || '🥩'} {CATEGORY_LABELS[p.category as keyof typeof CATEGORY_LABELS]?.ar || p.category}</Text>
-                  <View style={pm.priceRow}>
-                    {p.pricePerKg
-                      ? <Text style={pm.price}>{p.pricePerKg} ر.س/كغ</Text>
-                      : <Text style={pm.price}>{p.priceFixed?.toLocaleString()} ر.س</Text>
-                    }
-                    <View style={[pm.stockBadge, { backgroundColor: p.inStock ? colors.success + '33' : colors.danger + '33' }]}>
-                      <Text style={[pm.stockText, { color: p.inStock ? colors.textBrandSuccess : colors.danger }]}>
-                        {p.inStock ? 'متوفر' : 'نفد'}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={pm.actions}>
-                  <Pressable style={pm.editBtn} onPress={() => openProductForm(p)}>
-                    <AppIcon name="pencil-outline" size={16} color={colors.electricBright} />
-                  </Pressable>
-                  <Pressable style={pm.deleteBtn} onPress={() => deleteProduct(p.id)}>
-                    <AppIcon name="trash-outline" size={16} color={colors.danger} />
-                  </Pressable>
-                </View>
-              </View>
-            ))}
-            {products.length === 0 && (
-              <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>🥩</Text>
+            {products.length === 0 ? (
+              <View style={styles.emptyBox}>
                 <Text style={styles.emptyTitle}>لا توجد منتجات بعد</Text>
-                <Text style={styles.emptySub}>أضف منتجاتك لتبدأ في البيع</Text>
               </View>
-            )}
+            ) : null}
           </View>
         )}
 
-        {/* ── Offers Tab ── */}
         {activeTab === 'offers' && (
           <View>
             <View style={styles.tabHeader}>
-              <Text style={styles.sectionTitle}>عروضي ({offers.length})</Text>
+              <Text style={styles.pageTitle}>العروض</Text>
               <Pressable style={styles.addBtn} onPress={() => openOfferForm()}>
-                <AppIcon name="add" size={16} color={colors.electricBright} />
-                <Text style={styles.addBtnText}>إضافة عرض</Text>
+                <AppIcon name="add" size={16} color="#F4F6F5" />
+                <Text style={styles.addBtnText}>إنشاء عرض</Text>
               </Pressable>
             </View>
-
-            {showOfferForm && (
-              <View style={styles.formCard}>
-                <AddOfferForm
-                  offer={editingOffer}
-                  onClose={closeOfferForm}
-                  onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
-                  butcherCountry={butcher?.country || 'SA'}
-                />
-              </View>
-            )}
-
-            {offers.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>🏷️</Text>
-                <Text style={styles.emptyTitle}>لا توجد عروض بعد</Text>
-                <Text style={styles.emptySub}>أضف عروضاً لجذب المزيد من العملاء</Text>
-              </View>
-            ) : (
-              offers.map((offer: any) => (
-                <View key={offer.id} style={of.card}>
-                  <Image source={{ uri: offer.image }} style={of.img} contentFit="cover" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={of.title}>{offer.titleAr}</Text>
-                    <Text style={of.desc} numberOfLines={1}>{offer.descriptionAr}</Text>
-                    <View style={of.priceRow}>
-                      <Text style={of.price}>{offer.offerPrice?.toLocaleString()} ر.س</Text>
-                      <Text style={of.original}>{offer.originalPrice?.toLocaleString()}</Text>
-                      <View style={of.discBadge}>
-                        <Text style={of.discText}>-{offer.discountPercent}%</Text>
-                      </View>
+            <View style={styles.filterRow}>
+              {(['active', 'expired'] as const).map((scope) => (
+                <Pressable
+                  key={scope}
+                  onPress={() => setOfferScope(scope)}
+                  style={[styles.filterChip, offerScope === scope && styles.filterChipOn]}
+                >
+                  <Text style={[styles.filterText, offerScope === scope && styles.filterTextOn]}>
+                    {scope === 'active' ? 'النشطة' : 'المنتهية'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            {offers
+              .filter((offer: any) => {
+                const expired = offer.validUntil && new Date(offer.validUntil).getTime() < Date.now();
+                return offerScope === 'expired' ? expired : !expired;
+              })
+              .map((offer: any) => {
+                const expired = offer.validUntil && new Date(offer.validUntil).getTime() < Date.now();
+                return (
+                  <View key={offer.id} style={styles.productCard}>
+                    <Image source={{ uri: offer.image }} style={styles.productImg} contentFit="cover" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.productName}>{offer.titleAr}</Text>
+                      <Text style={styles.productMeta} numberOfLines={1}>{offer.descriptionAr}</Text>
+                      <Text style={styles.productPrice}>
+                        {offer.offerPrice?.toLocaleString()} ر.س
+                        {offer.discountPercent ? ` · خصم ${offer.discountPercent}%` : ''}
+                      </Text>
+                      <Text style={styles.productMeta}>
+                        حتى {offer.validUntil ? new Date(offer.validUntil).toLocaleDateString('ar-SA') : '—'}
+                        {expired ? ' · منتهٍ' : ' · نشط'}
+                      </Text>
+                    </View>
+                    <View style={styles.rowActions}>
+                      <Pressable style={styles.iconBtn} onPress={() => openOfferForm(offer)}>
+                        <AppIcon name="pencil-outline" size={16} color={colors.electric} />
+                      </Pressable>
+                      {!expired ? (
+                        <Pressable style={styles.iconBtn} onPress={() => void pauseOffer(offer)}>
+                          <AppIcon name="close-circle-outline" size={16} color={colors.amber} />
+                        </Pressable>
+                      ) : null}
+                      <Pressable style={styles.iconBtn} onPress={() => void deleteOffer(offer.id)}>
+                        <AppIcon name="trash-outline" size={16} color={colors.danger} />
+                      </Pressable>
                     </View>
                   </View>
-                  <View style={pm.actions}>
-                    <Pressable style={pm.editBtn} onPress={() => openOfferForm(offer)}>
-                      <AppIcon name="pencil-outline" size={16} color={colors.electricBright} />
-                    </Pressable>
-                    <Pressable style={pm.deleteBtn} onPress={() => deleteOffer(offer.id)}>
-                      <AppIcon name="trash-outline" size={16} color={colors.danger} />
-                    </Pressable>
-                  </View>
-                </View>
-              ))
-            )}
+                );
+              })}
           </View>
         )}
 
-        {/* ── Stories Tab ── */}
         {activeTab === 'stories' && (
           <View>
             <View style={styles.tabHeader}>
-              <Text style={styles.sectionTitle}>قصصي</Text>
+              <Text style={styles.pageTitle}>القصص</Text>
               <Pressable
                 style={styles.addBtn}
                 onPress={() => router.push({ pathname: '/create/story', params: { mode: 'butcher' } })}
               >
-                <AppIcon name="add" size={16} color={colors.electricBright} />
+                <AppIcon name="add" size={16} color="#F4F6F5" />
                 <Text style={styles.addBtnText}>نشر قصة</Text>
               </Pressable>
             </View>
-
-            {butcherStories.length > 0 && (
-              <View style={sto.activeList}>
-                <Text style={sto.activeListTitle}>القصص النشطة (٢٤ ساعة)</Text>
-                {butcherStories.map((story: any) => (
-                  <View key={story.id} style={sto.activeCard}>
-                    <Image source={{ uri: story.thumbnail }} style={sto.activeThumb} contentFit="cover" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={sto.activeCaption} numberOfLines={1}>
-                        {story.captionAr || story.caption || 'قصة بدون وصف'}
-                      </Text>
-                      <Text style={sto.activeMeta}>{storyTimeLeftLabel(story.expiresAt)}</Text>
-                    </View>
-                    <Pressable style={pm.deleteBtn} onPress={() => deleteStory(story.id)}>
-                      <AppIcon name="trash-outline" size={16} color={colors.danger} />
-                    </Pressable>
-                  </View>
-                ))}
+            {butcherStories.map((story: any) => (
+              <View key={story.id} style={styles.productCard}>
+                <Image source={{ uri: story.thumbnail }} style={styles.productImg} contentFit="cover" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.productName} numberOfLines={1}>{story.captionAr || story.caption || 'قصة'}</Text>
+                  <Text style={styles.productMeta}>{storyTimeLeftLabel(story.expiresAt)}</Text>
+                </View>
+                <Pressable style={styles.iconBtn} onPress={() => void deleteStory(story.id)}>
+                  <AppIcon name="trash-outline" size={16} color={colors.danger} />
+                </Pressable>
               </View>
-            )}
-
-            {/* Story types */}
+            ))}
             {[
-              { type: 'daily_slaughter', label: 'ذبح يومي',    icon: '🔪', color: colors.danger   },
-              { type: 'new_stock',       label: 'مخزون جديد',  icon: '📦', color: colors.textBrandSuccess  },
-              { type: 'offer',           label: 'عرض اليوم',   icon: '🏷️', color: colors.amber    },
-              { type: 'update',          label: 'تحديث عام',   icon: '📢', color: colors.textBrandAlt },
+              { type: 'daily_slaughter', label: 'ذبح يومي', icon: 'restaurant' },
+              { type: 'new_stock', label: 'مخزون جديد', icon: 'cube-outline' },
+              { type: 'offer', label: 'عرض اليوم', icon: 'pricetag-outline' },
+              { type: 'update', label: 'تحديث عام', icon: 'megaphone-outline' },
             ].map((st) => (
               <Pressable
                 key={st.type}
-                style={sto.typeCard}
-                onPress={() => router.push({
-                  pathname: '/create/story',
-                  params: { mode: 'butcher', type: st.type },
-                })}
+                style={styles.storyType}
+                onPress={() =>
+                  router.push({ pathname: '/create/story', params: { mode: 'butcher', type: st.type } })
+                }
               >
-                <LinearGradient colors={[st.color + '33', st.color + '11']} style={StyleSheet.absoluteFill} />
-                <View style={[sto.typeIcon, { backgroundColor: st.color + '44' }]}>
-                  <Text style={sto.typeIconText}>{st.icon}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={sto.typeLabel}>{st.label}</Text>
-                  <Text style={sto.typeSub}>انشر الآن ويظهر فوراً في القصص</Text>
-                </View>
-                <View style={[sto.addBadge, { backgroundColor: st.color }]}>
-                  <AppIcon name="add" size={18} color="#fff" />
-                </View>
+                <AppIcon name={st.icon} size={18} color={colors.electric} />
+                <Text style={styles.storyTypeLabel}>{st.label}</Text>
+                <AppIcon name="add" size={16} color={colors.textMuted} />
               </Pressable>
             ))}
-
           </View>
         )}
 
-        <View style={{ height: 80 }} />
+        {activeTab === 'shop' && (
+          <View>
+            <Text style={styles.pageTitle}>معلومات الملحمة</Text>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoName}>{butcher.nameAr}</Text>
+              {butcher.bioAr ? <Text style={styles.infoBio}>{butcher.bioAr}</Text> : null}
+              <Text style={styles.infoRow}>
+                العنوان: {formatLocationLabel(butcher.cityAr, butcher.addressAr ?? butcher.address, butcher.lat, butcher.lng) || 'غير محدد'}
+              </Text>
+              <Text style={styles.infoRow}>
+                ساعات العمل: {butcher.openTime || '06:00'} – {butcher.closeTime || '22:00'}
+              </Text>
+              <Text style={styles.infoRow}>الهاتف: {butcher.phone || '—'}</Text>
+              <Text style={styles.infoRow}>التوصيل: الملحمة تتولى التوصيل بنفسها — لا يوجد مندوب سرح</Text>
+              <Text style={styles.infoRow}>الاستلام من الملحمة متاح مع التوصيل حسب طلب العميل</Text>
+            </View>
+            {hasValidCoords(butcher.lat, butcher.lng) && !showLocationEditor ? (
+              <LocationMapPreview
+                country={(butcher.country as Country) ?? 'SA'}
+                lat={butcher.lat}
+                lng={butcher.lng}
+                cityLabel={butcher.cityAr}
+                height={140}
+              />
+            ) : null}
+            <Pressable style={styles.secondaryBtn} onPress={() => setShowLocationEditor((v) => !v)}>
+              <Text style={styles.secondaryBtnText}>{showLocationEditor ? 'إخفاء الخريطة' : 'تعديل الموقع'}</Text>
+            </Pressable>
+            {showLocationEditor ? (
+              <View style={{ gap: spacing.md, marginTop: spacing.md }}>
+                <ButcherLocationPicker
+                  country={(butcher.country as Country) ?? 'SA'}
+                  lat={locationLat}
+                  lng={locationLng}
+                  cityLabel={butcher.cityAr}
+                  addressLabel={butcher.addressAr ?? butcher.address}
+                  onChange={({ lat, lng }) => {
+                    setLocationLat(lat);
+                    setLocationLng(lng);
+                  }}
+                  onAddressResolved={setLocationAddress}
+                  height={200}
+                />
+                <Pressable style={styles.primaryBtn} onPress={() => void saveLocation()} disabled={savingLocation}>
+                  {savingLocation ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryBtnText}>حفظ الموقع</Text>}
+                </Pressable>
+              </View>
+            ) : null}
+            <Pressable style={[styles.secondaryBtn, { marginTop: spacing.md }]} onPress={() => router.push('/butchers/edit')}>
+              <Text style={styles.secondaryBtnText}>تعديل بيانات الملحمة</Text>
+            </Pressable>
+          </View>
+        )}
+
+        <View style={{ height: 88 }} />
       </ScrollView>
 
+      <Modal visible={showProductForm} animationType="slide" transparent>
+        <View style={styles.sheetBackdrop}>
+          <ScrollView style={styles.sheet} contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40 }}>
+            <AddProductForm
+              product={editingProduct ?? undefined}
+              onClose={closeProductForm}
+              onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
+              butcherCountry={butcher.country || 'SA'}
+            />
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <Modal visible={showOfferForm} animationType="slide" transparent>
+        <View style={styles.sheetBackdrop}>
+          <ScrollView style={styles.sheet} contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40 }}>
+            <AddOfferForm
+              offer={editingOffer}
+              onClose={closeOfferForm}
+              onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
+              butcherCountry={butcher.country || 'SA'}
+            />
+          </ScrollView>
+        </View>
+      </Modal>
+
       <Modal visible={!!cancelOrderId} transparent animationType="fade">
-        <View style={ord.modalBackdrop}>
-          <View style={ord.modalCard}>
-            <Text style={ord.modalTitle}>إلغاء الطلب</Text>
-            <Text style={ord.modalSub}>اختر سبب الإلغاء أو اكتب سبباً مخصصاً</Text>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>إلغاء الطلب</Text>
+            <Text style={styles.modalSub}>اختر سبب الإلغاء</Text>
             {CANCEL_REASONS.map((reason) => (
               <Pressable
                 key={reason}
-                style={[ord.reasonChip, cancelReasonPreset === reason && ord.reasonChipActive]}
+                style={[styles.reasonChip, cancelReasonPreset === reason && styles.reasonChipOn]}
                 onPress={() => setCancelReasonPreset(reason)}
               >
-                <Text
-                  style={[
-                    ord.reasonChipText,
-                    cancelReasonPreset === reason && ord.reasonChipTextActive,
-                  ]}
-                >
-                  {reason}
-                </Text>
+                <Text style={[styles.reasonText, cancelReasonPreset === reason && styles.reasonTextOn]}>{reason}</Text>
               </Pressable>
             ))}
             <Pressable
-              style={[ord.reasonChip, cancelReasonPreset === '__custom__' && ord.reasonChipActive]}
+              style={[styles.reasonChip, cancelReasonPreset === '__custom__' && styles.reasonChipOn]}
               onPress={() => setCancelReasonPreset('__custom__')}
             >
-              <Text
-                style={[
-                  ord.reasonChipText,
-                  cancelReasonPreset === '__custom__' && ord.reasonChipTextActive,
-                ]}
-              >
-                سبب آخر
-              </Text>
+              <Text style={[styles.reasonText, cancelReasonPreset === '__custom__' && styles.reasonTextOn]}>سبب آخر</Text>
             </Pressable>
             {cancelReasonPreset === '__custom__' && (
               <TextInput
-                style={ord.customReasonInput}
+                style={styles.search}
                 placeholder="اكتب سبب الإلغاء"
                 placeholderTextColor={colors.textSubtle}
                 value={cancelReasonCustom}
@@ -1575,12 +914,12 @@ export default function ButcherManageScreen() {
                 textAlign="right"
               />
             )}
-            <View style={ord.modalActions}>
-              <Pressable style={ord.modalCancelBtn} onPress={() => setCancelOrderId(null)}>
-                <Text style={ord.modalCancelText}>تراجع</Text>
+            <View style={styles.modalActions}>
+              <Pressable style={styles.secondaryBtn} onPress={() => setCancelOrderId(null)}>
+                <Text style={styles.secondaryBtnText}>تراجع</Text>
               </Pressable>
-              <Pressable style={ord.modalConfirmBtn} onPress={confirmCancelOrder}>
-                <Text style={ord.modalConfirmText}>تأكيد الإلغاء</Text>
+              <Pressable style={styles.dangerBtn} onPress={() => void confirmCancelOrder()}>
+                <Text style={styles.primaryBtnText}>تأكيد الإلغاء</Text>
               </Pressable>
             </View>
           </View>
@@ -1590,609 +929,282 @@ export default function ButcherManageScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 function createMainStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
-  header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1, borderColor: colors.borderSoft,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
-  headerSub: { ...typography.caption, color: colors.textBrand, marginTop: 1 },
-  verifiedStrip: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: spacing.lg, marginBottom: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.xl,
-    borderWidth: 1, borderColor: colors.gold + '44',
-    overflow: 'hidden', position: 'relative',
-  },
-  verifiedText: { ...typography.caption, color: colors.gold, flex: 1 },
-  onlineDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.success },
-  onlineText: { ...typography.micro, color: colors.textBrandSuccess },
-  tabsGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.xs,
-    gap: spacing.xs,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 4,
-  },
-  tabIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 20,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1.5,
-    borderColor: colors.borderSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  tabIconCircleActive: {
-    backgroundColor: colors.electric,
-    borderColor: colors.electricBright,
-  },
-  tabCountBadge: {
-    position: 'absolute',
-    top: -4,
-    left: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.danger,
-    borderWidth: 1.5,
-    borderColor: colors.bgDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  tabCountBadgeActive: {
-    backgroundColor: '#fff',
-    borderColor: colors.electric,
-  },
-  tabCountText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#fff',
-    lineHeight: 12,
-  },
-  tabCountTextActive: {
-    color: colors.textBrandAlt,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  tabLabelActive: {
-    color: colors.textBrandStrong,
-    fontWeight: '600',
-  },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
-  locationCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    gap: spacing.md,
-  },
-  locationHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  locationSub: {
-    ...typography.caption,
-    color: colors.textMuted,
-    ...getRtlText(),
-    marginTop: 4,
-  },
-  locationEditBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 16,
-    backgroundColor: colors.bgElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  locationEditor: { gap: spacing.md },
-  locationSaveBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.electric,
-  },
-  locationSaveText: { ...typography.bodyStrong, color: '#fff' },
-  tabHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  addBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: radius.pill,
-    borderWidth: 1, borderColor: colors.electricBright + '66',
-    backgroundColor: colors.electric + '11',
-  },
-  addBtnText: { ...typography.micro, color: colors.textBrandStrong },
-  formCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xxl,
-    borderWidth: 1, borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  empty: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
-  emptyIcon: { fontSize: 40 },
-  emptyTitle: { ...typography.h3, color: colors.textMuted },
-  emptySub: { ...typography.caption, color: colors.textSubtle },
+    screen: { flex: 1, backgroundColor: '#0B1622' },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.md },
+    mutedCenter: { ...typography.body, color: colors.textMuted, marginTop: spacing.md },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      gap: 10,
+    },
+    headerText: { flex: 1 },
+    headerTitle: { ...typography.h3, color: '#F4F6F5', textAlign: 'center', writingDirection: 'rtl' },
+    headerSub: { ...typography.caption, color: '#94A3AC', textAlign: 'center', writingDirection: 'rtl', marginTop: 2 },
+    iconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: '#122532',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    statusBar: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      borderRadius: 14,
+      backgroundColor: '#101F2C',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    statusLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    liveDot: { width: 8, height: 8, borderRadius: 4 },
+    statusLabel: { ...typography.caption, color: '#94A3AC', fontWeight: '600' },
+    statusLabelOn: { color: '#20B66F' },
+    openToggle: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },
+    openToggleOn: { backgroundColor: '#162D3A' },
+    openToggleOff: { backgroundColor: '#20B66F' },
+    openToggleText: { ...typography.micro, color: '#F4F6F5', fontWeight: '600' },
+    navRow: { paddingHorizontal: spacing.lg, gap: 8, paddingBottom: spacing.sm },
+    navChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 999,
+      backgroundColor: '#122532',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    navChipOn: { backgroundColor: '#20B66F', borderColor: '#20B66F' },
+    navChipText: { ...typography.micro, color: '#94A3AC', fontWeight: '600' },
+    navChipTextOn: { color: '#F4F6F5' },
+    navBadge: {
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: '#E85D5D',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    navBadgeOn: { backgroundColor: '#0B1622' },
+    navBadgeText: { fontSize: 9, color: '#fff', fontWeight: '700' },
+    navBadgeTextOn: { color: '#F4F6F5' },
+    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+    kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
+    kpi: {
+      width: '31%',
+      flexGrow: 1,
+      backgroundColor: '#101F2C',
+      borderRadius: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    kpiValue: { fontSize: 22, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl' },
+    kpiLabel: { ...typography.micro, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+    insightRow: { flexDirection: 'row', gap: 8, marginBottom: spacing.lg },
+    insight: {
+      flex: 1,
+      backgroundColor: '#122532',
+      borderRadius: 14,
+      padding: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    insightValue: { ...typography.bodyStrong, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
+    insightLabel: { ...typography.micro, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+    sectionTitle: {
+      ...typography.bodyStrong,
+      color: '#F4F6F5',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginBottom: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    pageTitle: {
+      ...typography.h3,
+      color: '#F4F6F5',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginBottom: spacing.md,
+    },
+    emptyInline: { ...typography.caption, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginBottom: spacing.lg },
+    emptyTitle: { ...typography.h3, color: '#D6DDE0', textAlign: 'center' },
+    emptySub: { ...typography.body, color: '#94A3AC', textAlign: 'center' },
+    emptyBox: { alignItems: 'center', paddingVertical: 48, gap: 8 },
+    slotRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: '#101F2C',
+      borderRadius: 14,
+      padding: spacing.md,
+      marginBottom: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    slotCount: { fontSize: 20, fontWeight: '700', color: '#20B66F', width: 36, textAlign: 'center' },
+    slotLabel: { ...typography.bodyStrong, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
+    slotSub: { ...typography.micro, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl' },
+    stockRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 10,
+    },
+    stockDot: { width: 8, height: 8, borderRadius: 4 },
+    stockLow: { backgroundColor: '#D4A017' },
+    stockOut: { backgroundColor: '#E85D5D' },
+    stockName: { flex: 1, ...typography.caption, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
+    stockLabel: { ...typography.micro, color: '#94A3AC' },
+    search: {
+      backgroundColor: '#122532',
+      borderRadius: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      color: '#F4F6F5',
+      marginBottom: spacing.sm,
+      writingDirection: 'rtl',
+    },
+    filterRow: { flexDirection: 'row', gap: 8, marginBottom: spacing.md, flexWrap: 'wrap' },
+    filterChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 999,
+      backgroundColor: '#122532',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    filterChipOn: { backgroundColor: '#20B66F', borderColor: '#20B66F' },
+    filterText: { ...typography.micro, color: '#94A3AC', fontWeight: '600' },
+    filterTextOn: { color: '#F4F6F5' },
+    tabHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+    addBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#20B66F',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 999,
+    },
+    addBtnText: { ...typography.micro, color: '#F4F6F5', fontWeight: '600' },
+    productCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: '#101F2C',
+      borderRadius: 14,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    productImg: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#162D3A' },
+    productImgEmpty: { alignItems: 'center', justifyContent: 'center' },
+    productName: { ...typography.caption, color: '#F4F6F5', fontWeight: '600', textAlign: 'right', writingDirection: 'rtl' },
+    productMeta: { ...typography.micro, color: '#94A3AC', marginTop: 2, textAlign: 'right', writingDirection: 'rtl' },
+    productFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, justifyContent: 'flex-end' },
+    productPrice: { ...typography.caption, color: '#D6DDE0', fontWeight: '600' },
+    stockPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+    stockOkBg: { backgroundColor: 'rgba(32,182,111,0.16)' },
+    stockLowBg: { backgroundColor: 'rgba(212,160,23,0.18)' },
+    stockOutBg: { backgroundColor: 'rgba(232,93,93,0.18)' },
+    stockPillText: { ...typography.micro, color: '#F4F6F5', fontWeight: '600' },
+    rowActions: { gap: 6 },
+    storyType: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: '#101F2C',
+      borderRadius: 14,
+      padding: spacing.md,
+      marginBottom: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    storyTypeLabel: { flex: 1, ...typography.bodyStrong, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
+    infoCard: {
+      backgroundColor: '#101F2C',
+      borderRadius: 14,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+      gap: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    infoName: { ...typography.h3, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
+    infoBio: { ...typography.body, color: '#D6DDE0', textAlign: 'right', writingDirection: 'rtl' },
+    infoRow: { ...typography.caption, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl' },
+    primaryBtn: {
+      backgroundColor: '#20B66F',
+      borderRadius: 14,
+      paddingVertical: 12,
+      alignItems: 'center',
+      paddingHorizontal: 24,
+    },
+    primaryBtnText: { ...typography.bodyStrong, color: '#F4F6F5' },
+    secondaryBtn: {
+      borderRadius: 14,
+      paddingVertical: 12,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(150,175,185,0.18)',
+      backgroundColor: '#122532',
+      flex: 1,
+    },
+    secondaryBtnText: { ...typography.caption, color: '#D6DDE0', fontWeight: '600' },
+    dangerBtn: {
+      flex: 1,
+      backgroundColor: '#E85D5D',
+      borderRadius: 14,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    sheetBackdrop: { flex: 1, backgroundColor: 'rgba(11,22,34,0.72)', justifyContent: 'flex-end' },
+    sheet: {
+      maxHeight: '92%',
+      backgroundColor: '#101F2C',
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+    },
+    modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: spacing.lg },
+    modalCard: {
+      backgroundColor: '#101F2C',
+      borderRadius: 16,
+      padding: spacing.lg,
+      gap: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    modalTitle: { ...typography.h3, color: '#F4F6F5', textAlign: 'right' },
+    modalSub: { ...typography.caption, color: '#94A3AC', textAlign: 'right', marginBottom: 8 },
+    reasonChip: {
+      padding: 10,
+      borderRadius: 12,
+      backgroundColor: '#122532',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(150,175,185,0.18)',
+    },
+    reasonChipOn: { borderColor: '#E85D5D', backgroundColor: 'rgba(232,93,93,0.14)' },
+    reasonText: { ...typography.caption, color: '#D6DDE0', textAlign: 'right' },
+    reasonTextOn: { color: '#E85D5D', fontWeight: '600' },
+    modalActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
   });
 }
-
-// Add product / offer form
-function createProductFormStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-  wrap: { gap: spacing.sm },
-  handle: {
-    width: 36, height: 4, borderRadius: 2,
-    backgroundColor: colors.borderMid,
-    alignSelf: 'center', marginBottom: spacing.md,
-  },
-  /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-  rtlTextShell: {
-    width: '100%',
-    direction: 'ltr',
-  },
-  chipTextShell: {
-    direction: 'ltr',
-  },
-  title: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'center',
-    writingDirection: 'rtl',
-    marginBottom: spacing.md,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    marginBottom: 5,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  input: {
-    backgroundColor: colors.bgElevated,
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
-    paddingHorizontal: spacing.md, paddingVertical: 12,
-    ...typography.body, color: colors.textPrimary,
-    marginBottom: spacing.md,
-    writingDirection: 'rtl',
-  },
-  catChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: radius.pill, backgroundColor: colors.bgElevated,
-    borderWidth: 1.5, borderColor: colors.borderSoft,
-  },
-  catChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
-  catIcon: { fontSize: 14 },
-  catLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  catLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  priceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md },
-  priceLabel: {
-    ...typography.micro,
-    color: colors.textMuted,
-    width: '100%',
-    textAlign: 'center',
-    writingDirection: 'rtl',
-    marginBottom: 4,
-  },
-  orShell: {
-    direction: 'ltr',
-    marginTop: 24,
-  },
-  orText: {
-    color: colors.textMuted,
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  cutsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.lg },
-  cutChip: {
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: radius.pill, backgroundColor: colors.bgElevated,
-    borderWidth: 1.5, borderColor: colors.borderSoft,
-  },
-  cutChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
-  cutLabel: {
-    ...typography.micro,
-    color: colors.textMuted,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  cutLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  freshnessRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
-  freshnessBtn: {
-    flex: 1, paddingVertical: 10,
-    borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.borderSoft,
-    backgroundColor: colors.bgElevated, alignItems: 'center',
-  },
-  freshnessBtnActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
-  freshnessLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  imageGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  imageThumbWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  imageThumb: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: colors.bgElevated,
-  },
-  imageRemove: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: colors.bgOverlay,
-    borderRadius: 12,
-  },
-  uploadBox: {
-    width: 88,
-    height: 88,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.electricBright + '55',
-    borderStyle: 'dashed',
-    backgroundColor: colors.electric + '08',
-  },
-  uploadBoxWide: {
-    width: '100%',
-    height: 140,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-    borderColor: colors.electricBright + '55',
-    borderStyle: 'dashed',
-    backgroundColor: colors.electric + '08',
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-  },
-  previewImgWide: {
-    width: '100%',
-    height: '100%',
-  },
-  removeImageLink: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing.md,
-  },
-  removeImageText: {
-    ...typography.caption,
-    color: colors.danger,
-    fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  uploadText: {
-    ...typography.micro,
-    color: colors.textBrandStrong,
-    fontWeight: '600',
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  uploadHint: {
-    ...typography.micro,
-    color: colors.textSubtle,
-    marginBottom: spacing.lg,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  actions: { flexDirection: 'row', gap: spacing.md },
-  cancelBtn: {
-    flex: 1, paddingVertical: 13,
-    borderRadius: radius.xl,
-    borderWidth: 1, borderColor: colors.borderSoft,
-    alignItems: 'center',
-    backgroundColor: colors.bgElevated,
-  },
-  cancelText: {
-    ...typography.bodyStrong,
-    color: colors.textMuted,
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  saveBtn: { flex: 2, borderRadius: radius.xl, overflow: 'hidden' },
-  saveBtnGrad: {
-    paddingVertical: 13,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  saveBtnText: {
-    ...typography.bodyStrong,
-    color: '#fff',
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  });
-}
-
-function createOrderStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xxl,
-    borderWidth: 1, borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    gap: spacing.md,
-  },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  customerWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  customerName: { ...typography.bodyStrong, color: colors.textPrimary },
-  statusBadge: {
-    paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: radius.pill, borderWidth: 1,
-  },
-  statusText: { ...typography.micro, fontWeight: '600' },
-  orderNumber: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 6,
-  },
-  contactText: {
-    ...typography.caption,
-    color: colors.electricBright,
-    fontWeight: '600',
-    writingDirection: 'rtl',
-  },
-  locationText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    flex: 1,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  detailRow: { flexDirection: 'row', gap: spacing.md },
-  detail: { flex: 1, gap: 2 },
-  detailLabel: { ...typography.micro, color: colors.textMuted },
-  detailValue: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  footerText: { ...typography.micro, color: colors.textMuted },
-  total: { ...typography.bodyStrong, color: colors.gold },
-  actions: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
-  chatBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: radius.pill,
-    borderWidth: 1, borderColor: colors.electricBright + '66',
-    backgroundColor: colors.electric + '11',
-  },
-  chatBtnText: { ...typography.micro, color: colors.textBrandStrong },
-  advanceBtn: { flex: 1, borderRadius: radius.pill, overflow: 'hidden' },
-  advanceBtnGrad: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 9,
-  },
-  advanceBtnText: { ...typography.micro, color: '#fff', fontWeight: '600' },
-  rejectBtn: {
-    width: 34, height: 34, borderRadius: 17,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.danger + '55',
-    backgroundColor: colors.danger + '11',
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right' },
-  modalSub: { ...typography.caption, color: colors.textMuted, ...getRtlText(), marginBottom: spacing.sm },
-  reasonChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    backgroundColor: colors.bgElevated,
-  },
-  reasonChipActive: {
-    borderColor: colors.danger,
-    backgroundColor: colors.danger + '18',
-  },
-  reasonChipText: { ...typography.caption, color: colors.textSecondary, textAlign: 'right' },
-  reasonChipTextActive: { color: colors.danger, fontWeight: '600' },
-  customReasonInput: {
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    color: colors.textPrimary,
-    backgroundColor: colors.bgElevated,
-    marginTop: spacing.xs,
-  },
-  modalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  modalCancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    alignItems: 'center',
-  },
-  modalCancelText: { ...typography.caption, color: colors.textMuted },
-  modalConfirmBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-    backgroundColor: colors.danger,
-    alignItems: 'center',
-  },
-  modalConfirmText: { ...typography.caption, color: '#fff', fontWeight: '600' },
-  });
-}
-
-function createProductManageStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-  card: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
-    padding: spacing.md, marginBottom: spacing.sm,
-  },
-  img: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.bgElevated },
-  name: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  cat: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  price: { ...typography.caption, color: colors.gold, fontWeight: '600' },
-  stockBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
-  stockText: { ...typography.micro, fontWeight: '600' },
-  actions: { gap: 6 },
-  editBtn: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: colors.electric + '22',
-    borderWidth: 1, borderColor: colors.electric + '44',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  deleteBtn: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: colors.danger + '22',
-    borderWidth: 1, borderColor: colors.danger + '44',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  });
-}
-
-function createOfferManageStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-  card: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.gold + '33',
-    padding: spacing.md, marginBottom: spacing.sm,
-  },
-  img: { width: 64, height: 64, borderRadius: radius.md, backgroundColor: colors.bgElevated },
-  title: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  desc: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  price: { ...typography.caption, color: colors.gold, fontWeight: '600' },
-  original: { ...typography.micro, color: colors.textMuted, textDecorationLine: 'line-through' },
-  discBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: colors.danger },
-  discText: { ...typography.micro, color: '#fff', fontWeight: '600' },
-  });
-}
-
-// Stories
-const sto = StyleSheet.create({
-  typeCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
-    padding: spacing.lg, marginBottom: spacing.sm,
-    overflow: 'hidden', position: 'relative',
-  },
-  typeIcon: {
-    width: 40, height: 40, borderRadius: 20,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  typeIconText: { fontSize: 18 },
-  typeLabel: { ...typography.bodyStrong, color: colors.textPrimary },
-  typeSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
-  addBadge: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  lockCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.gold + '11',
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.gold + '44',
-    padding: spacing.lg, marginTop: spacing.lg,
-  },
-  lockTitle: { ...typography.bodyStrong, color: colors.gold },
-  lockSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
-  lockBtn: {
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: radius.pill, backgroundColor: colors.gold,
-  },
-  lockBtnText: { ...typography.micro, color: '#1A1300', fontWeight: '600' },
-  activeList: { gap: spacing.sm, marginBottom: spacing.lg },
-  activeListTitle: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: '600',
-    ...getRtlText(),
-    marginBottom: spacing.xs,
-  },
-  activeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.sm,
-  },
-  activeThumb: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.md,
-    backgroundColor: colors.bgElevated,
-  },
-  activeCaption: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  activeMeta: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
-});
