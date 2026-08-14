@@ -207,10 +207,10 @@ export type ButcherRankingCategory =
   | 'new';
 
 export const BUTCHER_RANKING_TABS: { id: ButcherRankingCategory; label: string }[] = [
+  { id: 'distance', label: 'الأقرب إليك' },
   { id: 'rating', label: 'الأعلى تقييماً' },
   { id: 'favorites', label: 'الأكثر تفضيلاً' },
   { id: 'orders', label: 'الأكثر طلباً' },
-  { id: 'distance', label: 'الأقرب إليك' },
   { id: 'new', label: 'الملاحم الجديدة' },
 ];
 export function mapButcherFromApi(b: Record<string, unknown>): ButcherProfile {
