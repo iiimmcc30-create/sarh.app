@@ -1,6 +1,7 @@
-// SAFAT — Butchers market "More" hub — cover-style cards matching app More tab
+// SAFAT — Butchers market "More" hub (المزيد) — user summary + section shortcuts
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
@@ -8,6 +9,7 @@ import { AppScrollView } from '@/components/ui/AppScrollView';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -39,34 +41,36 @@ export default function ButchersMoreScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <ScreenHeader title="المزيد" />
+
       <AppScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
-        {/* User — cover trail: avatar on physical right */}
-        <View style={styles.card}>
-          <View style={styles.userRow}>
-            <View style={styles.coverTrail}>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.userName} numberOfLines={1}>
-                  {displayName}
-                </Text>
-                <Text style={styles.userPhone} numberOfLines={1}>
-                  {formatPhone(phone)}
-                </Text>
-              </View>
-              <View style={styles.avatarWrap}>
-                {me.avatar ? (
-                  <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-                ) : (
-                  <AppIcon name="person-outline" size={22} color={colors.textPrimary} />
-                )}
-              </View>
+        <View style={[styles.userCard, getRtlRow()]}>
+          <View style={styles.avatarWrap}>
+            {me.avatar ? (
+              <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
+            ) : (
+              <AppIcon name="person-outline" size={28} color={colors.electricBright} />
+            )}
+          </View>
+          <View style={styles.userText}>
+            <Text style={styles.userName} numberOfLines={1}>
+              {displayName}
+            </Text>
+            <View style={[styles.phoneRow, getRtlRow()]}>
+              <AppIcon name="call-outline" size={13} color={colors.textMuted} />
+              <Text style={styles.userPhone} numberOfLines={1}>
+                {formatPhone(phone)}
+              </Text>
             </View>
           </View>
         </View>
 
+        <Text style={styles.sectionLabel}>حسابي</Text>
         <View style={styles.card}>
           <SidebarMenuItem
             icon="heart-outline"
             title="تفضيلاتي"
+            subtitle="الملاحم المفضلة لديك"
             colors={colors}
             showDivider
             onPress={() => router.push('/butchers/favorites')}
@@ -74,16 +78,19 @@ export default function ButchersMoreScreen() {
           <SidebarMenuItem
             icon="receipt-outline"
             title="الفواتير"
+            subtitle="فواتير طلباتك المكتملة"
             colors={colors}
             showDivider={false}
             onPress={() => router.push('/butchers/invoices')}
           />
         </View>
 
+        <Text style={styles.sectionLabel}>الخدمات والدعم</Text>
         <View style={styles.card}>
           <SidebarMenuItem
             icon="storefront-outline"
             title="سجّل ملحمتك"
+            subtitle="انضم كشريك بائع في سرح"
             colors={colors}
             showDivider
             onPress={goRegister}
@@ -114,56 +121,44 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
-    scroll: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.lg,
-      gap: spacing.lg,
-    },
-    card: menuCardStyle(colors),
-    userRow: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 14,
-    },
-    coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
+    scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.lg },
+    userCard: {
       alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 10,
-      width: '100%',
-    },
-    rtlTextShellFlex: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
-    },
-    userName: {
-      ...typography.bodyStrong,
-      fontSize: 15,
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    userPhone: {
-      ...typography.caption,
-      color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      marginTop: 2,
+      gap: spacing.md,
+      padding: spacing.lg,
+      borderRadius: 16,
+      backgroundColor: colors.bgElevated,
     },
     avatarWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       overflow: 'hidden',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgDeep,
-      flexShrink: 0,
+      backgroundColor: colors.electric + '18',
     },
     avatar: { width: '100%', height: '100%' },
+    userText: { flex: 1, minWidth: 0, gap: 4 },
+    userName: {
+      ...typography.h3,
+      color: colors.textPrimary,
+      ...getRtlText(),
+    },
+    phoneRow: { alignItems: 'center', gap: 6 },
+    userPhone: {
+      ...typography.caption,
+      color: colors.textMuted,
+      ...getRtlText(),
+    },
+    sectionLabel: {
+      ...typography.bodyStrong,
+      fontSize: 13,
+      color: colors.textMuted,
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      ...getRtlText(),
+    },
+    card: menuCardStyle(colors),
   });
 }
