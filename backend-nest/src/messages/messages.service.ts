@@ -86,11 +86,16 @@ export class MessagesService {
 
     let type: MessageThreadType = dto.type ?? 'DIRECT';
     let resolvedButcherId: string | null = null;
+    let resolvedOrderId: string | undefined = orderId;
 
     if (butcherId || type === 'BUTCHER' || orderId) {
       type = 'BUTCHER';
       if (!butcherId) {
-        throwApi(400, 'validation_error', 'معرّف الملحمة مطلوب لمحادثات الملاحم');
+        throwApi(
+          400,
+          'validation_error',
+          'معرّف الملحمة مطلوب لمحادثات الملاحم',
+        );
       }
       const butcher = await this.repo.findButcherById(butcherId);
       if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
@@ -102,11 +107,39 @@ export class MessagesService {
         );
       }
       resolvedButcherId = butcher.id;
+
+      const customerId =
+        butcher.userId === senderId
+          ? receiverId
+          : butcher.userId === receiverId
+            ? senderId
+            : null;
+      if (!customerId) {
+        throwApi(400, 'invalid_action', 'المشاركون لا يطابقان محادثة الملحمة');
+      }
+      const acceptedOrder = await this.repo.findAcceptedButcherOrderForChat(
+        customerId,
+        butcher.id,
+      );
+      if (!acceptedOrder) {
+        throwApi(
+          403,
+          'chat_not_allowed',
+          'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
+        );
+      }
+      if (!resolvedOrderId) {
+        resolvedOrderId = acceptedOrder.id;
+      }
     }
 
     if (type === 'DIRECT') {
       if (receiver.allowPrivateMessages === false) {
-        throwApi(403, 'messages_disabled', 'هذا المستخدم لا يقبل الرسائل الخاصة');
+        throwApi(
+          403,
+          'messages_disabled',
+          'هذا المستخدم لا يقبل الرسائل الخاصة',
+        );
       }
       if (receiver.privateMessagesAudience === 'following') {
         const allowed = await this.repo.findFollow(receiverId, senderId);
@@ -135,7 +168,7 @@ export class MessagesService {
       text: bodyText,
       imageUrl,
       videoUrl,
-      orderId,
+      orderId: resolvedOrderId,
     });
 
     const senderName =
@@ -161,7 +194,7 @@ export class MessagesService {
         actorAvatar: message.sender.avatar,
         threadType: type,
         ...(resolvedButcherId ? { butcherId: resolvedButcherId } : {}),
-        ...(orderId ? { orderId } : {}),
+        ...(resolvedOrderId ? { orderId: resolvedOrderId } : {}),
         ...(imageUrl ? { imageUrl } : {}),
         ...(videoUrl ? { videoUrl } : {}),
       },
@@ -184,6 +217,35 @@ export class MessagesService {
 
     const thread = await this.repo.findThreadForUser(threadId, userId);
     if (!thread) throwApi(404, 'not_found', 'المحادثة غير موجودة');
+
+    if (thread.type === 'BUTCHER' && thread.butcherId) {
+      const otherId =
+        thread.participant1 === userId
+          ? thread.participant2
+          : thread.participant1;
+      const butcher = await this.repo.findButcherById(thread.butcherId);
+      if (butcher) {
+        const customerId =
+          butcher.userId === userId
+            ? otherId
+            : butcher.userId === otherId
+              ? userId
+              : null;
+        if (customerId) {
+          const acceptedOrder = await this.repo.findAcceptedButcherOrderForChat(
+            customerId,
+            thread.butcherId,
+          );
+          if (!acceptedOrder) {
+            throwApi(
+              403,
+              'chat_not_allowed',
+              'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
+            );
+          }
+        }
+      }
+    }
 
     const messages = await this.repo.findMessages(
       threadId,

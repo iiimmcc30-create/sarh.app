@@ -5,7 +5,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -39,6 +39,11 @@ import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductO
 import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
+import {
+  butcherChatRouteParams,
+  fetchButcherChatAccess,
+  type ButcherChatAccess,
+} from '@/services/butcherChat';
 
 type Tab = 'products' | 'offers' | 'stories' | 'about' | 'chat';
 
@@ -268,30 +273,45 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 }
 
 // ─── Tab: Chat ────────────────────────────────────────────────────────────────
-function ChatTab({ butcherName, butcherId, currentUserId }: { butcherName: string; butcherId: string; currentUserId?: string }) {
-  const router = useRouter();
+function ChatTab({
+  butcherName,
+  chatAccess,
+  onOpenChat,
+}: {
+  butcherName: string;
+  chatAccess: ButcherChatAccess | null;
+  onOpenChat: () => void;
+}) {
   const { colors } = useTheme();
   const chatStyles = useThemedStyles(({ colors }) => createChatStyles(colors));
-  const previewMessages: ChatMessage[] = [];
+  const router = useRouter();
+
+  if (!chatAccess?.allowed) {
+    return (
+      <View style={chatStyles.wrap}>
+        <View style={chatStyles.lockedCard}>
+          <AppIcon name="chatbubble-outline" size={28} color={colors.textMuted} />
+          <Text style={chatStyles.lockedTitle}>المحادثة غير متاحة بعد</Text>
+          <Text style={chatStyles.lockedSub}>
+            {chatAccess?.messageAr ??
+              'يمكنك مراسلة الملحمة بعد تقديم الطلب وقبوله من قبلها.'}
+          </Text>
+          <Pressable
+            style={chatStyles.ordersLink}
+            onPress={() => router.push('/butchers/my-orders')}
+          >
+            <Text style={chatStyles.ordersLinkText}>عرض طلباتي</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={chatStyles.wrap}>
-      {/* Preview messages */}
-      {previewMessages.map((msg) => {
-        const isMe = msg.senderId === currentUserId;
-        return (
-          <View key={msg.id} style={[chatStyles.bubble, isMe ? chatStyles.bubbleMe : chatStyles.bubbleThem]}>
-            <Text style={[chatStyles.bubbleText, isMe ? chatStyles.textMe : chatStyles.textThem]}>{msg.text}</Text>
-            <Text style={chatStyles.bubbleTime}>
-              {new Date(msg.createdAt).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </View>
-        );
-      })}
-
-      {/* Open full chat CTA */}
       <Pressable
         style={({ pressed }) => [chatStyles.openChatBtn, pressed && { opacity: 0.85 }]}
-        onPress={() => router.push({ pathname: '/butchers/chat', params: { butcherId } } as any)}
+        onPress={onOpenChat}
       >
         <LinearGradient
           colors={[colors.electric, colors.cyan]}
@@ -300,7 +320,7 @@ function ChatTab({ butcherName, butcherId, currentUserId }: { butcherName: strin
           end={{ x: 1, y: 0 }}
         >
           <AppIcon name="chatbubbles-outline" size={20} color="#fff" />
-          <Text style={chatStyles.openChatText}>فتح المحادثة الكاملة مع {butcherName}</Text>
+          <Text style={chatStyles.openChatText}>فتح المحادثة مع {butcherName}</Text>
         </LinearGradient>
       </Pressable>
     </View>
@@ -432,6 +452,7 @@ export default function ButcherProfileScreen() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [storiesList, setStoriesList] = useState<ButcherStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chatAccess, setChatAccess] = useState<ButcherChatAccess | null>(null);
 
   useEffect(() => {
     const fetchButcherDetails = async () => {
@@ -535,6 +556,41 @@ export default function ButcherProfileScreen() {
     };
     fetchButcherDetails();
   }, [id, accessToken]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const access = await fetchButcherChatAccess(id, accessToken);
+        if (!cancelled) setChatAccess(access);
+      } catch {
+        if (!cancelled) {
+          setChatAccess({
+            allowed: false,
+            reason: 'order_not_accepted',
+            messageAr: 'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, accessToken]);
+
+  const onOpenChat = useCallback(() => {
+    if (!chatAccess?.allowed || !id) return;
+    router.push(
+      butcherChatRouteParams({
+        butcherId: id,
+        orderId: chatAccess.orderId,
+        receiverId: chatAccess.receiverId,
+        receiverName: butcher?.nameAr,
+        receiverAvatar: butcher?.logo,
+      }),
+    );
+  }, [chatAccess, id, router, butcher?.nameAr, butcher?.logo]);
 
   useEffect(() => {
     if (!butcher) return;
@@ -767,8 +823,17 @@ export default function ButcherProfileScreen() {
         {/* ── Chat + Order CTAs ── */}
         <View style={styles.ctaRow}>
           <Pressable
-            style={styles.chatCta}
-            onPress={() => setActiveTab('chat')}
+            style={[
+              styles.chatCta,
+              chatAccess?.allowed && styles.chatCtaActive,
+            ]}
+            onPress={() => {
+              if (chatAccess?.allowed) {
+                onOpenChat();
+              } else {
+                setActiveTab('chat');
+              }
+            }}
           >
             <AppIcon name="chatbubble-outline" size={18} color={colors.electricBright} />
             <Text style={styles.chatCtaText}>محادثة</Text>
@@ -884,7 +949,13 @@ export default function ButcherProfileScreen() {
               </View>
             </>
           )}
-          {activeTab === 'chat' && <ChatTab butcherName={butcher.nameAr} butcherId={butcher.id} currentUserId={user?.id} />}
+          {activeTab === 'chat' && (
+            <ChatTab
+              butcherName={butcher.nameAr}
+              chatAccess={chatAccess}
+              onOpenChat={onOpenChat}
+            />
+          )}
         </View>
 
         <View style={{ height: itemCount > 0 ? 120 : 100 }} />
@@ -1039,6 +1110,10 @@ function createMainStyles(colors: ThemeColors) {
     backgroundColor: colors.electric + '11',
   },
   chatCtaText: { ...typography.bodyStrong, color: colors.textBrandStrong },
+  chatCtaActive: {
+    borderColor: colors.electricBright,
+    backgroundColor: colors.electric + '22',
+  },
   orderCta: { flex: 2, borderRadius: radius.xl, overflow: 'hidden' },
   orderCtaGrad: {
     flexDirection: 'row',
@@ -1265,6 +1340,33 @@ function createChatStyles(colors: ThemeColors) {
     paddingVertical: 14,
   },
   openChatText: { ...typography.bodyStrong, color: '#fff' },
+  lockedCard: {
+    backgroundColor: colors.bgSurface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  lockedTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
+  lockedSub: {
+    ...typography.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  ordersLink: {
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.electric + '22',
+    borderWidth: 1,
+    borderColor: colors.electric + '55',
+  },
+  ordersLinkText: { ...typography.bodyStrong, color: colors.textBrandStrong },
   });
 }
 

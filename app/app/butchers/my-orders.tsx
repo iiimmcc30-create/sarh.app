@@ -1,3 +1,4 @@
+import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -30,15 +31,18 @@ import {
   formatOrderDate,
   isActiveOrder,
 } from '@/services/butcherOrders';
+import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
 
 function OrderCard({
   order,
   onPress,
+  onChat,
   colors,
   styles,
 }: {
   order: ButcherOrderRecord;
   onPress: () => void;
+  onChat?: () => void;
   colors: ThemeColors;
   styles: ReturnType<typeof createStyles>;
 }) {
@@ -98,6 +102,18 @@ function OrderCard({
         <Text style={styles.totalLabel}>الإجمالي</Text>
         <Text style={styles.totalValue}>{formatCurrency(order.totalPrice, order.currency)}</Text>
       </View>
+
+      {onChat ? (
+        <Pressable
+          style={({ pressed }) => [styles.chatBtn, pressed && { opacity: 0.88 }]}
+          onPress={(e) => {
+            onChat();
+          }}
+        >
+          <AppIcon name="chatbubbles-outline" size={18} color="#fff" />
+          <Text style={styles.chatBtnText}>محادثة الملحمة</Text>
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }
@@ -186,6 +202,19 @@ export default function MyOrdersScreen() {
                       onPress={() =>
                         router.push({ pathname: '/butchers/order/[id]', params: { id: order.id } })
                       }
+                      onChat={
+                        isOrderChatEligible(order.status)
+                          ? () =>
+                              router.push(
+                                butcherChatRouteParams({
+                                  butcherId: order.butcherId,
+                                  orderId: order.id,
+                                  receiverName: order.butcher?.nameAr,
+                                  receiverAvatar: order.butcher?.logo,
+                                }),
+                              )
+                          : undefined
+                      }
                     />
                   ))}
                 </View>
@@ -202,6 +231,19 @@ export default function MyOrdersScreen() {
                       styles={styles}
                       onPress={() =>
                         router.push({ pathname: '/butchers/order/[id]', params: { id: order.id } })
+                      }
+                      onChat={
+                        isOrderChatEligible(order.status)
+                          ? () =>
+                              router.push(
+                                butcherChatRouteParams({
+                                  butcherId: order.butcherId,
+                                  orderId: order.id,
+                                  receiverName: order.butcher?.nameAr,
+                                  receiverAvatar: order.butcher?.logo,
+                                }),
+                              )
+                          : undefined
                       }
                     />
                   ))}
@@ -310,6 +352,22 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: colors.electricBright,
       fontWeight: '600',
+    },
+    chatBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      paddingVertical: 12,
+      borderRadius: radius.pill,
+      backgroundColor: colors.electric,
+    },
+    chatBtnText: {
+      ...typography.bodyStrong,
+      color: '#fff',
+      fontWeight: '600',
+      writingDirection: 'rtl',
     },
     empty: {
       alignItems: 'center',

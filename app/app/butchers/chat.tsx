@@ -33,6 +33,7 @@ import { uploadMediaFromUri } from '@/services/upload';
 import { useEffect } from 'react';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchButcherChatAccess } from '@/services/butcherChat';
 import { fetchUserProfile } from '@/services/users';
 
 function mapApiMessage(m: {
@@ -104,6 +105,7 @@ export default function ButcherChatScreen() {
     threadType: threadTypeParam,
     accountType: accountTypeParam,
     draftMessage: draftMessageParam,
+    orderId: orderIdParam,
   } = useLocalSearchParams<{
     butcherId?: string;
     threadId?: string;
@@ -113,6 +115,7 @@ export default function ButcherChatScreen() {
     threadType?: string;
     accountType?: string;
     draftMessage?: string;
+    orderId?: string;
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -148,6 +151,10 @@ export default function ButcherChatScreen() {
   );
   const [sending, setSending] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [chatAccessChecked, setChatAccessChecked] = useState(false);
+  const [resolvedOrderId, setResolvedOrderId] = useState<string | null>(
+    orderIdParam ?? null,
+  );
 
   useEffect(() => {
     if (typeof draftMessageParam === 'string' && draftMessageParam.trim()) {
@@ -220,8 +227,56 @@ export default function ButcherChatScreen() {
   }, [receiverId, threadTypeParam, butcherId, accountTypeParam, activeChatType]);
 
   useEffect(() => {
+    if (isThreadMode || isDirectMode || isButcherPeerMode) {
+      setChatAccessChecked(true);
+      return;
+    }
+    if (!butcherId || !accessToken) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const access = await fetchButcherChatAccess(butcherId, accessToken);
+        if (cancelled) return;
+        if (!access.allowed) {
+          Alert.alert(
+            'المحادثة غير متاحة',
+            access.messageAr ??
+              'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
+            [{ text: 'حسناً', onPress: () => router.back() }],
+          );
+          return;
+        }
+        if (access.orderId) setResolvedOrderId(access.orderId);
+        setChatAccessChecked(true);
+      } catch {
+        if (!cancelled) {
+          Alert.alert(
+            'المحادثة غير متاحة',
+            'تعذر التحقق من إمكانية المحادثة',
+            [{ text: 'حسناً', onPress: () => router.back() }],
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    butcherId,
+    accessToken,
+    isThreadMode,
+    isDirectMode,
+    isButcherPeerMode,
+    receiverId,
+    router,
+  ]);
+
+  useEffect(() => {
     if (isThreadMode || isDirectMode || isButcherPeerMode) return;
     if (!butcherId) return;
+    if (!chatAccessChecked) return;
     const fetchButcher = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/butchers/${butcherId}`);
@@ -238,8 +293,14 @@ export default function ButcherChatScreen() {
     fetchButcher();
   }, [butcherId, isThreadMode, router]);
 
+    fetchButcher();
+  }, [butcherId, isThreadMode, isDirectMode, isButcherPeerMode, chatAccessChecked, router]);
+
   useEffect(() => {
     if (!accessToken) return;
+    if (!chatAccessChecked && !isThreadMode && !isDirectMode && !isButcherPeerMode && butcherId) {
+      return;
+    }
     if (isThreadMode && threadIdParam) {
       const loadThreadMessages = async () => {
         setLoadingMessages(true);
@@ -393,7 +454,17 @@ export default function ButcherChatScreen() {
       }
     };
     loadMessages();
-  }, [butcherId, butcher?.user?.id, accessToken, isThreadMode, isDirectMode, isButcherPeerMode, receiverId, threadIdParam]);
+  }, [
+    butcherId,
+    butcher?.user?.id,
+    accessToken,
+    isThreadMode,
+    isDirectMode,
+    isButcherPeerMode,
+    receiverId,
+    threadIdParam,
+    chatAccessChecked,
+  ]);
 
   const deliverMessage = async (
     text: string,
@@ -431,6 +502,7 @@ export default function ButcherChatScreen() {
           ...(activeChatType === 'BUTCHER' && effectiveButcherId
             ? { butcherId: effectiveButcherId }
             : {}),
+          ...(resolvedOrderId ? { orderId: resolvedOrderId } : {}),
           ...(bodyText ? { text: bodyText } : {}),
           ...(media?.imageUrl ? { imageUrl: media.imageUrl } : {}),
           ...(media?.videoUrl ? { videoUrl: media.videoUrl } : {}),
@@ -623,7 +695,7 @@ export default function ButcherChatScreen() {
           <View style={styles.orderStrip}>
             <AppIcon name="clipboard-list-outline" size={16} color={colors.glow} />
             <Text style={styles.orderStripText}>
-              يمكنك مناقشة تفاصيل طلبك وتأكيده هنا مباشرةً مع الجزار
+              المحادثة متاحة بعد قبول طلبك — ناقش التفاصيل مع الملحمة هنا
             </Text>
           </View>
         ) : chatUiKind === 'livestock' ? (
