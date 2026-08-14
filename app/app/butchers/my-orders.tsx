@@ -16,7 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   CUT_LABELS,
@@ -68,19 +67,7 @@ function OrderCard({
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.94 }]}
     >
-      {/* Header: logo · name · date — status pill */}
-      <View style={[styles.cardHeader, getRtlRow()]}>
-        <View style={[styles.headerMain, getRtlRow()]}>
-          <View style={styles.logoWrap}>
-            <Image source={uriSource(order.butcher?.logo)} style={styles.logo} contentFit="cover" />
-          </View>
-          <View style={styles.headerText}>
-            <Text style={styles.butcherName} numberOfLines={1}>
-              {order.butcher?.nameAr ?? 'ملحمة'}
-            </Text>
-            <Text style={styles.orderDate}>{formatOrderDate(order.createdAt)}</Text>
-          </View>
-        </View>
+      <View style={styles.coverTrail}>
         <View
           style={[
             styles.statusBadge,
@@ -90,14 +77,19 @@ function OrderCard({
           <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
           <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
         </View>
+        <View style={styles.rtlTextShellFlex}>
+          <Text style={styles.butcherName} numberOfLines={1}>
+            {order.butcher?.nameAr ?? 'ملحمة'}
+          </Text>
+          <Text style={styles.orderDate}>{formatOrderDate(order.createdAt)}</Text>
+        </View>
+        <View style={styles.logoWrap}>
+          <Image source={uriSource(order.butcher?.logo)} style={styles.logo} contentFit="cover" />
+        </View>
       </View>
 
-      {/* Product summary */}
-      <View style={styles.productRow}>
-        <View style={styles.productIcon}>
-          <AppIcon name="bag-outline" size={16} color={colors.electricBright} />
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
+      <View style={styles.coverTrail}>
+        <View style={styles.rtlTextShellFlex}>
           <Text style={styles.productName} numberOfLines={1}>
             {orderProductSummary(order)}
           </Text>
@@ -110,24 +102,23 @@ function OrderCard({
 
       <View style={styles.divider} />
 
-      {/* Footer: order no + payment · total */}
-      <View style={[styles.footerRow, getRtlRow()]}>
-        <View style={styles.footerMeta}>
+      <View style={styles.coverTrail}>
+        <View style={styles.totalShell}>
+          <Text style={styles.totalValue}>{formatCurrency(order.totalPrice, order.currency)}</Text>
+          <Text style={styles.totalLabel}>الإجمالي</Text>
+        </View>
+        <View style={styles.rtlTextShellFlex}>
           <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
           <View
             style={[
               styles.payChip,
-              { backgroundColor: (isPaid ? colors.success : colors.gold) + '1F' },
+              { backgroundColor: (isPaid ? colors.success : colors.gold) + '1F', alignSelf: 'flex-end' },
             ]}
           >
             <Text style={[styles.payText, { color: isPaid ? colors.success : colors.gold }]}>
               {PAYMENT_STATUS_LABELS[order.paymentStatus]}
             </Text>
           </View>
-        </View>
-        <View style={styles.totalShell}>
-          <Text style={styles.totalValue}>{formatCurrency(order.totalPrice, order.currency)}</Text>
-          <Text style={styles.totalLabel}>الإجمالي</Text>
         </View>
       </View>
 
@@ -136,8 +127,12 @@ function OrderCard({
           style={({ pressed }) => [styles.chatBtn, pressed && { opacity: 0.88 }]}
           onPress={onChat}
         >
-          <AppIcon name="chatbubbles-outline" size={17} color={colors.electricBright} />
-          <Text style={styles.chatBtnText}>محادثة الملحمة</Text>
+          <View style={styles.coverTrail}>
+            <View style={styles.rtlTextShellFlex}>
+              <Text style={styles.chatBtnText}>محادثة الملحمة</Text>
+            </View>
+            <AppIcon name="chatbubbles-outline" size={17} color={colors.electricBright} />
+          </View>
         </Pressable>
       ) : null}
     </Pressable>
@@ -147,19 +142,17 @@ function OrderCard({
 function SkeletonCard({ styles }: { styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={styles.card}>
-      <View style={[styles.cardHeader, getRtlRow()]}>
-        <View style={[styles.headerMain, getRtlRow()]}>
-          <View style={[styles.logoWrap, styles.skeleton]} />
-          <View style={{ gap: 6 }}>
-            <View style={[styles.skeleton, { width: 120, height: 14, borderRadius: 6 }]} />
-            <View style={[styles.skeleton, { width: 80, height: 10, borderRadius: 6 }]} />
-          </View>
-        </View>
+      <View style={styles.coverTrail}>
         <View style={[styles.skeleton, { width: 72, height: 24, borderRadius: 999 }]} />
+        <View style={{ flex: 1, gap: 6 }}>
+          <View style={[styles.skeleton, { width: 120, height: 14, borderRadius: 6, alignSelf: 'flex-end' }]} />
+          <View style={[styles.skeleton, { width: 80, height: 10, borderRadius: 6, alignSelf: 'flex-end' }]} />
+        </View>
+        <View style={[styles.logoWrap, styles.skeleton]} />
       </View>
       <View style={[styles.skeleton, { width: '100%', height: 40, borderRadius: 10, marginTop: spacing.sm }]} />
       <View style={styles.divider} />
-      <View style={[styles.skeleton, { width: '60%', height: 20, borderRadius: 8 }]} />
+      <View style={[styles.skeleton, { width: '60%', height: 20, borderRadius: 8, alignSelf: 'flex-end' }]} />
     </View>
   );
 }
@@ -244,8 +237,12 @@ export default function MyOrdersScreen() {
               <View style={styles.emptyIconWrap}>
                 <AppIcon name="bag-outline" size={34} color={colors.electricBright} />
               </View>
-              <Text style={styles.emptyTitle}>لا توجد طلبات بعد</Text>
-              <Text style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.emptyTitle}>لا توجد طلبات بعد</Text>
+              </View>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</Text>
+              </View>
               <Pressable style={styles.emptyBtn} onPress={() => router.replace('/butchers')}>
                 <Text style={styles.emptyBtnText}>تصفح الملاحم</Text>
               </Pressable>
@@ -254,7 +251,9 @@ export default function MyOrdersScreen() {
             <>
               {activeOrders.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>الطلبات الحالية</Text>
+                  <View style={styles.rtlTextShell}>
+                    <Text style={styles.sectionTitle}>الطلبات الحالية</Text>
+                  </View>
                   {activeOrders.map((order) => (
                     <OrderCard
                       key={order.id}
@@ -272,7 +271,9 @@ export default function MyOrdersScreen() {
 
               {pastOrders.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>الطلبات السابقة</Text>
+                  <View style={styles.rtlTextShell}>
+                    <Text style={styles.sectionTitle}>الطلبات السابقة</Text>
+                  </View>
                   {pastOrders.map((order) => (
                     <OrderCard
                       key={order.id}
@@ -304,42 +305,51 @@ function createStyles(colors: ThemeColors) {
     flex: { flex: 1 },
     scroll: { padding: spacing.lg, paddingBottom: spacing.lg, gap: spacing.lg },
     section: { gap: spacing.md },
+    rtlTextShell: { width: '100%', direction: 'ltr' },
+    rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
+    coverTrail: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+    },
     sectionTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     card: {
       backgroundColor: colors.bgElevated,
-      borderRadius: radius.xl,
+      borderRadius: 14,
       padding: spacing.lg,
       gap: spacing.md,
       marginBottom: spacing.md,
     },
-    cardHeader: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    headerMain: { alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 },
     logoWrap: {
       width: 44,
       height: 44,
       borderRadius: 14,
       overflow: 'hidden',
       backgroundColor: colors.bgSurface,
+      flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },
-    headerText: { flex: 1, minWidth: 0, gap: 2 },
     butcherName: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     orderDate: {
       ...typography.micro,
       color: colors.textMuted,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     statusBadge: {
       flexDirection: 'row',
@@ -352,43 +362,31 @@ function createStyles(colors: ThemeColors) {
     },
     statusDot: { width: 6, height: 6, borderRadius: 3 },
     statusText: { ...typography.micro, fontWeight: '700', writingDirection: 'rtl' },
-    productRow: {
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      gap: spacing.sm,
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
-      padding: spacing.sm,
-    },
-    productIcon: {
-      width: 34,
-      height: 34,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.electric + '14',
-    },
     productName: {
       ...typography.bodyStrong,
       fontSize: 14,
       color: colors.textPrimary,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     productMeta: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: 2,
-      ...getRtlText(),
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderSoft,
     },
-    footerRow: { alignItems: 'flex-end', justifyContent: 'space-between' },
-    footerMeta: { gap: 6, alignItems: 'flex-end' },
     orderNumber: {
       ...typography.micro,
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     payChip: {
@@ -397,13 +395,20 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     payText: { ...typography.micro, fontWeight: '700', writingDirection: 'rtl' },
-    totalShell: { alignItems: 'flex-start', gap: 1 },
+    totalShell: { alignItems: 'flex-end', gap: 1, flexShrink: 0 },
     totalValue: {
       ...typography.h3,
       color: colors.textPrimary,
       fontWeight: '700',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
-    totalLabel: { ...typography.micro, color: colors.textMuted },
+    totalLabel: {
+      ...typography.micro,
+      color: colors.textMuted,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     chatBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -418,6 +423,8 @@ function createStyles(colors: ThemeColors) {
       fontSize: 14,
       color: colors.electricBright,
       fontWeight: '700',
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     skeleton: {
@@ -438,13 +445,20 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '14',
       marginBottom: spacing.xs,
     },
-    emptyTitle: { ...typography.h3, color: colors.textPrimary },
+    emptyTitle: {
+      ...typography.h3,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
     emptySub: {
       ...typography.caption,
       color: colors.textMuted,
       textAlign: 'center',
       writingDirection: 'rtl',
       paddingHorizontal: spacing.xl,
+      width: '100%',
     },
     emptyBtn: {
       marginTop: spacing.md,

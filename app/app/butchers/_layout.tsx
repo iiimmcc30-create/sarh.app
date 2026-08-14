@@ -19,6 +19,7 @@ export default function ButchersLayout() {
       }}
     >
       <Stack.Screen name="index" />
+      <Stack.Screen name="all" />
       <Stack.Screen name="[id]" />
       <Stack.Screen name="order" />
       <Stack.Screen name="cart" />

@@ -1,6 +1,7 @@
 // Vertical nearby butcher row — logo on physical right, RTL cover trail
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -16,10 +17,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 type Props = {
   butcher: ButcherProfile;
   onPress: () => void;
-  showDivider?: boolean;
 };
 
-export function ButcherNearbyRow({ butcher, onPress, showDivider }: Props) {
+export function ButcherNearbyRow({ butcher, onPress }: Props) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const name = butcher.nameAr || butcher.name;
@@ -69,7 +69,6 @@ export function ButcherNearbyRow({ butcher, onPress, showDivider }: Props) {
           />
         </View>
       </View>
-      {showDivider ? <View style={styles.divider} /> : null}
     </Pressable>
   );
 }
@@ -77,8 +76,13 @@ export function ButcherNearbyRow({ butcher, onPress, showDivider }: Props) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
-      paddingHorizontal: spacing.lg,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.md,
       paddingVertical: 12,
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
+      overflow: 'hidden',
     },
     coverTrail: {
       flexDirection: 'row',
@@ -132,15 +136,9 @@ function createStyles(colors: ThemeColors) {
       height: 56,
       borderRadius: 28,
       overflow: 'hidden',
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.bgSurface,
       flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: colors.borderSoft,
-      marginTop: 12,
-      marginRight: 68,
-    },
   });
 }

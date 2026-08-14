@@ -1,7 +1,8 @@
 // Horizontal butcher pick card — cover image + RTL meta (Sarh identity)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { MENU_CARD } from '@/components/feature/SidebarMenu';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -77,10 +78,14 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
       gap: 6,
+      backgroundColor: colors.bgElevated,
+      borderRadius: MENU_CARD.radius,
+      overflow: 'hidden',
+      paddingBottom: spacing.sm,
     },
     cover: {
       height: 118,
-      borderRadius: 14,
+      borderRadius: 0,
       overflow: 'hidden',
       backgroundColor: colors.bgElevated,
     },
@@ -95,7 +100,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 6,
     },
     promoText: { ...typography.micro, color: '#fff', fontWeight: '700', fontSize: 10 },
-    rtlShell: { width: '100%', direction: 'ltr' },
+    rtlShell: { width: '100%', direction: 'ltr', paddingHorizontal: spacing.sm, paddingTop: 8 },
     name: {
       ...typography.bodyStrong,
       fontSize: 14,
@@ -110,6 +115,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 4,
+      paddingHorizontal: spacing.sm,
     },
     rating: {
       ...typography.caption,
@@ -122,6 +128,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
       flexWrap: 'wrap',
       gap: 8,
+      paddingHorizontal: spacing.sm,
     },
     metaItem: {
       flexDirection: 'row',

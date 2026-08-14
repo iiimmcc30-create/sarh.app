@@ -40,6 +40,11 @@ import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar'
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import {
+  butcherChatRouteParams,
+  fetchButcherChatAccess,
+  type ButcherChatAccess,
+} from '@/services/butcherChat';
+import {
   butcherEtaLabel,
   butcherFeeLabel,
   butcherMinOrderLabel,
@@ -48,12 +53,12 @@ import {
 
 type Tab = 'products' | 'offers' | 'stories' | 'about' | 'chat';
 
-const TABS: { id: Tab; labelAr: string; icon: string }[] = [
-  { id: 'products', labelAr: 'المنتجات', icon: '🥩' },
-  { id: 'offers',   labelAr: 'العروض',   icon: '🏷️' },
-  { id: 'stories',  labelAr: 'القصص',    icon: '📸' },
-  { id: 'about',    labelAr: 'عن الملحمة', icon: 'ℹ️' },
-  { id: 'chat',     labelAr: 'المحادثة', icon: '💬' },
+const TABS: { id: Tab; labelAr: string }[] = [
+  { id: 'products', labelAr: 'المنتجات' },
+  { id: 'offers',   labelAr: 'العروض' },
+  { id: 'stories',  labelAr: 'القصص' },
+  { id: 'about',    labelAr: 'عن الملحمة' },
+  { id: 'chat',     labelAr: 'المحادثة' },
 ];
 
 // ─── Tab: Products (store grid) ───────────────────────────────────────────────
@@ -842,31 +847,6 @@ export default function ButcherProfileScreen() {
           </View>
         </View>
 
-        {/* Stats strip */}
-        <View style={styles.statsStrip}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{butcher.totalOrders.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>طلب</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{butcher.orderCompletionRate}%</Text>
-            <Text style={styles.statLabel}>إتمام</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: butcher.workingHours.isOpen ? colors.textBrandSuccess : colors.danger }]}>
-              {butcher.workingHours.isOpen ? 'مفتوح' : 'مغلق'}
-            </Text>
-            <Text style={styles.statLabel}>{butcher.workingHours.open}–{butcher.workingHours.close}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{currency.symbol}</Text>
-            <Text style={styles.statLabel}>{currency.nameAr}</Text>
-          </View>
-        </View>
-
         {chatAccess?.allowed ? (
           <View style={styles.ctaRow}>
             <Pressable
@@ -885,18 +865,21 @@ export default function ButcherProfileScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
         >
-          {visibleTabs.map((tab) => (
-            <Pressable
-              key={tab.id}
-              onPress={() => setActiveTab(tab.id)}
-              style={[styles.tabBtn, activeTab === tab.id && styles.tabBtnActive]}
-            >
-              <Text style={styles.tabIcon}>{tab.icon}</Text>
-              <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
-                {tab.labelAr}
-              </Text>
-            </Pressable>
-          ))}
+          {visibleTabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <Pressable key={tab.id} onPress={() => setActiveTab(tab.id)} style={styles.tabBtn}>
+                <View style={styles.tabCoverTrail}>
+                  <View style={styles.tabTextShell}>
+                    <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                      {tab.labelAr}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
         {/* ── Tab Content ── */}
@@ -1118,23 +1101,6 @@ function createMainStyles(colors: ThemeColors) {
     writingDirection: 'rtl',
   },
 
-  statsStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.lg,
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  statItem: { flex: 1, alignItems: 'center', gap: 2 },
-  statValue: { ...typography.bodyStrong, color: colors.textPrimary },
-  statLabel: { ...typography.micro, color: colors.textMuted },
-  statDivider: { width: 1, height: 28, backgroundColor: colors.borderSoft },
-
   ctaRow: {
     flexDirection: 'row',
     gap: spacing.md,
@@ -1161,29 +1127,43 @@ function createMainStyles(colors: ThemeColors) {
 
   tabsRow: {
     flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
     paddingBottom: spacing.sm,
-    gap: spacing.sm,
+    gap: spacing.lg,
   },
   tabBtn: {
+    alignItems: 'stretch',
+    paddingBottom: 2,
+  },
+  tabCoverTrail: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    direction: 'ltr',
+    justifyContent: 'flex-end',
   },
-  tabBtnActive: {
+  tabTextShell: {
+    direction: 'ltr',
+  },
+  tabLabel: {
+    ...typography.bodyStrong,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  tabLabelActive: { color: colors.electricBright },
+  tabUnderline: {
+    marginTop: 6,
+    height: 3,
+    width: '100%',
+    borderRadius: 2,
+    backgroundColor: 'transparent',
+  },
+  tabUnderlineActive: {
     backgroundColor: colors.electric,
-    borderColor: colors.electric,
   },
-  tabIcon: { fontSize: 14 },
-  tabLabel: { ...typography.caption, color: colors.textMuted },
-  tabLabelActive: { color: '#fff', fontWeight: '600' },
   tabContent: { paddingTop: spacing.lg },
   sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
   });

@@ -69,7 +69,7 @@ export function ButcherMiniSection({
     <View style={[s.wrapper, (isHero || isGrid) && s.wrapperHero]}>
       <SectionHeader
         title="الملاحم"
-        onSeeAll={() => router.push('/butchers')}
+        onSeeAll={() => router.push('/butchers/all')}
       />
 
       {showStories && stories.length > 0 && (
