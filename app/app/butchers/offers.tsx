@@ -1,8 +1,8 @@
-// SAFAT — Butchers offers feed — cover-style cards (هوية سرح)
+// SAFAT — Butchers offers feed (العروض) — aggregates active offers across butchers
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
-import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
@@ -95,12 +96,10 @@ function OfferProductCard({
         ) : null}
       </View>
       <View style={styles.productBody}>
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.productName} numberOfLines={2}>
-            {offer.titleAr}
-          </Text>
-        </View>
-        <View style={styles.priceRow}>
+        <Text style={styles.productName} numberOfLines={2}>
+          {offer.titleAr}
+        </Text>
+        <View style={[styles.priceRow, getRtlRow()]}>
           {offer.offerPrice != null ? (
             <Text style={styles.offerPrice}>{offer.offerPrice.toLocaleString('en-US')} ر.س</Text>
           ) : null}
@@ -109,11 +108,9 @@ function OfferProductCard({
           ) : null}
         </View>
         {validity ? (
-          <View style={styles.validityRow}>
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.validityText}>{validity}</Text>
-            </View>
+          <View style={[styles.validityRow, getRtlRow()]}>
             <AppIcon name="clock-outline" size={11} color={colors.textMuted} />
+            <Text style={styles.validityText}>{validity}</Text>
           </View>
         ) : null}
       </View>
@@ -132,44 +129,44 @@ function ButcherOffersCard({
   colors: ThemeColors;
   styles: ReturnType<typeof createStyles>;
 }) {
-  const meta = [item.rating.toFixed(1), item.cityAr].filter(Boolean).join(' · ');
-
   return (
     <View style={styles.card}>
       <Pressable
-        style={({ pressed }) => [styles.headerRow, pressed && { opacity: 0.92 }]}
+        style={[styles.cardHeader, getRtlRow()]}
         onPress={onOpen}
         accessibilityRole="button"
         accessibilityLabel={item.nameAr}
       >
-        <View style={styles.chevronSlot}>
-          <AppIcon name="angle-left" size={14} color={colors.textMuted} />
-        </View>
-        <View style={styles.coverTrail}>
-          <View style={styles.rtlTextShellFlex}>
-            <Text style={styles.butcherName} numberOfLines={1}>
-              {item.nameAr}
-            </Text>
-            <Text style={styles.butcherMeta} numberOfLines={1}>
-              {item.subscriptionActive ? `موثّق · ${meta}` : meta}
-            </Text>
-          </View>
+        <View style={[styles.headerMain, getRtlRow()]}>
           <View style={styles.logoWrap}>
-            <Image
-              source={uriSource(item.logo || item.cover)}
-              style={styles.logo}
-              contentFit="cover"
-            />
+            <Image source={uriSource(item.logo || item.cover)} style={styles.logo} contentFit="cover" />
           </View>
+          <View style={styles.headerText}>
+            <View style={[styles.nameRow, getRtlRow()]}>
+              <Text style={styles.butcherName} numberOfLines={1}>
+                {item.nameAr}
+              </Text>
+              {item.subscriptionActive ? (
+                <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
+              ) : null}
+            </View>
+            <View style={[styles.metaRow, getRtlRow()]}>
+              <AppIcon name="star" size={12} color={colors.gold} />
+              <Text style={styles.rating}>{item.rating.toFixed(1)}</Text>
+              {item.cityAr ? <Text style={styles.city}>· {item.cityAr}</Text> : null}
+            </View>
+          </View>
+        </View>
+        <View style={[styles.visitChip, getRtlRow()]}>
+          <Text style={styles.visitText}>زيارة</Text>
+          <AppIcon name="chevron-back" size={14} color={colors.electricBright} />
         </View>
       </Pressable>
-
-      <View style={[styles.insetDivider, { backgroundColor: colors.borderSoft }]} />
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.productsRow}
+        contentContainerStyle={[styles.productsRow, getRtlRow()]}
       >
         {item.offers.map((offer) => (
           <OfferProductCard
@@ -253,6 +250,8 @@ export default function ButcherOffersScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <ScreenHeader title="العروض" />
+
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.electricBright} />
@@ -276,25 +275,27 @@ export default function ButcherOffersScreen() {
           {data.length === 0 ? (
             <View style={styles.empty}>
               <View style={styles.emptyIconWrap}>
-                <AppIcon name="pricetag-outline" size={22} color={colors.textPrimary} />
+                <AppIcon name="pricetag-outline" size={34} color={colors.electricBright} />
               </View>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.emptyTitle}>لا توجد عروض حالياً</Text>
-              </View>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.emptySub}>تابعنا لاحقاً لأحدث عروض الملاحم</Text>
-              </View>
+              <Text style={styles.emptyTitle}>لا توجد عروض حالياً</Text>
+              <Text style={styles.emptySub}>تابعنا لاحقاً لأحدث عروض الملاحم</Text>
             </View>
           ) : (
-            data.map((item) => (
-              <ButcherOffersCard
-                key={item.butcherId}
-                item={item}
-                onOpen={() => openButcher(item.butcherId)}
-                colors={colors}
-                styles={styles}
-              />
-            ))
+            <>
+              <View style={styles.heroHeader}>
+                <Text style={styles.heroTitle}>عروض بالقرب منك</Text>
+                <Text style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</Text>
+              </View>
+              {data.map((item) => (
+                <ButcherOffersCard
+                  key={item.butcherId}
+                  item={item}
+                  onOpen={() => openButcher(item.butcherId)}
+                  colors={colors}
+                  styles={styles}
+                />
+              ))}
+            </>
           )}
         </AppScrollView>
       )}
@@ -308,169 +309,104 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
-    scroll: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.lg,
-      gap: spacing.lg,
-    },
+    scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.lg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
     loadingText: { ...typography.caption, color: colors.textMuted },
-    card: menuCardStyle(colors),
-    headerRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 14,
-      minHeight: 52,
+    heroHeader: { gap: 2 },
+    heroTitle: { ...typography.h2, color: colors.textPrimary, ...getRtlText() },
+    heroSub: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
+    card: {
+      backgroundColor: colors.bgElevated,
+      borderRadius: radius.xl,
+      padding: spacing.md,
+      gap: spacing.md,
     },
-    chevronSlot: {
-      width: 18,
-      flexShrink: 0,
-    },
-    coverTrail: {
-      flex: 1,
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 10,
-      minWidth: 0,
-    },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
-    rtlTextShellFlex: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
-    },
-    butcherName: {
-      ...typography.bodyStrong,
-      fontSize: 15,
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    butcherMeta: {
-      ...typography.caption,
-      color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      marginTop: 2,
-    },
+    cardHeader: { alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+    headerMain: { alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 },
     logoWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 46,
+      height: 46,
+      borderRadius: 14,
       overflow: 'hidden',
-      backgroundColor: colors.bgDeep,
-      flexShrink: 0,
-    },
-    logo: { width: '100%', height: '100%' },
-    insetDivider: {
-      height: StyleSheet.hairlineWidth,
-      marginHorizontal: spacing.lg,
-    },
-    productsRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-    },
-    product: {
-      width: 148,
-      backgroundColor: colors.bgDeep,
-      borderRadius: 12,
-      overflow: 'hidden',
-    },
-    productImageWrap: {
-      width: '100%',
-      height: 96,
-      position: 'relative',
       backgroundColor: colors.bgSurface,
     },
+    logo: { width: '100%', height: '100%' },
+    headerText: { flex: 1, minWidth: 0, gap: 3 },
+    nameRow: { alignItems: 'center', gap: 5 },
+    butcherName: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      flexShrink: 1,
+      ...getRtlText(),
+    },
+    metaRow: { alignItems: 'center', gap: 4 },
+    rating: { ...typography.micro, color: colors.gold, fontWeight: '700' },
+    city: { ...typography.micro, color: colors.textMuted },
+    visitChip: {
+      alignItems: 'center',
+      gap: 2,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      backgroundColor: colors.electric + '16',
+    },
+    visitText: { ...typography.micro, color: colors.electricBright, fontWeight: '700' },
+    productsRow: { gap: spacing.sm, paddingVertical: 2 },
+    product: {
+      width: 150,
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+    },
+    productImageWrap: { width: '100%', height: 100, position: 'relative', backgroundColor: colors.bgElevated },
     productImage: { width: '100%', height: '100%' },
     discountBadge: {
       position: 'absolute',
       top: 8,
       right: 8,
-      backgroundColor: colors.electric,
+      backgroundColor: colors.rose,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    discountText: { ...typography.micro, color: '#fff', fontWeight: '700', fontSize: 10 },
-    productBody: { padding: spacing.sm, gap: 4 },
+    discountText: { ...typography.micro, color: '#fff', fontWeight: '800', fontSize: 10 },
+    productBody: { padding: spacing.sm, gap: 5 },
     productName: {
       ...typography.caption,
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      lineHeight: 18,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    priceRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
-      alignItems: 'baseline',
-      gap: 6,
-    },
-    offerPrice: {
-      ...typography.bodyStrong,
-      fontSize: 14,
-      color: colors.textPrimary,
+      fontSize: 12,
       fontWeight: '700',
+      color: colors.textPrimary,
+      lineHeight: 17,
+      ...getRtlText(),
     },
+    priceRow: { alignItems: 'baseline', gap: 6 },
+    offerPrice: { ...typography.bodyStrong, fontSize: 14, color: colors.electricBright, fontWeight: '800' },
     originalPrice: {
       ...typography.micro,
       color: colors.textMuted,
       textDecorationLine: 'line-through',
     },
-    validityRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 4,
-    },
-    validityText: {
-      ...typography.micro,
-      color: colors.textMuted,
-      fontSize: 10,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    empty: { alignItems: 'center', paddingVertical: 80, gap: spacing.sm },
+    validityRow: { alignItems: 'center', gap: 4 },
+    validityText: { ...typography.micro, color: colors.textMuted, fontSize: 10, ...getRtlText() },
+    empty: { alignItems: 'center', paddingVertical: 90, gap: spacing.sm },
     emptyIconWrap: {
-      width: 48,
-      height: 48,
-      borderRadius: 14,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.electric + '14',
       marginBottom: spacing.xs,
     },
     emptyTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
     emptySub: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
