@@ -161,7 +161,9 @@ export default function HomeScreen() {
         <AppScrollView contentContainerStyle={styles.scrollContent}>
           <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
 
-          {/* 1) الإعلانات → 2) الملاحم → 3) المنشورات */}
+          {/* 1) ستوريات الأخبار → 2) الملاحم → 3) الإعلانات → 4) المنشورات */}
+          <ButcherMiniSection size="grid" showStories={false} limit={HOME_BUTCHERS_LIMIT} />
+
           <SectionHeader
             title="الإعلانات"
             onSeeAll={() => safePush('/(tabs)/market', undefined, router)}
@@ -186,8 +188,6 @@ export default function HomeScreen() {
               ))
             )}
           </View>
-
-          <ButcherMiniSection size="grid" showStories={false} limit={HOME_BUTCHERS_LIMIT} />
 
           <SectionHeader
             title="المنشورات"
