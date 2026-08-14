@@ -23,7 +23,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function SupportTicketDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>()!;
   const router = useRouter();
   const [ticket, setTicket] = useState<Record<string, unknown> | null>(null);
   const [staff, setStaff] = useState<Record<string, unknown>[]>([]);

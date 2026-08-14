@@ -18,7 +18,8 @@ const STATUS_AR: Record<string, string> = {
 };
 
 export default function AdminOrderDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>()!;
+  const id = params?.id ?? '';
   const router = useRouter();
   const [order, setOrder] = useState<Record<string, unknown> | null>(null);
 
