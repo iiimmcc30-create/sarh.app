@@ -102,7 +102,7 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
   },
   {
     id: 'official-services',
-    titleAr: 'خدمات سرح الرسمية',
+    titleAr: 'خدمات وزارة البيئة والمياه والزراعة',
     routes: ['/sarh-services'],
     coveredByTests: ['features-butcher-services.test.ts'],
     modules: ['services/officialServices.ts'],

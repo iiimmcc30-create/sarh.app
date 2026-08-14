@@ -100,7 +100,7 @@ export default function SidebarScreen() {
     return items;
   }, [isButcherOwner]);
 
-  /** تعزيز سرح · خدمات سرح */
+  /** تعزيز سرح (خدمات الوزارة أصبحت في تبويب المزيد) */
   const sarhItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [];
     if (hasAnyBoostService) {
@@ -111,12 +111,6 @@ export default function SidebarScreen() {
         route: '/promote',
       });
     }
-    items.push({
-      key: 'sarh-services',
-      icon: 'briefcase-outline',
-      label: 'خدمات سرح',
-      route: '/sarh-services',
-    });
     return items;
   }, [hasAnyBoostService]);
 
@@ -168,7 +162,9 @@ export default function SidebarScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <SidebarSection colors={colors}>{renderSectionItems(browseItems)}</SidebarSection>
-          <SidebarSection colors={colors}>{renderSectionItems(sarhItems)}</SidebarSection>
+          {sarhItems.length > 0 ? (
+            <SidebarSection colors={colors}>{renderSectionItems(sarhItems)}</SidebarSection>
+          ) : null}
           <SidebarSection colors={colors}>{renderSectionItems(settingsItems)}</SidebarSection>
 
           <SidebarLogoutButton colors={colors} onPress={handleSignOut} />

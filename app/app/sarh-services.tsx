@@ -2,6 +2,7 @@ import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { OfficialServiceCard } from '@/components/feature/OfficialServiceCard';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { MEWA_LOGO } from '@/constants/branding';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -12,6 +13,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -58,7 +60,7 @@ export default function SarhServicesScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="خدمات سرح" showBack />
+      <ScreenHeader title="الخدمات" showBack />
 
       <AppScrollView
         contentContainerStyle={styles.content}
@@ -71,9 +73,17 @@ export default function SarhServicesScreen() {
         }
       >
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>خدمات سرح</Text>
+          <View style={styles.logoPlate}>
+            <Image
+              source={MEWA_LOGO}
+              style={styles.logo}
+              resizeMode="contain"
+              accessibilityLabel="شعار وزارة البيئة والمياه والزراعة"
+            />
+          </View>
+          <Text style={styles.heroTitle}>خدمات وزارة البيئة والمياه والزراعة</Text>
           <Text style={styles.heroSubtitle}>
-            دليل للخدمات الرسمية التابعة لوزارة البيئة والمياه والزراعة
+            دليل الخدمات الرسمية للوزارة — يفتح الرابط الرسمي في المتصفح عند الضغط
           </Text>
         </View>
 
@@ -132,10 +142,25 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       paddingVertical: spacing.md,
     },
+    logoPlate: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.xs,
+    },
+    logo: {
+      width: 260,
+      height: 64,
+    },
     heroTitle: {
       ...typography.h2,
       color: colors.textPrimary,
       textAlign: 'center',
+      writingDirection: 'rtl',
     },
     heroSubtitle: {
       ...typography.caption,
