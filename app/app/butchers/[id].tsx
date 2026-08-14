@@ -4,8 +4,8 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -450,6 +450,52 @@ export default function ButcherProfileScreen() {
   const [storiesList, setStoriesList] = useState<ButcherStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatAccess, setChatAccess] = useState<ButcherChatAccess | null>(null);
+  const prevChatAllowed = useRef<boolean | null>(null);
+
+  const visibleTabs = useMemo(
+    () => TABS.filter((tab) => tab.id !== 'chat' || chatAccess?.allowed),
+    [chatAccess?.allowed],
+  );
+
+  const loadChatAccess = useCallback(async () => {
+    if (!id) return;
+    try {
+      const access = await fetchButcherChatAccess(id, accessToken);
+      setChatAccess(access);
+    } catch {
+      setChatAccess({
+        allowed: false,
+        reason: 'order_not_accepted',
+        messageAr: 'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
+      });
+    }
+  }, [id, accessToken]);
+
+  useEffect(() => {
+    void loadChatAccess();
+  }, [loadChatAccess]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadChatAccess();
+    }, [loadChatAccess]),
+  );
+
+  useEffect(() => {
+    if (activeTab === 'chat' && !chatAccess?.allowed) {
+      setActiveTab('products');
+    }
+  }, [activeTab, chatAccess?.allowed]);
+
+  useEffect(() => {
+    const wasAllowed = prevChatAllowed.current;
+    if (chatAccess?.allowed && wasAllowed === false) {
+      setActiveTab('chat');
+    }
+    if (chatAccess != null) {
+      prevChatAllowed.current = chatAccess.allowed;
+    }
+  }, [chatAccess]);
 
   useEffect(() => {
     const fetchButcherDetails = async () => {
@@ -552,28 +598,6 @@ export default function ButcherProfileScreen() {
       }
     };
     fetchButcherDetails();
-  }, [id, accessToken]);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const access = await fetchButcherChatAccess(id, accessToken);
-        if (!cancelled) setChatAccess(access);
-      } catch {
-        if (!cancelled) {
-          setChatAccess({
-            allowed: false,
-            reason: 'order_not_accepted',
-            messageAr: 'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
-          });
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
   }, [id, accessToken]);
 
   const onOpenChat = useCallback(() => {
@@ -810,26 +834,17 @@ export default function ButcherProfileScreen() {
           </View>
         </View>
 
-        {/* ── Chat CTA ── */}
-        <View style={styles.ctaRow}>
-          <Pressable
-            style={[
-              styles.chatCta,
-              styles.chatCtaFull,
-              chatAccess?.allowed && styles.chatCtaActive,
-            ]}
-            onPress={() => {
-              if (chatAccess?.allowed) {
-                onOpenChat();
-              } else {
-                setActiveTab('chat');
-              }
-            }}
-          >
-            <AppIcon name="chatbubble-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.chatCtaText}>محادثة</Text>
-          </Pressable>
-        </View>
+        {chatAccess?.allowed ? (
+          <View style={styles.ctaRow}>
+            <Pressable
+              style={[styles.chatCta, styles.chatCtaFull, styles.chatCtaActive]}
+              onPress={onOpenChat}
+            >
+              <AppIcon name="chatbubble-outline" size={18} color={colors.electricBright} />
+              <Text style={styles.chatCtaText}>محادثة</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* ── Tabs ── */}
         <ScrollView
@@ -837,7 +852,7 @@ export default function ButcherProfileScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
         >
-          {TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <Pressable
               key={tab.id}
               onPress={() => setActiveTab(tab.id)}
@@ -925,7 +940,7 @@ export default function ButcherProfileScreen() {
               </View>
             </>
           )}
-          {activeTab === 'chat' && (
+          {activeTab === 'chat' && chatAccess?.allowed && (
             <ChatTab
               butcherName={butcher.nameAr}
               chatAccess={chatAccess}
