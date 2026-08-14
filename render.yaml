@@ -42,6 +42,10 @@ services:
         sync: false
       - key: NI_API_KEY
         sync: false
+      - key: DATABASE_URL
+        value: postgresql://sarh_postgresql_user:waDdQYmtK41A0as8nfW48C3Nd5oOXV7b@dpg-d9v9dobl550s7381vo8g-a/sarh_postgresql
+      - key: DIRECT_URL
+        value: postgresql://sarh_postgresql_user:waDdQYmtK41A0as8nfW48C3Nd5oOXV7b@dpg-d9v9dobl550s7381vo8g-a.oregon-postgres.render.com/sarh_postgresql
       - key: NI_OUTLET_ID
         value: 36a1f0d3-6a8f-4287-958f-f151ae17146d
       - key: NI_BASIC_AUTH
