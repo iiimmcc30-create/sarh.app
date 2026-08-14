@@ -18,6 +18,7 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -703,6 +704,22 @@ export default function ButcherManageScreen() {
   const [cancelReasonPreset, setCancelReasonPreset] = useState<string>(CANCEL_REASONS[0]);
   const [cancelReasonCustom, setCancelReasonCustom] = useState('');
 
+  const loadOrdersOnly = async () => {
+    if (!accessToken) return;
+    try {
+      const headers: HeadersInit = { Authorization: `Bearer ${accessToken}` };
+      const resOrders = await fetch(`${API_BASE}/api/butchers/orders`, { headers });
+      if (resOrders.ok) {
+        const json = await resOrders.json();
+        if (json.success && json.data) {
+          setOrders(json.data);
+        }
+      }
+    } catch (err) {
+      console.warn('[ButcherManage] Reload orders failed:', err);
+    }
+  };
+
   const loadData = async () => {
     try {
       const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
@@ -873,7 +890,9 @@ export default function ButcherManageScreen() {
   useEffect(() => {
     if (!accessToken) return;
     const socket = connectSocket(accessToken);
-    const onOrderChanged = () => setRefreshTrigger((prev) => prev + 1);
+    const onOrderChanged = () => {
+      void loadOrdersOnly();
+    };
     socket.on('order.created', onOrderChanged);
     socket.on('order.updated', onOrderChanged);
     socket.on('order.cancelled', onOrderChanged);
@@ -1155,6 +1174,15 @@ export default function ButcherManageScreen() {
               const status = order.status;
               const statusColor = statusColors[status] ?? colors.textMuted;
               const customerName = order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
+              const customerPhone = order.customer?.phone as string | undefined;
+              const isPickup = order.deliveryType !== 'delivery';
+              const pickupLocation = [butcher?.addressAr, butcher?.cityAr]
+                .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
+                .filter(Boolean)
+                .join('، ');
+              const locationLine = isPickup
+                ? pickupLocation || 'استلام من الملحمة'
+                : (order.deliveryAddress as string | undefined) || 'لم يُحدد موقع التوصيل';
               const productName = order.product?.nameAr || 'منتج لحم';
               const formattedDate = new Date(order.createdAt).toLocaleDateString('ar-SA');
               const allowedNext: string[] = Array.isArray(order.allowedNextStatuses)
@@ -1179,6 +1207,21 @@ export default function ButcherManageScreen() {
                   <Text style={ord.orderNumber}>
                     رقم الطلب: {order.orderNumber || `#${order.id.slice(0, 8).toUpperCase()}`}
                   </Text>
+                  {customerPhone ? (
+                    <Pressable
+                      onPress={() => void Linking.openURL(`tel:${customerPhone}`)}
+                      style={ord.contactRow}
+                    >
+                      <AppIcon name="call-outline" size={14} color={colors.electricBright} />
+                      <Text style={ord.contactText}>{customerPhone}</Text>
+                    </Pressable>
+                  ) : null}
+                  <View style={ord.contactRow}>
+                    <AppIcon name="location" size={14} color={colors.textMuted} />
+                    <Text style={ord.locationText}>
+                      {isPickup ? `موقع الاستلام: ${locationLine}` : `موقع التوصيل: ${locationLine}`}
+                    </Text>
+                  </View>
                   {order.paymentStatus !== 'paid' && (
                     <View style={{ marginBottom: 8, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: colors.amber + '33', borderWidth: 1, borderColor: colors.amber + '66' }}>
                       <Text style={{ color: colors.amber, fontSize: 11, fontWeight: '600' }}>بانتظار الدفع</Text>
@@ -1936,6 +1979,25 @@ function createOrderStyles(colors: ThemeColors) {
   },
   statusText: { ...typography.micro, fontWeight: '600' },
   orderNumber: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+  },
+  contactText: {
+    ...typography.caption,
+    color: colors.electricBright,
+    fontWeight: '600',
+    writingDirection: 'rtl',
+  },
+  locationText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   detailRow: { flexDirection: 'row', gap: spacing.md },
   detail: { flex: 1, gap: 2 },
   detailLabel: { ...typography.micro, color: colors.textMuted },

@@ -126,7 +126,7 @@ export default function ButcherLocationScreen() {
         >
           <View style={styles.rtlTextShell}>
             <Text style={styles.hint}>
-              حدّد موقعك على الخريطة لعرض أقرب الملاحم وتسهيل التوصيل.
+              اضغط على الخريطة لتحديد موقعك، أو استخدم «موقعي الحالي».
             </Text>
           </View>
 
@@ -139,6 +139,10 @@ export default function ButcherLocationScreen() {
             showLocateButton
             onLocate={() => void locate()}
             locating={locating}
+            onPick={(lat, lng) => {
+              setCoords({ lat, lng });
+              void applyReverseGeocode(lat, lng);
+            }}
           />
 
           {initializing ? (

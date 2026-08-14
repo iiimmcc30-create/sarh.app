@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -48,7 +49,10 @@ export default function OrderDetailsScreen() {
   const [loading, setLoading] = useState(true);
 
   const loadOrder = useCallback(async () => {
-    if (!id || !accessToken) return;
+    if (!id || !accessToken) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE}/api/butchers/orders/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -91,6 +95,16 @@ export default function OrderDetailsScreen() {
   const statusColor = STATUS_COLORS[order.status] ?? colors.textMuted;
   const timeline: any[] = Array.isArray(order.timeline) ? order.timeline : [];
   const reached = new Set(timeline.map((t) => t.status));
+  const isPickup = order.deliveryType !== 'delivery';
+  const customerName =
+    order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
+  const customerPhone = order.customer?.phone as string | undefined;
+  const butcherName = order.butcher?.nameAr || 'ملحمة';
+  const butcherPhone = order.butcher?.phone as string | undefined;
+  const butcherLocation = [order.butcher?.addressAr, order.butcher?.cityAr]
+    .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
+    .filter(Boolean)
+    .join('، ');
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
@@ -185,6 +199,33 @@ export default function OrderDetailsScreen() {
         ) : null}
 
         <View style={s.card}>
+          <Text style={s.sectionTitle}>العميل والاستلام</Text>
+          <Row label="العميل" value={customerName} />
+          {customerPhone ? (
+            <Pressable onPress={() => void Linking.openURL(`tel:${customerPhone}`)}>
+              <Row label="الجوال" value={customerPhone} />
+            </Pressable>
+          ) : null}
+          <Row
+            label="طريقة الاستلام"
+            value={isPickup ? 'استلام من الملحمة' : 'توصيل'}
+          />
+          {isPickup ? (
+            <>
+              <Row label="الملحمة" value={butcherName} />
+              {butcherPhone ? (
+                <Pressable onPress={() => void Linking.openURL(`tel:${butcherPhone}`)}>
+                  <Row label="هاتف الملحمة" value={butcherPhone} />
+                </Pressable>
+              ) : null}
+              {butcherLocation ? <Row label="موقع الملحمة" value={butcherLocation} /> : null}
+            </>
+          ) : order.deliveryAddress ? (
+            <Row label="موقع التوصيل" value={order.deliveryAddress} />
+          ) : null}
+        </View>
+
+        <View style={s.card}>
           <Text style={s.sectionTitle}>تفاصيل الطلب</Text>
           {Array.isArray(order.items) && order.items.length > 0 ? (
             order.items.map((item: {
@@ -213,11 +254,6 @@ export default function OrderDetailsScreen() {
             </>
           )}
           <Row label="الإجمالي" value={`${order.totalPrice} ${order.currency || 'SAR'}`} />
-          <Row
-            label="الاستلام"
-            value={order.deliveryType === 'delivery' ? 'توصيل' : 'استلام من الملحمة'}
-          />
-          {order.deliveryAddress ? <Row label="العنوان" value={order.deliveryAddress} /> : null}
           {order.notes ? <Row label="ملاحظات" value={order.notes} /> : null}
           {order.cancellationReason ? (
             <Row label="سبب الإلغاء" value={order.cancellationReason} />
