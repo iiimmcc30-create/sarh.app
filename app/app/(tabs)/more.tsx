@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { BrandSwitch, menuCardStyle } from '@/components/feature/SidebarMenu';
-import { AppScrollView } from '@/components/ui/AppScrollView';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ds } from '@/constants/designSystem';
 import { LOCALE_STORAGE_KEY, type AppLocale, normalizeAppLocale } from '@/lib/locale';
 import { setupRtl } from '@/lib/rtl';
@@ -86,28 +86,8 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
+      <ScreenHeader title="المزيد" />
       <AppScrollView contentContainerStyle={styles.content}>
-        {/* الوضع الداكن + خدمات الوزارة */}
-        <View style={styles.card}>
-          <View style={styles.switchRow}>
-            <BrandSwitch value={isDark} onValueChange={onToggleTheme} colors={colors} />
-            <View style={styles.coverTrail}>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.rowTitle}>الوضع الداكن</Text>
-              </View>
-              <AppIcon name="weather-night" size={22} color={colors.textPrimary} />
-            </View>
-          </View>
-          <View style={[styles.insetDivider, { backgroundColor: colors.borderSoft }]} />
-          <SidebarMenuItem
-            icon="briefcase-outline"
-            title="خدمات وزارة البيئة والمياه والزراعة"
-            colors={colors}
-            showDivider={false}
-            onPress={() => safePush('/sarh-services', undefined, router)}
-          />
-        </View>
-
         {/* اللغة */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -132,6 +112,27 @@ export default function MoreScreen() {
               <Text style={[styles.langText, locale === 'en' && styles.langTextActive]}>ENGLISH</Text>
             </Pressable>
           </View>
+        </View>
+
+        {/* الوضع الداكن + خدمات الوزارة */}
+        <View style={styles.card}>
+          <View style={styles.switchRow}>
+            <BrandSwitch value={isDark} onValueChange={onToggleTheme} colors={colors} />
+            <View style={styles.coverTrail}>
+              <View style={styles.rtlTextShellFlex}>
+                <Text style={styles.rowTitle}>الوضع الداكن</Text>
+              </View>
+              <AppIcon name="weather-night" size={22} color={colors.textPrimary} />
+            </View>
+          </View>
+          <View style={[styles.insetDivider, { backgroundColor: colors.borderSoft }]} />
+          <SidebarMenuItem
+            icon="briefcase-outline"
+            title="خدمات وزارة البيئة والمياه والزراعة"
+            colors={colors}
+            showDivider={false}
+            onPress={() => safePush('/sarh-services', undefined, router)}
+          />
         </View>
 
         {/* السياسات والشروط */}
