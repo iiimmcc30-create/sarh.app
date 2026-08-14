@@ -1,50 +1,42 @@
-// Powered by OnSpace.AI
-// SAFAT — Butcher Tabs Layout
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@/hooks/useTheme';
 import { getRtlDirection } from '@/lib/rtl';
-import { layout, radius } from '@/constants/theme';
 
 function TabBarIcon({
   name,
   color,
-  size,
   focused,
 }: {
   name: string;
   color: string;
-  size: number;
   focused?: boolean;
 }) {
-  const variant = focused ? 'sr' : 'rr';
   return (
-    <View style={[styles.iconWrap, focused && { backgroundColor: `${color}14` }]}>
-      <AppIcon name={name} variant={variant} size={focused ? size + 1 : size} color={color} />
-      {focused ? <View style={[styles.activeDot, { backgroundColor: color }]} /> : null}
+    <View style={styles.iconWrap}>
+      <AppIcon name={name} variant={focused ? 'sr' : 'rr'} size={focused ? 22 : 20} color={color} />
     </View>
   );
 }
 
 export default function ButcherTabsLayout() {
   const insets = useSafeAreaInsets();
-  const { colors, scheme } = useTheme();
-  const tabBarBottom = Math.max(insets.bottom, 8) + 6;
+  const padBottom = Math.max(insets.bottom, 8);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.electricBright,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: '#20B66F',
+        tabBarInactiveTintColor: '#94A3AC',
+        tabBarHideOnKeyboard: true,
         tabBarLabel: ({ focused, children }) => (
           <Text
             style={{
-              color: focused ? colors.textBrandStrong : colors.textMuted,
+              color: focused ? '#20B66F' : '#94A3AC',
               fontSize: 10,
-              fontWeight: '600',
+              fontWeight: focused ? '700' : '600',
               writingDirection: 'rtl',
             }}
           >
@@ -52,33 +44,26 @@ export default function ButcherTabsLayout() {
           </Text>
         ),
         tabBarStyle: {
-          backgroundColor: colors.bgGlassStrong,
-          borderTopColor: colors.borderHairline,
+          backgroundColor: '#0B1622',
+          borderTopColor: 'rgba(150,175,185,0.18)',
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: layout.tabBarHeight + tabBarBottom,
+          height: 56 + padBottom,
           paddingTop: 6,
-          paddingBottom: tabBarBottom,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -5 },
-          shadowOpacity: scheme === 'light' ? 0.06 : 0.22,
-          shadowRadius: 16,
-          elevation: 12,
+          paddingBottom: padBottom,
+          elevation: 0,
+          shadowOpacity: 0,
           ...getRtlDirection(),
         },
         tabBarItemStyle: { paddingTop: 2 },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          writingDirection: 'rtl',
-        },
+        tabBarBackground: () => <View style={{ flex: 1, backgroundColor: '#0B1622' }} />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'التحليلات',
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabBarIcon name="bar-chart-outline" color={color} size={size} focused={focused} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="bar-chart-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -86,8 +71,8 @@ export default function ButcherTabsLayout() {
         name="manage"
         options={{
           title: 'إدارة الملحمة',
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabBarIcon name="storefront-outline" color={color} size={size} focused={focused} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="storefront-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -95,8 +80,8 @@ export default function ButcherTabsLayout() {
         name="messages"
         options={{
           title: 'الرسائل',
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabBarIcon name="chatbubbles-outline" color={color} size={size} focused={focused} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="chatbubbles-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -104,8 +89,8 @@ export default function ButcherTabsLayout() {
         name="profile"
         options={{
           title: 'حسابي',
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabBarIcon name="person-outline" color={color} size={size} focused={focused} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="person-outline" color={color} focused={focused} />
           ),
         }}
       />
@@ -116,17 +101,8 @@ export default function ButcherTabsLayout() {
 const styles = StyleSheet.create({
   iconWrap: {
     width: 42,
-    height: 32,
-    borderRadius: radius.md,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-  },
-  activeDot: {
-    position: 'absolute',
-    bottom: 2,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
   },
 });
