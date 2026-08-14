@@ -264,6 +264,12 @@ model Listing {
   contactPhone      String?
   weightKg          Float?
   images            String[]
+  videoUrl          String?
+  thumbnailUrl      String?
+  videoDuration     Float?
+  videoWidth        Int?
+  videoHeight       Int?
+  videoFileSize     Int?
   featured          Boolean         @default(false)
   pinned            Boolean         @default(false)
   featuredUntil     DateTime?

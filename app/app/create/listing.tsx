@@ -30,6 +30,8 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { Country } from '@/services/types';
 import { uploadImageFromUri } from '@/services/upload';
+import { ListingVideoSection, type ListingVideoState } from '@/components/listing/ListingVideoSection';
+import { uploadListingVideo } from '@/services/listingVideo';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import * as Location from 'expo-location';
 import { hasValidCoords } from '@/lib/butcherLocation';
@@ -85,6 +87,7 @@ export default function CreateListingScreen() {
   const [lng, setLng] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
   const [imageUris, setImageUris] = useState<string[]>([]);
+  const [videoState, setVideoState] = useState<ListingVideoState>({ status: 'idle' });
   const [submitting, setSubmitting] = useState(false);
   const [showBoostUpsell, setShowBoostUpsell] = useState(false);
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
@@ -217,6 +220,44 @@ export default function CreateListingScreen() {
         return;
       }
 
+      // Upload video if one was picked (optional — never blocks submit)
+      let videoFields: {
+        videoUrl?: string;
+        thumbnailUrl?: string;
+        videoDuration?: number;
+        videoWidth?: number;
+        videoHeight?: number;
+        videoFileSize?: number;
+      } = {};
+
+      if (videoState.status === 'picked' && videoState.meta) {
+        setVideoState({ status: 'uploading', meta: videoState.meta, progress: 0 });
+        try {
+          const result = await uploadListingVideo(accessToken, videoState.meta, (p) => {
+            setVideoState((prev) =>
+              prev.status === 'uploading' ? { ...prev, progress: p } : prev,
+            );
+          });
+          videoFields = {
+            videoUrl: result.videoUrl,
+            thumbnailUrl: result.thumbnailUrl ?? undefined,
+            videoDuration: result.videoDuration,
+            videoWidth: result.videoWidth,
+            videoHeight: result.videoHeight,
+            videoFileSize: result.videoFileSize,
+          };
+          setVideoState({
+            status: 'ready',
+            meta: videoState.meta,
+            videoUrl: result.videoUrl,
+            thumbnailUrl: result.thumbnailUrl,
+          });
+        } catch {
+          // Video upload failed — continue without video
+          setVideoState({ status: 'failed', meta: videoState.meta, error: 'فشل رفع الفيديو' });
+        }
+      }
+
       const title = titleAr.trim();
       const weightNum =
         weightKg.trim() && /^\d+(\.\d{1,2})?$/.test(weightKg.trim())
@@ -244,6 +285,7 @@ export default function CreateListingScreen() {
           : undefined,
         weightKg: weightNum && weightNum > 0 ? weightNum : undefined,
         images: uploadedUrls,
+        ...videoFields,
       });
 
       if (result.ok && result.listingId && hasAnyBoostService) {
@@ -493,6 +535,16 @@ export default function CreateListingScreen() {
                 </View>
                 <Text style={styles.imagePickerSub}>حتى 8 صور · JPG، PNG</Text>
               </View>
+
+              {/* Video — completely independent section, always optional */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>فيديو (اختياري)</Text>
+                <ListingVideoSection
+                  state={videoState}
+                  onChange={setVideoState}
+                  disabled={submitting}
+                />
+              </View>
             </View>
           )}
 
@@ -630,6 +682,16 @@ export default function CreateListingScreen() {
                   <Text style={styles.reviewLabel}>الصور</Text>
                   <Text style={styles.reviewValue}>{imageUris.length} صورة</Text>
                 </View>
+                {videoState.status !== 'idle' && (
+                  <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>الفيديو</Text>
+                    <Text style={styles.reviewValue}>
+                      {videoState.status === 'picked' || videoState.status === 'ready'
+                        ? `✓ ${Math.round((videoState.meta as any).durationSecs)}ث`
+                        : 'تمت الإضافة'}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.termsBox}>
