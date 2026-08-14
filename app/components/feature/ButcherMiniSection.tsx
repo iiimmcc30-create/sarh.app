@@ -4,7 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { ButcherDeliveryCard } from '@/components/feature/ButcherDeliveryCard';
+import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
@@ -55,8 +55,7 @@ export function ButcherMiniSection({
   // Wider cards: first fully visible, second ~half peek to invite horizontal scroll.
   // pad + card + gap + 0.5*card ≈ screenWidth
   const gridGap = spacing.md;
-  const gridPad = spacing.lg;
-  const GRID_CARD_W = Math.round(((screenWidth - gridPad - gridGap) / 1.5));
+  const GRID_CARD_W = Math.round((screenWidth - spacing.lg * 2) * 0.72);
 
   const { filteredButchers, stories, loading } = useButcher();
   const ranked = filteredButchers.slice(0, limit);
@@ -120,12 +119,12 @@ export function ButcherMiniSection({
 
       {isGrid ? (
         loading && ranked.length === 0 ? (
-          <View style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: gridPad }]}>
+          <View style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: spacing.lg }]}>
             <Text style={s.skeletonText}>جاري التحميل...</Text>
           </View>
         ) : ranked.length === 0 ? (
           <Pressable
-            style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: gridPad }]}
+            style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: spacing.lg }]}
             onPress={() => router.push('/butchers')}
           >
             <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
@@ -140,11 +139,12 @@ export function ButcherMiniSection({
             snapToInterval={GRID_CARD_W + gridGap}
             snapToAlignment="start"
           >
-            {ranked.map((butcher) => (
-              <ButcherDeliveryCard
+            {ranked.map((butcher, i) => (
+              <ButcherPickCard
                 key={butcher.id}
                 butcher={butcher}
                 width={GRID_CARD_W}
+                promoted={i < 2 || butcher.subscriptionActive}
                 onPress={() => openButcher(butcher.id)}
               />
             ))}
