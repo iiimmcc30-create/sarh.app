@@ -87,16 +87,28 @@ export default function MoreScreen() {
           <Text style={styles.headerTitle}>المزيد</Text>
         </View>
         <View style={styles.rtlTextShell}>
-          <Text style={styles.headerSub}>المظهر واللغة والسياسات</Text>
+          <Text style={styles.headerSub}>الخدمات واللغة والسياسات</Text>
         </View>
       </View>
 
       <AppScrollView contentContainerStyle={styles.content}>
-        {/* المظهر */}
+        {/* الخدمات: المظهر + خدمات الوزارة في بطاقة واحدة */}
         <SidebarThemeToggle
           preference={preference}
           colors={colors}
           onToggle={onToggleTheme}
+          title="الخدمات"
+          headerIcon="briefcase-outline"
+          themeLabel="المظهر"
+          footer={
+            <SidebarMenuItem
+              icon="briefcase-outline"
+              title="خدمات وزارة البيئة والمياه والزراعة"
+              colors={colors}
+              showDivider={false}
+              onPress={() => safePush('/sarh-services', undefined, router)}
+            />
+          }
         />
 
         {/* اللغة */}
@@ -154,13 +166,6 @@ export default function MoreScreen() {
             colors={colors}
             showDivider
             onPress={() => safePush('/info/about', undefined, router)}
-          />
-          <SidebarMenuItem
-            icon="lifebuoy"
-            title="الدعم والمساعدة"
-            colors={colors}
-            showDivider
-            onPress={() => safePush('/support', undefined, router)}
           />
           <SidebarMenuItem
             icon="mail-outline"

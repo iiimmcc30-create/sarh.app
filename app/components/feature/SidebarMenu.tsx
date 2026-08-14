@@ -119,16 +119,29 @@ export function SidebarThemeToggle({
   colors,
   onToggle,
   variant = 'outline',
+  title = 'المظهر',
+  headerIcon,
+  themeLabel = 'المظهر',
+  footer,
 }: {
   preference: 'light' | 'dark' | 'system';
   colors: ThemeColors;
   onToggle: () => void;
   variant?: 'default' | 'outline';
+  /** Card heading — e.g. الخدمات when theme + services share one card. */
+  title?: string;
+  headerIcon?: string;
+  /** Small label above the light/dark track. Hidden when equal to `title`. */
+  themeLabel?: string | null;
+  footer?: ReactNode;
 }) {
   const isDark = preference !== 'light';
   const isRtl = I18nManager.isRTL;
   const isOutline = variant === 'outline';
   const iconTint = isOutline ? colors.textPrimary : colors.textMuted;
+  const resolvedHeaderIcon =
+    headerIcon ?? (isDark ? 'weather-night' : 'sunny-outline');
+  const showThemeLabel = Boolean(themeLabel && themeLabel !== title);
 
   return (
     <View
@@ -146,11 +159,16 @@ export function SidebarThemeToggle({
       <View style={[themeStyles.header, themeStyles.headerCover]}>
         <View style={themeStyles.coverTrail}>
           <View style={themeStyles.titleShell}>
-            <Text style={[themeStyles.title, { color: colors.textPrimary }]}>المظهر</Text>
+            <Text style={[themeStyles.title, { color: colors.textPrimary }]}>{title}</Text>
           </View>
-          <AppIcon name={isDark ? 'weather-night' : 'sunny-outline'} size={22} color={iconTint} />
+          <AppIcon name={resolvedHeaderIcon} size={22} color={iconTint} />
         </View>
       </View>
+      {showThemeLabel ? (
+        <View style={themeStyles.subLabelShell}>
+          <Text style={[themeStyles.subLabel, { color: colors.textMuted }]}>{themeLabel}</Text>
+        </View>
+      ) : null}
       <View
         style={[
           themeStyles.track,
@@ -189,6 +207,16 @@ export function SidebarThemeToggle({
           </Text>
         </Pressable>
       </View>
+      {footer ? (
+        <View
+          style={[
+            themeStyles.footer,
+            { borderTopColor: colors.borderHairline ?? colors.borderSoft },
+          ]}
+        >
+          {footer}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -289,11 +317,30 @@ const themeStyles = StyleSheet.create({
     textAlign: 'right',
     writingDirection: 'rtl',
   },
+  subLabelShell: {
+    width: '100%',
+    direction: 'ltr',
+    paddingHorizontal: 4,
+  },
+  subLabel: {
+    ...typography.caption,
+    fontSize: 12,
+    fontWeight: '600',
+    width: '100%',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   track: {
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 4,
     gap: 4,
+  },
+  footer: {
+    marginHorizontal: -spacing.lg,
+    marginBottom: -spacing.md,
+    marginTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   option: {
     flex: 1,
