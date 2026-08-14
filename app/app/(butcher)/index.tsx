@@ -60,12 +60,11 @@ function StatCard({
   const sc = useThemedStyles(({ colors }) => createStatCardStyles(colors));
   return (
     <View style={sc.card}>
-      <LinearGradient colors={[color + '22', color + '08']} style={StyleSheet.absoluteFill} />
-      <View style={[sc.iconWrap, { backgroundColor: color + '33' }]}>
-        <Text style={sc.icon}>{icon}</Text>
+      <View style={[sc.iconWrap, { backgroundColor: color + '22' }]}>
+        <AppIcon name={icon} size={16} color={color} />
       </View>
       <Text style={sc.label}>{label}</Text>
-      <Text style={[sc.value, { color }]}>{value}</Text>
+      <Text style={[sc.value, { color: colors.textPrimary }]}>{value}</Text>
       {sub && <Text style={sc.sub}>{sub}</Text>}
       {trend && (
         <View style={sc.trendRow}>
@@ -115,7 +114,7 @@ export default function ButcherDashboardScreen() {
   const PERIODS: { id: Period; label: string }[] = [
     { id: 'week', label: 'الأسبوع' },
     { id: 'month', label: 'الشهر' },
-    { id: '3months', label: '٣ أشهر' },
+    { id: '3months', label: 'مخصص' },
   ];
 
   const butcherId = stats?.butcher?.id;
@@ -236,77 +235,74 @@ export default function ButcherDashboardScreen() {
           ))}
         </View>
 
-        {/* Revenue hero card */}
-        <LinearGradient colors={[colors.electric, colors.cyan]} style={styles.revenueCard}>
+        <View style={styles.revenueCard}>
           <View style={styles.revenueTop}>
             <View>
-              <Text style={styles.revenueLabel}>إجمالي الإيرادات</Text>
+              <Text style={styles.revenueLabel}>إجمالي المبيعات</Text>
               <Text style={styles.revenueValue}>
                 {data.revenue.toLocaleString()} ر.س
               </Text>
             </View>
-            <View style={styles.revenueTrend}>
-              <AppIcon name="trending-up" size={20} color="rgba(255,255,255,0.9)" />
-              {data.trends.revenue !== null && (
+            {data.trends.revenue !== null && (
+              <View style={styles.revenueTrend}>
+                <AppIcon name="trending-up" size={16} color="#20B66F" />
                 <Text style={styles.revenueTrendText}>
                   {data.trends.revenue >= 0 ? '+' : ''}{data.trends.revenue}%
                 </Text>
-              )}
-            </View>
+              </View>
+            )}
           </View>
-          <MiniBarChart data={data.dailyRevenue} color="rgba(255,255,255,0.9)" />
+          <MiniBarChart data={data.dailyRevenue} color="#20B66F" />
           <Text style={styles.revenueChartLabel}>
             {period === 'week' ? 'آخر ٧ أيام' : period === 'month' ? 'آخر ٣٠ يوماً' : 'آخر ٩٠ يوماً'}
           </Text>
-        </LinearGradient>
+        </View>
 
         {/* Stats grid */}
         <View style={styles.statsGrid}>
           <StatCard
-            icon="📦"
-            label="الطلبات"
+            icon="bag-outline"
+            label="عدد الطلبات"
             value={data.orders.toString()}
-            sub="طلب"
             color={colors.electricBright}
             trend={trendProp(data.trends.orders)}
           />
           <StatCard
-            icon="👁️"
-            label="المشاهدات"
-            value={data.profileViews.toLocaleString()}
-            sub="زيارة للملف"
-            color={colors.cyan}
+            icon="cash-multiple"
+            label="متوسط قيمة الطلب"
+            value={`${data.avgOrderValue} ر.س`}
+            color={colors.textSecondary}
           />
           <StatCard
-            icon="✅"
+            icon="checkmark-circle-outline"
             label="نسبة الإتمام"
             value={`${data.completionRate}%`}
             color={colors.success}
           />
           <StatCard
-            icon="💰"
-            label="متوسط الطلب"
-            value={`${data.avgOrderValue} ر.س`}
-            color={colors.gold}
+            icon="eye-outline"
+            label="مشاهدات الملف"
+            value={data.profileViews.toLocaleString()}
+            color={colors.cyan}
           />
           <StatCard
-            icon="⭐"
+            icon="star-outline"
             label="التقييم"
             value={data.reviews.avg.toString()}
             sub={`${data.reviews.count} تقييم`}
             color={colors.amber}
           />
           <StatCard
-            icon="👤"
+            icon="person-outline"
             label="عملاء جدد"
             value={data.newCustomers.toString()}
-            color={colors.rose}
+            color={colors.textSecondary}
           />
         </View>
 
         {/* Top products */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🥩 أكثر المنتجات مبيعاً</Text>
+          <Text style={styles.sectionTitle}>أكثر المنتجات مبيعاً</Text>
           {data.topProducts.length === 0 ? (
             <Text style={{ color: colors.textMuted, ...typography.caption, textAlign: 'center', paddingVertical: spacing.lg }}>
               لا توجد مبيعات في هذه الفترة
@@ -343,7 +339,7 @@ export default function ButcherDashboardScreen() {
 
         {/* Quick actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚡ إجراءات سريعة</Text>
+          <Text style={styles.sectionTitle}>إجراءات سريعة</Text>
           <View style={styles.actionsGrid}>
             {quickActions.map((action, i) => (
               <Pressable
@@ -435,22 +431,25 @@ function createStyles(colors: ThemeColors) {
   periodLabelActive: { color: '#fff', fontWeight: '600' },
 
   revenueCard: {
-    borderRadius: radius.xxl,
-    padding: spacing.xl,
+    borderRadius: 14,
+    padding: spacing.lg,
     marginBottom: spacing.lg,
     gap: spacing.md,
+    backgroundColor: colors.bgElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(150,175,185,0.18)',
   },
   revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  revenueLabel: { ...typography.caption, color: 'rgba(255,255,255,0.75)' },
-  revenueValue: { fontSize: 34, fontWeight: '600', color: '#fff', letterSpacing: -0.5 },
+  revenueLabel: { ...typography.caption, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
+  revenueValue: { fontSize: 28, fontWeight: '700', color: colors.textPrimary, letterSpacing: -0.4, textAlign: 'right' },
   revenueTrend: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(32,182,111,0.14)',
     paddingHorizontal: 10, paddingVertical: 6,
     borderRadius: radius.pill,
   },
-  revenueTrendText: { ...typography.caption, color: '#fff', fontWeight: '600' },
-  revenueChartLabel: { ...typography.micro, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
+  revenueTrendText: { ...typography.caption, color: '#20B66F', fontWeight: '600' },
+  revenueChartLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
 
   statsGrid: {
     flexDirection: 'row',
@@ -541,16 +540,15 @@ function createStatCardStyles(colors: ThemeColors) {
   return StyleSheet.create({
   card: {
     width: '47%',
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(150,175,185,0.18)',
     padding: spacing.md,
     gap: 4,
-    overflow: 'hidden',
-    position: 'relative',
+    backgroundColor: colors.bgElevated,
   },
   iconWrap: {
-    width: 38, height: 38, borderRadius: 19,
+    width: 32, height: 32, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 4,
   },
