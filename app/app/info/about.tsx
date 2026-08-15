@@ -19,6 +19,8 @@ import {
   BRAND_TAGLINE_AR,
   BRAND_VISION_AR,
 } from '@/constants/brandCopy';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export default function AboutScreen() {
   const { colors } = useTheme();
@@ -42,47 +44,47 @@ export default function AboutScreen() {
         {/* Hero */}
         <LinearGradient colors={['#0B1330', '#162149', '#1E3A8A']} style={styles.hero}>
           <AppLogo size={96} showRing={false} />
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.heroTitle}>{BRAND_NAME_AR}</Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.heroSub}>{BRAND_TAGLINE_AR}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.heroTitle}>{BRAND_NAME_AR}</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={styles.heroSub}>{BRAND_TAGLINE_AR}</RtlText>
+          </RtlTextShell>
         </LinearGradient>
 
         {/* About text */}
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>رسالتنا</Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.bodyText}>{BRAND_MISSION_AR}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>رسالتنا</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={styles.bodyText}>{BRAND_MISSION_AR}</RtlText>
+          </RtlTextShell>
         </View>
 
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>رؤيتنا</Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.bodyText}>{BRAND_VISION_AR}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>رؤيتنا</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={styles.bodyText}>{BRAND_VISION_AR}</RtlText>
+          </RtlTextShell>
         </View>
 
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>هدفنا</Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.bodyText}>{BRAND_GOAL_AR}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>هدفنا</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={styles.bodyText}>{BRAND_GOAL_AR}</RtlText>
+          </RtlTextShell>
         </View>
 
         {/* Features */}
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>ما نقدّمه</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>ما نقدّمه</RtlText>
+          </RtlTextShell>
           {[
             { icon: 'tag-multiple', label: 'إعلانات واضحة وموثوقة لبيع وشراء الحيوانات والمعدات' },
             { icon: 'broadcast', label: 'بث مباشر للمزادات والعروض الحية' },
@@ -103,9 +105,9 @@ export default function AboutScreen() {
 
         {/* Ownership */}
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>المالك والامتثال</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>المالك والامتثال</RtlText>
+          </RtlTextShell>
           <View style={styles.infoCard}>
             <View style={[styles.infoRow, getRtlRow()]}>
               <View style={styles.infoLabelShell}>
@@ -138,9 +140,9 @@ export default function AboutScreen() {
 
         {/* Contact */}
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>تواصل معنا</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>تواصل معنا</RtlText>
+          </RtlTextShell>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
             onPress={() => Linking.openURL('tel:+966591298136')}
@@ -170,12 +172,12 @@ export default function AboutScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.version}>
+        <RtlTextShell>
+          <RtlText style={styles.version}>
             {BRAND_FOOTER_AR}{'\n'}
             Uicons by Flaticon
-          </Text>
-        </View>
+          </RtlText>
+        </RtlTextShell>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -223,10 +225,6 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.xl,
     },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     heroTitle: {
       fontSize: 32,
       fontWeight: '600',
@@ -255,17 +253,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: colors.textPrimary,
       marginBottom: spacing.xs,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     bodyText: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 26,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     featureRow: {
       alignItems: 'center',
@@ -290,9 +282,6 @@ function createStyles(colors: ThemeColors) {
     featureText: {
       ...typography.body,
       color: colors.textSecondary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     infoCard: {
       backgroundColor: colors.bgSurface,
@@ -315,8 +304,6 @@ function createStyles(colors: ThemeColors) {
     infoLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     infoValueShell: {
       flex: 1,
@@ -326,9 +313,6 @@ function createStyles(colors: ThemeColors) {
     infoValue: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     divider: {
       height: 1,

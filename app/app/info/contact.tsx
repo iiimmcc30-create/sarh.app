@@ -11,6 +11,8 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export default function ContactScreen() {
   const { colors, gradients } = useTheme();
@@ -47,9 +49,9 @@ export default function ContactScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Channels */}
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>قنوات التواصل</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>قنوات التواصل</RtlText>
+          </RtlTextShell>
 
           <Pressable
             style={[styles.channelCard, getRtlRow()]}
@@ -110,14 +112,14 @@ export default function ContactScreen() {
 
         {/* Message form */}
         <View style={styles.section}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>أرسل رسالة</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>أرسل رسالة</RtlText>
+          </RtlTextShell>
 
           <View style={styles.fieldGroup}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.fieldLabel}>الاسم</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.fieldLabel}>الاسم</RtlText>
+            </RtlTextShell>
             <View style={styles.inputWrap}>
               <TextInput
                 value={name}
@@ -131,9 +133,9 @@ export default function ContactScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.fieldLabel}>الرسالة</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.fieldLabel}>الرسالة</RtlText>
+            </RtlTextShell>
             <View style={[styles.inputWrap, { alignItems: 'flex-start', paddingVertical: spacing.sm }]}>
               <TextInput
                 value={message}
@@ -159,9 +161,9 @@ export default function ContactScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.footer}>نرد على جميع الرسائل خلال 24 ساعة في أيام العمل</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={styles.footer}>نرد على جميع الرسائل خلال 24 ساعة في أيام العمل</RtlText>
+        </RtlTextShell>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -203,10 +205,6 @@ function createStyles(colors: ThemeColors) {
     },
     scroll: { paddingBottom: 40 },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     section: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.lg,
@@ -218,9 +216,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     channelCard: {
       alignItems: 'center',
@@ -248,9 +243,6 @@ function createStyles(colors: ThemeColors) {
     channelLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     channelValue: {
       ...typography.bodyStrong,
@@ -264,9 +256,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     inputWrap: {
       flexDirection: 'row',
@@ -284,8 +273,6 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 12,
     },
     inputRtl: {
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sendBtn: { borderRadius: radius.pill, overflow: 'hidden', marginTop: spacing.sm },
     sendBtnInner: {
@@ -298,8 +285,6 @@ function createStyles(colors: ThemeColors) {
     sendBtnText: {
       ...typography.bodyStrong,
       color: '#fff',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     footer: {
       ...typography.caption,

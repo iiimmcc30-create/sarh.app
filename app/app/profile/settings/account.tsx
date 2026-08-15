@@ -24,6 +24,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 function formatPhone(phone: string | null | undefined) {
   if (!phone) return 'غير مضاف';
@@ -139,9 +141,9 @@ export default function AccountInfoScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.card}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionLabel}>رقم الهاتف</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionLabel}>رقم الهاتف</RtlText>
+            </RtlTextShell>
             <View style={[styles.row, getRtlRow()]}>
               <Pressable
                 style={styles.changeBtn}
@@ -156,9 +158,9 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.card}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionLabel}>البريد الإلكتروني</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionLabel}>البريد الإلكتروني</RtlText>
+            </RtlTextShell>
             <AppTextInput
               value={email}
               onChangeText={setEmail}
@@ -178,9 +180,9 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.card}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionLabel}>تاريخ الميلاد</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionLabel}>تاريخ الميلاد</RtlText>
+            </RtlTextShell>
             <AppTextInput
               value={birthDate}
               onChangeText={setBirthDate}
@@ -189,11 +191,11 @@ export default function AccountInfoScreen() {
               ltr
             />
             {account?.birthDate ? (
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.hint}>
+              <RtlTextShell>
+                <RtlText style={styles.hint}>
                   المحفوظ: {formatBirthDate(account.birthDate)}
-                </Text>
-              </View>
+                </RtlText>
+              </RtlTextShell>
             ) : null}
             <PrimaryButton
               title="حفظ تاريخ الميلاد"
@@ -214,15 +216,15 @@ export default function AccountInfoScreen() {
           </View>
 
           <View style={styles.dangerCard}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.dangerTitle}>حذف الحساب</Text>
-            </View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.dangerText}>
+            <RtlTextShell>
+              <RtlText style={styles.dangerTitle}>حذف الحساب</RtlText>
+            </RtlTextShell>
+            <RtlTextShell>
+              <RtlText style={styles.dangerText}>
                 عند حذف حسابك سيتم إلغاء تفعيله وإزالة بياناتك وإعلاناتك ومنشوراتك بشكل
                 نهائي. لا يمكن التراجع عن هذا الإجراء.
-              </Text>
-            </View>
+              </RtlText>
+            </RtlTextShell>
             <Pressable
               style={[styles.deleteBtn, deleting && styles.deleteBtnDisabled]}
               onPress={() => void handleDeleteAccount()}
@@ -256,10 +258,6 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: spacing.xxxl,
     },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     card: {
       backgroundColor: colors.bgElevated,
       borderRadius: radius.lg,
@@ -272,9 +270,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontSize: 15,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     row: {
       alignItems: 'center',
@@ -303,15 +298,10 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontSize: 14,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     hint: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     noteCard: {
       ...getRtlRow(),
@@ -332,9 +322,6 @@ function createStyles(colors: ThemeColors) {
     noteText: {
       ...typography.body,
       color: colors.textSecondary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       lineHeight: 22,
     },
     dangerCard: {
@@ -350,16 +337,10 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.danger,
       fontSize: 15,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     dangerText: {
       ...typography.body,
       color: colors.textSecondary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       lineHeight: 22,
     },
     deleteBtn: {

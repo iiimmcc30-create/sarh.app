@@ -33,6 +33,8 @@ import {
 } from '@/services/butcherData';
 import { launchPaymentCheckout } from '@/services/payments';
 import { resolveMediaUrl } from '@/services/media';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -302,9 +304,9 @@ export default function ButcherCartScreen() {
             ) : null}
 
             <View style={styles.fieldBlock}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.fieldLabel}>ملاحظات (اختياري)</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.fieldLabel}>ملاحظات (اختياري)</RtlText>
+              </RtlTextShell>
               <TextInput
                 style={styles.input}
                 placeholder="تعليمات خاصة للملحمة..."
@@ -493,13 +495,6 @@ function createStyles(colors: ThemeColors) {
     fieldLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
     },
     input: {
       borderWidth: 1,

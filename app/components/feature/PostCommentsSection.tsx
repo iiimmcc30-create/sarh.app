@@ -24,6 +24,8 @@ import { useApp } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type PostCommentsSectionProps = {
   postId: string;
@@ -192,9 +194,9 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
             </Pressable>
           </View>
         ) : comments.length === 0 ? (
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</RtlText>
+          </RtlTextShell>
         ) : (
           <View style={styles.list}>
             {comments.map((c) => (
@@ -235,9 +237,9 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
                       </Pressable>
                     ) : null}
                   </View>
-                  <View style={styles.rtlTextShell}>
-                    <Text style={styles.commentText}>{c.content}</Text>
-                  </View>
+                  <RtlTextShell>
+                    <RtlText style={styles.commentText}>{c.content}</RtlText>
+                  </RtlTextShell>
                 </View>
               </View>
             ))}
@@ -301,17 +303,10 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       direction: 'ltr',
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     title: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     count: {
       ...typography.caption,
@@ -330,9 +325,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       lineHeight: 22,
       paddingVertical: spacing.sm,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     errorBox: {
       alignItems: 'center',
@@ -407,8 +399,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontWeight: '600',
       flexShrink: 1,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     metaDot: {
       ...typography.micro,
@@ -419,16 +409,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       flexShrink: 0,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     deleteBtn: {
       padding: 2,

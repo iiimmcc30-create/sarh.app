@@ -11,6 +11,9 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type Props = {
   onAddressChange?: (addressLine: string) => void;
@@ -49,17 +52,17 @@ export function DeliveryMapAddressField({ onAddressChange }: Props) {
       accessibilityRole="button"
       accessibilityLabel="اختيار عنوان التوصيل على الخريطة"
     >
-      <View style={styles.coverTrail}>
-        <View style={styles.rtlTextShellFlex}>
-          <Text style={styles.title}>عنوان التوصيل</Text>
-          <Text style={styles.value} numberOfLines={2}>
+      <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
+        <RtlTextShell flex>
+          <RtlText style={styles.title}>عنوان التوصيل</RtlText>
+          <RtlText style={styles.value} numberOfLines={2}>
             {hasLocation ? summary : 'اضغط لتحديد الموقع على الخريطة'}
-          </Text>
-        </View>
+          </RtlText>
+        </RtlTextShell>
         <View style={styles.iconWrap}>
           <AppIcon name="location" size={20} color={colors.electricBright} />
         </View>
-      </View>
+      </CoverTrailRow>
       <View style={styles.ctaRow}>
         <AppIcon name="angle-left" size={14} color={colors.textMuted} />
         <Text style={styles.cta}>
@@ -81,17 +84,7 @@ function createStyles(colors: ThemeColors) {
     },
     pressed: { opacity: 0.92 },
     coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 10,
       width: '100%',
-    },
-    rtlTextShellFlex: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
     },
     iconWrap: {
       width: 40,
@@ -105,17 +98,11 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     value: {
       ...typography.bodyStrong,
       fontSize: 15,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 2,
     },
     ctaRow: {

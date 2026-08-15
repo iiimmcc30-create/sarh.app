@@ -13,6 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
 import { safePush } from '@/lib/safeNavigate';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export default function ButchersAllScreen() {
   const router = useRouter();
@@ -78,9 +80,9 @@ export default function ButchersAllScreen() {
         >
           {butchers.length === 0 ? (
             <View style={styles.empty}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.emptyTitle}>لا توجد ملاحم حالياً</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.emptyTitle}>لا توجد ملاحم حالياً</RtlText>
+              </RtlTextShell>
             </View>
           ) : (
             butchers.map((butcher, index) => (
@@ -108,13 +110,9 @@ function createStyles(colors: ThemeColors) {
     scroll: { paddingTop: spacing.sm, paddingBottom: spacing.xl },
     loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     empty: { paddingVertical: 80, paddingHorizontal: spacing.lg },
-    rtlTextShell: { width: '100%', direction: 'ltr' },
     emptyTitle: {
       ...typography.body,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
   });
 }

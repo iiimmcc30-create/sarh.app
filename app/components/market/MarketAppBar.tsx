@@ -6,6 +6,8 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type Props = {
   onMenu: () => void;
@@ -38,11 +40,11 @@ export function MarketAppBar({
           accessibilityLabel={searchPlaceholder}
         >
           <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.searchPlaceholder} numberOfLines={1}>
+          <RtlTextShell>
+            <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
               {searchPlaceholder}
-            </Text>
-          </View>
+            </RtlText>
+          </RtlTextShell>
         </Pressable>
 
         <NotificationBellButton
@@ -85,16 +87,8 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 0,
     },
     /** Physical LTR shell — same as AppTextInput / listing titles. */
-    rtlTextShell: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
-    },
     searchPlaceholder: {
       ...typography.body,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       color: colors.textMuted,
       fontSize: 14,
     },

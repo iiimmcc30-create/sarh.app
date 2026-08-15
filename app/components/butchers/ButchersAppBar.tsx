@@ -5,6 +5,8 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type ButchersAppBarProps = {
   onBack: () => void;
@@ -38,7 +40,7 @@ export function ButchersAppBar({
 
         <View style={[styles.searchPill, getRtlRow()]}>
           <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
-          <View style={styles.rtlTextShell}>
+          <RtlTextShell>
             <TextInput
               style={styles.searchInput}
               placeholder={searchPlaceholder}
@@ -49,7 +51,7 @@ export function ButchersAppBar({
               returnKeyType="search"
               accessibilityLabel={searchPlaceholder}
             />
-          </View>
+          </RtlTextShell>
           {searchQuery.length > 0 ? (
             <Pressable onPress={() => onSearchChange('')} hitSlop={8} accessibilityLabel="مسح البحث">
               <AppIcon name="close-circle" size={16} color={colors.textMuted} />
@@ -96,16 +98,8 @@ function createStyles(colors: ThemeColors) {
       borderRadius: MENU_CARD.controlRadius,
       borderWidth: 0,
     },
-    rtlTextShell: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
-    },
     searchInput: {
       ...typography.body,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       color: colors.textPrimary,
       fontSize: 14,
       paddingVertical: 0,

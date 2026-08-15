@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import {
   SidebarMenuItem as SidebarMenuItemRow,
   type SidebarMenuItemProps,
@@ -61,9 +64,9 @@ export function SidebarSection({
   return (
     <View style={sectionStyles.block}>
       {title ? (
-        <View style={sectionStyles.titleShell}>
-          <Text style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</Text>
-        </View>
+        <RtlTextShell style={sectionStyles.titleShell}>
+          <RtlText style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</RtlText>
+        </RtlTextShell>
       ) : null}
       <View style={[sectionStyles.card, menuCardStyle(colors)]}>{children}</View>
     </View>
@@ -178,17 +181,17 @@ export function SidebarThemeToggle({
       ]}
     >
       <View style={[themeStyles.header, themeStyles.headerCover]}>
-        <View style={themeStyles.coverTrail}>
-          <View style={themeStyles.titleShell}>
-            <Text style={[themeStyles.title, { color: colors.textPrimary }]}>{title}</Text>
-          </View>
+        <CoverTrailRow justify="flex-end" gap={10} style={themeStyles.coverTrail}>
+          <RtlTextShell flex>
+            <RtlText style={[themeStyles.title, { color: colors.textPrimary }]}>{title}</RtlText>
+          </RtlTextShell>
           <AppIcon name={resolvedHeaderIcon} size={22} color={iconTint} />
-        </View>
+        </CoverTrailRow>
       </View>
       {showThemeLabel ? (
-        <View style={themeStyles.subLabelShell}>
-          <Text style={[themeStyles.subLabel, { color: colors.textMuted }]}>{themeLabel}</Text>
-        </View>
+        <RtlTextShell style={themeStyles.subLabelShell}>
+          <RtlText style={[themeStyles.subLabel, { color: colors.textMuted }]}>{themeLabel}</RtlText>
+        </RtlTextShell>
       ) : null}
       <View
         style={[
@@ -261,14 +264,14 @@ export function SidebarLogoutButton({
       ]}
     >
       <View style={logoutStyles.chevronSlot} />
-      <View style={logoutStyles.coverTrail}>
-        <View style={logoutStyles.textShell}>
-          <Text style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</Text>
-        </View>
+      <CoverTrailRow flex justify="flex-end" gap={10}>
+        <RtlTextShell flex>
+          <RtlText style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</RtlText>
+        </RtlTextShell>
         <View style={logoutStyles.iconWrapOutline}>
           <AppIcon name="log-out-outline" size={22} color={colors.rose} />
         </View>
-      </View>
+      </CoverTrailRow>
     </Pressable>
   );
 }
@@ -279,16 +282,11 @@ const sectionStyles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   titleShell: {
-    width: '100%',
-    direction: 'ltr',
     marginBottom: spacing.sm,
     paddingHorizontal: MENU_CARD.sectionTitlePad,
   },
   title: {
     ...typography.bodyStrong,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   card: {},
 });
@@ -319,37 +317,20 @@ const themeStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg - 4,
   },
   coverTrail: {
-    flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 10,
     width: '100%',
-  },
-  titleShell: {
-    flex: 1,
-    direction: 'ltr',
   },
   title: {
     ...typography.bodyStrong,
     fontSize: 15,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   subLabelShell: {
-    width: '100%',
-    direction: 'ltr',
     paddingHorizontal: 4,
   },
   subLabel: {
     ...typography.caption,
     fontSize: 12,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   track: {
     borderRadius: radius.lg,
@@ -397,15 +378,6 @@ const logoutStyles = StyleSheet.create({
     width: 18,
     flexShrink: 0,
   },
-  coverTrail: {
-    flex: 1,
-    flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 10,
-    minWidth: 0,
-  },
   iconWrapOutline: {
     width: 28,
     height: 28,
@@ -413,23 +385,10 @@ const logoutStyles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  /**
-   * Physical LTR shell with bounded width — same as SidebarMenuItem /
-   * listing title. Prevents Arabic logout label from clipping under
-   * overflow:hidden parents.
-   */
-  textShell: {
-    flex: 1,
-    minWidth: 0,
-    direction: 'ltr',
-  },
   text: {
     ...typography.bodyStrong,
     fontFamily: appFont.semibold,
     fontWeight: '600',
     fontSize: 15,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });

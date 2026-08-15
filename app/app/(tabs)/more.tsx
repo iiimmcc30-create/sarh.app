@@ -25,6 +25,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const TAB_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 24;
 
@@ -92,12 +95,12 @@ export default function MoreScreen() {
         {/* اللغة */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={styles.coverTrail}>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.cardTitle}>اللغة</Text>
-              </View>
+            <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
+              <RtlTextShell flex>
+                <RtlText style={styles.cardTitle}>اللغة</RtlText>
+              </RtlTextShell>
               <AppIcon name="globe-outline" size={22} color={colors.textPrimary} />
-            </View>
+            </CoverTrailRow>
           </View>
           <View style={styles.langTrack}>
             <Pressable
@@ -119,12 +122,12 @@ export default function MoreScreen() {
         <View style={styles.card}>
           <View style={styles.switchRow}>
             <BrandSwitch value={isDark} onValueChange={onToggleTheme} colors={colors} />
-            <View style={styles.coverTrail}>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.rowTitle}>الوضع الداكن</Text>
-              </View>
+            <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
+              <RtlTextShell flex>
+                <RtlText style={styles.rowTitle}>الوضع الداكن</RtlText>
+              </RtlTextShell>
               <AppIcon name="weather-night" size={22} color={colors.textPrimary} />
-            </View>
+            </CoverTrailRow>
           </View>
           <View style={[styles.insetDivider, { backgroundColor: colors.borderSoft }]} />
           <SidebarMenuItem
@@ -138,9 +141,9 @@ export default function MoreScreen() {
 
         {/* السياسات والشروط */}
         <View style={styles.sectionLabelWrap}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionLabel}>السياسات والشروط</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionLabel}>السياسات والشروط</RtlText>
+          </RtlTextShell>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -154,9 +157,9 @@ export default function MoreScreen() {
 
         {/* عن سرح */}
         <View style={styles.sectionLabelWrap}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionLabel}>عن سرح</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionLabel}>عن سرح</RtlText>
+          </RtlTextShell>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -195,14 +198,6 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: TAB_CLEARANCE,
       gap: spacing.lg,
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
-    rtlTextShellFlex: {
-      flex: 1,
-      direction: 'ltr',
-    },
     card: menuCardStyle(colors),
     switchRow: {
       flexDirection: 'row',
@@ -214,19 +209,11 @@ function createStyles(colors: ThemeColors) {
     },
     coverTrail: {
       flex: 1,
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 10,
       minWidth: 0,
     },
     rowTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       fontSize: 15,
     },
     insetDivider: {
@@ -241,9 +228,6 @@ function createStyles(colors: ThemeColors) {
     cardTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       fontSize: 15,
     },
     langTrack: {
@@ -280,9 +264,6 @@ function createStyles(colors: ThemeColors) {
     sectionLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
   });
 }

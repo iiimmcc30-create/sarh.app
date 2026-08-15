@@ -44,6 +44,8 @@ import {
   type OpsManageTab,
   type OpsOrderFilter,
 } from '@/lib/butcherOps';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const CANCEL_REASONS = [
   'المنتج غير متوفر',
@@ -492,11 +494,11 @@ export default function ButcherManageScreen() {
           )}
         </Pressable>
         <View style={styles.statusLeft}>
-          <View style={styles.rtlTextShellFlex}>
-            <Text style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
+          <RtlTextShell flex>
+            <RtlText style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
               {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
-            </Text>
-          </View>
+            </RtlText>
+          </RtlTextShell>
           <View style={[styles.liveDot, { backgroundColor: butcher.isOpen ? colors.electric : colors.textMuted }]} />
         </View>
       </View>
@@ -535,42 +537,42 @@ export default function ButcherManageScreen() {
                 { label: 'مكتملة اليوم', value: summary.completedToday, color: colors.textMuted, filter: 'delivered' as const },
               ].map((kpi) => (
                 <Pressable key={kpi.label} onPress={() => goOrders(kpi.filter)} style={styles.kpi}>
-                  <View style={styles.rtlTextShell}>
-                    <Text style={[styles.kpiValue, { color: kpi.color }]}>{kpi.value}</Text>
-                    <Text style={styles.kpiLabel}>{kpi.label}</Text>
-                  </View>
+                  <RtlTextShell>
+                    <RtlText style={[styles.kpiValue, { color: kpi.color }]}>{kpi.value}</RtlText>
+                    <RtlText style={styles.kpiLabel}>{kpi.label}</RtlText>
+                  </RtlTextShell>
                 </Pressable>
               ))}
             </View>
 
             <View style={styles.insightRow}>
               <View style={styles.insight}>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.insightValue}>{summary.salesToday.toLocaleString()} ر.س</Text>
-                  <Text style={styles.insightLabel}>مبيعات اليوم</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.insightValue}>{summary.salesToday.toLocaleString()} ر.س</RtlText>
+                  <RtlText style={styles.insightLabel}>مبيعات اليوم</RtlText>
+                </RtlTextShell>
               </View>
               <View style={styles.insight}>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.insightValue}>{summary.deliveryNow}</Text>
-                  <Text style={styles.insightLabel}>توصيل يحتاج خروج</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.insightValue}>{summary.deliveryNow}</RtlText>
+                  <RtlText style={styles.insightLabel}>توصيل يحتاج خروج</RtlText>
+                </RtlTextShell>
               </View>
               <View style={styles.insight}>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.insightValue}>{lowStock.length}</Text>
-                  <Text style={styles.insightLabel}>مخزون منخفض</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.insightValue}>{lowStock.length}</RtlText>
+                  <RtlText style={styles.insightLabel}>مخزون منخفض</RtlText>
+                </RtlTextShell>
               </View>
             </View>
 
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionTitle}>الطلبات التي تحتاج إجراء</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionTitle}>الطلبات التي تحتاج إجراء</RtlText>
+            </RtlTextShell>
             {actionOrders.length === 0 ? (
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.emptyInline}>لا توجد طلبات بانتظار إجراءك</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.emptyInline}>لا توجد طلبات بانتظار إجراءك</RtlText>
+              </RtlTextShell>
             ) : (
               actionOrders.map((order) => (
                 <OpsOrderCard
@@ -587,16 +589,16 @@ export default function ButcherManageScreen() {
 
             {hourGroups.length > 0 ? (
               <>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.sectionTitle}>طلبات اليوم حسب الوقت</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.sectionTitle}>طلبات اليوم حسب الوقت</RtlText>
+                </RtlTextShell>
                 {hourGroups.map((g) => (
                   <Pressable key={g.key} onPress={() => goOrders('all')} style={styles.slotRow}>
                     <Text style={styles.slotCount}>{g.count}</Text>
-                    <View style={styles.rtlTextShellFlex}>
-                      <Text style={styles.slotLabel}>{g.label}</Text>
-                      <Text style={styles.slotSub}>{g.count} طلبات</Text>
-                    </View>
+                    <RtlTextShell flex>
+                      <RtlText style={styles.slotLabel}>{g.label}</RtlText>
+                      <RtlText style={styles.slotSub}>{g.count} طلبات</RtlText>
+                    </RtlTextShell>
                   </Pressable>
                 ))}
               </>
@@ -604,17 +606,17 @@ export default function ButcherManageScreen() {
 
             {lowStock.length > 0 ? (
               <>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.sectionTitle}>منتجات تحتاج متابعة</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.sectionTitle}>منتجات تحتاج متابعة</RtlText>
+                </RtlTextShell>
                 {lowStock.slice(0, 4).map((p: any) => {
                   const stock = productStock(p);
                   return (
                     <Pressable key={p.id} onPress={() => { setActiveTab('products'); }} style={styles.stockRow}>
                       <Text style={styles.stockLabel}>{stock.label}</Text>
-                      <View style={styles.rtlTextShellFlex}>
-                        <Text style={styles.stockName} numberOfLines={1}>{p.nameAr}</Text>
-                      </View>
+                      <RtlTextShell flex>
+                        <RtlText style={styles.stockName} numberOfLines={1}>{p.nameAr}</RtlText>
+                      </RtlTextShell>
                       <View style={[styles.stockDot, stock.kind === 'out' ? styles.stockOut : styles.stockLow]} />
                     </Pressable>
                   );
@@ -626,9 +628,9 @@ export default function ButcherManageScreen() {
 
         {activeTab === 'orders' && (
           <View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.pageTitle}>الطلبات</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.pageTitle}>الطلبات</RtlText>
+            </RtlTextShell>
             <TextInput
               style={styles.search}
               placeholder="بحث برقم الطلب أو اسم العميل"
@@ -663,9 +665,9 @@ export default function ButcherManageScreen() {
             {filteredOrders.length === 0 ? (
               <View style={styles.emptyBox}>
                 <AppIcon name="clipboard-outline" size={28} color={colors.textMuted} />
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.emptyTitle}>لا توجد طلبات</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.emptyTitle}>لا توجد طلبات</RtlText>
+                </RtlTextShell>
               </View>
             ) : null}
           </View>
@@ -678,9 +680,9 @@ export default function ButcherManageScreen() {
                 <Text style={styles.addBtnText}>إضافة منتج</Text>
                 <AppIcon name="add" size={16} color="#fff" />
               </Pressable>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.pageTitle}>المنتجات</Text>
-              </View>
+              <RtlTextShell flex>
+                <RtlText style={styles.pageTitle}>المنتجات</RtlText>
+              </RtlTextShell>
             </View>
             {products.map((p: any) => {
               const stock = productStock(p);
@@ -733,9 +735,9 @@ export default function ButcherManageScreen() {
                 <Text style={styles.addBtnText}>إنشاء عرض</Text>
                 <AppIcon name="add" size={16} color="#fff" />
               </Pressable>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.pageTitle}>العروض</Text>
-              </View>
+              <RtlTextShell flex>
+                <RtlText style={styles.pageTitle}>العروض</RtlText>
+              </RtlTextShell>
             </View>
             <View style={styles.filterRow}>
               {(['active', 'expired'] as const).map((scope) => (
@@ -801,19 +803,19 @@ export default function ButcherManageScreen() {
                 <Text style={styles.addBtnText}>نشر قصة</Text>
                 <AppIcon name="add" size={16} color="#fff" />
               </Pressable>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.pageTitle}>القصص</Text>
-              </View>
+              <RtlTextShell flex>
+                <RtlText style={styles.pageTitle}>القصص</RtlText>
+              </RtlTextShell>
             </View>
             {butcherStories.map((story: any) => (
               <View key={story.id} style={styles.productCard}>
                 <Pressable style={styles.iconBtn} onPress={() => void deleteStory(story.id)}>
                   <AppIcon name="trash-outline" size={16} color={colors.danger} />
                 </Pressable>
-                <View style={styles.rtlTextShellFlex}>
-                  <Text style={styles.productName} numberOfLines={1}>{story.captionAr || story.caption || 'قصة'}</Text>
-                  <Text style={styles.productMeta}>{storyTimeLeftLabel(story.expiresAt)}</Text>
-                </View>
+                <RtlTextShell flex>
+                  <RtlText style={styles.productName} numberOfLines={1}>{story.captionAr || story.caption || 'قصة'}</RtlText>
+                  <RtlText style={styles.productMeta}>{storyTimeLeftLabel(story.expiresAt)}</RtlText>
+                </RtlTextShell>
                 <Image source={{ uri: story.thumbnail }} style={styles.productImg} contentFit="cover" />
               </View>
             ))}
@@ -831,9 +833,9 @@ export default function ButcherManageScreen() {
                 }
               >
                 <AppIcon name="add" size={16} color={colors.textMuted} />
-                <View style={styles.rtlTextShellFlex}>
-                  <Text style={styles.storyTypeLabel}>{st.label}</Text>
-                </View>
+                <RtlTextShell flex>
+                  <RtlText style={styles.storyTypeLabel}>{st.label}</RtlText>
+                </RtlTextShell>
                 <AppIcon name={st.icon} size={18} color={colors.electric} />
               </Pressable>
             ))}
@@ -842,23 +844,23 @@ export default function ButcherManageScreen() {
 
         {activeTab === 'shop' && (
           <View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.pageTitle}>معلومات الملحمة</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.pageTitle}>معلومات الملحمة</RtlText>
+            </RtlTextShell>
             <View style={styles.infoCard}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.infoName}>{butcher.nameAr}</Text>
-                {butcher.bioAr ? <Text style={styles.infoBio}>{butcher.bioAr}</Text> : null}
-                <Text style={styles.infoRow}>
+              <RtlTextShell>
+                <RtlText style={styles.infoName}>{butcher.nameAr}</RtlText>
+                {butcher.bioAr ? <RtlText style={styles.infoBio}>{butcher.bioAr}</RtlText> : null}
+                <RtlText style={styles.infoRow}>
                   العنوان: {formatLocationLabel(butcher.cityAr, butcher.addressAr ?? butcher.address, butcher.lat, butcher.lng) || 'غير محدد'}
-                </Text>
-                <Text style={styles.infoRow}>
+                </RtlText>
+                <RtlText style={styles.infoRow}>
                   ساعات العمل: {butcher.openTime || '06:00'} – {butcher.closeTime || '22:00'}
-                </Text>
-                <Text style={styles.infoRow}>الهاتف: {butcher.phone || '—'}</Text>
-                <Text style={styles.infoRow}>التوصيل: الملحمة تتولى التوصيل بنفسها — لا يوجد مندوب سرح</Text>
-                <Text style={styles.infoRow}>الاستلام من الملحمة متاح مع التوصيل حسب طلب العميل</Text>
-              </View>
+                </RtlText>
+                <RtlText style={styles.infoRow}>الهاتف: {butcher.phone || '—'}</RtlText>
+                <RtlText style={styles.infoRow}>التوصيل: الملحمة تتولى التوصيل بنفسها — لا يوجد مندوب سرح</RtlText>
+                <RtlText style={styles.infoRow}>الاستلام من الملحمة متاح مع التوصيل حسب طلب العميل</RtlText>
+              </RtlTextShell>
             </View>
             {hasValidCoords(butcher.lat, butcher.lng) && !showLocationEditor ? (
               <LocationMapPreview
@@ -930,10 +932,10 @@ export default function ButcherManageScreen() {
       <Modal visible={!!cancelOrderId} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.modalTitle}>إلغاء الطلب</Text>
-              <Text style={styles.modalSub}>اختر سبب الإلغاء</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.modalTitle}>إلغاء الطلب</RtlText>
+              <RtlText style={styles.modalSub}>اختر سبب الإلغاء</RtlText>
+            </RtlTextShell>
             {CANCEL_REASONS.map((reason) => (
               <Pressable
                 key={reason}
@@ -996,16 +998,10 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     headerSub: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 2,
     },
     iconBtn: {
@@ -1047,9 +1043,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     statusLabelOn: { color: colors.electric },
     openToggle: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, flexShrink: 0 },
@@ -1119,16 +1112,10 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     kpiValue: {
       fontSize: 22,
       fontWeight: '700',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     kpiLabel: {
       ...typography.micro,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 2,
     },
     insightRow: { flexDirection: 'row', gap: 8, marginBottom: spacing.lg },
@@ -1143,58 +1130,35 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     insightValue: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     insightLabel: {
       ...typography.micro,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 2,
     },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginBottom: spacing.sm,
       marginTop: spacing.sm,
     },
-    rtlTextShell: { width: '100%', direction: 'ltr' },
-    rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
     pageTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginBottom: spacing.md,
     },
     emptyInline: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginBottom: spacing.lg,
     },
     emptyTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     emptySub: {
       ...typography.body,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     emptyBox: { alignItems: 'center', paddingVertical: 48, gap: 8 },
     slotRow: {
@@ -1214,16 +1178,10 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     slotLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     slotSub: {
       ...typography.micro,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     stockRow: {
       flexDirection: 'row',
@@ -1239,9 +1197,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     stockName: {
       ...typography.caption,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     stockLabel: {
       ...typography.micro,
@@ -1281,8 +1236,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 11,
       color: colors.textMuted,
       fontWeight: '600',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     filterTextOn: { color: '#fff' },
     tabHeader: {
@@ -1330,17 +1283,11 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.caption,
       color: colors.textPrimary,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     productMeta: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: 2,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     productFooter: {
       flexDirection: 'row',
@@ -1373,9 +1320,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     storyTypeLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     infoCard: {
       backgroundColor: cardBg,
@@ -1389,23 +1333,14 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     infoName: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     infoBio: {
       ...typography.body,
       color: colors.textSecondary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     infoRow: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     primaryBtn: {
       backgroundColor: colors.electric,
@@ -1462,16 +1397,10 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     modalTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     modalSub: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginBottom: 8,
     },
     reasonChip: {
@@ -1485,9 +1414,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     reasonText: {
       ...typography.caption,
       color: colors.textSecondary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     reasonTextOn: { color: colors.danger, fontWeight: '600' },
     modalActions: {

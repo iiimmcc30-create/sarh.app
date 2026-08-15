@@ -50,6 +50,8 @@ import {
   butcherMinOrderLabel,
   butcherPickupLabel,
 } from '@/lib/butcherStoreMeta';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type Tab = 'products' | 'offers' | 'stories' | 'about' | 'chat';
 
@@ -90,9 +92,9 @@ function StoreProductsTab({
     return (
       <View style={emptyStyles.wrap}>
         <AppIcon name="storefront-outline" size={36} color={colors.textMuted} />
-        <View style={emptyStyles.rtlTextShell}>
-          <Text style={emptyStyles.title}>لا منتجات حالياً</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={emptyStyles.title}>لا منتجات حالياً</RtlText>
+        </RtlTextShell>
       </View>
     );
   }
@@ -128,8 +130,6 @@ function StoreProductsTab({
               ...typography.body,
               fontSize: 14,
               color: colors.textPrimary,
-              textAlign: 'right',
-              writingDirection: 'rtl',
               paddingVertical: 8,
             }}
           />
@@ -160,9 +160,9 @@ function OffersTab({ offers, currencySymbol }: {
     return (
       <View style={emptyStyles.wrap}>
         <AppIcon name="pricetag-outline" size={36} color={colors.textMuted} />
-        <View style={emptyStyles.rtlTextShell}>
-          <Text style={emptyStyles.title}>لا توجد عروض حالياً</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={emptyStyles.title}>لا توجد عروض حالياً</RtlText>
+        </RtlTextShell>
       </View>
     );
   }
@@ -179,12 +179,12 @@ function OffersTab({ offers, currencySymbol }: {
             <View style={offersStyles.discountBadge}>
               <Text style={offersStyles.discountText}>-{offer.discountPercent}%</Text>
             </View>
-            <View style={offersStyles.rtlTextShell}>
-              <Text style={offersStyles.offerTitle}>{offer.titleAr}</Text>
-            </View>
-            <View style={offersStyles.rtlTextShell}>
-              <Text style={offersStyles.offerDesc} numberOfLines={2}>{offer.descriptionAr}</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={offersStyles.offerTitle}>{offer.titleAr}</RtlText>
+            </RtlTextShell>
+            <RtlTextShell>
+              <RtlText style={offersStyles.offerDesc} numberOfLines={2}>{offer.descriptionAr}</RtlText>
+            </RtlTextShell>
             <View style={offersStyles.priceRow}>
               <Text style={offersStyles.originalPrice}>
                 {offer.originalPrice?.toLocaleString()}
@@ -215,9 +215,9 @@ function StoriesTab({ stories }: { stories: ButcherStory[] }) {
     return (
       <View style={emptyStyles.wrap}>
         <AppIcon name="images-outline" size={36} color={colors.textMuted} />
-        <View style={emptyStyles.rtlTextShell}>
-          <Text style={emptyStyles.title}>لا توجد قصص بعد</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={emptyStyles.title}>لا توجد قصص بعد</RtlText>
+        </RtlTextShell>
       </View>
     );
   }
@@ -263,12 +263,12 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
     <View style={aboutStyles.wrap}>
       {/* Bio */}
       <View style={aboutStyles.section}>
-        <View style={aboutStyles.rtlTextShell}>
-          <Text style={aboutStyles.sectionTitle}>عن الملحمة</Text>
-        </View>
-        <View style={aboutStyles.rtlTextShell}>
-          <Text style={aboutStyles.bio}>{butcher.bioAr}</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={aboutStyles.sectionTitle}>عن الملحمة</RtlText>
+        </RtlTextShell>
+        <RtlTextShell>
+          <RtlText style={aboutStyles.bio}>{butcher.bioAr}</RtlText>
+        </RtlTextShell>
       </View>
 
       {/* Info grid */}
@@ -285,9 +285,9 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
 
       {/* Specialties */}
       <View style={aboutStyles.section}>
-        <View style={aboutStyles.rtlTextShell}>
-          <Text style={aboutStyles.sectionTitle}>التخصصات</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={aboutStyles.sectionTitle}>التخصصات</RtlText>
+        </RtlTextShell>
         <View style={aboutStyles.chipsWrap}>
           {butcher.specialties.map((s, i) => (
             <View key={i} style={aboutStyles.chip}>
@@ -323,10 +323,10 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   const aboutStyles = useThemedStyles(({ colors }) => createAboutStyles(colors));
   return (
     <View style={aboutStyles.infoRow}>
-      <View style={aboutStyles.rtlTextShellFlex}>
-        <Text style={aboutStyles.infoValue}>{value}</Text>
-        <Text style={aboutStyles.infoLabel}>{label}</Text>
-      </View>
+      <RtlTextShell flex>
+        <RtlText style={aboutStyles.infoValue}>{value}</RtlText>
+        <RtlText style={aboutStyles.infoLabel}>{label}</RtlText>
+      </RtlTextShell>
       <AppIcon name={icon} size={16} color={colors.electricBright} />
     </View>
   );
@@ -351,15 +351,15 @@ function ChatTab({
       <View style={chatStyles.wrap}>
         <View style={chatStyles.lockedCard}>
           <AppIcon name="chatbubble-outline" size={28} color={colors.textMuted} />
-          <View style={chatStyles.rtlTextShell}>
-            <Text style={chatStyles.lockedTitle}>المحادثة غير متاحة بعد</Text>
-          </View>
-          <View style={chatStyles.rtlTextShell}>
-            <Text style={chatStyles.lockedSub}>
+          <RtlTextShell>
+            <RtlText style={chatStyles.lockedTitle}>المحادثة غير متاحة بعد</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={chatStyles.lockedSub}>
               {chatAccess?.messageAr ??
                 'يمكنك مراسلة الملحمة بعد تقديم الطلب وقبوله من قبلها.'}
-            </Text>
-          </View>
+            </RtlText>
+          </RtlTextShell>
           <Pressable
             style={chatStyles.ordersLink}
             onPress={() => router.push('/butchers/my-orders')}
@@ -467,8 +467,8 @@ function ReviewsStrip({ reviews }: { reviews: ButcherReview[] }) {
       {reviews.map((r) => (
         <View key={r.id} style={reviewsStyles.card}>
           <View style={reviewsStyles.header}>
-            <View style={reviewsStyles.rtlTextShellFlex}>
-              <Text style={reviewsStyles.author}>{r.authorNameAr}</Text>
+            <RtlTextShell flex>
+              <RtlText style={reviewsStyles.author}>{r.authorNameAr}</RtlText>
               <View style={reviewsStyles.stars}>
                 {[...Array(5)].map((_, i) => (
                   <AppIcon
@@ -479,12 +479,12 @@ function ReviewsStrip({ reviews }: { reviews: ButcherReview[] }) {
                   />
                 ))}
               </View>
-            </View>
+            </RtlTextShell>
             <Image source={{ uri: r.authorAvatar }} style={reviewsStyles.avatar} />
           </View>
-          <View style={reviewsStyles.rtlTextShell}>
-            <Text style={reviewsStyles.comment} numberOfLines={3}>{r.commentAr}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={reviewsStyles.comment} numberOfLines={3}>{r.commentAr}</RtlText>
+          </RtlTextShell>
         </View>
       ))}
     </ScrollView>
@@ -1102,9 +1102,6 @@ function createMainStyles(colors: ThemeColors) {
     fontSize: 20,
     fontWeight: '700',
     color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -1185,8 +1182,6 @@ function createMainStyles(colors: ThemeColors) {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textMuted,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   tabLabelActive: { color: colors.electricBright },
   tabUnderline: {
@@ -1204,9 +1199,6 @@ function createMainStyles(colors: ThemeColors) {
     ...typography.h3,
     color: colors.textPrimary,
     marginBottom: spacing.md,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   });
 }
@@ -1214,13 +1206,9 @@ function createMainStyles(colors: ThemeColors) {
 function createEmptyStyles(colors: ThemeColors) {
   return StyleSheet.create({
   wrap: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm, paddingHorizontal: spacing.lg },
-  rtlTextShell: { width: '100%', direction: 'ltr' },
   title: {
     ...typography.h3,
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   });
 }
@@ -1238,7 +1226,6 @@ function createOffersStyles(colors: ThemeColors) {
   },
   img: { width: '100%', height: 160 },
   body: { padding: spacing.lg },
-  rtlTextShell: { width: '100%', direction: 'ltr' },
   discountBadge: {
     alignSelf: 'flex-start',
     backgroundColor: colors.danger,
@@ -1252,17 +1239,11 @@ function createOffersStyles(colors: ThemeColors) {
     ...typography.h3,
     color: colors.textPrimary,
     marginBottom: 4,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   offerDesc: {
     ...typography.caption,
     color: colors.textSecondary,
     lineHeight: 18,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   priceRow: {
     flexDirection: 'row',
@@ -1329,9 +1310,6 @@ function createStoriesStyles(colors: ThemeColors) {
     ...typography.micro,
     color: '#fff',
     lineHeight: 14,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   });
 }
@@ -1341,23 +1319,15 @@ function createAboutStyles(colors: ThemeColors) {
   return StyleSheet.create({
   wrap: { paddingHorizontal: spacing.lg },
   section: { marginBottom: spacing.xl },
-  rtlTextShell: { width: '100%', direction: 'ltr' },
-  rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
   sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
     marginBottom: spacing.md,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   bio: {
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 22,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   infoGrid: {
     backgroundColor: colors.bgSurface,
@@ -1381,17 +1351,11 @@ function createAboutStyles(colors: ThemeColors) {
   infoLabel: {
     ...typography.caption,
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   infoValue: {
     ...typography.caption,
     color: colors.textPrimary,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   chipsWrap: {
     flexDirection: 'row',
@@ -1424,17 +1388,11 @@ function createAboutStyles(colors: ThemeColors) {
   verifiedTitle: {
     ...typography.bodyStrong,
     color: colors.gold,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   verifiedSub: {
     ...typography.caption,
     color: colors.textMuted,
     marginTop: 2,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   });
 }
@@ -1489,20 +1447,13 @@ function createChatStyles(colors: ThemeColors) {
     gap: spacing.sm,
     marginTop: spacing.lg,
   },
-  rtlTextShell: { width: '100%', direction: 'ltr' },
   lockedTitle: {
     ...typography.h3,
     color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   lockedSub: {
     ...typography.body,
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     lineHeight: 22,
   },
   ordersLink: {
@@ -1543,16 +1494,11 @@ function createReviewsStyles(colors: ThemeColors) {
     gap: 8,
     marginBottom: spacing.sm,
   },
-  rtlTextShell: { width: '100%', direction: 'ltr' },
-  rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
   avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.bgElevated },
   author: {
     ...typography.caption,
     color: colors.textPrimary,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   stars: {
     flexDirection: 'row',
@@ -1565,9 +1511,6 @@ function createReviewsStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.textSecondary,
     lineHeight: 17,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   });
 }

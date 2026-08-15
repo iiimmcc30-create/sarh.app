@@ -33,6 +33,9 @@ import {
   isActiveOrder,
 } from '@/services/butcherOrders';
 import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 function orderProductSummary(order: ButcherOrderRecord): string {
   const items = order.items ?? [];
@@ -68,7 +71,7 @@ function OrderCard({
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.94 }]}
     >
-      <View style={styles.coverTrail}>
+      <CoverTrailRow justify="flex-end" gap={spacing.sm}>
         <View
           style={[
             styles.statusBadge,
@@ -78,62 +81,62 @@ function OrderCard({
           <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
           <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
         </View>
-        <View style={styles.rtlTextShellFlex}>
-          <Text style={styles.butcherName} numberOfLines={1}>
+        <RtlTextShell flex>
+          <RtlText style={styles.butcherName} numberOfLines={1}>
             {order.butcher?.nameAr ?? 'ملحمة'}
-          </Text>
-          <Text style={styles.orderDate}>{formatOrderDate(order.createdAt)}</Text>
-        </View>
+          </RtlText>
+          <RtlText style={styles.orderDate}>{formatOrderDate(order.createdAt)}</RtlText>
+        </RtlTextShell>
         <View style={styles.logoWrap}>
           <Image source={uriSource(order.butcher?.logo)} style={styles.logo} contentFit="cover" />
         </View>
-      </View>
+      </CoverTrailRow>
 
-      <View style={styles.coverTrail}>
-        <View style={styles.rtlTextShellFlex}>
-          <Text style={styles.productName} numberOfLines={1}>
+      <CoverTrailRow justify="flex-end" gap={spacing.sm}>
+        <RtlTextShell flex>
+          <RtlText style={styles.productName} numberOfLines={1}>
             {orderProductSummary(order)}
-          </Text>
-          <Text style={styles.productMeta} numberOfLines={1}>
+          </RtlText>
+          <RtlText style={styles.productMeta} numberOfLines={1}>
             {order.weightKg} كغ · {CUT_LABELS[order.cutType as CutType]?.ar ?? order.cutType} ·{' '}
             {order.deliveryType === 'delivery' ? 'توصيل' : 'استلام'}
-          </Text>
-        </View>
-      </View>
+          </RtlText>
+        </RtlTextShell>
+      </CoverTrailRow>
 
       <View style={styles.divider} />
 
-      <View style={styles.coverTrail}>
+      <CoverTrailRow justify="flex-end" gap={spacing.sm}>
         <View style={styles.totalShell}>
           <Text style={styles.totalValue}>{formatCurrency(order.totalPrice, order.currency)}</Text>
           <Text style={styles.totalLabel}>الإجمالي</Text>
         </View>
-        <View style={styles.rtlTextShellFlex}>
-          <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
+        <RtlTextShell flex>
+          <RtlText style={styles.orderNumber}>#{order.orderNumber}</RtlText>
           <View
             style={[
               styles.payChip,
               { backgroundColor: (isPaid ? colors.success : colors.gold) + '1F', alignSelf: 'flex-end' },
             ]}
           >
-            <Text style={[styles.payText, { color: isPaid ? colors.success : colors.gold }]}>
+            <RtlText style={[styles.payText, { color: isPaid ? colors.success : colors.gold }]}>
               {PAYMENT_STATUS_LABELS[order.paymentStatus]}
-            </Text>
+            </RtlText>
           </View>
-        </View>
-      </View>
+        </RtlTextShell>
+      </CoverTrailRow>
 
       {onChat ? (
         <Pressable
           style={({ pressed }) => [styles.chatBtn, pressed && { opacity: 0.88 }]}
           onPress={onChat}
         >
-          <View style={styles.coverTrail}>
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.chatBtnText}>محادثة الملحمة</Text>
-            </View>
+          <CoverTrailRow justify="flex-end" gap={spacing.sm}>
+            <RtlTextShell flex>
+              <RtlText style={styles.chatBtnText}>محادثة الملحمة</RtlText>
+            </RtlTextShell>
             <AppIcon name="chatbubbles-outline" size={17} color={colors.electricBright} />
-          </View>
+          </CoverTrailRow>
         </Pressable>
       ) : null}
     </Pressable>
@@ -143,14 +146,14 @@ function OrderCard({
 function SkeletonCard({ styles }: { styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={styles.card}>
-      <View style={styles.coverTrail}>
+      <CoverTrailRow justify="flex-end" gap={spacing.sm}>
         <View style={[styles.skeleton, { width: 72, height: 24, borderRadius: 999 }]} />
         <View style={{ flex: 1, gap: 6 }}>
           <View style={[styles.skeleton, { width: 120, height: 14, borderRadius: 6, alignSelf: 'flex-end' }]} />
           <View style={[styles.skeleton, { width: 80, height: 10, borderRadius: 6, alignSelf: 'flex-end' }]} />
         </View>
         <View style={[styles.logoWrap, styles.skeleton]} />
-      </View>
+      </CoverTrailRow>
       <View style={[styles.skeleton, { width: '100%', height: 40, borderRadius: 10, marginTop: spacing.sm }]} />
       <View style={styles.divider} />
       <View style={[styles.skeleton, { width: '60%', height: 20, borderRadius: 8, alignSelf: 'flex-end' }]} />
@@ -240,12 +243,12 @@ export default function MyOrdersScreen() {
               <View style={styles.emptyIconWrap}>
                 <AppIcon name="bag-outline" size={34} color={colors.electricBright} />
               </View>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.emptyTitle}>لا توجد طلبات بعد</Text>
-              </View>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.emptyTitle}>لا توجد طلبات بعد</RtlText>
+              </RtlTextShell>
+              <RtlTextShell>
+                <RtlText style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</RtlText>
+              </RtlTextShell>
               <Pressable style={styles.emptyBtn} onPress={() => router.replace('/butchers')}>
                 <Text style={styles.emptyBtnText}>تصفح الملاحم</Text>
               </Pressable>
@@ -254,9 +257,9 @@ export default function MyOrdersScreen() {
             <>
               {activeOrders.length > 0 ? (
                 <View style={styles.section}>
-                  <View style={styles.rtlTextShell}>
-                    <Text style={styles.sectionTitle}>الطلبات الحالية</Text>
-                  </View>
+                  <RtlTextShell>
+                    <RtlText style={styles.sectionTitle}>الطلبات الحالية</RtlText>
+                  </RtlTextShell>
                   {activeOrders.map((order) => (
                     <OrderCard
                       key={order.id}
@@ -274,9 +277,9 @@ export default function MyOrdersScreen() {
 
               {pastOrders.length > 0 ? (
                 <View style={styles.section}>
-                  <View style={styles.rtlTextShell}>
-                    <Text style={styles.sectionTitle}>الطلبات السابقة</Text>
-                  </View>
+                  <RtlTextShell>
+                    <RtlText style={styles.sectionTitle}>الطلبات السابقة</RtlText>
+                  </RtlTextShell>
                   {pastOrders.map((order) => (
                     <OrderCard
                       key={order.id}
@@ -308,21 +311,9 @@ function createStyles(colors: ThemeColors) {
     flex: { flex: 1 },
     scroll: { padding: spacing.lg, paddingBottom: spacing.lg, gap: spacing.lg },
     section: { gap: spacing.md },
-    rtlTextShell: { width: '100%', direction: 'ltr' },
-    rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
-    coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: spacing.sm,
-    },
     sectionTitle: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     card: {
       backgroundColor: colors.bgElevated,
@@ -343,16 +334,10 @@ function createStyles(colors: ThemeColors) {
     butcherName: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     orderDate: {
       ...typography.micro,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     statusBadge: {
       flexDirection: 'row',
@@ -369,17 +354,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       fontSize: 14,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     productMeta: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: 2,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -388,9 +367,6 @@ function createStyles(colors: ThemeColors) {
     orderNumber: {
       ...typography.micro,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     payChip: {
       paddingHorizontal: 8,
@@ -403,14 +379,10 @@ function createStyles(colors: ThemeColors) {
       ...typography.h3,
       color: colors.textPrimary,
       fontWeight: '700',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     totalLabel: {
       ...typography.micro,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     chatBtn: {
       flexDirection: 'row',
@@ -426,9 +398,6 @@ function createStyles(colors: ThemeColors) {
       fontSize: 14,
       color: colors.electricBright,
       fontWeight: '700',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     skeleton: {
       backgroundColor: colors.bgSurface,

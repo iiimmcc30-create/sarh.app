@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -8,7 +11,6 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
   type TextStyle,
   type ViewStyle,
@@ -109,23 +111,23 @@ export function UserIdentityRow({
 
   const textBlock = (
     <View style={[styles.profileText, contentStyle]}>
-      <View style={styles.nameRow}>
-        <View style={styles.nameShell}>
-          <Text
+      <CoverTrailRow justify="flex-end" gap={6} style={styles.nameRow}>
+        <RtlTextShell flex>
+          <RtlText
             style={[styles.displayName, nameStyle]}
             numberOfLines={nameLines}
           >
             {displayName}
-          </Text>
-        </View>
+          </RtlText>
+        </RtlTextShell>
         {verified ? <VerificationBadge size={14} /> : null}
-      </View>
+      </CoverTrailRow>
       {handle ? (
-        <View style={styles.handleShell}>
-          <Text style={[styles.usernameText, usernameStyle]} numberOfLines={1}>
+        <RtlTextShell>
+          <RtlText style={[styles.usernameText, usernameStyle]} numberOfLines={1}>
             {handle}
-          </Text>
-        </View>
+          </RtlText>
+        </RtlTextShell>
       ) : null}
       {footer}
     </View>
@@ -157,23 +159,19 @@ export function UserIdentityRow({
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} style={rowStyle}>
-        {content}
+      <Pressable onPress={onPress}>
+        <CoverTrailRow style={rowStyle}>{content}</CoverTrailRow>
       </Pressable>
     );
   }
 
-  return <View style={rowStyle}>{content}</View>;
+  return <CoverTrailRow style={rowStyle}>{content}</CoverTrailRow>;
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
       gap: spacing.md,
-      minWidth: 0,
     },
     avatar: {
       backgroundColor: colors.bgElevated,
@@ -185,39 +183,17 @@ function createStyles(colors: ThemeColors) {
       gap: 3,
     },
     nameRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 6,
       width: '100%',
-      minWidth: 0,
-    },
-    nameShell: {
-      direction: 'ltr',
-      flex: 1,
-      minWidth: 0,
-    },
-    handleShell: {
-      direction: 'ltr',
-      width: '100%',
-      minWidth: 0,
     },
     displayName: {
       ...typography.bodyStrong,
       fontSize: 15,
       fontWeight: '600',
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     usernameText: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     trailing: {
       flexShrink: 0,

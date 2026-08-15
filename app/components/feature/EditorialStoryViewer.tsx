@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography } from '@/constants/theme';
 import { rtlForwardIcon } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const SNIPPET_LEN = 160;
@@ -190,25 +192,25 @@ export function EditorialStoryViewer({ stories, startIndex, onClose }: Props) {
           style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}
           pointerEvents="box-none"
         >
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.title}>{story.titleAr}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.title}>{story.titleAr}</RtlText>
+          </RtlTextShell>
           {expanded ? (
             <ScrollView
               style={styles.bodyScroll}
               contentContainerStyle={styles.bodyScrollContent}
               showsVerticalScrollIndicator={false}
             >
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.body}>{story.bodyAr}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.body}>{story.bodyAr}</RtlText>
+              </RtlTextShell>
             </ScrollView>
           ) : (
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.body} numberOfLines={4}>
+            <RtlTextShell>
+              <RtlText style={styles.body} numberOfLines={4}>
                 {snippet}
-              </Text>
-            </View>
+              </RtlText>
+            </RtlTextShell>
           )}
           {canToggle || expanded ? (
             <Pressable
@@ -287,24 +289,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
   },
-  rtlTextShell: {
-    width: '100%',
-    direction: 'ltr',
-  },
   title: {
     ...typography.h3,
     color: '#fff',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   body: {
     ...typography.body,
     color: 'rgba(255,255,255,0.92)',
     lineHeight: 24,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   bodyScroll: {
     maxHeight: SCREEN_H * 0.42,

@@ -15,6 +15,9 @@ import { useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 function formatPhone(phone?: string): string {
   if (!phone) return 'لم يتم إضافة رقم جوال';
@@ -46,15 +49,15 @@ export default function ButchersMoreScreen() {
       <AppScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
         <View style={styles.card}>
           <View style={styles.userRow}>
-            <View style={styles.coverTrail}>
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.userName} numberOfLines={1}>
+            <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
+              <RtlTextShell flex>
+                <RtlText style={styles.userName} numberOfLines={1}>
                   {displayName}
-                </Text>
-                <Text style={styles.userPhone} numberOfLines={1}>
+                </RtlText>
+                <RtlText style={styles.userPhone} numberOfLines={1}>
                   {formatPhone(phone)}
-                </Text>
-              </View>
+                </RtlText>
+              </RtlTextShell>
               <View style={styles.avatarWrap}>
                 {me.avatar ? (
                   <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
@@ -62,14 +65,14 @@ export default function ButchersMoreScreen() {
                   <AppIcon name="person-outline" size={22} color={colors.textPrimary} />
                 )}
               </View>
-            </View>
+            </CoverTrailRow>
           </View>
         </View>
 
         <View style={styles.sectionLabelWrap}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionLabel}>حسابي</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionLabel}>حسابي</RtlText>
+          </RtlTextShell>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -91,9 +94,9 @@ export default function ButchersMoreScreen() {
         </View>
 
         <View style={styles.sectionLabelWrap}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionLabel}>الخدمات والدعم</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionLabel}>الخدمات والدعم</RtlText>
+          </RtlTextShell>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
@@ -142,21 +145,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 14,
     },
     coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 10,
       width: '100%',
-    },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
-    rtlTextShellFlex: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
     },
     avatarWrap: {
       width: 40,
@@ -173,16 +162,10 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       fontSize: 15,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     userPhone: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 2,
     },
     sectionLabelWrap: {
@@ -192,9 +175,6 @@ function createStyles(colors: ThemeColors) {
     sectionLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
   });
 }

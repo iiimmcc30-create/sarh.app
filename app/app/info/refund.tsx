@@ -7,6 +7,8 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const REFUND_SECTIONS = [
   {
@@ -59,20 +61,20 @@ export default function RefundScreen() {
         contentContainerStyle={[styles.content, getRtlDirection()]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.intro}>
+        <RtlTextShell>
+          <RtlText style={styles.intro}>
             آخر تحديث: يوليو ٢٠٢٥ · هذه السياسة جزء من شروط وأحكام منصة سرح وتنظّم حالات استرداد المبالغ المدفوعة.
-          </Text>
-        </View>
+          </RtlText>
+        </RtlTextShell>
 
         {REFUND_SECTIONS.map((section, i) => (
           <View key={i} style={styles.section}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-            </View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionBody}>{section.content}</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionTitle}>{section.title}</RtlText>
+            </RtlTextShell>
+            <RtlTextShell>
+              <RtlText style={styles.sectionBody}>{section.content}</RtlText>
+            </RtlTextShell>
           </View>
         ))}
 
@@ -98,33 +100,20 @@ function createStyles(colors: ThemeColors) {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { flex: 1 },
     content: { padding: spacing.xl, gap: spacing.lg },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     intro: {
       ...typography.body,
       color: colors.textMuted,
       lineHeight: 22,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     section: { gap: spacing.xs },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sectionBody: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 24,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     footer: { alignItems: 'center', marginTop: spacing.xl },
     footerText: { ...typography.micro, color: colors.textSubtle },
