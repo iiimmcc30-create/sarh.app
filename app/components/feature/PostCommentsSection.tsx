@@ -304,12 +304,11 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     title: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: colors.textBrandStrong,
-      fontWeight: '600',
     },
     count: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
       backgroundColor: colors.bgElevated,
       paddingHorizontal: 8,
@@ -321,7 +320,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.lg,
     },
     empty: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textMuted,
       lineHeight: 22,
       paddingVertical: spacing.sm,
@@ -332,7 +331,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
     },
     errorText: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.rose,
       textAlign: 'center',
       lineHeight: 22,
@@ -346,9 +345,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     retryText: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: colors.electricBright,
-      fontWeight: '600',
     },
     list: {
       gap: spacing.md,
@@ -395,23 +393,22 @@ function createStyles(colors: ThemeColors) {
       maxWidth: '100%',
     },
     commentName: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: colors.textPrimary,
-      fontWeight: '600',
       flexShrink: 1,
     },
     metaDot: {
-      ...typography.micro,
+      ...typography.feedBody,
       color: colors.textSubtle,
       flexShrink: 0,
     },
     commentTime: {
-      ...typography.micro,
+      ...typography.feedBody,
       color: colors.textMuted,
       flexShrink: 0,
     },
     commentText: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textSecondary,
       lineHeight: 22,
     },
@@ -436,7 +433,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.lg,
       paddingHorizontal: spacing.md,
       paddingVertical: 10,
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textPrimary,
     },
     sendBtn: {

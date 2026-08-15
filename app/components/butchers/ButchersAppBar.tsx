@@ -1,7 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { MENU_CARD } from '@/components/feature/SidebarMenu';
+import { butcherTypography } from '@/constants/butcherTypography';
 import { ds } from '@/constants/designSystem';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -99,7 +100,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 0,
     },
     searchInput: {
-      ...typography.body,
+      ...butcherTypography.body,
       color: colors.textPrimary,
       fontSize: 14,
       paddingVertical: 0,
@@ -127,11 +128,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     badgeText: {
-      ...typography.micro,
+      ...butcherTypography.badge,
       color: '#fff',
-      fontSize: 9,
-      fontWeight: '700',
-      lineHeight: 12,
     },
   });
 }

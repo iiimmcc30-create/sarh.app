@@ -1,6 +1,7 @@
 // SAFAT — Butchers market promo slider (admin-managed, 3 slides)
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { ButcherMarketBanner } from '@/services/butcherMarketBanners';
 import { useEffect, useRef, useState } from 'react';
@@ -113,23 +114,20 @@ function createStyles(colors: ThemeColors) {
       gap: 4,
     },
     title: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: '#fff',
       textAlign: 'center',
-      writingDirection: 'rtl',
     },
     subtitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       fontSize: 18,
       color: '#fff',
       textAlign: 'center',
-      writingDirection: 'rtl',
     },
     caption: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: 'rgba(255,255,255,0.88)',
       textAlign: 'center',
-      writingDirection: 'rtl',
     },
     dots: {
       flexDirection: 'row',

@@ -504,8 +504,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: `${colors.electric}22`,
     },
     aiBadgeText: {
-      ...typography.micro,
-      fontWeight: '700',
+      ...typography.emphasis,
       color: colors.electric,
       fontSize: 10,
     },

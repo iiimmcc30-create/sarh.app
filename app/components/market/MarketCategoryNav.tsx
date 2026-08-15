@@ -126,8 +126,8 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     tabTextActive: {
+      ...typography.emphasis,
       color: colors.textPrimary,
-      fontWeight: '700',
     },
     tabUnderline: {
       height: 3,
@@ -160,7 +160,6 @@ function createStyles(colors: ThemeColors) {
     chipText: {
       ...typography.caption,
       fontSize: 13,
-      fontWeight: '600',
       color: colors.textPrimary,
       writingDirection: 'rtl',
     },

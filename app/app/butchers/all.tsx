@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,7 +112,7 @@ function createStyles(colors: ThemeColors) {
     loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     empty: { paddingVertical: 80, paddingHorizontal: spacing.lg },
     emptyTitle: {
-      ...typography.body,
+      ...butcherTypography.body,
       color: colors.textMuted,
     },
   });

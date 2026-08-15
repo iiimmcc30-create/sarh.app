@@ -1,32 +1,22 @@
 /**
- * Apply IBM Plex Sans Arabic as the default typeface for Text / TextInput.
- * Maps numeric/keyword fontWeight → the matching loaded font file (Expo Google Fonts).
+ * Project-wide IBM Plex Sans Arabic — same loaded files as FloatingTabBar.
+ * Always pairs fontFamily with the matching loaded weight so Android
+ * does not synthesize a face (which changes Arabic letterforms).
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
-import { appFont } from '@/constants/fonts';
+import { appFont, resolveAppFontFace } from '@/constants/fonts';
 
 type AnyTextProps = {
   style?: StyleProp<TextStyle>;
   [key: string]: unknown;
 };
 
-function resolveFontFamily(weight: TextStyle['fontWeight'] | undefined, existingFamily?: string): string {
-  // Preserve explicit IBM Plex / app font families already set via typography tokens.
-  if (existingFamily && Object.values(appFont).includes(existingFamily as (typeof appFont)[keyof typeof appFont])) {
-    return existingFamily;
-  }
-  if (weight == null) return appFont.regular;
-  const w = String(weight);
-  if (w === '700' || w === '800' || w === '900' || w === 'bold') return appFont.semibold;
-  if (w === '600' || w === 'semibold') return appFont.semibold;
-  if (w === '500' || w === 'medium') return appFont.medium;
-  return appFont.regular;
-}
-
 function withAppFont(style: StyleProp<TextStyle> | undefined): StyleProp<TextStyle> {
   const flat = StyleSheet.flatten(style) as TextStyle | undefined;
-  const family = resolveFontFamily(flat?.fontWeight, flat?.fontFamily);
-  return [{ fontFamily: family }, style];
+  const face = resolveAppFontFace(flat?.fontWeight, flat?.fontFamily);
+  if (face.fontFamily === 'monospace') return style;
+  // Apply after caller styles so a Regular token + fontWeight 600 cannot stay mismatched.
+  return [style, { fontFamily: face.fontFamily, fontWeight: face.fontWeight }];
 }
 
 let applied = false;
@@ -43,11 +33,14 @@ function patchHost(
   }
   Component.defaultProps = {
     ...Component.defaultProps,
-    style: withAppFont(Component.defaultProps?.style as StyleProp<TextStyle>),
+    style: withAppFont([
+      { fontFamily: appFont.regular, fontWeight: '400' },
+      Component.defaultProps?.style as StyleProp<TextStyle>,
+    ]),
   };
 }
 
-/** Call once after fonts are available (safe to call multiple times). */
+/** Call once after IBM Plex faces are loaded (safe to call multiple times). */
 export function applyAppFonts() {
   if (applied) return;
   applied = true;

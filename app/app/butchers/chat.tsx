@@ -20,7 +20,8 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
@@ -817,10 +818,10 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.borderMid,
   },
   headerNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  headerName: { ...typography.bodyStrong, color: colors.textPrimary },
+  headerName: { ...butcherTypography.primary, color: colors.textPrimary },
   onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot: { width: 7, height: 7, borderRadius: 4 },
-  onlineText: { ...typography.micro, color: colors.textMuted },
+  onlineText: { ...butcherTypography.meta, color: colors.textMuted },
   callBtn: {
     width: 38, height: 38, borderRadius: 19,
     backgroundColor: colors.bgGlass,
@@ -841,7 +842,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingVertical: 8,
   },
-  orderStripText: { ...typography.caption, color: colors.textMuted, flex: 1, textAlign: 'right' },
+  orderStripText: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1, textAlign: 'right' },
 
   messagesList: {
     paddingHorizontal: spacing.lg,
@@ -867,7 +868,7 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderMid,
   },
-  quickReplyText: { ...typography.caption, color: colors.textBrand },
+  quickReplyText: { ...butcherTypography.secondary, color: colors.textBrand },
 
   inputBar: {
     flexDirection: 'row',
@@ -893,7 +894,7 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
     maxHeight: 100,
     textAlignVertical: 'center',
@@ -936,7 +937,7 @@ function createMessageStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
     borderBottomLeftRadius: 4,
   },
-  bubbleText: { ...typography.body, lineHeight: 20 },
+  bubbleText: { ...butcherTypography.body, lineHeight: 20 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
   bubbleImg: {
@@ -951,7 +952,7 @@ function createMessageStyles(colors: ThemeColors) {
     marginBottom: 4,
     overflow: 'hidden',
   },
-  timeText: { ...typography.micro, marginTop: 4 },
+  timeText: { ...butcherTypography.meta, marginTop: 4 },
   timeTextMe: { color: 'rgba(255,255,255,0.55)', textAlign: 'right' },
   timeTextThem: { color: colors.textSubtle },
   });

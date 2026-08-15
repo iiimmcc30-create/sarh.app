@@ -11,7 +11,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, getRtlRow } from '@/lib/rtl';
@@ -141,20 +142,19 @@ function createStyles(colors: ThemeColors) {
     },
     cardTop: { alignItems: 'flex-start', gap: spacing.md },
     invoiceNo: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.electricBright,
-      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
     },
     butcherName: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
       writingDirection: 'rtl',
       ...getRtlText(),
     },
     date: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       writingDirection: 'rtl',
       ...getRtlText(),
@@ -168,9 +168,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.success + '55',
     },
     paidText: {
-      ...typography.micro,
+      ...butcherTypography.emphasis,
       color: colors.success,
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
     divider: {
@@ -178,21 +177,20 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.borderHairline,
     },
     productLine: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textSecondary,
       writingDirection: 'rtl',
       ...getRtlText(),
     },
     totalRow: { justifyContent: 'space-between', marginTop: spacing.xs },
     totalLabel: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       writingDirection: 'rtl',
     },
     totalValue: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     empty: {
       alignItems: 'center',
@@ -200,9 +198,9 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     emptyIcon: { fontSize: 48 },
-    emptyTitle: { ...typography.h3, color: colors.textPrimary },
+    emptyTitle: { ...butcherTypography.title, color: colors.textPrimary },
     emptySub: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       textAlign: 'center',
       writingDirection: 'rtl',

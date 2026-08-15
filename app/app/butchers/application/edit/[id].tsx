@@ -27,7 +27,8 @@ import { WizardStepBar } from '@/components/butcherApplication/WizardStepBar';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { presentActionSheet } from '@/lib/actionSheet';
@@ -851,15 +852,15 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
   },
   headerSub: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   savingText: {
-    ...typography.micro,
+    ...butcherTypography.meta,
     color: colors.textBrand,
   },
   unsavedDot: {
@@ -876,19 +877,18 @@ const s = StyleSheet.create({
     gap: spacing.md,
   },
   stepTitle: {
-    ...typography.h2,
+    ...butcherTypography.titleLarge,
     color: colors.textPrimary,
   },
   stepSub: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textMuted,
     marginBottom: spacing.sm,
     lineHeight: 22,
   },
   fieldLabel: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textSecondary,
-    fontWeight: '600',
     ...getRtlText(),
   },
   countryFixed: {
@@ -902,16 +902,16 @@ const s = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   countryFixedText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textPrimary,
   },
   inlineError: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.danger,
     ...getRtlText(),
   },
   syncNotice: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textBrandSuccess,
     ...getRtlText(),
   },
@@ -939,7 +939,7 @@ const rv = StyleSheet.create({
     marginBottom: spacing.md,
   },
   cardTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
@@ -947,11 +947,11 @@ const rv = StyleSheet.create({
     gap: spacing.xs,
   },
   label: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   value: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
     lineHeight: 22,
   },
@@ -986,7 +986,7 @@ const rv = StyleSheet.create({
   },
   checkboxText: {
     flex: 1,
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textSecondary,
     lineHeight: 22,
     ...getRtlText(),

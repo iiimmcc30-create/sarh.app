@@ -1,7 +1,8 @@
 // SAFAT — Butchers market bottom navigation (الرئيسية · الطلبات · العروض · الخريطة · المزيد)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow } from '@/constants/designSystem';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
@@ -61,10 +62,13 @@ export function ButchersTabBar({ active }: { active: ButchersTab }) {
               style={({ pressed }) => [styles.slot, pressed && styles.pressed]}
             >
               <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-                <AppIcon name={tab.icon} size={24} color={tint} />
+                <AppIcon name={tab.icon} size={22} color={tint} />
               </View>
               <Text
-                style={[styles.label, { color: tint }, focused && styles.labelActive]}
+                style={[
+                  focused ? butcherTypography.tabActive : butcherTypography.tab,
+                  { color: tint },
+                ]}
                 numberOfLines={1}
               >
                 {tab.label}
@@ -83,8 +87,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.borderSoft,
-      paddingTop: 10,
-      paddingHorizontal: 2,
+      paddingTop: spacing.sm,
+      paddingHorizontal: spacing.xs,
     },
     row: {
       alignItems: 'flex-start',
@@ -95,32 +99,17 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'flex-start',
       gap: 4,
-      paddingVertical: 4,
-      minHeight: 56,
+      paddingVertical: 2,
+      minHeight: 48,
     },
     iconWrap: {
-      width: 44,
-      height: 32,
-      borderRadius: 16,
+      width: 24,
+      height: 24,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    iconWrapActive: {
-      backgroundColor: colors.electric + '22',
-    },
-    pressed: { opacity: 0.6 },
-    label: {
-      ...typography.caption,
-      fontSize: 12,
-      lineHeight: 16,
-      fontWeight: '600',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    labelActive: {
-      fontWeight: '800',
-      fontSize: 13,
-    },
+    iconWrapActive: {},
+    pressed: { opacity: 0.92, transform: [{ scale: 0.98 }] },
   });
 }
 

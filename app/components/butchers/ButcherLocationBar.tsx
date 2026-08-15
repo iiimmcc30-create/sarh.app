@@ -1,6 +1,7 @@
 // SAFAT — Butchers home delivery-location selector (tap to open smart map picker)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -81,11 +82,11 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '18',
     },
     label: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
     },
     value: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 14,
       color: colors.textPrimary,
     },

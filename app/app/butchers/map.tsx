@@ -15,7 +15,8 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { marginAutoStart, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 import { useEffect } from 'react';
 import {
@@ -480,8 +481,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
-  headerSub: { ...typography.caption, color: colors.textBrand, marginTop: 1 },
+  headerTitle: { ...butcherTypography.title, color: colors.textPrimary },
+  headerSub: { ...butcherTypography.secondary, color: colors.textBrand, marginTop: 1 },
   listBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgGlass,
@@ -511,8 +512,8 @@ const s = StyleSheet.create({
     borderColor: colors.electric,
   },
   filterFlag: { fontSize: 13 },
-  filterLabel: { ...typography.caption, color: colors.textMuted },
-  filterLabelActive: { color: '#fff', fontWeight: '600' },
+  filterLabel: { ...butcherTypography.secondary, color: colors.textMuted },
+  filterLabelActive: { ...butcherTypography.emphasis, color: '#fff' },
 
   // Map
   mapContainer: {
@@ -542,7 +543,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  regionText: { ...typography.micro, color: colors.textMuted },
+  regionText: { ...butcherTypography.meta, color: colors.textMuted },
   legend: {
     position: 'absolute',
     bottom: spacing.md,
@@ -558,7 +559,7 @@ const s = StyleSheet.create({
   },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { ...typography.micro, color: colors.textMuted },
+  legendText: { ...butcherTypography.meta, color: colors.textMuted },
   tapHint: {
     position: 'absolute',
     bottom: spacing.xl,
@@ -573,11 +574,11 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  tapHintText: { ...typography.caption, color: colors.textMuted },
+  tapHintText: { ...butcherTypography.secondary, color: colors.textMuted },
 
   // Mini list
   miniList: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  miniListTitle: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.sm },
+  miniListTitle: { ...butcherTypography.secondary, color: colors.textMuted, marginBottom: spacing.sm },
   miniListRow: { flexDirection: 'row', gap: spacing.sm },
   miniCard: {
     flexDirection: 'row',
@@ -592,12 +593,12 @@ const s = StyleSheet.create({
     position: 'relative',
   },
   miniLogo: { width: 36, height: 36, borderRadius: 16, backgroundColor: colors.bgElevated },
-  miniName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
+  miniName: { ...butcherTypography.emphasis, color: colors.textPrimary },
   miniMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   miniFlag: { fontSize: 11 },
-  miniCity: { ...typography.micro, color: colors.textMuted },
+  miniCity: { ...butcherTypography.meta, color: colors.textMuted },
   miniRating: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  miniRatingText: { ...typography.micro, color: colors.gold, fontWeight: '600' },
+  miniRatingText: { ...butcherTypography.emphasis, color: colors.gold },
 });
 
 // Map pin styles
@@ -645,7 +646,7 @@ const mp = StyleSheet.create({
     marginTop: 4,
     maxWidth: 120,
   },
-  pinLabelText: { ...typography.micro, color: colors.textPrimary },
+  pinLabelText: { ...butcherTypography.meta, color: colors.textPrimary },
 });
 
 // Bottom card styles
@@ -668,10 +669,10 @@ const bc = StyleSheet.create({
     borderWidth: 1.5, borderColor: colors.borderMid,
   },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1 },
+  name: { ...butcherTypography.primary, color: colors.textPrimary, flex: 1 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   countryFlag: { fontSize: 13 },
-  location: { ...typography.caption, color: colors.textMuted },
+  location: { ...butcherTypography.secondary, color: colors.textMuted },
   ratingBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: colors.gold + '22',
@@ -679,7 +680,7 @@ const bc = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  rating: { ...typography.caption, color: colors.gold, fontWeight: '600' },
+  rating: { ...butcherTypography.emphasis, color: colors.gold },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
   statusPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -687,7 +688,7 @@ const bc = StyleSheet.create({
     borderRadius: radius.pill,
   },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { ...typography.micro, fontWeight: '600' },
+  statusText: { ...butcherTypography.emphasis },
   hoursPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 5,
@@ -695,7 +696,7 @@ const bc = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  hoursText: { ...typography.micro, color: colors.textMuted },
+  hoursText: { ...butcherTypography.meta, color: colors.textMuted },
   completionPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 8, paddingVertical: 5,
@@ -703,8 +704,8 @@ const bc = StyleSheet.create({
     backgroundColor: colors.electric + '11',
     borderWidth: 1, borderColor: colors.electricBright + '33',
   },
-  completionText: { ...typography.micro, color: colors.textBrandStrong },
-  currencyText: { ...typography.caption, color: colors.textMuted, ...marginAutoStart() },
+  completionText: { ...butcherTypography.meta, color: colors.textBrandStrong },
+  currencyText: { ...butcherTypography.secondary, color: colors.textMuted, ...marginAutoStart() },
   chipsRow: { flexDirection: 'row', gap: 6 },
   chip: {
     paddingHorizontal: 10, paddingVertical: 4,
@@ -712,7 +713,7 @@ const bc = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  chipText: { ...typography.micro, color: colors.textBrand },
+  chipText: { ...butcherTypography.meta, color: colors.textBrand },
   actions: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
   chatBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -721,13 +722,13 @@ const bc = StyleSheet.create({
     borderWidth: 1, borderColor: colors.electricBright + '66',
     backgroundColor: colors.electric + '11',
   },
-  chatBtnText: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '600' },
+  chatBtnText: { ...butcherTypography.emphasis, color: colors.textBrandStrong },
   orderBtn: { flex: 1, borderRadius: radius.xl, overflow: 'hidden' },
   orderBtnGrad: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 11,
   },
-  orderBtnText: { ...typography.caption, color: '#fff', fontWeight: '600' },
+  orderBtnText: { ...butcherTypography.emphasis, color: '#fff' },
   profileBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 10,
@@ -735,5 +736,5 @@ const bc = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderSoft,
     backgroundColor: colors.bgElevated,
   },
-  profileBtnText: { ...typography.micro, color: colors.textBrandStrong },
+  profileBtnText: { ...butcherTypography.meta, color: colors.textBrandStrong },
 });

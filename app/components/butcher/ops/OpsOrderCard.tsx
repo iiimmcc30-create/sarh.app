@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -198,11 +199,11 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     orderNo: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
     },
     customer: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
     },
     badge: {
@@ -211,9 +212,9 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 999,
       borderWidth: 1,
     },
-    badgeText: { ...typography.micro, fontWeight: '600' },
+    badgeText: { ...butcherTypography.emphasis },
     lines: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textSecondary,
     },
     metaRow: {
@@ -224,7 +225,7 @@ function createStyles(colors: ThemeColors) {
       gap: 8,
       flexWrap: 'wrap',
     },
-    total: { ...typography.bodyStrong, color: colors.textPrimary },
+    total: { ...butcherTypography.primary, color: colors.textPrimary },
     chip: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -235,21 +236,20 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
     },
     chipText: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textSecondary,
       writingDirection: 'rtl',
     },
     muted: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
     },
     phone: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.electric,
-      fontWeight: '600',
     },
     notes: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textSecondary,
       marginTop: 4,
     },
@@ -260,9 +260,8 @@ function createStyles(colors: ThemeColors) {
       gap: 8,
     },
     deliveryTitle: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     secondaryBtn: {
       flexDirection: 'row',
@@ -274,7 +273,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderSoft,
     },
-    secondaryBtnText: { ...typography.caption, color: colors.electric, fontWeight: '600' },
+    secondaryBtnText: { ...butcherTypography.emphasis, color: colors.electric },
     actions: {
       flexDirection: 'row',
       direction: 'ltr',
@@ -290,7 +289,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 11,
       alignItems: 'center',
     },
-    primaryBtnText: { ...typography.bodyStrong, color: '#F4F6F5' },
+    primaryBtnText: { ...butcherTypography.primary, color: '#F4F6F5' },
     iconBtn: {
       width: 40,
       height: 40,

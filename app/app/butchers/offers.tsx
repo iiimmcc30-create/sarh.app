@@ -17,7 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
@@ -316,16 +317,16 @@ function createStyles(colors: ThemeColors) {
     flex: { flex: 1 },
     scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.lg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-    loadingText: { ...typography.caption, color: colors.textMuted },
+    loadingText: { ...butcherTypography.secondary, color: colors.textMuted },
     sectionLabelWrap: {
       paddingHorizontal: 0,
     },
     heroTitle: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
     },
     heroSub: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       marginTop: 2,
     },
@@ -348,14 +349,14 @@ function createStyles(colors: ThemeColors) {
     headerText: { flex: 1, minWidth: 0, gap: 3 },
     nameRow: { alignItems: 'center', gap: 5 },
     butcherName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       flexShrink: 1,
       ...getRtlText(),
     },
     metaRow: { alignItems: 'center', gap: 4 },
-    rating: { ...typography.micro, color: colors.gold, fontWeight: '700' },
-    city: { ...typography.micro, color: colors.textMuted },
+    rating: { ...butcherTypography.emphasis, color: colors.gold },
+    city: { ...butcherTypography.meta, color: colors.textMuted },
     visitChip: {
       alignItems: 'center',
       gap: 2,
@@ -364,7 +365,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
       backgroundColor: colors.electric + '16',
     },
-    visitText: { ...typography.micro, color: colors.electricBright, fontWeight: '700' },
+    visitText: { ...butcherTypography.emphasis, color: colors.electricBright },
     productsRow: { gap: spacing.sm, paddingVertical: 2 },
     product: {
       width: 150,
@@ -383,25 +384,24 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    discountText: { ...typography.micro, color: '#fff', fontWeight: '800', fontSize: 10 },
+    discountText: { ...butcherTypography.emphasis, color: '#fff', fontSize: 10 },
     productBody: { padding: spacing.sm, gap: 5 },
     productName: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       fontSize: 12,
-      fontWeight: '700',
       color: colors.textPrimary,
       lineHeight: 17,
       ...getRtlText(),
     },
     priceRow: { alignItems: 'baseline', gap: 6 },
-    offerPrice: { ...typography.bodyStrong, fontSize: 14, color: colors.electricBright, fontWeight: '800' },
+    offerPrice: { ...butcherTypography.primary, fontSize: 14, color: colors.electricBright },
     originalPrice: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
       textDecorationLine: 'line-through',
     },
     validityRow: { alignItems: 'center', gap: 4 },
-    validityText: { ...typography.micro, color: colors.textMuted, fontSize: 10, ...getRtlText() },
+    validityText: { ...butcherTypography.meta, color: colors.textMuted, fontSize: 10, ...getRtlText() },
     empty: { alignItems: 'center', paddingVertical: 90, gap: spacing.sm },
     emptyIconWrap: {
       width: 76,
@@ -413,13 +413,13 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.xs,
     },
     emptyTitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',
     },
     emptySub: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       textAlign: 'center',
       writingDirection: 'rtl',

@@ -53,7 +53,7 @@ export default function HomeScreen() {
       },
       empty: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
       emptyIcon: { fontSize: 36 },
-      emptyText: { ...typography.body, color: colors.textMuted },
+      emptyText: { ...typography.feedBody, color: colors.textMuted },
     }),
   );
   const {

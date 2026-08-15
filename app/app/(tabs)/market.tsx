@@ -297,7 +297,7 @@ function createMarketStyles(
       direction: 'ltr',
     },
     listingsTitle: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
@@ -308,7 +308,7 @@ function createMarketStyles(
       flexShrink: 0,
     },
     listingsCount: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -325,6 +325,6 @@ function createMarketStyles(
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
     emptyIcon: { fontSize: 40 },
-    emptyText: { ...typography.body, color: colors.textMuted },
+    emptyText: { ...typography.feedBody, color: colors.textMuted },
   });
 }

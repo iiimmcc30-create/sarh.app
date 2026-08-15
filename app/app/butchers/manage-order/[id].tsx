@@ -14,7 +14,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
@@ -361,11 +362,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     borderColor: border,
   },
   headerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
   },
   headerSub: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.electric,
   },
   scroll: { padding: spacing.lg, gap: spacing.md },
@@ -378,26 +379,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     borderColor: border,
   },
   section: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textMuted,
-    fontWeight: '600',
   },
   value: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
   },
   muted: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   link: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.electric,
-    fontWeight: '600',
   },
   itemRow: { paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: border },
   itemName: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textPrimary,
   },
   mapBtn: {
@@ -432,11 +431,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   tlDotDone: { backgroundColor: colors.electric, borderColor: colors.electric },
   tlDotActive: { borderColor: colors.electric, backgroundColor: colors.electric },
   tlLabel: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   tlDone: { color: colors.textPrimary },
-  tlActive: { color: colors.electric, fontWeight: '700' },
+  tlActive: { ...butcherTypography.emphasis, color: colors.electric },
   primary: {
     backgroundColor: colors.electric,
     borderRadius: 14,
@@ -444,7 +443,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     alignItems: 'center',
   },
   primaryText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: '#fff',
     textAlign: 'center',
     writingDirection: 'rtl',

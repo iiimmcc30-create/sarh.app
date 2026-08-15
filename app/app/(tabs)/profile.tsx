@@ -214,7 +214,7 @@ function createStyles(colors: ThemeColors) {
       gap: 10,
     },
     emptyTitle: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textMuted,
     },
     emptyBtn: {
@@ -227,7 +227,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
     },
     emptyBtnText: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: colors.textBrandStrong,
     },
   });

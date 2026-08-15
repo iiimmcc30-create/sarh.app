@@ -234,9 +234,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     screenTitle: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: colors.textPrimary,
-      fontWeight: '600',
       fontSize: 17,
     },
     scroll: {

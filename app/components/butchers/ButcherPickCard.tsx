@@ -2,7 +2,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -97,10 +98,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingVertical: 3,
       borderRadius: 6,
     },
-    promoText: { ...typography.micro, color: '#fff', fontWeight: '700', fontSize: 10 },
+    promoText: { ...butcherTypography.emphasis, color: '#fff', fontSize: 10 },
     rtlShell: { width: '100%', direction: 'ltr', paddingHorizontal: spacing.sm, paddingTop: 8 },
     name: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 14,
       color: colors.textPrimary,
       width: '100%',
@@ -116,9 +117,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.sm,
     },
     rating: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
-      writingDirection: 'rtl',
     },
     metaRow: {
       flexDirection: 'row',
@@ -135,9 +135,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 3,
     },
     metaText: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
-      writingDirection: 'rtl',
     },
   });
 }
