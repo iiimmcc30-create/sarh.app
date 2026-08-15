@@ -22,7 +22,7 @@ export function ButcherCategoryBar({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
     >
-      {categories.map((cat) => {
+      {[...categories].reverse().map((cat) => {
         const meta =
           cat === 'all'
             ? { ar: 'الكل' }

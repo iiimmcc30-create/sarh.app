@@ -891,7 +891,7 @@ export default function ButcherProfileScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
         >
-          {visibleTabs.map((tab) => {
+          {[...visibleTabs].reverse().map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <Pressable key={tab.id} onPress={() => setActiveTab(tab.id)} style={styles.tabBtn}>
