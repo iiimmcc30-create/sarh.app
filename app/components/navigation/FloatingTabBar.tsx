@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
+import { sarh } from '@/constants/sarhTokens';
 import { motion, spacing, typography } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
