@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -32,10 +33,10 @@ export default function ButchersMoreScreen() {
 
   const goRegister = () => {
     if (!isAuthenticated) {
-      router.push('/auth/phone');
+      safePush('/auth/phone', undefined, router);
       return;
     }
-    router.push('/butchers/apply');
+    safePush('/butchers/apply', undefined, router);
   };
 
   return (
@@ -77,7 +78,7 @@ export default function ButchersMoreScreen() {
             subtitle="الملاحم المفضلة لديك"
             colors={colors}
             showDivider
-            onPress={() => router.push('/butchers/favorites')}
+            onPress={() => safePush('/butchers/favorites', undefined, router)}
           />
           <SidebarMenuItem
             icon="receipt-outline"
@@ -85,7 +86,7 @@ export default function ButchersMoreScreen() {
             subtitle="فواتير طلباتك المكتملة"
             colors={colors}
             showDivider={false}
-            onPress={() => router.push('/butchers/invoices')}
+            onPress={() => safePush('/butchers/invoices', undefined, router)}
           />
         </View>
 
@@ -108,14 +109,14 @@ export default function ButchersMoreScreen() {
             title="الدعم والمساعدة"
             colors={colors}
             showDivider
-            onPress={() => router.push('/support')}
+            onPress={() => safePush('/support', undefined, router)}
           />
           <SidebarMenuItem
             icon="shield-outline"
             title="سياسة الخصوصية"
             colors={colors}
             showDivider={false}
-            onPress={() => router.push('/info/privacy')}
+            onPress={() => safePush('/info/privacy', undefined, router)}
           />
         </View>
       </AppScrollView>

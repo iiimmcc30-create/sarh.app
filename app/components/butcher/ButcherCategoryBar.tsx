@@ -1,6 +1,7 @@
 import { CATEGORY_LABELS, type MeatCategory } from '@/services/butcherData';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type ButcherCategoryBarProps = {
@@ -15,11 +16,14 @@ export function ButcherCategoryBar({
   onChange,
 }: ButcherCategoryBarProps) {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const scroller = useRef<ScrollView>(null);
 
   return (
     <ScrollView
+      ref={scroller}
       horizontal
       showsHorizontalScrollIndicator={false}
+      onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}
       contentContainerStyle={styles.row}
     >
       {[...categories].reverse().map((cat) => {
@@ -29,15 +33,15 @@ export function ButcherCategoryBar({
             : CATEGORY_LABELS[cat as MeatCategory];
         const isActive = active === cat;
         return (
-          <Pressable key={cat} onPress={() => onChange(cat)} style={styles.item}>
-            <View style={styles.coverTrail}>
-              <View style={styles.rtlTextShell}>
-                <Text style={[styles.label, isActive && styles.labelActive]}>
+          <Pressable key={cat} onPress={() => onChange(cat)} style={styles.tabBtn}>
+            <View style={styles.tabCoverTrail}>
+              <View style={styles.tabTextShell}>
+                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
                   {cat === 'all' ? 'الكل' : meta?.ar ?? cat}
                 </Text>
               </View>
             </View>
-            <View style={[styles.underline, isActive && styles.underlineActive]} />
+            <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
           </Pressable>
         );
       })}
@@ -52,42 +56,41 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
       justifyContent: 'flex-end',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.sm,
       gap: spacing.lg,
     },
-    item: {
+    tabBtn: {
       alignItems: 'stretch',
       paddingBottom: 2,
     },
-    coverTrail: {
+    tabCoverTrail: {
       flexDirection: 'row',
       direction: 'ltr',
       justifyContent: 'flex-end',
     },
-    rtlTextShell: {
-      width: '100%',
+    tabTextShell: {
       direction: 'ltr',
     },
-    label: {
+    tabLabel: {
       ...typography.bodyStrong,
       fontSize: 14,
       fontWeight: '600',
       color: colors.textMuted,
-      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    labelActive: {
+    tabLabelActive: {
       color: colors.electricBright,
     },
-    underline: {
+    tabUnderline: {
       marginTop: 6,
       height: 3,
       width: '100%',
       borderRadius: 2,
       backgroundColor: 'transparent',
     },
-    underlineActive: {
+    tabUnderlineActive: {
       backgroundColor: colors.electric,
     },
   });

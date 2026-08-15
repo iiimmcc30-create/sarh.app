@@ -5,6 +5,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -246,7 +247,7 @@ export default function ButcherOffersScreen() {
   );
 
   const openButcher = (id: string) =>
-    router.push({ pathname: '/butchers/[id]', params: { id } });
+    safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>

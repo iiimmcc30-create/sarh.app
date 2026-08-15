@@ -18,6 +18,8 @@ describe('safeNavigate', () => {
     expect(normalizeRoutePath('/(tabs)/profile')).toBe('/profile');
     expect(normalizeRoutePath('/(tabs)/profile/')).toBe('/profile');
     expect(normalizeRoutePath('/profile/settings?x=1')).toBe('/profile/settings');
+    expect(normalizeRoutePath('/butchers/index')).toBe('/butchers');
+    expect(normalizeRoutePath('/butchers/index/')).toBe('/butchers');
   });
 
   it('matches equivalent paths', () => {

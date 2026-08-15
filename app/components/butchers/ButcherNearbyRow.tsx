@@ -1,6 +1,7 @@
 // Vertical nearby butcher row — logo on physical right, RTL cover trail
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -19,9 +20,9 @@ type Props = {
   showDivider?: boolean;
 };
 
-export function ButcherNearbyRow({ butcher, onPress, showDivider }: Props) {
+export function ButcherNearbyRow({ butcher, onPress }: Props) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const name = butcher.nameAr || butcher.name;
 
   return (
@@ -69,15 +70,17 @@ export function ButcherNearbyRow({ butcher, onPress, showDivider }: Props) {
           />
         </View>
       </View>
-      {showDivider ? <View style={styles.divider} /> : null}
     </Pressable>
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     row: {
-      paddingHorizontal: spacing.lg,
+      ...butcherSoftCardStyle(colors, scheme),
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.md,
       paddingVertical: 12,
     },
     coverTrail: {
@@ -136,11 +139,5 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: colors.borderSoft,
-      marginTop: 12,
-      marginRight: 68,
-    },
   });
 }

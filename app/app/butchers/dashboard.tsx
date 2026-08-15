@@ -4,6 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { useState } from 'react';
 import {
   Pressable,
@@ -189,7 +190,7 @@ export default function ButcherDashboardScreen() {
 
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.push('/butcher-sidebar')} hitSlop={12} style={s.backBtn}>
+        <Pressable onPress={() => safePush('/butcher-sidebar', undefined, router)} hitSlop={12} style={s.backBtn}>
           <AppIcon name="menu" size={22} color={colors.textPrimary} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}>

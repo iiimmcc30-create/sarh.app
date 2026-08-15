@@ -5,7 +5,7 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
-import { isNavigationLocked } from '@/lib/safeNavigate';
+import { safeReplace } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,8 +35,8 @@ export function ButchersTabBar({ active }: { active: ButchersTab }) {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const onPress = (tab: TabDef) => {
-    if (tab.key === active || isNavigationLocked()) return;
-    router.replace(tab.route as never);
+    if (tab.key === active) return;
+    safeReplace(tab.route, undefined, router);
   };
 
   return (

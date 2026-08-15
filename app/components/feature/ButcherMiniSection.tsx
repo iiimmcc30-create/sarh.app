@@ -6,6 +6,7 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
 import { useRouter } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
   colors,
@@ -61,14 +62,14 @@ export function ButcherMiniSection({
   const ranked = filteredButchers.slice(0, limit);
 
   const openButcher = (id: string) => {
-    router.push({ pathname: '/butchers/[id]', params: { id } });
+    safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
   };
 
   return (
     <View style={[s.wrapper, (isHero || isGrid) && s.wrapperHero]}>
       <SectionHeader
         title="الملاحم"
-        onSeeAll={() => router.push('/butchers/all')}
+        onSeeAll={() => safePush('/butchers/all', undefined, router)}
       />
 
       {showStories && stories.length > 0 && (
@@ -87,10 +88,14 @@ export function ButcherMiniSection({
                 key={story.id}
                 style={s.storyItem}
                 onPress={() =>
-                  router.push({
-                    pathname: '/butchers/story-viewer',
-                    params: { butcherId: story.butcherId, storyId: story.id },
-                  })
+                  safePush(
+                    {
+                      pathname: '/butchers/story-viewer',
+                      params: { butcherId: story.butcherId, storyId: story.id },
+                    },
+                    undefined,
+                    router,
+                  )
                 }
               >
                 <LinearGradient
@@ -125,7 +130,7 @@ export function ButcherMiniSection({
         ) : ranked.length === 0 ? (
           <Pressable
             style={[s.skeleton, { width: GRID_CARD_W, height: 220, marginHorizontal: spacing.lg }]}
-            onPress={() => router.push('/butchers')}
+            onPress={() => safePush('/butchers', undefined, router)}
           >
             <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
             <Text style={s.skeletonText}>لا توجد ملاحم حالياً</Text>
@@ -166,7 +171,7 @@ export function ButcherMiniSection({
           ) : ranked.length === 0 ? (
             <Pressable
               style={[s.skeleton, { width: CARD_W, height: COVER_H + (isHero ? 0 : 80) }]}
-              onPress={() => router.push('/butchers')}
+              onPress={() => safePush('/butchers', undefined, router)}
             >
               <AppIcon name="storefront-outline" size={26} color={colors.textMuted} />
               <Text style={s.skeletonText}>لا توجد ملاحم حالياً</Text>

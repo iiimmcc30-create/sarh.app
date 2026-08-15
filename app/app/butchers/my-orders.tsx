@@ -3,6 +3,7 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
 import {
   Pressable,
@@ -196,13 +197,15 @@ export default function MyOrdersScreen() {
   const chatHandler = (order: ButcherOrderRecord) =>
     isOrderChatEligible(order.status)
       ? () =>
-          router.push(
+          safePush(
             butcherChatRouteParams({
               butcherId: order.butcherId,
               orderId: order.id,
               receiverName: order.butcher?.nameAr,
               receiverAvatar: order.butcher?.logo,
             }),
+            undefined,
+            router,
           )
       : undefined;
 
@@ -261,7 +264,7 @@ export default function MyOrdersScreen() {
                       colors={colors}
                       styles={styles}
                       onPress={() =>
-                        router.push({ pathname: '/butchers/order/[id]', params: { id: order.id } })
+                        safePush({ pathname: '/butchers/order/[id]', params: { id: order.id } }, undefined, router)
                       }
                       onChat={chatHandler(order)}
                     />
@@ -281,7 +284,7 @@ export default function MyOrdersScreen() {
                       colors={colors}
                       styles={styles}
                       onPress={() =>
-                        router.push({ pathname: '/butchers/order/[id]', params: { id: order.id } })
+                        safePush({ pathname: '/butchers/order/[id]', params: { id: order.id } }, undefined, router)
                       }
                       onChat={chatHandler(order)}
                     />

@@ -9,6 +9,7 @@ import {
   type DeliveryLocation,
 } from '@/services/butcherDeliveryLocation';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -37,7 +38,7 @@ export function ButcherLocationBar() {
   return (
     <Pressable
       style={({ pressed }) => [styles.bar, pressed && styles.pressed]}
-      onPress={() => router.push('/butchers/location')}
+      onPress={() => safePush('/butchers/location', undefined, router)}
       accessibilityRole="button"
       accessibilityLabel="تحديد موقع التوصيل"
     >

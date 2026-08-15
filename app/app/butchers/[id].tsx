@@ -99,6 +99,11 @@ function StoreProductsTab({
 
   return (
     <View>
+      <ButcherCategoryBar
+        categories={categories}
+        active={activeCategory}
+        onChange={setActiveCategory}
+      />
       <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xs }}>
         <View
           style={{
@@ -130,11 +135,6 @@ function StoreProductsTab({
           />
         </View>
       </View>
-      <ButcherCategoryBar
-        categories={categories}
-        active={activeCategory}
-        onChange={setActiveCategory}
-      />
       {filtered.map((product) => (
         <ButcherStoreProductCard
           key={product.id}
@@ -520,6 +520,7 @@ export default function ButcherProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [chatAccess, setChatAccess] = useState<ButcherChatAccess | null>(null);
   const prevChatAllowed = useRef<boolean | null>(null);
+  const tabsScroller = useRef<ScrollView>(null);
 
   const visibleTabs = useMemo(
     () => TABS.filter((tab) => tab.id !== 'chat' || chatAccess?.allowed),
@@ -887,8 +888,10 @@ export default function ButcherProfileScreen() {
 
         {/* ── Tabs ── */}
         <ScrollView
+          ref={tabsScroller}
           horizontal
           showsHorizontalScrollIndicator={false}
+          onContentSizeChange={() => tabsScroller.current?.scrollToEnd({ animated: false })}
           contentContainerStyle={styles.tabsRow}
         >
           {[...visibleTabs].reverse().map((tab) => {

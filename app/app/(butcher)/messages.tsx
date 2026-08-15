@@ -21,6 +21,7 @@ import { fetchNotifications } from '@/services/notifications';
 import { useMessageThreads } from '@/hooks/useMessageThreads';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { getRtlRow, marginEnd } from '@/lib/rtl';
+import { safePush } from '@/lib/safeNavigate';
 
 type Tab = 'messages' | 'activity';
 
@@ -102,7 +103,7 @@ export default function ButcherMessagesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.push('/butcher-sidebar')} hitSlop={12} style={styles.menuBtn}>
+        <Pressable onPress={() => safePush('/butcher-sidebar', undefined, router)} hitSlop={12} style={styles.menuBtn}>
           <AppIcon name="menu" size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.title}>
