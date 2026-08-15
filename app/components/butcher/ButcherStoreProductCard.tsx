@@ -7,9 +7,6 @@ import { resolveMediaUrl } from '@/services/media';
 import type { ButcherProduct, MeatCategory } from '@/services/butcherData';
 import { CATEGORY_LABELS } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -46,7 +43,7 @@ export function ButcherStoreProductCard({
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.96 }]}
     >
-      <CoverTrailRow justify="flex-end" gap={12}>
+      <View style={styles.coverTrail}>
         <Pressable
           onPress={(e) => {
             e.stopPropagation?.();
@@ -61,18 +58,18 @@ export function ButcherStoreProductCard({
         </Pressable>
 
         <View style={styles.body}>
-          <RtlTextShell>
-            <RtlText style={styles.name} numberOfLines={2}>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.name} numberOfLines={2}>
               {product.nameAr}
-            </RtlText>
-          </RtlTextShell>
-          <RtlTextShell>
-            <RtlText style={styles.qty}>{qtyLabel}</RtlText>
-          </RtlTextShell>
+            </Text>
+          </View>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.qty}>{qtyLabel}</Text>
+          </View>
           {cat ? (
-            <RtlTextShell>
-              <RtlText style={styles.cat}>{cat.ar}</RtlText>
-            </RtlTextShell>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.cat}>{cat.ar}</Text>
+            </View>
           ) : null}
           <View style={styles.priceRow}>
             <Text style={styles.price}>
@@ -91,7 +88,7 @@ export function ButcherStoreProductCard({
           style={styles.image}
           contentFit="cover"
         />
-      </CoverTrailRow>
+      </View>
     </Pressable>
   );
 }
@@ -104,6 +101,13 @@ function createStyles(colors: ThemeColors) {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
       backgroundColor: colors.screenRoot,
+    },
+    coverTrail: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 12,
     },
     addBtn: {
       width: 40,
@@ -122,18 +126,31 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
       gap: 3,
     },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
+    },
     name: {
       ...typography.bodyStrong,
       fontSize: 15,
       color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     qty: {
       ...typography.caption,
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     cat: {
       ...typography.micro,
       color: colors.textSecondary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     priceRow: {
       flexDirection: 'row',
