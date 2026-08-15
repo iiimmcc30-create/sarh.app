@@ -6,7 +6,8 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, gradients, radius, spacing } from '@/constants/theme';
 
 export default function OrderSuccessScreen() {
   const router = useRouter();
@@ -129,9 +130,9 @@ const s = StyleSheet.create({
     overflow: 'hidden',
   },
   icon: { fontSize: 52 },
-  title: { ...typography.h1, color: colors.textPrimary, textAlign: 'center' },
+  title: { ...butcherTypography.titleLarge, color: colors.textPrimary, textAlign: 'center' },
   sub: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
@@ -146,15 +147,15 @@ const s = StyleSheet.create({
     position: 'relative',
   },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  summaryLabel: { ...typography.caption, color: colors.textMuted, flex: 1 },
-  summaryValue: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
+  summaryLabel: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1 },
+  summaryValue: { ...butcherTypography.emphasis, color: colors.textPrimary },
   pendingBadge: {
     paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: radius.pill,
     backgroundColor: colors.amber + '33',
     borderWidth: 1, borderColor: colors.amber + '66',
   },
-  pendingText: { ...typography.micro, color: colors.amber, fontWeight: '600' },
+  pendingText: { ...butcherTypography.emphasis, color: colors.amber },
   paidBadge: {
     backgroundColor: colors.success + '33',
     borderColor: colors.success + '66',
@@ -178,20 +179,20 @@ const s = StyleSheet.create({
   stepCircleDone: { backgroundColor: colors.success, borderColor: colors.success },
   stepLine: { display: 'none' },
   stepLineDone: {},
-  stepNum: { ...typography.micro, color: colors.textMuted },
-  stepLabel: { ...typography.caption, color: colors.textMuted, flex: 1 },
-  stepLabelDone: { color: colors.textBrandSuccess, fontWeight: '600' },
+  stepNum: { ...butcherTypography.meta, color: colors.textMuted },
+  stepLabel: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1 },
+  stepLabelDone: { color: colors.textBrandSuccess },
   chatBtn: { width: '100%', borderRadius: radius.xl, overflow: 'hidden' },
   chatBtnGrad: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, paddingVertical: 16,
   },
-  chatBtnText: { ...typography.bodyStrong, color: '#fff', fontSize: 16 },
+  chatBtnText: { ...butcherTypography.primary, color: '#fff', fontSize: 16 },
   backBtn: {
     width: '100%', paddingVertical: 14,
     borderRadius: radius.xl,
     borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center',
   },
-  backBtnText: { ...typography.bodyStrong, color: colors.textMuted },
+  backBtnText: { ...butcherTypography.primary, color: colors.textMuted },
 });

@@ -8,7 +8,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { gradients, radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -197,7 +198,7 @@ function createStyles(colors: ThemeColors) {
     justifyContent: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     flex: 1,
     textAlign: 'center',
@@ -219,13 +220,13 @@ function createStyles(colors: ThemeColors) {
     justifyContent: 'center',
   },
   title: {
-    ...typography.h1,
+    ...butcherTypography.titleLarge,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
   subtitle: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
@@ -257,12 +258,11 @@ function createStyles(colors: ThemeColors) {
     justifyContent: 'center',
   },
   stepNumText: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textBrand,
-    fontWeight: '600',
   },
   stepText: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
     flex: 1,
   },
@@ -277,7 +277,7 @@ function createStyles(colors: ThemeColors) {
     width: '100%',
   },
   errorText: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.danger,
     flex: 1,
   },
@@ -289,7 +289,7 @@ function createStyles(colors: ThemeColors) {
     padding: spacing.md,
   },
   linkText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textBrand,
     textAlign: 'center',
   },

@@ -2,7 +2,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText } from '@/lib/rtl';
@@ -231,13 +232,13 @@ function createStyles(colors: ThemeColors) {
     flex: { flex: 1 },
     scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
     hint: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       lineHeight: 22,
     },
     field: { gap: spacing.sm },
     fieldLabel: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 15,
       color: colors.textPrimary,
     },
@@ -249,10 +250,10 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
     },
     chipActive: { backgroundColor: colors.electric + '20' },
-    chipText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-    chipTextActive: { color: colors.electricBright },
+    chipText: { ...butcherTypography.emphasis, color: colors.textMuted },
+    chipTextActive: { ...butcherTypography.emphasis, color: colors.electricBright },
     input: {
-      ...typography.body,
+      ...butcherTypography.body,
       backgroundColor: colors.bgElevated,
       borderRadius: radius.lg,
       paddingHorizontal: spacing.md,
@@ -280,9 +281,8 @@ function createStyles(colors: ThemeColors) {
     },
     saveBtnDisabled: { opacity: 0.5 },
     saveBtnText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: '#fff',
-      fontWeight: '700',
       writingDirection: 'rtl',
     },
   });

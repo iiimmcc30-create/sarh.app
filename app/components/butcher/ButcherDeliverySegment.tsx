@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import type { DeliveryType } from '@/services/butcherData';
@@ -80,7 +81,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     optionText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textSecondary,
       fontSize: 14,
@@ -89,7 +90,7 @@ function createStyles(colors: ThemeColors) {
       color: '#fff',
     },
     hint: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       paddingHorizontal: spacing.xs,
     },

@@ -18,7 +18,8 @@ import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
 import { TimelineItem } from '@/components/butcherApplication/TimelineItem';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import {
@@ -350,7 +351,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     flex: 1,
     textAlign: 'center',
@@ -365,11 +366,11 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
   },
   title: {
-    ...typography.h1,
+    ...butcherTypography.titleLarge,
     color: colors.textPrimary,
   },
   meta: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   provisionCard: {
@@ -387,18 +388,18 @@ const s = StyleSheet.create({
     gap: spacing.xs,
   },
   provisionTitle: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textBrandSuccess,
   },
   provisionSub: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textSecondary,
   },
   footerBtn: {
     marginTop: spacing.md,
   },
   errorText: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.danger,
     textAlign: 'center',
   },
@@ -409,7 +410,7 @@ const d = StyleSheet.create({
     gap: spacing.sm,
   },
   sectionTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
@@ -425,16 +426,16 @@ const d = StyleSheet.create({
     gap: spacing.xs,
   },
   label: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   value: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
     lineHeight: 22,
   },
   empty: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textMuted,
     textAlign: 'center',
   },
@@ -451,15 +452,15 @@ const d = StyleSheet.create({
     gap: spacing.xs,
   },
   docTitle: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textPrimary,
   },
   docSub: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   docNotes: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.amber,
   },
   docBadge: {
@@ -469,9 +470,8 @@ const d = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   docBadgeText: {
-    ...typography.micro,
+    ...butcherTypography.emphasis,
     color: colors.textBrand,
-    fontWeight: '600',
   },
   commentRow: {
     gap: spacing.xs,
@@ -480,12 +480,12 @@ const d = StyleSheet.create({
     borderBottomColor: colors.borderHairline,
   },
   commentText: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
     lineHeight: 22,
   },
   commentMeta: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
 });

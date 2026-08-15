@@ -13,7 +13,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -289,7 +290,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: { flex: 1, textAlign: 'center', ...typography.h3, color: colors.textPrimary },
+  headerTitle: { flex: 1, textAlign: 'center', ...butcherTypography.title, color: colors.textPrimary },
   scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
   card: {
     backgroundColor: colors.bgSurface,
@@ -300,7 +301,7 @@ const s = StyleSheet.create({
     gap: spacing.sm,
   },
   orderNumber: {
-    ...typography.h2,
+    ...butcherTypography.titleLarge,
     color: colors.textPrimary,
     writingDirection: 'rtl',
   },
@@ -311,9 +312,9 @@ const s = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  badgeText: { ...typography.caption, fontWeight: '600', writingDirection: 'rtl' },
+  badgeText: { ...butcherTypography.secondary, writingDirection: 'rtl' },
   sectionTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     writingDirection: 'rtl',
     marginBottom: spacing.sm,
@@ -360,21 +361,20 @@ const s = StyleSheet.create({
     flex: 1,
     paddingBottom: spacing.sm,
   },
-  timelineLabel: { ...typography.body, color: colors.textMuted, writingDirection: 'rtl' },
-  timelineDone: { color: colors.textPrimary, fontWeight: '600' },
-  timelineActive: { color: colors.electricBright, fontWeight: '600' },
-  timelineNote: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
+  timelineLabel: { ...butcherTypography.body, color: colors.textMuted, writingDirection: 'rtl' },
+  timelineDone: { ...butcherTypography.emphasis, color: colors.textPrimary },
+  timelineActive: { ...butcherTypography.emphasis, color: colors.electricBright },
+  timelineNote: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
   row: {
     ...getRtlRow(),
     justifyContent: 'space-between',
     gap: spacing.md,
     paddingVertical: 4,
   },
-  rowLabel: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
+  rowLabel: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },
   rowValue: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textPrimary,
-    fontWeight: '600',
     flex: 1,
     writingDirection: 'rtl',
   },
@@ -385,7 +385,7 @@ const s = StyleSheet.create({
     marginTop: spacing.sm,
     gap: 2,
   },
-  errorText: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
+  errorText: { ...butcherTypography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
   chatBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,7 +397,7 @@ const s = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   chatBtnText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: '#fff',
     writingDirection: 'rtl',
   },

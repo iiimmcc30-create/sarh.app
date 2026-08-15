@@ -17,7 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, radius, spacing } from '@/constants/theme';
 import { API_BASE } from '@/services/api';
 import { STORY_IMAGE_DURATION_SEC, isVideoMediaUrl } from '@/constants/stories';
 import { resolveMediaUrl } from '@/services/media';
@@ -116,7 +117,7 @@ export default function ButcherStoryViewerScreen() {
   if (loading) {
     return (
       <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: '#fff', ...typography.body }}>جاري تحميل القصة...</Text>
+        <Text style={{ color: '#fff', ...butcherTypography.body }}>جاري تحميل القصة...</Text>
       </View>
     );
   }
@@ -310,7 +311,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  typeBadgeText: { ...typography.micro, color: '#fff', fontWeight: '600' },
+  typeBadgeText: { ...butcherTypography.emphasis, color: '#fff' },
 
   header: {
     position: 'absolute',
@@ -325,15 +326,15 @@ const s = StyleSheet.create({
     borderWidth: 2, borderColor: '#fff',
   },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  name: { ...typography.bodyStrong, color: '#fff' },
-  time: { ...typography.micro, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
+  name: { ...butcherTypography.primary, color: '#fff' },
+  time: { ...butcherTypography.meta, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
   visitBtn: {
     paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: radius.pill,
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
   },
-  visitBtnText: { ...typography.micro, color: '#fff', fontWeight: '600' },
+  visitBtnText: { ...butcherTypography.emphasis, color: '#fff' },
   closeBtn: {
     width: 34, height: 34, borderRadius: 17,
     backgroundColor: 'rgba(0,0,0,0.45)',
@@ -356,7 +357,7 @@ const s = StyleSheet.create({
     gap: spacing.md,
   },
   caption: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: '#fff',
     ...getRtlText(),
     textShadowColor: 'rgba(0,0,0,0.8)',
@@ -373,7 +374,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 11,
   },
-  orderCtaText: { ...typography.caption, color: '#fff', fontWeight: '600' },
+  orderCtaText: { ...butcherTypography.emphasis, color: '#fff' },
   actionBtn: {
     width: 44, height: 44, borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -392,7 +393,7 @@ const s = StyleSheet.create({
   },
   replyInput: {
     flex: 1,
-    ...typography.body,
+    ...butcherTypography.body,
     color: '#fff',
   },
 });

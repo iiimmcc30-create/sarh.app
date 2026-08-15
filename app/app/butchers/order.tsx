@@ -17,7 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
@@ -660,7 +661,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
     },
     centeredText: {
-      ...typography.body,
+      ...butcherTypography.body,
       color: colors.textMuted,
       textAlign: 'center',
     },
@@ -673,7 +674,7 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    secondaryBtnText: { ...typography.bodyStrong, color: colors.textBrandStrong },
+    secondaryBtnText: { ...butcherTypography.primary, color: colors.textBrandStrong },
 
     header: {
       flexDirection: 'row',
@@ -692,8 +693,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     headerCenter: { flex: 1, alignItems: 'center' },
-    headerTitle: { ...typography.bodyStrong, color: colors.textPrimary, fontSize: 17 },
-    headerSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+    headerTitle: { ...butcherTypography.primary, color: colors.textPrimary, fontSize: 17 },
+    headerSub: { ...butcherTypography.secondary, color: colors.textMuted, marginTop: 2 },
 
     scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
 
@@ -714,8 +715,8 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 26,
       backgroundColor: colors.bgElevated,
     },
-    butcherName: { ...typography.bodyStrong, color: colors.textPrimary, fontSize: 16 },
-    butcherMeta: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+    butcherName: { ...butcherTypography.primary, color: colors.textPrimary, fontSize: 16 },
+    butcherMeta: { ...butcherTypography.secondary, color: colors.textMuted, marginTop: 2 },
     verifiedBadge: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -727,18 +728,18 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.gold + '44',
     },
-    verifiedText: { ...typography.micro, color: colors.gold, fontWeight: '600' },
+    verifiedText: { ...butcherTypography.emphasis, color: colors.gold },
 
     section: { marginBottom: spacing.lg },
     sectionTitle: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
       ...getRtlText(),
       fontSize: 15,
     },
     hint: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
       textAlign: 'center',
       marginTop: spacing.xs,
@@ -754,8 +755,8 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.xs,
     },
     emptyEmoji: { fontSize: 32 },
-    emptyTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-    emptySub: { ...typography.caption, color: colors.textMuted },
+    emptyTitle: { ...butcherTypography.primary, color: colors.textPrimary },
+    emptySub: { ...butcherTypography.secondary, color: colors.textMuted },
 
     productCard: {
       flexDirection: 'row',
@@ -786,16 +787,15 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     productName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       flex: 1,
       ...getRtlText(),
     },
-    productCat: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
+    productCat: { ...butcherTypography.meta, color: colors.textMuted, textAlign: 'right' },
     productPrice: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.gold,
-      fontWeight: '600',
       ...getRtlText(),
       marginTop: 2,
     },
@@ -821,7 +821,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
       borderColor: colors.electric,
     },
-    chipText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
+    chipText: { ...butcherTypography.emphasis, color: colors.textMuted },
     chipTextActive: { color: '#fff' },
 
     weightCard: {
@@ -842,7 +842,7 @@ function createStyles(colors: ThemeColors) {
     },
     weightInput: {
       flex: 1,
-      ...typography.h2,
+      ...butcherTypography.titleLarge,
       textAlign: 'center',
       color: colors.textPrimary,
       paddingVertical: Platform.OS === 'ios' ? 12 : 8,
@@ -864,9 +864,9 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
       backgroundColor: colors.electric + '10',
     },
-    deliveryLabel: { ...typography.bodyStrong, color: colors.textMuted, fontSize: 14 },
+    deliveryLabel: { ...butcherTypography.primary, color: colors.textMuted, fontSize: 14 },
     deliveryLabelActive: { color: colors.textBrandStrong },
-    deliverySub: { ...typography.micro, color: colors.textSubtle, textAlign: 'center' },
+    deliverySub: { ...butcherTypography.meta, color: colors.textSubtle, textAlign: 'center' },
 
     textArea: {
       marginTop: spacing.sm,
@@ -877,7 +877,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       padding: spacing.md,
       color: colors.textPrimary,
-      ...typography.body,
+      ...butcherTypography.body,
       textAlignVertical: 'top',
     },
 
@@ -894,7 +894,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
       backgroundColor: colors.electric + '14',
     },
-    payPillText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
+    payPillText: { ...butcherTypography.emphasis, color: colors.textMuted },
     payPillTextActive: { color: colors.textBrandStrong },
 
     summaryCard: {
@@ -906,7 +906,7 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.md,
     },
     summaryTitle: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
       ...getRtlText(),
@@ -918,11 +918,10 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
       marginBottom: 6,
     },
-    summaryLabel: { ...typography.caption, color: colors.textMuted },
+    summaryLabel: { ...butcherTypography.secondary, color: colors.textMuted },
     summaryValue: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.textSecondary,
-      fontWeight: '600',
       flex: 1,
       writingDirection: 'rtl',
     },
@@ -936,8 +935,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    totalLabel: { ...typography.bodyStrong, color: colors.textPrimary },
-    totalValue: { ...typography.h3, color: colors.gold },
+    totalLabel: { ...butcherTypography.primary, color: colors.textPrimary },
+    totalValue: { ...butcherTypography.title, color: colors.gold },
 
     footer: {
       position: 'absolute',
@@ -958,8 +957,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       padding: spacing.md,
     },
-    footerLabel: { ...typography.micro, color: colors.textMuted },
-    footerTotal: { ...typography.h3, color: colors.gold, fontSize: 20 },
+    footerLabel: { ...butcherTypography.meta, color: colors.textMuted },
+    footerTotal: { ...butcherTypography.title, color: colors.gold, fontSize: 20 },
     submitBtn: { flex: 1, borderRadius: radius.xl, overflow: 'hidden', maxWidth: 220 },
     submitGrad: {
       flexDirection: 'row',
@@ -969,6 +968,6 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 14,
       borderRadius: radius.xl,
     },
-    submitText: { ...typography.bodyStrong, color: '#fff' },
+    submitText: { ...butcherTypography.primary, color: '#fff' },
   });
 }

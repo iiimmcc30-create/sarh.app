@@ -20,7 +20,8 @@ import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { gradients, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { gradients, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -319,7 +320,7 @@ function createStyles(colors: ThemeColors) {
     justifyContent: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     flex: 1,
     textAlign: 'center',
@@ -336,7 +337,7 @@ function createStyles(colors: ThemeColors) {
     padding: spacing.md,
   },
   errorText: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.danger,
     textAlign: 'center',
   },
@@ -344,7 +345,7 @@ function createStyles(colors: ThemeColors) {
     gap: spacing.md,
   },
   summaryTitle: {
-    ...typography.h2,
+    ...butcherTypography.titleLarge,
     color: colors.textPrimary,
   },
   datesCard: {
@@ -361,11 +362,11 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center',
   },
   dateLabel: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   dateValue: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textPrimary,
   },
   divider: {
@@ -381,7 +382,7 @@ function createStyles(colors: ThemeColors) {
     marginTop: spacing.lg,
   },
   historyTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textSecondary,
   },
   });

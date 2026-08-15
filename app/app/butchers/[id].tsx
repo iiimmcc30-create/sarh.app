@@ -16,7 +16,8 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { gradients, radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
@@ -127,7 +128,7 @@ function StoreProductsTab({
             placeholderTextColor={colors.textMuted}
             style={{
               flex: 1,
-              ...typography.body,
+              ...butcherTypography.body,
               fontSize: 14,
               color: colors.textPrimary,
               paddingVertical: 8,
@@ -406,11 +407,11 @@ function RatingDistribution({
     StyleSheet.create({
       wrap: { paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.md },
       summaryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-      avg: { fontSize: 36, fontWeight: '600', color: c.textPrimary },
+      avg: { ...butcherTypography.titleLarge, fontSize: 36, color: c.textPrimary },
       meta: { gap: 4 },
-      count: { ...typography.caption, color: c.textMuted },
+      count: { ...butcherTypography.secondary, color: c.textMuted },
       barRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-      barLabel: { width: 14, ...typography.caption, color: c.textMuted, textAlign: 'center' },
+      barLabel: { width: 14, ...butcherTypography.secondary, color: c.textMuted, textAlign: 'center' },
       barTrack: {
         flex: 1,
         height: 6,
@@ -977,7 +978,7 @@ export default function ButcherProfileScreen() {
                         alignItems: 'center',
                       }}
                     >
-                      <Text style={{ color: '#fff', fontWeight: '600' }}>
+                      <Text style={{ ...butcherTypography.primary, color: '#fff' }}>
                         {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
                       </Text>
                     </Pressable>
@@ -1098,9 +1099,8 @@ function createMainStyles(colors: ThemeColors) {
   },
   nameBlock: { width: '100%', direction: 'ltr' },
   name: {
-    ...typography.h2,
+    ...butcherTypography.titleLarge,
     fontSize: 20,
-    fontWeight: '700',
     color: colors.textPrimary,
   },
   ratingRow: {
@@ -1111,8 +1111,8 @@ function createMainStyles(colors: ThemeColors) {
     gap: 4,
     marginTop: 4,
   },
-  ratingScore: { ...typography.bodyStrong, color: colors.textPrimary },
-  ratingCount: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
+  ratingScore: { ...butcherTypography.primary, color: colors.textPrimary },
+  ratingCount: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },
   serviceRow: {
     flexDirection: 'row',
     direction: 'ltr',
@@ -1127,7 +1127,7 @@ function createMainStyles(colors: ThemeColors) {
     gap: 4,
   },
   serviceText: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
     writingDirection: 'rtl',
   },
@@ -1150,7 +1150,7 @@ function createMainStyles(colors: ThemeColors) {
     backgroundColor: colors.electric + '11',
   },
   chatCtaFull: { flex: 1 },
-  chatCtaText: { ...typography.bodyStrong, color: colors.textBrandStrong },
+  chatCtaText: { ...butcherTypography.primary, color: colors.textBrandStrong },
   chatCtaActive: {
     borderColor: colors.electricBright,
     backgroundColor: colors.electric + '22',
@@ -1178,12 +1178,11 @@ function createMainStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   tabLabel: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     fontSize: 14,
-    fontWeight: '600',
     color: colors.textMuted,
   },
-  tabLabelActive: { color: colors.electricBright },
+  tabLabelActive: { ...butcherTypography.emphasis, color: colors.electricBright },
   tabUnderline: {
     marginTop: 6,
     height: 3,
@@ -1196,7 +1195,7 @@ function createMainStyles(colors: ThemeColors) {
   },
   tabContent: { paddingTop: spacing.lg },
   sectionTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -1207,7 +1206,7 @@ function createEmptyStyles(colors: ThemeColors) {
   return StyleSheet.create({
   wrap: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm, paddingHorizontal: spacing.lg },
   title: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textMuted,
   },
   });
@@ -1234,14 +1233,14 @@ function createOffersStyles(colors: ThemeColors) {
     borderRadius: radius.pill,
     marginBottom: spacing.sm,
   },
-  discountText: { ...typography.micro, color: '#fff', fontWeight: '600' },
+  discountText: { ...butcherTypography.emphasis, color: '#fff' },
   offerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     marginBottom: 4,
   },
   offerDesc: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textSecondary,
     lineHeight: 18,
   },
@@ -1253,9 +1252,9 @@ function createOffersStyles(colors: ThemeColors) {
     gap: 10,
     marginTop: spacing.md,
   },
-  offerPrice: { ...typography.h3, color: colors.gold },
+  offerPrice: { ...butcherTypography.title, color: colors.gold },
   originalPrice: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textMuted,
     textDecorationLine: 'line-through',
   },
@@ -1267,7 +1266,7 @@ function createOffersStyles(colors: ThemeColors) {
     gap: 5,
     marginTop: spacing.sm,
   },
-  validText: { ...typography.caption, color: colors.textMuted, writingDirection: 'rtl' },
+  validText: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },
   });
 }
 
@@ -1298,7 +1297,7 @@ function createStoriesStyles(colors: ThemeColors) {
     paddingVertical: 4,
     borderRadius: radius.pill,
   },
-  badgeText: { ...typography.micro, color: colors.textBrand, writingDirection: 'rtl' },
+  badgeText: { ...butcherTypography.meta, color: colors.textBrand, writingDirection: 'rtl' },
   captionShell: {
     position: 'absolute',
     bottom: 8,
@@ -1307,7 +1306,7 @@ function createStoriesStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   caption: {
-    ...typography.micro,
+    ...butcherTypography.meta,
     color: '#fff',
     lineHeight: 14,
   },
@@ -1320,12 +1319,12 @@ function createAboutStyles(colors: ThemeColors) {
   wrap: { paddingHorizontal: spacing.lg },
   section: { marginBottom: spacing.xl },
   sectionTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
   bio: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textSecondary,
     lineHeight: 22,
   },
@@ -1349,13 +1348,12 @@ function createAboutStyles(colors: ThemeColors) {
     borderBottomColor: colors.borderSoft,
   },
   infoLabel: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
   infoValue: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textPrimary,
-    fontWeight: '600',
   },
   chipsWrap: {
     flexDirection: 'row',
@@ -1372,7 +1370,7 @@ function createAboutStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderMid,
   },
-  chipText: { ...typography.caption, color: colors.textBrand },
+  chipText: { ...butcherTypography.secondary, color: colors.textBrand },
   verifiedCard: {
     flexDirection: 'row',
     direction: 'ltr',
@@ -1386,11 +1384,11 @@ function createAboutStyles(colors: ThemeColors) {
     marginBottom: spacing.xl,
   },
   verifiedTitle: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.gold,
   },
   verifiedSub: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
     marginTop: 2,
   },
@@ -1419,10 +1417,10 @@ function createChatStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
     borderBottomLeftRadius: 4,
   },
-  bubbleText: { ...typography.body, lineHeight: 20 },
+  bubbleText: { ...butcherTypography.body, lineHeight: 20 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
-  bubbleTime: { ...typography.micro, color: 'rgba(255,255,255,0.5)', marginTop: 4, textAlign: 'right' },
+  bubbleTime: { ...butcherTypography.meta, color: 'rgba(255,255,255,0.5)', marginTop: 4, textAlign: 'right' },
   openChatBtn: {
     marginTop: spacing.xl,
     borderRadius: radius.xl,
@@ -1436,7 +1434,7 @@ function createChatStyles(colors: ThemeColors) {
     gap: 10,
     paddingVertical: 14,
   },
-  openChatText: { ...typography.bodyStrong, color: '#fff' },
+  openChatText: { ...butcherTypography.primary, color: '#fff' },
   lockedCard: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.xl,
@@ -1448,11 +1446,11 @@ function createChatStyles(colors: ThemeColors) {
     marginTop: spacing.lg,
   },
   lockedTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
   },
   lockedSub: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textMuted,
     lineHeight: 22,
   },
@@ -1465,7 +1463,7 @@ function createChatStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.electric + '55',
   },
-  ordersLinkText: { ...typography.bodyStrong, color: colors.textBrandStrong },
+  ordersLinkText: { ...butcherTypography.primary, color: colors.textBrandStrong },
   });
 }
 
@@ -1496,9 +1494,8 @@ function createReviewsStyles(colors: ThemeColors) {
   },
   avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.bgElevated },
   author: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textPrimary,
-    fontWeight: '600',
   },
   stars: {
     flexDirection: 'row',
@@ -1508,7 +1505,7 @@ function createReviewsStyles(colors: ThemeColors) {
     marginTop: 2,
   },
   comment: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textSecondary,
     lineHeight: 17,
   },

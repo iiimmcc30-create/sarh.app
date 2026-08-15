@@ -21,7 +21,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
@@ -625,14 +626,14 @@ function createStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   loadingText: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textMuted,
     width: '100%',
     textAlign: 'center',
     writingDirection: 'rtl',
   },
   errorText: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textSecondary,
     width: '100%',
     textAlign: 'center',
@@ -645,7 +646,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.electric,
   },
   retryText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: '#fff',
     textAlign: 'center',
     writingDirection: 'rtl',
@@ -671,7 +672,7 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
   },
   headerTitle: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     width: '100%',
     textAlign: 'center',
@@ -681,7 +682,7 @@ function createStyles(colors: ThemeColors) {
   saveBtnLoading: { opacity: 0.7 },
   saveBtnInner: { paddingHorizontal: spacing.lg, paddingVertical: 8, borderRadius: radius.pill },
   saveBtnText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: '#fff',
     textAlign: 'center',
     writingDirection: 'rtl',
@@ -702,7 +703,7 @@ function createStyles(colors: ThemeColors) {
     gap: 6,
   },
   coverHint: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
     textAlign: 'center',
     writingDirection: 'rtl',
@@ -741,9 +742,8 @@ function createStyles(colors: ThemeColors) {
   form: { paddingHorizontal: spacing.lg, gap: spacing.md },
   fieldGroup: { gap: 6 },
   fieldLabel: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textSecondary,
-    fontWeight: '600',
   },
   input: {
     backgroundColor: colors.bgSurface,
@@ -752,7 +752,7 @@ function createStyles(colors: ThemeColors) {
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: 12,
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
     writingDirection: 'rtl',
   },
@@ -772,7 +772,7 @@ function createStyles(colors: ThemeColors) {
   },
   countryFlag: { fontSize: 16 },
   countryLabelFixed: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textPrimary,
   },
   phoneRow: { alignItems: 'center', gap: spacing.sm },
@@ -784,18 +784,17 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  phoneCodeText: { ...typography.bodyStrong, color: colors.textPrimary },
+  phoneCodeText: { ...butcherTypography.primary, color: colors.textPrimary },
   phoneInput: { flex: 1 },
   sectionDivider: { marginTop: spacing.sm, marginBottom: 4 },
   sectionLabel: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textBrand,
-    fontWeight: '600',
   },
   hoursRow: { alignItems: 'center', gap: spacing.md },
   hourField: { flex: 1, gap: 6 },
   hourLabel: {
-    ...typography.micro,
+    ...butcherTypography.meta,
     color: colors.textMuted,
     width: '100%',
     textAlign: 'center',
@@ -818,7 +817,7 @@ function createStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   toggleLabel: {
-    ...typography.body,
+    ...butcherTypography.body,
     color: colors.textPrimary,
   },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
@@ -832,10 +831,10 @@ function createStyles(colors: ThemeColors) {
   },
   chipActive: { borderColor: colors.electricBright, backgroundColor: colors.electric + '18' },
   chipText: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
-  chipTextActive: { color: colors.textBrandStrong, fontWeight: '600' },
+  chipTextActive: { ...butcherTypography.emphasis, color: colors.textBrandStrong },
   coordsBox: {
     alignItems: 'center',
     gap: 8,
@@ -851,7 +850,7 @@ function createStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   coordsText: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textBrandSuccess,
   },
 });

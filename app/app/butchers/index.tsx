@@ -11,7 +11,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -223,7 +224,7 @@ function createScreenStyles(colors: ThemeColors) {
     },
     nearbyList: { backgroundColor: colors.screenRoot, paddingBottom: spacing.sm },
     emptyState: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
-    emptyTitle: { ...typography.h3, color: colors.textPrimary, ...getRtlText() },
-    emptySub: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
+    emptyTitle: { ...butcherTypography.title, color: colors.textPrimary, ...getRtlText() },
+    emptySub: { ...butcherTypography.secondary, color: colors.textMuted, ...getRtlText() },
   });
 }

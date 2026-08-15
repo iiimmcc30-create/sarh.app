@@ -14,7 +14,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -312,7 +313,7 @@ function createStyles(colors: ThemeColors) {
     scroll: { padding: spacing.lg, paddingBottom: spacing.lg, gap: spacing.lg },
     section: { gap: spacing.md },
     sectionTitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
     },
     card: {
@@ -332,11 +333,11 @@ function createStyles(colors: ThemeColors) {
     },
     logo: { width: '100%', height: '100%' },
     butcherName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
     },
     orderDate: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
     },
     statusBadge: {
@@ -349,14 +350,14 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
     },
     statusDot: { width: 6, height: 6, borderRadius: 3 },
-    statusText: { ...typography.micro, fontWeight: '700', writingDirection: 'rtl' },
+    statusText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
     productName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 14,
       color: colors.textPrimary,
     },
     productMeta: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
       marginTop: 2,
     },
@@ -365,7 +366,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.borderSoft,
     },
     orderNumber: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
     },
     payChip: {
@@ -373,15 +374,14 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    payText: { ...typography.micro, fontWeight: '700', writingDirection: 'rtl' },
+    payText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
     totalShell: { alignItems: 'flex-end', gap: 1, flexShrink: 0 },
     totalValue: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
-      fontWeight: '700',
     },
     totalLabel: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
     },
     chatBtn: {
@@ -394,10 +394,9 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '16',
     },
     chatBtnText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 14,
       color: colors.electricBright,
-      fontWeight: '700',
     },
     skeleton: {
       backgroundColor: colors.bgSurface,
@@ -418,14 +417,14 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.xs,
     },
     emptyTitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
     emptySub: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       textAlign: 'center',
       writingDirection: 'rtl',
@@ -440,9 +439,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     emptyBtnText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: '#fff',
-      fontWeight: '700',
       writingDirection: 'rtl',
     },
   });

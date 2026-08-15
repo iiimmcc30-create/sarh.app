@@ -13,7 +13,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, getRtlRow } from '@/lib/rtl';
@@ -203,22 +204,21 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     name: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
-      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
     },
     ratingRow: { alignItems: 'center', gap: 4 },
-    rating: { ...typography.caption, color: colors.gold, fontWeight: '600' },
-    reviews: { ...typography.caption, color: colors.textMuted },
+    rating: { ...butcherTypography.emphasis, color: colors.gold },
+    reviews: { ...butcherTypography.secondary, color: colors.textMuted },
     openBadge: {
       alignSelf: 'flex-start',
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    openText: { ...typography.micro, fontWeight: '600', writingDirection: 'rtl' },
+    openText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
     actions: { marginTop: spacing.sm, gap: spacing.sm, alignItems: 'center' },
     visitBtn: {
       flex: 1,
@@ -230,9 +230,8 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     visitBtnText: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.electricBright,
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
     removeBtn: {
@@ -251,9 +250,9 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     emptyIcon: { fontSize: 48 },
-    emptyTitle: { ...typography.h3, color: colors.textPrimary },
+    emptyTitle: { ...butcherTypography.title, color: colors.textPrimary },
     emptySub: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       textAlign: 'center',
       writingDirection: 'rtl',
@@ -267,9 +266,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     emptyBtnText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: '#fff',
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
   });

@@ -6,7 +6,8 @@ import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { AppScrollView } from '@/components/ui/AppScrollView';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
@@ -159,12 +160,12 @@ function createStyles(colors: ThemeColors) {
     },
     avatar: { width: '100%', height: '100%' },
     userName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 15,
       color: colors.textPrimary,
     },
     userPhone: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       marginTop: 2,
     },
@@ -173,7 +174,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
     },
     sectionLabel: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
     },
   });

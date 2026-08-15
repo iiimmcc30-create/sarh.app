@@ -1,4 +1,5 @@
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { StyleSheet, Text, View } from 'react-native';
@@ -54,13 +55,13 @@ function createStyles(colors: ThemeColors) {
       marginHorizontal: spacing.sm,
     },
     value: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textPrimary,
       fontSize: 16,
     },
     label: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       ...getRtlText(),
       color: colors.textMuted,
     },

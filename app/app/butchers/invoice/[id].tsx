@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, getRtlRow } from '@/lib/rtl';
@@ -188,26 +189,23 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.sm,
     },
     brand: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       writingDirection: 'rtl',
     },
     invoiceTitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
     invoiceNo: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.electricBright,
-      fontWeight: '600',
     },
     section: { gap: spacing.sm },
     sectionTitle: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
-      fontWeight: '600',
       writingDirection: 'rtl',
       ...getRtlText(),
       marginBottom: spacing.xs,
@@ -221,19 +219,18 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
     },
     rowLabel: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       writingDirection: 'rtl',
     },
     rowValue: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.textPrimary,
-      fontWeight: '600',
       flex: 1,
       textAlign: 'left',
       writingDirection: 'rtl',
     },
-    rowValueHighlight: { color: colors.success, fontWeight: '600' },
+    rowValueHighlight: { ...butcherTypography.emphasis, color: colors.success },
     grandTotal: {
       marginTop: spacing.sm,
       paddingTop: spacing.md,
@@ -243,24 +240,23 @@ function createStyles(colors: ThemeColors) {
       gap: 4,
     },
     grandLabel: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       writingDirection: 'rtl',
     },
     grandValue: {
-      ...typography.h2,
+      ...butcherTypography.titleLarge,
       color: colors.electricBright,
-      fontWeight: '600',
     },
     footerNote: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       textAlign: 'center',
       writingDirection: 'rtl',
       marginTop: spacing.sm,
     },
     error: {
-      ...typography.body,
+      ...butcherTypography.body,
       color: colors.textMuted,
       textAlign: 'center',
       marginTop: 80,

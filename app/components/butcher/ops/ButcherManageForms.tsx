@@ -13,7 +13,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -636,7 +637,7 @@ function createProductFormStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   title: {
-    ...typography.h3,
+    ...butcherTypography.title,
     color: colors.textPrimary,
     width: '100%',
     textAlign: 'center',
@@ -644,16 +645,15 @@ function createProductFormStyles(colors: ThemeColors) {
     marginBottom: spacing.md,
   },
   label: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.textSecondary,
-    fontWeight: '600',
     marginBottom: 5,
   },
   input: {
     backgroundColor: colors.bgElevated,
     borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSoft,
     paddingHorizontal: spacing.md, paddingVertical: 12,
-    ...typography.body, color: colors.textPrimary,
+    ...butcherTypography.body, color: colors.textPrimary,
     marginBottom: spacing.md,
     writingDirection: 'rtl',
   },
@@ -666,13 +666,13 @@ function createProductFormStyles(colors: ThemeColors) {
   catChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
   catIcon: { fontSize: 14 },
   catLabel: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textMuted,
   },
-  catLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
+  catLabelActive: { color: colors.textBrandStrong },
   priceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md },
   priceLabel: {
-    ...typography.micro,
+    ...butcherTypography.meta,
     color: colors.textMuted,
     width: '100%',
     textAlign: 'center',
@@ -696,10 +696,10 @@ function createProductFormStyles(colors: ThemeColors) {
   },
   cutChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
   cutLabel: {
-    ...typography.micro,
+    ...butcherTypography.meta,
     color: colors.textMuted,
   },
-  cutLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
+  cutLabelActive: { color: colors.textBrandStrong },
   freshnessRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   freshnessBtn: {
     flex: 1, paddingVertical: 10,
@@ -708,7 +708,7 @@ function createProductFormStyles(colors: ThemeColors) {
   },
   freshnessBtnActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
   freshnessLabel: {
-    ...typography.caption,
+    ...butcherTypography.secondary,
     color: colors.textSecondary,
     textAlign: 'center',
     writingDirection: 'rtl',
@@ -773,19 +773,17 @@ function createProductFormStyles(colors: ThemeColors) {
     marginBottom: spacing.md,
   },
   removeImageText: {
-    ...typography.caption,
+    ...butcherTypography.emphasis,
     color: colors.danger,
-    fontWeight: '600',
   },
   uploadText: {
-    ...typography.micro,
+    ...butcherTypography.emphasis,
     color: colors.textBrandStrong,
-    fontWeight: '600',
     textAlign: 'center',
     writingDirection: 'rtl',
   },
   uploadHint: {
-    ...typography.micro,
+    ...butcherTypography.meta,
     color: colors.textSubtle,
     marginBottom: spacing.lg,
   },
@@ -798,7 +796,7 @@ function createProductFormStyles(colors: ThemeColors) {
     backgroundColor: colors.bgElevated,
   },
   cancelText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: colors.textMuted,
     textAlign: 'center',
     writingDirection: 'rtl',
@@ -809,7 +807,7 @@ function createProductFormStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center',
   },
   saveBtnText: {
-    ...typography.bodyStrong,
+    ...butcherTypography.primary,
     color: '#fff',
     textAlign: 'center',
     writingDirection: 'rtl',

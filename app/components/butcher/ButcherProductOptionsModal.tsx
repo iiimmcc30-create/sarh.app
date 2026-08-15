@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { computeProductLineTotal, resolveLineWeightKg } from '@/lib/butcherOrderPricing';
 import { resolveMediaUrl } from '@/services/media';
@@ -217,16 +218,16 @@ function createStyles(colors: ThemeColors) {
     },
     heroText: { flex: 1, minWidth: 0, gap: 4 },
     title: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
     },
     subtitle: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
     },
     section: { marginBottom: spacing.lg, gap: spacing.sm },
     sectionTitle: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
     },
     chips: {
@@ -249,15 +250,15 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '18',
     },
     chipText: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textSecondary,
     },
     chipTextActive: {
+      ...butcherTypography.emphasis,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     weightTitle: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'center',
@@ -285,14 +286,14 @@ function createStyles(colors: ThemeColors) {
     },
     weightInput: {
       minWidth: 72,
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',
       paddingVertical: 4,
     },
     hint: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
       width: '100%',
       textAlign: 'center',
@@ -308,11 +309,11 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.md,
     },
     totalLabel: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textSecondary,
     },
     totalValue: {
-      ...typography.h3,
+      ...butcherTypography.title,
       color: colors.textPrimary,
     },
     cta: {
@@ -331,9 +332,8 @@ function createStyles(colors: ThemeColors) {
     },
     ctaDisabled: { opacity: 0.5 },
     ctaText: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: '#fff',
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
   });

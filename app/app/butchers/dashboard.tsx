@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { useButcherStats, StatsPeriod } from '@/hooks/useButcherStats';
 import { useRequireApprovedButcher } from '@/hooks/useRequireApprovedButcher';
 import { usePaidServices } from '@/hooks/usePaidServices';
@@ -221,7 +222,7 @@ export default function ButcherDashboardScreen() {
 
         {error && !loading && (
           <View style={{ padding: spacing.lg, alignItems: 'center' }}>
-            <Text style={{ color: colors.textMuted, ...typography.body }}>تعذر تحميل الإحصائيات</Text>
+            <Text style={{ color: colors.textMuted, ...butcherTypography.body }}>تعذر تحميل الإحصائيات</Text>
           </View>
         )}
 
@@ -312,7 +313,7 @@ export default function ButcherDashboardScreen() {
         <View style={s.section}>
           <Text style={s.sectionTitle}>🥩 أكثر المنتجات مبيعاً</Text>
           {data.topProducts.length === 0 ? (
-            <Text style={{ color: colors.textMuted, ...typography.caption, textAlign: 'center', paddingVertical: spacing.lg }}>
+            <Text style={{ color: colors.textMuted, ...butcherTypography.secondary, textAlign: 'center', paddingVertical: spacing.lg }}>
               لا توجد مبيعات في هذه الفترة
             </Text>
           ) : (
@@ -388,8 +389,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
-  headerSub: { ...typography.caption, color: colors.textBrand, marginTop: 1 },
+  headerTitle: { ...butcherTypography.title, color: colors.textPrimary },
+  headerSub: { ...butcherTypography.secondary, color: colors.textBrand, marginTop: 1 },
   exportBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgGlass,
@@ -410,14 +411,14 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  verifiedStripText: { ...typography.caption, color: colors.gold, flex: 1 },
+  verifiedStripText: { ...butcherTypography.secondary, color: colors.gold, flex: 1 },
   manageBtn: {
     paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: radius.pill,
     backgroundColor: colors.gold + '33',
     borderWidth: 1, borderColor: colors.gold + '66',
   },
-  manageBtnText: { ...typography.micro, color: colors.gold, fontWeight: '600' },
+  manageBtnText: { ...butcherTypography.emphasis, color: colors.gold },
 
   periodRow: {
     flexDirection: 'row',
@@ -434,8 +435,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   periodBtnActive: { backgroundColor: colors.electric },
-  periodLabel: { ...typography.caption, color: colors.textMuted },
-  periodLabelActive: { color: '#fff', fontWeight: '600' },
+  periodLabel: { ...butcherTypography.secondary, color: colors.textMuted },
+  periodLabelActive: { ...butcherTypography.emphasis, color: '#fff' },
 
   revenueCard: {
     borderRadius: radius.xxl,
@@ -444,16 +445,16 @@ const s = StyleSheet.create({
     gap: spacing.md,
   },
   revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  revenueLabel: { ...typography.caption, color: 'rgba(255,255,255,0.75)' },
-  revenueValue: { fontSize: 34, fontWeight: '600', color: '#fff', letterSpacing: -0.5 },
+  revenueLabel: { ...butcherTypography.secondary, color: 'rgba(255,255,255,0.75)' },
+  revenueValue: { ...butcherTypography.titleLarge, fontSize: 34, color: '#fff', letterSpacing: -0.5 },
   revenueTrend: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 10, paddingVertical: 6,
     borderRadius: radius.pill,
   },
-  revenueTrendText: { ...typography.caption, color: '#fff', fontWeight: '600' },
-  revenueChartLabel: { ...typography.micro, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
+  revenueTrendText: { ...butcherTypography.emphasis, color: '#fff' },
+  revenueChartLabel: { ...butcherTypography.meta, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
 
   statsGrid: {
     flexDirection: 'row',
@@ -463,7 +464,7 @@ const s = StyleSheet.create({
   },
 
   section: { marginBottom: spacing.xl },
-  sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
+  sectionTitle: { ...butcherTypography.title, color: colors.textPrimary, marginBottom: spacing.md },
 
   productRow: {
     flexDirection: 'row',
@@ -481,10 +482,10 @@ const s = StyleSheet.create({
     backgroundColor: colors.electric + '33',
     alignItems: 'center', justifyContent: 'center',
   },
-  productRankText: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '600' },
+  productRankText: { ...butcherTypography.emphasis, color: colors.textBrandStrong },
   productNameRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  productName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  productSales: { ...typography.micro, color: colors.textMuted },
+  productName: { ...butcherTypography.emphasis, color: colors.textPrimary },
+  productSales: { ...butcherTypography.meta, color: colors.textMuted },
   progressTrack: {
     height: 6, borderRadius: 3,
     backgroundColor: colors.bgElevated,
@@ -492,7 +493,7 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   progressFill: { height: '100%', borderRadius: 3 },
-  productRevenue: { ...typography.micro, color: colors.gold, fontWeight: '600' },
+  productRevenue: { ...butcherTypography.emphasis, color: colors.gold },
 
   actionsGrid: {
     flexDirection: 'row',
@@ -513,7 +514,7 @@ const s = StyleSheet.create({
     width: 44, height: 44, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
   },
-  actionLabel: { ...typography.micro, color: colors.textSecondary, textAlign: 'center' },
+  actionLabel: { ...butcherTypography.meta, color: colors.textSecondary, textAlign: 'center' },
 
   rankCard: {
     flexDirection: 'row',
@@ -529,14 +530,14 @@ const s = StyleSheet.create({
   },
   rankLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rankIcon: { fontSize: 32 },
-  rankTitle: { ...typography.bodyStrong, color: colors.gold },
-  rankSub: { ...typography.micro, color: colors.textMuted, marginTop: 3, maxWidth: 220 },
+  rankTitle: { ...butcherTypography.primary, color: colors.gold },
+  rankSub: { ...butcherTypography.meta, color: colors.textMuted, marginTop: 3, maxWidth: 220 },
   rankBadge: {
     width: 56, height: 56, borderRadius: 20,
     backgroundColor: colors.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  rankNum: { fontSize: 22, fontWeight: '600', color: '#1A1300' },
+  rankNum: { ...butcherTypography.title, fontSize: 22, color: '#1A1300' },
 });
 
 const sc = StyleSheet.create({
@@ -556,11 +557,11 @@ const sc = StyleSheet.create({
     marginBottom: 4,
   },
   icon: { fontSize: 18 },
-  label: { ...typography.micro, color: colors.textMuted },
-  value: { fontSize: 22, fontWeight: '600', letterSpacing: -0.3 },
-  sub: { ...typography.micro, color: colors.textMuted },
+  label: { ...butcherTypography.meta, color: colors.textMuted },
+  value: { ...butcherTypography.title, fontSize: 22, letterSpacing: -0.3 },
+  sub: { ...butcherTypography.meta, color: colors.textMuted },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  trendText: { ...typography.micro, fontWeight: '600' },
+  trendText: { ...butcherTypography.emphasis },
 });
 
 const chart = StyleSheet.create({

@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { resolveMediaUrl } from '@/services/media';
@@ -131,7 +132,7 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     name: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 15,
       color: colors.textPrimary,
       width: '100%',
@@ -139,14 +140,14 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     qty: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     cat: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textSecondary,
       width: '100%',
       textAlign: 'right',
@@ -161,12 +162,12 @@ function createStyles(colors: ThemeColors) {
       marginTop: 4,
     },
     price: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.electricBright,
       fontSize: 15,
     },
     compare: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
       textDecorationLine: 'line-through',
     },

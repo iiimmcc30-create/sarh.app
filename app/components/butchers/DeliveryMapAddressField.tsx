@@ -1,6 +1,7 @@
 // SAFAT — Delivery address via map picker (not free-text)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -96,11 +97,11 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     title: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       color: colors.textMuted,
     },
     value: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 15,
       color: colors.textPrimary,
       marginTop: 2,
@@ -113,9 +114,8 @@ function createStyles(colors: ThemeColors) {
       gap: 4,
     },
     cta: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       color: colors.electricBright,
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
   });

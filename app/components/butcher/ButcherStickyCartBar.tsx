@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -86,12 +87,11 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     badgeText: {
-      ...typography.micro,
+      ...butcherTypography.emphasis,
       color: '#fff',
-      fontWeight: '600',
     },
     summary: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: '#fff',
     },
@@ -100,15 +100,14 @@ function createStyles(colors: ThemeColors) {
       gap: 2,
     },
     total: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: '#fff',
     },
     cta: {
-      ...typography.micro,
+      ...butcherTypography.emphasis,
       ...getRtlText(),
       color: 'rgba(255,255,255,0.9)',
-      fontWeight: '600',
     },
   });
 }

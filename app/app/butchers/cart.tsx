@@ -17,7 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatWeightLabel } from '@/lib/butcherOrderPricing';
@@ -380,21 +381,20 @@ function createStyles(colors: ThemeColors) {
     },
     headerCenter: { flex: 1, alignItems: 'center' },
     headerTitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       ...getRtlText(),
       color: colors.textPrimary,
     },
     headerSub: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       ...getRtlText(),
       color: colors.textMuted,
       marginTop: 2,
     },
     clearText: {
-      ...typography.caption,
+      ...butcherTypography.emphasis,
       ...getRtlText(),
       color: colors.danger,
-      fontWeight: '600',
       minWidth: 44,
       textAlign: 'center',
     },
@@ -413,7 +413,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     butcherName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textPrimary,
     },
@@ -424,12 +424,12 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     emptyTitle: {
-      ...typography.h3,
+      ...butcherTypography.title,
       ...getRtlText(),
       color: colors.textPrimary,
     },
     emptyHint: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       ...getRtlText(),
       color: colors.textMuted,
       textAlign: 'center',
@@ -444,7 +444,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     backLinkText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textSecondary,
     },
@@ -466,12 +466,12 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     lineName: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textPrimary,
     },
     lineMeta: {
-      ...typography.caption,
+      ...butcherTypography.secondary,
       ...getRtlText(),
       color: colors.textMuted,
     },
@@ -482,7 +482,7 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.xs,
     },
     linePrice: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textSecondary,
     },
@@ -493,7 +493,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.xs,
     },
     fieldLabel: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       color: colors.textPrimary,
     },
     input: {
@@ -522,17 +522,17 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     summaryLabel: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: colors.textSecondary,
     },
     summaryValue: {
-      ...typography.h3,
+      ...butcherTypography.title,
       ...getRtlText(),
       color: colors.textPrimary,
     },
     summaryHint: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       ...getRtlText(),
       color: colors.textMuted,
       lineHeight: 18,
@@ -560,7 +560,7 @@ function createStyles(colors: ThemeColors) {
     },
     payBtnDisabled: { opacity: 0.7 },
     payBtnText: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       ...getRtlText(),
       color: '#fff',
     },
