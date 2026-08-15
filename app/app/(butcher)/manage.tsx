@@ -600,7 +600,9 @@ export default function ButcherManageScreen() {
 
         {activeTab === 'orders' && (
           <View>
-            <Text style={styles.pageTitle}>الطلبات</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.pageTitle}>الطلبات</Text>
+            </View>
             <TextInput
               style={styles.search}
               placeholder="بحث برقم الطلب أو اسم العميل"
@@ -610,7 +612,7 @@ export default function ButcherManageScreen() {
               textAlign="right"
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-              {OPS_ORDER_FILTERS.map((f) => (
+              {[...OPS_ORDER_FILTERS].reverse().map((f) => (
                 <Pressable
                   key={f.id}
                   onPress={() => setOrderFilter(f.id)}
@@ -635,7 +637,9 @@ export default function ButcherManageScreen() {
             {filteredOrders.length === 0 ? (
               <View style={styles.emptyBox}>
                 <AppIcon name="clipboard-outline" size={28} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>لا توجد طلبات</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.emptyTitle}>لا توجد طلبات</Text>
+                </View>
               </View>
             ) : null}
           </View>
@@ -644,11 +648,13 @@ export default function ButcherManageScreen() {
         {activeTab === 'products' && (
           <View>
             <View style={styles.tabHeader}>
-              <Text style={styles.pageTitle}>المنتجات</Text>
               <Pressable style={styles.addBtn} onPress={() => openProductForm()}>
-                <AppIcon name="add" size={16} color="#F4F6F5" />
                 <Text style={styles.addBtnText}>إضافة منتج</Text>
+                <AppIcon name="add" size={16} color="#F4F6F5" />
               </Pressable>
+              <View style={styles.rtlTextShellFlex}>
+                <Text style={styles.pageTitle}>المنتجات</Text>
+              </View>
             </View>
             {products.map((p: any) => {
               const stock = productStock(p);
@@ -697,11 +703,13 @@ export default function ButcherManageScreen() {
         {activeTab === 'offers' && (
           <View>
             <View style={styles.tabHeader}>
-              <Text style={styles.pageTitle}>العروض</Text>
               <Pressable style={styles.addBtn} onPress={() => openOfferForm()}>
-                <AppIcon name="add" size={16} color="#F4F6F5" />
                 <Text style={styles.addBtnText}>إنشاء عرض</Text>
+                <AppIcon name="add" size={16} color="#F4F6F5" />
               </Pressable>
+              <View style={styles.rtlTextShellFlex}>
+                <Text style={styles.pageTitle}>العروض</Text>
+              </View>
             </View>
             <View style={styles.filterRow}>
               {(['active', 'expired'] as const).map((scope) => (
@@ -760,25 +768,27 @@ export default function ButcherManageScreen() {
         {activeTab === 'stories' && (
           <View>
             <View style={styles.tabHeader}>
-              <Text style={styles.pageTitle}>القصص</Text>
               <Pressable
                 style={styles.addBtn}
                 onPress={() => router.push({ pathname: '/create/story', params: { mode: 'butcher' } })}
               >
-                <AppIcon name="add" size={16} color="#F4F6F5" />
                 <Text style={styles.addBtnText}>نشر قصة</Text>
+                <AppIcon name="add" size={16} color="#F4F6F5" />
               </Pressable>
+              <View style={styles.rtlTextShellFlex}>
+                <Text style={styles.pageTitle}>القصص</Text>
+              </View>
             </View>
             {butcherStories.map((story: any) => (
               <View key={story.id} style={styles.productCard}>
-                <Image source={{ uri: story.thumbnail }} style={styles.productImg} contentFit="cover" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.productName} numberOfLines={1}>{story.captionAr || story.caption || 'قصة'}</Text>
-                  <Text style={styles.productMeta}>{storyTimeLeftLabel(story.expiresAt)}</Text>
-                </View>
                 <Pressable style={styles.iconBtn} onPress={() => void deleteStory(story.id)}>
                   <AppIcon name="trash-outline" size={16} color={colors.danger} />
                 </Pressable>
+                <View style={styles.rtlTextShellFlex}>
+                  <Text style={styles.productName} numberOfLines={1}>{story.captionAr || story.caption || 'قصة'}</Text>
+                  <Text style={styles.productMeta}>{storyTimeLeftLabel(story.expiresAt)}</Text>
+                </View>
+                <Image source={{ uri: story.thumbnail }} style={styles.productImg} contentFit="cover" />
               </View>
             ))}
             {[
@@ -794,9 +804,11 @@ export default function ButcherManageScreen() {
                   router.push({ pathname: '/create/story', params: { mode: 'butcher', type: st.type } })
                 }
               >
-                <AppIcon name={st.icon} size={18} color={colors.electric} />
-                <Text style={styles.storyTypeLabel}>{st.label}</Text>
                 <AppIcon name="add" size={16} color={colors.textMuted} />
+                <View style={styles.rtlTextShellFlex}>
+                  <Text style={styles.storyTypeLabel}>{st.label}</Text>
+                </View>
+                <AppIcon name={st.icon} size={18} color={colors.electric} />
               </Pressable>
             ))}
           </View>
@@ -804,19 +816,23 @@ export default function ButcherManageScreen() {
 
         {activeTab === 'shop' && (
           <View>
-            <Text style={styles.pageTitle}>معلومات الملحمة</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.pageTitle}>معلومات الملحمة</Text>
+            </View>
             <View style={styles.infoCard}>
-              <Text style={styles.infoName}>{butcher.nameAr}</Text>
-              {butcher.bioAr ? <Text style={styles.infoBio}>{butcher.bioAr}</Text> : null}
-              <Text style={styles.infoRow}>
-                العنوان: {formatLocationLabel(butcher.cityAr, butcher.addressAr ?? butcher.address, butcher.lat, butcher.lng) || 'غير محدد'}
-              </Text>
-              <Text style={styles.infoRow}>
-                ساعات العمل: {butcher.openTime || '06:00'} – {butcher.closeTime || '22:00'}
-              </Text>
-              <Text style={styles.infoRow}>الهاتف: {butcher.phone || '—'}</Text>
-              <Text style={styles.infoRow}>التوصيل: الملحمة تتولى التوصيل بنفسها — لا يوجد مندوب سرح</Text>
-              <Text style={styles.infoRow}>الاستلام من الملحمة متاح مع التوصيل حسب طلب العميل</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.infoName}>{butcher.nameAr}</Text>
+                {butcher.bioAr ? <Text style={styles.infoBio}>{butcher.bioAr}</Text> : null}
+                <Text style={styles.infoRow}>
+                  العنوان: {formatLocationLabel(butcher.cityAr, butcher.addressAr ?? butcher.address, butcher.lat, butcher.lng) || 'غير محدد'}
+                </Text>
+                <Text style={styles.infoRow}>
+                  ساعات العمل: {butcher.openTime || '06:00'} – {butcher.closeTime || '22:00'}
+                </Text>
+                <Text style={styles.infoRow}>الهاتف: {butcher.phone || '—'}</Text>
+                <Text style={styles.infoRow}>التوصيل: الملحمة تتولى التوصيل بنفسها — لا يوجد مندوب سرح</Text>
+                <Text style={styles.infoRow}>الاستلام من الملحمة متاح مع التوصيل حسب طلب العميل</Text>
+              </View>
             </View>
             {hasValidCoords(butcher.lat, butcher.lng) && !showLocationEditor ? (
               <LocationMapPreview
@@ -828,7 +844,9 @@ export default function ButcherManageScreen() {
               />
             ) : null}
             <Pressable style={styles.secondaryBtn} onPress={() => setShowLocationEditor((v) => !v)}>
-              <Text style={styles.secondaryBtnText}>{showLocationEditor ? 'إخفاء الخريطة' : 'تعديل الموقع'}</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.secondaryBtnText}>{showLocationEditor ? 'إخفاء الخريطة' : 'تعديل الموقع'}</Text>
+              </View>
             </Pressable>
             {showLocationEditor ? (
               <View style={{ gap: spacing.md, marginTop: spacing.md }}>
@@ -851,7 +869,9 @@ export default function ButcherManageScreen() {
               </View>
             ) : null}
             <Pressable style={[styles.secondaryBtn, { marginTop: spacing.md }]} onPress={() => router.push('/butchers/edit')}>
-              <Text style={styles.secondaryBtnText}>تعديل بيانات الملحمة</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.secondaryBtnText}>تعديل بيانات الملحمة</Text>
+              </View>
             </Pressable>
           </View>
         )}
@@ -888,8 +908,10 @@ export default function ButcherManageScreen() {
       <Modal visible={!!cancelOrderId} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>إلغاء الطلب</Text>
-            <Text style={styles.modalSub}>اختر سبب الإلغاء</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.modalTitle}>إلغاء الطلب</Text>
+              <Text style={styles.modalSub}>اختر سبب الإلغاء</Text>
+            </View>
             {CANCEL_REASONS.map((reason) => (
               <Pressable
                 key={reason}
@@ -1036,15 +1058,24 @@ function createMainStyles(colors: ThemeColors) {
       marginBottom: spacing.sm,
       marginTop: spacing.sm,
     },
+    rtlTextShell: { width: '100%', direction: 'ltr' },
+    rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
     pageTitle: {
       ...typography.h3,
       color: '#F4F6F5',
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       marginBottom: spacing.md,
     },
     emptyInline: { ...typography.caption, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginBottom: spacing.lg },
-    emptyTitle: { ...typography.h3, color: '#D6DDE0', textAlign: 'center' },
+    emptyTitle: {
+      ...typography.h3,
+      color: '#D6DDE0',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     emptySub: { ...typography.body, color: '#94A3AC', textAlign: 'center' },
     emptyBox: { alignItems: 'center', paddingVertical: 48, gap: 8 },
     slotRow: {
@@ -1083,7 +1114,14 @@ function createMainStyles(colors: ThemeColors) {
       marginBottom: spacing.sm,
       writingDirection: 'rtl',
     },
-    filterRow: { flexDirection: 'row', gap: 8, marginBottom: spacing.md, flexWrap: 'wrap' },
+    filterRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      gap: 8,
+      marginBottom: spacing.md,
+      flexWrap: 'wrap',
+    },
     filterChip: {
       paddingHorizontal: 12,
       paddingVertical: 7,
@@ -1093,21 +1131,44 @@ function createMainStyles(colors: ThemeColors) {
       borderColor: 'rgba(150,175,185,0.18)',
     },
     filterChipOn: { backgroundColor: '#20B66F', borderColor: '#20B66F' },
-    filterText: { ...typography.micro, color: '#94A3AC', fontWeight: '600' },
+    filterText: {
+      ...typography.micro,
+      color: '#94A3AC',
+      fontWeight: '600',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     filterTextOn: { color: '#F4F6F5' },
-    tabHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+    tabHeader: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginBottom: spacing.md,
+    },
     addBtn: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 4,
       backgroundColor: '#20B66F',
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 999,
+      flexShrink: 0,
     },
-    addBtnText: { ...typography.micro, color: '#F4F6F5', fontWeight: '600' },
+    addBtnText: {
+      ...typography.micro,
+      color: '#F4F6F5',
+      fontWeight: '600',
+      writingDirection: 'rtl',
+    },
     productCard: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       gap: spacing.md,
       backgroundColor: '#101F2C',
@@ -1119,8 +1180,22 @@ function createMainStyles(colors: ThemeColors) {
     },
     productImg: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#162D3A' },
     productImgEmpty: { alignItems: 'center', justifyContent: 'center' },
-    productName: { ...typography.caption, color: '#F4F6F5', fontWeight: '600', textAlign: 'right', writingDirection: 'rtl' },
-    productMeta: { ...typography.micro, color: '#94A3AC', marginTop: 2, textAlign: 'right', writingDirection: 'rtl' },
+    productName: {
+      ...typography.caption,
+      color: '#F4F6F5',
+      fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    productMeta: {
+      ...typography.micro,
+      color: '#94A3AC',
+      marginTop: 2,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     productFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, justifyContent: 'flex-end' },
     productPrice: { ...typography.caption, color: '#D6DDE0', fontWeight: '600' },
     stockPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
@@ -1131,6 +1206,8 @@ function createMainStyles(colors: ThemeColors) {
     rowActions: { gap: 6 },
     storyType: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 10,
       backgroundColor: '#101F2C',
@@ -1140,7 +1217,13 @@ function createMainStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: 'rgba(150,175,185,0.18)',
     },
-    storyTypeLabel: { flex: 1, ...typography.bodyStrong, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
+    storyTypeLabel: {
+      ...typography.bodyStrong,
+      color: '#F4F6F5',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     infoCard: {
       backgroundColor: '#101F2C',
       borderRadius: 14,
@@ -1150,9 +1233,27 @@ function createMainStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: 'rgba(150,175,185,0.18)',
     },
-    infoName: { ...typography.h3, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
-    infoBio: { ...typography.body, color: '#D6DDE0', textAlign: 'right', writingDirection: 'rtl' },
-    infoRow: { ...typography.caption, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl' },
+    infoName: {
+      ...typography.h3,
+      color: '#F4F6F5',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    infoBio: {
+      ...typography.body,
+      color: '#D6DDE0',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    infoRow: {
+      ...typography.caption,
+      color: '#94A3AC',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     primaryBtn: {
       backgroundColor: '#20B66F',
       borderRadius: 14,
@@ -1164,13 +1265,21 @@ function createMainStyles(colors: ThemeColors) {
     secondaryBtn: {
       borderRadius: 14,
       paddingVertical: 12,
-      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      alignItems: 'stretch',
       borderWidth: 1,
       borderColor: 'rgba(150,175,185,0.18)',
       backgroundColor: '#122532',
       flex: 1,
     },
-    secondaryBtnText: { ...typography.caption, color: '#D6DDE0', fontWeight: '600' },
+    secondaryBtnText: {
+      ...typography.caption,
+      color: '#D6DDE0',
+      fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     dangerBtn: {
       flex: 1,
       backgroundColor: '#E85D5D',
@@ -1194,8 +1303,21 @@ function createMainStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: 'rgba(150,175,185,0.18)',
     },
-    modalTitle: { ...typography.h3, color: '#F4F6F5', textAlign: 'right' },
-    modalSub: { ...typography.caption, color: '#94A3AC', textAlign: 'right', marginBottom: 8 },
+    modalTitle: {
+      ...typography.h3,
+      color: '#F4F6F5',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    modalSub: {
+      ...typography.caption,
+      color: '#94A3AC',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginBottom: 8,
+    },
     reasonChip: {
       padding: 10,
       borderRadius: 12,
@@ -1204,7 +1326,13 @@ function createMainStyles(colors: ThemeColors) {
       borderColor: 'rgba(150,175,185,0.18)',
     },
     reasonChipOn: { borderColor: '#E85D5D', backgroundColor: 'rgba(232,93,93,0.14)' },
-    reasonText: { ...typography.caption, color: '#D6DDE0', textAlign: 'right' },
+    reasonText: {
+      ...typography.caption,
+      color: '#D6DDE0',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     reasonTextOn: { color: '#E85D5D', fontWeight: '600' },
     modalActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
   });

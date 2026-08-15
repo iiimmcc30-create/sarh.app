@@ -251,7 +251,11 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 999,
       backgroundColor: colors.bgSurface,
     },
-    chipText: { ...typography.micro, color: colors.textSecondary },
+    chipText: {
+      ...typography.micro,
+      color: colors.textSecondary,
+      writingDirection: 'rtl',
+    },
     muted: {
       ...typography.caption,
       color: colors.textMuted,
