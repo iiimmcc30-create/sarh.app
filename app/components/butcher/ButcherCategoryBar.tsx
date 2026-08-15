@@ -65,12 +65,15 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
     },
     rtlTextShell: {
+      width: '100%',
       direction: 'ltr',
     },
     label: {
       ...typography.bodyStrong,
       fontSize: 14,
+      fontWeight: '600',
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
