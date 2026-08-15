@@ -66,13 +66,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     title: {
       ...typography.h3,
+      ...typography.feedTitle,
       fontSize: isDark ? 20 : 18,
       lineHeight: isDark ? 28 : 24,
-      fontWeight: '600',
       color: isDark ? colors.textPrimary : colors.electric,
     },
     subtitle: {
-      ...typography.caption,
+      ...typography.feedBody,
       lineHeight: 18,
       color: colors.textMuted,
     },
@@ -85,9 +85,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       flexShrink: 0,
     },
     seeAllText: {
-      ...typography.caption,
+      ...typography.feedBody,
       lineHeight: 18,
-      fontWeight: '500',
       color: isDark ? colors.textSecondary : colors.textBrandStrong,
       writingDirection: 'rtl',
     },

@@ -393,6 +393,22 @@ export const typography = {
     fontWeight: '500' as const,
     ...directionalText,
   },
+  /**
+   * Posts / listings titles — same weight as active bottom tab (600 SemiBold).
+   */
+  feedTitle: {
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
+    ...directionalText,
+  },
+  /**
+   * Posts / listings body & meta — same weight as inactive bottom tab (500 Medium).
+   */
+  feedBody: {
+    fontFamily: appFont.medium,
+    fontWeight: '500' as const,
+    ...directionalText,
+  },
 };
 
 /** Shared 2026 layout metrics. Keep screens visually consistent across device sizes. */

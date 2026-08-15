@@ -232,6 +232,7 @@ function createPostsStyles(
     },
     screenTitle: {
       ...typography.h3,
+      ...typography.feedTitle,
       color: colors.textPrimary,
       textAlign: 'center',
       paddingTop: spacing.md,
@@ -253,12 +254,13 @@ function createPostsStyles(
       position: 'relative',
     },
     tabText: {
-      ...typography.bodyStrong,
+      ...typography.feedBody,
+      fontSize: 15,
       color: colors.textMuted,
     },
     tabTextActive: {
+      ...typography.feedTitle,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     tabIndicator: {
       position: 'absolute',
@@ -275,7 +277,7 @@ function createPostsStyles(
       gap: spacing.md,
     },
     emptyIcon: { fontSize: 40 },
-    emptyText: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
+    emptyText: { ...typography.feedBody, color: colors.textMuted, textAlign: 'center' },
     emptyBtn: {
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
@@ -284,6 +286,6 @@ function createPostsStyles(
       borderWidth: 1,
       borderColor: colors.electric,
     },
-    emptyBtnText: { ...typography.bodyStrong, color: colors.textBrandStrong },
+    emptyBtnText: { ...typography.feedTitle, color: colors.textBrandStrong },
   });
 }

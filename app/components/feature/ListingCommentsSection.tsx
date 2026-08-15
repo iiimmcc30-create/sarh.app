@@ -285,12 +285,11 @@ function createStyles(colors: ThemeColors) {
     },
     /** Accent bar sits on physical right beside the section title. */
     title: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: colors.textBrandStrong,
-      fontWeight: '600',
     },
     count: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
       backgroundColor: colors.bgElevated,
       paddingHorizontal: 8,
@@ -299,7 +298,7 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     hint: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
       lineHeight: 20,
     },
@@ -309,7 +308,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
     },
     errorText: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.rose,
       textAlign: 'center',
       lineHeight: 22,
@@ -323,15 +322,14 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     retryText: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: colors.electricBright,
-      fontWeight: '600',
     },
     loader: {
       paddingVertical: spacing.lg,
     },
     empty: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textMuted,
       lineHeight: 22,
       paddingVertical: spacing.sm,
@@ -376,22 +374,21 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     commentName: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     metaDot: {
-      ...typography.micro,
+      ...typography.feedBody,
       color: colors.textSubtle,
       flexShrink: 0,
     },
     commentTime: {
-      ...typography.micro,
+      ...typography.feedBody,
       color: colors.textMuted,
       flexShrink: 0,
     },
     commentText: {
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textSecondary,
       lineHeight: 22,
     },
@@ -416,7 +413,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.lg,
       paddingHorizontal: spacing.md,
       paddingVertical: 10,
-      ...typography.body,
+      ...typography.feedBody,
       color: colors.textPrimary,
     },
     sendBtn: {

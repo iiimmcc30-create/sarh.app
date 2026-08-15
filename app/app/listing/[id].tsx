@@ -654,7 +654,7 @@ export default function ListingDetailScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
-    notFound: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
+    notFound: { ...typography.feedBody, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
     scrollContent: {
       paddingBottom: 140,
       paddingHorizontal: spacing.lg,
@@ -699,7 +699,7 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     headerMetaText: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
     },
     specsBlock: {
@@ -712,7 +712,7 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     specMetaText: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
     },
     galleryBlock: {
@@ -720,9 +720,8 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.sm,
     },
     galleryHeading: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: colors.textMuted,
-      fontWeight: '600',
       marginBottom: spacing.xs,
     },
     galleryImageWrap: {
@@ -738,18 +737,16 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     price: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       fontSize: 15,
       lineHeight: 22,
       color: colors.textBrandStrong,
-      fontWeight: '600',
     },
     priceOnRequest: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       fontSize: 15,
       lineHeight: 22,
       color: colors.textBrandStrong,
-      fontWeight: '600',
     },
     priceBadges: {
       flexDirection: 'row',
@@ -766,7 +763,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    featuredText: { ...typography.micro, color: '#1A1300', fontWeight: '600' },
+    featuredText: { ...typography.feedBody, color: '#1A1300' },
     pinned: {
       alignItems: 'center',
       gap: 4,
@@ -775,12 +772,12 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    pinnedText: { ...typography.micro, color: '#fff', fontWeight: '600' },
+    pinnedText: { ...typography.feedBody, color: '#fff' },
     title: {
+      ...typography.feedTitle,
       fontSize: 20,
       lineHeight: 28,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     sellerRow: {
       flexDirection: 'row',
@@ -809,9 +806,8 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     sellerInlineName: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: colors.textSecondary,
-      fontWeight: '600',
     },
 
     ownerToolsRow: {
@@ -835,9 +831,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: `${colors.rose}10`,
     },
     ownerToolLabel: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textSecondary,
-      fontWeight: '600',
     },
     ownerActionPressed: {
       opacity: 0.82,
@@ -859,20 +854,19 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderMid,
     },
     followPillText: {
-      ...typography.caption,
+      ...typography.feedTitle,
       color: '#fff',
-      fontWeight: '600',
     },
     followingPillText: { color: colors.textMuted },
 
     desc: {
-      ...typography.body,
+      ...typography.feedBody,
       fontSize: 15,
       color: colors.textSecondary,
       lineHeight: 24,
     },
     descArabic: {
-      ...typography.body,
+      ...typography.feedBody,
       fontSize: 16,
       color: colors.textPrimary,
       lineHeight: 27,
@@ -904,7 +898,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     ctaBtnAppText: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: '#fff',
       fontSize: 15,
     },
@@ -919,7 +913,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: '#25D366',
     },
     ctaBtnWaText: {
-      ...typography.bodyStrong,
+      ...typography.feedTitle,
       color: '#fff',
       fontSize: 15,
     },

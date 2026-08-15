@@ -390,8 +390,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       minWidth: 0,
     },
     name: {
+      ...typography.feedTitle,
       fontSize: 16,
-      fontWeight: '600',
       color: colors.textPrimary,
       flexShrink: 1,
       textAlign: 'right',
@@ -408,11 +408,12 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       flexShrink: 0,
     },
     ratingMiniText: {
+      ...typography.feedBody,
       fontSize: 11,
-      fontWeight: '600',
       color: colors.textSecondary,
     },
     metaMuted: {
+      ...typography.feedBody,
       fontSize: 13,
       color: colors.textMuted,
       flexShrink: 0,
@@ -433,8 +434,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       borderColor: colors.electric + '55',
     },
     aiBadgeText: {
+      ...typography.feedBody,
       fontSize: 10,
-      fontWeight: '600',
       color: colors.textSecondary,
     },
     menuBtn: {
@@ -454,7 +455,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       marginTop: 8,
     },
     body: {
-      ...typography.body,
+      ...typography.feedBody,
       fontSize: 15,
       lineHeight: 24,
       color: colors.textPrimary,
@@ -467,9 +468,9 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       opacity: 0.92,
     },
     showMore: {
+      ...typography.feedTitle,
       fontSize: 14,
       color: colors.textSecondary,
-      fontWeight: '600',
       marginTop: 4,
       ...getRtlText(),
     },
@@ -499,8 +500,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       paddingHorizontal: 2,
     },
     actionCount: {
+      ...typography.feedBody,
       fontSize: 12,
-      fontWeight: '600',
     },
   });
 }

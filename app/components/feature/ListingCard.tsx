@@ -395,11 +395,10 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     direction: 'ltr',
   },
   listTitle: {
-    ...typography.bodyStrong,
+    ...typography.feedTitle,
     fontSize: 14,
     lineHeight: 18,
     color: colors.textBrandStrong,
-    fontWeight: '600',
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
@@ -447,6 +446,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     gap: 3,
   },
   listMetaText: {
+    ...typography.feedBody,
     fontSize: 11,
     lineHeight: 14,
     color: colors.textMuted,
@@ -454,10 +454,10 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     flexShrink: 1,
   },
   listPriceAmount: {
+    ...typography.feedTitle,
     fontSize: 11,
     lineHeight: 14,
     color: colors.textPrimary,
-    fontWeight: '600',
     writingDirection: 'ltr',
     fontVariant: ['tabular-nums'],
   },
@@ -472,15 +472,14 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     borderColor: colors.borderSoft,
   },
   listRiyalText: {
+    ...typography.feedBody,
     fontSize: 8,
     lineHeight: 10,
     color: colors.textMuted,
-    fontWeight: '600',
   },
   listStatusNew: {
-    ...typography.micro,
+    ...typography.feedBody,
     color: colors.cyan,
-    fontWeight: '600',
     fontSize: 10,
     flexShrink: 0,
   },
@@ -513,10 +512,10 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     flexShrink: 0,
   },
   listSellerName: {
+    ...typography.feedTitle,
     fontSize: 11,
     lineHeight: 14,
     color: colors.textPrimary,
-    fontWeight: '600',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
@@ -676,6 +675,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   featureTitle: {
     ...typography.h2,
+    ...typography.feedTitle,
     color: '#fff',
     marginBottom: 2,
     flex: 1,
@@ -703,7 +703,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     gap: 4,
   },
   featuredText: {
-    ...typography.micro,
+    ...typography.feedBody,
     color: '#1A1300',
   },
   locationPill: {
@@ -718,7 +718,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     borderColor: colors.borderSoft,
   },
   locationText: {
-    ...typography.caption,
+    ...typography.feedBody,
     color: '#fff',
   },
   locationTextCompact: {
@@ -752,8 +752,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   harajTitle: {
     ...typography.h3,
+    ...typography.feedTitle,
     color: colors.textBrandStrong,
-    fontWeight: '600',
     ...getRtlText(),
     ...getRtlText(),
     lineHeight: 26,
@@ -771,7 +771,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     gap: 4,
   },
   harajMetaText: {
-    ...typography.caption,
+    ...typography.feedBody,
     color: colors.textMuted,
     writingDirection: 'rtl',
   },
@@ -804,7 +804,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     flexShrink: 0,
   },
   harajSellerName: {
-    ...typography.bodyStrong,
+    ...typography.feedTitle,
     color: colors.textPrimary,
     flexShrink: 1,
     textAlign: 'right',
@@ -820,21 +820,19 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     borderRadius: radius.pill,
   },
   harajFeaturedText: {
-    ...typography.micro,
+    ...typography.feedBody,
     color: '#1A1300',
-    fontWeight: '600',
   },
   harajDesc: {
-    ...typography.body,
+    ...typography.feedBody,
     color: colors.textSecondary,
     ...getRtlText(),
     ...getRtlText(),
     lineHeight: 24,
   },
   harajPrice: {
-    ...typography.bodyStrong,
+    ...typography.feedTitle,
     color: colors.textPrimary,
-    fontWeight: '600',
     ...getRtlText(),
     ...getRtlText(),
   },
@@ -870,9 +868,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   harajPhotoCountText: {
-    ...typography.micro,
+    ...typography.feedBody,
     color: '#fff',
-    fontWeight: '600',
     fontSize: 11,
   },
   });
