@@ -10,6 +10,8 @@ import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export type SettingsMenuItem = {
   icon: string;
@@ -44,12 +46,12 @@ export function SettingsMenuScreen({
       <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           <AppIcon name={heroIcon} size={28} color={colors.textPrimary} />
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.heroTitle}>{title}</Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.heroDescription}>{description}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.heroTitle}>{title}</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={styles.heroDescription}>{description}</RtlText>
+          </RtlTextShell>
         </View>
 
         <View style={styles.list}>
@@ -89,10 +91,6 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       gap: spacing.sm,
     },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     heroTitle: {
       ...typography.h3,
       color: colors.textPrimary,

@@ -1,8 +1,9 @@
 import React, { memo, useCallback, useRef } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import {
   StyleSheet,
-  Text,
   TextInput,
   TextInputProps,
   View,
@@ -85,9 +86,9 @@ function AppTextInputComponent({
   return (
     <View style={containerStyle}>
       {label ? (
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.label}>{label}</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={styles.label}>{label}</RtlText>
+        </RtlTextShell>
       ) : null}
       <View
         ref={wrapRef}
@@ -116,14 +117,14 @@ function AppTextInputComponent({
         />
       </View>
       {error ? (
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.error}>{error}</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={styles.error}>{error}</RtlText>
+        </RtlTextShell>
       ) : null}
       {!error && hint ? (
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.hint}>{hint}</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={styles.hint}>{hint}</RtlText>
+        </RtlTextShell>
       ) : null}
     </View>
   );
@@ -133,20 +134,12 @@ export const AppTextInput = memo(AppTextInputComponent);
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     label: {
       ...typography.caption,
       fontFamily: appFont.medium,
       fontWeight: '500',
       color: colors.textSecondary,
       marginBottom: spacing.xs,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     wrap: {
       ...getRtlRow(),
@@ -182,17 +175,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.danger,
       marginTop: spacing.xs,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     hint: {
       ...typography.micro,
       color: colors.textMuted,
       marginTop: spacing.xs,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
   });
 }

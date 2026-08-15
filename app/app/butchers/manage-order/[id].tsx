@@ -34,6 +34,9 @@ import {
   orderShortId,
   primaryAdvanceAction,
 } from '@/lib/butcherOps';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const CANCEL_REASONS = [
   'المنتج غير متوفر',
@@ -115,9 +118,9 @@ export default function ButcherManageOrderScreen() {
   if (!order) {
     return (
       <SafeAreaView style={s.screen}>
-        <View style={s.rtlTextShell}>
-          <Text style={s.error}>تعذر تحميل تفاصيل الطلب</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={s.error}>تعذر تحميل تفاصيل الطلب</RtlText>
+        </RtlTextShell>
       </SafeAreaView>
     );
   }
@@ -138,10 +141,10 @@ export default function ButcherManageOrderScreen() {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <View style={s.header}>
-        <View style={s.rtlTextShellFlex}>
-          <Text style={s.headerTitle}>{orderShortId(order)}</Text>
-          <Text style={s.headerSub}>{opsStatusLabel(order.status, order.deliveryType)}</Text>
-        </View>
+        <RtlTextShell flex>
+          <RtlText style={s.headerTitle}>{orderShortId(order)}</RtlText>
+          <RtlText style={s.headerSub}>{opsStatusLabel(order.status, order.deliveryType)}</RtlText>
+        </RtlTextShell>
         <Pressable onPress={() => router.back()} style={s.iconBtn}>
           <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
         </Pressable>
@@ -149,59 +152,61 @@ export default function ButcherManageOrderScreen() {
 
       <ScrollView contentContainerStyle={s.scroll}>
         <View style={s.card}>
-          <View style={s.rtlTextShell}>
-            <Text style={s.section}>معلومات العميل</Text>
-            <Text style={s.value}>{customer}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={s.section}>معلومات العميل</RtlText>
+            <RtlText style={s.value}>{customer}</RtlText>
+          </RtlTextShell>
           {phone ? (
-            <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={s.coverTrail}>
-              <View style={s.rtlTextShellFlex}>
-                <Text style={s.link}>{phone}</Text>
-              </View>
-              <AppIcon name="call-outline" size={16} color={colors.electric} />
+            <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)}>
+              <CoverTrailRow justify="flex-end" gap={8}>
+                <RtlTextShell flex>
+                  <RtlText style={s.link}>{phone}</RtlText>
+                </RtlTextShell>
+                <AppIcon name="call-outline" size={16} color={colors.electric} />
+              </CoverTrailRow>
             </Pressable>
           ) : null}
         </View>
 
         <View style={s.card}>
-          <View style={s.rtlTextShell}>
-            <Text style={s.section}>المنتجات</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={s.section}>المنتجات</RtlText>
+          </RtlTextShell>
           {items.map((item: any, idx: number) => (
             <View key={item.id || idx} style={s.itemRow}>
-              <View style={s.rtlTextShell}>
-                <Text style={s.itemName}>{item.product?.nameAr || 'منتج'}</Text>
-                <Text style={s.muted}>
+              <RtlTextShell>
+                <RtlText style={s.itemName}>{item.product?.nameAr || 'منتج'}</RtlText>
+                <RtlText style={s.muted}>
                   {item.cutType ? `${cutLabelAr(item.cutType)} · ` : ''}
                   {item.weightKg != null ? `${item.weightKg} كغ` : ''}
-                </Text>
-                <Text style={s.value}>
+                </RtlText>
+                <RtlText style={s.value}>
                   {Number(item.lineTotal ?? item.totalPrice ?? 0).toLocaleString()} {order.currency || 'ر.س'}
-                </Text>
-              </View>
+                </RtlText>
+              </RtlTextShell>
             </View>
           ))}
         </View>
 
         <View style={s.card}>
-          <View style={s.rtlTextShell}>
-            <Text style={s.section}>الدفع</Text>
-            <Text style={s.value}>
+          <RtlTextShell>
+            <RtlText style={s.section}>الدفع</RtlText>
+            <RtlText style={s.value}>
               {PAYMENT_STATUS_LABELS[order.paymentStatus as 'paid' | 'unpaid'] ?? order.paymentStatus}
-            </Text>
-            <Text style={s.muted}>الإجمالي {Number(order.totalPrice || 0).toLocaleString()} {order.currency || 'ر.س'}</Text>
-          </View>
+            </RtlText>
+            <RtlText style={s.muted}>الإجمالي {Number(order.totalPrice || 0).toLocaleString()} {order.currency || 'ر.س'}</RtlText>
+          </RtlTextShell>
         </View>
 
         <View style={s.card}>
-          <View style={s.rtlTextShell}>
-            <Text style={s.section}>التوصيل</Text>
-            <Text style={s.value}>{delivery ? 'توصيل الملحمة' : 'استلام من الملحمة'}</Text>
-            <Text style={s.muted}>{address}</Text>
+          <RtlTextShell>
+            <RtlText style={s.section}>التوصيل</RtlText>
+            <RtlText style={s.value}>{delivery ? 'توصيل الملحمة' : 'استلام من الملحمة'}</RtlText>
+            <RtlText style={s.muted}>{address}</RtlText>
             {order.createdAt ? (
-              <Text style={s.muted}>وقت الطلب: {new Date(order.createdAt).toLocaleString('ar-SA')}</Text>
+              <RtlText style={s.muted}>وقت الطلب: {new Date(order.createdAt).toLocaleString('ar-SA')}</RtlText>
             ) : null}
-          </View>
+          </RtlTextShell>
           {delivery && order.deliveryAddress ? (
             <Pressable
               style={s.mapBtn}
@@ -215,30 +220,30 @@ export default function ButcherManageOrderScreen() {
 
         {order.notes ? (
           <View style={s.card}>
-            <View style={s.rtlTextShell}>
-              <Text style={s.section}>ملاحظات العميل</Text>
-              <Text style={s.value}>{order.notes}</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={s.section}>ملاحظات العميل</RtlText>
+              <RtlText style={s.value}>{order.notes}</RtlText>
+            </RtlTextShell>
           </View>
         ) : null}
 
         <View style={s.card}>
-          <View style={s.rtlTextShell}>
-            <Text style={s.section}>متابعة الطلب</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={s.section}>متابعة الطلب</RtlText>
+          </RtlTextShell>
           {order.status === 'cancelled' ? (
-            <View style={s.rtlTextShell}>
-              <Text style={[s.value, { color: colors.danger }]}>ملغى</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={[s.value, { color: colors.danger }]}>ملغى</RtlText>
+            </RtlTextShell>
           ) : (
             flow.map((step) => {
               const done = flowStepDone(order.status, step.id, delivery);
               const active = flowStepActive(order.status, step.id, delivery);
               return (
                 <View key={step.id} style={s.tlRow}>
-                  <View style={s.rtlTextShellFlex}>
-                    <Text style={[s.tlLabel, done && s.tlDone, active && s.tlActive]}>{step.label}</Text>
-                  </View>
+                  <RtlTextShell flex>
+                    <RtlText style={[s.tlLabel, done && s.tlDone, active && s.tlActive]}>{step.label}</RtlText>
+                  </RtlTextShell>
                   <View style={[s.tlDot, done && s.tlDotDone, active && s.tlDotActive]}>
                     {done ? <AppIcon name="checkmark" size={10} color="#fff" /> : null}
                   </View>
@@ -266,27 +271,27 @@ export default function ButcherManageOrderScreen() {
       <Modal visible={cancelOpen} transparent animationType="fade">
         <View style={s.modalBackdrop}>
           <View style={s.modalCard}>
-            <View style={s.rtlTextShell}>
-              <Text style={s.section}>إلغاء الطلب</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={s.section}>إلغاء الطلب</RtlText>
+            </RtlTextShell>
             {CANCEL_REASONS.map((reason) => (
               <Pressable
                 key={reason}
                 style={[s.reason, cancelReasonPreset === reason && s.reasonOn]}
                 onPress={() => setCancelReasonPreset(reason)}
               >
-                <View style={s.rtlTextShell}>
-                  <Text style={s.value}>{reason}</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={s.value}>{reason}</RtlText>
+                </RtlTextShell>
               </Pressable>
             ))}
             <Pressable
               style={[s.reason, cancelReasonPreset === '__custom__' && s.reasonOn]}
               onPress={() => setCancelReasonPreset('__custom__')}
             >
-              <View style={s.rtlTextShell}>
-                <Text style={s.value}>سبب آخر</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={s.value}>سبب آخر</RtlText>
+              </RtlTextShell>
             </Pressable>
             {cancelReasonPreset === '__custom__' ? (
               <TextInput
@@ -333,9 +338,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   error: {
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     marginTop: 80,
     paddingHorizontal: spacing.lg,
   },
@@ -347,15 +349,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     gap: 10,
-  },
-  rtlTextShell: { width: '100%', direction: 'ltr' },
-  rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
-  coverTrail: {
-    flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 6,
   },
   iconBtn: {
     width: 40,
@@ -370,16 +363,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   headerTitle: {
     ...typography.h3,
     color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   headerSub: {
     ...typography.caption,
     color: colors.electric,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   scroll: { padding: spacing.lg, gap: spacing.md },
   card: {
@@ -393,40 +380,25 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   section: {
     ...typography.caption,
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     fontWeight: '600',
   },
   value: {
     ...typography.body,
     color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   muted: {
     ...typography.caption,
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   link: {
     ...typography.caption,
     color: colors.electric,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   itemRow: { paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: border },
   itemName: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   mapBtn: {
     marginTop: 8,
@@ -462,9 +434,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   tlLabel: {
     ...typography.caption,
     color: colors.textMuted,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   tlDone: { color: colors.textPrimary },
   tlActive: { color: colors.electric, fontWeight: '700' },

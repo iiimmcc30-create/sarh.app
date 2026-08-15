@@ -4,6 +4,8 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import type { DeliveryType } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type ButcherDeliverySegmentProps = {
   value: DeliveryType;
@@ -39,13 +41,13 @@ export function ButcherDeliverySegment({ value, onChange }: ButcherDeliverySegme
           );
         })}
       </View>
-      <View style={styles.rtlTextShell}>
-        <Text style={styles.hint}>
+      <RtlTextShell>
+        <RtlText style={styles.hint}>
           {value === 'delivery'
             ? 'أدخل عنوان التوصيل عند الدفع من السلة.'
             : 'استلام من موقع الملحمة.'}
-        </Text>
-      </View>
+        </RtlText>
+      </RtlTextShell>
     </View>
   );
 }
@@ -86,16 +88,9 @@ function createStyles(colors: ThemeColors) {
     optionTextActive: {
       color: '#fff',
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     hint: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       paddingHorizontal: spacing.xs,
     },
   });

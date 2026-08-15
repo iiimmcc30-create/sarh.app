@@ -61,6 +61,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 function goalAccentColor(
   accent: 'electric' | 'gold' | 'promotion',
@@ -333,19 +335,19 @@ export default function ListingPromoteScreen() {
           </View>
 
           <View style={styles.section}>
-            <View style={styles.rtlTextShell}>
-              <Text style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</Text>
-            </View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</RtlText>
+            </RtlTextShell>
+            <RtlTextShell>
+              <RtlText style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</RtlText>
+            </RtlTextShell>
             <View style={styles.goalList}>
               {!hasAnyBoostService ? (
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.sectionHint}>
+                <RtlTextShell>
+                  <RtlText style={styles.sectionHint}>
                     خدمات الترقية غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
-                  </Text>
-                </View>
+                  </RtlText>
+                </RtlTextShell>
               ) : null}
               {enabledGoals.map((option) => {
                 const selected = goal === option.key;
@@ -379,14 +381,14 @@ export default function ListingPromoteScreen() {
                         />
                       </View>
                       <View style={styles.goalTextWrap}>
-                        <View style={styles.rtlTextShell}>
-                          <Text style={[styles.goalTitle, selected && { color: accent }]}>
+                        <RtlTextShell>
+                          <RtlText style={[styles.goalTitle, selected && { color: accent }]}>
                             {option.title}
-                          </Text>
-                        </View>
-                        <View style={styles.rtlTextShell}>
-                          <Text style={styles.goalDesc}>{option.desc}</Text>
-                        </View>
+                          </RtlText>
+                        </RtlTextShell>
+                        <RtlTextShell>
+                          <RtlText style={styles.goalDesc}>{option.desc}</RtlText>
+                        </RtlTextShell>
                       </View>
                     </View>
                     <View style={[styles.goalPreviewTag, getRtlRow()]}>
@@ -532,12 +534,12 @@ export default function ListingPromoteScreen() {
         <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
           <View style={[styles.bottomInner, getRtlRow()]}>
             <View style={styles.totalBlock}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.totalLabel}>الإجمالي</Text>
-              </View>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.totalLabel}>الإجمالي</RtlText>
+              </RtlTextShell>
+              <RtlTextShell>
+                <RtlText style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</RtlText>
+              </RtlTextShell>
             </View>
             <View style={styles.payBtnWrap}>
               <PrimaryButton
@@ -678,16 +680,9 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     sectionHint: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sliderCard: {
       gap: spacing.sm,
@@ -705,8 +700,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       fontWeight: '600',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sectionTitleBlock: {
       width: '100%',
@@ -758,17 +751,11 @@ function createStyles(colors: ThemeColors) {
     goalTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     goalDesc: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 18,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     goalPreviewTag: {
       alignItems: 'center',
@@ -794,9 +781,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sliderValue: {
       fontSize: 28,
@@ -848,17 +832,11 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     totalValue: {
       ...typography.h3,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     payBtnWrap: {
       flex: 1.2,

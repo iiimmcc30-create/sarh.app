@@ -9,6 +9,8 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const SECTIONS = [
   {
@@ -65,22 +67,22 @@ export default function PrivacyScreen() {
 
         {SECTIONS.map((sec, i) => (
           <View key={i} style={styles.section}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionTitle}>{sec.title}</Text>
-            </View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionContent}>{sec.content}</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionTitle}>{sec.title}</RtlText>
+            </RtlTextShell>
+            <RtlTextShell>
+              <RtlText style={styles.sectionContent}>{sec.content}</RtlText>
+            </RtlTextShell>
           </View>
         ))}
 
         <View style={styles.contactSection}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>تواصل معنا</Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>تواصل معنا</RtlText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <RtlText style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</RtlText>
+          </RtlTextShell>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>info@alsfat.com</Text>
@@ -140,24 +142,14 @@ function createStyles(colors: ThemeColors) {
       borderBottomColor: colors.borderSoft,
       gap: spacing.sm,
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sectionContent: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 26,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     contactSection: {
       paddingHorizontal: spacing.lg,

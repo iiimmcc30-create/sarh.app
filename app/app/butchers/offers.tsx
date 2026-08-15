@@ -24,6 +24,8 @@ import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const MAX_BUTCHERS = 24;
 
@@ -284,10 +286,10 @@ export default function ButcherOffersScreen() {
           ) : (
             <>
               <View style={styles.sectionLabelWrap}>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.heroTitle}>عروض بالقرب منك</Text>
-                  <Text style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.heroTitle}>عروض بالقرب منك</RtlText>
+                  <RtlText style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</RtlText>
+                </RtlTextShell>
               </View>
               {data.map((item) => (
                 <ButcherOffersCard
@@ -318,23 +320,13 @@ function createStyles(colors: ThemeColors) {
     sectionLabelWrap: {
       paddingHorizontal: 0,
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     heroTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     heroSub: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 2,
     },
     card: {

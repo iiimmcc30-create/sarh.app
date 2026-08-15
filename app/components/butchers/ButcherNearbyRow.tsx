@@ -13,6 +13,9 @@ import {
 } from '@/lib/butcherStoreMeta';
 import type { ButcherProfile } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type Props = {
   butcher: ButcherProfile;
@@ -30,38 +33,38 @@ export function ButcherNearbyRow({ butcher, onPress }: Props) {
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.92 }]}
     >
-      <View style={styles.coverTrail}>
-        <View style={styles.textShell}>
-          <Text style={styles.name} numberOfLines={1}>
+      <CoverTrailRow justify="flex-end" gap={12}>
+        <RtlTextShell flex style={{ gap: 4 }}>
+          <RtlText style={styles.name} numberOfLines={1}>
             {name}
-          </Text>
+          </RtlText>
           <View style={styles.ratingRow}>
             <AppIcon name="star" size={12} color={colors.gold} />
-            <Text style={styles.rating}>
+            <RtlText style={styles.rating}>
               {butcher.rating.toFixed(1)} ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
-            </Text>
+            </RtlText>
           </View>
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
               <AppIcon name="map-marker-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText}>{butcher.cityAr || '—'}</Text>
+              <RtlText style={styles.metaText}>{butcher.cityAr || '—'}</RtlText>
             </View>
             <View style={styles.metaItem}>
               <AppIcon name="bicycle-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText}>{butcherFeeLabel(butcher)}</Text>
+              <RtlText style={styles.metaText}>{butcherFeeLabel(butcher)}</RtlText>
             </View>
             <View style={styles.metaItem}>
               <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText}>{butcherEtaLabel(butcher)}</Text>
+              <RtlText style={styles.metaText}>{butcherEtaLabel(butcher)}</RtlText>
             </View>
             <View style={styles.metaItem}>
               <AppIcon name="receipt-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText} numberOfLines={1}>
+              <RtlText style={styles.metaText} numberOfLines={1}>
                 {butcherMinOrderLabel(butcher)}
-              </Text>
+              </RtlText>
             </View>
           </View>
-        </View>
+        </RtlTextShell>
         <View style={styles.logoWrap}>
           <Image
             source={uriSource(butcher.logo || butcher.cover)}
@@ -69,7 +72,7 @@ export function ButcherNearbyRow({ butcher, onPress }: Props) {
             contentFit="cover"
           />
         </View>
-      </View>
+      </CoverTrailRow>
     </Pressable>
   );
 }
@@ -83,26 +86,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: spacing.md,
       paddingVertical: 12,
     },
-    coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 12,
-    },
-    textShell: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
-      gap: 4,
-    },
     name: {
       ...typography.bodyStrong,
       fontSize: 15,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     ratingRow: {
       flexDirection: 'row',

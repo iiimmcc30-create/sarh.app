@@ -20,6 +20,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -80,13 +82,13 @@ export function ButcherProductOptionsModal({
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.hero}>
             <View style={styles.heroText}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.title}>{product.nameAr}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.title}>{product.nameAr}</RtlText>
+              </RtlTextShell>
               {product.descriptionAr ? (
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.subtitle}>{product.descriptionAr}</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.subtitle}>{product.descriptionAr}</RtlText>
+                </RtlTextShell>
               ) : null}
             </View>
             <Image
@@ -98,9 +100,9 @@ export function ButcherProductOptionsModal({
 
           {product.availableCuts.length > 0 ? (
             <View style={styles.section}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionTitle}>طريقة التقطيع</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionTitle}>طريقة التقطيع</RtlText>
+              </RtlTextShell>
               <View style={styles.chips}>
                 {[...product.availableCuts].reverse().map((cut) => {
                   const active = selectedCut === cut;
@@ -154,9 +156,9 @@ export function ButcherProductOptionsModal({
 
           <View style={styles.totalRow}>
             <Text style={styles.totalValue}>{priceLabel}</Text>
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.totalLabel}>الإجمالي</Text>
-            </View>
+            <RtlTextShell flex>
+              <RtlText style={styles.totalLabel}>الإجمالي</RtlText>
+            </RtlTextShell>
           </View>
         </ScrollView>
 
@@ -214,29 +216,18 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     heroText: { flex: 1, minWidth: 0, gap: 4 },
-    rtlTextShell: { width: '100%', direction: 'ltr' },
-    rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
     title: {
       ...typography.h3,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     subtitle: {
       ...typography.caption,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     section: { marginBottom: spacing.lg, gap: spacing.sm },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     chips: {
       flexDirection: 'row',
@@ -260,8 +251,6 @@ function createStyles(colors: ThemeColors) {
     chipText: {
       ...typography.caption,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     chipTextActive: {
       color: colors.textPrimary,
@@ -321,9 +310,6 @@ function createStyles(colors: ThemeColors) {
     totalLabel: {
       ...typography.bodyStrong,
       color: colors.textSecondary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     totalValue: {
       ...typography.h3,

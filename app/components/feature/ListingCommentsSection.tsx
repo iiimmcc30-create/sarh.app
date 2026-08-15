@@ -24,6 +24,8 @@ import { useApp } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type ListingCommentsSectionProps = {
   listingId: string;
@@ -160,11 +162,11 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
         <Text style={styles.count}>{comments.length}</Text>
       </View>
 
-      <View style={styles.rtlTextShell}>
-        <Text style={styles.hint}>
+      <RtlTextShell>
+        <RtlText style={styles.hint}>
           ردود عامة يراها الجميع — للمحادثة الخاصة استخدم زر المراسلة أسفل الصفحة
-        </Text>
-      </View>
+        </RtlText>
+      </RtlTextShell>
 
       {loading ? (
         <ActivityIndicator color={colors.electricBright} style={styles.loader} />
@@ -176,9 +178,9 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
           </Pressable>
         </View>
       ) : comments.length === 0 ? (
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.empty}>لا توجد ردود بعد — كن أول من يسأل أو يعلّق علناً</Text>
-        </View>
+        <RtlTextShell>
+          <RtlText style={styles.empty}>لا توجد ردود بعد — كن أول من يسأل أو يعلّق علناً</RtlText>
+        </RtlTextShell>
       ) : (
         <View style={styles.list}>
           {comments.map((c) => (
@@ -219,9 +221,9 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
                     </Pressable>
                   ) : null}
                 </View>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.commentText}>{c.content}</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.commentText}>{c.content}</RtlText>
+                </RtlTextShell>
               </View>
             </View>
           ))}
@@ -281,17 +283,10 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       direction: 'ltr',
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     title: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     count: {
       ...typography.caption,
@@ -306,9 +301,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 20,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     errorBox: {
       alignItems: 'center',
@@ -342,9 +334,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       lineHeight: 22,
       paddingVertical: spacing.sm,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     list: {
       gap: spacing.md,
@@ -399,9 +388,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textPrimary,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     metaDot: {
       ...typography.micro,
@@ -412,16 +398,11 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       flexShrink: 0,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     commentText: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     deleteBtn: {
       padding: 2,

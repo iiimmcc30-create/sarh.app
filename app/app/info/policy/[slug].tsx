@@ -10,6 +10,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export default function PolicyDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -66,13 +68,13 @@ export default function PolicyDetailScreen() {
           {sections.map((section, i) => (
             <View key={`${section.title}-${i}`} style={styles.section}>
               {section.title ? (
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.sectionTitle}>{section.title}</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.sectionTitle}>{section.title}</RtlText>
+                </RtlTextShell>
               ) : null}
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionBody}>{section.body}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionBody}>{section.body}</RtlText>
+              </RtlTextShell>
             </View>
           ))}
           <Text style={styles.updated}>آخر تحديث: {updatedLabel}</Text>
@@ -103,24 +105,14 @@ function createStyles(colors: ThemeColors) {
     content: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.huge },
     section: { gap: spacing.xs },
     /** Physical LTR shell — same as SidebarMenuItem / listing title. */
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     sectionTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sectionBody: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 24,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     updated: {
       ...typography.micro,

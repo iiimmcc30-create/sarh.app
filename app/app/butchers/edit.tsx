@@ -35,6 +35,8 @@ import { formatLocationLabel } from '@/lib/formatAddress';
 import { hasValidCoords } from '@/lib/butcherLocation';
 import { uploadImageFromUri } from '@/services/upload';
 import { useRequireApprovedButcher } from '@/hooks/useRequireApprovedButcher';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const SAUDI_COUNTRY: Country = 'SA';
 
@@ -299,9 +301,9 @@ export default function EditButcherScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.electricBright} />
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.loadingText}>جاري تحميل بيانات الملحمة...</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.loadingText}>جاري تحميل بيانات الملحمة...</RtlText>
+          </RtlTextShell>
         </View>
       </SafeAreaView>
     );
@@ -320,9 +322,9 @@ export default function EditButcherScreen() {
           <View style={{ width: 38 }} />
         </View>
         <View style={styles.center}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.errorText}>{errorMsg}</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.errorText}>{errorMsg}</RtlText>
+          </RtlTextShell>
           <Pressable style={styles.retryBtn} onPress={loadProfile}>
             <View style={styles.chipTextShell}>
               <Text style={styles.retryText}>إعادة المحاولة</Text>
@@ -408,9 +410,9 @@ export default function EditButcherScreen() {
             <Field styles={styles} colors={colors} label="اسم الملحمة *" value={nameAr} onChange={setNameAr} placeholder="مثال: ملحمة الطازج" />
             <Field styles={styles} colors={colors} label="نبذة" value={bioAr} onChange={setBioAr} placeholder="وصف مختصر عن ملحمتك..." multiline />
 
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.fieldLabel}>البلد</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.fieldLabel}>البلد</RtlText>
+            </RtlTextShell>
             <View style={[styles.countryFixed, getRtlRow()]}>
               <Text style={styles.countryFlag}>🇸🇦</Text>
               <View style={styles.chipTextShell}>
@@ -418,9 +420,9 @@ export default function EditButcherScreen() {
               </View>
             </View>
 
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.fieldLabel}>رقم الهاتف</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.fieldLabel}>رقم الهاتف</RtlText>
+            </RtlTextShell>
             <View style={[styles.phoneRow, getRtlRow()]}>
               <View style={styles.phoneCodePill}>
                 <Text style={styles.phoneCodeText}>{phoneCode}</Text>
@@ -441,15 +443,15 @@ export default function EditButcherScreen() {
             <Field styles={styles} colors={colors} label="السجل التجاري" value={commercialReg} onChange={setCommercialReg} placeholder="رقم السجل التجاري" />
 
             <View style={styles.sectionDivider}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionLabel}>ساعات العمل</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionLabel}>ساعات العمل</RtlText>
+              </RtlTextShell>
             </View>
             <View style={[styles.hoursRow, getRtlRow()]}>
               <View style={styles.hourField}>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.hourLabel}>الافتتاح</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.hourLabel}>الافتتاح</RtlText>
+                </RtlTextShell>
                 <TextInput
                   style={styles.input}
                   value={openTime}
@@ -461,9 +463,9 @@ export default function EditButcherScreen() {
               </View>
               <AppIcon name="arrow-forward" size={18} color={colors.textMuted} style={{ marginTop: 28 }} />
               <View style={styles.hourField}>
-                <View style={styles.rtlTextShell}>
-                  <Text style={styles.hourLabel}>الإغلاق</Text>
-                </View>
+                <RtlTextShell>
+                  <RtlText style={styles.hourLabel}>الإغلاق</RtlText>
+                </RtlTextShell>
                 <TextInput
                   style={styles.input}
                   value={closeTime}
@@ -488,9 +490,9 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionLabel}>أيام الإغلاق</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionLabel}>أيام الإغلاق</RtlText>
+              </RtlTextShell>
             </View>
             <View style={styles.chipsRow}>
               {CLOSED_DAYS.map((day) => {
@@ -510,9 +512,9 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionLabel}>التخصصات</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionLabel}>التخصصات</RtlText>
+              </RtlTextShell>
             </View>
             <View style={styles.chipsRow}>
               {SPECIALTY_OPTIONS.map((spec) => {
@@ -532,9 +534,9 @@ export default function EditButcherScreen() {
             </View>
 
             <View style={styles.sectionDivider}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionLabel}>موقع الملحمة على الخريطة (اختياري)</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionLabel}>موقع الملحمة على الخريطة (اختياري)</RtlText>
+              </RtlTextShell>
             </View>
             <ButcherLocationPicker
               country={country}
@@ -592,9 +594,9 @@ function Field({
 }) {
   return (
     <View style={styles.fieldGroup}>
-      <View style={styles.rtlTextShell}>
-        <Text style={styles.fieldLabel}>{label}</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={styles.fieldLabel}>{label}</RtlText>
+      </RtlTextShell>
       <TextInput
         style={[styles.input, multiline && styles.inputMultiline, rtl && styles.inputRtl]}
         value={value}
@@ -615,10 +617,6 @@ function createStyles(colors: ThemeColors) {
   container: { flex: 1, backgroundColor: colors.screenRoot },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
   /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-  rtlTextShell: {
-    width: '100%',
-    direction: 'ltr',
-  },
   chipTextShell: {
     direction: 'ltr',
   },
@@ -746,9 +744,6 @@ function createStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.textSecondary,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   input: {
     backgroundColor: colors.bgSurface,
@@ -779,8 +774,6 @@ function createStyles(colors: ThemeColors) {
   countryLabelFixed: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   phoneRow: { alignItems: 'center', gap: spacing.sm },
   phoneCodePill: {
@@ -798,9 +791,6 @@ function createStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.textBrand,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   hoursRow: { alignItems: 'center', gap: spacing.md },
   hourField: { flex: 1, gap: 6 },
@@ -830,9 +820,6 @@ function createStyles(colors: ThemeColors) {
   toggleLabel: {
     ...typography.body,
     color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
@@ -847,8 +834,6 @@ function createStyles(colors: ThemeColors) {
   chipText: {
     ...typography.caption,
     color: colors.textMuted,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   chipTextActive: { color: colors.textBrandStrong, fontWeight: '600' },
   coordsBox: {
@@ -868,9 +853,6 @@ function createStyles(colors: ThemeColors) {
   coordsText: {
     ...typography.caption,
     color: colors.textBrandSuccess,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });
 }

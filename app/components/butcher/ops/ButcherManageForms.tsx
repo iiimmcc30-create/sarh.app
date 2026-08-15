@@ -25,6 +25,8 @@ import {
   CutType,
   MeatCategory,
 } from '@/services/butcherData';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export function isLocalImageUri(uri: string) {
   return (
@@ -179,13 +181,13 @@ export function AddProductForm({
   return (
     <View style={apf.wrap}>
       <View style={apf.handle} />
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.title}>{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.title}>{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</RtlText>
+      </RtlTextShell>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>اسم المنتج بالعربي</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>اسم المنتج بالعربي</RtlText>
+      </RtlTextShell>
       <TextInput
         style={apf.input}
         placeholder="مثال: خروف كامل طازج"
@@ -195,9 +197,9 @@ export function AddProductForm({
         textAlign="right"
       />
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الفئة</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>الفئة</RtlText>
+      </RtlTextShell>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.lg }}>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {ALL_CATEGORIES.map(([cat, info]) => (
@@ -215,14 +217,14 @@ export function AddProductForm({
         </View>
       </ScrollView>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>التسعير</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>التسعير</RtlText>
+      </RtlTextShell>
       <View style={apf.priceRow}>
         <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>سعر/كغ</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={apf.priceLabel}>سعر/كغ</RtlText>
+          </RtlTextShell>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -237,9 +239,9 @@ export function AddProductForm({
           <Text style={apf.orText}>أو</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>سعر ثابت</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={apf.priceLabel}>سعر ثابت</RtlText>
+          </RtlTextShell>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -252,9 +254,9 @@ export function AddProductForm({
         </View>
       </View>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الكمية المتاحة (كغ)</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>الكمية المتاحة (كغ)</RtlText>
+      </RtlTextShell>
       <TextInput
         style={apf.input}
         placeholder="مثال: 50"
@@ -265,9 +267,9 @@ export function AddProductForm({
         textAlign="center"
       />
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>طرق التقطيع المتاحة</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>طرق التقطيع المتاحة</RtlText>
+      </RtlTextShell>
       <View style={apf.cutsGrid}>
         {ALL_CUTS.map((cut) => (
           <Pressable
@@ -284,9 +286,9 @@ export function AddProductForm({
         ))}
       </View>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الطزاجة</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>الطزاجة</RtlText>
+      </RtlTextShell>
       <View style={apf.freshnessRow}>
         {[
           { id: 'fresh',   label: 'طازج'  },
@@ -305,9 +307,9 @@ export function AddProductForm({
         ))}
       </View>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>التوفر</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>التوفر</RtlText>
+      </RtlTextShell>
       <View style={apf.freshnessRow}>
         {[
           { id: true,  label: 'متوفر' },
@@ -325,9 +327,9 @@ export function AddProductForm({
         ))}
       </View>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>صور المنتج</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>صور المنتج</RtlText>
+      </RtlTextShell>
       <View style={apf.imageGrid}>
         {imageUris.map((uri, idx) => (
           <View key={`${uri}-${idx}`} style={apf.imageThumbWrap}>
@@ -346,9 +348,9 @@ export function AddProductForm({
           </Pressable>
         )}
       </View>
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.uploadHint}>حتى 5 صور · JPG أو PNG</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.uploadHint}>حتى 5 صور · JPG أو PNG</RtlText>
+      </RtlTextShell>
 
       <View style={apf.actions}>
         <Pressable style={apf.cancelBtn} onPress={onClose} disabled={loading}>
@@ -491,13 +493,13 @@ export function AddOfferForm({
   return (
     <View style={apf.wrap}>
       <View style={apf.handle} />
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.title}>{offer ? 'تعديل العرض' : 'إضافة عرض جديد'}</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.title}>{offer ? 'تعديل العرض' : 'إضافة عرض جديد'}</RtlText>
+      </RtlTextShell>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>عنوان العرض</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>عنوان العرض</RtlText>
+      </RtlTextShell>
       <TextInput
         style={apf.input}
         placeholder="مثال: عرض نهاية الأسبوع"
@@ -507,9 +509,9 @@ export function AddOfferForm({
         textAlign="right"
       />
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>الوصف</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>الوصف</RtlText>
+      </RtlTextShell>
       <TextInput
         style={[apf.input, { minHeight: 72 }]}
         placeholder="وصف مختصر للعرض"
@@ -522,9 +524,9 @@ export function AddOfferForm({
 
       <View style={apf.priceRow}>
         <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>السعر الأصلي</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={apf.priceLabel}>السعر الأصلي</RtlText>
+          </RtlTextShell>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -536,9 +538,9 @@ export function AddOfferForm({
           />
         </View>
         <View style={{ flex: 1 }}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.priceLabel}>سعر العرض</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={apf.priceLabel}>سعر العرض</RtlText>
+          </RtlTextShell>
           <TextInput
             style={apf.input}
             placeholder="0"
@@ -551,9 +553,9 @@ export function AddOfferForm({
         </View>
       </View>
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>نسبة الخصم % (اختياري)</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>نسبة الخصم % (اختياري)</RtlText>
+      </RtlTextShell>
       <TextInput
         style={apf.input}
         placeholder="20"
@@ -564,9 +566,9 @@ export function AddOfferForm({
         textAlign="center"
       />
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>صورة العرض</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>صورة العرض</RtlText>
+      </RtlTextShell>
       <Pressable onPress={pickImage} style={apf.uploadBoxWide}>
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={apf.previewImgWide} contentFit="cover" />
@@ -581,15 +583,15 @@ export function AddOfferForm({
       </Pressable>
       {imageUri ? (
         <Pressable onPress={() => setImageUri('')} style={apf.removeImageLink}>
-          <View style={apf.rtlTextShell}>
-            <Text style={apf.removeImageText}>إزالة الصورة</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={apf.removeImageText}>إزالة الصورة</RtlText>
+          </RtlTextShell>
         </Pressable>
       ) : null}
 
-      <View style={apf.rtlTextShell}>
-        <Text style={apf.label}>تاريخ الانتهاء (YYYY-MM-DD)</Text>
-      </View>
+      <RtlTextShell>
+        <RtlText style={apf.label}>تاريخ الانتهاء (YYYY-MM-DD)</RtlText>
+      </RtlTextShell>
       <TextInput
         style={apf.input}
         placeholder="2026-12-31"
@@ -630,10 +632,6 @@ function createProductFormStyles(colors: ThemeColors) {
     alignSelf: 'center', marginBottom: spacing.md,
   },
   /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-  rtlTextShell: {
-    width: '100%',
-    direction: 'ltr',
-  },
   chipTextShell: {
     direction: 'ltr',
   },
@@ -650,9 +648,6 @@ function createProductFormStyles(colors: ThemeColors) {
     color: colors.textSecondary,
     fontWeight: '600',
     marginBottom: 5,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   input: {
     backgroundColor: colors.bgElevated,
@@ -673,8 +668,6 @@ function createProductFormStyles(colors: ThemeColors) {
   catLabel: {
     ...typography.caption,
     color: colors.textMuted,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   catLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
   priceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md },
@@ -705,8 +698,6 @@ function createProductFormStyles(colors: ThemeColors) {
   cutLabel: {
     ...typography.micro,
     color: colors.textMuted,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   cutLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
   freshnessRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
@@ -785,9 +776,6 @@ function createProductFormStyles(colors: ThemeColors) {
     ...typography.caption,
     color: colors.danger,
     fontWeight: '600',
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   uploadText: {
     ...typography.micro,
@@ -800,9 +788,6 @@ function createProductFormStyles(colors: ThemeColors) {
     ...typography.micro,
     color: colors.textSubtle,
     marginBottom: spacing.lg,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   actions: { flexDirection: 'row', gap: spacing.md },
   cancelBtn: {

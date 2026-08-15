@@ -1,4 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -28,7 +31,7 @@ export function SectionHeader({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.coverTrail}>
+      <CoverTrailRow justify="space-between" gap={spacing.sm} style={styles.coverTrail}>
         {onSeeAll ? (
           <Pressable onPress={onSeeAll} hitSlop={8} style={styles.seeAll}>
             <AppIcon
@@ -41,11 +44,11 @@ export function SectionHeader({
         ) : (
           <View />
         )}
-        <View style={styles.rtlTextShell}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-        </View>
-      </View>
+        <RtlTextShell flex>
+          <RtlText style={styles.title}>{title}</RtlText>
+          {subtitle ? <RtlText style={styles.subtitle}>{subtitle}</RtlText> : null}
+        </RtlTextShell>
+      </CoverTrailRow>
     </View>
   );
 }
@@ -59,17 +62,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingBottom: isDark ? spacing.md : spacing.sm,
     },
     coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       minHeight: 32,
-      gap: spacing.sm,
-    },
-    rtlTextShell: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
     },
     title: {
       ...typography.h3,
@@ -77,17 +70,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       lineHeight: isDark ? 28 : 24,
       fontWeight: '700',
       color: isDark ? colors.textPrimary : colors.electric,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     subtitle: {
       ...typography.caption,
       lineHeight: 18,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     seeAll: {
       flexDirection: 'row',

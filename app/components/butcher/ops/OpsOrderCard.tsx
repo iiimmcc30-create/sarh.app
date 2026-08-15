@@ -14,6 +14,9 @@ import {
 } from '@/lib/butcherOps';
 import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type Props = {
   order: any;
@@ -52,23 +55,23 @@ export function OpsOrderCard({
 
   return (
     <Pressable onPress={onOpen} style={({ pressed }) => [styles.card, pressed && { opacity: 0.96 }]}>
-      <View style={styles.coverTrail}>
+      <CoverTrailRow justify="flex-end" gap={8}>
         <View style={[styles.badge, { backgroundColor: `${statusColor}22`, borderColor: `${statusColor}55` }]}>
           <Text style={[styles.badgeText, { color: statusColor }]}>
             {opsStatusLabel(order.status, order.deliveryType)}
           </Text>
         </View>
-        <View style={styles.rtlTextShellFlex}>
-          <Text style={styles.orderNo}>{orderShortId(order)}</Text>
-          <Text style={styles.customer} numberOfLines={1}>{customer}</Text>
-        </View>
-      </View>
+        <RtlTextShell flex>
+          <RtlText style={styles.orderNo}>{orderShortId(order)}</RtlText>
+          <RtlText style={styles.customer} numberOfLines={1}>{customer}</RtlText>
+        </RtlTextShell>
+      </CoverTrailRow>
 
-      <View style={styles.rtlTextShell}>
-        <Text style={styles.lines} numberOfLines={compact ? 1 : 2}>
+      <RtlTextShell>
+        <RtlText style={styles.lines} numberOfLines={compact ? 1 : 2}>
           {orderLineSummary(order)}
-        </Text>
-      </View>
+        </RtlText>
+      </RtlTextShell>
 
       <View style={styles.metaRow}>
         <Text style={styles.total}>
@@ -87,30 +90,31 @@ export function OpsOrderCard({
 
       {!compact ? (
         <>
-          <View style={styles.coverTrail}>
+          <CoverTrailRow justify="flex-end" gap={8}>
             <AppIcon name="time-outline" size={14} color={colors.textMuted} />
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.muted}>{created}</Text>
-            </View>
-          </View>
-          <View style={styles.coverTrail}>
+            <RtlTextShell flex>
+              <RtlText style={styles.muted}>{created}</RtlText>
+            </RtlTextShell>
+          </CoverTrailRow>
+          <CoverTrailRow justify="flex-end" gap={8}>
             <AppIcon name="location-outline" size={14} color={colors.textMuted} />
-            <View style={styles.rtlTextShellFlex}>
-              <Text style={styles.muted} numberOfLines={2}>{location}</Text>
-            </View>
-          </View>
+            <RtlTextShell flex>
+              <RtlText style={styles.muted} numberOfLines={2}>{location}</RtlText>
+            </RtlTextShell>
+          </CoverTrailRow>
           {phone ? (
             <Pressable
               onPress={(e) => {
                 e.stopPropagation?.();
                 void Linking.openURL(`tel:${phone}`);
               }}
-              style={styles.coverTrail}
             >
-              <AppIcon name="call-outline" size={14} color={colors.electric} />
-              <View style={styles.rtlTextShellFlex}>
-                <Text style={styles.phone}>{phone}</Text>
-              </View>
+              <CoverTrailRow justify="flex-end" gap={8}>
+                <AppIcon name="call-outline" size={14} color={colors.electric} />
+                <RtlTextShell flex>
+                  <RtlText style={styles.phone}>{phone}</RtlText>
+                </RtlTextShell>
+              </CoverTrailRow>
             </Pressable>
           ) : null}
         </>
@@ -118,11 +122,11 @@ export function OpsOrderCard({
 
       {showDeliveryPanel ? (
         <View style={styles.deliveryPanel}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.deliveryTitle}>جاهز للتوصيل</Text>
-            <Text style={styles.muted} numberOfLines={2}>{location}</Text>
-            {order.notes ? <Text style={styles.notes}>ملاحظات: {order.notes}</Text> : null}
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.deliveryTitle}>جاهز للتوصيل</RtlText>
+            <RtlText style={styles.muted} numberOfLines={2}>{location}</RtlText>
+            {order.notes ? <RtlText style={styles.notes}>ملاحظات: {order.notes}</RtlText> : null}
+          </RtlTextShell>
           {delivery && order.deliveryAddress ? (
             <Pressable
               style={styles.secondaryBtn}
@@ -193,32 +197,13 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    coverTrail: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      gap: 8,
-    },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
-    rtlTextShellFlex: {
-      flex: 1,
-      direction: 'ltr',
-    },
     orderNo: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     customer: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     badge: {
       paddingHorizontal: 10,
@@ -230,8 +215,6 @@ function createStyles(colors: ThemeColors) {
     lines: {
       ...typography.caption,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     metaRow: {
       flexDirection: 'row',
@@ -259,21 +242,15 @@ function createStyles(colors: ThemeColors) {
     muted: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     phone: {
       ...typography.caption,
       color: colors.electric,
       fontWeight: '600',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     notes: {
       ...typography.micro,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
       marginTop: 4,
     },
     deliveryPanel: {
@@ -286,8 +263,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textPrimary,
       fontWeight: '600',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     secondaryBtn: {
       flexDirection: 'row',

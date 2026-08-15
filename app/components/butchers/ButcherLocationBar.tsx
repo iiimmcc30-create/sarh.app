@@ -12,6 +12,8 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export function ButcherLocationBar() {
   const router = useRouter();
@@ -45,14 +47,14 @@ export function ButcherLocationBar() {
       <View style={styles.pin}>
         <AppIcon name="location" size={18} color={colors.electricBright} />
       </View>
-      <View style={styles.textShell}>
-        <Text style={styles.label} numberOfLines={1}>
+      <RtlTextShell flex>
+        <RtlText style={styles.label} numberOfLines={1}>
           {label}
-        </Text>
-        <Text style={styles.value} numberOfLines={1}>
+        </RtlText>
+        <RtlText style={styles.value} numberOfLines={1}>
           {hasLocation ? summary : 'اضغط لاختيار موقع التوصيل على الخريطة'}
-        </Text>
-      </View>
+        </RtlText>
+      </RtlTextShell>
       <AppIcon name="chevron-down" size={18} color={colors.textMuted} />
     </Pressable>
   );
@@ -78,25 +80,14 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       backgroundColor: colors.electric + '18',
     },
-    textShell: {
-      flex: 1,
-      minWidth: 0,
-      direction: 'ltr',
-    },
     label: {
       ...typography.micro,
       color: colors.textMuted,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     value: {
       ...typography.bodyStrong,
       fontSize: 14,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
   });
 }

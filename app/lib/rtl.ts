@@ -101,7 +101,10 @@ export function getRtlDirection(): ViewStyle {
   return { direction: isAppRtl() ? 'rtl' : 'ltr' };
 }
 
-/** Horizontal row that respects layout direction (RTL Arabic vs LTR English). */
+/**
+ * Logical RTL row — flex follows app direction (navigation bars, input rows).
+ * For mixed [text + icon] cover rows use `getCoverTrailRowStyle()` / `CoverTrailRow`.
+ */
 export function getRtlRow(): ViewStyle {
   if (isAppRtl()) {
     return Platform.OS === 'web'
@@ -113,11 +116,60 @@ export function getRtlRow(): ViewStyle {
     : { flexDirection: 'row' };
 }
 
-/** Primary body text — direction + alignment for the active locale. */
+/**
+ * Glyph alignment only — insufficient inside flex rows without bounds.
+ * Prefer `getRtlBlockTextStyle()` inside `RtlTextShell`, or the `RtlText` component.
+ */
 export function getRtlText(): TextStyle {
   return isAppRtl()
     ? { writingDirection: 'rtl', textAlign: 'right' }
     : { writingDirection: 'ltr', textAlign: 'left' };
+}
+
+export type PhysicalLtrShellOptions = {
+  /** `flex: 1` + `minWidth: 0` for text inside a horizontal row. Default: full-width block. */
+  flex?: boolean;
+};
+
+/**
+ * Physical LTR island — gives Text a stable box under global RTL flex.
+ * Does not change business logic; only layout bounds.
+ */
+export function getPhysicalLtrShellStyle(options?: PhysicalLtrShellOptions): ViewStyle {
+  const flex = options?.flex ?? false;
+  if (flex) {
+    return { flex: 1, minWidth: 0, direction: 'ltr' };
+  }
+  return { width: '100%', direction: 'ltr' };
+}
+
+export type CoverTrailRowOptions = {
+  flex?: boolean;
+  justifyContent?: ViewStyle['justifyContent'];
+  gap?: number;
+};
+
+/**
+ * Cover trail row — physical LTR order for [text + icon/image/button] clusters.
+ * Icon/image on physical right; text shell adjacent (see SidebarMenuItem, SectionHeader).
+ */
+export function getCoverTrailRowStyle(options?: CoverTrailRowOptions): ViewStyle {
+  return {
+    flexDirection: 'row',
+    direction: 'ltr',
+    alignItems: 'center',
+    minWidth: 0,
+    ...(options?.flex ? { flex: 1 } : null),
+    ...(options?.justifyContent ? { justifyContent: options.justifyContent } : null),
+    ...(options?.gap != null ? { gap: options.gap } : null),
+  };
+}
+
+/** Block Arabic text — use inside `RtlTextShell` (includes `width: '100%'`). */
+export function getRtlBlockTextStyle(): TextStyle {
+  return isAppRtl()
+    ? { width: '100%', textAlign: 'right', writingDirection: 'rtl' }
+    : { width: '100%', textAlign: 'left', writingDirection: 'ltr' };
 }
 
 /** Cross-axis alignment at inline start. */

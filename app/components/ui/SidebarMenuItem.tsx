@@ -9,6 +9,9 @@
  * right, title in rtlTextShell hugging the icon (same pattern as listing cover).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
@@ -121,18 +124,17 @@ function OutlineMenuItem({
           </View>
         ) : null}
 
-        {/* Cover cluster: icon on physical right, title shell adjacent (RTL). */}
-        <View style={styles.coverTrail}>
-          <View style={styles.textShell}>
-            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+        <CoverTrailRow flex justify="flex-end" gap={10}>
+          <RtlTextShell flex style={styles.textShellGap}>
+            <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
               {title}
-            </Text>
+            </RtlText>
             {subtitle ? (
-              <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+              <RtlText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
                 {subtitle}
-              </Text>
+              </RtlText>
             ) : null}
-          </View>
+          </RtlTextShell>
           <View style={styles.iconWrapOutline}>
             <AppIcon
               name={icon}
@@ -140,7 +142,7 @@ function OutlineMenuItem({
               color={iconTint}
             />
           </View>
-        </View>
+        </CoverTrailRow>
       </View>
 
       {showDivider ? (
@@ -236,16 +238,16 @@ export function SidebarMenuItem({
         </View>
       ) : null}
 
-      <View style={styles.textShell}>
-        <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+      <RtlTextShell flex style={styles.textShellGap}>
+        <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
           {title}
-        </Text>
+        </RtlText>
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+          <RtlText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
             {subtitle}
-          </Text>
+          </RtlText>
         ) : null}
-      </View>
+      </RtlTextShell>
 
       <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
         <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
@@ -283,14 +285,8 @@ const styles = StyleSheet.create({
     minHeight: SIDEBAR_MENU_ITEM.outlineMinHeight,
     minWidth: 0,
   },
-  coverTrail: {
-    flex: 1,
-    flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 10,
-    minWidth: 0,
+  textShellGap: {
+    gap: 2,
   },
   chevronSlot: {
     width: 18,
@@ -304,12 +300,6 @@ const styles = StyleSheet.create({
   },
   rowPressed: {
     opacity: 0.76,
-  },
-  textShell: {
-    flex: 1,
-    minWidth: 0,
-    direction: 'ltr',
-    gap: 2,
   },
   iconWrap: {
     width: SIDEBAR_MENU_ITEM.iconWrap,
@@ -331,17 +321,11 @@ const styles = StyleSheet.create({
     fontFamily: appFont.semibold,
     fontSize: SIDEBAR_MENU_ITEM.titleSize,
     fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   subtitle: {
     ...typography.caption,
     fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
     lineHeight: 18,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   badge: {
     minWidth: 24,

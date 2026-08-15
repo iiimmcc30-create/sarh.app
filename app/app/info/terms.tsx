@@ -9,6 +9,8 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const TERMS = [
   {
@@ -71,21 +73,21 @@ export default function TermsScreen() {
           <View key={i} style={styles.section}>
             <View style={styles.titleRow}>
               <Text style={styles.sectionNum}>{i + 1}</Text>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.sectionTitle}>{item.title}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.sectionTitle}>{item.title}</RtlText>
+              </RtlTextShell>
             </View>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.sectionContent}>{item.content}</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.sectionContent}>{item.content}</RtlText>
+            </RtlTextShell>
           </View>
         ))}
 
         {/* Contact */}
         <View style={styles.contactSection}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.sectionTitle}>للاستفسار</Text>
-          </View>
+          <RtlTextShell>
+            <RtlText style={styles.sectionTitle}>للاستفسار</RtlText>
+          </RtlTextShell>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>info@alsfat.com</Text>
@@ -139,24 +141,14 @@ function createStyles(colors: ThemeColors) {
     textAlign: 'center',
     color: colors.textBrandStrong,
   },
-  rtlTextShell: {
-    width: '100%',
-    direction: 'ltr',
-  },
   sectionTitle: {
     ...typography.bodyStrong,
     color: colors.gold,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   sectionContent: {
     ...typography.body,
     color: colors.textSecondary,
     lineHeight: 26,
-    width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   contactSection: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, gap: spacing.sm },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },

@@ -37,6 +37,8 @@ import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const CATEGORY_LABELS: Record<string, string> = {
   camels: 'إبل',
@@ -494,25 +496,25 @@ export default function ListingDetailScreen() {
               </View>
             ) : null}
             {listing.arabicDescription ? (
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.descArabic}>{listing.arabicDescription}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.descArabic}>{listing.arabicDescription}</RtlText>
+              </RtlTextShell>
             ) : null}
             {listing.description && listing.description !== listing.arabicDescription ? (
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.desc}>{listing.description}</Text>
-              </View>
+              <RtlTextShell>
+                <RtlText style={styles.desc}>{listing.description}</RtlText>
+              </RtlTextShell>
             ) : null}
           </View>
         ) : null}
 
         {images.length > 0 ? (
           <View style={styles.galleryBlock}>
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.galleryHeading}>
+            <RtlTextShell>
+              <RtlText style={styles.galleryHeading}>
                 الصور ({images.length.toLocaleString('ar-SA')})
-              </Text>
-            </View>
+              </RtlText>
+            </RtlTextShell>
             {images.map((uri, index) => (
               <Pressable
                 key={`${uri}-${index}`}
@@ -733,9 +735,6 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 22,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     priceOnRequest: {
       ...typography.bodyStrong,
@@ -743,9 +742,6 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 22,
       color: colors.textBrandStrong,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     priceBadges: {
       flexDirection: 'row',
@@ -777,18 +773,11 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
       direction: 'ltr',
     },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
-    },
     title: {
       fontSize: 20,
       lineHeight: 28,
       color: colors.textPrimary,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     sellerRow: {
       flexDirection: 'row',
@@ -826,8 +815,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textSecondary,
       fontWeight: '600',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     followTextShell: {
       direction: 'ltr',
@@ -879,8 +866,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: '#fff',
       fontWeight: '600',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     followingPillText: { color: colors.textMuted },
 
@@ -889,18 +874,12 @@ function createStyles(colors: ThemeColors) {
       fontSize: 15,
       color: colors.textSecondary,
       lineHeight: 24,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     descArabic: {
       ...typography.body,
       fontSize: 16,
       color: colors.textPrimary,
       lineHeight: 27,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
 
     // Bottom CTA
