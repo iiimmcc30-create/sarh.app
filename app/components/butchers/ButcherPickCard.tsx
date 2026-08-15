@@ -1,7 +1,7 @@
 // Horizontal butcher pick card — cover image + RTL meta (Sarh identity)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
+import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -23,7 +23,7 @@ type Props = {
 
 export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const name = butcher.nameAr || butcher.name;
 
   return (
@@ -74,20 +74,18 @@ export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     card: {
+      ...butcherSoftCardStyle(colors, scheme),
       gap: 6,
-      backgroundColor: colors.bgElevated,
-      borderRadius: MENU_CARD.radius,
-      overflow: 'hidden',
       paddingBottom: spacing.sm,
     },
     cover: {
       height: 118,
       borderRadius: 0,
       overflow: 'hidden',
-      backgroundColor: colors.bgElevated,
+      backgroundColor: scheme === 'light' ? 'rgba(255,255,255,0.35)' : colors.bgSurface,
     },
     coverImg: { width: '100%', height: '100%' },
     promo: {

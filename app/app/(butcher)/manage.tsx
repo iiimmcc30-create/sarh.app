@@ -19,6 +19,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { confirmDestructive } from '@/lib/actionSheet';
+import { safePush } from '@/lib/safeNavigate';
 import { API_BASE } from '@/services/api';
 import { CATEGORY_LABELS, Country } from '@/services/butcherData';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
@@ -464,7 +465,7 @@ export default function ButcherManageScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.push('/butcher-sidebar')} hitSlop={12} style={styles.iconBtn}>
+        <Pressable onPress={() => safePush('/butcher-sidebar', undefined, router)} hitSlop={12} style={styles.iconBtn}>
           <AppIcon name="menu" size={20} color={colors.textPrimary} />
         </Pressable>
         <View style={styles.headerText}>

@@ -1,10 +1,9 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { sarh } from '@/constants/sarhTokens';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon, getRtlRow } from '@/lib/rtl';
+import { rtlForwardIcon } from '@/lib/rtl';
 
 type SectionHeaderProps = {
   title: string;
@@ -13,7 +12,7 @@ type SectionHeaderProps = {
   seeAllLabel?: string;
 };
 
-/** Unified section title + optional "see all" action for home and feed sections. */
+/** Section title — cover-style RTL: title on physical right, see-all on physical left. */
 export function SectionHeader({
   title,
   subtitle,
@@ -29,24 +28,23 @@ export function SectionHeader({
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.row, getRtlRow()]}>
-        <View style={[styles.titleBlock, getRtlRow()]}>
-          {isDark ? <View style={styles.accentMark} /> : null}
-          <View style={styles.titleTextWrap}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-          </View>
-        </View>
+      <View style={styles.coverTrail}>
         {onSeeAll ? (
-          <Pressable onPress={onSeeAll} hitSlop={8} style={[styles.seeAll, getRtlRow()]}>
-            <Text style={styles.seeAllText}>{seeAllLabel}</Text>
+          <Pressable onPress={onSeeAll} hitSlop={8} style={styles.seeAll}>
             <AppIcon
               name={rtlForwardIcon()}
               size={14}
               color={isDark ? colors.textSecondary : colors.textBrandStrong}
             />
+            <Text style={styles.seeAllText}>{seeAllLabel}</Text>
           </Pressable>
-        ) : null}
+        ) : (
+          <View />
+        )}
+        <View style={styles.rtlTextShell}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
       </View>
     </View>
   );
@@ -60,49 +58,51 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingTop: isDark ? spacing.xl : spacing.lg,
       paddingBottom: isDark ? spacing.md : spacing.sm,
     },
-    row: {
+    coverTrail: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       justifyContent: 'space-between',
       minHeight: 32,
-    },
-    titleBlock: {
-      flex: 1,
-      alignItems: 'center',
       gap: spacing.sm,
     },
-    titleTextWrap: {
+    rtlTextShell: {
       flex: 1,
-      gap: spacing.xs,
-    },
-    accentMark: {
-      width: 3,
-      height: 22,
-      borderRadius: 2,
-      backgroundColor: sarh.color.action,
+      minWidth: 0,
+      direction: 'ltr',
     },
     title: {
       ...typography.h3,
       fontSize: isDark ? 20 : 18,
       lineHeight: isDark ? 28 : 24,
-      fontWeight: isDark ? '700' : '700',
+      fontWeight: '700',
       color: isDark ? colors.textPrimary : colors.electric,
+      width: '100%',
+      textAlign: 'right',
       writingDirection: 'rtl',
     },
     subtitle: {
       ...typography.caption,
       lineHeight: 18,
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     seeAll: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       gap: spacing.xs,
       paddingVertical: spacing.xs,
+      flexShrink: 0,
     },
     seeAllText: {
       ...typography.caption,
       lineHeight: 18,
       fontWeight: '500',
       color: isDark ? colors.textSecondary : colors.textBrandStrong,
+      writingDirection: 'rtl',
     },
   });
 }

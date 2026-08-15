@@ -3,7 +3,6 @@ import { Image } from '@/components/ui/AppImage';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { computeProductLineTotal, resolveLineWeightKg } from '@/lib/butcherOrderPricing';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { resolveMediaUrl } from '@/services/media';
 import {
   cutLabelAr,
@@ -80,24 +79,30 @@ export function ButcherProductOptionsModal({
         <View style={styles.handle} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.hero}>
+            <View style={styles.heroText}>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.title}>{product.nameAr}</Text>
+              </View>
+              {product.descriptionAr ? (
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.subtitle}>{product.descriptionAr}</Text>
+                </View>
+              ) : null}
+            </View>
             <Image
               source={{ uri: resolveMediaUrl(product.images[0]) ?? PLACEHOLDER }}
               style={styles.image}
               contentFit="cover"
             />
-            <View style={styles.heroText}>
-              <Text style={styles.title}>{product.nameAr}</Text>
-              {product.descriptionAr ? (
-                <Text style={styles.subtitle}>{product.descriptionAr}</Text>
-              ) : null}
-            </View>
           </View>
 
           {product.availableCuts.length > 0 ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>طريقة التقطيع</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.sectionTitle}>طريقة التقطيع</Text>
+              </View>
               <View style={styles.chips}>
-                {product.availableCuts.map((cut) => {
+                {[...product.availableCuts].reverse().map((cut) => {
                   const active = selectedCut === cut;
                   return (
                     <Pressable
@@ -117,7 +122,7 @@ export function ButcherProductOptionsModal({
 
           {product.pricePerKg ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>الوزن (كغ)</Text>
+              <Text style={styles.weightTitle}>الوزن (كغ)</Text>
               <View style={styles.weightRow}>
                 <Pressable
                   style={styles.weightBtn}
@@ -148,8 +153,10 @@ export function ButcherProductOptionsModal({
           ) : null}
 
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>الإجمالي</Text>
             <Text style={styles.totalValue}>{priceLabel}</Text>
+            <View style={styles.rtlTextShellFlex}>
+              <Text style={styles.totalLabel}>الإجمالي</Text>
+            </View>
           </View>
         </ScrollView>
 
@@ -193,7 +200,10 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.md,
     },
     hero: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
       gap: spacing.md,
       marginBottom: spacing.lg,
     },
@@ -201,26 +211,37 @@ function createStyles(colors: ThemeColors) {
       width: 72,
       height: 72,
       borderRadius: radius.md,
+      flexShrink: 0,
     },
-    heroText: { flex: 1, gap: 4 },
+    heroText: { flex: 1, minWidth: 0, gap: 4 },
+    rtlTextShell: { width: '100%', direction: 'ltr' },
+    rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
     title: {
       ...typography.h3,
-      ...getRtlText(),
       color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     subtitle: {
       ...typography.caption,
-      ...getRtlText(),
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     section: { marginBottom: spacing.lg, gap: spacing.sm },
     sectionTitle: {
       ...typography.bodyStrong,
-      ...getRtlText(),
       color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     chips: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       flexWrap: 'wrap',
       gap: spacing.sm,
     },
@@ -238,15 +259,24 @@ function createStyles(colors: ThemeColors) {
     },
     chipText: {
       ...typography.caption,
-      ...getRtlText(),
       color: colors.textSecondary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     chipTextActive: {
       color: colors.textPrimary,
       fontWeight: '600',
     },
+    weightTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
     weightRow: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.md,
@@ -267,35 +297,41 @@ function createStyles(colors: ThemeColors) {
     weightInput: {
       minWidth: 72,
       ...typography.h3,
-      ...getRtlText(),
       color: colors.textPrimary,
       textAlign: 'center',
+      writingDirection: 'rtl',
       paddingVertical: 4,
     },
     hint: {
       ...typography.micro,
-      ...getRtlText(),
       color: colors.textMuted,
+      width: '100%',
+      textAlign: 'center',
+      writingDirection: 'rtl',
     },
     iconColor: { color: colors.textPrimary },
     totalRow: {
-      ...getRtlRow(),
-      justifyContent: 'space-between',
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
+      gap: spacing.md,
       marginBottom: spacing.md,
     },
     totalLabel: {
       ...typography.bodyStrong,
-      ...getRtlText(),
       color: colors.textSecondary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     totalValue: {
       ...typography.h3,
-      ...getRtlText(),
       color: colors.textPrimary,
     },
     cta: {
-      ...getRtlRow(),
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.xs,
@@ -310,9 +346,9 @@ function createStyles(colors: ThemeColors) {
     ctaDisabled: { opacity: 0.5 },
     ctaText: {
       ...typography.caption,
-      ...getRtlText(),
       color: '#fff',
       fontWeight: '600',
+      writingDirection: 'rtl',
     },
   });
 }

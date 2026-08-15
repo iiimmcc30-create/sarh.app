@@ -54,7 +54,8 @@ export function normalizeRoutePath(input: string): string {
   const withoutGroups = withoutQuery.replace(/\/\([^/]+\)/g, '');
   const collapsed = withoutGroups.replace(/\/{2,}/g, '/');
   const trimmed = collapsed.replace(/\/$/, '');
-  return trimmed.length > 0 ? trimmed : '/';
+  const withoutIndex = trimmed.replace(/\/index$/i, '');
+  return withoutIndex.length > 0 ? withoutIndex : '/';
 }
 
 function hrefToPath(href: string | Href | Record<string, unknown>): string {

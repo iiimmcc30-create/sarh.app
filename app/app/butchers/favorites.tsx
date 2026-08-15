@@ -17,6 +17,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { safePush } from '@/lib/safeNavigate';
 import { useAuth } from '@/contexts/AuthContext';
 import { ButcherProfile } from '@/services/butcherData';
 import {
@@ -102,7 +103,7 @@ export default function ButcherFavoritesScreen() {
               <Text style={styles.emptyIcon}>❤️</Text>
               <Text style={styles.emptyTitle}>لا توجد ملاحم مفضلة</Text>
               <Text style={styles.emptySub}>أضف ملاحمك المفضلة من قائمة الملاحم</Text>
-              <Pressable style={styles.emptyBtn} onPress={() => router.push('/butchers')}>
+              <Pressable style={styles.emptyBtn} onPress={() => safePush('/butchers', undefined, router)}>
                 <Text style={styles.emptyBtnText}>تصفح الملاحم</Text>
               </Pressable>
             </View>
@@ -151,7 +152,7 @@ export default function ButcherFavoritesScreen() {
                       <Pressable
                         style={styles.visitBtn}
                         onPress={() =>
-                          router.push({ pathname: '/butchers/[id]', params: { id: butcher.id } })
+                          safePush({ pathname: '/butchers/[id]', params: { id: butcher.id } }, undefined, router)
                         }
                       >
                         <Text style={styles.visitBtnText}>زيارة الملحمة</Text>

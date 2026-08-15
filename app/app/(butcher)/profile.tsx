@@ -2,6 +2,7 @@
 // SAFAT — Butcher Profile Screen (الملف الشخصي للملحمة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { getRtlText } from '@/lib/rtl';
+import { safePush } from '@/lib/safeNavigate';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -127,7 +128,7 @@ export default function ButcherProfileScreen() {
           <Image source={{ uri: butcher.cover }} style={styles.cover} contentFit="cover" />
           <Pressable
             style={styles.menuBtn}
-            onPress={() => router.push('/butcher-sidebar')}
+            onPress={() => safePush('/butcher-sidebar', undefined, router)}
           >
             <AppIcon name="menu" size={22} color={colors.textPrimary} />
           </Pressable>

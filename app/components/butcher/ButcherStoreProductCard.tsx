@@ -58,14 +58,18 @@ export function ButcherStoreProductCard({
         </Pressable>
 
         <View style={styles.body}>
-          <Text style={styles.name} numberOfLines={2}>
-            {product.nameAr}
-          </Text>
-          <Text style={styles.qty}>{qtyLabel}</Text>
-          {cat ? (
-            <Text style={styles.cat}>
-              {cat.icon} {cat.ar}
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.name} numberOfLines={2}>
+              {product.nameAr}
             </Text>
+          </View>
+          <View style={styles.rtlTextShell}>
+            <Text style={styles.qty}>{qtyLabel}</Text>
+          </View>
+          {cat ? (
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.cat}>{cat.ar}</Text>
+            </View>
           ) : null}
           <View style={styles.priceRow}>
             <Text style={styles.price}>
@@ -121,6 +125,10 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
       direction: 'ltr',
       gap: 3,
+    },
+    rtlTextShell: {
+      width: '100%',
+      direction: 'ltr',
     },
     name: {
       ...typography.bodyStrong,

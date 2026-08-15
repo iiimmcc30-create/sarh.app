@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
+import { safePush } from '@/lib/safeNavigate';
 
 export default function ButchersAllScreen() {
   const router = useRouter();
@@ -82,11 +83,14 @@ export default function ButchersAllScreen() {
               </View>
             </View>
           ) : (
-            butchers.map((butcher) => (
+            butchers.map((butcher, index) => (
               <ButcherNearbyRow
                 key={butcher.id}
                 butcher={butcher}
-                onPress={() => router.push({ pathname: '/butchers/[id]', params: { id: butcher.id } })}
+                onPress={() =>
+                  safePush({ pathname: '/butchers/[id]', params: { id: butcher.id } }, undefined, router)
+                }
+                showDivider={index < butchers.length - 1}
               />
             ))
           )}

@@ -1,7 +1,7 @@
 // Vertical nearby butcher row — logo on physical right, RTL cover trail
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
+import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -17,11 +17,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 type Props = {
   butcher: ButcherProfile;
   onPress: () => void;
+  showDivider?: boolean;
 };
 
 export function ButcherNearbyRow({ butcher, onPress }: Props) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const name = butcher.nameAr || butcher.name;
 
   return (
@@ -73,16 +74,14 @@ export function ButcherNearbyRow({ butcher, onPress }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     row: {
+      ...butcherSoftCardStyle(colors, scheme),
       marginHorizontal: spacing.lg,
       marginBottom: spacing.sm,
       paddingHorizontal: spacing.md,
       paddingVertical: 12,
-      backgroundColor: colors.bgElevated,
-      borderRadius: MENU_CARD.radius,
-      overflow: 'hidden',
     },
     coverTrail: {
       flexDirection: 'row',
@@ -136,7 +135,7 @@ function createStyles(colors: ThemeColors) {
       height: 56,
       borderRadius: 28,
       overflow: 'hidden',
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgDeep,
       flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },

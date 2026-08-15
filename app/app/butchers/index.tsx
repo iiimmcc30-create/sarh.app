@@ -26,6 +26,7 @@ import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getRtlText } from '@/lib/rtl';
+import { safePush, safeReplace } from '@/lib/safeNavigate';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 
 const SECTION_LIMIT = 12;
@@ -118,7 +119,8 @@ export default function ButchersScreen() {
 
   const filteredPicks = useMemo(() => filterButchers(picks, searchQuery), [picks, searchQuery]);
   const filteredNearby = useMemo(() => filterButchers(nearby, searchQuery), [nearby, searchQuery]);
-  const openButcher = (id: string) => router.push({ pathname: '/butchers/[id]', params: { id } });
+  const openButcher = (id: string) =>
+    safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
@@ -132,12 +134,16 @@ export default function ButchersScreen() {
         <View style={s.stickyHeader}>
           <ButcherLocationBar />
           <ButchersAppBar
-            onBack={() => router.replace('/(tabs)')}
+            onBack={() => safeReplace('/(tabs)', undefined, router)}
             onCart={() =>
-              router.push({
-                pathname: '/butchers/cart',
-                params: butcherId ? { butcherId } : {},
-              })
+              safePush(
+                {
+                  pathname: '/butchers/cart',
+                  params: butcherId ? { butcherId } : {},
+                },
+                undefined,
+                router,
+              )
             }
             cartCount={itemCount}
             searchQuery={searchQuery}
@@ -162,7 +168,7 @@ export default function ButchersScreen() {
           <>
             <SectionHeader
               title="مختارات سرح"
-              onSeeAll={() => router.push('/butchers/all')}
+              onSeeAll={() => safePush('/butchers/all', undefined, router)}
             />
             <ScrollView
               horizontal
@@ -182,14 +188,15 @@ export default function ButchersScreen() {
 
             <SectionHeader
               title="الأقرب إليك"
-              onSeeAll={() => router.push('/butchers/all')}
+              onSeeAll={() => safePush('/butchers/all', undefined, router)}
             />
             <View style={s.nearbyList}>
-              {filteredNearby.map((butcher) => (
+              {filteredNearby.map((butcher, index) => (
                 <ButcherNearbyRow
                   key={butcher.id}
                   butcher={butcher}
                   onPress={() => openButcher(butcher.id)}
+                  showDivider={index < filteredNearby.length - 1}
                 />
               ))}
             </View>
