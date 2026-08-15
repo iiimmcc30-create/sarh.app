@@ -20,7 +20,7 @@ export function BootSplashGate({ children }: BootSplashGateProps) {
   const { isLoading: onboardingLoading } = useOnboarding();
   const [showBoot, setShowBoot] = useState(true);
 
-  const fontsReady = IS_WEB ? true : fontsLoaded || Boolean(fontError);
+  const fontsReady = fontsLoaded || Boolean(fontError);
   const appReady = fontsReady && !authLoading && !onboardingLoading;
 
   useEffect(() => {

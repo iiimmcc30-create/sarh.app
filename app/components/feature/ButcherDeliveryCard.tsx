@@ -179,9 +179,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: 'rgba(255,255,255,0.92)',
     },
     ratingText: {
-      ...typography.micro,
+      ...typography.emphasis,
       color: colors.textPrimary,
-      fontWeight: '700',
       fontSize: 11,
     },
     ratingCount: {
@@ -217,9 +216,8 @@ function createStyles(colors: ThemeColors) {
       zIndex: 2,
     },
     promoText: {
-      ...typography.micro,
+      ...typography.emphasis,
       color: '#fff',
-      fontWeight: '700',
       fontSize: 10,
     },
     info: {
@@ -245,7 +243,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       fontSize: 13,
       lineHeight: 18,
-      fontWeight: '700',
       color: colors.textPrimary,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -260,9 +257,9 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     brandBadgeText: {
+      ...typography.emphasis,
       color: colors.gold,
       fontSize: 7,
-      fontWeight: '800',
       lineHeight: 9,
     },
     descShell: {
@@ -300,7 +297,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       fontSize: 10,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
   });
 }

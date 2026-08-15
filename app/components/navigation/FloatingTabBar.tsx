@@ -1,10 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
-import { appFont } from '@/constants/fonts';
-import { sarh } from '@/constants/sarhTokens';
-import { motion, spacing } from '@/constants/theme';
+import { motion, spacing, typography } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, isAppRtl } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
@@ -13,7 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICON_SIZE = 22;
 const ADD_BOX = 22;
-const LABEL_SIZE = 10;
 
 type TabDef =
   | { kind: 'route'; route: string; icon: string; label: string }
@@ -89,12 +86,8 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                   </View>
                   <Text
                     style={[
-                      styles.tabLabel,
-                      {
-                        color: inactiveTint,
-                        fontFamily: appFont.medium,
-                        fontWeight: '500',
-                      },
+                      typography.tab,
+                      { color: inactiveTint },
                     ]}
                     numberOfLines={1}
                   >
@@ -124,12 +117,8 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                 </View>
                 <Text
                   style={[
-                    styles.tabLabel,
-                    {
-                      color: tint,
-                      fontFamily: focused ? appFont.semibold : appFont.medium,
-                      fontWeight: focused ? '600' : '500',
-                    },
+                    focused ? typography.tabActive : typography.tab,
+                    { color: tint },
                   ]}
                   numberOfLines={1}
                 >
@@ -187,10 +176,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabLabel: {
-    fontSize: LABEL_SIZE,
-    lineHeight: 13,
-    textAlign: 'center',
-    writingDirection: isAppRtl() ? 'rtl' : 'ltr',
+    ...typography.tab,
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],

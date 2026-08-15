@@ -2,7 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
+import { typography } from '@/constants/theme';
 import { getRtlDirection } from '@/lib/rtl';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -37,7 +37,7 @@ export default function ButcherTabsLayout() {
         tabBarLabel: ({ focused, children }) => (
           <Text
             style={[
-              focused ? butcherTypography.tabActive : butcherTypography.tab,
+              focused ? typography.tabActive : typography.tab,
               { color: focused ? colors.electric : colors.textMuted },
             ]}
           >

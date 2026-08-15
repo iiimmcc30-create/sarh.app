@@ -1,5 +1,5 @@
 /**
- * Apply IBM Plex Sans Arabic as the default typeface for Text / TextInput.
+ * Apply IBM Plex Sans Arabic as the default typeface for Text / TextInput project-wide.
  * Maps numeric/keyword fontWeight → the matching loaded font file (Expo Google Fonts).
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
@@ -10,9 +10,10 @@ type AnyTextProps = {
   [key: string]: unknown;
 };
 
+const APP_FAMILIES = new Set<string>(Object.values(appFont));
+
 function resolveFontFamily(weight: TextStyle['fontWeight'] | undefined, existingFamily?: string): string {
-  // Preserve explicit IBM Plex / app font families already set via typography tokens.
-  if (existingFamily && Object.values(appFont).includes(existingFamily as (typeof appFont)[keyof typeof appFont])) {
+  if (existingFamily && APP_FAMILIES.has(existingFamily)) {
     return existingFamily;
   }
   if (weight == null) return appFont.regular;
@@ -43,11 +44,14 @@ function patchHost(
   }
   Component.defaultProps = {
     ...Component.defaultProps,
-    style: withAppFont(Component.defaultProps?.style as StyleProp<TextStyle>),
+    style: withAppFont([
+      { fontFamily: appFont.regular },
+      Component.defaultProps?.style as StyleProp<TextStyle>,
+    ]),
   };
 }
 
-/** Call once after fonts are available (safe to call multiple times). */
+/** Call once after IBM Plex Sans Arabic is loaded (safe to call multiple times). */
 export function applyAppFonts() {
   if (applied) return;
   applied = true;

@@ -1095,7 +1095,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: 3,
     },
     navBadgeOn: { backgroundColor: colors.screenRoot },
-    navBadgeText: { fontSize: 8, color: '#fff', fontWeight: '700' },
+    navBadgeText: { ...typography.emphasis, fontSize: 8, color: '#fff' },
     navBadgeTextOn: { color: colors.textPrimary },
     scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
     kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
@@ -1111,7 +1111,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     kpiValue: {
       fontSize: 22,
-      fontWeight: '700',
+      fontWeight: '600',
     },
     kpiLabel: {
       ...typography.micro,
@@ -1174,7 +1174,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
     },
-    slotCount: { fontSize: 20, fontWeight: '700', color: colors.electric, width: 36, textAlign: 'center' },
+    slotCount: { ...typography.h3, fontSize: 20, color: colors.electric, width: 36, textAlign: 'center' },
     slotLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,

@@ -1,4 +1,6 @@
-/** IBM Plex Sans Arabic — unified app typeface (400 / 500 / 600). */
+/** IBM Plex Sans Arabic — unified app typeface (400 / 500 / 600). Same family as FloatingTabBar. */
+export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
+
 export const appFont = {
   regular: 'IBMPlexSansArabic_400Regular',
   medium: 'IBMPlexSansArabic_500Medium',

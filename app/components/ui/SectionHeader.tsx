@@ -68,7 +68,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.h3,
       fontSize: isDark ? 20 : 18,
       lineHeight: isDark ? 28 : 24,
-      fontWeight: '700',
+      fontWeight: '600',
       color: isDark ? colors.textPrimary : colors.electric,
     },
     subtitle: {

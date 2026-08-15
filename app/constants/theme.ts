@@ -363,10 +363,34 @@ export const typography = {
   },
   micro: {
     fontSize: 11,
-    fontFamily: appFont.medium,
-    fontWeight: '500' as const,
+    fontFamily: appFont.regular,
+    fontWeight: '400' as const,
     letterSpacing: 0.2,
     lineHeight: 15,
+    ...directionalText,
+  },
+  /** Bottom tab labels — inactive (FloatingTabBar / ButchersTabBar). */
+  tab: {
+    fontFamily: appFont.medium,
+    fontWeight: '500' as const,
+    fontSize: 10,
+    lineHeight: 13,
+    textAlign: 'center' as const,
+    ...directionalText,
+  },
+  /** Bottom tab labels — active. */
+  tabActive: {
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
+    fontSize: 10,
+    lineHeight: 13,
+    textAlign: 'center' as const,
+    ...directionalText,
+  },
+  /** Mild emphasis — chips, badges (medium 500, not 700). */
+  emphasis: {
+    fontFamily: appFont.medium,
+    fontWeight: '500' as const,
     ...directionalText,
   },
 };

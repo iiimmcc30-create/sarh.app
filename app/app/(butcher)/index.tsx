@@ -442,7 +442,7 @@ function createStyles(colors: ThemeColors) {
   },
   revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   revenueLabel: { ...typography.caption, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
-  revenueValue: { fontSize: 28, fontWeight: '700', color: colors.textPrimary, letterSpacing: -0.4, textAlign: 'right' },
+  revenueValue: { ...typography.h1, fontSize: 28, color: colors.textPrimary, letterSpacing: -0.4, textAlign: 'right' },
   revenueTrend: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(32,182,111,0.14)',
