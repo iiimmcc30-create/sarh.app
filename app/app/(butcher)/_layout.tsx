@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getRtlDirection } from '@/lib/rtl';
+import { useTheme } from '@/hooks/useTheme';
 
 function TabBarIcon({
   name,
@@ -23,18 +24,19 @@ function TabBarIcon({
 export default function ButcherTabsLayout() {
   const insets = useSafeAreaInsets();
   const padBottom = Math.max(insets.bottom, 8);
+  const { colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#20B66F',
-        tabBarInactiveTintColor: '#94A3AC',
+        tabBarActiveTintColor: colors.electric,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarHideOnKeyboard: true,
         tabBarLabel: ({ focused, children }) => (
           <Text
             style={{
-              color: focused ? '#20B66F' : '#94A3AC',
+              color: focused ? colors.electric : colors.textMuted,
               fontSize: 10,
               fontWeight: focused ? '700' : '600',
               writingDirection: 'rtl',
@@ -44,8 +46,8 @@ export default function ButcherTabsLayout() {
           </Text>
         ),
         tabBarStyle: {
-          backgroundColor: '#0B1622',
-          borderTopColor: 'rgba(150,175,185,0.18)',
+          backgroundColor: colors.bgElevated,
+          borderTopColor: colors.borderSoft,
           borderTopWidth: StyleSheet.hairlineWidth,
           height: 56 + padBottom,
           paddingTop: 6,
@@ -55,7 +57,7 @@ export default function ButcherTabsLayout() {
           ...getRtlDirection(),
         },
         tabBarItemStyle: { paddingTop: 2 },
-        tabBarBackground: () => <View style={{ flex: 1, backgroundColor: '#0B1622' }} />,
+        tabBarBackground: () => <View style={{ flex: 1, backgroundColor: colors.bgElevated }} />,
       }}
     >
       <Tabs.Screen

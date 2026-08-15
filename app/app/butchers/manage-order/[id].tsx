@@ -14,7 +14,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, typography } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -43,6 +45,8 @@ const CANCEL_REASONS = [
 export default function ButcherManageOrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
+  const s = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const { accessToken } = useAuth();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +107,7 @@ export default function ButcherManageOrderScreen() {
   if (loading) {
     return (
       <SafeAreaView style={s.screen}>
-        <ActivityIndicator size="large" color="#20B66F" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={colors.electric} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
@@ -139,7 +143,7 @@ export default function ButcherManageOrderScreen() {
           <Text style={s.headerSub}>{opsStatusLabel(order.status, order.deliveryType)}</Text>
         </View>
         <Pressable onPress={() => router.back()} style={s.iconBtn}>
-          <AppIcon name={rtlBackIcon()} size={20} color="#F4F6F5" />
+          <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
         </Pressable>
       </View>
 
@@ -154,7 +158,7 @@ export default function ButcherManageOrderScreen() {
               <View style={s.rtlTextShellFlex}>
                 <Text style={s.link}>{phone}</Text>
               </View>
-              <AppIcon name="call-outline" size={16} color="#20B66F" />
+              <AppIcon name="call-outline" size={16} color={colors.electric} />
             </Pressable>
           ) : null}
         </View>
@@ -204,7 +208,7 @@ export default function ButcherManageOrderScreen() {
               onPress={() => void Linking.openURL(mapsUrlForAddress(String(order.deliveryAddress)))}
             >
               <Text style={s.link}>فتح الموقع</Text>
-              <AppIcon name="navigate-outline" size={16} color="#20B66F" />
+              <AppIcon name="navigate-outline" size={16} color={colors.electric} />
             </Pressable>
           ) : null}
         </View>
@@ -224,7 +228,7 @@ export default function ButcherManageOrderScreen() {
           </View>
           {order.status === 'cancelled' ? (
             <View style={s.rtlTextShell}>
-              <Text style={[s.value, { color: '#E85D5D' }]}>ملغى</Text>
+              <Text style={[s.value, { color: colors.danger }]}>ملغى</Text>
             </View>
           ) : (
             flow.map((step) => {
@@ -288,7 +292,7 @@ export default function ButcherManageOrderScreen() {
               <TextInput
                 style={s.input}
                 placeholder="اكتب السبب"
-                placeholderTextColor="#94A3AC"
+                placeholderTextColor={colors.textMuted}
                 value={cancelReasonCustom}
                 onChangeText={setCancelReasonCustom}
                 textAlign="right"
@@ -321,10 +325,14 @@ export default function ButcherManageOrderScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0B1622' },
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const cardBg = colors.bgElevated;
+  const softBg = scheme === 'light' ? colors.bgDeep : colors.bgSurface;
+  const border = colors.borderSoft;
+  return StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
   error: {
-    color: '#94A3AC',
+    color: colors.textMuted,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
@@ -353,36 +361,38 @@ const s = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#122532',
+    backgroundColor: softBg,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: border,
   },
   headerTitle: {
     ...typography.h3,
-    color: '#F4F6F5',
+    color: colors.textPrimary,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
   headerSub: {
     ...typography.caption,
-    color: '#20B66F',
+    color: colors.electric,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
   scroll: { padding: spacing.lg, gap: spacing.md },
   card: {
-    backgroundColor: '#101F2C',
+    backgroundColor: cardBg,
     borderRadius: 14,
     padding: spacing.md,
     gap: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(150,175,185,0.18)',
+    borderColor: border,
   },
   section: {
     ...typography.caption,
-    color: '#94A3AC',
+    color: colors.textMuted,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
@@ -390,30 +400,30 @@ const s = StyleSheet.create({
   },
   value: {
     ...typography.body,
-    color: '#F4F6F5',
+    color: colors.textPrimary,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
   muted: {
     ...typography.caption,
-    color: '#94A3AC',
+    color: colors.textMuted,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
   link: {
     ...typography.caption,
-    color: '#20B66F',
+    color: colors.electric,
     fontWeight: '600',
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
-  itemRow: { paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(150,175,185,0.12)' },
+  itemRow: { paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: border },
   itemName: {
     ...typography.bodyStrong,
-    color: '#F4F6F5',
+    color: colors.textPrimary,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
@@ -428,7 +438,7 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: '#122532',
+    backgroundColor: softBg,
   },
   tlRow: {
     flexDirection: 'row',
@@ -443,30 +453,30 @@ const s = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 1.5,
-    borderColor: '#94A3AC',
+    borderColor: colors.textMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tlDotDone: { backgroundColor: '#20B66F', borderColor: '#20B66F' },
-  tlDotActive: { borderColor: '#20B66F', backgroundColor: '#18965B' },
+  tlDotDone: { backgroundColor: colors.electric, borderColor: colors.electric },
+  tlDotActive: { borderColor: colors.electric, backgroundColor: colors.electric },
   tlLabel: {
     ...typography.caption,
-    color: '#94A3AC',
+    color: colors.textMuted,
     width: '100%',
     textAlign: 'right',
     writingDirection: 'rtl',
   },
-  tlDone: { color: '#F4F6F5' },
-  tlActive: { color: '#20B66F', fontWeight: '700' },
+  tlDone: { color: colors.textPrimary },
+  tlActive: { color: colors.electric, fontWeight: '700' },
   primary: {
-    backgroundColor: '#20B66F',
+    backgroundColor: colors.electric,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   primaryText: {
     ...typography.bodyStrong,
-    color: '#F4F6F5',
+    color: '#fff',
     textAlign: 'center',
     writingDirection: 'rtl',
   },
@@ -479,28 +489,31 @@ const s = StyleSheet.create({
   },
   danger: {
     marginTop: 8,
-    backgroundColor: '#E85D5D',
+    backgroundColor: colors.danger,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: spacing.lg },
   modalCard: {
-    backgroundColor: '#101F2C',
+    backgroundColor: cardBg,
     borderRadius: 16,
     padding: spacing.lg,
     gap: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: border,
   },
   reason: {
     padding: 10,
     borderRadius: 12,
-    backgroundColor: '#122532',
+    backgroundColor: softBg,
   },
-  reasonOn: { borderWidth: 1, borderColor: '#E85D5D' },
+  reasonOn: { borderWidth: 1, borderColor: colors.danger },
   input: {
-    backgroundColor: '#122532',
+    backgroundColor: softBg,
     borderRadius: 12,
     padding: 10,
-    color: '#F4F6F5',
+    color: colors.textPrimary,
   },
 });
+}

@@ -58,8 +58,8 @@ function parseManageTab(value: string | undefined): OpsManageTab | null {
 
 export default function ButcherManageScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createMainStyles(colors));
+  const { colors, scheme } = useTheme();
+  const styles = useThemedStyles(({ colors, scheme }) => createMainStyles(colors, scheme));
   const { tab, action } = useLocalSearchParams<{ tab?: string; action?: string }>();
   const { accessToken, user } = useAuth();
   const initialTab = parseManageTab(tab) ?? 'home';
@@ -478,12 +478,6 @@ export default function ButcherManageScreen() {
       </View>
 
       <View style={styles.statusBar}>
-        <View style={styles.statusLeft}>
-          <View style={[styles.liveDot, { backgroundColor: butcher.isOpen ? '#20B66F' : colors.textMuted }]} />
-          <Text style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
-            {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
-          </Text>
-        </View>
         <Pressable
           disabled={savingOpen}
           onPress={() => void setShopOpen(!butcher.isOpen)}
@@ -492,24 +486,38 @@ export default function ButcherManageScreen() {
           {savingOpen ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.openToggleText}>{butcher.isOpen ? 'إيقاف الاستقبال' : 'فتح الملحمة'}</Text>
+            <Text style={[styles.openToggleText, !butcher.isOpen && styles.openToggleTextOn]}>
+              {butcher.isOpen ? 'إيقاف الاستقبال' : 'فتح الملحمة'}
+            </Text>
           )}
         </Pressable>
+        <View style={styles.statusLeft}>
+          <View style={styles.rtlTextShellFlex}>
+            <Text style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
+              {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
+            </Text>
+          </View>
+          <View style={[styles.liveDot, { backgroundColor: butcher.isOpen ? colors.electric : colors.textMuted }]} />
+        </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
-        {OPS_MANAGE_TABS.map((item) => {
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.navRow}
+      >
+        {[...OPS_MANAGE_TABS].reverse().map((item) => {
           const active = activeTab === item.id;
           const count = item.id === 'orders' ? summary.newCount : undefined;
           return (
             <Pressable key={item.id} onPress={() => setActiveTab(item.id)} style={[styles.navChip, active && styles.navChipOn]}>
-              <AppIcon name={item.icon} size={14} color={active ? '#F4F6F5' : colors.textMuted} />
-              <Text style={[styles.navChipText, active && styles.navChipTextOn]}>{item.label}</Text>
               {!!count && count > 0 ? (
                 <View style={[styles.navBadge, active && styles.navBadgeOn]}>
                   <Text style={[styles.navBadgeText, active && styles.navBadgeTextOn]}>{count > 99 ? '99+' : count}</Text>
                 </View>
               ) : null}
+              <Text style={[styles.navChipText, active && styles.navChipTextOn]}>{item.label}</Text>
+              <AppIcon name={item.icon} size={12} color={active ? '#fff' : colors.textMuted} />
             </Pressable>
           );
         })}
@@ -520,37 +528,49 @@ export default function ButcherManageScreen() {
           <View>
             <View style={styles.kpiRow}>
               {[
-                { label: 'جديدة', value: summary.newCount, color: '#D4A017', filter: 'pending' as const },
+                { label: 'جديدة', value: summary.newCount, color: colors.amber, filter: 'pending' as const },
                 { label: 'قيد التجهيز', value: summary.preparing, color: '#5B8FA8', filter: 'preparing' as const },
-                { label: 'جاهزة', value: summary.readyPickup, color: '#20B66F', filter: 'ready' as const },
-                { label: 'قيد التوصيل', value: summary.delivering, color: '#20B66F', filter: 'delivering' as const },
-                { label: 'مكتملة اليوم', value: summary.completedToday, color: '#94A3AC', filter: 'delivered' as const },
+                { label: 'جاهزة', value: summary.readyPickup, color: colors.electric, filter: 'ready' as const },
+                { label: 'قيد التوصيل', value: summary.delivering, color: colors.electric, filter: 'delivering' as const },
+                { label: 'مكتملة اليوم', value: summary.completedToday, color: colors.textMuted, filter: 'delivered' as const },
               ].map((kpi) => (
                 <Pressable key={kpi.label} onPress={() => goOrders(kpi.filter)} style={styles.kpi}>
-                  <Text style={[styles.kpiValue, { color: kpi.color }]}>{kpi.value}</Text>
-                  <Text style={styles.kpiLabel}>{kpi.label}</Text>
+                  <View style={styles.rtlTextShell}>
+                    <Text style={[styles.kpiValue, { color: kpi.color }]}>{kpi.value}</Text>
+                    <Text style={styles.kpiLabel}>{kpi.label}</Text>
+                  </View>
                 </Pressable>
               ))}
             </View>
 
             <View style={styles.insightRow}>
               <View style={styles.insight}>
-                <Text style={styles.insightValue}>{summary.salesToday.toLocaleString()} ر.س</Text>
-                <Text style={styles.insightLabel}>مبيعات اليوم</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.insightValue}>{summary.salesToday.toLocaleString()} ر.س</Text>
+                  <Text style={styles.insightLabel}>مبيعات اليوم</Text>
+                </View>
               </View>
               <View style={styles.insight}>
-                <Text style={styles.insightValue}>{summary.deliveryNow}</Text>
-                <Text style={styles.insightLabel}>توصيل يحتاج خروج</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.insightValue}>{summary.deliveryNow}</Text>
+                  <Text style={styles.insightLabel}>توصيل يحتاج خروج</Text>
+                </View>
               </View>
               <View style={styles.insight}>
-                <Text style={styles.insightValue}>{lowStock.length}</Text>
-                <Text style={styles.insightLabel}>مخزون منخفض</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.insightValue}>{lowStock.length}</Text>
+                  <Text style={styles.insightLabel}>مخزون منخفض</Text>
+                </View>
               </View>
             </View>
 
-            <Text style={styles.sectionTitle}>الطلبات التي تحتاج إجراء</Text>
+            <View style={styles.rtlTextShell}>
+              <Text style={styles.sectionTitle}>الطلبات التي تحتاج إجراء</Text>
+            </View>
             {actionOrders.length === 0 ? (
-              <Text style={styles.emptyInline}>لا توجد طلبات بانتظار إجراءك</Text>
+              <View style={styles.rtlTextShell}>
+                <Text style={styles.emptyInline}>لا توجد طلبات بانتظار إجراءك</Text>
+              </View>
             ) : (
               actionOrders.map((order) => (
                 <OpsOrderCard
@@ -567,11 +587,13 @@ export default function ButcherManageScreen() {
 
             {hourGroups.length > 0 ? (
               <>
-                <Text style={styles.sectionTitle}>طلبات اليوم حسب الوقت</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.sectionTitle}>طلبات اليوم حسب الوقت</Text>
+                </View>
                 {hourGroups.map((g) => (
                   <Pressable key={g.key} onPress={() => goOrders('all')} style={styles.slotRow}>
                     <Text style={styles.slotCount}>{g.count}</Text>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.rtlTextShellFlex}>
                       <Text style={styles.slotLabel}>{g.label}</Text>
                       <Text style={styles.slotSub}>{g.count} طلبات</Text>
                     </View>
@@ -582,14 +604,18 @@ export default function ButcherManageScreen() {
 
             {lowStock.length > 0 ? (
               <>
-                <Text style={styles.sectionTitle}>منتجات تحتاج متابعة</Text>
+                <View style={styles.rtlTextShell}>
+                  <Text style={styles.sectionTitle}>منتجات تحتاج متابعة</Text>
+                </View>
                 {lowStock.slice(0, 4).map((p: any) => {
                   const stock = productStock(p);
                   return (
                     <Pressable key={p.id} onPress={() => { setActiveTab('products'); }} style={styles.stockRow}>
-                      <View style={[styles.stockDot, stock.kind === 'out' ? styles.stockOut : styles.stockLow]} />
-                      <Text style={styles.stockName} numberOfLines={1}>{p.nameAr}</Text>
                       <Text style={styles.stockLabel}>{stock.label}</Text>
+                      <View style={styles.rtlTextShellFlex}>
+                        <Text style={styles.stockName} numberOfLines={1}>{p.nameAr}</Text>
+                      </View>
+                      <View style={[styles.stockDot, stock.kind === 'out' ? styles.stockOut : styles.stockLow]} />
                     </Pressable>
                   );
                 })}
@@ -650,7 +676,7 @@ export default function ButcherManageScreen() {
             <View style={styles.tabHeader}>
               <Pressable style={styles.addBtn} onPress={() => openProductForm()}>
                 <Text style={styles.addBtnText}>إضافة منتج</Text>
-                <AppIcon name="add" size={16} color="#F4F6F5" />
+                <AppIcon name="add" size={16} color="#fff" />
               </Pressable>
               <View style={styles.rtlTextShellFlex}>
                 <Text style={styles.pageTitle}>المنتجات</Text>
@@ -705,7 +731,7 @@ export default function ButcherManageScreen() {
             <View style={styles.tabHeader}>
               <Pressable style={styles.addBtn} onPress={() => openOfferForm()}>
                 <Text style={styles.addBtnText}>إنشاء عرض</Text>
-                <AppIcon name="add" size={16} color="#F4F6F5" />
+                <AppIcon name="add" size={16} color="#fff" />
               </Pressable>
               <View style={styles.rtlTextShellFlex}>
                 <Text style={styles.pageTitle}>العروض</Text>
@@ -773,7 +799,7 @@ export default function ButcherManageScreen() {
                 onPress={() => router.push({ pathname: '/create/story', params: { mode: 'butcher' } })}
               >
                 <Text style={styles.addBtnText}>نشر قصة</Text>
-                <AppIcon name="add" size={16} color="#F4F6F5" />
+                <AppIcon name="add" size={16} color="#fff" />
               </Pressable>
               <View style={styles.rtlTextShellFlex}>
                 <Text style={styles.pageTitle}>القصص</Text>
@@ -844,9 +870,7 @@ export default function ButcherManageScreen() {
               />
             ) : null}
             <Pressable style={styles.secondaryBtn} onPress={() => setShowLocationEditor((v) => !v)}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.secondaryBtnText}>{showLocationEditor ? 'إخفاء الخريطة' : 'تعديل الموقع'}</Text>
-              </View>
+              <Text style={styles.secondaryBtnText}>{showLocationEditor ? 'إخفاء الخريطة' : 'تعديل الموقع'}</Text>
             </Pressable>
             {showLocationEditor ? (
               <View style={{ gap: spacing.md, marginTop: spacing.md }}>
@@ -869,9 +893,7 @@ export default function ButcherManageScreen() {
               </View>
             ) : null}
             <Pressable style={[styles.secondaryBtn, { marginTop: spacing.md }]} onPress={() => router.push('/butchers/edit')}>
-              <View style={styles.rtlTextShell}>
-                <Text style={styles.secondaryBtnText}>تعديل بيانات الملحمة</Text>
-              </View>
+              <Text style={styles.secondaryBtnText}>تعديل بيانات الملحمة</Text>
             </Pressable>
           </View>
         )}
@@ -938,7 +960,7 @@ export default function ButcherManageScreen() {
               />
             )}
             <View style={styles.modalActions}>
-              <Pressable style={styles.secondaryBtn} onPress={() => setCancelOrderId(null)}>
+              <Pressable style={[styles.secondaryBtn, { flex: 1 }]} onPress={() => setCancelOrderId(null)}>
                 <Text style={styles.secondaryBtnText}>تراجع</Text>
               </Pressable>
               <Pressable style={styles.dangerBtn} onPress={() => void confirmCancelOrder()}>
@@ -952,30 +974,49 @@ export default function ButcherManageScreen() {
   );
 }
 
-function createMainStyles(colors: ThemeColors) {
+function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const cardBg = colors.bgElevated;
+  const softBg = scheme === 'light' ? colors.bgDeep : colors.bgSurface;
+  const border = colors.borderSoft;
+
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: '#0B1622' },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.md },
     mutedCenter: { ...typography.body, color: colors.textMuted, marginTop: spacing.md },
     header: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       gap: 10,
     },
-    headerText: { flex: 1 },
-    headerTitle: { ...typography.h3, color: '#F4F6F5', textAlign: 'center', writingDirection: 'rtl' },
-    headerSub: { ...typography.caption, color: '#94A3AC', textAlign: 'center', writingDirection: 'rtl', marginTop: 2 },
+    headerText: { flex: 1, minWidth: 0, direction: 'ltr' },
+    headerTitle: {
+      ...typography.h3,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    headerSub: {
+      ...typography.caption,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginTop: 2,
+    },
     iconBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: '#122532',
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: softBg,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
     statusBar: {
       marginHorizontal: spacing.lg,
@@ -983,76 +1024,141 @@ function createMainStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.md,
       paddingVertical: 10,
       borderRadius: 14,
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
+      gap: 10,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    statusLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    statusLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: 8,
+      minWidth: 0,
+    },
     liveDot: { width: 8, height: 8, borderRadius: 4 },
-    statusLabel: { ...typography.caption, color: '#94A3AC', fontWeight: '600' },
-    statusLabelOn: { color: '#20B66F' },
-    openToggle: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },
-    openToggleOn: { backgroundColor: '#162D3A' },
-    openToggleOff: { backgroundColor: '#20B66F' },
-    openToggleText: { ...typography.micro, color: '#F4F6F5', fontWeight: '600' },
-    navRow: { paddingHorizontal: spacing.lg, gap: 8, paddingBottom: spacing.sm },
+    statusLabel: {
+      ...typography.caption,
+      color: colors.textMuted,
+      fontWeight: '600',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    statusLabelOn: { color: colors.electric },
+    openToggle: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, flexShrink: 0 },
+    openToggleOn: { backgroundColor: softBg },
+    openToggleOff: { backgroundColor: colors.electric },
+    openToggleText: {
+      ...typography.micro,
+      color: colors.textPrimary,
+      fontWeight: '600',
+      writingDirection: 'rtl',
+    },
+    openToggleTextOn: { color: '#fff' },
+    navRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      paddingHorizontal: spacing.lg,
+      gap: 6,
+      paddingBottom: spacing.sm,
+    },
     navChip: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
       borderRadius: 999,
-      backgroundColor: '#122532',
+      backgroundColor: softBg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    navChipOn: { backgroundColor: '#20B66F', borderColor: '#20B66F' },
-    navChipText: { ...typography.micro, color: '#94A3AC', fontWeight: '600' },
-    navChipTextOn: { color: '#F4F6F5' },
+    navChipOn: { backgroundColor: colors.electric, borderColor: colors.electric },
+    navChipText: {
+      ...typography.micro,
+      fontSize: 11,
+      color: colors.textMuted,
+      fontWeight: '600',
+      writingDirection: 'rtl',
+    },
+    navChipTextOn: { color: '#fff' },
     navBadge: {
-      minWidth: 16,
-      height: 16,
-      borderRadius: 8,
-      backgroundColor: '#E85D5D',
+      minWidth: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: colors.danger,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 4,
+      paddingHorizontal: 3,
     },
-    navBadgeOn: { backgroundColor: '#0B1622' },
-    navBadgeText: { fontSize: 9, color: '#fff', fontWeight: '700' },
-    navBadgeTextOn: { color: '#F4F6F5' },
+    navBadgeOn: { backgroundColor: colors.screenRoot },
+    navBadgeText: { fontSize: 8, color: '#fff', fontWeight: '700' },
+    navBadgeTextOn: { color: colors.textPrimary },
     scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
     kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
     kpi: {
       width: '31%',
       flexGrow: 1,
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderRadius: 14,
       paddingVertical: 12,
       paddingHorizontal: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    kpiValue: { fontSize: 22, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl' },
-    kpiLabel: { ...typography.micro, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+    kpiValue: {
+      fontSize: 22,
+      fontWeight: '700',
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    kpiLabel: {
+      ...typography.micro,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginTop: 2,
+    },
     insightRow: { flexDirection: 'row', gap: 8, marginBottom: spacing.lg },
     insight: {
       flex: 1,
-      backgroundColor: '#122532',
+      backgroundColor: softBg,
       borderRadius: 14,
       padding: 10,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    insightValue: { ...typography.bodyStrong, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
-    insightLabel: { ...typography.micro, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginTop: 2 },
+    insightValue: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    insightLabel: {
+      ...typography.micro,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginTop: 2,
+    },
     sectionTitle: {
       ...typography.bodyStrong,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       marginBottom: spacing.sm,
@@ -1062,55 +1168,94 @@ function createMainStyles(colors: ThemeColors) {
     rtlTextShellFlex: { flex: 1, minWidth: 0, direction: 'ltr' },
     pageTitle: {
       ...typography.h3,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       marginBottom: spacing.md,
     },
-    emptyInline: { ...typography.caption, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl', marginBottom: spacing.lg },
+    emptyInline: {
+      ...typography.caption,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      marginBottom: spacing.lg,
+    },
     emptyTitle: {
       ...typography.h3,
-      color: '#D6DDE0',
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    emptySub: { ...typography.body, color: '#94A3AC', textAlign: 'center' },
+    emptySub: {
+      ...typography.body,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     emptyBox: { alignItems: 'center', paddingVertical: 48, gap: 8 },
     slotRow: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 12,
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderRadius: 14,
       padding: spacing.md,
       marginBottom: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    slotCount: { fontSize: 20, fontWeight: '700', color: '#20B66F', width: 36, textAlign: 'center' },
-    slotLabel: { ...typography.bodyStrong, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
-    slotSub: { ...typography.micro, color: '#94A3AC', textAlign: 'right', writingDirection: 'rtl' },
+    slotCount: { fontSize: 20, fontWeight: '700', color: colors.electric, width: 36, textAlign: 'center' },
+    slotLabel: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    slotSub: {
+      ...typography.micro,
+      color: colors.textMuted,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
     stockRow: {
       flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 8,
       paddingVertical: 10,
     },
     stockDot: { width: 8, height: 8, borderRadius: 4 },
-    stockLow: { backgroundColor: '#D4A017' },
-    stockOut: { backgroundColor: '#E85D5D' },
-    stockName: { flex: 1, ...typography.caption, color: '#F4F6F5', textAlign: 'right', writingDirection: 'rtl' },
-    stockLabel: { ...typography.micro, color: '#94A3AC' },
+    stockLow: { backgroundColor: colors.amber },
+    stockOut: { backgroundColor: colors.danger },
+    stockName: {
+      ...typography.caption,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    stockLabel: {
+      ...typography.micro,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+    },
     search: {
-      backgroundColor: '#122532',
+      backgroundColor: softBg,
       borderRadius: 12,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
       paddingHorizontal: spacing.md,
       paddingVertical: 10,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
       marginBottom: spacing.sm,
       writingDirection: 'rtl',
     },
@@ -1118,27 +1263,28 @@ function createMainStyles(colors: ThemeColors) {
       flexDirection: 'row',
       direction: 'ltr',
       justifyContent: 'flex-end',
-      gap: 8,
+      gap: 6,
       marginBottom: spacing.md,
       flexWrap: 'wrap',
     },
     filterChip: {
-      paddingHorizontal: 12,
-      paddingVertical: 7,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
       borderRadius: 999,
-      backgroundColor: '#122532',
+      backgroundColor: softBg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    filterChipOn: { backgroundColor: '#20B66F', borderColor: '#20B66F' },
+    filterChipOn: { backgroundColor: colors.electric, borderColor: colors.electric },
     filterText: {
       ...typography.micro,
-      color: '#94A3AC',
+      fontSize: 11,
+      color: colors.textMuted,
       fontWeight: '600',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    filterTextOn: { color: '#F4F6F5' },
+    filterTextOn: { color: '#fff' },
     tabHeader: {
       flexDirection: 'row',
       direction: 'ltr',
@@ -1153,7 +1299,7 @@ function createMainStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: '#20B66F',
+      backgroundColor: colors.electric,
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 999,
@@ -1161,7 +1307,7 @@ function createMainStyles(colors: ThemeColors) {
     },
     addBtnText: {
       ...typography.micro,
-      color: '#F4F6F5',
+      color: '#fff',
       fontWeight: '600',
       writingDirection: 'rtl',
     },
@@ -1171,18 +1317,18 @@ function createMainStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderRadius: 14,
       padding: spacing.md,
       marginBottom: spacing.sm,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    productImg: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#162D3A' },
+    productImg: { width: 56, height: 56, borderRadius: 10, backgroundColor: softBg },
     productImgEmpty: { alignItems: 'center', justifyContent: 'center' },
     productName: {
       ...typography.caption,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
       fontWeight: '600',
       width: '100%',
       textAlign: 'right',
@@ -1190,19 +1336,26 @@ function createMainStyles(colors: ThemeColors) {
     },
     productMeta: {
       ...typography.micro,
-      color: '#94A3AC',
+      color: colors.textMuted,
       marginTop: 2,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    productFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, justifyContent: 'flex-end' },
-    productPrice: { ...typography.caption, color: '#D6DDE0', fontWeight: '600' },
+    productFooter: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 6,
+      justifyContent: 'flex-end',
+    },
+    productPrice: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
     stockPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-    stockOkBg: { backgroundColor: 'rgba(32,182,111,0.16)' },
-    stockLowBg: { backgroundColor: 'rgba(212,160,23,0.18)' },
-    stockOutBg: { backgroundColor: 'rgba(232,93,93,0.18)' },
-    stockPillText: { ...typography.micro, color: '#F4F6F5', fontWeight: '600' },
+    stockOkBg: { backgroundColor: `${colors.electric}22` },
+    stockLowBg: { backgroundColor: `${colors.amber}22` },
+    stockOutBg: { backgroundColor: `${colors.danger}22` },
+    stockPillText: { ...typography.micro, color: colors.textPrimary, fontWeight: '600' },
     rowActions: { gap: 6 },
     storyType: {
       flexDirection: 'row',
@@ -1210,109 +1363,112 @@ function createMainStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 10,
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderRadius: 14,
       padding: spacing.md,
       marginBottom: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
     storyTypeLabel: {
       ...typography.bodyStrong,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     infoCard: {
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderRadius: 14,
       padding: spacing.lg,
       marginBottom: spacing.md,
       gap: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
     infoName: {
       ...typography.h3,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     infoBio: {
       ...typography.body,
-      color: '#D6DDE0',
+      color: colors.textSecondary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     infoRow: {
       ...typography.caption,
-      color: '#94A3AC',
+      color: colors.textMuted,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     primaryBtn: {
-      backgroundColor: '#20B66F',
+      backgroundColor: colors.electric,
       borderRadius: 14,
       paddingVertical: 12,
       alignItems: 'center',
       paddingHorizontal: 24,
     },
-    primaryBtnText: { ...typography.bodyStrong, color: '#F4F6F5' },
+    primaryBtnText: { ...typography.bodyStrong, color: '#fff', textAlign: 'center' },
     secondaryBtn: {
       borderRadius: 14,
       paddingVertical: 12,
       paddingHorizontal: spacing.md,
-      alignItems: 'stretch',
+      alignItems: 'center',
+      justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(150,175,185,0.18)',
-      backgroundColor: '#122532',
-      flex: 1,
+      borderColor: border,
+      backgroundColor: cardBg,
     },
     secondaryBtnText: {
       ...typography.caption,
-      color: '#D6DDE0',
+      color: colors.textPrimary,
       fontWeight: '600',
-      width: '100%',
-      textAlign: 'right',
+      textAlign: 'center',
       writingDirection: 'rtl',
     },
     dangerBtn: {
       flex: 1,
-      backgroundColor: '#E85D5D',
+      backgroundColor: colors.danger,
       borderRadius: 14,
       paddingVertical: 12,
       alignItems: 'center',
     },
-    sheetBackdrop: { flex: 1, backgroundColor: 'rgba(11,22,34,0.72)', justifyContent: 'flex-end' },
+    sheetBackdrop: {
+      flex: 1,
+      backgroundColor: scheme === 'light' ? 'rgba(245,247,249,0.72)' : 'rgba(11,22,34,0.72)',
+      justifyContent: 'flex-end',
+    },
     sheet: {
       maxHeight: '92%',
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
     },
-    modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: spacing.lg },
+    modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: spacing.lg },
     modalCard: {
-      backgroundColor: '#101F2C',
+      backgroundColor: cardBg,
       borderRadius: 16,
       padding: spacing.lg,
       gap: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
     modalTitle: {
       ...typography.h3,
-      color: '#F4F6F5',
+      color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     modalSub: {
       ...typography.caption,
-      color: '#94A3AC',
+      color: colors.textMuted,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -1321,19 +1477,25 @@ function createMainStyles(colors: ThemeColors) {
     reasonChip: {
       padding: 10,
       borderRadius: 12,
-      backgroundColor: '#122532',
+      backgroundColor: softBg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: border,
     },
-    reasonChipOn: { borderColor: '#E85D5D', backgroundColor: 'rgba(232,93,93,0.14)' },
+    reasonChipOn: { borderColor: colors.danger, backgroundColor: `${colors.danger}14` },
     reasonText: {
       ...typography.caption,
-      color: '#D6DDE0',
+      color: colors.textSecondary,
       width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    reasonTextOn: { color: '#E85D5D', fontWeight: '600' },
-    modalActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
+    reasonTextOn: { color: colors.danger, fontWeight: '600' },
+    modalActions: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      gap: 8,
+      marginTop: 8,
+    },
   });
 }
