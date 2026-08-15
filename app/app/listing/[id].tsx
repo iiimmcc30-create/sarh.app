@@ -4,7 +4,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { rtlBackIcon, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { type Listing } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +37,7 @@ import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
@@ -401,30 +402,37 @@ export default function ListingDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.sellerInfoCard}>
-          {/* LTR shell so textAlign:'right' is physical right (same as SidebarMenuItem). */}
-          <View style={styles.titleWrap}>
-            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+          <RtlTextShell>
+            <RtlText style={styles.title} numberOfLines={2} ellipsizeMode="tail">
               {listing.arabicTitle || listing.title}
-            </Text>
-          </View>
+            </RtlText>
+          </RtlTextShell>
 
-          <View style={[styles.headerMetaRow, getRtlRow()]}>
-            <View style={[styles.headerMetaItem, getRtlRow()]}>
-              <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-              <Text style={styles.headerMetaText}>{listing.arabicLocation || listing.location}</Text>
+          <RtlTextShell>
+            <View style={[styles.headerMetaRow, getRtlRow()]}>
+              <CoverTrailRow gap={4} style={styles.headerMetaItem}>
+                <RtlTextShell flex>
+                  <RtlText style={styles.headerMetaText}>
+                    {listing.arabicLocation || listing.location}
+                  </RtlText>
+                </RtlTextShell>
+                <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
+              </CoverTrailRow>
+              {listing.weightKg != null && listing.weightKg > 0 ? (
+                <RtlTextShell style={styles.headerMetaItem}>
+                  <RtlText style={styles.headerMetaText}>
+                    {`الوزن: ${listing.weightKg.toLocaleString('ar-SA')} كجم`}
+                  </RtlText>
+                </RtlTextShell>
+              ) : null}
+              <CoverTrailRow gap={4} style={styles.headerMetaItem}>
+                <RtlTextShell flex>
+                  <RtlText style={styles.headerMetaText}>{timeLabel || 'الآن'}</RtlText>
+                </RtlTextShell>
+                <AppIcon name="time-outline" size={13} color={colors.textMuted} />
+              </CoverTrailRow>
             </View>
-            {listing.weightKg != null && listing.weightKg > 0 ? (
-              <View style={[styles.headerMetaItem, getRtlRow()]}>
-                <Text style={styles.headerMetaText}>
-                  الوزن: {listing.weightKg.toLocaleString('ar-SA')} كجم
-                </Text>
-              </View>
-            ) : null}
-            <View style={[styles.headerMetaItem, getRtlRow()]}>
-              <AppIcon name="time-outline" size={13} color={colors.textMuted} />
-              <Text style={styles.headerMetaText}>{timeLabel || 'الآن'}</Text>
-            </View>
-          </View>
+          </RtlTextShell>
 
           {!isOwner ? (
             /**
@@ -440,33 +448,36 @@ export default function ListingDetailScreen() {
                 {isFollowing === null && isAuthenticated ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <View style={styles.followTextShell}>
+                  <RtlTextShell>
                     <Text
                       style={[
                         styles.followPillText,
+                        getRtlText(),
                         isFollowing === true && styles.followingPillText,
                       ]}
                     >
                       {isFollowing ? 'متابَع' : 'متابعة'}
                     </Text>
-                  </View>
+                  </RtlTextShell>
                 )}
               </Pressable>
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
                 style={styles.sellerInline}
               >
-                <View style={styles.sellerNameShell}>
-                  <Text style={styles.sellerInlineName} numberOfLines={1}>
-                    {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
-                  </Text>
-                </View>
-                {listing.seller.verified ? <VerificationBadge size={16} /> : null}
-                <Image
-                  source={uriSource(listing.seller.avatar)}
-                  style={styles.sellerInlineAvatar}
-                  contentFit="cover"
-                />
+                <CoverTrailRow justify="flex-end" gap={8} style={styles.sellerInlineTrail}>
+                  <RtlTextShell flex>
+                    <RtlText style={styles.sellerInlineName} numberOfLines={1}>
+                      {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
+                    </RtlText>
+                  </RtlTextShell>
+                  {listing.seller.verified ? <VerificationBadge size={16} /> : null}
+                  <Image
+                    source={uriSource(listing.seller.avatar)}
+                    style={styles.sellerInlineAvatar}
+                    contentFit="cover"
+                  />
+                </CoverTrailRow>
               </Pressable>
             </View>
           ) : null}
@@ -483,17 +494,19 @@ export default function ListingDetailScreen() {
         {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
           <View style={styles.specsBlock}>
             {categoryLabel || listing.breed || listing.age ? (
-              <View style={[styles.specMetaLine, getRtlRow()]}>
-                {categoryLabel ? (
-                  <Text style={styles.specMetaText}>{categoryLabel}</Text>
-                ) : null}
-                {listing.breed ? (
-                  <Text style={styles.specMetaText}>{listing.breed}</Text>
-                ) : null}
-                {listing.age ? (
-                  <Text style={styles.specMetaText}>{listing.age}</Text>
-                ) : null}
-              </View>
+              <RtlTextShell>
+                <View style={[styles.specMetaLine, getRtlRow()]}>
+                  {categoryLabel ? (
+                    <Text style={[styles.specMetaText, getRtlText()]}>{categoryLabel}</Text>
+                  ) : null}
+                  {listing.breed ? (
+                    <Text style={[styles.specMetaText, getRtlText()]}>{listing.breed}</Text>
+                  ) : null}
+                  {listing.age ? (
+                    <Text style={[styles.specMetaText, getRtlText()]}>{listing.age}</Text>
+                  ) : null}
+                </View>
+              </RtlTextShell>
             ) : null}
             {listing.arabicDescription ? (
               <RtlTextShell>
@@ -538,15 +551,15 @@ export default function ListingDetailScreen() {
         {/* Price under listing image — LTR shell (same as title / SidebarMenuItem). */}
         <View style={styles.priceBlock}>
           {listing.price > 0 ? (
-            <View style={styles.priceShell}>
-              <Text style={styles.price}>
+            <RtlTextShell>
+              <RtlText style={styles.price}>
                 {`السعر: ${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
-              </Text>
-            </View>
+              </RtlText>
+            </RtlTextShell>
           ) : (
-            <View style={styles.priceShell}>
-              <Text style={styles.priceOnRequest}>السعر عند الطلب</Text>
-            </View>
+            <RtlTextShell>
+              <RtlText style={styles.priceOnRequest}>السعر عند الطلب</RtlText>
+            </RtlTextShell>
           )}
           {(listing.pinned || listing.featured) ? (
             <View style={styles.priceBadges}>
@@ -586,6 +599,7 @@ export default function ListingDetailScreen() {
                 <Text
                   style={[
                     styles.ownerToolLabel,
+                    getRtlText(),
                     a.danger && styles.ownerActionTextDanger,
                   ]}
                 >
@@ -678,15 +692,15 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       flexWrap: 'wrap',
       gap: spacing.sm,
+      width: '100%',
     },
     headerMetaItem: {
-      alignItems: 'center',
-      gap: 4,
+      flexShrink: 1,
+      minWidth: 0,
     },
     headerMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
     },
     specsBlock: {
       gap: spacing.sm,
@@ -695,11 +709,11 @@ function createStyles(colors: ThemeColors) {
     specMetaLine: {
       flexWrap: 'wrap',
       gap: spacing.sm,
+      width: '100%',
     },
     specMetaText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'rtl',
     },
     galleryBlock: {
       gap: spacing.xs,
@@ -709,9 +723,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
-      width: '100%',
-      writingDirection: 'rtl',
-      textAlign: 'right',
       marginBottom: spacing.xs,
     },
     galleryImageWrap: {
@@ -724,10 +735,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       marginTop: spacing.md,
       paddingHorizontal: spacing.xs,
-    },
-    priceShell: {
       width: '100%',
-      direction: 'ltr',
     },
     price: {
       ...typography.bodyStrong,
@@ -768,11 +776,6 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     pinnedText: { ...typography.micro, color: '#fff', fontWeight: '600' },
-    /** Physical LTR shell — same pattern as SidebarMenuItem — so textAlign:'right' stays on the visual right under app RTL. */
-    titleWrap: {
-      width: '100%',
-      direction: 'ltr',
-    },
     title: {
       fontSize: 20,
       lineHeight: 28,
@@ -789,18 +792,12 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.xs,
     },
     sellerInline: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: 8,
       flexShrink: 1,
       minWidth: 0,
       maxWidth: '72%',
     },
-    sellerNameShell: {
-      direction: 'ltr',
-      flexShrink: 1,
-      minWidth: 0,
+    sellerInlineTrail: {
+      width: '100%',
     },
     sellerInlineAvatar: {
       width: 28,
@@ -816,15 +813,13 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontWeight: '600',
     },
-    followTextShell: {
-      direction: 'ltr',
-    },
 
     ownerToolsRow: {
       flexWrap: 'wrap',
       gap: spacing.sm,
       marginTop: spacing.sm,
       paddingVertical: spacing.xs,
+      width: '100%',
     },
     ownerToolChip: {
       ...getRtlRow(),
@@ -834,6 +829,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
       backgroundColor: colors.bgSurface,
+      flexShrink: 0,
     },
     ownerToolChipDanger: {
       backgroundColor: `${colors.rose}10`,
