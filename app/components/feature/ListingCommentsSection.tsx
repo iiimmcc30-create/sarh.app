@@ -24,6 +24,7 @@ import { useApp } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
@@ -154,13 +155,15 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
 
   return (
     <View style={styles.card}>
-      <View style={[styles.header, getRtlRow()]}>
-        <View style={styles.sectionBar} />
-        <View style={styles.titleShell}>
-          <Text style={styles.title}>الردود على الإعلان</Text>
-        </View>
+      <CoverTrailRow justify="space-between" gap={8} style={styles.header}>
         <Text style={styles.count}>{comments.length}</Text>
-      </View>
+        <CoverTrailRow justify="flex-end" gap={8} flex style={styles.headerTrail}>
+          <RtlTextShell flex>
+            <RtlText style={styles.title}>الردود على الإعلان</RtlText>
+          </RtlTextShell>
+          <View style={styles.sectionBar} />
+        </CoverTrailRow>
+      </CoverTrailRow>
 
       <RtlTextShell>
         <RtlText style={styles.hint}>
@@ -191,20 +194,20 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
               <View style={styles.commentBubble}>
                 <View style={[styles.commentHeader, getRtlRow()]}>
                   <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
-                    <View style={styles.nameTimeShell}>
-                      <View style={styles.nameShell}>
-                        <Text style={styles.commentName} numberOfLines={1}>
-                          {c.author.arabicName || c.author.displayName}
-                        </Text>
-                      </View>
-                      {c.author.verified ? (
-                        <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
-                      ) : null}
-                      <Text style={styles.metaDot}>·</Text>
+                    <CoverTrailRow justify="flex-end" gap={4} style={styles.nameTimeRow}>
                       <Text style={styles.commentTime} numberOfLines={1}>
                         {c.createdAt}
                       </Text>
-                    </View>
+                      <Text style={styles.metaDot}>·</Text>
+                      {c.author.verified ? (
+                        <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
+                      ) : null}
+                      <RtlTextShell flex>
+                        <RtlText style={styles.commentName} numberOfLines={1}>
+                          {c.author.arabicName || c.author.displayName}
+                        </RtlText>
+                      </RtlTextShell>
+                    </CoverTrailRow>
                   </UserProfileLink>
                   {canDeleteComment(c.author.id, listingOwnerId, user, me) ? (
                     <Pressable
@@ -269,8 +272,10 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     header: {
-      alignItems: 'center',
-      gap: 8,
+      width: '100%',
+    },
+    headerTrail: {
+      minWidth: 0,
     },
     sectionBar: {
       width: 4,
@@ -278,11 +283,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 2,
       backgroundColor: colors.electricBright,
     },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    titleShell: {
-      flex: 1,
-      direction: 'ltr',
-    },
+    /** Accent bar sits on physical right beside the section title. */
     title: {
       ...typography.bodyStrong,
       color: colors.textBrandStrong,
@@ -370,18 +371,8 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 0,
     },
-    nameTimeShell: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      flexWrap: 'nowrap',
-      gap: 4,
-      alignSelf: 'flex-end',
-      maxWidth: '100%',
-    },
-    nameShell: {
-      direction: 'ltr',
-      flex: 1,
+    nameTimeRow: {
+      width: '100%',
       minWidth: 0,
     },
     commentName: {
