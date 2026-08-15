@@ -191,7 +191,7 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.sm,
       gap: 8,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: colors.borderSoft,
     },
     coverTrail: {
       flexDirection: 'row',
@@ -297,7 +297,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 8,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: colors.borderSoft,
     },
     secondaryBtnText: { ...typography.caption, color: colors.electric, fontWeight: '600' },
     actions: {
@@ -310,7 +310,7 @@ function createStyles(colors: ThemeColors) {
     },
     primaryBtn: {
       flex: 1,
-      backgroundColor: '#20B66F',
+      backgroundColor: colors.electric,
       borderRadius: 12,
       paddingVertical: 11,
       alignItems: 'center',
@@ -324,7 +324,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       backgroundColor: colors.bgSurface,
       borderWidth: 1,
-      borderColor: 'rgba(150,175,185,0.18)',
+      borderColor: colors.borderSoft,
     },
     iconBtnDanger: {
       width: 40,
