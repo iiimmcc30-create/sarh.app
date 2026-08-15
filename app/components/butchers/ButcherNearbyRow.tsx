@@ -2,7 +2,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -97,7 +98,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 4,
     },
     name: {
-      ...typography.bodyStrong,
+      ...butcherTypography.primary,
       fontSize: 15,
       color: colors.textPrimary,
       width: '100%',
@@ -111,7 +112,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       gap: 4,
     },
-    rating: { ...typography.caption, color: colors.textMuted },
+    rating: { ...butcherTypography.secondary, color: colors.textMuted },
     metaRow: {
       flexDirection: 'row',
       direction: 'ltr',
@@ -126,9 +127,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 3,
     },
     metaText: {
-      ...typography.micro,
+      ...butcherTypography.meta,
       color: colors.textMuted,
-      writingDirection: 'rtl',
     },
     logoWrap: {
       width: 56,
