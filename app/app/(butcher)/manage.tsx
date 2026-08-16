@@ -534,6 +534,7 @@ export default function ButcherManageScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.navScroll}
         contentContainerStyle={[styles.navRow, getRtlRow()]}
       >
         {OPS_PRIMARY_TABS.map((item) => {
@@ -1066,7 +1067,8 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
+      paddingTop: spacing.sm,
+      paddingBottom: 6,
       gap: 10,
     },
     headerText: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
@@ -1099,9 +1101,9 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     statusBar: {
       marginHorizontal: spacing.lg,
-      marginBottom: spacing.sm,
+      marginBottom: 8,
       paddingHorizontal: spacing.md,
-      paddingVertical: 12,
+      paddingVertical: 10,
       borderRadius: 14,
       backgroundColor: cardBg,
       alignItems: 'center',
@@ -1153,10 +1155,14 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       includeFontPadding: false,
     },
     openToggleTextOn: { color: '#fff' },
+    navScroll: {
+      flexGrow: 0,
+      flexShrink: 0,
+    },
     navRow: {
       paddingHorizontal: spacing.lg,
       gap: 8,
-      paddingBottom: spacing.sm,
+      paddingBottom: 8,
       alignItems: 'center',
     },
     navChip: {
@@ -1197,12 +1203,12 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     navBadgeOn: { backgroundColor: colors.electricBright },
     navBadgeText: { ...typography.badge, fontFamily: OFFICIAL_APP_FONT, color: '#fff' },
     navBadgeTextOn: { color: '#fff' },
-    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxxl },
+    scroll: { paddingHorizontal: spacing.lg, paddingTop: 0, paddingBottom: spacing.xxxl },
     statsGrid: {
       flexDirection: 'row-reverse',
       flexWrap: 'wrap',
-      gap: 10,
-      marginBottom: spacing.md,
+      gap: 8,
+      marginBottom: 8,
     },
     statCard: {
       width: '23.5%',
@@ -1242,11 +1248,11 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     actionCard: {
       backgroundColor: cardBg,
       borderRadius: 16,
-      paddingVertical: spacing.xl,
+      paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
-      marginBottom: spacing.lg,
+      marginBottom: spacing.md,
       alignItems: 'center',
     },
     actionCardTitle: {
@@ -1275,14 +1281,14 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.bodyStrong,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      marginBottom: spacing.sm,
-      marginTop: spacing.sm,
+      marginBottom: 6,
+      marginTop: 8,
     },
     pageTitle: {
       ...typography.h3,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
     },
     emptyInline: {
       ...typography.caption,
@@ -1355,7 +1361,9 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       writingDirection: 'rtl',
     },
     filterRowWrap: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
+      flexGrow: 0,
+      flexShrink: 0,
     },
     tabHeader: {
       flexDirection: 'row',
@@ -1363,7 +1371,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       justifyContent: 'flex-end',
       alignItems: 'center',
       gap: spacing.md,
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
     },
     addBtn: {
       flexDirection: 'row',
