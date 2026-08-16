@@ -30,6 +30,8 @@ type BackendListing = {
   contactPhone?: string;
   weightKg?: number;
   images?: string[];
+  videoUrl?: string | null;
+  thumbnailUrl?: string | null;
   description: string;
   arabicDescription: string;
   featured?: boolean;
@@ -79,6 +81,8 @@ function mapListing(l: BackendListing): Listing {
       l.marketSubcategory?.requiresWeight === true ||
       l.category === 'slaughter',
     images: l.images?.length ? l.images : [],
+    videoUrl: l.videoUrl?.trim() || undefined,
+    thumbnailUrl: l.thumbnailUrl?.trim() || undefined,
     description: l.description,
     arabicDescription: l.arabicDescription,
     seller: {

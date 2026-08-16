@@ -17,6 +17,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { listingHasVideo, listingPhotoUris, listingThumbUri } from '@/lib/listingMedia';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
@@ -45,17 +46,7 @@ const CATEGORY_ICONS: Record<Listing['category'], string> = {
   slaughter: '🥩',
 };
 
-const VIDEO_EXT = /\.(mp4|mov|webm|m4v)(\?|$)/i;
 const NEW_LISTING_MS = 24 * 60 * 60 * 1000;
-
-function listingImageUri(listing: Listing): string | undefined {
-  const first = listing.images?.[0];
-  return first && first.trim().length > 0 ? first : undefined;
-}
-
-function listingHasVideo(listing: Listing): boolean {
-  return (listing.images ?? []).some((uri) => VIDEO_EXT.test(uri));
-}
 
 function listingTimeLabel(listing: Listing): string {
   if (listing.createdAt) return formatRelativeTimeAr(listing.createdAt);
@@ -88,7 +79,7 @@ function ListingCardInner({
   compact = false,
 }: ListingCardProps) {
   const country = getCountryInfo(listing.country);
-  const thumbUri = listingImageUri(listing);
+  const thumbUri = listingThumbUri(listing);
   const { scheme, colors } = useTheme();
   const styles = useThemedStyles(({ colors: c, scheme: s }) => createStyles(c, s));
   const cardOverlay = imageCardOverlay(scheme);
@@ -101,9 +92,7 @@ function ListingCardInner({
   const sellerName =
     seller?.arabicName || seller?.displayName || seller?.username || 'بائع';
   const sellerId = seller?.id;
-  const photoCount = (listing.images ?? []).filter(
-    (uri) => uri && uri.trim().length > 0 && !VIDEO_EXT.test(uri),
-  ).length;
+  const photoCount = listingPhotoUris(listing).length;
 
   if (variant === 'list') {
     const showNew = isNewListing(listing);

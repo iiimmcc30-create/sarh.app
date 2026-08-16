@@ -92,6 +92,9 @@ export interface Listing {
   /** Parent category requires weight (ذبائح) */
   requiresWeight?: boolean;
   images: string[];
+  /** Dedicated listing video — separate from the image gallery */
+  videoUrl?: string;
+  thumbnailUrl?: string;
   description: string;
   arabicDescription: string;
   seller: User;
