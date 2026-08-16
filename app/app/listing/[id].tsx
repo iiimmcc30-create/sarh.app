@@ -114,7 +114,12 @@ export default function ListingDetailScreen() {
           raw.marketCategory?.requiresWeight === true ||
           raw.marketSubcategory?.requiresWeight === true ||
           raw.category === 'slaughter',
-        images: raw.images?.length ? raw.images : [],
+        images: (raw.images ?? [])
+          .map((uri: string) => {
+            const rawUri = typeof uri === 'string' ? uri.trim() : '';
+            return resolveMediaUrl(rawUri) ?? rawUri;
+          })
+          .filter((uri: string) => uri.length > 0),
         videoUrl: resolveMediaUrl(
           listingVideoUrl({ images: raw.images, videoUrl: raw.videoUrl }),
         ),

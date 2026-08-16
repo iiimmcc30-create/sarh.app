@@ -2,15 +2,38 @@ import type { Listing } from '@/services/types';
 
 export const LISTING_VIDEO_EXT = /\.(mp4|mov|webm|m4v|quicktime)(\?|$)/i;
 const LISTING_VIDEO_HINT = /\/video\/|resource_type=video|\/videos\//i;
+const LISTING_IMAGE_EXT = /\.(jpe?g|png|webp|gif)(\?|$)/i;
 
 function trimUri(uri?: string | null): string | undefined {
   const value = typeof uri === 'string' ? uri.trim() : '';
   return value.length > 0 ? value : undefined;
 }
 
+/** Cloudinary (or derived) video still — image, not playable video. */
+export function isListingVideoStillUri(uri?: string | null): boolean {
+  const value = trimUri(uri);
+  if (!value) return false;
+  if (!/\/video\/upload\//i.test(value)) return false;
+  if (/\/video\/upload\/[^/]*so_/i.test(value)) return true;
+  if (/\/video\/upload\/[^/]*f_jpg/i.test(value)) return true;
+  return LISTING_IMAGE_EXT.test(value);
+}
+
+/**
+ * Ephemeral local-disk uploads (e.g. Render `/uploads/...`) that disappear
+ * after restart — prefer Cloudinary/CDN covers over these on cards.
+ */
+export function isEphemeralListingUploadUri(uri?: string | null): boolean {
+  const value = trimUri(uri);
+  if (!value) return false;
+  if (/res\.cloudinary\.com/i.test(value)) return false;
+  return /\/uploads\//i.test(value);
+}
+
 export function isListingVideoUri(uri?: string | null): boolean {
   const value = trimUri(uri);
   if (!value) return false;
+  if (isListingVideoStillUri(value)) return false;
   return LISTING_VIDEO_EXT.test(value) || LISTING_VIDEO_HINT.test(value);
 }
 
@@ -25,7 +48,7 @@ export function listingVideoUrl(
   listing: Pick<Listing, 'images' | 'videoUrl'>,
 ): string | undefined {
   const dedicated = trimUri(listing.videoUrl);
-  if (dedicated) return dedicated;
+  if (dedicated && !isListingVideoStillUri(dedicated)) return dedicated;
   return (listing.images ?? []).find((uri) => isListingVideoUri(uri));
 }
 
@@ -55,14 +78,27 @@ export function cloudinaryVideoFirstFrameUrl(
     .replace(/\.(mp4|mov|webm|m4v)(\?|$)/i, '.jpg$2');
 }
 
-/** Cover for outer listing cards: first photo, else saved thumb, else video start frame. */
+function firstDurableUri(uris: Array<string | undefined | null>): string | undefined {
+  for (const uri of uris) {
+    const value = trimUri(uri);
+    if (value && !isEphemeralListingUploadUri(value)) return value;
+  }
+  return undefined;
+}
+
+/** Cover for outer listing cards: durable photo → thumb → video frame → any photo. */
 export function listingThumbUri(
   listing: Pick<Listing, 'images' | 'thumbnailUrl' | 'videoUrl'>,
 ): string | undefined {
-  const photo = listingPhotoUris(listing)[0];
-  if (photo) return photo;
+  const photos = listingPhotoUris(listing);
+  const durablePhoto = firstDurableUri(photos);
+  if (durablePhoto) return durablePhoto;
+
   const thumb = trimUri(listing.thumbnailUrl);
-  if (thumb) return thumb;
-  const video = listingVideoUrl(listing);
-  return cloudinaryVideoFirstFrameUrl(video);
+  if (thumb && !isEphemeralListingUploadUri(thumb)) return thumb;
+
+  const videoFrame = cloudinaryVideoFirstFrameUrl(listingVideoUrl(listing));
+  if (videoFrame) return videoFrame;
+
+  return photos[0] ?? thumb;
 }

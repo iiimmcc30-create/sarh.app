@@ -1,5 +1,8 @@
 import {
   cloudinaryVideoFirstFrameUrl,
+  isEphemeralListingUploadUri,
+  isListingVideoStillUri,
+  isListingVideoUri,
   listingHasVideo,
   listingPhotoUris,
   listingThumbUri,
@@ -55,5 +58,43 @@ describe('listingMedia', () => {
       'https://res.cloudinary.com/demo/video/upload/so_0,f_jpg,q_auto/v1/safat/listings/clip.jpg',
     );
     expect(cloudinaryVideoFirstFrameUrl(videoUrl)).toContain('so_0,f_jpg');
+  });
+
+  it('treats Cloudinary video stills as photos, not playable video', () => {
+    const still =
+      'https://res.cloudinary.com/demo/video/upload/so_0,f_jpg,q_auto/v1/safat/listings/clip.jpg';
+    expect(isListingVideoStillUri(still)).toBe(true);
+    expect(isListingVideoUri(still)).toBe(false);
+    expect(listingPhotoUris({ images: [still] })).toEqual([still]);
+    expect(listingThumbUri({ images: [still], videoUrl: undefined })).toBe(still);
+  });
+
+  it('prefers durable Cloudinary thumb over ephemeral /uploads photo on cards', () => {
+    const listing = {
+      images: [
+        'https://sarh-new4.onrender.com/uploads/listings/dead.jpeg',
+      ],
+      thumbnailUrl:
+        'https://res.cloudinary.com/demo/image/upload/v1/sarh/listings/thumb.jpg',
+      videoUrl:
+        'https://res.cloudinary.com/demo/video/upload/v1/sarh/listings/clip.mp4',
+    };
+
+    expect(isEphemeralListingUploadUri(listing.images[0])).toBe(true);
+    expect(listingThumbUri(listing)).toBe(listing.thumbnailUrl);
+  });
+
+  it('keeps a durable photo as the outer card cover when available', () => {
+    const photo =
+      'https://res.cloudinary.com/demo/image/upload/v1/sarh/listings/photo.jpg';
+    const listing = {
+      images: [photo],
+      thumbnailUrl:
+        'https://res.cloudinary.com/demo/image/upload/v1/sarh/listings/thumb.jpg',
+      videoUrl:
+        'https://res.cloudinary.com/demo/video/upload/v1/sarh/listings/clip.mp4',
+    };
+
+    expect(listingThumbUri(listing)).toBe(photo);
   });
 });

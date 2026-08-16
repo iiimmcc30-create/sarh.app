@@ -83,7 +83,12 @@ function mapListing(l: BackendListing): Listing {
       l.marketCategory?.requiresWeight === true ||
       l.marketSubcategory?.requiresWeight === true ||
       l.category === 'slaughter',
-    images: l.images?.length ? l.images : [],
+    images: (l.images ?? [])
+      .map((uri) => {
+        const raw = typeof uri === 'string' ? uri.trim() : '';
+        return resolveMediaUrl(raw) ?? raw;
+      })
+      .filter((uri) => uri.length > 0),
     videoUrl: resolveMediaUrl(listingVideoUrl({ images: l.images, videoUrl: l.videoUrl })),
     thumbnailUrl: resolveMediaUrl(l.thumbnailUrl?.trim() || undefined),
     description: l.description,
