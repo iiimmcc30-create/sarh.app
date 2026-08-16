@@ -37,6 +37,10 @@ import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
 import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
+import {
+  LISTING_EDIT_LIMIT_MESSAGE_AR,
+  listingAllowsOwnerEdit,
+} from '@/lib/listingLimits';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -61,7 +65,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { accessToken, isAuthenticated } = useAuth();
+  const { accessToken, isAuthenticated, user } = useAuth();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { listings, me, removeListing } = useApp();
@@ -139,6 +143,7 @@ export default function ListingDetailScreen() {
         pinned: raw.pinned ?? false,
         postedAt: new Date(raw.createdAt).toLocaleDateString('ar-SA'),
         createdAt: raw.createdAt,
+        editCount: typeof raw.editCount === 'number' ? raw.editCount : 0,
       });
     } catch {
       /* keep cache */
@@ -273,7 +278,13 @@ export default function ListingDetailScreen() {
     Alert.alert('البث المباشر', 'قريباً 🔴\nميزة البث المباشر للإعلانات ستتوفر قريباً.');
   };
 
+  const canEditListing = listingAllowsOwnerEdit(listing.editCount, user?.role);
+
   const handleEdit = () => {
+    if (!canEditListing) {
+      Alert.alert('تعديل غير متاح', LISTING_EDIT_LIMIT_MESSAGE_AR);
+      return;
+    }
     void navigateToCreateListing({ editId: listing.id });
   };
 
@@ -306,13 +317,17 @@ export default function ListingDetailScreen() {
       badge: 'قريباً',
       danger: false,
     },
-    {
-      key: 'edit',
-      icon: 'create-outline',
-      label: 'تعديل',
-      onPress: handleEdit,
-      danger: false,
-    },
+    ...(canEditListing
+      ? [
+          {
+            key: 'edit',
+            icon: 'create-outline',
+            label: 'تعديل',
+            onPress: handleEdit,
+            danger: false,
+          },
+        ]
+      : []),
     ...(paidFlags.listingFeesEnabled
       ? [
           {
@@ -349,7 +364,9 @@ export default function ListingDetailScreen() {
       title: 'إدارة الإعلان',
       message: 'اختر الإجراء المطلوب',
       items: [
-        { key: 'edit', label: 'تعديل الإعلان', icon: 'create-outline' },
+        ...(canEditListing
+          ? [{ key: 'edit', label: 'تعديل الإعلان', icon: 'create-outline' }]
+          : []),
         ...(paidFlags.listingFeesEnabled
           ? [
               { key: 'pay-fee', label: 'سداد الرسوم', icon: 'receipt-outline' },

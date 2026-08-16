@@ -7,6 +7,7 @@ import { User, Post, Listing } from '@/services/types';
 import { useAuth } from './AuthContext';
 import { API_BASE, ensureApiReachable } from '@/services/api';
 import { parseApiError } from '@/services/apiError';
+import { sanitizeListingLimitMessage } from '@/lib/listingLimits';
 import { authFetch, getAccessToken } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { fetchPublicFeed } from '@/services/fetchPublicFeed';
@@ -53,6 +54,7 @@ interface AppContextValue {
   deletePost: (postId: string) => Promise<ActionResult>;
   listings: Listing[];
   addListing: (listingData: any) => Promise<ActionResult>;
+  updateListing: (listingId: string, listingData: any) => Promise<ActionResult>;
   likedPosts: Set<string>;
   repostedPosts: Set<string>;
   bookmarkedPosts: Set<string>;
@@ -177,6 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       postedAt: new Date(l.createdAt).toLocaleDateString('ar-SA'),
       createdAt: l.createdAt,
       views: typeof l.views === 'number' ? l.views : undefined,
+      editCount: typeof l.editCount === 'number' ? l.editCount : 0,
     };
   }, [mapBackendUser]);
 
@@ -513,12 +516,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return mapped ? { ok: true, listingId: mapped.id } : { ok: false, error: 'استجابة غير صالحة' };
         }
       }
-      return { ok: false, error: await parseApiError(res) };
+      return { ok: false, error: sanitizeListingLimitMessage(await parseApiError(res)) };
     } catch (err) {
       console.warn('[AppContext] Add listing failed:', err);
       return {
         ok: false,
         error: err instanceof Error ? err.message : 'فشل نشر الإعلان',
+      };
+    }
+  }, [isAuthenticated, accessToken, mapBackendListing]);
+
+  const updateListing = useCallback(async (listingId: string, listingData: any): Promise<ActionResult> => {
+    if (!isAuthenticated || !accessToken) {
+      return { ok: false, error: 'يجب تسجيل الدخول أولاً' };
+    }
+    try {
+      const res = await authFetch(`${API_BASE}/api/listings/${listingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(listingData),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          const mapped = mapBackendListing(json.data);
+          if (mapped) {
+            setListingsState((prev) => prev.map((item) => (item.id === listingId ? mapped : item)));
+            return { ok: true, listingId: mapped.id };
+          }
+          return { ok: false, error: 'استجابة غير صالحة' };
+        }
+      }
+      return { ok: false, error: sanitizeListingLimitMessage(await parseApiError(res)) };
+    } catch (err) {
+      console.warn('[AppContext] Update listing failed:', err);
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : 'فشل تعديل الإعلان',
       };
     }
   }, [isAuthenticated, accessToken, mapBackendListing]);
@@ -725,6 +759,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deletePost,
       listings: listingsState,
       addListing,
+      updateListing,
       likedPosts,
       repostedPosts,
       bookmarkedPosts,
@@ -746,6 +781,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deletePost,
       listingsState,
       addListing,
+      updateListing,
       likedPosts,
       repostedPosts,
       bookmarkedPosts,

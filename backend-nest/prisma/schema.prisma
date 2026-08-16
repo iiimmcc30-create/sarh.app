@@ -281,6 +281,7 @@ model Listing {
   status            ListingStatus   @default(active)
   views             Int             @default(0)
   commentsCount     Int             @default(0)
+  editCount         Int             @default(0)
   expiresAt         DateTime?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

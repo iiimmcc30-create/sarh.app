@@ -9,6 +9,7 @@ import {
   hasPaidAccess,
 } from '../../lib/subscription-lifecycle';
 import { throwApi } from '../../common/exceptions/api.exception';
+import { LISTING_DAILY_LIMIT_MESSAGE_AR, resolveListingCreateDailyLimit } from '../../listings/listing-policy';
 import { SubscriptionLifecycleRepository } from '../repositories/subscription-lifecycle.repository';
 import { SubscriptionsRepository } from '../repositories/subscriptions.repository';
 import { SubscriptionLifecycleService } from './subscription-lifecycle.service';
@@ -73,6 +74,7 @@ export class SubscriptionEntitlementService {
   async assertCanCreateListing(
     userId: string,
     params: { images: string[]; featured: boolean; pinned?: boolean },
+    actor?: { role?: string },
   ): Promise<string> {
     let row = await this.repo.findByUserId(userId);
     if (!row) {
@@ -92,13 +94,12 @@ export class SubscriptionEntitlementService {
     );
     const perms = ctx.permissions;
 
-    const dailyLimit = this.permissions.maxAdsPer24Hours(perms);
-    if (!isUnlimited(dailyLimit) && row.dailyAdsUsed >= dailyLimit) {
-      throwApi(
-        403,
-        'listing_limit',
-        `وصلت للحد الأقصى (${dailyLimit} إعلانات يومياً). يرجى ترقية الباقة.`,
-      );
+    const dailyLimit = resolveListingCreateDailyLimit(
+      actor?.role,
+      this.permissions.maxAdsPer24Hours(perms),
+    );
+    if (!dailyLimit.unlimited && row.dailyAdsUsed >= dailyLimit.limit) {
+      throwApi(403, 'listing_limit', LISTING_DAILY_LIMIT_MESSAGE_AR);
     }
 
     if (params.featured) {

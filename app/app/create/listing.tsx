@@ -6,8 +6,8 @@ import { elevatedControlStyle, menuCardStyle } from '@/components/feature/Sideba
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
@@ -29,9 +29,17 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE } from '@/services/api';
+import { authFetch } from '@/services/authFetch';
 import { Country } from '@/services/types';
 import { resolveMediaUrl } from '@/services/media';
+import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
+import {
+  LISTING_EDIT_LIMIT_MESSAGE_AR,
+  listingAllowsOwnerEdit,
+  sanitizeListingLimitMessage,
+} from '@/lib/listingLimits';
 import { ListingVideoSection, type ListingVideoState } from '@/components/listing/ListingVideoSection';
 import { uploadListingVideo } from '@/services/listingVideo';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
@@ -69,10 +77,17 @@ export default function CreateListingScreen() {
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router = useRouter();
-  const { addListing } = useApp();
-  const { accessToken } = useAuth();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const isEditing = typeof editId === 'string' && editId.length > 0;
+  const { addListing, updateListing } = useApp();
+  const { accessToken, user } = useAuth();
 
   const [step, setStep] = useState(0);
+  const [loadingListing, setLoadingListing] = useState(isEditing);
+  const [pendingCategoryIds, setPendingCategoryIds] = useState<{
+    parentId?: string;
+    subId?: string;
+  } | null>(null);
   const { categories: parents, loading: categoriesLoading } = useMarketCategories();
   const [parentCategory, setParentCategory] = useState<MarketCategory | null>(null);
   const [subCategory, setSubCategory] = useState<MarketCategory | null>(null);
@@ -95,12 +110,96 @@ export default function CreateListingScreen() {
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
   const { hasAnyBoostService } = usePaidServices();
 
+  useEffect(() => {
+    if (!isEditing || !editId || !accessToken) {
+      if (!isEditing) setLoadingListing(false);
+      return;
+    }
+    let active = true;
+    (async () => {
+      try {
+        const res = await authFetch(`${API_BASE}/api/listings/${editId}`);
+        const json = await res.json().catch(() => ({}));
+        if (!active) return;
+        if (!res.ok || !json.success || !json.data) {
+          Alert.alert('خطأ', 'تعذر تحميل الإعلان');
+          router.back();
+          return;
+        }
+        const raw = json.data;
+        const editCount = typeof raw.editCount === 'number' ? raw.editCount : 0;
+        if (!listingAllowsOwnerEdit(editCount, user?.role)) {
+          Alert.alert('تعديل غير متاح', LISTING_EDIT_LIMIT_MESSAGE_AR);
+          router.back();
+          return;
+        }
+        setTitleAr(raw.arabicTitle ?? raw.title ?? '');
+        setDescAr(raw.arabicDescription ?? raw.description ?? '');
+        setBreed(raw.breed ?? '');
+        setAge(raw.age ?? '');
+        setPrice(raw.price != null ? String(raw.price) : '');
+        setCountry((raw.country as Country) || 'SA');
+        setLocation(raw.arabicLocation ?? raw.location ?? '');
+        setContactPhone(raw.contactPhone ?? '');
+        setWeightKg(raw.weightKg != null ? String(raw.weightKg) : '');
+        setImageUris(
+          (Array.isArray(raw.images) ? raw.images : [])
+            .map((uri: string) => resolveMediaUrl(uri) ?? uri)
+            .filter(Boolean),
+        );
+        if (raw.videoUrl) {
+          const video = resolveMediaUrl(raw.videoUrl) ?? raw.videoUrl;
+          const thumb =
+            resolveMediaUrl(raw.thumbnailUrl) ?? raw.thumbnailUrl ?? null;
+          setVideoState({
+            status: 'ready',
+            videoUrl: video,
+            thumbnailUrl: thumb,
+            meta: {
+              localUri: video,
+              thumbnailUri: thumb,
+              durationSecs: typeof raw.videoDuration === 'number' ? raw.videoDuration : 0,
+              width: raw.videoWidth ?? 0,
+              height: raw.videoHeight ?? 0,
+              fileSizeBytes: raw.videoFileSize ?? 0,
+            },
+          });
+        }
+        setPendingCategoryIds({
+          parentId: raw.categoryId ?? raw.marketCategory?.id,
+          subId: raw.subcategoryId ?? raw.marketSubcategory?.id,
+        });
+      } catch {
+        if (active) {
+          Alert.alert('خطأ', 'تعذر تحميل الإعلان');
+          router.back();
+        }
+      } finally {
+        if (active) setLoadingListing(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [accessToken, editId, isEditing, router, user?.role]);
+
   const selectedCountry = GCC_COUNTRIES.find((c) => c.code === country)!;
 
   const subOptions = useMemo(
     () => parentCategory?.children?.filter((c) => c.isActive) ?? [],
     [parentCategory],
   );
+
+  useEffect(() => {
+    if (!pendingCategoryIds || parents.length === 0) return;
+    const parent =
+      parents.find((item) => item.id === pendingCategoryIds.parentId) ?? null;
+    if (!parent) return;
+    setParentCategory(parent);
+    const sub =
+      parent.children?.find((item) => item.id === pendingCategoryIds.subId) ?? null;
+    setSubCategory(sub);
+  }, [parents, pendingCategoryIds]);
 
   const needsWeight = categoryRequiresWeight({
     category: parentCategory?.legacyCategory || parentCategory?.slug,
@@ -204,6 +303,10 @@ export default function CreateListingScreen() {
     try {
       const uploadedUrls: string[] = [];
       for (const uri of imageUris) {
+        if (!needsUpload(uri)) {
+          uploadedUrls.push(resolveMediaUrl(uri) ?? uri);
+          continue;
+        }
         try {
           const url = await uploadImageFromUri(accessToken, uri, 'listings');
           uploadedUrls.push(url);
@@ -272,7 +375,7 @@ export default function CreateListingScreen() {
           ? Number(weightKg)
           : undefined;
       const legacyCategory = resolveLegacyListingCategory(subCategory, parentCategory);
-      const result = await addListing({
+      const payload = {
         title,
         arabicTitle: title,
         description: descAr.trim(),
@@ -294,9 +397,17 @@ export default function CreateListingScreen() {
         weightKg: weightNum && weightNum > 0 ? weightNum : undefined,
         images: uploadedUrls,
         ...videoFields,
-      });
+        ...(isEditing && videoState.status === 'idle'
+          ? { videoUrl: null, thumbnailUrl: null }
+          : {}),
+      };
 
-      if (result.ok && result.listingId && hasAnyBoostService) {
+      const result =
+        isEditing && editId
+          ? await updateListing(editId, payload)
+          : await addListing(payload);
+
+      if (result.ok && !isEditing && result.listingId && hasAnyBoostService) {
         setPublishedListingId(result.listingId);
         setShowBoostUpsell(true);
       } else if (result.ok) {
@@ -304,16 +415,34 @@ export default function CreateListingScreen() {
       } else {
         Alert.alert(
           'خطأ',
-          result.error ||
-            'فشل نشر الإعلان. يرجى التحقق من المدخلات والمحاولة مجدداً.',
+          sanitizeListingLimitMessage(
+            result.error ||
+              (isEditing
+                ? 'فشل تعديل الإعلان. يرجى التحقق من المدخلات والمحاولة مجدداً.'
+                : 'فشل نشر الإعلان. يرجى التحقق من المدخلات والمحاولة مجدداً.'),
+          ),
         );
       }
     } catch (err: any) {
-      Alert.alert('خطأ', err?.message || 'فشل نشر الإعلان.');
+      Alert.alert(
+        'خطأ',
+        sanitizeListingLimitMessage(err?.message || 'فشل نشر الإعلان.'),
+      );
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loadingListing) {
+    return (
+      <SafeAreaView style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]} edges={['top', 'bottom']}>
+        <ActivityIndicator color={colors.electricBright} />
+        <Text style={{ ...typography.body, color: colors.textMuted, marginTop: spacing.md }}>
+          جاري تحميل الإعلان...
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -331,7 +460,7 @@ export default function CreateListingScreen() {
             <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
           <View style={styles.headerTitleShell}>
-            <Text style={styles.headerTitle}>إنشاء إعلان</Text>
+            <Text style={styles.headerTitle}>{isEditing ? 'تعديل الإعلان' : 'إنشاء إعلان'}</Text>
           </View>
           <View style={styles.headerSide} />
         </View>
@@ -707,7 +836,7 @@ export default function CreateListingScreen() {
               <View style={styles.termsBox}>
                 <AppIcon name="information-circle-outline" size={16} color={colors.textMuted} />
                 <Text style={styles.termsText}>
-                  بالنشر، تؤكد أن الإعلان صحيح ويتوافق مع شروط سرح.
+                  بالنشر، تؤكد أن الإعلان صحيح ويتوافق مع شروط سرح. يمكن نشر إعلان واحد كل 24 ساعة، وتعديله مرة واحدة.
                 </Text>
               </View>
             </View>
@@ -731,7 +860,11 @@ export default function CreateListingScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={[styles.continueBtnText, !canContinue() && { color: colors.textMuted }]}>
-                  {step === STEPS.length - 1 ? '🚀 نشر الإعلان' : 'التالي ← '}
+                  {step === STEPS.length - 1
+                    ? isEditing
+                      ? 'حفظ التعديل'
+                      : '🚀 نشر الإعلان'
+                    : 'التالي ← '}
                 </Text>
               )}
             </LinearGradient>
