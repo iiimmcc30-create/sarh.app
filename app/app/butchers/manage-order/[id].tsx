@@ -1,5 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -173,87 +176,93 @@ export default function ButcherManageOrderScreen() {
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.sheet}>
-          <View style={s.sheetHead}>
+          <CoverTrailRow justify="space-between" gap={10} style={s.sheetHead}>
             <View style={s.priceCol}>
               <Text style={s.price}>{formatSar(order.totalPrice, currency)}</Text>
-              <View style={[s.paidBadge, { backgroundColor: `${accent}22` }]}>
-                <AppIcon name="checkmark" size={11} color={accent} />
-                <Text style={[s.paidBadgeText, { color: accent }]}>
+              <CoverTrailRow gap={4} style={[s.paidBadge, { backgroundColor: `${colors.success}22` }]}>
+                <Text style={[s.paidBadgeText, { color: colors.success }]}>
                   {PAYMENT_STATUS_LABELS[order.paymentStatus as 'paid' | 'unpaid'] ?? (paid ? 'مدفوع' : 'غير مدفوع')}
                 </Text>
-              </View>
+                {paid ? <AppIcon name="checkmark" size={11} color={colors.success} /> : null}
+              </CoverTrailRow>
             </View>
-            <View style={s.headMain}>
-              <View style={[s.statusBadge, { backgroundColor: accent }]}>
+            <RtlTextShell flex>
+              <View style={[s.statusBadge, { backgroundColor: accent, alignSelf: 'flex-end' }]}>
                 <View style={s.statusDot} />
                 <Text style={s.statusBadgeText}>{opsStatusLabel(order.status, order.deliveryType)}</Text>
               </View>
-              <Text style={s.orderId}>{orderShortId(order)}</Text>
-              {order.createdAt ? <Text style={s.dateText}>{formatOrderDateTime(order.createdAt)}</Text> : null}
-            </View>
-          </View>
+              <RtlText style={s.orderId}>{orderShortId(order)}</RtlText>
+              {order.createdAt ? <RtlText style={s.dateText}>{formatOrderDateTime(order.createdAt)}</RtlText> : null}
+            </RtlTextShell>
+          </CoverTrailRow>
+
+          <View style={s.divider} />
 
           <View style={s.block}>
-            <View style={s.blockTitleRow}>
+            <CoverTrailRow justify="flex-end" gap={6} style={s.blockTitleRow}>
               <Text style={s.blockTitle}>معلومات العميل</Text>
-              <AppIcon name="person-outline" size={16} color={accent} />
-            </View>
-            <View style={s.customerRow}>
+              <AppIcon name="person-outline" size={16} color={colors.textPrimary} />
+            </CoverTrailRow>
+            <CoverTrailRow justify="space-between" gap={10} style={s.customerRow}>
               {phone ? (
                 <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={s.callBtn}>
-                  <AppIcon name="call-outline" size={18} color="#fff" />
+                  <AppIcon name="call-outline" size={18} color={colors.success} />
                 </Pressable>
               ) : (
                 <View style={{ width: 42 }} />
               )}
-              <View style={s.customerText}>
-                <Text style={s.value}>{customer}</Text>
-                {phone ? <Text style={s.muted}>{phone}</Text> : null}
-                <View style={s.locLine}>
-                  <AppIcon name="map-marker-outline" size={13} color={accent} />
+              <RtlTextShell flex>
+                <RtlText style={s.value}>{customer}</RtlText>
+                {phone ? <RtlText style={s.muted}>{phone}</RtlText> : null}
+                <CoverTrailRow gap={4} style={s.locLine}>
+                  <AppIcon name="map-marker-outline" size={13} color={colors.success} />
                   <Text style={s.muted} numberOfLines={2}>
                     {address}
                   </Text>
-                </View>
-              </View>
-            </View>
+                </CoverTrailRow>
+              </RtlTextShell>
+            </CoverTrailRow>
           </View>
 
           <View style={s.block}>
-            <View style={s.blockTitleRow}>
+            <CoverTrailRow justify="flex-end" gap={6} style={s.blockTitleRow}>
               <Text style={s.blockTitle}>معلومات الطلب</Text>
-              <AppIcon name="clipboard-outline" size={16} color={accent} />
-            </View>
+              <AppIcon name="clipboard-outline" size={16} color={colors.success} />
+            </CoverTrailRow>
             <InfoRow icon="truck" label="نوع الطلب" value={delivery ? 'توصيل' : 'استلام'} colors={colors} />
             <InfoRow
               icon="time-outline"
-              label="وقت التسليم"
+              label="موعد التوصيل"
               value={formatOrderDateTime(order.scheduledAt || order.createdAt) || '—'}
               colors={colors}
             />
             <InfoRow icon="credit-card-outline" label="طريقة الدفع" value={paymentMethodLabel(order)} colors={colors} />
             <InfoRow icon="copy-outline" label="رقم الطلب" value={orderShortId(order)} colors={colors} />
+          </View>
 
+          <View style={s.block}>
             {items.map((item: any, idx: number) => {
               const name = item.product?.nameAr || 'منتج';
-              const weight = item.weightKg != null ? `${item.weightKg} كجم` : '';
-              const unit = item.unitPrice ?? item.product?.pricePerKg;
-              const line = Number(item.lineTotal ?? item.totalPrice ?? 0);
+              const weight = Number(item.weightKg || 0);
+              const line = Number(item.lineTotal ?? item.linePrice ?? item.totalPrice ?? 0);
+              const unit = item.unitPrice ?? item.product?.pricePerKg ?? (weight > 0 ? line / weight : undefined);
               const thumb = item.product?.images?.[0];
               return (
-                <View key={item.id || idx} style={s.itemRow}>
+                <CoverTrailRow key={item.id || idx} justify="space-between" gap={8} style={s.itemRow}>
                   <View style={s.itemMeta}>
                     <Text style={s.itemTotal}>{formatSar(line, currency)}</Text>
-                    <Text style={s.itemQty}>
-                      {weight}
-                      {unit != null ? ` × ${formatSar(unit, currency)}` : ''}
-                    </Text>
                     <Text style={s.itemPiece}>{item.quantity != null ? `${item.quantity} قطعة` : '1 قطعة'}</Text>
                   </View>
-                  <View style={s.itemMain}>
-                    <Text style={s.itemName}>{name}</Text>
-                    {item.cutType ? <Text style={s.muted}>{cutLabelAr(item.cutType)}</Text> : null}
-                  </View>
+                  <RtlTextShell flex>
+                    <RtlText style={s.itemName}>{name}</RtlText>
+                    <RtlText style={s.muted}>
+                      {weight > 0
+                        ? `${weight} كجم${unit != null ? ` × ${formatSar(unit, currency)}` : ''}`
+                        : item.cutType
+                          ? cutLabelAr(item.cutType)
+                          : ''}
+                    </RtlText>
+                  </RtlTextShell>
                   {thumb ? (
                     <Image source={{ uri: thumb }} style={s.thumb} contentFit="cover" />
                   ) : (
@@ -261,14 +270,14 @@ export default function ButcherManageOrderScreen() {
                       <AppIcon name="image-outline" size={16} color={colors.textMuted} />
                     </View>
                   )}
-                </View>
+                </CoverTrailRow>
               );
             })}
 
-            <View style={s.totalRow}>
-              <Text style={[s.totalValue, { color: accent }]}>{formatSar(order.totalPrice, currency)}</Text>
+            <CoverTrailRow justify="space-between" style={s.totalRow}>
+              <Text style={[s.totalValue, { color: colors.success }]}>{formatSar(order.totalPrice, currency)}</Text>
               <Text style={s.totalLabel}>المجموع</Text>
-            </View>
+            </CoverTrailRow>
           </View>
 
           {showMore ? (
@@ -320,16 +329,16 @@ export default function ButcherManageOrderScreen() {
             </>
           ) : null}
 
-          <View style={s.footerBtns}>
+          <CoverTrailRow justify="space-between" gap={8} style={s.footerBtns}>
             <Pressable style={s.ghostBtn} onPress={() => setShowMore((v) => !v)}>
               <AppIcon name={showMore ? 'angle-up' : 'angle-down'} size={16} color={colors.textPrimary} />
               <Text style={s.ghostText}>{showMore ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}</Text>
             </Pressable>
-            <Pressable style={[s.chatBtn, { backgroundColor: accent }]} onPress={openChat}>
+            <Pressable style={[s.chatBtn, { backgroundColor: colors.success }]} onPress={openChat}>
               <AppIcon name="chatbubble-outline" size={16} color="#fff" />
               <Text style={s.chatText}>التواصل مع العميل</Text>
             </Pressable>
-          </View>
+          </CoverTrailRow>
         </View>
       </ScrollView>
 
@@ -401,25 +410,25 @@ function InfoRow({
   colors: ThemeColors;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 }}>
-      <Text
-        style={{
-          ...butcherTypography.body,
-          fontFamily: OFFICIAL_APP_FONT,
-          color: colors.textPrimary,
-          flex: 1,
-          textAlign: 'left',
-        }}
-      >
-        {value}
-      </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Text style={{ ...butcherTypography.meta, fontFamily: OFFICIAL_APP_FONT, color: colors.textMuted }}>
-          {label}
+    <CoverTrailRow justify="space-between" gap={spacing.md} style={{ paddingVertical: 6 }}>
+      <CoverTrailRow gap={6} style={{ flexShrink: 1, maxWidth: '62%' }}>
+        <AppIcon name={icon} size={14} color={colors.success} />
+        <Text
+          style={{
+            ...butcherTypography.body,
+            fontFamily: OFFICIAL_APP_FONT,
+            color: colors.textPrimary,
+            writingDirection: 'rtl',
+            textAlign: 'left',
+          }}
+        >
+          {value}
         </Text>
-        <AppIcon name={icon} size={14} color={colors.electricBright} />
-      </View>
-    </View>
+      </CoverTrailRow>
+      <Text style={{ ...butcherTypography.meta, fontFamily: OFFICIAL_APP_FONT, color: colors.textMuted }}>
+        {label}
+      </Text>
+    </CoverTrailRow>
   );
 }
 
@@ -534,13 +543,19 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       gap: 10,
     },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: border,
+    },
     callBtn: {
       width: 42,
       height: 42,
       borderRadius: 21,
-      backgroundColor: colors.electricBright,
+      backgroundColor: colors.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: border,
     },
     customerText: { flex: 1, alignItems: 'flex-end', gap: 2 },
     value: {
