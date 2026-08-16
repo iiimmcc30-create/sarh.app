@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -19,9 +20,11 @@ import { Roles } from '../common/decorators/auth.decorators';
 import { successResponse } from '../common/utils/response.util';
 import { KnowledgeCenterService } from './services/knowledge-center.service';
 import {
+  CreateKnowledgePostDto,
   CreateKnowledgeSourceDto,
   ListKnowledgeArticlesQueryDto,
   ListKnowledgeLogsQueryDto,
+  UpdateKnowledgeProfileDto,
   UpdateKnowledgeSourceDto,
 } from './dto/knowledge.dto';
 
@@ -166,5 +169,29 @@ export class AdminKnowledgeController {
   @ApiOperation({ summary: 'List recent sync operation logs' })
   async logs(@Query() query: ListKnowledgeLogsQueryDto) {
     return successResponse(await this.knowledge.listLogs(query));
+  }
+
+  @Roles(...STAFF)
+  @Get('profile')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get Knowledge Center user profile' })
+  async getProfile() {
+    return successResponse({ user: await this.knowledge.getProfile() });
+  }
+
+  @Roles('ADMIN')
+  @Put('profile')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update Knowledge Center avatar and/or bio' })
+  async updateProfile(@Body() body: UpdateKnowledgeProfileDto) {
+    return successResponse({ user: await this.knowledge.updateProfile(body) });
+  }
+
+  @Roles(...STAFF)
+  @Post('post')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Publish a direct post as مركز المعرفة' })
+  async createPost(@Body() body: CreateKnowledgePostDto) {
+    return successResponse({ post: await this.knowledge.createDirectPost(body) });
   }
 }

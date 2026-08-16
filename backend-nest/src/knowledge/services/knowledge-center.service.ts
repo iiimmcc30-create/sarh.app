@@ -4,13 +4,16 @@ import { randomBytes } from 'crypto';
 import { KnowledgeSourceType } from '@prisma/client';
 import { LoggerService } from '../../common/services/logger.service';
 import { throwApi } from '../../common/exceptions/api.exception';
+import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import { KnowledgeRepository } from '../repositories/knowledge.repository';
 import { NewsFetcherService } from './news-fetcher.service';
 import { AISummarizerService } from './ai-summarizer.service';
 import { PublisherService } from './publisher.service';
 import { DEFAULT_KNOWLEDGE_SOURCES } from '../constants/default-sources';
 import {
+  CreateKnowledgePostDto,
   CreateKnowledgeSourceDto,
+  UpdateKnowledgeProfileDto,
   UpdateKnowledgeSourceDto,
 } from '../dto/knowledge.dto';
 
@@ -24,6 +27,7 @@ export class KnowledgeCenterService implements OnModuleInit {
     private readonly summarizer: AISummarizerService,
     private readonly publisher: PublisherService,
     private readonly logger: LoggerService,
+    private readonly cache: RedisCacheService,
   ) {}
 
   async onModuleInit() {
@@ -136,6 +140,66 @@ export class KnowledgeCenterService implements OnModuleInit {
       sourcesEnabled: enabled,
       sync: syncStats,
     };
+  }
+
+  async getProfile() {
+    const user = await this.repo.findKnowledgeUser();
+    if (!user) return null;
+    return {
+      id: user.id,
+      username: user.username,
+      arabicName: user.arabicName,
+      displayName: user.displayName,
+      avatar: user.avatar,
+      bio: user.bio,
+      isAI: user.isAI,
+      verified: user.verified,
+      isActive: user.isActive,
+    };
+  }
+
+  async updateProfile(dto: UpdateKnowledgeProfileDto) {
+    const user = await this.repo.findKnowledgeUser();
+    if (!user) throwApi(404, 'not_found', 'حساب مركز المعرفة غير موجود');
+    const updated = await this.repo.updateKnowledgeUserProfile(user.id, dto);
+    await this.repo.createSyncLog({
+      level: 'info',
+      message: 'تم تحديث ملف مركز المعرفة',
+      meta: { fields: Object.keys(dto) },
+    });
+    return updated;
+  }
+
+  async createDirectPost(dto: CreateKnowledgePostDto) {
+    const user = await this.repo.findKnowledgeUser();
+    if (!user) throwApi(404, 'not_found', 'حساب مركز المعرفة غير موجود');
+
+    const post = await this.repo.createDirectPost({
+      authorId: user.id,
+      content: dto.content,
+      arabicContent: dto.content,
+      image: dto.imageUrl ?? null,
+    });
+
+    const followers = await this.repo.findFollowerIds(user.id);
+    if (followers.length > 0) {
+      await this.publisher
+        .notifyFollowers(user, post.id, dto.content.slice(0, 80))
+        .catch(() => undefined);
+    }
+
+    await this.cache.del('posts:feed:first').catch(() => undefined);
+    await this.cache.delPattern('posts:feed:*').catch(() => 0);
+    await this.cache.delPattern('posts:feed:following:*').catch(() => 0);
+
+    await this.repo.createSyncLog({
+      level: 'info',
+      message: 'تم نشر منشور مباشر من مركز المعرفة',
+      meta: { postId: post.id },
+    });
+
+    this.logger.info({ postId: post.id, authorId: user.id }, 'Knowledge direct post created');
+    return post;
   }
 
   async ensureFollowedByUser(userId: string) {

@@ -9,7 +9,8 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { KnowledgeArticleStatus, KnowledgeSourceType } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { MEDIA_URL_OPTS } from '../../shared/lib/media-url';
 
 export class CreateKnowledgeSourceDto {
   @ApiProperty({ example: 'وزارة البيئة والمياه والزراعة' })
@@ -78,6 +79,35 @@ export class ListKnowledgeArticlesQueryDto {
   @IsOptional()
   @Type(() => Number)
   pageSize?: number;
+}
+
+export class CreateKnowledgePostDto {
+  @ApiProperty({ example: 'محتوى المنشور الذي سينشر باسم مركز المعرفة' })
+  @IsString()
+  @MinLength(5)
+  @MaxLength(2000)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  content!: string;
+
+  @ApiPropertyOptional({ example: 'https://cdn.example.com/image.jpg' })
+  @IsOptional()
+  @IsUrl(MEDIA_URL_OPTS)
+  @MaxLength(500)
+  imageUrl?: string;
+}
+
+export class UpdateKnowledgeProfileDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl(MEDIA_URL_OPTS)
+  @MaxLength(500)
+  avatar?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string;
 }
 
 export class ListKnowledgeLogsQueryDto {
