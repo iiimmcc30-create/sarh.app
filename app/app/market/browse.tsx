@@ -215,7 +215,7 @@ export default function MarketBrowseScreen() {
           selected={activeCountry === 'SA'}
           onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
         />
-        <FilterChip label={sortLabel} onPress={cycleSort} />
+        <FilterChip label={sortLabel} icon="sort-alt" chevron onPress={cycleSort} />
       </View>
 
       <View style={[styles.countRow, getRtlRow()]}>

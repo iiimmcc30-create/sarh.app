@@ -223,6 +223,7 @@ export default function MarketScreen() {
           onSortPress={cycleSort}
           sortLabel={sortLabel}
           filterActive={showFeaturedOnly}
+          regionActive={regionPickerOpen}
         />
       </View>
 

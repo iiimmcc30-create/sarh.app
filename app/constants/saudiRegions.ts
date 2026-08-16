@@ -153,3 +153,28 @@ export type RegionSelection =
   | { type: 'city'; region: SaudiRegion; city: SaudiCity };
 
 export const ALL_REGIONS_LABEL = 'كل المناطق';
+
+/** Featured city chips shown in the region picker sheet. */
+export const SAUDI_MAIN_CITIES: Array<{
+  regionId: string;
+  cityId: string;
+}> = [
+  { regionId: 'eastern', cityId: 'dammam' },
+  { regionId: 'riyadh', cityId: 'riyadh-city' },
+  { regionId: 'makkah', cityId: 'jeddah' },
+  { regionId: 'madinah', cityId: 'madinah-city' },
+  { regionId: 'makkah', cityId: 'makkah-city' },
+];
+
+export function resolveSaudiMainCities(): Array<{
+  region: SaudiRegion;
+  city: SaudiCity;
+}> {
+  const out: Array<{ region: SaudiRegion; city: SaudiCity }> = [];
+  for (const ref of SAUDI_MAIN_CITIES) {
+    const region = SAUDI_REGIONS.find((r) => r.id === ref.regionId);
+    const city = region?.cities.find((c) => c.id === ref.cityId);
+    if (region && city) out.push({ region, city });
+  }
+  return out;
+}

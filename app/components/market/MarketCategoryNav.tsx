@@ -1,5 +1,6 @@
 import type { MarketCategory } from '@/services/categories';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlDirection } from '@/lib/rtl';
 import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
@@ -14,8 +15,8 @@ type Props = {
 };
 
 /**
- * Haraj-style two-row category nav: text tabs + subcategory chips.
- * Horizontal ScrollViews must stay flexGrow:0 so they never eat vertical space.
+ * Two-row category nav matching market reference:
+ * green underline tabs + subcategory chips (check / emoji).
  */
 export function MarketCategoryNav({
   categories,
@@ -41,7 +42,9 @@ export function MarketCategoryNav({
         contentContainerStyle={[styles.tabRow, getRtlDirection()]}
       >
         <Pressable onPress={() => onSelectParent(null)} style={styles.tabHit}>
-          <Text style={[styles.tabText, !activeParentId && styles.tabTextActive]}>الكل</Text>
+          <Text style={[styles.tabText, !activeParentId && styles.tabTextActive]}>
+            الكل
+          </Text>
           {!activeParentId ? <View style={styles.tabUnderline} /> : null}
         </Pressable>
         {categories.map((cat) => {
@@ -52,7 +55,9 @@ export function MarketCategoryNav({
               onPress={() => onSelectParent(cat)}
               style={styles.tabHit}
             >
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>{cat.nameAr}</Text>
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                {cat.nameAr}
+              </Text>
               {active ? <View style={styles.tabUnderline} /> : null}
             </Pressable>
           );
@@ -64,6 +69,7 @@ export function MarketCategoryNav({
           <FilterChip
             label="الكل"
             selected={!activeSubId}
+            selectedCheck
             onPress={() => onSelectSub(null)}
           />
           {subs.map((sub) => (
@@ -71,6 +77,11 @@ export function MarketCategoryNav({
               key={sub.id}
               label={sub.nameAr}
               selected={activeSubId === sub.id}
+              leading={
+                sub.emoji ? (
+                  <Text style={styles.subEmoji}>{sub.emoji}</Text>
+                ) : undefined
+              }
               onPress={() => onSelectSub(sub)}
             />
           ))}
@@ -89,7 +100,6 @@ function createStyles(colors: ThemeColors) {
       flexGrow: 0,
       flexShrink: 0,
     },
-    /** Prevent RN Web ScrollView default flexGrow:1 from opening a vertical gap. */
     hScroll: {
       flexGrow: 0,
       flexShrink: 0,
@@ -108,19 +118,26 @@ function createStyles(colors: ThemeColors) {
     },
     tabText: {
       ...typography.smallHeading,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       writingDirection: 'rtl',
+      includeFontPadding: false,
     },
     tabTextActive: {
       ...typography.emphasis,
-      color: colors.textPrimary,
+      fontFamily: OFFICIAL_APP_FONT,
+      color: colors.electricBright,
     },
     tabUnderline: {
       height: 3,
       width: '100%',
       minWidth: 24,
       borderRadius: 2,
-      backgroundColor: colors.electric,
+      backgroundColor: colors.electricBright,
+    },
+    subEmoji: {
+      fontSize: 14,
+      lineHeight: 18,
     },
   });
 }

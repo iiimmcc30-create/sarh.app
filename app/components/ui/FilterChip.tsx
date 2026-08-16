@@ -4,24 +4,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  View,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
+import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { FILTER_CHIP } from '@/components/ui/filterChipTokens';
 
-/** Unified filter / category chip — text only, fixed height, content-width. */
-export const FILTER_CHIP = {
-  height: 46,
-  paddingHorizontal: 22,
-  radius: 15,
-  gap: 10,
-  fontSize: 14,
-  lineHeight: 20,
-  /** Idle surface — dark near #101F2C; themed via bgSurface / elevated. */
-  idleSurfaceFallback: '#101F2C',
-} as const;
+export { FILTER_CHIP } from '@/components/ui/filterChipTokens';
 
 type FilterChipProps = {
   label: string;
@@ -30,6 +24,14 @@ type FilterChipProps = {
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Optional leading/trailing icon (Lucide/legacy name). */
+  icon?: string;
+  /** Show checkmark circle when selected (market «الكل» style). */
+  selectedCheck?: boolean;
+  /** Dropdown chevron on the opposite side of the label. */
+  chevron?: boolean;
+  /** Optional emoji / custom node before the label (RTL: visual right). */
+  leading?: ReactNode;
 };
 
 export function FilterChip({
@@ -39,8 +41,17 @@ export function FilterChip({
   disabled = false,
   style,
   testID,
+  icon,
+  selectedCheck = false,
+  chevron = false,
+  leading,
 }: FilterChipProps) {
-  const styles = useThemedStyles(({ colors }) => createChipStyles(colors));
+  const { styles, colors } = useThemedStyles((theme) => ({
+    styles: createChipStyles(theme.colors),
+    colors: theme.colors,
+  }));
+
+  const iconColor = selected ? '#FFFFFF' : colors.textSecondary;
 
   return (
     <Pressable
@@ -57,12 +68,26 @@ export function FilterChip({
         style,
       ]}
     >
-      <Text
-        numberOfLines={1}
-        style={[styles.label, selected && styles.labelSelected]}
-      >
-        {label}
-      </Text>
+      <View style={[styles.inner, getRtlRow()]}>
+        {selected && selectedCheck ? (
+          <View style={styles.checkCircle}>
+            <AppIcon name="checkmark" size={11} color={colors.electricBright} />
+          </View>
+        ) : leading ? (
+          leading
+        ) : icon ? (
+          <AppIcon name={icon} size={15} color={iconColor} />
+        ) : null}
+        <Text
+          numberOfLines={1}
+          style={[styles.label, selected && styles.labelSelected]}
+        >
+          {label}
+        </Text>
+        {chevron ? (
+          <AppIcon name="angle-down" size={13} color={iconColor} />
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -128,19 +153,31 @@ function createChipStyles(colors: ThemeColors) {
     chipDisabled: {
       opacity: 0.45,
     },
+    inner: {
+      alignItems: 'center',
+      gap: 7,
+      maxWidth: '100%',
+    },
+    checkCircle: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: '#FFFFFF',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     label: {
       ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
       fontSize: FILTER_CHIP.fontSize,
       lineHeight: FILTER_CHIP.lineHeight,
-      fontWeight: '500',
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',
       includeFontPadding: false,
     },
     labelSelected: {
       color: '#FFFFFF',
-      fontWeight: '600',
     },
   });
 }

@@ -1,4 +1,4 @@
-import { FILTER_CHIP } from '../components/ui/FilterChip';
+import { FILTER_CHIP } from '../components/ui/filterChipTokens';
 
 describe('FilterChip tokens', () => {
   it('keeps a fixed height and content-driven horizontal padding', () => {
@@ -14,5 +14,10 @@ describe('FilterChip tokens', () => {
 
   it('uses a dark idle surface near the messages reference', () => {
     expect(FILTER_CHIP.idleSurfaceFallback.toLowerCase()).toBe('#101f2c');
+  });
+
+  it('keeps the official chip radius near the market reference', () => {
+    expect(FILTER_CHIP.radius).toBeGreaterThanOrEqual(12);
+    expect(FILTER_CHIP.radius).toBeLessThanOrEqual(16);
   });
 });
