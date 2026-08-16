@@ -35,8 +35,34 @@ export function listingHasVideo(
   return !!listingVideoUrl(listing);
 }
 
-export function listingThumbUri(
-  listing: Pick<Listing, 'images' | 'thumbnailUrl'>,
+/**
+ * Cloudinary first-frame still from a video delivery URL (so_0).
+ * Used when a listing has video but no uploaded thumbnail / photos.
+ */
+export function cloudinaryVideoFirstFrameUrl(
+  videoUrl?: string | null,
 ): string | undefined {
-  return listingPhotoUris(listing)[0] ?? trimUri(listing.thumbnailUrl);
+  const value = trimUri(videoUrl);
+  if (!value) return undefined;
+  if (!/res\.cloudinary\.com/i.test(value)) return undefined;
+  if (!/\/video\/upload\//i.test(value)) return undefined;
+  // Already a transformed still
+  if (/\/video\/upload\/[^/]*so_/i.test(value)) {
+    return value.replace(/\.(mp4|mov|webm|m4v)(\?|$)/i, '.jpg$2');
+  }
+  return value
+    .replace(/\/video\/upload\//i, '/video/upload/so_0,f_jpg,q_auto/')
+    .replace(/\.(mp4|mov|webm|m4v)(\?|$)/i, '.jpg$2');
+}
+
+/** Cover for outer listing cards: first photo, else saved thumb, else video start frame. */
+export function listingThumbUri(
+  listing: Pick<Listing, 'images' | 'thumbnailUrl' | 'videoUrl'>,
+): string | undefined {
+  const photo = listingPhotoUris(listing)[0];
+  if (photo) return photo;
+  const thumb = trimUri(listing.thumbnailUrl);
+  if (thumb) return thumb;
+  const video = listingVideoUrl(listing);
+  return cloudinaryVideoFirstFrameUrl(video);
 }

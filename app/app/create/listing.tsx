@@ -40,6 +40,7 @@ import {
   listingAllowsOwnerEdit,
   sanitizeListingLimitMessage,
 } from '@/lib/listingLimits';
+import { cloudinaryVideoFirstFrameUrl } from '@/lib/listingMedia';
 import { ListingVideoSection, type ListingVideoState } from '@/components/listing/ListingVideoSection';
 import { uploadListingVideo } from '@/services/listingVideo';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
@@ -266,6 +267,11 @@ export default function CreateListingScreen() {
     }
   };
 
+  const hasListingVideo =
+    videoState.status === 'picked' ||
+    videoState.status === 'ready' ||
+    videoState.status === 'uploading';
+
   const canContinue = () => {
     if (step === 0) return !!parentCategory && !!subCategory;
     if (step === 1) {
@@ -275,7 +281,7 @@ export default function CreateListingScreen() {
       return (
         titleAr.trim().length >= 3 &&
         descAr.trim().length >= 10 &&
-        imageUris.length > 0 &&
+        (imageUris.length > 0 || hasListingVideo) &&
         weightValid
       );
     }
@@ -319,13 +325,7 @@ export default function CreateListingScreen() {
         }
       }
 
-      if (uploadedUrls.length === 0) {
-        Alert.alert('صور مطلوبة', 'يجب إضافة صورة واحدة على الأقل للإعلان.');
-        setSubmitting(false);
-        return;
-      }
-
-      // Upload video if one was picked (optional — never blocks submit)
+      // Upload video if one was picked (optional unless there are no photos)
       let videoFields: {
         videoUrl?: string;
         thumbnailUrl?: string;
@@ -336,9 +336,14 @@ export default function CreateListingScreen() {
       } = {};
 
       if (videoState.status === 'ready' && videoState.videoUrl) {
+        const readyThumb =
+          resolveMediaUrl(videoState.thumbnailUrl) ??
+          videoState.thumbnailUrl ??
+          cloudinaryVideoFirstFrameUrl(videoState.videoUrl) ??
+          undefined;
         videoFields = {
           videoUrl: resolveMediaUrl(videoState.videoUrl) ?? videoState.videoUrl,
-          thumbnailUrl: resolveMediaUrl(videoState.thumbnailUrl) ?? videoState.thumbnailUrl ?? undefined,
+          thumbnailUrl: readyThumb,
         };
       } else if (videoState.status === 'picked' && videoState.meta) {
         setVideoState({ status: 'uploading', meta: videoState.meta, progress: 0 });
@@ -348,10 +353,14 @@ export default function CreateListingScreen() {
               prev.status === 'uploading' ? { ...prev, progress: p } : prev,
             );
           });
+          const thumb =
+            resolveMediaUrl(result.thumbnailUrl) ??
+            result.thumbnailUrl ??
+            cloudinaryVideoFirstFrameUrl(result.videoUrl) ??
+            undefined;
           videoFields = {
             videoUrl: resolveMediaUrl(result.videoUrl) ?? result.videoUrl,
-            thumbnailUrl:
-              resolveMediaUrl(result.thumbnailUrl) ?? result.thumbnailUrl ?? undefined,
+            thumbnailUrl: thumb,
             videoDuration: result.videoDuration,
             videoWidth: result.videoWidth,
             videoHeight: result.videoHeight,
@@ -361,12 +370,36 @@ export default function CreateListingScreen() {
             status: 'ready',
             meta: videoState.meta,
             videoUrl: result.videoUrl,
-            thumbnailUrl: result.thumbnailUrl,
+            thumbnailUrl: thumb ?? null,
           });
         } catch {
-          // Video upload failed — continue without video
+          if (uploadedUrls.length === 0) {
+            setVideoState({ status: 'failed', meta: videoState.meta, error: 'فشل رفع الفيديو' });
+            Alert.alert('خطأ', 'تعذّر رفع الفيديو. أضف صورة أو أعد المحاولة.');
+            setSubmitting(false);
+            return;
+          }
+          // With photos, video failure is non-blocking
           setVideoState({ status: 'failed', meta: videoState.meta, error: 'فشل رفع الفيديو' });
         }
+      }
+
+      // Video-only: use first-frame thumbnail as the outer card cover image
+      if (uploadedUrls.length === 0) {
+        const cover =
+          videoFields.thumbnailUrl ??
+          cloudinaryVideoFirstFrameUrl(videoFields.videoUrl) ??
+          undefined;
+        if (!cover || !videoFields.videoUrl) {
+          Alert.alert(
+            'وسائط مطلوبة',
+            'أضف صورة واحدة على الأقل، أو فيديو ليُستخدم إطار بدايته كصورة الإعلان.',
+          );
+          setSubmitting(false);
+          return;
+        }
+        uploadedUrls.push(cover);
+        videoFields.thumbnailUrl = cover;
       }
 
       const title = titleAr.trim();
@@ -655,7 +688,7 @@ export default function CreateListingScreen() {
 
               {/* Images */}
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الصور * (صورة واحدة على الأقل)</Text>
+                <Text style={styles.fieldLabel}>الصور{hasListingVideo ? '' : ' *'}</Text>
                 <View style={styles.imageGrid}>
                   {imageUris.map((uri, idx) => (
                     <View key={uri} style={styles.imageThumbWrap}>

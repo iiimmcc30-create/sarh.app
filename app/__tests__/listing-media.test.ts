@@ -1,4 +1,5 @@
 import {
+  cloudinaryVideoFirstFrameUrl,
   listingHasVideo,
   listingPhotoUris,
   listingThumbUri,
@@ -39,5 +40,20 @@ describe('listingMedia', () => {
     expect(listingHasVideo(listing)).toBe(true);
     expect(listingVideoUrl(listing)).toContain('/video/upload/');
     expect(listingPhotoUris(listing)).toEqual([]);
+  });
+
+  it('uses Cloudinary first frame when video-only listing has no photos', () => {
+    const videoUrl =
+      'https://res.cloudinary.com/demo/video/upload/v1/safat/listings/clip.mp4';
+    const listing = {
+      images: [] as string[],
+      videoUrl,
+    };
+
+    expect(listingPhotoUris(listing)).toEqual([]);
+    expect(listingThumbUri(listing)).toBe(
+      'https://res.cloudinary.com/demo/video/upload/so_0,f_jpg,q_auto/v1/safat/listings/clip.jpg',
+    );
+    expect(cloudinaryVideoFirstFrameUrl(videoUrl)).toContain('so_0,f_jpg');
   });
 });
