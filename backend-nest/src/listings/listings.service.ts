@@ -21,6 +21,7 @@ import {
   interleavePromotedListings,
   promotionSearchScore,
 } from './promotion/promotion-ranking.util';
+import { extractListingVideoUrl } from '../shared/lib/media-url';
 import { SubscriptionEntitlementService } from '../subscriptions/services/subscription-entitlement.service';
 import { PlanResolverService } from '../plans/plan-resolver.service';
 import { PlanPermissionService } from '../plans/plan-permission.service';
@@ -348,7 +349,7 @@ export class ListingsService {
           contactPhone: dto.contactPhone,
           weightKg: dto.weightKg ?? null,
           images: dto.images,
-          videoUrl: dto.videoUrl ?? null,
+          videoUrl: extractListingVideoUrl(dto.videoUrl, dto.images),
           thumbnailUrl: dto.thumbnailUrl ?? null,
           videoDuration: dto.videoDuration ?? null,
           videoWidth: dto.videoWidth ?? null,
@@ -470,6 +471,15 @@ export class ListingsService {
     }
     if (dto.price !== undefined) updateData.price = dto.price;
     if (dto.images !== undefined) updateData.images = dto.images;
+    if (dto.videoUrl !== undefined || dto.images !== undefined) {
+      updateData.videoUrl = extractListingVideoUrl(
+        dto.videoUrl ?? listing.videoUrl,
+        dto.images ?? undefined,
+      );
+    }
+    if (dto.thumbnailUrl !== undefined) {
+      updateData.thumbnailUrl = dto.thumbnailUrl;
+    }
     if (dto.breed !== undefined) updateData.breed = dto.breed;
     if (dto.age !== undefined) updateData.age = dto.age;
     if (dto.location !== undefined) updateData.location = dto.location;
