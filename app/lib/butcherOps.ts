@@ -98,7 +98,7 @@ export function primaryAdvanceAction(order: {
     next === 'confirmed'
       ? 'قبول الطلب'
       : next === 'preparing'
-        ? 'بدء التجهيز'
+        ? 'تأكيد الطلب'
         : next === 'ready'
           ? 'تم التجهيز'
           : isDeliveryOrder(order)
@@ -117,6 +117,18 @@ export function orderCustomerName(order: {
   customer?: { arabicName?: string; displayName?: string };
 }): string {
   return order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
+}
+
+export function orderProductTitle(order: any): string {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  if (items.length > 1) {
+    const first = items[0]?.product?.nameAr || items[0]?.nameAr || 'منتج';
+    return `${first} + ${items.length - 1}`;
+  }
+  if (items.length === 1) {
+    return items[0]?.product?.nameAr || items[0]?.nameAr || order?.product?.nameAr || 'منتج';
+  }
+  return order?.product?.nameAr || 'منتج لحم';
 }
 
 export function orderLineSummary(order: any): string {
@@ -293,6 +305,17 @@ export function formatOrderDateTime(iso?: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+/** Outer-card time: «اليوم 06:30 م» when same local day. */
+export function formatOpsWhen(iso?: string, now = new Date()): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const time = d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+  if (isSameLocalDay(iso, now)) return `اليوم ${time}`;
+  const date = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+  return `${date} ${time}`;
 }
 
 export type OpsStatusTone = 'green' | 'blue' | 'orange' | 'muted';

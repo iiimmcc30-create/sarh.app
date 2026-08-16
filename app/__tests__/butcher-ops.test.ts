@@ -1,7 +1,9 @@
 import {
+  formatOpsWhen,
   groupOrdersByHour,
   matchesOpsFilter,
   OPS_PRIMARY_TABS,
+  orderProductTitle,
   primaryAdvanceAction,
   productStock,
   summarizeOrders,
@@ -37,7 +39,7 @@ describe('butcherOps', () => {
 
   it('maps primary actions onto existing statuses', () => {
     expect(primaryAdvanceAction({ status: 'pending', allowedNextStatuses: ['confirmed', 'cancelled'], paymentStatus: 'paid' })?.label).toBe('قبول الطلب');
-    expect(primaryAdvanceAction({ status: 'confirmed', allowedNextStatuses: ['preparing', 'cancelled'] })?.label).toBe('بدء التجهيز');
+    expect(primaryAdvanceAction({ status: 'confirmed', allowedNextStatuses: ['preparing', 'cancelled'] })?.label).toBe('تأكيد الطلب');
     expect(primaryAdvanceAction({ status: 'preparing', allowedNextStatuses: ['ready'] })?.label).toBe('تم التجهيز');
     expect(primaryAdvanceAction({ status: 'ready', deliveryType: 'delivery', allowedNextStatuses: ['delivered'] })?.label).toBe('تم التسليم');
   });
@@ -59,5 +61,15 @@ describe('butcherOps', () => {
     expect(groups[0].count).toBe(2);
     expect(productStock({ inStock: true, availableQuantity: 2 }).kind).toBe('low');
     expect(productStock({ inStock: false }).kind).toBe('out');
+  });
+
+  it('uses product title and relative time on the outer ops card', () => {
+    expect(
+      orderProductTitle({
+        items: [{ product: { nameAr: 'خروف كامل' } }],
+      }),
+    ).toBe('خروف كامل');
+    const now = new Date('2026-08-16T18:00:00');
+    expect(formatOpsWhen('2026-08-16T15:30:00', now)).toMatch(/^اليوم /);
   });
 });
