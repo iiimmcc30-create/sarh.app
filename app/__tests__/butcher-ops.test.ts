@@ -1,6 +1,7 @@
 import {
   groupOrdersByHour,
   matchesOpsFilter,
+  OPS_ORDERS_STATUS_CHIPS,
   OPS_PRIMARY_TABS,
   primaryAdvanceAction,
   productStock,
@@ -15,6 +16,16 @@ describe('butcherOps', () => {
       'المنتجات',
       'العروض',
       'القصص',
+    ]);
+  });
+
+  it('exposes orders status chips with الكل and قيد التوصيل', () => {
+    expect(OPS_ORDERS_STATUS_CHIPS.map((t) => t.label)).toEqual([
+      'الكل',
+      'قيد التوصيل',
+      'جاهزة',
+      'مكتملة',
+      'ملغاة',
     ]);
   });
   it('summarizes operational buckets without a courier status', () => {
