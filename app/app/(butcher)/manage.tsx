@@ -48,8 +48,8 @@ import {
 } from '@/lib/butcherOps';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { getRtlRow } from '@/lib/rtl';
 
 const CANCEL_REASONS = [
   'المنتج غير متوفر',
@@ -470,33 +470,45 @@ export default function ButcherManageScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <CoverTrailRow justify="space-between" gap={10} style={styles.header}>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.push('/butchers/edit')} hitSlop={12} style={styles.iconBtn}>
           <AppIcon name="create-outline" size={18} color={colors.textPrimary} />
         </Pressable>
-        <CoverTrailRow flex justify="flex-end" gap={10}>
-          <RtlTextShell flex>
-            <RtlText style={styles.headerBrand} numberOfLines={1}>
-              سرح
-            </RtlText>
-            {accountName || butcher.nameAr ? (
-              <RtlText style={styles.headerSub} numberOfLines={1}>
-                {accountName || butcher.nameAr}
-              </RtlText>
-            ) : null}
-          </RtlTextShell>
-          <Pressable
-            onPress={() => safePush('/butcher-sidebar', undefined, router)}
-            hitSlop={12}
-            style={styles.iconBtn}
-            accessibilityLabel="القائمة"
-          >
-            <AppIcon name="menu" size={20} color={colors.textPrimary} />
-          </Pressable>
-        </CoverTrailRow>
-      </CoverTrailRow>
+        <View style={styles.headerText}>
+          <Text style={styles.headerBrand} numberOfLines={1}>
+            سرح
+          </Text>
+          {accountName ? (
+            <Text style={styles.headerSub} numberOfLines={1}>
+              {accountName}
+            </Text>
+          ) : butcher.nameAr ? (
+            <Text style={styles.headerSub} numberOfLines={1}>
+              {butcher.nameAr}
+            </Text>
+          ) : null}
+        </View>
+        <Pressable
+          onPress={() => safePush('/butcher-sidebar', undefined, router)}
+          hitSlop={12}
+          style={styles.iconBtn}
+        >
+          <AppIcon name="menu" size={20} color={colors.textPrimary} />
+        </Pressable>
+      </View>
 
-      <CoverTrailRow justify="space-between" gap={10} style={styles.statusBar}>
+      <View style={[styles.statusBar, getRtlRow()]}>
+        <View style={[styles.statusLeft, getRtlRow()]}>
+          <View
+            style={[
+              styles.liveDot,
+              { backgroundColor: butcher.isOpen ? colors.electricBright : colors.textMuted },
+            ]}
+          />
+          <Text style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
+            {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
+          </Text>
+        </View>
         <Pressable
           disabled={savingOpen}
           onPress={() => void setShopOpen(!butcher.isOpen)}
@@ -507,36 +519,22 @@ export default function ButcherManageScreen() {
           {savingOpen ? (
             <ActivityIndicator size="small" color={colors.textPrimary} />
           ) : (
-            <CoverTrailRow justify="flex-end" gap={6}>
-              <Text style={[styles.openToggleText, !butcher.isOpen && styles.openToggleTextOn]}>
-                {butcher.isOpen ? 'إيقاف' : 'فتح'}
-              </Text>
+            <View style={[styles.openToggleInner, getRtlRow()]}>
               {butcher.isOpen ? (
                 <AppIcon name="pause" size={14} color={colors.textPrimary} />
               ) : null}
-            </CoverTrailRow>
+              <Text style={[styles.openToggleText, !butcher.isOpen && styles.openToggleTextOn]}>
+                {butcher.isOpen ? 'إيقاف' : 'فتح'}
+              </Text>
+            </View>
           )}
         </Pressable>
-        <CoverTrailRow flex justify="flex-end" gap={8}>
-          <RtlTextShell flex>
-            <RtlText style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
-              {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
-            </RtlText>
-          </RtlTextShell>
-          <View
-            style={[
-              styles.liveDot,
-              { backgroundColor: butcher.isOpen ? colors.electricBright : colors.textMuted },
-            ]}
-          />
-        </CoverTrailRow>
-      </CoverTrailRow>
+      </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.navScroll}
-        contentContainerStyle={styles.navRow}
+        contentContainerStyle={[styles.navRow, getRtlRow()]}
       >
         {OPS_PRIMARY_TABS.map((item) => {
           const active = activeTab === item.id;
@@ -720,15 +718,10 @@ export default function ButcherManageScreen() {
               onChangeText={setOrderQuery}
               textAlign="right"
             />
-            <FilterChipRow
-              cover
-              contentPaddingHorizontal={0}
-              style={styles.filterRowWrap}
-            >
-              {OPS_ORDER_FILTERS.map((f) => (
+            <FilterChipRow contentPaddingHorizontal={0} style={styles.filterRowWrap}>
+              {[...OPS_ORDER_FILTERS].reverse().map((f) => (
                 <FilterChip
                   key={f.id}
-                  cover
                   label={f.label}
                   selected={orderFilter === f.id}
                   onPress={() => setOrderFilter(f.id)}
@@ -1070,14 +1063,19 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.md },
     mutedCenter: { ...typography.body, fontFamily: OFFICIAL_APP_FONT, color: colors.textMuted, marginTop: spacing.md },
     header: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: 6,
+      paddingVertical: spacing.sm,
+      gap: 10,
     },
+    headerText: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
     headerBrand: {
       ...typography.h3,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     headerSub: {
@@ -1085,6 +1083,8 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       marginTop: 2,
+      textAlign: 'right',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     iconBtn: {
@@ -1099,13 +1099,22 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     statusBar: {
       marginHorizontal: spacing.lg,
-      marginBottom: 8,
+      marginBottom: spacing.sm,
       paddingHorizontal: spacing.md,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderRadius: 14,
       backgroundColor: cardBg,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
+    },
+    statusLeft: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 8,
+      minWidth: 0,
     },
     liveDot: { width: 8, height: 8, borderRadius: 4 },
     statusLabel: {
@@ -1132,6 +1141,10 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: colors.electricBright,
       borderColor: colors.electricBright,
     },
+    openToggleInner: {
+      alignItems: 'center',
+      gap: 6,
+    },
     openToggleText: {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
@@ -1140,18 +1153,11 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       includeFontPadding: false,
     },
     openToggleTextOn: { color: '#fff' },
-    navScroll: {
-      flexGrow: 0,
-      flexShrink: 0,
-    },
     navRow: {
       paddingHorizontal: spacing.lg,
       gap: 8,
-      paddingBottom: 8,
+      paddingBottom: spacing.sm,
       alignItems: 'center',
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
     },
     navChip: {
       alignItems: 'center',
@@ -1191,12 +1197,12 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     navBadgeOn: { backgroundColor: colors.electricBright },
     navBadgeText: { ...typography.badge, fontFamily: OFFICIAL_APP_FONT, color: '#fff' },
     navBadgeTextOn: { color: '#fff' },
-    scroll: { paddingHorizontal: spacing.lg, paddingTop: 0, paddingBottom: spacing.xxxl },
+    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxxl },
     statsGrid: {
       flexDirection: 'row-reverse',
       flexWrap: 'wrap',
-      gap: 8,
-      marginBottom: 8,
+      gap: 10,
+      marginBottom: spacing.md,
     },
     statCard: {
       width: '23.5%',
@@ -1236,11 +1242,11 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     actionCard: {
       backgroundColor: cardBg,
       borderRadius: 16,
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.xl,
       paddingHorizontal: spacing.lg,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
       alignItems: 'center',
     },
     actionCardTitle: {
@@ -1269,14 +1275,14 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       ...typography.bodyStrong,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      marginBottom: 6,
-      marginTop: 8,
+      marginBottom: spacing.sm,
+      marginTop: spacing.sm,
     },
     pageTitle: {
       ...typography.h3,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
     },
     emptyInline: {
       ...typography.caption,
@@ -1349,9 +1355,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       writingDirection: 'rtl',
     },
     filterRowWrap: {
-      marginBottom: spacing.sm,
-      flexGrow: 0,
-      flexShrink: 0,
+      marginBottom: spacing.md,
     },
     tabHeader: {
       flexDirection: 'row',
