@@ -1,6 +1,6 @@
 type ExpoVideoModule = {
   useVideoPlayer: (
-    source: string,
+    source: string | { uri: string },
     setup: (player: {
       loop: boolean;
       muted: boolean;
