@@ -28,15 +28,16 @@ import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { uploadImageFromUri } from '@/services/upload';
 import { rtlInputText, ltrInputText } from '@/lib/rtl';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 
 const HASHTAG_BLUE = '#1D9BF0';
 const MAX_POST_IMAGES = 4;
 
 const POST_TYPES = [
-  { id: 'text', icon: 'document-text-outline', label: 'نص', iconLib: 'ionicons' },
-  { id: 'image', icon: 'image-outline', label: 'صورة', iconLib: 'ionicons' },
-  { id: 'poll', icon: 'bar-chart-outline', label: 'استطلاع', iconLib: 'ionicons' },
-  { id: 'listing', icon: 'pricetag-outline', label: 'إعلان', iconLib: 'ionicons' },
+  { id: 'text', label: 'نص' },
+  { id: 'image', label: 'صورة' },
+  { id: 'poll', label: 'استطلاع' },
+  { id: 'listing', label: 'إعلان' },
 ];
 
 const SUGGESTED_HASHTAGS = [
@@ -207,24 +208,16 @@ export default function CreatePostScreen() {
         </View>
 
         {/* Post type selector */}
-        <View style={styles.typeRow}>
+        <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.typeRow}>
           {POST_TYPES.map((t) => (
-            <Pressable
+            <FilterChip
               key={t.id}
+              label={t.label}
+              selected={selectedType === t.id}
               onPress={() => setSelectedType(t.id)}
-              style={[styles.typeChip, selectedType === t.id && styles.typeChipActive]}
-            >
-              <AppIcon
-                name={t.icon}
-                size={14}
-                color={selectedType === t.id ? colors.electricBright : colors.textMuted}
-              />
-              <Text style={[styles.typeLabel, selectedType === t.id && styles.typeLabelActive]}>
-                {t.label}
-              </Text>
-            </Pressable>
+            />
           ))}
-        </View>
+        </FilterChipRow>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {/* Compose area */}
@@ -399,19 +392,10 @@ function createStyles(colors: ThemeColors) {
   },
   postBtnText: { ...typography.bodyStrong, color: '#fff' },
   typeRow: {
-    flexDirection: 'row', gap: spacing.sm,
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.sm,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
   },
-  typeChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: spacing.md, paddingVertical: 6,
-    borderRadius: radius.pill, backgroundColor: colors.bgSurface,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  typeChipActive: { borderColor: colors.electric, backgroundColor: `${colors.electric}15` },
-  typeLabel: { ...typography.micro, color: colors.textMuted },
-  typeLabelActive: { color: colors.textBrandStrong },
   scroll: { paddingBottom: 20 },
   composeRow: {
     flexDirection: 'row', gap: spacing.md,

@@ -23,6 +23,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { FilterChip } from '@/components/ui/FilterChip';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -105,20 +106,14 @@ export function ButcherProductOptionsModal({
                 <RtlText style={styles.sectionTitle}>طريقة التقطيع</RtlText>
               </RtlTextShell>
               <View style={styles.chips}>
-                {[...product.availableCuts].reverse().map((cut) => {
-                  const active = selectedCut === cut;
-                  return (
-                    <Pressable
-                      key={cut}
-                      onPress={() => setSelectedCut(cut)}
-                      style={[styles.chip, active && styles.chipActive]}
-                    >
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                        {cutLabelAr(cut)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                {[...product.availableCuts].reverse().map((cut) => (
+                  <FilterChip
+                    key={cut}
+                    label={cutLabelAr(cut)}
+                    selected={selectedCut === cut}
+                    onPress={() => setSelectedCut(cut)}
+                  />
+                ))}
               </View>
             </View>
           ) : null}
@@ -235,27 +230,7 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
       justifyContent: 'flex-end',
       flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgSurface,
-    },
-    chipActive: {
-      borderColor: colors.electric,
-      backgroundColor: colors.electric + '18',
-    },
-    chipText: {
-      ...butcherTypography.secondary,
-      color: colors.textSecondary,
-    },
-    chipTextActive: {
-      ...butcherTypography.emphasis,
-      color: colors.textPrimary,
+      gap: 10,
     },
     weightTitle: {
       ...butcherTypography.primary,

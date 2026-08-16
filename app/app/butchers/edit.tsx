@@ -36,6 +36,7 @@ import { formatLocationLabel } from '@/lib/formatAddress';
 import { hasValidCoords } from '@/lib/butcherLocation';
 import { uploadImageFromUri } from '@/services/upload';
 import { useRequireApprovedButcher } from '@/hooks/useRequireApprovedButcher';
+import { FilterChip } from '@/components/ui/FilterChip';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
@@ -496,20 +497,14 @@ export default function EditButcherScreen() {
               </RtlTextShell>
             </View>
             <View style={styles.chipsRow}>
-              {CLOSED_DAYS.map((day) => {
-                const active = closedDays.includes(day.id);
-                return (
-                  <Pressable
-                    key={day.id}
-                    onPress={() => toggleClosedDay(day.id)}
-                    style={[styles.chip, active && styles.chipActive]}
-                  >
-                    <View style={styles.chipTextShell}>
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{day.ar}</Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
+              {CLOSED_DAYS.map((day) => (
+                <FilterChip
+                  key={day.id}
+                  label={day.ar}
+                  selected={closedDays.includes(day.id)}
+                  onPress={() => toggleClosedDay(day.id)}
+                />
+              ))}
             </View>
 
             <View style={styles.sectionDivider}>
@@ -518,20 +513,14 @@ export default function EditButcherScreen() {
               </RtlTextShell>
             </View>
             <View style={styles.chipsRow}>
-              {SPECIALTY_OPTIONS.map((spec) => {
-                const active = specialties.includes(spec);
-                return (
-                  <Pressable
-                    key={spec}
-                    onPress={() => toggleSpecialty(spec)}
-                    style={[styles.chip, active && styles.chipActive]}
-                  >
-                    <View style={styles.chipTextShell}>
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{spec}</Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
+              {SPECIALTY_OPTIONS.map((spec) => (
+                <FilterChip
+                  key={spec}
+                  label={spec}
+                  selected={specialties.includes(spec)}
+                  onPress={() => toggleSpecialty(spec)}
+                />
+              ))}
             </View>
 
             <View style={styles.sectionDivider}>
@@ -820,21 +809,7 @@ function createStyles(colors: ThemeColors) {
     ...butcherTypography.body,
     color: colors.textPrimary,
   },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  chipActive: { borderColor: colors.electricBright, backgroundColor: colors.electric + '18' },
-  chipText: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  chipTextActive: { ...butcherTypography.emphasis, color: colors.textBrandStrong },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   coordsBox: {
     alignItems: 'center',
     gap: 8,

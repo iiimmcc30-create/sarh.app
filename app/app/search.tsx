@@ -23,6 +23,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, marginAutoStart, rtlBackIcon, getRtlRow } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { useApp } from '@/hooks/useApp';
 import { API_BASE } from '@/services/api';
 
@@ -161,19 +162,16 @@ export default function SearchScreen() {
       </View>
 
       {hasQuery && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+        <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.filterRowWrap}>
           {FILTERS.map((f) => (
-            <Pressable
+            <FilterChip
               key={f.id}
+              label={f.label}
+              selected={filter === f.id}
               onPress={() => setFilter(f.id)}
-              style={[styles.filterChip, filter === f.id && styles.filterChipActive]}
-            >
-              <Text style={[styles.filterLabel, filter === f.id && styles.filterLabelActive]}>
-                {f.label}
-              </Text>
-            </Pressable>
+            />
           ))}
-        </ScrollView>
+        </FilterChipRow>
       )}
 
       {!hasQuery ? (
@@ -341,18 +339,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     flex: 1, ...typography.body, color: colors.textPrimary,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
   },
-  filterRow: {
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm,
+  filterRowWrap: {
     backgroundColor: colors.bgDeep,
+    paddingVertical: spacing.sm,
   },
-  filterChip: {
-    paddingHorizontal: spacing.lg, minHeight: 36, justifyContent: 'center',
-    borderRadius: 14, backgroundColor: colors.bgElevated,
-    borderWidth: 0,
-  },
-  filterChipActive: { backgroundColor: colors.electric, borderWidth: 0 },
-  filterLabel: { ...typography.caption, color: colors.textPrimary },
-  filterLabelActive: { color: '#fff' },
   scroll: { paddingBottom: 20 },
   section: {
     marginHorizontal: spacing.lg,

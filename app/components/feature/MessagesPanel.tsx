@@ -30,6 +30,7 @@ import {
   type MessageListingPreview,
 } from '@/lib/messageListingContext';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 
 const FILTERS: { id: MessageThreadFilter; label: string }[] = [
   { id: 'all', label: 'الكل' },
@@ -192,32 +193,16 @@ export function MessagesPanel({
         />
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filtersRow}
-        style={styles.filtersScroll}
-      >
-        {FILTERS.map((item) => {
-          const active = filter === item.id;
-          return (
-            <Pressable
-              key={item.id}
-              onPress={() => setFilter(item.id)}
-              style={[styles.filterChip, active && styles.filterChipActive]}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  active && styles.filterChipTextActive,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.filtersScroll}>
+        {FILTERS.map((item) => (
+          <FilterChip
+            key={item.id}
+            label={item.label}
+            selected={filter === item.id}
+            onPress={() => setFilter(item.id)}
+          />
+        ))}
+      </FilterChipRow>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -409,33 +394,7 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'right',
       paddingVertical: 0,
     },
-    filtersScroll: { flexGrow: 0, marginBottom: spacing.sm },
-    filtersRow: {
-      paddingHorizontal: spacing.lg,
-      gap: spacing.sm,
-      paddingBottom: spacing.sm,
-    },
-    filterChip: {
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      backgroundColor: 'transparent',
-    },
-    filterChipActive: {
-      backgroundColor: colors.electricBright,
-      borderColor: colors.electricBright,
-    },
-    filterChipText: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      fontWeight: '500',
-    },
-    filterChipTextActive: {
-      color: '#fff',
-      fontWeight: '600',
-    },
+    filtersScroll: { marginBottom: spacing.sm },
     chatRow: {
       flexDirection: 'row',
       alignItems: 'center',

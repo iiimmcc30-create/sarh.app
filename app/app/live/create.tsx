@@ -23,6 +23,7 @@ import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeM
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { colors, radius, spacing, typography } from '@/constants/theme';
+import { FilterChip, FILTER_CHIP } from '@/components/ui/FilterChip';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -366,15 +367,12 @@ export default function CreateStreamScreen() {
           </View>
           <View style={styles.catGrid}>
             {CATEGORIES.map((cat) => (
-              <Pressable
+              <FilterChip
                 key={cat.id + cat.ar}
-                style={[styles.catChip, category === cat.id && styles.catChipActive]}
+                label={cat.ar}
+                selected={category === cat.id}
                 onPress={() => setCategory(cat.id)}
-              >
-                <Text style={[styles.catChipText, category === cat.id && styles.catChipTextActive]}>
-                  {cat.ar}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
 
@@ -566,18 +564,12 @@ const styles = StyleSheet.create({
   },
   catHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'flex-end' },
   catHeaderText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-end' },
-  catChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+  catGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: FILTER_CHIP.gap,
+    justifyContent: 'flex-end',
   },
-  catChipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-  catChipText: { ...typography.caption, color: colors.textMuted },
-  catChipTextActive: { color: '#fff', fontWeight: '600' },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-end' },
   statusPill: {
     paddingHorizontal: 10,

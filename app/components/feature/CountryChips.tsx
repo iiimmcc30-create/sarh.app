@@ -1,8 +1,7 @@
 // Powered by OnSpace.AI
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlDirection } from '@/lib/rtl';
+import { View, StyleSheet } from 'react-native';
+import { spacing } from '@/constants/theme';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { Country, countries } from '@/services/types';
 
 interface CountryChipsProps {
@@ -13,77 +12,30 @@ interface CountryChipsProps {
 const order: (Country | 'ALL')[] = ['ALL', 'SA'];
 
 export function CountryChips({ value, onChange }: CountryChipsProps) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
-
   return (
-    <View style={[styles.wrap, getRtlDirection()]}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
-      >
+    <View style={styles.wrap}>
+      <FilterChipRow contentPaddingHorizontal={spacing.lg}>
         {order.map((code) => {
-          const isSelected = value === code;
           const label = code === 'ALL' ? 'الكل' : countries[code as Country].ar;
-          const flag = code === 'ALL' ? '🌐' : countries[code as Country].flag;
           return (
-            <Pressable
+            <FilterChip
               key={code}
+              label={label}
+              selected={value === code}
               onPress={() => onChange(code)}
-              style={({ pressed }) => [
-                styles.chip,
-                isSelected && styles.chipSelected,
-                pressed && { opacity: 0.85 },
-              ]}
-            >
-              <Text style={styles.flag}>{flag}</Text>
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{label}</Text>
-            </Pressable>
+            />
           );
         })}
-      </ScrollView>
+      </FilterChipRow>
     </View>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    wrap: {
-      minHeight: 50,
-      paddingVertical: spacing.sm,
-    },
-    content: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      gap: spacing.sm,
-    },
-    chip: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 8,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 0,
-      height: 36,
-    },
-    chipSelected: {
-      backgroundColor: colors.electric,
-    },
-    flag: {
-      fontSize: 14,
-    },
-    chipText: {
-      ...typography.caption,
-      color: colors.textPrimary,
-    },
-    chipTextSelected: {
-      color: '#fff',
-      fontWeight: '600',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  wrap: {
+    minHeight: 50,
+    paddingVertical: spacing.sm,
+  },
+});
 
 export default CountryChips;

@@ -5,7 +5,6 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +27,7 @@ import {
 } from '@/services/butcherData';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 
 export function isLocalImageUri(uri: string) {
   return (
@@ -201,22 +201,16 @@ export function AddProductForm({
       <RtlTextShell>
         <RtlText style={apf.label}>الفئة</RtlText>
       </RtlTextShell>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.lg }}>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          {ALL_CATEGORIES.map(([cat, info]) => (
-            <Pressable
-              key={cat}
-              onPress={() => setForm({ ...form, category: cat })}
-              style={[apf.catChip, form.category === cat && apf.catChipActive]}
-            >
-              <Text style={apf.catIcon}>{info.icon}</Text>
-              <View style={apf.chipTextShell}>
-                <Text style={[apf.catLabel, form.category === cat && apf.catLabelActive]}>{info.ar}</Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      <FilterChipRow contentPaddingHorizontal={0} style={{ marginBottom: spacing.lg }}>
+        {ALL_CATEGORIES.map(([cat, info]) => (
+          <FilterChip
+            key={cat}
+            label={info.ar}
+            selected={form.category === cat}
+            onPress={() => setForm({ ...form, category: cat })}
+          />
+        ))}
+      </FilterChipRow>
 
       <RtlTextShell>
         <RtlText style={apf.label}>التسعير</RtlText>
@@ -657,19 +651,6 @@ function createProductFormStyles(colors: ThemeColors) {
     marginBottom: spacing.md,
     writingDirection: 'rtl',
   },
-  catChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: radius.pill, backgroundColor: colors.bgElevated,
-    borderWidth: 1.5, borderColor: colors.borderSoft,
-  },
-  catChipActive: { borderColor: colors.electric, backgroundColor: colors.electric + '22' },
-  catIcon: { fontSize: 14 },
-  catLabel: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  catLabelActive: { color: colors.textBrandStrong },
   priceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md },
   priceLabel: {
     ...butcherTypography.meta,

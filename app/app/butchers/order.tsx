@@ -3,6 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { DeliveryMapAddressField } from '@/components/butchers/DeliveryMapAddressField';
+import { FilterChip } from '@/components/ui/FilterChip';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
@@ -438,20 +439,14 @@ export default function ButcherOrderScreen() {
         {availableCuts.length > 0 ? (
           <Section title="طريقة التقطيع" styles={styles}>
             <View style={styles.chipsWrap}>
-              {availableCuts.map((cut) => {
-                const active = selectedCut === cut;
-                return (
-                  <Pressable
-                    key={cut}
-                    onPress={() => setSelectedCut(cut as CutType)}
-                    style={[styles.chip, active && styles.chipActive]}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                      {cutLabelAr(cut)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {availableCuts.map((cut) => (
+                <FilterChip
+                  key={cut}
+                  label={cutLabelAr(cut)}
+                  selected={selectedCut === cut}
+                  onPress={() => setSelectedCut(cut as CutType)}
+                />
+              ))}
             </View>
           </Section>
         ) : null}
@@ -807,21 +802,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
 
-    chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    chip: {
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1.5,
-      borderColor: colors.borderSoft,
-    },
-    chipActive: {
-      backgroundColor: colors.electric,
-      borderColor: colors.electric,
-    },
-    chipText: { ...butcherTypography.emphasis, color: colors.textMuted },
-    chipTextActive: { color: '#fff' },
+    chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 
     weightCard: {
       flexDirection: 'row',

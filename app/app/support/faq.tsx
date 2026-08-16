@@ -17,6 +17,7 @@ import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection, getRtlRow } from '@/lib/rtl';
@@ -77,19 +78,16 @@ export default function SupportFaqScreen() {
           onSubmitEditing={() => void load()}
         />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        <FilterChipRow contentPaddingHorizontal={0} style={styles.chipsWrap}>
           {categoryChips.map((cat) => (
-            <Pressable
+            <FilterChip
               key={cat.value || 'all'}
+              label={cat.labelAr}
+              selected={(category ?? '') === cat.value}
               onPress={() => setCategory(cat.value || undefined)}
-              style={[styles.chip, (category ?? '') === cat.value && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, (category ?? '') === cat.value && styles.chipTextActive]}>
-                {cat.labelAr}
-              </Text>
-            </Pressable>
+            />
           ))}
-        </ScrollView>
+        </FilterChipRow>
 
         {loading ? (
           <ActivityIndicator style={styles.loader} />
@@ -132,18 +130,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.huge },
-    chips: { gap: spacing.sm },
-    chip: {
-      borderRadius: 999,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    chipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-    chipText: { ...typography.caption, color: colors.textSecondary },
-    chipTextActive: { color: '#fff' },
+    chipsWrap: { marginHorizontal: 0 },
     loader: { marginTop: spacing.lg },
     empty: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
     faqCard: { gap: spacing.sm },

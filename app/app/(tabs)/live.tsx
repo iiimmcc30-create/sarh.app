@@ -9,7 +9,6 @@ import {
   FlatList,
   ListRenderItemInfo,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -25,6 +24,7 @@ import { LiveStreamItem } from '@/components/feature/LiveStreamItem';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { LiveStream } from '@/services/types';
 import { marginAutoStart } from '@/lib/rtl';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 
 const LIVE_CATEGORIES = ['الكل', 'إبل', 'خيول', 'أغنام', 'صقور', 'معز'] as const;
 const LIVE_CAT_MAP: Record<string, string> = {
@@ -119,23 +119,16 @@ export default function LiveScreen() {
   const ListHeader = useCallback(
     () => (
       <View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.catRow}
-        >
+        <FilterChipRow contentPaddingHorizontal={0} style={styles.catRow}>
           {LIVE_CATEGORIES.map((cat) => (
-            <Pressable
+            <FilterChip
               key={cat}
+              label={cat}
+              selected={activeCategory === cat}
               onPress={() => setActiveCategory(cat)}
-              style={[styles.catChip, activeCategory === cat && styles.catChipActive]}
-            >
-              <Text style={[styles.catLabel, activeCategory === cat && styles.catLabelActive]}>
-                {cat}
-              </Text>
-            </Pressable>
+            />
           ))}
-        </ScrollView>
+        </FilterChipRow>
 
         {featured ? (
           <Pressable style={styles.featured} onPress={() => openWatch(featured.id)}>
@@ -255,15 +248,7 @@ function createStyles(colors: ThemeColors) {
   title: { ...typography.h2, color: colors.textPrimary },
   viewersWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   viewersCount: { ...typography.caption, color: colors.textMuted },
-  catRow: { paddingBottom: spacing.md, gap: spacing.sm },
-  catChip: {
-    paddingHorizontal: spacing.md, paddingVertical: 6,
-    borderRadius: radius.pill, backgroundColor: colors.bgSurface,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  catChipActive: { backgroundColor: colors.liveRed, borderColor: colors.liveRed },
-  catLabel: { ...typography.caption, color: colors.textMuted },
-  catLabelActive: { color: '#fff' },
+  catRow: { paddingBottom: spacing.md },
   scroll: { paddingHorizontal: spacing.lg },
   featured: {
     height: 220, borderRadius: radius.xl, overflow: 'hidden', marginBottom: spacing.lg,

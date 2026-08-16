@@ -1,8 +1,8 @@
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import type { MarketCategory } from '@/services/categories';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlDirection } from '@/lib/rtl';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -60,33 +60,21 @@ export function MarketCategoryNav({
       </ScrollView>
 
       {activeParent && subs.length > 0 ? (
-        <ScrollView
-          horizontal
-          style={styles.hScroll}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.chipRow, getRtlDirection()]}
-        >
-          <Pressable
+        <FilterChipRow contentPaddingHorizontal={spacing.md}>
+          <FilterChip
+            label="الكل"
+            selected={!activeSubId}
             onPress={() => onSelectSub(null)}
-            style={[styles.chip, !activeSubId && styles.chipActive]}
-          >
-            <Text style={[styles.chipText, !activeSubId && styles.chipTextActive]}>الكل</Text>
-          </Pressable>
-          {subs.map((sub) => {
-            const active = activeSubId === sub.id;
-            return (
-              <Pressable
-                key={sub.id}
-                onPress={() => onSelectSub(sub)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]} numberOfLines={1}>
-                  {sub.nameAr}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+          />
+          {subs.map((sub) => (
+            <FilterChip
+              key={sub.id}
+              label={sub.nameAr}
+              selected={activeSubId === sub.id}
+              onPress={() => onSelectSub(sub)}
+            />
+          ))}
+        </FilterChipRow>
       ) : null}
     </View>
   );
@@ -133,35 +121,6 @@ function createStyles(colors: ThemeColors) {
       minWidth: 24,
       borderRadius: 2,
       backgroundColor: colors.electric,
-    },
-    chipRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      gap: spacing.sm,
-    },
-    chip: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: MENU_CARD.radius,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 10,
-      minHeight: 38,
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-    },
-    chipActive: {
-      backgroundColor: colors.electric,
-      borderColor: colors.electric,
-    },
-    chipText: {
-      ...typography.secondary,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-    },
-    chipTextActive: {
-      color: '#FFFFFF',
     },
   });
 }

@@ -16,6 +16,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -136,19 +137,16 @@ export default function CreateSupportTicketScreen() {
         <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
           <GlassCard style={styles.section}>
             <Text style={styles.label}>تصنيف المشكلة</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            <FilterChipRow contentPaddingHorizontal={0}>
               {CATEGORIES.map((cat) => (
-                <Pressable
+                <FilterChip
                   key={cat}
+                  label={TICKET_CATEGORY_LABEL_AR[cat]}
+                  selected={category === cat}
                   onPress={() => setCategory(cat)}
-                  style={[styles.chip, category === cat && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>
-                    {TICKET_CATEGORY_LABEL_AR[cat]}
-                  </Text>
-                </Pressable>
+                />
               ))}
-            </ScrollView>
+            </FilterChipRow>
             <Text style={styles.selectedHint}>المحدد: {categoryLabel}</Text>
           </GlassCard>
 
@@ -207,18 +205,6 @@ function createStyles(colors: ThemeColors) {
     content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.huge },
     section: { gap: spacing.sm },
     label: { ...typography.bodyStrong, color: colors.textPrimary },
-    chips: { gap: spacing.sm, paddingVertical: spacing.xs },
-    chip: {
-      borderRadius: 999,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    chipActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-    chipText: { ...typography.caption, color: colors.textSecondary },
-    chipTextActive: { color: '#fff' },
     selectedHint: { ...typography.micro, color: colors.textMuted },
     textArea: { minHeight: 140, textAlignVertical: 'top' },
     attachHeader: { ...getRtlRow(), justifyContent: 'space-between', alignItems: 'center' },

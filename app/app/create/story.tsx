@@ -38,6 +38,7 @@ import {
   type StoryMediaKind,
 } from '@/lib/storyMedia';
 import { useAuth } from '@/contexts/AuthContext';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { API_BASE } from '@/services/api';
 import { uploadMediaFromUri } from '@/services/upload';
 
@@ -61,15 +62,15 @@ function StoryVideoPreview({ uri }: { uri: string }) {
 }
 
 export default function CreateStoryScreen() {
-  const { colors, gradients } = useTheme();
+  const { gradients } = useTheme();
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const insets = useSafeAreaInsets();
 
-  const BUTCHER_TYPES: { id: ButcherStoryType; label: string; icon: string; color: string }[] = [
-    { id: 'daily_slaughter', label: 'ذبح يومي', icon: '🔪', color: colors.danger },
-    { id: 'new_stock', label: 'مخزون جديد', icon: '📦', color: colors.textBrandSuccess },
-    { id: 'offer', label: 'عرض اليوم', icon: '🏷️', color: colors.amber },
-    { id: 'update', label: 'تحديث عام', icon: '📢', color: colors.textBrandAlt },
+  const BUTCHER_TYPES: { id: ButcherStoryType; label: string }[] = [
+    { id: 'daily_slaughter', label: 'ذبح يومي' },
+    { id: 'new_stock', label: 'مخزون جديد' },
+    { id: 'offer', label: 'عرض اليوم' },
+    { id: 'update', label: 'تحديث عام' },
   ];
 
   const router = useRouter();
@@ -377,31 +378,16 @@ export default function CreateStoryScreen() {
                   keyboardShouldPersistTaps="handled"
                 >
                   {isButcherMode ? (
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      <View style={styles.typeRow}>
-                        {BUTCHER_TYPES.map((t) => {
-                          const active = storyType === t.id;
-                          return (
-                            <Pressable
-                              key={t.id}
-                              onPress={() => setStoryType(t.id)}
-                              style={[
-                                styles.typeChip,
-                                active && {
-                                  borderColor: t.color,
-                                  backgroundColor: `${t.color}33`,
-                                },
-                              ]}
-                            >
-                              <Text style={styles.typeIcon}>{t.icon}</Text>
-                              <Text style={[styles.typeLabel, active && { color: t.color }]}>
-                                {t.label}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
-                    </ScrollView>
+                    <FilterChipRow contentPaddingHorizontal={0}>
+                      {BUTCHER_TYPES.map((t) => (
+                        <FilterChip
+                          key={t.id}
+                          label={t.label}
+                          selected={storyType === t.id}
+                          onPress={() => setStoryType(t.id)}
+                        />
+                      ))}
+                    </FilterChipRow>
                   ) : null}
                   {!isButcherMode ? (
                     <TextInput
@@ -578,27 +564,6 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: 'rgba(0,0,0,0.38)',
       borderRadius: radius.lg,
       padding: spacing.sm,
-    },
-    typeRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    typeChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      backgroundColor: 'rgba(255,255,255,0.12)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.22)',
-    },
-    typeIcon: { fontSize: 14 },
-    typeLabel: {
-      ...typography.caption,
-      color: 'rgba(255,255,255,0.85)',
-      fontWeight: '600',
     },
     optionInput: {
       minHeight: 44,

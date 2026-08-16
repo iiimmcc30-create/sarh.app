@@ -1,9 +1,8 @@
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import type { MarketCategory } from '@/services/categories';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection } from '@/lib/rtl';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
+import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   categories: MarketCategory[];
@@ -11,7 +10,7 @@ type Props = {
 };
 
 /**
- * Horizontal category chips — same elevated rounded surface as listing cards, text only.
+ * Horizontal category chips — unified FilterChip, text only.
  */
 export function MarketCategoriesGrid({ categories, onSelect }: Props) {
   const { styles } = useThemedStyles((theme) => ({
@@ -23,25 +22,11 @@ export function MarketCategoriesGrid({ categories, onSelect }: Props) {
       <View style={styles.titleShell}>
         <Text style={styles.title}>التصنيفات</Text>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.row, getRtlDirection()]}
-      >
+      <FilterChipRow contentPaddingHorizontal={spacing.md}>
         {categories.map((cat) => (
-          <Pressable
-            key={cat.id}
-            onPress={() => onSelect(cat)}
-            style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
-          >
-            <View style={styles.labelShell}>
-              <Text style={styles.label} numberOfLines={1}>
-                {cat.nameAr}
-              </Text>
-            </View>
-          </Pressable>
+          <FilterChip key={cat.id} label={cat.nameAr} onPress={() => onSelect(cat)} />
         ))}
-      </ScrollView>
+      </FilterChipRow>
     </View>
   );
 }
@@ -63,34 +48,6 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '600',
       color: colors.textSecondary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      gap: spacing.sm,
-    },
-    chip: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: MENU_CARD.radius,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 11,
-      minHeight: 40,
-      justifyContent: 'center',
-      borderWidth: 0,
-    },
-    chipPressed: {
-      opacity: 0.92,
-    },
-    labelShell: {
-      direction: 'ltr',
-    },
-    label: {
-      ...typography.secondary,
-      color: colors.textBrandStrong,
       textAlign: 'right',
       writingDirection: 'rtl',
     },

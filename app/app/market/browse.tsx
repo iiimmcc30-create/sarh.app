@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
+import { FilterChip } from '@/components/ui/FilterChip';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
@@ -12,7 +13,7 @@ import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchMarketCategories } from '@/services/categories';
 import { searchListings } from '@/services/listings';
-import { countries, type Country, type Listing } from '@/services/types';
+import { type Country, type Listing } from '@/services/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -209,24 +210,12 @@ export default function MarketBrowseScreen() {
       </View>
 
       <View style={[styles.filterRow, getRtlRow()]}>
-        <Pressable
-          style={[styles.filterChip, getRtlRow(), activeCountry === 'SA' && styles.filterChipActive]}
+        <FilterChip
+          label="السعودية"
+          selected={activeCountry === 'SA'}
           onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
-        >
-          <Text style={styles.filterFlag}>{countries.SA.flag}</Text>
-          <Text
-            style={[
-              styles.filterChipText,
-              activeCountry === 'SA' && styles.filterChipTextActive,
-            ]}
-          >
-            السعودية
-          </Text>
-        </Pressable>
-        <Pressable style={[styles.filterChip, getRtlRow()]} onPress={cycleSort}>
-          <Text style={styles.filterChipText}>{sortLabel}</Text>
-          <AppIcon name="sort-alt" size={14} color={colors.textSecondary} />
-        </Pressable>
+        />
+        <FilterChip label={sortLabel} onPress={cycleSort} />
       </View>
 
       <View style={[styles.countRow, getRtlRow()]}>
@@ -339,30 +328,6 @@ function createStyles(
       paddingVertical: spacing.sm,
       gap: spacing.sm,
       alignItems: 'center',
-    },
-    filterChip: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      minHeight: 36,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-    },
-    filterChipActive: {
-      backgroundColor: isDark ? colors.electric : colors.electric,
-    },
-    filterChipText: {
-      ...typography.badge,
-      color: colors.textSecondary,
-      writingDirection: 'rtl',
-    },
-    filterChipTextActive: {
-      color: '#fff',
-    },
-    filterFlag: {
-      fontSize: 14,
     },
     countRow: {
       paddingHorizontal: spacing.lg,

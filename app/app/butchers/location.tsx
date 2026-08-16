@@ -2,11 +2,14 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { FilterChip } from '@/components/ui/FilterChip';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText } from '@/lib/rtl';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { reverseGeocodeToAddress } from '@/lib/formatAddress';
 import {
   loadDeliveryLocation,
@@ -28,8 +31,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const LABEL_OPTIONS = ['المنزل', 'العمل', 'آخر'];
 
@@ -158,20 +159,14 @@ export default function ButcherLocationScreen() {
               <RtlText style={styles.fieldLabel}>نوع العنوان</RtlText>
             </RtlTextShell>
             <View style={styles.chipsRow}>
-              {LABEL_OPTIONS.map((opt) => {
-                const activeChip = label === opt;
-                return (
-                  <Pressable
-                    key={opt}
-                    onPress={() => setLabel(opt)}
-                    style={[styles.chip, activeChip && styles.chipActive]}
-                  >
-                    <Text style={[styles.chipText, activeChip && styles.chipTextActive]}>
-                      {opt}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {LABEL_OPTIONS.map((opt) => (
+                <FilterChip
+                  key={opt}
+                  label={opt}
+                  selected={label === opt}
+                  onPress={() => setLabel(opt)}
+                />
+              ))}
             </View>
           </View>
 
@@ -241,16 +236,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.smallHeading,
       color: colors.textPrimary,
     },
-    chipsRow: { flexDirection: 'row-reverse', gap: spacing.sm },
-    chip: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 9,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-    },
-    chipActive: { backgroundColor: colors.electric + '20' },
-    chipText: { ...butcherTypography.emphasis, color: colors.textMuted },
-    chipTextActive: { ...butcherTypography.emphasis, color: colors.electricBright },
+    chipsRow: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10 },
     input: {
       ...butcherTypography.body,
       backgroundColor: colors.bgElevated,

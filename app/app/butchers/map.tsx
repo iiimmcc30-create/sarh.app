@@ -490,31 +490,6 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
 
-  filterRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  filterChipActive: {
-    backgroundColor: colors.electric,
-    borderColor: colors.electric,
-  },
-  filterFlag: { fontSize: 13 },
-  filterLabel: { ...butcherTypography.secondary, color: colors.textMuted },
-  filterLabelActive: { ...butcherTypography.emphasis, color: '#fff' },
-
   // Map
   mapContainer: {
     flex: 1,

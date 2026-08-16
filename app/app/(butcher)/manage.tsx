@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { Image } from '@/components/ui/AppImage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useMemo } from 'react';
@@ -639,17 +640,16 @@ export default function ButcherManageScreen() {
               onChangeText={setOrderQuery}
               textAlign="right"
             />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            <FilterChipRow contentPaddingHorizontal={0} style={styles.filterRowWrap}>
               {[...OPS_ORDER_FILTERS].reverse().map((f) => (
-                <Pressable
+                <FilterChip
                   key={f.id}
+                  label={f.label}
+                  selected={orderFilter === f.id}
                   onPress={() => setOrderFilter(f.id)}
-                  style={[styles.filterChip, orderFilter === f.id && styles.filterChipOn]}
-                >
-                  <Text style={[styles.filterText, orderFilter === f.id && styles.filterTextOn]}>{f.label}</Text>
-                </Pressable>
+                />
               ))}
-            </ScrollView>
+            </FilterChipRow>
             {filteredOrders.map((order) => (
               <OpsOrderCard
                 key={order.id}
@@ -739,19 +739,16 @@ export default function ButcherManageScreen() {
                 <RtlText style={styles.pageTitle}>العروض</RtlText>
               </RtlTextShell>
             </View>
-            <View style={styles.filterRow}>
+            <FilterChipRow contentPaddingHorizontal={0} style={styles.filterRowWrap}>
               {(['active', 'expired'] as const).map((scope) => (
-                <Pressable
+                <FilterChip
                   key={scope}
+                  label={scope === 'active' ? 'النشطة' : 'المنتهية'}
+                  selected={offerScope === scope}
                   onPress={() => setOfferScope(scope)}
-                  style={[styles.filterChip, offerScope === scope && styles.filterChipOn]}
-                >
-                  <Text style={[styles.filterText, offerScope === scope && styles.filterTextOn]}>
-                    {scope === 'active' ? 'النشطة' : 'المنتهية'}
-                  </Text>
-                </Pressable>
+                />
               ))}
-            </View>
+            </FilterChipRow>
             {offers
               .filter((offer: any) => {
                 const expired = offer.validUntil && new Date(offer.validUntil).getTime() < Date.now();
@@ -1211,28 +1208,9 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       marginBottom: spacing.sm,
       writingDirection: 'rtl',
     },
-    filterRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
-      gap: 6,
+    filterRowWrap: {
       marginBottom: spacing.md,
-      flexWrap: 'wrap',
     },
-    filterChip: {
-      paddingHorizontal: 8,
-      paddingVertical: 5,
-      borderRadius: 999,
-      backgroundColor: softBg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: border,
-    },
-    filterChipOn: { backgroundColor: colors.electric, borderColor: colors.electric },
-    filterText: {
-      ...typography.badge,
-      color: colors.textMuted,
-    },
-    filterTextOn: { color: '#fff' },
     tabHeader: {
       flexDirection: 'row',
       direction: 'ltr',
