@@ -1,18 +1,48 @@
 import type { RegionSelection, SaudiCity, SaudiRegion } from '@/constants/saudiRegions';
 import { SAUDI_REGIONS } from '@/constants/saudiRegions';
 
-function normalizeArabic(text: string): string {
+export function normalizeArabic(text: string): string {
   return text
     .replace(/[أإآ]/g, 'ا')
     .replace(/ة/g, 'ه')
     .replace(/ى/g, 'ي')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
+}
+
+/** Compact form for matching "حفرالباطن" ↔ "حفر الباطن". */
+function compactArabic(text: string): string {
+  return normalizeArabic(text).replace(/\s+/g, '');
 }
 
 export type RegionSearchHit =
   | { kind: 'region'; region: SaudiRegion; score: number }
   | { kind: 'city'; region: SaudiRegion; city: SaudiCity; score: number };
+
+/** Short labels used when listing location is just "القصيم" / "الشرقية". */
+export function regionMatchTokens(region: SaudiRegion): string[] {
+  const full = normalizeArabic(region.nameAr);
+  const stripped = full
+    .replace(/^منطقه\s+/, '')
+    .replace(/^المنطقه\s+/, '');
+  const tokens = new Set<string>([full, stripped, normalizeArabic(region.nameEn)]);
+  if (region.id === 'eastern') {
+    tokens.add('الشرقيه');
+    tokens.add('الشرقية');
+  }
+  return [...tokens].filter(Boolean);
+}
+
+function textMatchesToken(haystack: string, haystackCompact: string, token: string): boolean {
+  if (!token) return false;
+  if (haystack.includes(token) || token.includes(haystack)) return true;
+  const compact = compactArabic(token);
+  return (
+    !!compact &&
+    (haystackCompact.includes(compact) || compact.includes(haystackCompact))
+  );
+}
 
 /** Fuzzy search across Saudi regions and cities (Arabic + English). */
 export function searchSaudiRegions(query: string): RegionSearchHit[] {
@@ -32,16 +62,29 @@ export function searchSaudiRegions(query: string): RegionSearchHit[] {
   const hits: RegionSearchHit[] = [];
 
   for (const region of SAUDI_REGIONS) {
-    const regionAr = normalizeArabic(region.nameAr);
-    const regionEn = region.nameEn.toLowerCase();
-    if (regionAr.includes(q) || regionEn.includes(qEn)) {
-      hits.push({ kind: 'region', region, score: regionAr.startsWith(q) ? 0 : 1 });
+    const regionTokens = regionMatchTokens(region);
+    if (
+      regionTokens.some((t) => t.includes(q) || q.includes(t)) ||
+      region.nameEn.toLowerCase().includes(qEn)
+    ) {
+      hits.push({
+        kind: 'region',
+        region,
+        score: regionTokens.some((t) => t.startsWith(q)) ? 0 : 1,
+      });
     }
 
     for (const city of region.cities) {
       const cityAr = normalizeArabic(city.nameAr);
       const cityEn = city.nameEn.toLowerCase();
-      if (cityAr.includes(q) || cityEn.includes(qEn)) {
+      const cityCompact = compactArabic(city.nameAr);
+      const qCompact = compactArabic(query);
+      if (
+        cityAr.includes(q) ||
+        q.includes(cityAr) ||
+        cityEn.includes(qEn) ||
+        (qCompact && cityCompact.includes(qCompact))
+      ) {
         hits.push({
           kind: 'city',
           region,
@@ -62,25 +105,33 @@ export function listingMatchesRegionSelection(
 ): boolean {
   if (selection.type === 'all') return true;
 
-  const haystack = normalizeArabic(locationText);
+  const raw = typeof locationText === 'string' ? locationText.trim() : '';
+  if (!raw) return false;
+
+  const haystack = normalizeArabic(raw);
+  const haystackCompact = compactArabic(raw);
 
   if (selection.type === 'city') {
     const cityAr = normalizeArabic(selection.city.nameAr);
     const cityEn = selection.city.nameEn.toLowerCase();
-    return haystack.includes(cityAr) || locationText.toLowerCase().includes(cityEn);
+    return (
+      textMatchesToken(haystack, haystackCompact, cityAr) ||
+      raw.toLowerCase().includes(cityEn)
+    );
   }
 
-  const regionAr = normalizeArabic(selection.region.nameAr);
-  if (haystack.includes(regionAr)) return true;
+  for (const token of regionMatchTokens(selection.region)) {
+    if (textMatchesToken(haystack, haystackCompact, token)) return true;
+  }
 
   return selection.region.cities.some((city) => {
     const cityAr = normalizeArabic(city.nameAr);
-    return haystack.includes(cityAr);
+    return textMatchesToken(haystack, haystackCompact, cityAr);
   });
 }
 
 export function regionSelectionLabel(selection: RegionSelection): string {
   if (selection.type === 'all') return 'كل المناطق';
   if (selection.type === 'city') return selection.city.nameAr;
-  return selection.region.nameAr.replace(/^منطقة\s/, '');
+  return selection.region.nameAr.replace(/^منطقة\s/, '').replace(/^المنطقة\s/, '');
 }

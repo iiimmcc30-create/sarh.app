@@ -23,6 +23,9 @@ export const SAUDI_REGIONS: SaudiRegion[] = [
       { id: 'kharj', nameAr: 'الخرج', nameEn: 'Al Kharj' },
       { id: 'dawadmi', nameAr: 'الدوادمي', nameEn: 'Dawadmi' },
       { id: 'majmaah', nameAr: 'المجمعة', nameEn: 'Al Majmaah' },
+      { id: 'zulfi', nameAr: 'الزلفي', nameEn: 'Az Zulfi' },
+      { id: 'duruma', nameAr: 'ضرماء', nameEn: 'Duruma' },
+      { id: 'muzahmiyah', nameAr: 'المزاحمية', nameEn: 'Al Muzahimiyah' },
     ],
   },
   {
@@ -69,6 +72,7 @@ export const SAUDI_REGIONS: SaudiRegion[] = [
       { id: 'jubail', nameAr: 'الجبيل', nameEn: 'Jubail' },
       { id: 'ahsa', nameAr: 'الأحساء', nameEn: 'Al Ahsa' },
       { id: 'qatif', nameAr: 'القطيف', nameEn: 'Qatif' },
+      { id: 'hafr-albatin', nameAr: 'حفر الباطن', nameEn: 'Hafr Al Batin' },
     ],
   },
   {

@@ -31,8 +31,8 @@ type Props = {
 };
 
 /**
- * Bottom-sheet region picker — matches market reference:
- * admin regions grid + main cities + Apply / Reset.
+ * Bottom-sheet region picker:
+ * pick an admin region → its cities appear; Apply commits the draft filter.
  */
 export function RegionCityPicker({ visible, selection, onClose, onSelect }: Props) {
   const insets = useSafeAreaInsets();
@@ -54,6 +54,9 @@ export function RegionCityPicker({ visible, selection, onClose, onSelect }: Prop
   const hits = useMemo(() => searchSaudiRegions(query), [query]);
   const mainCities = useMemo(() => resolveSaudiMainCities(), []);
   const searching = query.trim().length > 0;
+
+  const focusedRegion: SaudiRegion | null =
+    draft.type === 'region' || draft.type === 'city' ? draft.region : null;
 
   const apply = () => {
     onSelect(draft);
@@ -80,6 +83,10 @@ export function RegionCityPicker({ visible, selection, onClose, onSelect }: Prop
     draft.type === 'city' && draft.city.id === city.id;
 
   const sheetMaxHeight = Math.min(windowHeight * 0.86, 720);
+
+  const citiesSectionTitle = focusedRegion
+    ? `مدن ${focusedRegion.nameAr.replace(/^منطقة\s/, '').replace(/^المنطقة\s/, '')}`
+    : 'المدن الرئيسية';
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
@@ -133,7 +140,7 @@ export function RegionCityPicker({ visible, selection, onClose, onSelect }: Prop
                 ) : (
                   hits.map((hit) => {
                     if (hit.kind === 'region') {
-                      const active = regionSelected(hit.region) && draft.type === 'region';
+                      const active = draft.type === 'region' && draft.region.id === hit.region.id;
                       return (
                         <Pressable
                           key={`r-${hit.region.id}`}
@@ -165,10 +172,12 @@ export function RegionCityPicker({ visible, selection, onClose, onSelect }: Prop
               </View>
             ) : (
               <>
-                <Text style={styles.sectionTitle}>المناطق الإدارية</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>المناطق الإدارية</Text>
+                </View>
                 <View style={styles.regionGrid}>
                   {SAUDI_REGIONS.map((region) => {
-                    const active = regionSelected(region) && draft.type === 'region';
+                    const active = regionSelected(region);
                     return (
                       <Pressable
                         key={region.id}
@@ -186,27 +195,70 @@ export function RegionCityPicker({ visible, selection, onClose, onSelect }: Prop
                   })}
                 </View>
 
-                <Text style={styles.sectionTitle}>المدن الرئيسية</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={[styles.cityRow, getRtlRow()]}
-                >
-                  {mainCities.map(({ region, city }) => {
-                    const active = citySelected(city);
-                    return (
-                      <Pressable
-                        key={city.id}
-                        style={[styles.cityChip, active && styles.chipActive]}
-                        onPress={() => pickCity(region, city)}
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>{citiesSectionTitle}</Text>
+                </View>
+
+                {focusedRegion ? (
+                  <View style={styles.cityWrap}>
+                    <Pressable
+                      style={[
+                        styles.cityChip,
+                        styles.cityChipFlex,
+                        draft.type === 'region' &&
+                          draft.region.id === focusedRegion.id &&
+                          styles.chipActive,
+                      ]}
+                      onPress={() => pickRegion(focusedRegion)}
+                    >
+                      <Text
+                        style={[
+                          styles.cityChipText,
+                          draft.type === 'region' &&
+                            draft.region.id === focusedRegion.id &&
+                            styles.chipTextActive,
+                        ]}
                       >
-                        <Text style={[styles.cityChipText, active && styles.chipTextActive]}>
-                          {city.nameAr}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
+                        كل مدن المنطقة
+                      </Text>
+                    </Pressable>
+                    {focusedRegion.cities.map((city) => {
+                      const active = citySelected(city);
+                      return (
+                        <Pressable
+                          key={city.id}
+                          style={[styles.cityChip, styles.cityChipFlex, active && styles.chipActive]}
+                          onPress={() => pickCity(focusedRegion, city)}
+                        >
+                          <Text style={[styles.cityChipText, active && styles.chipTextActive]}>
+                            {city.nameAr}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={[styles.cityRow, getRtlRow()]}
+                  >
+                    {mainCities.map(({ region, city }) => {
+                      const active = citySelected(city);
+                      return (
+                        <Pressable
+                          key={city.id}
+                          style={[styles.cityChip, active && styles.chipActive]}
+                          onPress={() => pickCity(region, city)}
+                        >
+                          <Text style={[styles.cityChipText, active && styles.chipTextActive]}>
+                            {city.nameAr}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                )}
 
                 <Pressable
                   style={[
@@ -296,7 +348,8 @@ function createStyles(colors: ThemeColors) {
     },
     headerTextShell: {
       flex: 1,
-      direction: 'ltr',
+      width: '100%',
+      alignItems: 'flex-end',
     },
     title: {
       ...typography.cardHeading,
@@ -304,6 +357,7 @@ function createStyles(colors: ThemeColors) {
       fontSize: 20,
       lineHeight: 28,
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       includeFontPadding: false,
@@ -312,6 +366,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       marginTop: 2,
@@ -353,14 +408,19 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: spacing.md,
       gap: spacing.sm,
     },
+    sectionHeader: {
+      width: '100%',
+      alignItems: 'flex-end',
+      marginTop: spacing.xs,
+      marginBottom: spacing.sm,
+    },
     sectionTitle: {
       ...typography.bodyStrong,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
-      marginTop: spacing.xs,
-      marginBottom: spacing.sm,
       includeFontPadding: false,
     },
     regionGrid: {
@@ -368,6 +428,7 @@ function createStyles(colors: ThemeColors) {
       flexWrap: 'wrap',
       gap: 10,
       marginBottom: spacing.md,
+      width: '100%',
     },
     regionChip: {
       width: '31.5%',
@@ -396,6 +457,13 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: spacing.sm,
       marginBottom: spacing.sm,
     },
+    cityWrap: {
+      flexDirection: 'row-reverse',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: spacing.md,
+      width: '100%',
+    },
     cityChip: {
       minHeight: 42,
       paddingHorizontal: 16,
@@ -406,11 +474,15 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    cityChipFlex: {
+      paddingHorizontal: 14,
+    },
     cityChipText: {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
       fontSize: 13,
       color: colors.textPrimary,
+      textAlign: 'center',
       writingDirection: 'rtl',
       includeFontPadding: false,
     },
@@ -455,6 +527,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.cardHeading,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       includeFontPadding: false,
@@ -463,6 +536,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
       includeFontPadding: false,
