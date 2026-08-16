@@ -74,12 +74,13 @@ export const ds = {
   },
 
   tabBar: {
-    /** Flat reference bar — no raised center FAB. */
+    /** Same chrome height as ButchersTabBar (paddingTop 8 + slot 48). */
     height: 56,
     fabSize: 22,
     fabLift: 0,
     marginH: 0,
-    marginBottom: 0,
+    /** Minimum safe-area padding — matches ButchersTabBar. */
+    marginBottom: sarh.space.sm,
   },
 
   motion: {

@@ -34,7 +34,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const { colors, scheme } = useTheme();
   const isLight = scheme === 'light';
   const tokens = isLight ? ds.light : ds.dark;
-  const bottom = Math.max(insets.bottom, ds.tabBar.marginBottom);
+  const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const activeTint = isLight ? colors.electricBright : sarh.color.action;
   const inactiveTint = isLight ? colors.textMuted : '#E8EEF2';
 
@@ -53,10 +53,11 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   };
 
   return (
-    <View style={[styles.wrap, { paddingBottom: bottom }]} pointerEvents="box-none">
+    <View style={styles.wrap} pointerEvents="box-none">
       <View
         style={[
           styles.bar,
+          { paddingBottom: bottomPad },
           isLight
             ? {
                 backgroundColor: tokens.glass,
@@ -145,7 +146,6 @@ const styles = StyleSheet.create({
   bar: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.xs,
     paddingHorizontal: spacing.xs,
   },
   row: {

@@ -417,7 +417,7 @@ export const layout = {
   sectionGap: spacing.xxl,
   contentMaxWidth: 720,
   headerHeight: 60,
-  tabBarHeight: 64,
+  tabBarHeight: 56,
 };
 
 export const controls = {
