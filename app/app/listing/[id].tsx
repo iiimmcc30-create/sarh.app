@@ -801,11 +801,11 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     price: {
-      ...typography.priceLarge,
+      ...typography.valueLarge,
       color: colors.textBrandStrong,
     },
     priceOnRequest: {
-      ...typography.priceLarge,
+      ...typography.valueLarge,
       color: colors.textBrandStrong,
     },
     priceBadges: {

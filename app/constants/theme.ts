@@ -3,7 +3,7 @@
 
 import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';
-import { appFont, typeFace } from './fonts';
+import { OFFICIAL_APP_FONT } from './fonts';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -308,195 +308,95 @@ const directionalText = {
   writingDirection: 'rtl' as const,
 };
 
-const face400 = typeFace('400');
-const face500 = typeFace('500');
-const face600 = typeFace('600');
-const face700 = typeFace('700');
+/** Same face as listing price (`IBMPlexSansArabic_700Bold`) — sole UI typeface. */
+const officialFace = {
+  fontFamily: OFFICIAL_APP_FONT,
+  fontWeight: '700' as const,
+};
+const face500 = officialFace;
+const face600 = officialFace;
+const face700 = officialFace;
 
 /**
- * Unified Sarh typography roles — sizes/line-heights/weights only.
- * Font family stays IBM Plex Sans Arabic (`appFont` / `typeFace`).
- * `tab` / `tabActive` are frozen for bottom navigation — do not change.
+ * Sarh content typography — sizes 12 / 14 / 15 / 16 / 18 / 20 / 24.
+ * All tokens use the official listing-price Bold face (`OFFICIAL_APP_FONT`).
+ * `tab` / `tabActive` keep frozen sizes for bottom navigation.
  */
 export const typography = {
-  /** Display — 32 / 40 / 700 */
   display: {
-    fontSize: 32,
-    lineHeight: 40,
-    ...face700,
-    ...directionalText,
-  },
-  /** Page Title — 24 / 32 / 700 */
-  pageTitle: {
     fontSize: 24,
     lineHeight: 32,
     ...face700,
     ...directionalText,
   },
-  /** Large Section Title — 22 / 30 / 700 */
-  sectionHeadingLarge: {
-    fontSize: 22,
-    lineHeight: 30,
-    ...face700,
-    ...directionalText,
-  },
-  /** Section Title — 20 / 28 / 700 */
   sectionHeading: {
     fontSize: 20,
     lineHeight: 28,
     ...face700,
     ...directionalText,
   },
-  /** Subsection — 18 / 26 / 600 */
-  subsection: {
-    fontSize: 18,
-    lineHeight: 26,
-    ...face600,
-    ...directionalText,
-  },
-  /** Card Title — 17 / 24 / 600 */
-  cardHeading: {
-    fontSize: 17,
-    lineHeight: 24,
-    ...face600,
-    ...directionalText,
-  },
-  /** Body Large — 16 / 24 / 500 */
-  bodyLarge: {
-    fontSize: 16,
-    lineHeight: 24,
-    ...face500,
-    ...directionalText,
-  },
-  /** Body Medium — 16 / 24 / 500 */
-  bodyMedium: {
-    fontSize: 16,
-    lineHeight: 24,
-    ...face500,
-    ...directionalText,
-  },
-  /** Body — 15 / 22 / 400 */
-  body: {
-    fontSize: 15,
-    lineHeight: 22,
-    ...face400,
-    ...directionalText,
-  },
-  /** Body Small — 14 / 20 / 400 */
-  bodySmall: {
-    fontSize: 14,
-    lineHeight: 20,
-    ...face400,
-    ...directionalText,
-  },
-  /** Label — 14 / 20 / 500 */
-  label: {
-    fontSize: 14,
-    lineHeight: 20,
-    ...face500,
-    ...directionalText,
-  },
-  /** Caption — 12 / 16 / 400 */
-  caption: {
-    fontSize: 12,
-    lineHeight: 16,
-    ...face400,
-    ...directionalText,
-  },
-  /** Button — 15 / 20 / 600 */
-  button: {
-    fontSize: 15,
-    lineHeight: 20,
-    ...face600,
-    ...directionalText,
-  },
-  /** Small Button — 13 / 18 / 600 */
-  buttonSmall: {
-    fontSize: 13,
-    lineHeight: 18,
-    ...face600,
-    ...directionalText,
-  },
-  /** Large Price — 24 / 32 / 700 */
-  priceLarge: {
-    fontSize: 24,
-    lineHeight: 32,
-    ...face700,
-    ...directionalText,
-  },
-  /** Price — 20 / 28 / 700 */
-  price: {
-    fontSize: 20,
-    lineHeight: 28,
-    ...face700,
-    ...directionalText,
-  },
-  /** Small Price — 18 / 24 / 700 */
-  priceSmall: {
-    fontSize: 18,
-    lineHeight: 24,
-    ...face700,
-    ...directionalText,
-  },
-  /** Content tabs (not bottom nav) — 14 / 20 / 500 */
-  tabs: {
-    fontSize: 14,
-    lineHeight: 20,
-    ...face500,
-    ...directionalText,
-  },
-  /** Chips / filters — 13 / 18 / 500 */
-  chip: {
-    fontSize: 13,
-    lineHeight: 18,
-    ...face500,
-    ...directionalText,
-  },
-  /** Badges — 12 / 16 / 600 */
-  badge: {
-    fontSize: 12,
-    lineHeight: 16,
-    ...face600,
-    ...directionalText,
-  },
-
-  // ── Backward-compatible aliases (nearest role) ──────────────────────────
-  /** @deprecated Use `subsection` */
   cardHeadingLarge: {
     fontSize: 18,
     lineHeight: 26,
     ...face600,
     ...directionalText,
   },
-  /** @deprecated Use `label` / `bodySmall` */
+  cardHeading: {
+    fontSize: 16,
+    lineHeight: 24,
+    ...face600,
+    ...directionalText,
+  },
+  body: {
+    fontSize: 16,
+    lineHeight: 24,
+    ...face500,
+    ...directionalText,
+  },
   smallHeading: {
     fontSize: 14,
     lineHeight: 20,
     ...face500,
     ...directionalText,
   },
-  /** @deprecated Use `bodySmall` */
   secondary: {
     fontSize: 14,
     lineHeight: 20,
-    ...face400,
+    ...face500,
     ...directionalText,
   },
-  /** @deprecated Use `priceSmall` */
+  button: {
+    fontSize: 15,
+    lineHeight: 20,
+    ...face600,
+    ...directionalText,
+  },
   value: {
+    fontSize: 16,
+    lineHeight: 22,
+    ...face700,
+    ...directionalText,
+  },
+  valueLarge: {
     fontSize: 18,
     lineHeight: 24,
     ...face700,
     ...directionalText,
   },
-  /** @deprecated Use `price` / `priceLarge` */
-  valueLarge: {
-    fontSize: 20,
-    lineHeight: 28,
-    ...face700,
+  caption: {
+    fontSize: 12,
+    lineHeight: 18,
+    ...face500,
     ...directionalText,
   },
-  /** @deprecated Use `pageTitle` */
+  badge: {
+    fontSize: 12,
+    lineHeight: 18,
+    ...face600,
+    ...directionalText,
+  },
+
+  /** @deprecated Use `display` */
   h1: {
     fontSize: 24,
     lineHeight: 32,
@@ -510,14 +410,14 @@ export const typography = {
     ...face700,
     ...directionalText,
   },
-  /** @deprecated Use `subsection` */
+  /** @deprecated Use `cardHeadingLarge` */
   h3: {
     fontSize: 18,
     lineHeight: 26,
     ...face600,
     ...directionalText,
   },
-  /** @deprecated Use `button` */
+  /** @deprecated Use `button` for CTAs */
   bodyStrong: {
     fontSize: 15,
     lineHeight: 20,
@@ -527,36 +427,17 @@ export const typography = {
   /** @deprecated Use `caption` */
   micro: {
     fontSize: 12,
-    lineHeight: 16,
-    ...face400,
-    ...directionalText,
-  },
-  emphasis: {
+    lineHeight: 18,
     ...face500,
     ...directionalText,
   },
-  /** @deprecated Use `cardHeading` */
-  feedTitle: {
-    fontSize: 17,
-    lineHeight: 24,
-    ...face600,
-    ...directionalText,
-  },
-  /** @deprecated Use `bodySmall` */
-  feedBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    ...face400,
-    ...directionalText,
-  },
-
   /**
    * Frozen — FloatingTabBar / ButchersTabBar only.
    * Do not change size, weight, or line height.
    */
   tab: {
-    fontFamily: appFont.medium,
-    fontWeight: '500' as const,
+    fontFamily: OFFICIAL_APP_FONT,
+    fontWeight: '700' as const,
     fontSize: 10,
     lineHeight: 13,
     textAlign: 'center' as const,
@@ -567,11 +448,29 @@ export const typography = {
    * Do not change size, weight, or line height.
    */
   tabActive: {
-    fontFamily: appFont.semibold,
-    fontWeight: '600' as const,
+    fontFamily: OFFICIAL_APP_FONT,
+    fontWeight: '700' as const,
     fontSize: 10,
     lineHeight: 13,
     textAlign: 'center' as const,
+    ...directionalText,
+  },
+  emphasis: {
+    ...face500,
+    ...directionalText,
+  },
+  /** Card / list titles — 16 / 600 / 24 */
+  feedTitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    ...face600,
+    ...directionalText,
+  },
+  /** Secondary / meta copy — 14 / 500 / 20 */
+  feedBody: {
+    fontSize: 14,
+    lineHeight: 20,
+    ...face500,
     ...directionalText,
   },
 };

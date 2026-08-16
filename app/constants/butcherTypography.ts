@@ -13,12 +13,12 @@ export const butcherTabLabelActive = typography.tabActive;
 export const butcherTypography = {
   tab: typography.tab,
   tabActive: typography.tabActive,
-  title: typography.subsection,
+  title: typography.cardHeadingLarge,
   titleLarge: typography.sectionHeading,
-  primary: typography.bodyLarge,
+  primary: typography.body,
   body: typography.body,
-  secondary: typography.bodySmall,
+  secondary: typography.secondary,
   meta: typography.caption,
-  emphasis: typography.label,
+  emphasis: typography.emphasis,
   badge: typography.badge,
 } as const;

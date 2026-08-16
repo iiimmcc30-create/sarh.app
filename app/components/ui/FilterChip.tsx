@@ -8,7 +8,6 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { typography, type ThemeColors } from '@/constants/theme';
-import { appFont } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 
@@ -18,6 +17,8 @@ export const FILTER_CHIP = {
   paddingHorizontal: 22,
   radius: 15,
   gap: 10,
+  fontSize: 14,
+  lineHeight: 20,
   /** Idle surface — dark near #101F2C; themed via bgSurface / elevated. */
   idleSurfaceFallback: '#101F2C',
 } as const;
@@ -128,21 +129,18 @@ function createChipStyles(colors: ThemeColors) {
       opacity: 0.45,
     },
     label: {
-      ...typography.chip,
+      ...typography.caption,
+      fontSize: FILTER_CHIP.fontSize,
+      lineHeight: FILTER_CHIP.lineHeight,
+      fontWeight: '500',
       color: colors.textSecondary,
       textAlign: 'center',
       writingDirection: 'rtl',
       includeFontPadding: false,
     },
     labelSelected: {
-      fontFamily: appFont.semibold,
-      fontWeight: '600',
-      fontSize: typography.chip.fontSize,
-      lineHeight: typography.chip.lineHeight,
       color: '#FFFFFF',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      includeFontPadding: false,
+      fontWeight: '600',
     },
   });
 }

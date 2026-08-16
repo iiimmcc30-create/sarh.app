@@ -1,14 +1,13 @@
 /**
- * IBM Plex Sans Arabic — sole UI typeface (do not replace / add families).
+ * Official Sarh UI typeface = listing price face:
+ *   IBMPlexSansArabic_700Bold  (IBM Plex Sans Arabic Bold)
  *
- * Loaded faces:
- *   IBMPlexSansArabic_400Regular
- *   IBMPlexSansArabic_500Medium
- *   IBMPlexSansArabic_600SemiBold
- *   IBMPlexSansArabic_700Bold
+ * Price text (`typography.valueLarge`) is the visual reference. Every content
+ * face resolves to that same Bold file so the app never mixes Medium/SemiBold
+ * letterforms with the price typeface.
  *
- * Content weights map 1:1 to these faces. Bottom-nav `tab` / `tabActive`
- * tokens stay frozen in theme.ts.
+ * Still loaded (for legacy name remaps / tooling): Regular / Medium / SemiBold.
+ * Tajawal is not used and must not be reintroduced.
  */
 export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
 
@@ -16,14 +15,16 @@ export const appFont = {
   regular: 'IBMPlexSansArabic_400Regular',
   medium: 'IBMPlexSansArabic_500Medium',
   semibold: 'IBMPlexSansArabic_600SemiBold',
+  /** Official sole content face — same as listing price. */
   bold: 'IBMPlexSansArabic_700Bold',
 } as const;
 
-/** @deprecated Prefer `appFont` + weight roles — kept for call sites. */
+/** The only content fontFamily used across the app (matches price). */
 export const OFFICIAL_APP_FONT = appFont.bold;
 
 export type AppFontWeight = '400' | '500' | '600' | '700';
 
+/** Faces that must not be rewritten to IBM Plex (icons / card numbers). */
 const PRESERVED_FAMILIES = new Set([
   'monospace',
   'FlaticonUicons-RegularRounded',
@@ -36,14 +37,12 @@ function isLegacyTajawalFamily(family?: string): boolean {
   return /tajawal/i.test(family);
 }
 
-function faceForWeight(weight: AppFontWeight): string {
-  if (weight === '700') return appFont.bold;
-  if (weight === '600') return appFont.semibold;
-  if (weight === '400') return appFont.regular;
-  return appFont.medium;
-}
+const OFFICIAL_FACE = {
+  fontFamily: OFFICIAL_APP_FONT,
+  fontWeight: '700' as const,
+};
 
-/** Map CSS/RN weight → loaded IBM Plex face (same family, correct file). */
+/** Map any requested weight → official price Bold face. */
 export function resolveAppFontFace(
   weight?: string | number,
   existingFamily?: string,
@@ -52,40 +51,16 @@ export function resolveAppFontFace(
     return { fontFamily: existingFamily, fontWeight: '400' };
   }
 
-  const w = weight == null ? '' : String(weight);
-  if (w === '800' || w === '900' || w === '700' || w === 'bold') {
-    return { fontFamily: appFont.bold, fontWeight: '700' };
-  }
-  if (w === '600' || w === 'semibold') {
-    return { fontFamily: appFont.semibold, fontWeight: '600' };
-  }
-  if (w === '500' || w === 'medium') {
-    return { fontFamily: appFont.medium, fontWeight: '500' };
-  }
-  if (w === '400' || w === 'normal' || w === '100' || w === '200' || w === '300') {
-    return { fontFamily: appFont.regular, fontWeight: '400' };
+  // Ignore weight / legacy Medium-SemiBold names — price Bold only.
+  void weight;
+  if (isLegacyTajawalFamily(existingFamily)) {
+    return { ...OFFICIAL_FACE };
   }
 
-  if (existingFamily === appFont.bold) return { fontFamily: appFont.bold, fontWeight: '700' };
-  if (existingFamily === appFont.semibold) return { fontFamily: appFont.semibold, fontWeight: '600' };
-  if (existingFamily === appFont.medium) return { fontFamily: appFont.medium, fontWeight: '500' };
-  if (existingFamily === appFont.regular) return { fontFamily: appFont.regular, fontWeight: '400' };
-
-  if (!existingFamily || existingFamily === APP_FONT_NAME || isLegacyTajawalFamily(existingFamily)) {
-    return { fontFamily: appFont.medium, fontWeight: '500' };
-  }
-
-  return { fontFamily: faceForWeight('500'), fontWeight: '500' };
+  return { ...OFFICIAL_FACE };
 }
 
-/** Style helper for theme tokens — IBM Plex face + matching weight. */
-export function typeFace(weight: AppFontWeight): {
-  fontFamily: string;
-  fontWeight: AppFontWeight;
-} {
-  return { fontFamily: faceForWeight(weight), fontWeight: weight };
-}
-
+/** Registered IBM Plex Sans Arabic faces loaded at boot. */
 export const APP_FONT_FACES = [
   appFont.regular,
   appFont.medium,
