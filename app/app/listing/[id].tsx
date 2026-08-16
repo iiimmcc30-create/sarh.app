@@ -491,17 +491,6 @@ export default function ListingDetailScreen() {
           ) : null}
         </View>
 
-        {videoUri ? (
-          <View style={styles.galleryBlock}>
-            <RtlTextShell>
-              <RtlText style={styles.galleryHeading}>الفيديو</RtlText>
-            </RtlTextShell>
-            <View style={styles.galleryImageWrap}>
-              <ListingVideoPlayer uri={videoUri} posterUri={listing.thumbnailUrl} />
-            </View>
-          </View>
-        ) : null}
-
         <ImageViewerModal
           visible={imageViewerVisible}
           images={images}
@@ -509,7 +498,6 @@ export default function ListingDetailScreen() {
           onClose={() => setImageViewerVisible(false)}
         />
 
-        {/* Description stays in its previous place — only the «المواصفات» label is removed. */}
         {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
           <View style={styles.specsBlock}>
             {categoryLabel || listing.breed || listing.age ? (
@@ -537,6 +525,21 @@ export default function ListingDetailScreen() {
                 <RtlText style={styles.desc}>{listing.description}</RtlText>
               </RtlTextShell>
             ) : null}
+          </View>
+        ) : null}
+
+        {videoUri ? (
+          <View style={styles.galleryBlock}>
+            <RtlTextShell>
+              <RtlText style={styles.galleryHeading}>الفيديو</RtlText>
+            </RtlTextShell>
+            <View style={styles.galleryImageWrap}>
+              <ListingVideoPlayer
+                uri={videoUri}
+                posterUri={listing.thumbnailUrl}
+                height={galleryImageHeight}
+              />
+            </View>
           </View>
         ) : null}
 

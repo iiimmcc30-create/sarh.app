@@ -1,4 +1,4 @@
-import { createElement, useEffect, useMemo, useRef } from 'react';
+import { Component, createElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
@@ -8,13 +8,36 @@ import { resolveMediaUrl } from '@/services/media';
 type Props = {
   uri: string;
   posterUri?: string | null;
+  height?: number;
   aspectRatio?: number;
   style?: ViewStyle;
 };
 
-export function ListingVideoPlayer({
+type NativePlayer = {
+  loop: boolean;
+  muted: boolean;
+  status: string;
+  keepScreenOnWhilePlaying: boolean;
+  play: () => void;
+  pause: () => void;
+  addListener: (
+    event: string,
+    cb: (payload: { status?: string; isPlaying?: boolean }) => void,
+  ) => { remove: () => void };
+};
+
+export function ListingVideoPlayer(props: Props) {
+  return (
+    <VideoErrorBoundary fallback={<VideoOpenFallback {...props} />}>
+      <ListingVideoPlayerInner {...props} />
+    </VideoErrorBoundary>
+  );
+}
+
+function ListingVideoPlayerInner({
   uri,
   posterUri,
+  height,
   aspectRatio = 16 / 9,
   style,
 }: Props) {
@@ -22,8 +45,8 @@ export function ListingVideoPlayer({
   const poster = resolveMediaUrl(posterUri) ?? posterUri ?? undefined;
 
   const containerStyle = useMemo(
-    () => [styles.container, { aspectRatio }, style],
-    [aspectRatio, style],
+    () => [styles.container, height ? { height, width: '100%' as const } : { aspectRatio }, style],
+    [aspectRatio, height, style],
   );
 
   if (Platform.OS === 'web') {
@@ -50,6 +73,83 @@ export function ListingVideoPlayer({
     return <NativeListingVideo uri={videoUri} posterUri={poster} containerStyle={containerStyle} />;
   }
 
+  return <VideoOpenFallback uri={videoUri} posterUri={poster} style={containerStyle} />;
+}
+
+function NativeListingVideo({
+  uri,
+  posterUri,
+  containerStyle,
+}: {
+  uri: string;
+  posterUri?: string;
+  containerStyle: Array<ViewStyle | false | undefined>;
+}) {
+  const { useVideoPlayer, VideoView } = getExpoVideoModule()!;
+  const [showPoster, setShowPoster] = useState(true);
+
+  const player = useVideoPlayer({ uri }, (p) => {
+    const native = p as NativePlayer;
+    native.loop = false;
+    native.muted = false;
+    native.keepScreenOnWhilePlaying = false;
+  }) as NativePlayer;
+
+  const hidePoster = useCallback(() => setShowPoster(false), []);
+
+  useEffect(() => {
+    setShowPoster(true);
+    const statusSub = player.addListener('statusChange', ({ status }) => {
+      if (status === 'readyToPlay' || status === 'error') hidePoster();
+    });
+    const playingSub = player.addListener('playingChange', ({ isPlaying }) => {
+      if (isPlaying) hidePoster();
+    });
+    return () => {
+      statusSub.remove();
+      playingSub.remove();
+      try {
+        player.pause();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [hidePoster, player, uri]);
+
+  return (
+    <View style={containerStyle}>
+      {showPoster && posterUri ? (
+        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFillObject} contentFit="contain" />
+      ) : null}
+      <VideoView
+        player={player}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="contain"
+        nativeControls
+        allowsFullscreen
+        useExoShutter={false}
+        surfaceType={Platform.OS === 'android' ? 'textureView' : undefined}
+        onFirstFrameRender={hidePoster}
+      />
+    </View>
+  );
+}
+
+function VideoOpenFallback({
+  uri,
+  posterUri,
+  height,
+  aspectRatio = 16 / 9,
+  style,
+}: Props) {
+  const videoUri = resolveMediaUrl(uri) ?? uri;
+  const poster = resolveMediaUrl(posterUri) ?? posterUri ?? undefined;
+  const containerStyle = [
+    styles.container,
+    height ? { height, width: '100%' as const } : { aspectRatio },
+    style,
+  ];
+
   return (
     <View style={containerStyle}>
       {poster ? (
@@ -69,50 +169,16 @@ export function ListingVideoPlayer({
   );
 }
 
-function NativeListingVideo({
-  uri,
-  posterUri,
-  containerStyle,
-}: {
-  uri: string;
-  posterUri?: string;
-  containerStyle: ViewStyle[];
-}) {
-  const mod = getExpoVideoModule()!;
-  const { useVideoPlayer, VideoView } = mod;
+class VideoErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
 
-  const player = useVideoPlayer(uri, (p: { loop: boolean; muted: boolean }) => {
-    p.loop = false;
-    p.muted = false;
-  });
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
 
-  const playerRef = useRef(player);
-  playerRef.current = player;
-
-  useEffect(() => {
-    return () => {
-      try {
-        (playerRef.current as { pause?: () => void })?.pause?.();
-      } catch {
-        /* ignore */
-      }
-    };
-  }, []);
-
-  return (
-    <View style={containerStyle}>
-      {posterUri ? (
-        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFill} contentFit="contain" />
-      ) : null}
-      <VideoView
-        player={player}
-        style={StyleSheet.absoluteFill}
-        contentFit="contain"
-        nativeControls
-        playsInline
-      />
-    </View>
-  );
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
 }
 
 const styles = StyleSheet.create({
