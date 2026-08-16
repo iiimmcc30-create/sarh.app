@@ -276,7 +276,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: 8, paddingVertical: 3,
   },
   liveDotSmall: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#fff' },
-  liveTagText: { fontSize: 10, fontWeight: '600', color: '#fff', letterSpacing: 0.5 },
+  liveTagText: { ...typography.badge, color: '#fff', letterSpacing: 0.5 },
   featuredContent: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: spacing.lg, gap: spacing.sm,
@@ -317,6 +317,6 @@ function createStyles(colors: ThemeColors) {
     paddingVertical: 12,
   },
   fabDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
-  fabText: { ...typography.bodyStrong, color: '#fff', fontSize: 13 },
+  fabText: { ...typography.button, color: '#fff' },
   });
 }

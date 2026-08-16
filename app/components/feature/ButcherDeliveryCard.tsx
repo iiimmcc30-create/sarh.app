@@ -179,14 +179,12 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: 'rgba(255,255,255,0.92)',
     },
     ratingText: {
-      ...typography.emphasis,
+      ...typography.caption,
       color: colors.textPrimary,
-      fontSize: 11,
     },
     ratingCount: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
-      fontSize: 10,
     },
     logoWrap: {
       width: 34,
@@ -216,9 +214,8 @@ function createStyles(colors: ThemeColors) {
       zIndex: 2,
     },
     promoText: {
-      ...typography.emphasis,
+      ...typography.badge,
       color: '#fff',
-      fontSize: 10,
     },
     info: {
       paddingHorizontal: spacing.sm,
@@ -240,9 +237,7 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     name: {
-      ...typography.bodyStrong,
-      fontSize: 13,
-      lineHeight: 18,
+      ...typography.cardHeading,
       color: colors.textPrimary,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -257,10 +252,8 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     brandBadgeText: {
-      ...typography.emphasis,
+      ...typography.badge,
       color: colors.gold,
-      fontSize: 7,
-      lineHeight: 9,
     },
     descShell: {
       direction: 'ltr',
@@ -268,8 +261,6 @@ function createStyles(colors: ThemeColors) {
     },
     desc: {
       ...typography.caption,
-      fontSize: 10,
-      lineHeight: 14,
       color: colors.textMuted,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -294,8 +285,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgDeep,
     },
     metaPillText: {
-      ...typography.micro,
-      fontSize: 10,
+      ...typography.caption,
       color: colors.textPrimary,
     },
   });

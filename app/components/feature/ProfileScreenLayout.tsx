@@ -504,14 +504,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: `${colors.electric}22`,
     },
     aiBadgeText: {
-      ...typography.emphasis,
+      ...typography.badge,
       color: colors.electric,
-      fontSize: 10,
     },
     displayName: {
-      ...typography.h2,
-      fontSize: 22,
-      fontWeight: '600',
+      ...typography.cardHeadingLarge,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
@@ -545,21 +542,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       opacity: 0.75,
     },
     ratingText: {
-      ...typography.caption,
-      fontWeight: '600',
+      ...typography.badge,
       color: colors.textPrimary,
-      fontSize: 13,
     },
     ratingCount: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
-      fontSize: 11,
     },
     handleText: {
       ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '500',
-      fontSize: 13,
       textAlign: 'right',
       writingDirection: 'ltr',
     },
@@ -594,15 +586,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignSelf: 'stretch',
     },
     statNum: {
-      fontSize: 20,
-      fontWeight: '600',
+      ...typography.valueLarge,
       color: colors.textPrimary,
       textAlign: 'center',
     },
     statLbl: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
-      fontSize: 11,
       textAlign: 'center',
       ...getRtlText(),
     },
@@ -621,7 +611,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     locationText: {
       ...typography.caption,
       color: colors.textMuted,
-      fontSize: 12,
       ...getRtlText(),
     },
     avatarCol: {
@@ -694,10 +683,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderWidth: 0,
     },
     btnFollowText: {
-      ...typography.bodyStrong,
+      ...typography.button,
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 14,
     },
     btnFollowingText: {
       color: colors.textPrimary,
@@ -707,10 +694,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: colors.bgElevated,
     },
     btnMessageText: {
-      ...typography.bodyStrong,
+      ...typography.button,
       color: colors.textPrimary,
-      fontWeight: '600',
-      fontSize: 14,
     },
     contentCardTop: {
       marginHorizontal: spacing.lg,
@@ -741,9 +726,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       position: 'relative',
     },
     tabLabel: {
-      ...typography.bodyStrong,
-      fontSize: 15,
-      fontWeight: '600',
+      ...typography.smallHeading,
       color: colors.textMuted,
       ...getRtlText(),
     },

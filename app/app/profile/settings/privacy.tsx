@@ -245,9 +245,7 @@ function createStyles(colors: ThemeColors) {
       gap: 4,
     },
     label: {
-      ...typography.bodyStrong,
-      fontSize: 15,
-      fontWeight: '600',
+      ...typography.cardHeading,
       color: colors.textPrimary,
       textAlign: 'right',
     },

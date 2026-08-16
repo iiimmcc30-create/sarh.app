@@ -34,7 +34,7 @@ function patchHost(
   Component.defaultProps = {
     ...Component.defaultProps,
     style: withAppFont([
-      { fontFamily: appFont.regular, fontWeight: '400' },
+      { fontFamily: appFont.medium, fontWeight: '500' },
       Component.defaultProps?.style as StyleProp<TextStyle>,
     ]),
   };

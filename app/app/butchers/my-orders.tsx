@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -352,8 +352,7 @@ function createStyles(colors: ThemeColors) {
     statusDot: { width: 6, height: 6, borderRadius: 3 },
     statusText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
     productName: {
-      ...butcherTypography.primary,
-      fontSize: 14,
+      ...typography.cardHeading,
       color: colors.textPrimary,
     },
     productMeta: {
@@ -394,8 +393,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '16',
     },
     chatBtnText: {
-      ...butcherTypography.primary,
-      fontSize: 14,
+      ...typography.button,
       color: colors.electricBright,
     },
     skeleton: {

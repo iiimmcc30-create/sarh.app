@@ -3,7 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText } from '@/lib/rtl';
@@ -238,8 +238,7 @@ function createStyles(colors: ThemeColors) {
     },
     field: { gap: spacing.sm },
     fieldLabel: {
-      ...butcherTypography.primary,
-      fontSize: 15,
+      ...typography.smallHeading,
       color: colors.textPrimary,
     },
     chipsRow: { flexDirection: 'row-reverse', gap: spacing.sm },

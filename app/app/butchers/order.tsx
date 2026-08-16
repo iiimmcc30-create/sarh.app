@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
@@ -693,7 +693,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     headerCenter: { flex: 1, alignItems: 'center' },
-    headerTitle: { ...butcherTypography.primary, color: colors.textPrimary, fontSize: 17 },
+    headerTitle: { ...typography.cardHeading, color: colors.textPrimary },
     headerSub: { ...butcherTypography.secondary, color: colors.textMuted, marginTop: 2 },
 
     scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
@@ -715,7 +715,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 26,
       backgroundColor: colors.bgElevated,
     },
-    butcherName: { ...butcherTypography.primary, color: colors.textPrimary, fontSize: 16 },
+    butcherName: { ...butcherTypography.title, color: colors.textPrimary },
     butcherMeta: { ...butcherTypography.secondary, color: colors.textMuted, marginTop: 2 },
     verifiedBadge: {
       flexDirection: 'row',
@@ -732,11 +732,10 @@ function createStyles(colors: ThemeColors) {
 
     section: { marginBottom: spacing.lg },
     sectionTitle: {
-      ...butcherTypography.primary,
+      ...typography.smallHeading,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
       ...getRtlText(),
-      fontSize: 15,
     },
     hint: {
       ...butcherTypography.meta,
@@ -864,7 +863,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
       backgroundColor: colors.electric + '10',
     },
-    deliveryLabel: { ...butcherTypography.primary, color: colors.textMuted, fontSize: 14 },
+    deliveryLabel: { ...butcherTypography.secondary, color: colors.textMuted },
     deliveryLabelActive: { color: colors.textBrandStrong },
     deliverySub: { ...butcherTypography.meta, color: colors.textSubtle, textAlign: 'center' },
 
@@ -958,7 +957,7 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.md,
     },
     footerLabel: { ...butcherTypography.meta, color: colors.textMuted },
-    footerTotal: { ...butcherTypography.title, color: colors.gold, fontSize: 20 },
+    footerTotal: { ...typography.valueLarge, color: colors.gold },
     submitBtn: { flex: 1, borderRadius: radius.xl, overflow: 'hidden', maxWidth: 220 },
     submitGrad: {
       flexDirection: 'row',

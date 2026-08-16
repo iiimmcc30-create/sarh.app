@@ -717,7 +717,7 @@ function createStyles(colors: ThemeColors) {
       maxWidth: '100%',
     },
     headerMetaText: {
-      ...typography.feedBody,
+      ...typography.caption,
       color: colors.textMuted,
       flexShrink: 1,
     },
@@ -731,7 +731,7 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     specMetaText: {
-      ...typography.feedBody,
+      ...typography.caption,
       color: colors.textMuted,
     },
     galleryBlock: {
@@ -739,7 +739,7 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.sm,
     },
     galleryHeading: {
-      ...typography.feedTitle,
+      ...typography.smallHeading,
       color: colors.textMuted,
       marginBottom: spacing.xs,
     },
@@ -756,15 +756,11 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     price: {
-      ...typography.feedTitle,
-      fontSize: 15,
-      lineHeight: 22,
+      ...typography.valueLarge,
       color: colors.textBrandStrong,
     },
     priceOnRequest: {
-      ...typography.feedTitle,
-      fontSize: 15,
-      lineHeight: 22,
+      ...typography.valueLarge,
       color: colors.textBrandStrong,
     },
     priceBadges: {
@@ -782,7 +778,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    featuredText: { ...typography.feedBody, color: '#1A1300' },
+    featuredText: { ...typography.badge, color: '#1A1300' },
     pinned: {
       alignItems: 'center',
       gap: 4,
@@ -791,11 +787,9 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    pinnedText: { ...typography.feedBody, color: '#fff' },
+    pinnedText: { ...typography.badge, color: '#fff' },
     title: {
-      ...typography.feedTitle,
-      fontSize: 20,
-      lineHeight: 28,
+      ...typography.sectionHeading,
       color: colors.textPrimary,
     },
     sellerRow: {
@@ -873,22 +867,18 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderMid,
     },
     followPillText: {
-      ...typography.feedTitle,
+      ...typography.button,
       color: '#fff',
     },
     followingPillText: { color: colors.textMuted },
 
     desc: {
-      ...typography.feedBody,
-      fontSize: 15,
+      ...typography.body,
       color: colors.textSecondary,
-      lineHeight: 24,
     },
     descArabic: {
-      ...typography.feedBody,
-      fontSize: 16,
+      ...typography.body,
       color: colors.textPrimary,
-      lineHeight: 27,
     },
 
     // Bottom CTA
@@ -917,9 +907,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     ctaBtnAppText: {
-      ...typography.feedTitle,
+      ...typography.button,
       color: '#fff',
-      fontSize: 15,
     },
     ctaBtnWa: {
       flex: 1,
@@ -932,9 +921,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: '#25D366',
     },
     ctaBtnWaText: {
-      ...typography.feedTitle,
+      ...typography.button,
       color: '#fff',
-      fontSize: 15,
     },
   });
 }

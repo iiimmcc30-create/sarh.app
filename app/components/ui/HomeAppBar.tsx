@@ -89,9 +89,8 @@ function createStyles(colors: ThemeColors) {
     },
     /** Physical LTR shell — same as AppTextInput / listing titles. */
     searchPlaceholder: {
-      ...typography.body,
+      ...typography.secondary,
       color: colors.textMuted,
-      fontSize: 14,
     },
     iconBtn: {
       width: ds.iconBtn.md,

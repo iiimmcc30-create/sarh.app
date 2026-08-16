@@ -337,8 +337,8 @@ function createStyles(colors: ThemeColors) {
     gap: spacing.md,
   },
   channelIconWrap: { alignItems: 'center', marginBottom: -spacing.sm },
-  cardTitle: { fontSize: 20, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
-  cardSub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
+  cardTitle: { ...typography.sectionHeading, color: colors.textPrimary, textAlign: 'center' },
+  cardSub: { ...typography.secondary, color: colors.textMuted, textAlign: 'center' },
   phoneHighlight: { color: colors.textBrandStrong, fontWeight: '600' },
 
   otpRow: {
@@ -356,7 +356,7 @@ function createStyles(colors: ThemeColors) {
   },
   otpBoxError: { borderColor: colors.danger, backgroundColor: 'rgba(239, 68, 68, 0.1)' },
   otpInput: {
-    fontSize: 20, fontWeight: '600', color: colors.textPrimary,
+    ...typography.sectionHeading, color: colors.textPrimary,
     width: '100%', height: '100%', textAlign: 'center',
   },
 
@@ -366,32 +366,32 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, ...getRtlText(), flex: 1 },
+  errorText: { ...typography.caption, color: colors.danger, ...getRtlText(), flex: 1 },
 
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: 5 },
-  countdownText: { fontSize: 13, color: colors.textMuted },
+  countdownText: { ...typography.secondary, color: colors.textMuted },
   countdownBadge: {
     backgroundColor: colors.bgDeep, paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 6, borderWidth: 1, borderColor: colors.borderHairline,
   },
-  countdownValue: { fontSize: 12, color: '#f59e0b', fontWeight: '600' },
+  countdownValue: { ...typography.badge, color: '#f59e0b' },
   resendActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  resendActionText: { fontSize: 13, color: colors.textBrandStrong, fontWeight: '600' },
+  resendActionText: { ...typography.button, color: colors.textBrandStrong },
 
   verifyBtn: { width: '100%', borderRadius: 20, overflow: 'hidden', marginTop: 10 },
   verifyBtnDisabled: { opacity: 0.5 },
   verifyGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  verifyText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+  verifyText: { ...typography.button, color: colors.textPrimary },
 
   poweredRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  poweredText: { fontSize: 11, color: '#6b7280' },
+  poweredText: { ...typography.caption, color: '#6b7280' },
   twilioBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(239, 47, 70, 0.1)', paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 12, borderWidth: 1, borderColor: colors.borderHairline,
   },
   twilioDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#f22f46' },
-  twilioText: { fontSize: 11, color: '#f22f46', fontWeight: '600' },
+  twilioText: { ...typography.badge, color: '#f22f46' },
 
   // Success screen
   successCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
@@ -401,7 +401,7 @@ function createStyles(colors: ThemeColors) {
     shadowOpacity: 0.8, shadowRadius: 30, elevation: 16,
   },
   successInner: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center' },
-  successTitle: { fontSize: 24, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
-  successSub: { fontSize: 14, color: colors.textMuted },
+  successTitle: { ...typography.display, color: colors.textPrimary, textAlign: 'center' },
+  successSub: { ...typography.secondary, color: colors.textMuted },
   });
 }

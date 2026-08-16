@@ -112,10 +112,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       fontSize: 20,
     },
     label: {
-      ...typography.micro,
-      fontSize: 11,
+      ...typography.caption,
       color: colors.textMuted,
-      fontWeight: '500',
       writingDirection: 'rtl',
       textAlign: 'center',
     },

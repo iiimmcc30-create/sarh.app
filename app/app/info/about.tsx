@@ -226,8 +226,7 @@ function createStyles(colors: ThemeColors) {
     },
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
     heroTitle: {
-      fontSize: 32,
-      fontWeight: '600',
+      ...typography.display,
       color: colors.textPrimary,
       letterSpacing: -0.5,
       width: '100%',

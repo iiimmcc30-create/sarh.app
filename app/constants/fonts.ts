@@ -1,22 +1,23 @@
 /**
- * IBM Plex Sans Arabic — same faces as FloatingTabBar (source of truth).
+ * IBM Plex Sans Arabic — same family as FloatingTabBar.
  * Loaded files (via @expo-google-fonts/ibm-plex-sans-arabic):
- *   IBMPlexSansArabic_400Regular
+ *   IBMPlexSansArabic_400Regular (legacy / icon-host fallback only)
  *   IBMPlexSansArabic_500Medium
  *   IBMPlexSansArabic_600SemiBold
- * No local assets/fonts copies. Do not request 700+ — that file is not loaded.
+ *   IBMPlexSansArabic_700Bold
+ * Content typography uses 500 / 600 / 700 only.
+ * Bottom-nav labels keep their own tokens (500 / 600) and must not be restyled here.
  */
 export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
 
 export const appFont = {
   regular: 'IBMPlexSansArabic_400Regular',
   medium: 'IBMPlexSansArabic_500Medium',
-  /** Loaded SemiBold file — not a synthetic 700 */
-  bold: 'IBMPlexSansArabic_600SemiBold',
   semibold: 'IBMPlexSansArabic_600SemiBold',
+  bold: 'IBMPlexSansArabic_700Bold',
 } as const;
 
-export type AppFontWeight = '400' | '500' | '600';
+export type AppFontWeight = '400' | '500' | '600' | '700';
 
 const PRESERVED_FAMILIES = new Set([
   'monospace',
@@ -25,7 +26,7 @@ const PRESERVED_FAMILIES = new Set([
   'FlaticonUicons-BoldRounded',
 ]);
 
-/** Map CSS/RN weight → loaded IBM Plex file. Unsupported 700+ clamp to 600 file. */
+/** Map CSS/RN weight → loaded IBM Plex file. Content 100–400 promote to 500. */
 export function resolveAppFontFace(
   weight?: string | number,
   existingFamily?: string,
@@ -35,8 +36,11 @@ export function resolveAppFontFace(
   }
 
   const w = weight == null ? '' : String(weight);
-  if (w === '700' || w === '800' || w === '900' || w === 'bold') {
-    return { fontFamily: appFont.semibold, fontWeight: '600' };
+  if (w === '800' || w === '900') {
+    return { fontFamily: appFont.bold, fontWeight: '700' };
+  }
+  if (w === '700' || w === 'bold') {
+    return { fontFamily: appFont.bold, fontWeight: '700' };
   }
   if (w === '600' || w === 'semibold') {
     return { fontFamily: appFont.semibold, fontWeight: '600' };
@@ -45,12 +49,12 @@ export function resolveAppFontFace(
     return { fontFamily: appFont.medium, fontWeight: '500' };
   }
   if (w === '400' || w === 'normal' || w === '100' || w === '200' || w === '300') {
-    return { fontFamily: appFont.regular, fontWeight: '400' };
+    return { fontFamily: appFont.medium, fontWeight: '500' };
   }
 
+  if (existingFamily === appFont.bold) return { fontFamily: appFont.bold, fontWeight: '700' };
   if (existingFamily === appFont.semibold) return { fontFamily: appFont.semibold, fontWeight: '600' };
   if (existingFamily === appFont.medium) return { fontFamily: appFont.medium, fontWeight: '500' };
-  if (existingFamily === appFont.regular) return { fontFamily: appFont.regular, fontWeight: '400' };
 
-  return { fontFamily: appFont.regular, fontWeight: '400' };
+  return { fontFamily: appFont.medium, fontWeight: '500' };
 }

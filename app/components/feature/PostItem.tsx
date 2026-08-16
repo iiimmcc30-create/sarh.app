@@ -390,8 +390,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       minWidth: 0,
     },
     name: {
-      ...typography.feedTitle,
-      fontSize: 16,
+      ...typography.cardHeading,
       color: colors.textPrimary,
       flexShrink: 1,
       textAlign: 'right',
@@ -408,20 +407,18 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       flexShrink: 0,
     },
     ratingMiniText: {
-      ...typography.feedBody,
-      fontSize: 11,
+      ...typography.caption,
       color: colors.textSecondary,
     },
     metaMuted: {
-      ...typography.feedBody,
-      fontSize: 13,
+      ...typography.caption,
       color: colors.textMuted,
       flexShrink: 0,
       textAlign: 'right',
       writingDirection: 'rtl',
     },
     metaDot: {
-      fontSize: 13,
+      ...typography.caption,
       color: colors.textSubtle,
       flexShrink: 0,
     },
@@ -434,8 +431,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       borderColor: colors.electric + '55',
     },
     aiBadgeText: {
-      ...typography.feedBody,
-      fontSize: 10,
+      ...typography.badge,
       color: colors.textSecondary,
     },
     menuBtn: {
@@ -455,9 +451,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       marginTop: 8,
     },
     body: {
-      ...typography.feedBody,
-      fontSize: 15,
-      lineHeight: 24,
+      ...typography.body,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
@@ -468,8 +462,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       opacity: 0.92,
     },
     showMore: {
-      ...typography.feedTitle,
-      fontSize: 14,
+      ...typography.secondary,
       color: colors.textSecondary,
       marginTop: 4,
       ...getRtlText(),
@@ -500,8 +493,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       paddingHorizontal: 2,
     },
     actionCount: {
-      ...typography.feedBody,
-      fontSize: 12,
+      ...typography.caption,
     },
   });
 }

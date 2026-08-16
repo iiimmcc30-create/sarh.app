@@ -100,9 +100,7 @@ function createStyles(colors: ThemeColors) {
       maxWidth: 160,
     },
     regionText: {
-      ...typography.caption,
-      fontSize: 13,
-      fontWeight: '600',
+      ...typography.badge,
       color: colors.textPrimary,
       writingDirection: 'rtl',
       flexShrink: 1,
@@ -121,9 +119,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     chipText: {
-      ...typography.caption,
-      fontSize: 12,
-      fontWeight: '600',
+      ...typography.badge,
       color: colors.textSecondary,
       writingDirection: 'rtl',
     },

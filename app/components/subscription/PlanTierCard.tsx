@@ -209,19 +209,15 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'flex-end',
     },
     priceFree: {
-      fontSize: 28,
-      fontWeight: '600',
+      ...typography.display,
       color: colors.electric,
     },
     price: {
-      fontSize: 32,
-      fontWeight: '600',
+      ...typography.display,
       color: colors.textPrimary,
-      lineHeight: 36,
     },
     priceCurrency: {
-      fontSize: 16,
-      fontWeight: '600',
+      ...typography.value,
       color: colors.textMuted,
     },
     pricePer: {

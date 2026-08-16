@@ -100,9 +100,8 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 0,
     },
     searchInput: {
-      ...butcherTypography.body,
+      ...butcherTypography.secondary,
       color: colors.textPrimary,
-      fontSize: 14,
       paddingVertical: 0,
     },
     iconBtn: {

@@ -1,6 +1,5 @@
 import { CATEGORY_LABELS, type MeatCategory } from '@/services/butcherData';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -74,8 +73,7 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     tabLabel: {
-      ...butcherTypography.primary,
-      fontSize: 14,
+      ...typography.smallHeading,
       color: colors.textMuted,
       textAlign: 'right',
       writingDirection: 'rtl',

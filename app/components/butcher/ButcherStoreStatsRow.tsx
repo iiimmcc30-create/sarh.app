@@ -1,5 +1,5 @@
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { StyleSheet, Text, View } from 'react-native';
@@ -55,10 +55,9 @@ function createStyles(colors: ThemeColors) {
       marginHorizontal: spacing.sm,
     },
     value: {
-      ...butcherTypography.primary,
+      ...typography.value,
       ...getRtlText(),
       color: colors.textPrimary,
-      fontSize: 16,
     },
     label: {
       ...butcherTypography.meta,

@@ -89,10 +89,7 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     label: {
-      ...typography.bodyStrong,
-      fontSize: 13,
-      lineHeight: 18,
-      fontWeight: '600',
+      ...typography.secondary,
       color: colors.textBrandStrong,
       textAlign: 'right',
       writingDirection: 'rtl',

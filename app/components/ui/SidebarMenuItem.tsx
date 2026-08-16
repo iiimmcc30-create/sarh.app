@@ -12,7 +12,6 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isNavigationLocked } from '@/lib/safeNavigate';
@@ -317,19 +316,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   title: {
-    ...typography.bodyStrong,
-    fontFamily: appFont.semibold,
-    fontSize: SIDEBAR_MENU_ITEM.titleSize,
-    fontWeight: SIDEBAR_MENU_ITEM.titleWeight,
+    ...typography.cardHeading,
   },
   subtitle: {
     ...typography.caption,
-    fontSize: SIDEBAR_MENU_ITEM.subtitleSize,
-    lineHeight: 18,
   },
   badge: {
     minWidth: 24,
-    height: 22,
+    minHeight: 22,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -337,9 +331,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   badgeText: {
+    ...typography.badge,
     color: '#F4F7F9',
-    fontSize: 11,
-    fontWeight: '600',
   },
 });
 

@@ -383,11 +383,10 @@ function createStyles(colors: ThemeColors, isHero = false) {
       borderColor: colors.gold + '55',
     },
     storyName: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textSecondary,
       textAlign: 'center',
       maxWidth: STORY_SIZE + 4,
-      fontSize: 10,
     },
 
     gridRow: {
@@ -460,10 +459,8 @@ function createStyles(colors: ThemeColors, isHero = false) {
       backgroundColor: sarh.color.action,
     },
     newBadgeText: {
-      ...typography.micro,
+      ...typography.badge,
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 9,
     },
     ratingChip: {
       flexDirection: 'row',
@@ -475,15 +472,12 @@ function createStyles(colors: ThemeColors, isHero = false) {
       backgroundColor: 'rgba(0,0,0,0.5)',
     },
     ratingText: {
-      ...typography.micro,
+      ...typography.caption,
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 11,
     },
     ratingCount: {
-      ...typography.micro,
+      ...typography.caption,
       color: 'rgba(255,255,255,0.75)',
-      fontSize: 9,
     },
 
     statusPill: {
@@ -511,10 +505,8 @@ function createStyles(colors: ThemeColors, isHero = false) {
       backgroundColor: '#fff',
     },
     statusText: {
-      ...typography.micro,
+      ...typography.badge,
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 10,
     },
 
     badgesRow: {
@@ -543,10 +535,8 @@ function createStyles(colors: ThemeColors, isHero = false) {
       backgroundColor: colors.gold,
     },
     badgeText: {
-      ...typography.micro,
+      ...typography.badge,
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 9,
     },
 
     heroOverlay: {
@@ -615,9 +605,8 @@ function createStyles(colors: ThemeColors, isHero = false) {
       gap: 3,
     },
     metaText: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
-      fontSize: 10,
     },
     metaDot: {
       width: 3,

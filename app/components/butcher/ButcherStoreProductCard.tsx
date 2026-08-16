@@ -1,7 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { resolveMediaUrl } from '@/services/media';
@@ -132,8 +132,7 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     name: {
-      ...butcherTypography.primary,
-      fontSize: 15,
+      ...typography.cardHeading,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
@@ -162,9 +161,8 @@ function createStyles(colors: ThemeColors) {
       marginTop: 4,
     },
     price: {
-      ...butcherTypography.primary,
+      ...typography.value,
       color: colors.electricBright,
-      fontSize: 15,
     },
     compare: {
       ...butcherTypography.secondary,

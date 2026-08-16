@@ -1078,10 +1078,8 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     navChipOn: { backgroundColor: colors.electric, borderColor: colors.electric },
     navChipText: {
-      ...typography.micro,
-      fontSize: 11,
+      ...typography.badge,
       color: colors.textMuted,
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
     navChipTextOn: { color: '#fff' },
@@ -1095,7 +1093,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingHorizontal: 3,
     },
     navBadgeOn: { backgroundColor: colors.screenRoot },
-    navBadgeText: { ...typography.emphasis, fontSize: 8, color: '#fff' },
+    navBadgeText: { ...typography.badge, color: '#fff' },
     navBadgeTextOn: { color: colors.textPrimary },
     scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
     kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
@@ -1110,8 +1108,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: border,
     },
     kpiValue: {
-      fontSize: 22,
-      fontWeight: '600',
+      ...typography.valueLarge,
     },
     kpiLabel: {
       ...typography.micro,
@@ -1174,7 +1171,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
     },
-    slotCount: { ...typography.h3, fontSize: 20, color: colors.electric, width: 36, textAlign: 'center' },
+    slotCount: { ...typography.value, color: colors.electric, width: 36, textAlign: 'center' },
     slotLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
@@ -1232,10 +1229,8 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     filterChipOn: { backgroundColor: colors.electric, borderColor: colors.electric },
     filterText: {
-      ...typography.micro,
-      fontSize: 11,
+      ...typography.badge,
       color: colors.textMuted,
-      fontWeight: '600',
     },
     filterTextOn: { color: '#fff' },
     tabHeader: {

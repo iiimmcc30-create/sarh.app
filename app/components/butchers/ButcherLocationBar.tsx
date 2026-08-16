@@ -86,8 +86,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
     },
     value: {
-      ...butcherTypography.primary,
-      fontSize: 14,
+      ...butcherTypography.secondary,
       color: colors.textPrimary,
     },
   });

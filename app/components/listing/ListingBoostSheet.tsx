@@ -725,7 +725,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     niText: {
-      fontSize: 11,
+      ...typography.caption,
       color: colors.textSubtle,
     },
   });

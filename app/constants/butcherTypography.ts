@@ -1,6 +1,6 @@
 /**
  * Butcher UI typography — aliases global `typography` (IBM Plex Sans Arabic).
- * Kept for butcher imports; source of truth is `@/constants/theme`.
+ * `tab` / `tabActive` stay frozen for ButchersTabBar.
  */
 import { APP_FONT_NAME } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
@@ -13,16 +13,12 @@ export const butcherTabLabelActive = typography.tabActive;
 export const butcherTypography = {
   tab: typography.tab,
   tabActive: typography.tabActive,
-  title: typography.h3,
-  titleLarge: typography.h2,
-  primary: typography.bodyStrong,
+  title: typography.cardHeadingLarge,
+  titleLarge: typography.sectionHeading,
+  primary: typography.body,
   body: typography.body,
-  secondary: typography.caption,
-  meta: typography.micro,
+  secondary: typography.secondary,
+  meta: typography.caption,
   emphasis: typography.emphasis,
-  badge: {
-    ...typography.emphasis,
-    fontSize: 9,
-    lineHeight: 12,
-  },
+  badge: typography.badge,
 } as const;

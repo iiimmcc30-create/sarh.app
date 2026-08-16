@@ -442,7 +442,7 @@ function createStyles(colors: ThemeColors) {
   },
   revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   revenueLabel: { ...typography.caption, color: colors.textMuted, textAlign: 'right', writingDirection: 'rtl' },
-  revenueValue: { ...typography.h1, fontSize: 28, color: colors.textPrimary, letterSpacing: -0.4, textAlign: 'right' },
+  revenueValue: { ...typography.display, color: colors.textPrimary, letterSpacing: -0.4, textAlign: 'right' },
   revenueTrend: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(32,182,111,0.14)',
@@ -533,7 +533,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  rankNum: { fontSize: 22, fontWeight: '600', color: '#1A1300' },
+  rankNum: { ...typography.valueLarge, color: '#1A1300' },
   });
 }
 
@@ -555,7 +555,7 @@ function createStatCardStyles(colors: ThemeColors) {
   },
   icon: { fontSize: 18 },
   label: { ...typography.micro, color: colors.textMuted },
-  value: { fontSize: 22, fontWeight: '600', letterSpacing: -0.3 },
+  value: { ...typography.valueLarge, letterSpacing: -0.3 },
   sub: { ...typography.micro, color: colors.textMuted },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   trendText: { ...typography.micro, fontWeight: '600' },

@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { gradients, radius, spacing, type ThemeColors } from '@/constants/theme';
+import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, rtlBackIcon } from '@/lib/rtl';
@@ -128,8 +128,7 @@ function StoreProductsTab({
             placeholderTextColor={colors.textMuted}
             style={{
               flex: 1,
-              ...butcherTypography.body,
-              fontSize: 14,
+              ...butcherTypography.secondary,
               color: colors.textPrimary,
               paddingVertical: 8,
             }}
@@ -407,7 +406,7 @@ function RatingDistribution({
     StyleSheet.create({
       wrap: { paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.md },
       summaryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-      avg: { ...butcherTypography.titleLarge, fontSize: 36, color: c.textPrimary },
+      avg: { ...typography.display, color: c.textPrimary },
       meta: { gap: 4 },
       count: { ...butcherTypography.secondary, color: c.textMuted },
       barRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -1100,7 +1099,6 @@ function createMainStyles(colors: ThemeColors) {
   nameBlock: { width: '100%', direction: 'ltr' },
   name: {
     ...butcherTypography.titleLarge,
-    fontSize: 20,
     color: colors.textPrimary,
   },
   ratingRow: {
@@ -1178,8 +1176,7 @@ function createMainStyles(colors: ThemeColors) {
     direction: 'ltr',
   },
   tabLabel: {
-    ...butcherTypography.primary,
-    fontSize: 14,
+    ...typography.smallHeading,
     color: colors.textMuted,
   },
   tabLabelActive: { ...butcherTypography.emphasis, color: colors.electricBright },
@@ -1507,7 +1504,6 @@ function createReviewsStyles(colors: ThemeColors) {
   comment: {
     ...butcherTypography.secondary,
     color: colors.textSecondary,
-    lineHeight: 17,
   },
   });
 }

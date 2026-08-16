@@ -470,9 +470,8 @@ function createStyles(colors: ThemeColors) {
     },
     topBtnPlaceholder: { width: 40 },
     topTitle: {
-      ...typography.bodyStrong,
+      ...typography.cardHeading,
       color: '#fff',
-      fontSize: 16,
     },
     publishChip: {
       backgroundColor: colors.electric,
@@ -483,9 +482,8 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     publishChipText: {
-      ...typography.bodyStrong,
+      ...typography.button,
       color: '#fff',
-      fontSize: 14,
     },
     pickerBody: {
       flex: 1,

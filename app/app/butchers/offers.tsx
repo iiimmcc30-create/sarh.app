@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
@@ -384,24 +384,22 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    discountText: { ...butcherTypography.emphasis, color: '#fff', fontSize: 10 },
+    discountText: { ...butcherTypography.badge, color: '#fff' },
     productBody: { padding: spacing.sm, gap: 5 },
     productName: {
-      ...butcherTypography.emphasis,
-      fontSize: 12,
+      ...typography.cardHeading,
       color: colors.textPrimary,
-      lineHeight: 17,
       ...getRtlText(),
     },
     priceRow: { alignItems: 'baseline', gap: 6 },
-    offerPrice: { ...butcherTypography.primary, fontSize: 14, color: colors.electricBright },
+    offerPrice: { ...typography.value, color: colors.electricBright },
     originalPrice: {
       ...butcherTypography.meta,
       color: colors.textMuted,
       textDecorationLine: 'line-through',
     },
     validityRow: { alignItems: 'center', gap: 4 },
-    validityText: { ...butcherTypography.meta, color: colors.textMuted, fontSize: 10, ...getRtlText() },
+    validityText: { ...butcherTypography.meta, color: colors.textMuted, ...getRtlText() },
     empty: { alignItems: 'center', paddingVertical: 90, gap: spacing.sm },
     emptyIconWrap: {
       width: 76,

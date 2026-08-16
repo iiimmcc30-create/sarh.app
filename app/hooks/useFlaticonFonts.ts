@@ -2,6 +2,7 @@ import {
   IBMPlexSansArabic_400Regular,
   IBMPlexSansArabic_500Medium,
   IBMPlexSansArabic_600SemiBold,
+  IBMPlexSansArabic_700Bold,
   useFonts,
 } from '@expo-google-fonts/ibm-plex-sans-arabic';
 
@@ -11,6 +12,7 @@ export function useFlaticonFonts() {
     IBMPlexSansArabic_400Regular,
     IBMPlexSansArabic_500Medium,
     IBMPlexSansArabic_600SemiBold,
+    IBMPlexSansArabic_700Bold,
   });
   return { loaded, error: error ?? null };
 }

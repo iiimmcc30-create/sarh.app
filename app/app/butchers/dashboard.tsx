@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
+import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
 import { useButcherStats, StatsPeriod } from '@/hooks/useButcherStats';
 import { useRequireApprovedButcher } from '@/hooks/useRequireApprovedButcher';
 import { usePaidServices } from '@/hooks/usePaidServices';
@@ -446,7 +446,7 @@ const s = StyleSheet.create({
   },
   revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   revenueLabel: { ...butcherTypography.secondary, color: 'rgba(255,255,255,0.75)' },
-  revenueValue: { ...butcherTypography.titleLarge, fontSize: 34, color: '#fff', letterSpacing: -0.5 },
+  revenueValue: { ...typography.display, color: '#fff', letterSpacing: -0.5 },
   revenueTrend: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -537,7 +537,7 @@ const s = StyleSheet.create({
     backgroundColor: colors.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  rankNum: { ...butcherTypography.title, fontSize: 22, color: '#1A1300' },
+  rankNum: { ...typography.valueLarge, color: '#1A1300' },
 });
 
 const sc = StyleSheet.create({
@@ -558,7 +558,7 @@ const sc = StyleSheet.create({
   },
   icon: { fontSize: 18 },
   label: { ...butcherTypography.meta, color: colors.textMuted },
-  value: { ...butcherTypography.title, fontSize: 22, letterSpacing: -0.3 },
+  value: { ...typography.valueLarge, letterSpacing: -0.3 },
   sub: { ...butcherTypography.meta, color: colors.textMuted },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   trendText: { ...butcherTypography.emphasis },

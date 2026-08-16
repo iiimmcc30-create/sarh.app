@@ -3,7 +3,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { inlineStart } from '@/lib/rtl';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
@@ -63,10 +63,10 @@ function createStyles(colors: ThemeColors) {
       position: 'absolute',
       top: -2,
       ...inlineStart(-2),
-      minWidth: 18,
-      height: 18,
+      minWidth: 20,
+      minHeight: 20,
       paddingHorizontal: spacing.xs,
-      borderRadius: 9,
+      borderRadius: 10,
       backgroundColor: colors.danger,
       alignItems: 'center',
       justifyContent: 'center',
@@ -74,10 +74,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.bgDeep,
     },
     badgeText: {
-      fontSize: 10,
-      fontWeight: '600',
+      ...typography.badge,
       color: '#fff',
-      lineHeight: 12,
     },
   });
 }

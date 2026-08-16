@@ -249,14 +249,10 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.display,
       color: colors.textPrimary,
-      fontSize: 30,
-      lineHeight: 40,
     },
     description: {
       ...typography.body,
       color: colors.textSecondary,
-      fontSize: 16,
-      lineHeight: 26,
     },
     footer: {
       paddingHorizontal: layout.screenPadding,

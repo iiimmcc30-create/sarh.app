@@ -288,13 +288,11 @@ function createBarStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: colors.bgDeep,
     },
     countText: {
+      ...typography.badge,
       color: '#fff',
-      fontSize: 10,
-      fontWeight: '600',
     },
     label: {
       ...typography.caption,
-      lineHeight: 16,
       color: colors.textMuted,
       textAlign: 'center',
       width: CIRCLE + spacing.sm,

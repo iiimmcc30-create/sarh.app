@@ -205,8 +205,7 @@ function createStyles(colors: ThemeColors) {
     },
     searchInput: {
       flex: 1,
-      ...typography.body,
-      fontSize: 14,
+      ...typography.secondary,
       color: colors.textPrimary,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -254,8 +253,7 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
     },
     rowTitle: {
-      ...typography.bodyStrong,
-      fontSize: 14,
+      ...typography.cardHeading,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
@@ -278,8 +276,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.md,
     },
     cityText: {
-      ...typography.body,
-      fontSize: 14,
+      ...typography.secondary,
       color: colors.textSecondary,
       textAlign: 'right',
       writingDirection: 'rtl',

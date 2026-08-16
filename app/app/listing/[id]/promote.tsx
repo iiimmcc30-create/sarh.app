@@ -783,9 +783,7 @@ function createStyles(colors: ThemeColors) {
       fontWeight: '600',
     },
     sliderValue: {
-      fontSize: 28,
-      lineHeight: 34,
-      fontWeight: '600',
+      ...typography.display,
       color: colors.textBrandStrong,
       ...getRtlText(),
       ...getRtlText(),
@@ -867,8 +865,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
       color: colors.textPrimary,
       backgroundColor: colors.bgElevated,
-      fontSize: 18,
-      fontWeight: '600' as const,
+      ...typography.valueLarge,
     },
     minBudgetHint: {
       ...typography.caption,
@@ -927,9 +924,7 @@ function createStyles(colors: ThemeColors) {
       ...getRtlText(),
     },
     priceCardValue: {
-      fontSize: 28,
-      lineHeight: 34,
-      fontWeight: '600',
+      ...typography.display,
       color: colors.textBrandStrong,
       ...getRtlText(),
       ...getRtlText(),

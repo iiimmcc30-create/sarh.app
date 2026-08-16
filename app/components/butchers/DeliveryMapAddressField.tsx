@@ -1,7 +1,7 @@
 // SAFAT — Delivery address via map picker (not free-text)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -101,8 +101,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
     },
     value: {
-      ...butcherTypography.primary,
-      fontSize: 15,
+      ...typography.body,
       color: colors.textPrimary,
       marginTop: 2,
     },

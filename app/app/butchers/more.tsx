@@ -160,8 +160,7 @@ function createStyles(colors: ThemeColors) {
     },
     avatar: { width: '100%', height: '100%' },
     userName: {
-      ...butcherTypography.primary,
-      fontSize: 15,
+      ...butcherTypography.title,
       color: colors.textPrimary,
     },
     userPhone: {
