@@ -1,4 +1,4 @@
-import { Component, createElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Component, createElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
@@ -25,6 +25,8 @@ type NativePlayer = {
     cb: (payload: { status?: string; isPlaying?: boolean }) => void,
   ) => { remove: () => void };
 };
+
+const MEDIA_SURFACE = '#102633';
 
 export function ListingVideoPlayer(props: Props) {
   return (
@@ -62,7 +64,7 @@ function ListingVideoPlayerInner({
             width: '100%',
             height: '100%',
             objectFit: 'contain',
-            backgroundColor: '#000',
+            backgroundColor: MEDIA_SURFACE,
           },
         })}
       </View>
@@ -87,6 +89,7 @@ function NativeListingVideo({
 }) {
   const { useVideoPlayer, VideoView } = getExpoVideoModule()!;
   const [showPoster, setShowPoster] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const player = useVideoPlayer({ uri }, (p) => {
     const native = p as NativePlayer;
@@ -99,8 +102,11 @@ function NativeListingVideo({
 
   useEffect(() => {
     setShowPoster(true);
+    setLoadFailed(false);
     const statusSub = player.addListener('statusChange', ({ status }) => {
-      if (status === 'readyToPlay' || status === 'error') hidePoster();
+      if (status === 'readyToPlay') hidePoster();
+      // Keep poster visible on error — otherwise the black surface shows alone.
+      if (status === 'error') setLoadFailed(true);
     });
     const playingSub = player.addListener('playingChange', ({ isPlaying }) => {
       if (isPlaying) hidePoster();
@@ -116,21 +122,28 @@ function NativeListingVideo({
     };
   }, [hidePoster, player, uri]);
 
+  const posterVisible = Boolean(posterUri) && (showPoster || loadFailed);
+
   return (
     <View style={containerStyle}>
-      {showPoster && posterUri ? (
-        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFillObject} contentFit="contain" />
-      ) : null}
       <VideoView
         player={player}
         style={StyleSheet.absoluteFillObject}
         contentFit="contain"
-        nativeControls
+        nativeControls={!loadFailed}
         allowsFullscreen
         useExoShutter={false}
         surfaceType={Platform.OS === 'android' ? 'textureView' : undefined}
         onFirstFrameRender={hidePoster}
       />
+      {posterVisible ? (
+        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFillObject} contentFit="contain" />
+      ) : null}
+      {loadFailed && !posterUri ? (
+        <View style={styles.missingMedia}>
+          <AppIcon name="videocam-off" size={28} color="rgba(255,255,255,0.55)" />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -154,7 +167,11 @@ function VideoOpenFallback({
     <View style={containerStyle}>
       {poster ? (
         <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="contain" />
-      ) : null}
+      ) : (
+        <View style={styles.missingMedia}>
+          <AppIcon name="videocam-off" size={28} color="rgba(255,255,255,0.55)" />
+        </View>
+      )}
       <Pressable
         style={styles.playBtn}
         onPress={() => void Linking.openURL(videoUri)}
@@ -184,10 +201,16 @@ class VideoErrorBoundary extends Component<{ children: ReactNode; fallback: Reac
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: '#000',
+    backgroundColor: MEDIA_SURFACE,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  missingMedia: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: MEDIA_SURFACE,
   },
   playBtn: {
     ...StyleSheet.absoluteFillObject,

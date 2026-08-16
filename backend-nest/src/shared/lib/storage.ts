@@ -82,7 +82,16 @@ if (CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET) {
 
 export function getStorageProvider(): StorageProvider {
   const explicit = process.env.STORAGE_PROVIDER?.toLowerCase();
-  if (explicit === 'local') return 'local';
+  const isProd = process.env.NODE_ENV === 'production';
+
+  // Production must never use ephemeral local disk — Render/Railway wipe /uploads.
+  if (explicit === 'local' && !isProd) return 'local';
+  if (explicit === 'local' && isProd) {
+    logger.warn(
+      'STORAGE_PROVIDER=local ignored in production; using Cloudinary/S3',
+    );
+  }
+
   if (explicit === 's3') return isS3Configured() ? 's3' : fallbackProvider();
   if (explicit === 'cloudinary') {
     return isCloudinaryConfigured() ? 'cloudinary' : fallbackProvider();
@@ -94,7 +103,10 @@ export function getStorageProvider(): StorageProvider {
 
 function fallbackProvider(): StorageProvider {
   if (process.env.NODE_ENV !== 'production') return 'local';
-  return isCloudinaryConfigured() ? 'cloudinary' : 's3';
+  if (isCloudinaryConfigured()) return 'cloudinary';
+  if (isS3Configured()) return 's3';
+  // Do not fall back to local disk in production (ephemeral — media 404 / black tiles).
+  return 'cloudinary';
 }
 
 export function isLocalStorageEnabled(): boolean {

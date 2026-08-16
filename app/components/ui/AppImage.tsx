@@ -1,8 +1,10 @@
 import { Image as ExpoImage, type ImageProps as ExpoImageProps } from 'expo-image';
+import { useCallback, useState } from 'react';
 import {
   type ImageSourcePropType,
   type ImageStyle,
   type StyleProp,
+  StyleSheet,
   View,
 } from 'react-native';
 import { resolveMediaUrl } from '@/services/media';
@@ -30,16 +32,34 @@ function hasValidUri(source: ImageSourcePropType | null | undefined): boolean {
   return typeof uri === 'string' && uri.trim().length > 0;
 }
 
+/** Soft surface when media is missing or fails to load (avoids solid black tiles). */
+const PLACEHOLDER_BG = '#102633';
+
 export function Image({
   contentFit = 'cover',
   transition = 200,
   priority = 'normal',
   style,
   source,
+  onError,
   ...props
 }: AppImageProps) {
-  if (!hasValidUri(source)) {
-    return <View style={style as StyleProp<ImageStyle>} />;
+  const [failed, setFailed] = useState(false);
+  const handleError = useCallback(
+    (event: Parameters<NonNullable<ExpoImageProps['onError']>>[0]) => {
+      setFailed(true);
+      onError?.(event);
+    },
+    [onError],
+  );
+
+  if (!hasValidUri(source) || failed) {
+    return (
+      <View
+        style={[styles.placeholder, style as StyleProp<ImageStyle>]}
+        accessibilityLabel="تعذّر تحميل الصورة"
+      />
+    );
   }
 
   return (
@@ -51,6 +71,7 @@ export function Image({
       transition={transition}
       priority={priority}
       cachePolicy="memory-disk"
+      onError={handleError}
       recyclingKey={
         typeof source === 'object' && source && !Array.isArray(source) && 'uri' in source
           ? source.uri
@@ -59,3 +80,9 @@ export function Image({
     />
   );
 }
+
+const styles = StyleSheet.create({
+  placeholder: {
+    backgroundColor: PLACEHOLDER_BG,
+  },
+});

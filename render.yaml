@@ -52,3 +52,14 @@ services:
         sync: false
       - key: NI_WEBHOOK_SECRET
         sync: false
+      # Media — required in production (local /uploads is ephemeral on Render)
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: safat
