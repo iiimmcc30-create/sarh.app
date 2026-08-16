@@ -187,6 +187,21 @@ export default function ListingDetailScreen() {
       Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لمراسلة البائع');
       return;
     }
+    const image =
+      listing.images?.[0] ||
+      listing.thumbnailUrl ||
+      undefined;
+    void import('@/lib/messageListingContext').then(({ saveMessageListingContext }) =>
+      saveMessageListingContext({
+        listingId: listing.id,
+        title: listing.arabicTitle || listing.title,
+        price: listing.price,
+        currency: listing.currency || 'SAR',
+        image,
+        location: listing.arabicLocation || listing.location,
+        peerUserId: listing.seller.id,
+      }),
+    );
     router.push({
       pathname: '/butchers/chat',
       params: {
@@ -195,9 +210,15 @@ export default function ListingDetailScreen() {
         receiverAvatar: listing.seller.avatar ?? '',
         accountType: 'LIVESTOCK_TRADER',
         threadType: 'DIRECT',
+        listingId: listing.id,
+        listingTitle: listing.arabicTitle || listing.title,
+        listingPrice: String(listing.price),
+        listingCurrency: listing.currency || 'SAR',
+        listingImage: image ?? '',
+        listingLocation: listing.arabicLocation || listing.location || '',
         ...(draftMessage?.trim() ? { draftMessage: draftMessage.trim() } : {}),
       },
-    } as any);
+    } as never);
   };
 
   const openSellerWhatsApp = async () => {

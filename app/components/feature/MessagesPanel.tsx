@@ -1,126 +1,119 @@
-// SAFAT — Messages panel (standalone tab or embedded in profile)
+// SAFAT — Messages inbox (Premium · RTL · Mobile-first)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, marginEnd } from '@/lib/rtl';
-
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { Image } from '@/components/ui/AppImage';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchNotifications, type AppNotification } from '@/services/notifications';
-import { useMessageThreads, type MessageThreadType } from '@/hooks/useMessageThreads';
-import { handleNotificationNavigation } from '@/lib/notifications';
+import {
+  filterMessageThreads,
+  useMessageThreads,
+  type MessageThreadFilter,
+  type MessageThreadItem,
+} from '@/hooks/useMessageThreads';
+import {
+  formatListingPrice,
+  getAllMessageListingContexts,
+  type MessageListingPreview,
+} from '@/lib/messageListingContext';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 
-type Tab = 'messages' | 'activity';
-type InboxKind = MessageThreadType;
+const FILTERS: { id: MessageThreadFilter; label: string }[] = [
+  { id: 'all', label: 'الكل' },
+  { id: 'unread', label: 'غير مقروءة' },
+  { id: 'transactions', label: 'المعاملات' },
+  { id: 'requests', label: 'الطلبات' },
+];
+
+function formatThreadTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const now = new Date();
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  if (sameDay) {
+    return date.toLocaleTimeString('ar-SA', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate()
+  ) {
+    return 'أمس';
+  }
+  return date.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+}
 
 interface MessagesPanelProps {
-  /** embedded = inside profile scroll; standalone = full screen with own scroll */
   variant?: 'embedded' | 'standalone';
   showHeader?: boolean;
 }
 
-export function MessagesPanel({ variant = 'standalone', showHeader = true }: MessagesPanelProps) {
+export function MessagesPanel({
+  variant = 'standalone',
+  showHeader = true,
+}: MessagesPanelProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const tabBarClearance = 58 + Math.max(insets.bottom, 8) + 6;
   const listBottomPadding =
-    variant === 'embedded'
-      ? spacing.lg
-      : tabBarClearance + spacing.xl;
-  const { accessToken, user } = useAuth();
-  const [inboxKind, setInboxKind] = useState<InboxKind>('DIRECT');
-  const { threads, loading: threadsLoading, error: threadsError } = useMessageThreads(
-    accessToken,
-    inboxKind,
-  );
-  const [activeTab, setActiveTab] = useState<Tab>('messages');
+    variant === 'embedded' ? spacing.lg : tabBarClearance + spacing.xl;
+  const { accessToken } = useAuth();
+  const { threads, loading, error, refetch } = useMessageThreads(accessToken, 'ALL');
+  const [filter, setFilter] = useState<MessageThreadFilter>('all');
   const [search, setSearch] = useState('');
-  const [notificationsList, setNotificationsList] = useState<AppNotification[]>([]);
+  const [listingByPeer, setListingByPeer] = useState<
+    Record<string, MessageListingPreview>
+  >({});
 
-  useEffect(() => {
-    const loadNotifications = async () => {
-      if (!accessToken) return;
-      try {
-        const page = await fetchNotifications();
-        setNotificationsList(page.notifications);
-      } catch (err) {
-        console.warn('[MessagesPanel] Failed to fetch notifications:', err);
-      }
-    };
-    loadNotifications();
-  }, [accessToken]);
+  useFocusEffect(
+    useCallback(() => {
+      void refetch();
+      void getAllMessageListingContexts().then(setListingByPeer);
+    }, [refetch]),
+  );
 
-  const activityItems = notificationsList.map((n) => {
-    const mapType = (t: string): string => {
-      if (['like', 'follow', 'comment', 'repost'].includes(t)) return t;
-      if (t === 'live_start') return 'live';
-      return 'market';
-    };
-    return {
-      id: n.id,
-      type: mapType(n.type),
-      notification: n,
-      user: {
-        id: (n.data?.actorId as string | undefined) || undefined,
-        avatar: (n.data?.actorAvatar as string | undefined) || undefined,
-        arabicName: n.titleAr || 'إشعار صفاة',
-      },
-      arabicText: n.bodyAr,
-      time: new Date(n.createdAt).toLocaleDateString('ar-SA'),
-    };
-  });
+  const listingTitlesByPeer = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const [peerId, preview] of Object.entries(listingByPeer)) {
+      map[peerId] = preview.title;
+    }
+    return map;
+  }, [listingByPeer]);
 
-  const filteredChats = threads.filter((t) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    const butcherName = t.butcher?.nameAr ?? '';
-    const p = t.participant;
-    const names = [
-      p?.displayName?.toLowerCase() ?? '',
-      p?.arabicName ?? '',
-      butcherName,
-    ];
-    return names.some((n) => n.includes(q) || n.toLowerCase().includes(q));
-  });
+  const filteredChats = useMemo(
+    () => filterMessageThreads(threads, filter, search, listingTitlesByPeer),
+    [threads, filter, search, listingTitlesByPeer],
+  );
 
-  const ACTIVITY_ICONS: Record<string, string> = {
-    like: 'heart',
-    follow: 'person-add',
-    comment: 'chatbubble',
-    repost: 'repeat',
-    live: 'radio',
-    market: 'pricetag',
-  };
-
-  const ACTIVITY_COLORS: Record<string, string> = {
-    like: colors.rose,
-    follow: colors.electric,
-    comment: colors.glow,
-    repost: colors.emerald,
-    live: colors.liveRed,
-    market: colors.gold,
-  };
-
-  const openChat = (chat: typeof threads[0]) => {
+  const openChat = (chat: MessageThreadItem) => {
     const p = chat.participant;
     if (!p) return;
     const isButcher = chat.type === 'BUTCHER';
+    const listing = listingByPeer[p.id];
     router.push({
       pathname: '/butchers/chat',
       params: {
@@ -133,342 +126,463 @@ export function MessagesPanel({ variant = 'standalone', showHeader = true }: Mes
           ? chat.butcher?.logo || p.avatar || ''
           : p.avatar ?? '',
         threadType: chat.type,
-        accountType: isButcher ? 'BUTCHER' : 'USER',
+        accountType: isButcher
+          ? 'BUTCHER'
+          : listing
+            ? 'LIVESTOCK_TRADER'
+            : 'USER',
         ...(chat.butcherId ? { butcherId: chat.butcherId } : {}),
+        ...(listing
+          ? {
+              listingId: listing.listingId,
+              listingTitle: listing.title,
+              listingPrice: String(listing.price),
+              listingCurrency: listing.currency || 'SAR',
+              listingImage: listing.image || '',
+              listingLocation: listing.location || '',
+            }
+          : {}),
       },
-    } as any);
+    } as never);
   };
 
-  const messagesContent = (
-    <>
-      {activeTab === 'messages' ? (
-        <>
-          <View style={styles.inboxTabs}>
-            <Pressable
-              onPress={() => setInboxKind('DIRECT')}
-              style={[styles.inboxTab, inboxKind === 'DIRECT' && styles.inboxTabActive]}
-            >
-              <Text
-                style={[
-                  styles.inboxTabLabel,
-                  inboxKind === 'DIRECT' && styles.inboxTabLabelActive,
-                ]}
-              >
-                المستخدمون
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setInboxKind('BUTCHER')}
-              style={[styles.inboxTab, inboxKind === 'BUTCHER' && styles.inboxTabActive]}
-            >
-              <Text
-                style={[
-                  styles.inboxTabLabel,
-                  inboxKind === 'BUTCHER' && styles.inboxTabLabelActive,
-                ]}
-              >
-                الملاحم
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.searchRow}>
-            <AppIcon name="search" size={16} color={colors.textMuted} />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder={
-                inboxKind === 'BUTCHER'
-                  ? 'ابحث في رسائل الملاحم...'
-                  : 'ابحث في الرسائل...'
-              }
-              placeholderTextColor={colors.textMuted}
-              style={styles.searchInput}
-            />
-          </View>
-
-          {threadsLoading ? (
-            <View style={styles.empty}>
-              <ActivityIndicator size="large" color={colors.electricBright} />
-              <Text style={styles.emptyText}>جاري تحميل المحادثات...</Text>
-            </View>
-          ) : threadsError === 'unauthorized' ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🔒</Text>
-              <Text style={styles.emptyText}>سجّل الدخول لعرض رسائلك</Text>
-            </View>
-          ) : (
-            filteredChats.map((chat) => {
-              const p = chat.participant;
-              if (!p) return null;
-              const isButcher = chat.type === 'BUTCHER';
-              const title = isButcher
-                ? chat.butcher?.nameAr || p.arabicName
-                : p.arabicName;
-              const avatarUri = isButcher
-                ? chat.butcher?.logo || p.avatar
-                : p.avatar;
-              return (
-                <View key={chat.id} style={styles.chatRow}>
-                  {isButcher ? (
-                    <View style={styles.avatarWrap}>
-                      <Image source={{ uri: avatarUri }} style={styles.avatar} contentFit="cover" />
-                    </View>
-                  ) : (
-                    <UserProfileLink userId={p.id}>
-                      <View style={styles.avatarWrap}>
-                        <Image source={{ uri: avatarUri }} style={styles.avatar} contentFit="cover" />
-                        <View style={styles.onlineDot} />
-                      </View>
-                    </UserProfileLink>
-                  )}
-                  <Pressable
-                    style={({ pressed }) => [styles.chatContent, pressed && { opacity: 0.85 }]}
-                    onPress={() => openChat(chat)}
-                  >
-                    <View style={styles.chatTop}>
-                      {isButcher ? (
-                        <View style={styles.chatName}>
-                          <Text style={styles.displayName}>{title}</Text>
-                        </View>
-                      ) : (
-                        <UserProfileLink userId={p.id} style={styles.chatName}>
-                          <Text style={styles.displayName}>{title}</Text>
-                          {p.verified && (
-                            <AppIcon name="checkmark-circle" size={13} color={colors.electricBright} />
-                          )}
-                        </UserProfileLink>
-                      )}
-                      <Text style={styles.chatTime}>
-                        {new Date(chat.lastMessageAt).toLocaleDateString('ar-SA')}
-                      </Text>
-                    </View>
-                    <View style={styles.chatBottom}>
-                      <Text style={styles.lastMessage} numberOfLines={1}>
-                        {chat.lastMessage ?? '—'}
-                      </Text>
-                      {chat.unread > 0 && (
-                        <View style={styles.unreadBadge}>
-                          <Text style={styles.unreadCount}>{chat.unread}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </Pressable>
-                </View>
-              );
-            })
-          )}
-
-          {!threadsLoading && filteredChats.length === 0 && (
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>💬</Text>
-              <Text style={styles.emptyText}>
-                {inboxKind === 'BUTCHER'
-                  ? 'لا توجد محادثات مع ملاحم'
-                  : 'لا توجد محادثات'}
-              </Text>
-            </View>
-          )}
-        </>
-      ) : (
-        <>
-          {activityItems.map((item) => (
-            <Pressable
-              key={item.id}
-              style={({ pressed }) => [styles.activityRow, pressed && { backgroundColor: colors.bgSurface }]}
-              onPress={() => {
-                handleNotificationNavigation(
-                  { type: item.notification.type, data: item.notification.data },
-                  { router, isAdmin: user?.role === 'ADMIN' },
-                );
-              }}
-            >
-              <View style={[styles.activityIcon, { backgroundColor: `${ACTIVITY_COLORS[item.type]}20` }]}>
-                <AppIcon
-                  name={ACTIVITY_ICONS[item.type]}
-                  size={16}
-                  color={ACTIVITY_COLORS[item.type]}
-                />
-              </View>
-              <UserProfileLink userId={item.user.id}>
-                <Image source={{ uri: item.user.avatar }} style={styles.activityAvatar} contentFit="cover" />
-              </UserProfileLink>
-              <View style={styles.activityContent}>
-                <View style={styles.activityTextRow}>
-                  <UserProfileLink userId={item.user.id}>
-                    <Text style={styles.activityUser}>{item.user.arabicName}</Text>
-                  </UserProfileLink>
-                  <Text style={styles.activityText}>{item.arabicText}</Text>
-                </View>
-                <Text style={styles.activityTime}>{item.time}</Text>
-              </View>
-            </Pressable>
-          ))}
-          {activityItems.length === 0 && (
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🔔</Text>
-              <Text style={styles.emptyText}>لا يوجد نشاط بعد</Text>
-            </View>
-          )}
-        </>
-      )}
-    </>
-  );
-
-  const tabSwitcher = (
-    <View style={[styles.tabs, variant === 'embedded' && styles.tabsEmbedded]}>
-      <Pressable
-        onPress={() => setActiveTab('messages')}
-        style={[styles.tab, activeTab === 'messages' && styles.tabActive]}
-      >
-        <Text style={[styles.tabLabel, activeTab === 'messages' && styles.tabLabelActive]}>
-          الرسائل
-        </Text>
-        {threads.some((t) => t.unread > 0) && <View style={styles.tabDot} />}
-      </Pressable>
-      <Pressable
-        onPress={() => setActiveTab('activity')}
-        style={[styles.tab, activeTab === 'activity' && styles.tabActive]}
-      >
-        <Text style={[styles.tabLabel, activeTab === 'activity' && styles.tabLabelActive]}>
-          النشاط
-        </Text>
-      </Pressable>
-    </View>
-  );
-
-  if (variant === 'embedded') {
-    return (
-      <View style={styles.embeddedWrap}>
-        {tabSwitcher}
-        {messagesContent}
-        <View style={{ height: listBottomPadding }} />
-      </View>
-    );
-  }
+  const resolveListingPreview = (chat: MessageThreadItem) => {
+    const peerId = chat.participant?.id;
+    if (peerId && listingByPeer[peerId]) return listingByPeer[peerId];
+    if (chat.type === 'BUTCHER' && chat.butcher) {
+      return {
+        listingId: chat.butcher.id,
+        title: chat.butcher.nameAr,
+        price: 0,
+        image: chat.butcher.logo || undefined,
+        peerUserId: peerId || '',
+        location: undefined,
+      } satisfies MessageListingPreview;
+    }
+    return null;
+  };
 
   return (
-    <>
-      {showHeader && (
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {activeTab === 'messages' ? 'الرسائل' : 'النشاط'}
-          </Text>
-          <Pressable style={styles.composeBtn} onPress={() => router.push('/create/post')}>
-            <AppIcon name="create-outline" size={22} color={colors.electricBright} />
+    <View style={styles.root}>
+      {showHeader ? (
+        <View style={[styles.header, getRtlRow()]}>
+          <Pressable
+            style={styles.headerIconBtn}
+            onPress={() => router.push('/(tabs)/market' as never)}
+            hitSlop={8}
+            accessibilityLabel="إنشاء محادثة جديدة"
+          >
+            <AppIcon name="create-outline" size={22} color={colors.textPrimary} />
           </Pressable>
+          <Text style={styles.title}>الرسائل</Text>
+          <View style={styles.headerSide} />
         </View>
-      )}
-      {tabSwitcher}
+      ) : null}
+
+      <View style={styles.searchBar}>
+        <AppIcon name="search" size={18} color={colors.textMuted} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="البحث في الرسائل والإعلانات"
+          placeholderTextColor={colors.textMuted}
+          style={styles.searchInput}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersRow}
+        style={styles.filtersScroll}
+      >
+        {FILTERS.map((item) => {
+          const active = filter === item.id;
+          return (
+            <Pressable
+              key={item.id}
+              onPress={() => setFilter(item.id)}
+              style={[styles.filterChip, active && styles.filterChipActive]}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  active && styles.filterChipTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: listBottomPadding }}
       >
-        {messagesContent}
+        {loading ? (
+          <View style={styles.empty}>
+            <ActivityIndicator size="large" color={colors.electricBright} />
+            <Text style={styles.emptyText}>جاري تحميل المحادثات...</Text>
+          </View>
+        ) : error === 'unauthorized' ? (
+          <View style={styles.empty}>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="lock-closed-outline" size={28} color={colors.electricBright} />
+            </View>
+            <Text style={styles.emptyTitle}>سجّل الدخول</Text>
+            <Text style={styles.emptyText}>عرض رسائلك يتطلب تسجيل الدخول</Text>
+          </View>
+        ) : filteredChats.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIconWrap}>
+              <AppIcon name="chatbubbles-outline" size={28} color={colors.electricBright} />
+            </View>
+            <Text style={styles.emptyTitle}>ابدأ محادثة جديدة</Text>
+            <Text style={styles.emptyText}>
+              تواصل مع البائعين عبر الإعلانات أو الملاحم
+            </Text>
+            <Pressable
+              style={styles.exploreBtn}
+              onPress={() => router.push('/(tabs)/market' as never)}
+            >
+              <Text style={styles.exploreBtnText}>استكشف الإعلانات</Text>
+            </Pressable>
+          </View>
+        ) : (
+          filteredChats.map((chat) => {
+            const p = chat.participant;
+            if (!p) return null;
+            const isButcher = chat.type === 'BUTCHER';
+            const title = isButcher
+              ? chat.butcher?.nameAr || p.arabicName
+              : p.arabicName;
+            const avatarUri = isButcher
+              ? chat.butcher?.logo || p.avatar
+              : p.avatar;
+            const listing = resolveListingPreview(chat);
+            const showListingMeta =
+              listing &&
+              (listing.price > 0 || Boolean(listing.image) || Boolean(listing.title));
+
+            return (
+              <Pressable
+                key={chat.id}
+                onPress={() => openChat(chat)}
+                style={({ pressed }) => [
+                  styles.chatRow,
+                  pressed && styles.chatRowPressed,
+                ]}
+              >
+                <View style={styles.chatLeading}>
+                  {isButcher ? (
+                    <View style={styles.avatarWrap}>
+                      <Image
+                        source={{ uri: avatarUri }}
+                        style={styles.avatar}
+                        contentFit="cover"
+                      />
+                    </View>
+                  ) : (
+                    <UserProfileLink userId={p.id}>
+                      <View style={styles.avatarWrap}>
+                        <Image
+                          source={{ uri: avatarUri }}
+                          style={styles.avatar}
+                          contentFit="cover"
+                        />
+                        <View style={styles.onlineDot} />
+                      </View>
+                    </UserProfileLink>
+                  )}
+                  {listing?.image ? (
+                    <Image
+                      source={{ uri: listing.image }}
+                      style={styles.listingThumb}
+                      contentFit="cover"
+                    />
+                  ) : null}
+                </View>
+
+                <View style={styles.chatBody}>
+                  <View style={[styles.chatTop, getRtlRow()]}>
+                    <View style={[styles.chatNameRow, getRtlRow()]}>
+                      <Text style={styles.displayName} numberOfLines={1}>
+                        {title}
+                      </Text>
+                      {!isButcher && p.verified ? (
+                        <AppIcon
+                          name="checkmark-circle"
+                          size={14}
+                          color={colors.electricBright}
+                        />
+                      ) : null}
+                    </View>
+                    <Text style={styles.chatTime}>
+                      {formatThreadTime(chat.lastMessageAt)}
+                    </Text>
+                  </View>
+
+                  {showListingMeta && listing.price > 0 ? (
+                    <Text style={styles.listingMeta} numberOfLines={1}>
+                      {listing.title}
+                      {' · '}
+                      {formatListingPrice(listing.price, listing.currency)}
+                    </Text>
+                  ) : showListingMeta && listing.title && isButcher ? (
+                    <Text style={styles.listingMeta} numberOfLines={1}>
+                      {listing.title}
+                    </Text>
+                  ) : null}
+
+                  <View style={[styles.chatBottom, getRtlRow()]}>
+                    <Text style={styles.lastMessage} numberOfLines={1}>
+                      {chat.isMine ? 'أنت: ' : ''}
+                      {chat.lastMessage ?? '—'}
+                    </Text>
+                    {chat.unread > 0 ? (
+                      <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadCount}>
+                          {chat.unread > 99 ? '99+' : chat.unread}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })
+        )}
       </ScrollView>
-    </>
+    </View>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  embeddedWrap: {
-    marginHorizontal: -spacing.lg,
-  },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-  },
-  title: { ...typography.h1, color: colors.textPrimary },
-  composeBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  tabs: {
-    flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-    paddingHorizontal: spacing.lg,
-  },
-  tabsEmbedded: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  tab: { paddingVertical: spacing.md, ...marginEnd(spacing.xl), ...getRtlRow(), alignItems: 'center', gap: 6 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: colors.electricBright },
-  tabLabel: { ...typography.body, color: colors.textMuted },
-  tabLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  tabDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.electricBright },
-  inboxTabs: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-  },
-  inboxTab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderRadius: radius.lg,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  inboxTabActive: {
-    borderColor: colors.electricBright,
-    backgroundColor: colors.bgGlass,
-  },
-  inboxTabLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '500' },
-  inboxTabLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    marginHorizontal: spacing.lg, marginVertical: spacing.md,
-    backgroundColor: colors.bgSurface, borderRadius: radius.xl,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  searchInput: { flex: 1, ...typography.body, color: colors.textPrimary, textAlign: 'right' },
-  chatRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-  },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 48, height: 48, borderRadius: 20, borderWidth: 1, borderColor: colors.borderMid },
-  onlineDot: {
-    position: 'absolute', bottom: 1, right: 1,
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: colors.emerald, borderWidth: 2, borderColor: colors.bgDeep,
-  },
-  chatContent: { flex: 1 },
-  chatTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  chatName: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  displayName: { ...typography.bodyStrong, color: colors.textPrimary },
-  chatTime: { ...typography.micro, color: colors.textMuted },
-  chatBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  lastMessage: { ...typography.caption, color: colors.textMuted, flex: 1 },
-  unreadBadge: {
-    minWidth: 22, minHeight: 22, borderRadius: 12,
-    backgroundColor: colors.electricBright, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadCount: { ...typography.badge, color: '#fff' },
-  empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
-  emptyIcon: { fontSize: 40 },
-  emptyText: { ...typography.body, color: colors.textMuted },
-  activityRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-  },
-  activityIcon: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  activityAvatar: { width: 40, height: 40, borderRadius: 20 },
-  activityContent: { flex: 1 },
-  activityTextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
-  activityText: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, ...getRtlText(), flex: 1 },
-  activityUser: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  activityTime: { ...typography.micro, color: colors.textMuted, marginTop: 2 },
+    root: { flex: 1, backgroundColor: colors.screenRoot },
+    header: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      minHeight: 52,
+    },
+    headerSide: { width: 40 },
+    headerIconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    title: {
+      ...typography.sectionHeading,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      flex: 1,
+    },
+    searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: PlatformPad,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    searchInput: {
+      flex: 1,
+      ...typography.body,
+      color: colors.textPrimary,
+      textAlign: 'right',
+      paddingVertical: 0,
+    },
+    filtersScroll: { flexGrow: 0, marginBottom: spacing.sm },
+    filtersRow: {
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    filterChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      backgroundColor: 'transparent',
+    },
+    filterChipActive: {
+      backgroundColor: colors.electricBright,
+      borderColor: colors.electricBright,
+    },
+    filterChipText: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    filterChipTextActive: {
+      color: '#fff',
+      fontWeight: '600',
+    },
+    chatRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSoft,
+    },
+    chatRowPressed: { backgroundColor: colors.bgSurface },
+    chatLeading: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    avatarWrap: { position: 'relative' },
+    avatar: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    onlineDot: {
+      position: 'absolute',
+      bottom: 1,
+      right: 1,
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.emerald,
+      borderWidth: 2,
+      borderColor: colors.bgDeep,
+    },
+    listingThumb: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    chatBody: { flex: 1, minWidth: 0 },
+    chatTop: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 2,
+      gap: spacing.sm,
+    },
+    chatNameRow: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 4,
+      minWidth: 0,
+    },
+    displayName: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      flexShrink: 1,
+      ...getRtlText(),
+    },
+    chatTime: {
+      ...typography.micro,
+      color: colors.textMuted,
+    },
+    listingMeta: {
+      ...typography.caption,
+      color: colors.emerald,
+      marginBottom: 2,
+      ...getRtlText(),
+    },
+    chatBottom: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    lastMessage: {
+      ...typography.caption,
+      color: colors.textMuted,
+      flex: 1,
+      ...getRtlText(),
+    },
+    unreadBadge: {
+      minWidth: 22,
+      height: 22,
+      borderRadius: 11,
+      paddingHorizontal: 6,
+      backgroundColor: colors.electricBright,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    unreadCount: {
+      ...typography.badge,
+      color: '#fff',
+      fontWeight: '700',
+    },
+    empty: {
+      alignItems: 'center',
+      paddingVertical: spacing.xxxl,
+      paddingHorizontal: spacing.xl,
+      gap: spacing.sm,
+    },
+    emptyCard: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+      alignItems: 'center',
+      gap: spacing.sm,
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    emptyIconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(32, 182, 111, 0.14)',
+      marginBottom: spacing.sm,
+    },
+    emptyTitle: {
+      ...typography.bodyStrong,
+      color: colors.textPrimary,
+      textAlign: 'center',
+    },
+    emptyText: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    exploreBtn: {
+      marginTop: spacing.md,
+      backgroundColor: colors.electricBright,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: 12,
+      borderRadius: radius.pill,
+    },
+    exploreBtnText: {
+      ...typography.button,
+      color: '#fff',
+    },
   });
 }
+
+const PlatformPad = 12;

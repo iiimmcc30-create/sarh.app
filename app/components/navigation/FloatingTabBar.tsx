@@ -19,13 +19,13 @@ type TabDef =
 
 /**
  * Visual RTL order (right→left), matching reference:
- * الرئيسية · السوق · إضافة عرض · صندوق الوارد · المزيد
+ * الرئيسية · السوق · إضافة عرض · المحادثات · المزيد
  */
 const TABS: TabDef[] = [
   { kind: 'route', route: 'index', icon: 'home-outline', label: 'الرئيسية' },
   { kind: 'route', route: 'market', icon: 'cart-outline', label: 'السوق' },
   { kind: 'create', label: 'إضافة عرض' },
-  { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'صندوق الوارد' },
+  { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'المحادثات' },
   { kind: 'route', route: 'more', icon: 'apps', label: 'المزيد' },
 ];
 

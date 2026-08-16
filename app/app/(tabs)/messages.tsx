@@ -11,7 +11,7 @@ export default function MessagesScreen() {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <MessagesPanel variant="standalone" />
     </SafeAreaView>
   );

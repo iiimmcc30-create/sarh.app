@@ -3,7 +3,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -21,7 +20,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
@@ -36,6 +35,16 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchButcherChatAccess } from '@/services/butcherChat';
 import { fetchUserProfile } from '@/services/users';
+import {
+  formatListingPrice,
+  getMessageListingContext,
+  saveMessageListingContext,
+} from '@/lib/messageListingContext';
+import {
+  formatOfferMessage,
+  parseOfferMessage,
+} from '@/lib/messageOffers';
+import * as Location from 'expo-location';
 
 function mapApiMessage(m: {
   id: string;
@@ -107,6 +116,12 @@ export default function ButcherChatScreen() {
     accountType: accountTypeParam,
     draftMessage: draftMessageParam,
     orderId: orderIdParam,
+    listingId: listingIdParam,
+    listingTitle: listingTitleParam,
+    listingPrice: listingPriceParam,
+    listingCurrency: listingCurrencyParam,
+    listingImage: listingImageParam,
+    listingLocation: listingLocationParam,
   } = useLocalSearchParams<{
     butcherId?: string;
     threadId?: string;
@@ -117,10 +132,16 @@ export default function ButcherChatScreen() {
     accountType?: string;
     draftMessage?: string;
     orderId?: string;
+    listingId?: string;
+    listingTitle?: string;
+    listingPrice?: string;
+    listingCurrency?: string;
+    listingImage?: string;
+    listingLocation?: string;
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const messageStyles = useThemedStyles(({ colors }) => createMessageStyles(colors));
   const { me } = useApp();
@@ -156,12 +177,55 @@ export default function ButcherChatScreen() {
   const [resolvedOrderId, setResolvedOrderId] = useState<string | null>(
     orderIdParam ?? null,
   );
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [listingContext, setListingContext] = useState<{
+    listingId: string;
+    title: string;
+    price: number;
+    currency: string;
+    image?: string;
+    location?: string;
+  } | null>(
+    listingIdParam && listingTitleParam
+      ? {
+          listingId: listingIdParam,
+          title: listingTitleParam,
+          price: Number(listingPriceParam) || 0,
+          currency: listingCurrencyParam || 'SAR',
+          image: listingImageParam || undefined,
+          location: listingLocationParam || undefined,
+        }
+      : null,
+  );
 
   useEffect(() => {
     if (typeof draftMessageParam === 'string' && draftMessageParam.trim()) {
       setInputText(draftMessageParam.trim());
     }
   }, [draftMessageParam]);
+
+  useEffect(() => {
+    if (listingContext || !receiverId) return;
+    void getMessageListingContext(receiverId).then((cached) => {
+      if (!cached) return;
+      setListingContext({
+        listingId: cached.listingId,
+        title: cached.title,
+        price: cached.price,
+        currency: cached.currency || 'SAR',
+        image: cached.image,
+        location: cached.location,
+      });
+    });
+  }, [listingContext, receiverId]);
+
+  useEffect(() => {
+    if (!listingContext || !receiverId) return;
+    void saveMessageListingContext({
+      ...listingContext,
+      peerUserId: receiverId,
+    });
+  }, [listingContext, receiverId]);
 
   const receiverUserId = receiverId || butcher?.user?.id;
   const effectiveButcherId = butcherId || resolvedButcherId;
@@ -544,20 +608,35 @@ export default function ButcherChatScreen() {
     }
   };
 
-  const pickAndSendMedia = async () => {
+  const pickAndSendMedia = async (source: 'library' | 'camera' = 'library') => {
     if (!receiverUserId || !accessToken || sending) return;
+    setAttachOpen(false);
 
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('صلاحية مطلوبة', 'يجب السماح بالوصول للصور والفيديو لإرسال الوسائط.');
-      return;
+    if (source === 'camera') {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('صلاحية مطلوبة', 'يجب السماح بالوصول للكاميرا.');
+        return;
+      }
+    } else {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('صلاحية مطلوبة', 'يجب السماح بالوصول للصور والفيديو لإرسال الوسائط.');
+        return;
+      }
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images', 'videos'],
-      quality: 0.85,
-      videoMaxDuration: 60,
-    });
+    const result =
+      source === 'camera'
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ['images'],
+            quality: 0.85,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images', 'videos'],
+            quality: 0.85,
+            videoMaxDuration: 60,
+          });
     if (result.canceled || !result.assets?.[0]) return;
 
     const asset = result.assets[0];
@@ -584,17 +663,138 @@ export default function ButcherChatScreen() {
     }
   };
 
+  const sendCurrentLocation = async () => {
+    setAttachOpen(false);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('إذن الموقع', 'يرجى السماح بالوصول للموقع لمشاركته.');
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const lat = pos.coords.latitude.toFixed(5);
+      const lng = pos.coords.longitude.toFixed(5);
+      await sendMessage(`📍 موقعي: https://maps.google.com/?q=${lat},${lng}`);
+    } catch {
+      Alert.alert('خطأ', 'تعذّر الحصول على الموقع.');
+    }
+  };
+
+  const sendPriceOffer = () => {
+    setAttachOpen(false);
+    if (Platform.OS === 'ios' && typeof Alert.prompt === 'function') {
+      Alert.prompt(
+        'إرسال عرض سعر',
+        'أدخل المبلغ بالريال',
+        [
+          { text: 'إلغاء', style: 'cancel' },
+          {
+            text: 'إرسال',
+            onPress: (value?: string) => {
+              const amount = Number(String(value ?? '').replace(/[^\d.]/g, ''));
+              if (!Number.isFinite(amount) || amount <= 0) {
+                Alert.alert('تنبيه', 'أدخل مبلغاً صالحاً');
+                return;
+              }
+              void sendMessage(formatOfferMessage(amount));
+            },
+          },
+        ],
+        'plain-text',
+        '',
+        'numeric',
+      );
+      return;
+    }
+    Alert.alert('إرسال عرض سعر', 'اختر مبلغاً سريعاً أو عدّل لاحقاً', [
+      { text: 'إلغاء', style: 'cancel' },
+      {
+        text: '٢٬٠٠٠ ر.س',
+        onPress: () => void sendMessage(formatOfferMessage(2000)),
+      },
+      {
+        text: '٢٬٢٠٠ ر.س',
+        onPress: () => void sendMessage(formatOfferMessage(2200)),
+      },
+      {
+        text: '٢٬٥٠٠ ر.س',
+        onPress: () => void sendMessage(formatOfferMessage(2500)),
+      },
+    ]);
+  };
+
+  const shareListingInChat = () => {
+    setAttachOpen(false);
+    if (!listingContext) {
+      Alert.alert('مشاركة إعلان', 'لا يوجد إعلان مرتبط بهذه المحادثة.');
+      return;
+    }
+    void sendMessage(
+      `📦 إعلان: ${listingContext.title}\n${formatListingPrice(listingContext.price, listingContext.currency)}\nhttps://alsfat.com/l/${listingContext.listingId}`,
+    );
+  };
+
+  const respondToOffer = (accept: boolean) => {
+    void sendMessage(accept ? 'أوافق على العرض' : 'أرفض العرض');
+  };
+
   const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isMe = item.senderId === MY_ID;
+    const offer = parseOfferMessage(item.text);
+    const timeLabel = new Date(item.createdAt).toLocaleTimeString('ar-SA', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    if (offer) {
+      return (
+        <View
+          style={[
+            messageStyles.bubbleWrap,
+            isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem,
+          ]}
+        >
+          <View style={[messageStyles.offerCard, isMe && messageStyles.offerCardMe]}>
+            <Text style={messageStyles.offerLabel}>عرض سعر</Text>
+            <Text style={messageStyles.offerAmount}>
+              {offer.amount.toLocaleString('en-US')} {offer.currencyLabel}
+            </Text>
+            <Text style={messageStyles.offerStatus}>
+              {isMe ? 'تم إرسال العرض' : 'عرض وارد'}
+            </Text>
+            {!isMe ? (
+              <View style={messageStyles.offerActions}>
+                <Pressable
+                  style={messageStyles.offerAccept}
+                  onPress={() => respondToOffer(true)}
+                >
+                  <Text style={messageStyles.offerAcceptText}>قبول</Text>
+                </Pressable>
+                <Pressable
+                  style={messageStyles.offerReject}
+                  onPress={() => respondToOffer(false)}
+                >
+                  <Text style={messageStyles.offerRejectText}>رفض</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            <Text style={[messageStyles.timeText, messageStyles.timeTextThem]}>
+              {timeLabel}
+              {isMe ? (
+                <Text style={{ color: item.read ? colors.electricBright : colors.textSubtle }}>
+                  {' '}✓✓
+                </Text>
+              ) : null}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
     return (
       <View style={[messageStyles.bubbleWrap, isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem]}>
-        {!isMe && (
-          <Image
-            source={uriSource(headerAvatar)}
-            style={messageStyles.avatar}
-            contentFit="cover"
-          />
-        )}
         <View style={[messageStyles.bubble, isMe ? messageStyles.bubbleMe : messageStyles.bubbleThem]}>
           {item.text ? (
             <Text style={[messageStyles.bubbleText, isMe ? messageStyles.textMe : messageStyles.textThem]}>
@@ -619,12 +819,9 @@ export default function ButcherChatScreen() {
             />
           ) : null}
           <Text style={[messageStyles.timeText, isMe ? messageStyles.timeTextMe : messageStyles.timeTextThem]}>
-            {new Date(item.createdAt).toLocaleTimeString('ar-SA', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {timeLabel}
             {isMe && (
-              <Text style={{ color: item.read ? colors.textBrandStrong : colors.textSubtle }}>
+              <Text style={{ color: item.read ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)' }}>
                 {' '}✓✓
               </Text>
             )}
@@ -636,7 +833,6 @@ export default function ButcherChatScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -649,63 +845,89 @@ export default function ButcherChatScreen() {
           </Pressable>
           <UserProfileLink userId={receiverUserId} style={styles.headerCenter}>
             <Image source={uriSource(headerAvatar)} style={styles.headerAvatar} contentFit="cover" />
-            <View>
+            <View style={{ flex: 1 }}>
               <View style={styles.headerNameRow}>
-                <Text style={styles.headerName}>{headerName}</Text>
+                <Text style={styles.headerName} numberOfLines={1}>{headerName}</Text>
                 {butcher?.subscriptionActive && (
                   <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
                 )}
               </View>
               <View style={styles.onlineRow}>
-                <View style={[
-                  styles.onlineDot,
-                  {
-                    backgroundColor:
-                      chatUiKind === 'butcher'
-                        ? butcher?.workingHours?.isOpen
-                          ? colors.success
-                          : colors.textSubtle
-                        : colors.success,
-                  },
-                ]} />
+                <View
+                  style={[
+                    styles.onlineDot,
+                    {
+                      backgroundColor:
+                        chatUiKind === 'butcher'
+                          ? butcher?.workingHours?.isOpen
+                            ? colors.success
+                            : colors.textSubtle
+                          : colors.success,
+                    },
+                  ]}
+                />
                 <Text style={styles.onlineText}>
                   {chatUiKind === 'butcher'
                     ? butcher?.workingHours?.isOpen
-                      ? 'متاح الآن'
+                      ? 'متصل الآن'
                       : 'غير متاح'
-                    : chatUiKind === 'livestock'
-                      ? 'تاجر مواشي'
-                      : 'محادثة مباشرة'}
+                    : 'متصل الآن'}
                 </Text>
               </View>
             </View>
           </UserProfileLink>
-          {chatUiKind === 'butcher' ? (
-            <Pressable style={styles.callBtn}>
-              <AppIcon name="call-outline" size={20} color={colors.electricBright} />
-            </Pressable>
-          ) : (
-            <View style={styles.callBtnPlaceholder} />
-          )}
+          <Pressable style={styles.moreBtn} hitSlop={8}>
+            <AppIcon name="ellipsis-vertical" size={18} color={colors.textSecondary} />
+          </Pressable>
         </View>
 
-        {chatUiKind === 'butcher' ? (
+        {listingContext ? (
+          <View style={styles.listingCard}>
+            <View style={styles.listingCardTop}>
+              {listingContext.image ? (
+                <Image
+                  source={{ uri: listingContext.image }}
+                  style={styles.listingCardImage}
+                  contentFit="cover"
+                />
+              ) : (
+                <View style={[styles.listingCardImage, styles.listingCardImageFallback]}>
+                  <AppIcon name="image-outline" size={18} color={colors.textMuted} />
+                </View>
+              )}
+              <View style={styles.listingCardMeta}>
+                <Text style={styles.listingCardTitle} numberOfLines={1}>
+                  {listingContext.title}
+                </Text>
+                <Text style={styles.listingCardPrice}>
+                  {formatListingPrice(listingContext.price, listingContext.currency)}
+                </Text>
+                {listingContext.location ? (
+                  <Text style={styles.listingCardLocation} numberOfLines={1}>
+                    {listingContext.location}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+            <Pressable
+              style={styles.listingCardBtn}
+              onPress={() =>
+                router.push(`/listing/${listingContext.listingId}` as never)
+              }
+            >
+              <Text style={styles.listingCardBtnText}>عرض الإعلان</Text>
+              <AppIcon name={rtlBackIcon()} size={16} color={colors.electricBright} />
+            </Pressable>
+          </View>
+        ) : chatUiKind === 'butcher' ? (
           <View style={styles.orderStrip}>
             <AppIcon name="clipboard-list-outline" size={16} color={colors.glow} />
             <Text style={styles.orderStripText}>
               المحادثة متاحة بعد قبول طلبك — ناقش التفاصيل مع الملحمة هنا
             </Text>
           </View>
-        ) : chatUiKind === 'livestock' ? (
-          <View style={styles.orderStrip}>
-            <AppIcon name="pricetag-outline" size={16} color={colors.glow} />
-            <Text style={styles.orderStripText}>
-              يمكنك التواصل مباشرة حول تفاصيل البيع والشراء والاستلام
-            </Text>
-          </View>
         ) : null}
 
-        {/* Messages */}
         <FlatList
           ref={listRef}
           data={messages}
@@ -714,9 +936,16 @@ export default function ButcherChatScreen() {
           contentContainerStyle={styles.messagesList}
           onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            messages.length > 0 ? (
+              <View style={styles.datePillWrap}>
+                <Text style={styles.datePill}>اليوم</Text>
+              </View>
+            ) : null
+          }
         />
 
-        {quickReplies.length > 0 ? (
+        {quickReplies.length > 0 && !attachOpen ? (
           <View style={styles.quickRepliesWrap}>
             <FlatList
               horizontal
@@ -736,49 +965,76 @@ export default function ButcherChatScreen() {
           </View>
         ) : null}
 
-        {/* Input bar */}
+        {attachOpen ? (
+          <View style={styles.attachSheet}>
+            {(
+              [
+                { key: 'image', label: 'صورة', icon: 'image-outline', onPress: () => void pickAndSendMedia('library') },
+                { key: 'camera', label: 'كاميرا', icon: 'camera-outline', onPress: () => void pickAndSendMedia('camera') },
+                { key: 'location', label: 'موقع', icon: 'location-outline', onPress: () => void sendCurrentLocation() },
+                { key: 'offer', label: 'إرسال عرض', icon: 'pricetag-outline', onPress: sendPriceOffer },
+                { key: 'share', label: 'مشاركة إعلان', icon: 'share-outline', onPress: shareListingInChat },
+              ] as const
+            ).map((action) => (
+              <Pressable key={action.key} style={styles.attachAction} onPress={action.onPress}>
+                <View style={styles.attachActionIcon}>
+                  <AppIcon name={action.icon} size={20} color={colors.textPrimary} />
+                </View>
+                <Text style={styles.attachActionLabel}>{action.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+
         <View
           style={[
             styles.inputBar,
-            { paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.sm },
+            { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
           ]}
         >
           <Pressable
             style={[styles.attachBtn, sending && { opacity: 0.4 }]}
-            onPress={pickAndSendMedia}
+            onPress={() => setAttachOpen((v) => !v)}
             disabled={sending}
           >
-            {sending ? (
-              <ActivityIndicator size="small" color={colors.textMuted} />
-            ) : (
-              <AppIcon name="image-outline" size={22} color={colors.textMuted} />
-            )}
+            <AppIcon
+              name={attachOpen ? 'close' : 'add'}
+              size={22}
+              color={colors.textPrimary}
+            />
           </Pressable>
 
           <TextInput
             style={styles.input}
-            placeholder="اكتب رسالتك..."
+            placeholder="اكتب رسالة..."
             placeholderTextColor={colors.textSubtle}
             value={inputText}
             onChangeText={setInputText}
             multiline
             maxLength={500}
             textAlign="right"
+            onFocus={() => setAttachOpen(false)}
           />
 
           <Pressable
-            style={[styles.sendBtn, !inputText.trim() && { opacity: 0.4 }]}
-            onPress={() => sendMessage(inputText)}
-            disabled={!inputText.trim()}
+            style={[
+              styles.sendBtn,
+              !inputText.trim() && !sending ? styles.sendBtnIdle : null,
+            ]}
+            onPress={() => {
+              if (inputText.trim()) void sendMessage(inputText);
+            }}
+            disabled={!inputText.trim() || sending}
           >
-            <LinearGradient
-              colors={[colors.electric, colors.cyan]}
-              style={styles.sendBtnGrad}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <AppIcon name="paper-plane" size={18} color="#fff" />
-            </LinearGradient>
+            {sending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <AppIcon
+                name={inputText.trim() ? 'paper-plane' : 'mic'}
+                size={18}
+                color="#fff"
+              />
+            )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -795,13 +1051,13 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSoft,
     gap: spacing.sm,
   },
   backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.bgGlass,
+    width: 38, height: 38, borderRadius: 12,
+    backgroundColor: colors.bgSurface,
     borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
@@ -810,26 +1066,82 @@ function createStyles(colors: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    minWidth: 0,
   },
   headerAvatar: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 42, height: 42, borderRadius: 21,
     backgroundColor: colors.bgElevated,
     borderWidth: 1.5,
     borderColor: colors.borderMid,
   },
   headerNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  headerName: { ...butcherTypography.primary, color: colors.textPrimary },
+  headerName: { ...butcherTypography.primary, color: colors.textPrimary, flexShrink: 1 },
   onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot: { width: 7, height: 7, borderRadius: 4 },
   onlineText: { ...butcherTypography.meta, color: colors.textMuted },
-  callBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.bgGlass,
-    borderWidth: 1, borderColor: colors.borderSoft,
+  moreBtn: {
+    width: 38, height: 38, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
   },
-  callBtnPlaceholder: {
-    width: 38, height: 38,
+
+  listingCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    gap: spacing.sm,
+  },
+  listingCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  listingCardImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: colors.bgElevated,
+  },
+  listingCardImageFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listingCardMeta: { flex: 1, minWidth: 0 },
+  listingCardTitle: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    textAlign: 'right',
+  },
+  listingCardPrice: {
+    ...typography.caption,
+    color: colors.electricBright,
+    marginTop: 2,
+    textAlign: 'right',
+    fontWeight: '600',
+  },
+  listingCardLocation: {
+    ...typography.micro,
+    color: colors.textMuted,
+    marginTop: 2,
+    textAlign: 'right',
+  },
+  listingCardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(32, 182, 111, 0.12)',
+  },
+  listingCardBtnText: {
+    ...typography.caption,
+    color: colors.electricBright,
+    fontWeight: '600',
   },
 
   orderStrip: {
@@ -849,9 +1161,21 @@ function createStyles(colors: ThemeColors) {
     paddingVertical: spacing.md,
     gap: spacing.sm,
   },
+  datePillWrap: { alignItems: 'center', marginBottom: spacing.md },
+  datePill: {
+    ...typography.micro,
+    color: colors.textMuted,
+    backgroundColor: colors.bgSurface,
+    overflow: 'hidden',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
 
   quickRepliesWrap: {
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.borderSoft,
   },
   quickRepliesRow: {
@@ -870,39 +1194,75 @@ function createStyles(colors: ThemeColors) {
   },
   quickReplyText: { ...butcherTypography.secondary, color: colors.textBrand },
 
+  attachSheet: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.borderSoft,
+    backgroundColor: colors.bgPrimary,
+  },
+  attachAction: {
+    width: '18%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  attachActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  attachActionLabel: {
+    ...typography.micro,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingTop: spacing.sm,
     gap: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
-    backgroundColor: colors.bgPrimary,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.bgSurface,
   },
   attachBtn: {
     width: 42, height: 42, borderRadius: 21,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1, borderColor: colors.borderSoft,
   },
   input: {
     flex: 1,
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 10,
     ...butcherTypography.body,
     color: colors.textPrimary,
     maxHeight: 100,
     textAlignVertical: 'center',
   },
-  sendBtn: { borderRadius: 21, overflow: 'hidden' },
-  sendBtnGrad: {
-    width: 42, height: 42,
-    alignItems: 'center', justifyContent: 'center',
+  sendBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.electricBright,
+  },
+  sendBtnIdle: {
+    backgroundColor: colors.emerald,
   },
   });
 }
@@ -915,29 +1275,25 @@ function createMessageStyles(colors: ThemeColors) {
     marginBottom: spacing.sm,
     gap: 8,
   },
-  bubbleWrapMe: { justifyContent: 'flex-end' },
-  bubbleWrapThem: { justifyContent: 'flex-start' },
-  avatar: {
-    width: 28, height: 28, borderRadius: 16,
-    backgroundColor: colors.bgElevated,
-  },
+  bubbleWrapMe: { justifyContent: 'flex-start' },
+  bubbleWrapThem: { justifyContent: 'flex-end' },
   bubble: {
     maxWidth: '78%',
-    borderRadius: radius.xl,
+    borderRadius: 18,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
   },
   bubbleMe: {
-    backgroundColor: colors.electric,
-    borderBottomRightRadius: 4,
+    backgroundColor: colors.electricBright,
+    borderBottomLeftRadius: 6,
   },
   bubbleThem: {
-    backgroundColor: colors.bgElevated,
+    backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 6,
   },
-  bubbleText: { ...butcherTypography.body, lineHeight: 20 },
+  bubbleText: { ...butcherTypography.body, lineHeight: 22 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
   bubbleImg: {
@@ -953,7 +1309,58 @@ function createMessageStyles(colors: ThemeColors) {
     overflow: 'hidden',
   },
   timeText: { ...butcherTypography.meta, marginTop: 4 },
-  timeTextMe: { color: 'rgba(255,255,255,0.55)', textAlign: 'right' },
-  timeTextThem: { color: colors.textSubtle },
+  timeTextMe: { color: 'rgba(255,255,255,0.7)', textAlign: 'left' },
+  timeTextThem: { color: colors.textSubtle, textAlign: 'right' },
+  offerCard: {
+    maxWidth: '82%',
+    borderRadius: 18,
+    padding: spacing.md,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    gap: 4,
+  },
+  offerCardMe: {
+    borderColor: 'rgba(32, 182, 111, 0.35)',
+  },
+  offerLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'right',
+  },
+  offerAmount: {
+    ...typography.h3,
+    color: colors.electricBright,
+    textAlign: 'right',
+  },
+  offerStatus: {
+    ...typography.micro,
+    color: colors.textSecondary,
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+  offerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  offerAccept: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    backgroundColor: colors.electricBright,
+  },
+  offerAcceptText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  offerReject: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  offerRejectText: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
   });
 }
