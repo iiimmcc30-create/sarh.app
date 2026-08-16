@@ -5,6 +5,7 @@
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { Platform } from 'react-native';
 import { LISTING_VIDEO_CONFIG } from '@/constants/listingVideoConfig';
+import { cloudinaryVideoFirstFrameUrl } from '@/lib/listingMedia';
 import { uploadImageFromUri, uploadMediaFromUri } from './upload';
 
 export type ListingVideoMeta = {
@@ -109,8 +110,11 @@ export async function uploadListingVideo(
         'listings',
       );
     } catch {
-      // Thumbnail failure is non-fatal
+      // Thumbnail failure is non-fatal — fall back to Cloudinary still
     }
+  }
+  if (!thumbnailUrl) {
+    thumbnailUrl = cloudinaryVideoFirstFrameUrl(videoUrl) ?? null;
   }
 
   onProgress?.(100);
