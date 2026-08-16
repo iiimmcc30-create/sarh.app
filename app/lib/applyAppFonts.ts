@@ -1,10 +1,10 @@
 /**
- * Project-wide IBM Plex Sans Arabic — same loaded files as FloatingTabBar.
- * Always pairs fontFamily with the matching loaded weight so Android
- * does not synthesize a face (which changes Arabic letterforms).
+ * Project-wide IBM Plex Sans Arabic — same loaded files as FloatingTabBar / price text.
+ * Always pairs fontFamily with a platform-safe weight so Android does not fall
+ * back to the system Arabic face (which looks like a different typeface).
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
-import { appFont, resolveAppFontFace } from '@/constants/fonts';
+import { appFont, resolveAppFontFace, toNativeFontStyle } from '@/constants/fonts';
 
 type AnyTextProps = {
   style?: StyleProp<TextStyle>;
@@ -16,7 +16,7 @@ function withAppFont(style: StyleProp<TextStyle> | undefined): StyleProp<TextSty
   const face = resolveAppFontFace(flat?.fontWeight, flat?.fontFamily);
   if (face.fontFamily === 'monospace') return style;
   // Apply after caller styles so a Regular token + fontWeight 600 cannot stay mismatched.
-  return [style, { fontFamily: face.fontFamily, fontWeight: face.fontWeight }];
+  return [style, toNativeFontStyle(face)];
 }
 
 let applied = false;
@@ -34,7 +34,7 @@ function patchHost(
   Component.defaultProps = {
     ...Component.defaultProps,
     style: withAppFont([
-      { fontFamily: appFont.medium, fontWeight: '500' },
+      toNativeFontStyle({ fontFamily: appFont.medium, fontWeight: '500' }),
       Component.defaultProps?.style as StyleProp<TextStyle>,
     ]),
   };
