@@ -87,6 +87,47 @@ async function uploadToLocal(slot: LocalUploadSlot, file: File): Promise<string>
   return data.url;
 }
 
+/** Upload any image from a file picker, presigned to a given folder. */
+export async function uploadImageToFolder(
+  file: File,
+  folder: UploadFolder,
+): Promise<string> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('اختر ملف صورة فقط');
+  }
+
+  const presignRes = await apiClient.post<
+    ApiEnvelope<{ urls: UploadSlot[]; maxSizeMb?: number }>
+  >('/upload/presign', {
+    mimetype: file.type,
+    folder,
+    count: 1,
+  });
+
+  const { urls, maxSizeMb = 20 } = unwrap(presignRes);
+  const slot = urls[0];
+  if (!slot?.uploadUrl) {
+    throw new Error('تعذّر تجهيز رفع الصورة');
+  }
+
+  const maxBytes = maxSizeMb * 1024 * 1024;
+  if (file.size > maxBytes) {
+    throw new Error(`حجم الصورة يتجاوز ${maxSizeMb} ميجابايت`);
+  }
+
+  if (slot.provider === 'local') return uploadToLocal(slot, file);
+  if (slot.provider === 'cloudinary' || 'signature' in slot) {
+    return uploadToCloudinary(slot as CloudinaryUploadSlot, file);
+  }
+  if (!slot.cdnUrl) throw new Error('تعذّر تجهيز رفع الصورة');
+  return uploadToS3(slot, file);
+}
+
+/** Upload the Knowledge Center account avatar. */
+export async function uploadKnowledgeCenterAvatar(file: File): Promise<string> {
+  return uploadImageToFolder(file, 'posts');
+}
+
 /** Upload an image from the device album/file picker for editorial stories. */
 export async function uploadEditorialStoryImage(file: File): Promise<string> {
   if (!file.type.startsWith('image/')) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   BookOpen,
   Plus,
@@ -11,13 +11,19 @@ import {
   X,
   Upload,
   Sparkles,
+  User,
+  PenLine,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   activateKnowledgeCenter,
+  createKnowledgePost,
   createKnowledgeSource,
   deleteKnowledgeSource,
   fetchKnowledgeArticles,
   fetchKnowledgeLogs,
+  fetchKnowledgeProfile,
   fetchKnowledgeSources,
   publishKnowledgeArticle,
   approveKnowledgeArticle,
@@ -25,27 +31,48 @@ import {
   setKnowledgeSourceEnabled,
   syncKnowledge,
   syncKnowledgeSource,
+  updateKnowledgeProfile,
   type KnowledgeArticle,
+  type KnowledgeProfile,
   type KnowledgeSource,
   type KnowledgeSyncLog,
 } from '@/services/knowledge.service';
+import {
+  uploadImageToFolder,
+  uploadKnowledgeCenterAvatar,
+} from '@/services/upload.service';
 
-type Tab = 'sources' | 'articles' | 'logs';
+type Tab = 'sources' | 'articles' | 'logs' | 'profile' | 'post';
 
 export default function KnowledgeCenterPage() {
   const [tab, setTab] = useState<Tab>('sources');
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
   const [logs, setLogs] = useState<KnowledgeSyncLog[]>([]);
+  const [profile, setProfile] = useState<KnowledgeProfile>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [form, setForm] = useState({
+  const [sourceForm, setSourceForm] = useState({
     name: '',
     url: '',
     type: 'RSS' as 'RSS' | 'API',
   });
+
+  // Profile state
+  const [profileBio, setProfileBio] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Direct post state
+  const [postContent, setPostContent] = useState('');
+  const [postImageUrl, setPostImageUrl] = useState('');
+  const [postImageUploading, setPostImageUploading] = useState(false);
+  const [postSubmitting, setPostSubmitting] = useState(false);
+  const [postSuccess, setPostSuccess] = useState(false);
+  const postImageInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,9 +86,13 @@ export default function KnowledgeCenterPage() {
           pageSize: 50,
         });
         setArticles(data.items);
-      } else {
+      } else if (tab === 'logs') {
         const data = await fetchKnowledgeLogs({ pageSize: 50 });
         setLogs(data.items);
+      } else if (tab === 'profile') {
+        const p = await fetchKnowledgeProfile();
+        setProfile(p);
+        setProfileBio(p?.bio ?? '');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'تعذر التحميل');
@@ -79,8 +110,8 @@ export default function KnowledgeCenterPage() {
     setBusy(true);
     setError(null);
     try {
-      await createKnowledgeSource(form);
-      setForm({ name: '', url: '', type: 'RSS' });
+      await createKnowledgeSource(sourceForm);
+      setSourceForm({ name: '', url: '', type: 'RSS' });
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'فشل إنشاء المصدر');
@@ -89,8 +120,77 @@ export default function KnowledgeCenterPage() {
     }
   }
 
+  async function onAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    setError(null);
+    try {
+      const url = await uploadKnowledgeCenterAvatar(file);
+      const updated = await updateKnowledgeProfile({ avatar: url });
+      setProfile(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'فشل تغيير الصورة');
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  }
+
+  async function onSaveBio(e: FormEvent) {
+    e.preventDefault();
+    setProfileSaving(true);
+    setError(null);
+    try {
+      const updated = await updateKnowledgeProfile({ bio: profileBio });
+      setProfile(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'فشل حفظ النبذة');
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
+  async function onPostImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPostImageUploading(true);
+    setError(null);
+    try {
+      const url = await uploadImageToFolder(file, 'posts');
+      setPostImageUrl(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'فشل رفع الصورة');
+    } finally {
+      setPostImageUploading(false);
+      if (postImageInputRef.current) postImageInputRef.current.value = '';
+    }
+  }
+
+  async function onSubmitPost(e: FormEvent) {
+    e.preventDefault();
+    if (!postContent.trim()) return;
+    setPostSubmitting(true);
+    setError(null);
+    setPostSuccess(false);
+    try {
+      await createKnowledgePost({
+        content: postContent.trim(),
+        imageUrl: postImageUrl || undefined,
+      });
+      setPostContent('');
+      setPostImageUrl('');
+      setPostSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'فشل نشر المنشور');
+    } finally {
+      setPostSubmitting(false);
+    }
+  }
+
   return (
     <div className="space-y-6 p-6" dir="rtl">
+      {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-100">
@@ -98,7 +198,7 @@ export default function KnowledgeCenterPage() {
             مركز المعرفة
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            إدارة المصادر والأخبار الموثوقة والنشر التلقائي
+            إدارة الحساب، نشر المحتوى، المصادر والأخبار الموثوقة
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -150,29 +250,34 @@ export default function KnowledgeCenterPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-slate-800 pb-2">
+      {/* ── Tabs ─────────────────────────────────────────────── */}
+      <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
         {(
           [
-            ['sources', 'المصادر'],
-            ['articles', 'الأخبار'],
-            ['logs', 'سجل العمليات'],
+            ['profile', 'الحساب', User],
+            ['post', 'نشر منشور', PenLine],
+            ['sources', 'المصادر', BookOpen],
+            ['articles', 'الأخبار', RefreshCw],
+            ['logs', 'سجل العمليات', RefreshCw],
           ] as const
-        ).map(([id, label]) => (
+        ).map(([id, label, Icon]) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`rounded-lg px-3 py-2 text-sm ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm ${
               tab === id
                 ? 'bg-emerald-600/20 text-emerald-300'
                 : 'text-slate-400 hover:bg-slate-900'
             }`}
           >
+            <Icon className="h-3.5 w-3.5" />
             {label}
           </button>
         ))}
       </div>
 
+      {/* ── Feedback banner ──────────────────────────────────── */}
       {error ? (
         <div
           className={`rounded-xl border px-4 py-3 text-sm ${
@@ -185,10 +290,194 @@ export default function KnowledgeCenterPage() {
         </div>
       ) : null}
 
+      {postSuccess && tab === 'post' ? (
+        <div className="rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
+          ✅ تم نشر المنشور بنجاح باسم مركز المعرفة
+        </div>
+      ) : null}
+
       {loading ? (
         <p className="text-slate-400">جاري التحميل...</p>
       ) : null}
 
+      {/* ══════════════════════════════════════════════════════
+          Tab: الحساب — profile management
+         ══════════════════════════════════════════════════════ */}
+      {!loading && tab === 'profile' ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Avatar card */}
+          <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-5">
+            <h2 className="flex items-center gap-2 font-semibold text-slate-100">
+              <Camera className="h-4 w-4 text-emerald-400" />
+              صورة الحساب
+            </h2>
+
+            <div className="flex items-center gap-4">
+              {profile?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.avatar}
+                  alt="avatar"
+                  className="h-20 w-20 rounded-full object-cover border-2 border-slate-700"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 text-3xl">
+                  📚
+                </div>
+              )}
+              <div className="space-y-1 text-sm text-slate-400">
+                <p className="font-medium text-slate-200">
+                  {profile?.arabicName ?? 'مركز المعرفة'}
+                </p>
+                <p>@{profile?.username ?? 'knowledge_center'}</p>
+                <p className="text-xs">
+                  {profile?.verified ? '✅ موثّق' : ''}{' '}
+                  {profile?.isAI ? '🤖 ذكاء اصطناعي' : ''}
+                </p>
+              </div>
+            </div>
+
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onAvatarChange}
+            />
+            <button
+              type="button"
+              disabled={avatarUploading}
+              onClick={() => avatarInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+            >
+              <Upload className="h-4 w-4" />
+              {avatarUploading ? 'جاري الرفع...' : 'تغيير الصورة'}
+            </button>
+          </div>
+
+          {/* Bio card */}
+          <form
+            onSubmit={onSaveBio}
+            className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-5"
+          >
+            <h2 className="flex items-center gap-2 font-semibold text-slate-100">
+              <User className="h-4 w-4 text-emerald-400" />
+              النبذة التعريفية
+            </h2>
+            <textarea
+              rows={4}
+              className="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              placeholder="اكتب نبذة عن مركز المعرفة..."
+              value={profileBio}
+              onChange={(e) => setProfileBio(e.target.value)}
+              maxLength={500}
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                {profileBio.length}/500
+              </span>
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-500 disabled:opacity-50"
+              >
+                {profileSaving ? 'جاري الحفظ...' : 'حفظ النبذة'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {/* ══════════════════════════════════════════════════════
+          Tab: نشر منشور — direct post form
+         ══════════════════════════════════════════════════════ */}
+      {!loading && tab === 'post' ? (
+        <form
+          onSubmit={onSubmitPost}
+          className="max-w-2xl space-y-4 rounded-2xl border border-slate-800 bg-slate-950 p-5"
+        >
+          <h2 className="flex items-center gap-2 font-semibold text-slate-100">
+            <PenLine className="h-4 w-4 text-emerald-400" />
+            نشر منشور باسم مركز المعرفة
+          </h2>
+          <p className="text-xs text-slate-500">
+            سيظهر المنشور في تغذية المتابعين ويُنسب لحساب مركز المعرفة.
+          </p>
+
+          <textarea
+            rows={6}
+            required
+            className="w-full resize-y rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            placeholder="اكتب محتوى المنشور هنا..."
+            value={postContent}
+            onChange={(e) => {
+              setPostContent(e.target.value);
+              if (postSuccess) setPostSuccess(false);
+            }}
+            maxLength={2000}
+          />
+          <span className="block text-left text-xs text-slate-500">
+            {postContent.length}/2000
+          </span>
+
+          {/* Image attachment */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-slate-400">
+              صورة مرفقة (اختياري)
+            </p>
+            {postImageUrl ? (
+              <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={postImageUrl}
+                  alt="preview"
+                  className="h-32 w-auto rounded-xl border border-slate-700 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPostImageUrl('')}
+                  className="absolute -top-2 -left-2 rounded-full bg-rose-600 p-0.5 text-white hover:bg-rose-500"
+                  title="إزالة الصورة"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <input
+                  ref={postImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onPostImageChange}
+                />
+                <button
+                  type="button"
+                  disabled={postImageUploading}
+                  onClick={() => postImageInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-700 px-4 py-2 text-sm text-slate-400 hover:border-slate-500 hover:text-slate-200 disabled:opacity-50"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  {postImageUploading ? 'جاري رفع الصورة...' : 'إرفاق صورة'}
+                </button>
+              </>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={postSubmitting || !postContent.trim()}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+          >
+            <PenLine className="h-4 w-4" />
+            {postSubmitting ? 'جاري النشر...' : 'نشر المنشور'}
+          </button>
+        </form>
+      ) : null}
+
+      {/* ══════════════════════════════════════════════════════
+          Tab: المصادر — sources management
+         ══════════════════════════════════════════════════════ */}
       {!loading && tab === 'sources' ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <form
@@ -201,22 +490,22 @@ export default function KnowledgeCenterPage() {
             <input
               className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               placeholder="اسم المصدر"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              value={sourceForm.name}
+              onChange={(e) => setSourceForm((f) => ({ ...f, name: e.target.value }))}
               required
             />
             <input
               className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               placeholder="رابط RSS أو API"
-              value={form.url}
-              onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+              value={sourceForm.url}
+              onChange={(e) => setSourceForm((f) => ({ ...f, url: e.target.value }))}
               required
             />
             <select
               className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              value={form.type}
+              value={sourceForm.type}
               onChange={(e) =>
-                setForm((f) => ({ ...f, type: e.target.value as 'RSS' | 'API' }))
+                setSourceForm((f) => ({ ...f, type: e.target.value as 'RSS' | 'API' }))
               }
             >
               <option value="RSS">RSS</option>
@@ -293,6 +582,9 @@ export default function KnowledgeCenterPage() {
         </div>
       ) : null}
 
+      {/* ══════════════════════════════════════════════════════
+          Tab: الأخبار — articles moderation
+         ══════════════════════════════════════════════════════ */}
       {!loading && tab === 'articles' ? (
         <div className="space-y-4">
           <select
@@ -376,6 +668,9 @@ export default function KnowledgeCenterPage() {
         </div>
       ) : null}
 
+      {/* ══════════════════════════════════════════════════════
+          Tab: سجل العمليات — sync logs
+         ══════════════════════════════════════════════════════ */}
       {!loading && tab === 'logs' ? (
         <div className="space-y-2">
           {logs.map((log) => (

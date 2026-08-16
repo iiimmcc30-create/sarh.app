@@ -55,6 +55,58 @@ export class KnowledgeRepository {
     });
   }
 
+  updateKnowledgeUserProfile(
+    id: string,
+    data: { avatar?: string; bio?: string },
+  ) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(data.avatar !== undefined ? { avatar: data.avatar } : {}),
+        ...(data.bio !== undefined ? { bio: data.bio } : {}),
+      },
+      select: {
+        id: true,
+        username: true,
+        arabicName: true,
+        displayName: true,
+        avatar: true,
+        bio: true,
+        isAI: true,
+        verified: true,
+      },
+    });
+  }
+
+  createDirectPost(data: {
+    authorId: string;
+    content: string;
+    arabicContent: string;
+    image?: string | null;
+  }) {
+    return this.prisma.post.create({
+      data: {
+        authorId: data.authorId,
+        content: data.content,
+        arabicContent: data.arabicContent,
+        image: data.image ?? null,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            arabicName: true,
+            avatar: true,
+            verified: true,
+            isAI: true,
+          },
+        },
+      },
+    });
+  }
+
   listSources() {
     return this.prisma.knowledgeSource.findMany({
       orderBy: { createdAt: 'desc' },

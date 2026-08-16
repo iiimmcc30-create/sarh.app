@@ -133,3 +133,36 @@ export async function fetchKnowledgeLogs(params: {
     totalPages: number;
   }>(res);
 }
+
+export type KnowledgeProfile = {
+  id: string;
+  username: string;
+  arabicName: string | null;
+  displayName: string;
+  avatar: string | null;
+  bio: string | null;
+  isAI: boolean;
+  verified: boolean;
+  isActive: boolean;
+} | null;
+
+export async function fetchKnowledgeProfile() {
+  const res = await apiClient.get('/admin/knowledge/profile');
+  return unwrap<{ user: KnowledgeProfile }>(res).user;
+}
+
+export async function updateKnowledgeProfile(data: {
+  avatar?: string;
+  bio?: string;
+}) {
+  const res = await apiClient.put('/admin/knowledge/profile', data);
+  return unwrap<{ user: KnowledgeProfile }>(res).user;
+}
+
+export async function createKnowledgePost(data: {
+  content: string;
+  imageUrl?: string;
+}) {
+  const res = await apiClient.post('/admin/knowledge/post', data);
+  return unwrap<{ post: Record<string, unknown> }>(res).post;
+}

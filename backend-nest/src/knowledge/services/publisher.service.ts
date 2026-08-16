@@ -113,6 +113,26 @@ export class PublisherService {
     return updated;
   }
 
+  async notifyFollowers(
+    author: { id: string; arabicName?: string | null },
+    postId: string,
+    preview: string,
+  ) {
+    const followers = await this.repo.findFollowerIds(author.id);
+    if (followers.length === 0) return;
+    await this.notifications
+      .notifyUsers(
+        followers.map((f) => f.followerId),
+        {
+          type: 'system',
+          titleAr: 'منشور جديد من مركز المعرفة',
+          bodyAr: `${author.arabicName || 'مركز المعرفة'}: ${preview}`,
+          data: { postId, authorId: author.id },
+        },
+      )
+      .catch(() => undefined);
+  }
+
   async rejectArticle(articleId: string, reason?: string) {
     const article = await this.repo.findArticleById(articleId);
     if (!article) throwApi(404, 'not_found', 'الخبر غير موجود');
