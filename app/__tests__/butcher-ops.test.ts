@@ -1,12 +1,22 @@
 import {
   groupOrdersByHour,
   matchesOpsFilter,
+  OPS_PRIMARY_TABS,
   primaryAdvanceAction,
   productStock,
   summarizeOrders,
 } from '../lib/butcherOps';
 
 describe('butcherOps', () => {
+  it('exposes five primary manage tabs matching the ops reference', () => {
+    expect(OPS_PRIMARY_TABS.map((t) => t.label)).toEqual([
+      'التشغيل',
+      'الطلبات',
+      'المنتجات',
+      'العروض',
+      'القصص',
+    ]);
+  });
   it('summarizes operational buckets without a courier status', () => {
     const orders = [
       { status: 'pending', deliveryType: 'delivery', totalPrice: 10, createdAt: new Date().toISOString() },
