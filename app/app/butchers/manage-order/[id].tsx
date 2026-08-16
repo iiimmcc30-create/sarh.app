@@ -21,6 +21,9 @@ import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { PAYMENT_STATUS_LABELS, cutLabelAr } from '@/services/butcherData';
@@ -194,10 +197,12 @@ export default function ButcherManageOrderScreen() {
           </View>
 
           <View style={s.block}>
-            <View style={s.blockTitleRow}>
-              <Text style={s.blockTitle}>معلومات العميل</Text>
+            <CoverTrailRow justify="flex-end" gap={6} style={s.blockTitleRow}>
+              <RtlTextShell>
+                <RtlText style={s.blockTitle}>معلومات العميل</RtlText>
+              </RtlTextShell>
               <AppIcon name="person-outline" size={16} color={accent} />
-            </View>
+            </CoverTrailRow>
             <View style={s.customerRow}>
               {phone ? (
                 <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={s.callBtn}>
@@ -220,10 +225,12 @@ export default function ButcherManageOrderScreen() {
           </View>
 
           <View style={s.block}>
-            <View style={s.blockTitleRow}>
-              <Text style={s.blockTitle}>معلومات الطلب</Text>
+            <CoverTrailRow justify="flex-end" gap={6} style={s.blockTitleRow}>
+              <RtlTextShell>
+                <RtlText style={s.blockTitle}>معلومات الطلب</RtlText>
+              </RtlTextShell>
               <AppIcon name="clipboard-outline" size={16} color={accent} />
-            </View>
+            </CoverTrailRow>
             <InfoRow icon="truck" label="نوع الطلب" value={delivery ? 'توصيل' : 'استلام'} colors={colors} />
             <InfoRow
               icon="time-outline"
@@ -265,10 +272,12 @@ export default function ButcherManageOrderScreen() {
               );
             })}
 
-            <View style={s.totalRow}>
+            <CoverTrailRow justify="space-between" gap={8} style={s.totalRow}>
               <Text style={[s.totalValue, { color: accent }]}>{formatSar(order.totalPrice, currency)}</Text>
-              <Text style={s.totalLabel}>المجموع</Text>
-            </View>
+              <RtlTextShell>
+                <RtlText style={s.totalLabel}>المجموع</RtlText>
+              </RtlTextShell>
+            </CoverTrailRow>
           </View>
 
           {showMore ? (
@@ -280,7 +289,9 @@ export default function ButcherManageOrderScreen() {
                 </View>
               ) : null}
               <View style={s.block}>
-                <Text style={s.blockTitle}>متابعة الطلب</Text>
+                <RtlTextShell>
+                  <RtlText style={s.blockTitle}>متابعة الطلب</RtlText>
+                </RtlTextShell>
                 {order.status === 'cancelled' ? (
                   <Text style={[s.value, { color: colors.danger }]}>ملغى</Text>
                 ) : (
@@ -288,12 +299,16 @@ export default function ButcherManageOrderScreen() {
                     const done = flowStepDone(order.status, step.id, delivery);
                     const active = flowStepActive(order.status, step.id, delivery);
                     return (
-                      <View key={step.id} style={s.tlRow}>
-                        <Text style={[s.tlLabel, done && s.tlDone, active && s.tlActive]}>{step.label}</Text>
+                      <CoverTrailRow key={step.id} justify="flex-end" gap={10} style={s.tlRow}>
+                        <RtlTextShell flex>
+                          <RtlText style={[s.tlLabel, done && s.tlDone, active && s.tlActive]}>
+                            {step.label}
+                          </RtlText>
+                        </RtlTextShell>
                         <View style={[s.tlDot, done && s.tlDotDone, active && s.tlDotActive]}>
                           {done ? <AppIcon name="checkmark" size={10} color="#fff" /> : null}
                         </View>
-                      </View>
+                      </CoverTrailRow>
                     );
                   })
                 )}
@@ -401,25 +416,26 @@ function InfoRow({
   colors: ThemeColors;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 }}>
+    <CoverTrailRow justify="space-between" gap={8} style={{ paddingVertical: 6, width: '100%' }}>
       <Text
         style={{
           ...butcherTypography.body,
           fontFamily: OFFICIAL_APP_FONT,
           color: colors.textPrimary,
-          flex: 1,
-          textAlign: 'left',
+          flexShrink: 1,
         }}
       >
         {value}
       </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Text style={{ ...butcherTypography.meta, fontFamily: OFFICIAL_APP_FONT, color: colors.textMuted }}>
-          {label}
-        </Text>
+      <CoverTrailRow justify="flex-end" gap={6}>
+        <RtlTextShell>
+          <RtlText style={{ ...butcherTypography.meta, fontFamily: OFFICIAL_APP_FONT, color: colors.textMuted }}>
+            {label}
+          </RtlText>
+        </RtlTextShell>
         <AppIcon name={icon} size={14} color={colors.electricBright} />
-      </View>
-    </View>
+      </CoverTrailRow>
+    </CoverTrailRow>
   );
 }
 
@@ -518,11 +534,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: border,
     },
     blockTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 6,
       marginBottom: 4,
+      width: '100%',
     },
     blockTitle: {
       ...butcherTypography.emphasis,
@@ -597,12 +610,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       justifyContent: 'center',
     },
     totalRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
       paddingTop: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: border,
+      width: '100%',
     },
     totalLabel: {
       ...butcherTypography.emphasis,
@@ -664,11 +675,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       backgroundColor: colors.bgSurface,
     },
     tlRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 10,
       paddingVertical: 4,
+      width: '100%',
     },
     tlDot: {
       width: 18,
