@@ -33,6 +33,8 @@ import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
+import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
+import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
@@ -108,6 +110,11 @@ export default function ListingDetailScreen() {
           raw.marketSubcategory?.requiresWeight === true ||
           raw.category === 'slaughter',
         images: raw.images?.length ? raw.images : [],
+        videoUrl: typeof raw.videoUrl === 'string' && raw.videoUrl.trim() ? raw.videoUrl : undefined,
+        thumbnailUrl:
+          typeof raw.thumbnailUrl === 'string' && raw.thumbnailUrl.trim()
+            ? raw.thumbnailUrl
+            : undefined,
         description: raw.description,
         arabicDescription: raw.arabicDescription,
         seller: {
@@ -254,7 +261,8 @@ export default function ListingDetailScreen() {
   const timeLabel = listing.createdAt
     ? formatRelativeTimeAr(listing.createdAt)
     : listing.postedAt;
-  const images = (listing.images || []).filter((uri) => uri && uri.trim().length > 0);
+  const images = listingPhotoUris(listing);
+  const videoUri = listingVideoUrl(listing);
   const categoryLabel = CATEGORY_LABELS[listing.category] ?? '';
 
   const handleStartLive = () => {
@@ -408,31 +416,27 @@ export default function ListingDetailScreen() {
             </RtlText>
           </RtlTextShell>
 
-          <RtlTextShell>
-            <View style={[styles.headerMetaRow, getRtlRow()]}>
-              <CoverTrailRow gap={4} style={styles.headerMetaItem}>
-                <RtlTextShell flex>
-                  <RtlText style={styles.headerMetaText}>
-                    {listing.arabicLocation || listing.location}
-                  </RtlText>
-                </RtlTextShell>
-                <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-              </CoverTrailRow>
-              {listing.weightKg != null && listing.weightKg > 0 ? (
-                <RtlTextShell style={styles.headerMetaItem}>
-                  <RtlText style={styles.headerMetaText}>
-                    {`الوزن: ${listing.weightKg.toLocaleString('ar-SA')} كجم`}
-                  </RtlText>
-                </RtlTextShell>
-              ) : null}
-              <CoverTrailRow gap={4} style={styles.headerMetaItem}>
-                <RtlTextShell flex>
-                  <RtlText style={styles.headerMetaText}>{timeLabel || 'الآن'}</RtlText>
-                </RtlTextShell>
-                <AppIcon name="time-outline" size={13} color={colors.textMuted} />
-              </CoverTrailRow>
+          <View style={[styles.headerMetaRow, getRtlRow()]}>
+            <View style={[styles.headerMetaChip, getRtlRow()]}>
+              <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+                {listing.arabicLocation || listing.location}
+              </Text>
+              <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
             </View>
-          </RtlTextShell>
+            {listing.weightKg != null && listing.weightKg > 0 ? (
+              <View style={styles.headerMetaChip}>
+                <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+                  {`الوزن: ${listing.weightKg.toLocaleString('ar-SA')} كجم`}
+                </Text>
+              </View>
+            ) : null}
+            <View style={[styles.headerMetaChip, getRtlRow()]}>
+              <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+                {timeLabel || 'الآن'}
+              </Text>
+              <AppIcon name="time-outline" size={13} color={colors.textMuted} />
+            </View>
+          </View>
 
           {!isOwner ? (
             /**
@@ -518,6 +522,17 @@ export default function ListingDetailScreen() {
                 <RtlText style={styles.desc}>{listing.description}</RtlText>
               </RtlTextShell>
             ) : null}
+          </View>
+        ) : null}
+
+        {videoUri ? (
+          <View style={styles.galleryBlock}>
+            <RtlTextShell>
+              <RtlText style={styles.galleryHeading}>الفيديو</RtlText>
+            </RtlTextShell>
+            <View style={styles.galleryImageWrap}>
+              <ListingVideoPlayer uri={videoUri} posterUri={listing.thumbnailUrl} />
+            </View>
           </View>
         ) : null}
 
@@ -694,13 +709,17 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       width: '100%',
     },
-    headerMetaItem: {
+    headerMetaChip: {
+      flexGrow: 0,
       flexShrink: 1,
-      minWidth: 0,
+      alignItems: 'center',
+      gap: 4,
+      maxWidth: '100%',
     },
     headerMetaText: {
       ...typography.feedBody,
       color: colors.textMuted,
+      flexShrink: 1,
     },
     specsBlock: {
       gap: spacing.sm,

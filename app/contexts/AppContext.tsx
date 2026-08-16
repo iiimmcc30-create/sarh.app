@@ -163,6 +163,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         l.marketSubcategory?.requiresWeight === true ||
         l.category === 'slaughter',
       images: l.images && l.images.length > 0 ? l.images : [],
+      videoUrl: typeof l.videoUrl === 'string' && l.videoUrl.trim() ? l.videoUrl : undefined,
+      thumbnailUrl:
+        typeof l.thumbnailUrl === 'string' && l.thumbnailUrl.trim() ? l.thumbnailUrl : undefined,
       description: l.description,
       arabicDescription: l.arabicDescription,
       seller: mapBackendUser(l.seller),
