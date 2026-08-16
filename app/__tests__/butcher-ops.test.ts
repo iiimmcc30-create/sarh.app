@@ -43,7 +43,9 @@ describe('butcherOps', () => {
   });
 
   it('filters order tabs using existing statuses', () => {
-    expect(matchesOpsFilter({ status: 'confirmed' }, 'preparing')).toBe(true);
+    expect(matchesOpsFilter({ status: 'confirmed' }, 'confirmed')).toBe(true);
+    expect(matchesOpsFilter({ status: 'confirmed' }, 'preparing')).toBe(false);
+    expect(matchesOpsFilter({ status: 'preparing' }, 'preparing')).toBe(true);
     expect(matchesOpsFilter({ status: 'ready', deliveryType: 'delivery' }, 'delivering')).toBe(true);
     expect(matchesOpsFilter({ status: 'ready', deliveryType: 'pickup' }, 'ready')).toBe(true);
   });

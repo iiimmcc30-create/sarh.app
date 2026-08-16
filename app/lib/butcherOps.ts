@@ -4,6 +4,7 @@ import { CUT_LABELS, cutLabelAr, orderStatusLabel } from '@/services/butcherData
 export type OpsOrderFilter =
   | 'all'
   | 'pending'
+  | 'confirmed'
   | 'preparing'
   | 'ready'
   | 'delivering'
@@ -27,11 +28,11 @@ export const OPS_PRIMARY_TABS = OPS_MANAGE_TABS.filter((t) => t.id !== 'shop');
 export const OPS_ORDER_FILTERS: { id: OpsOrderFilter; label: string }[] = [
   { id: 'all', label: 'الكل' },
   { id: 'pending', label: 'جديدة' },
+  { id: 'confirmed', label: 'قيد القبول' },
   { id: 'preparing', label: 'قيد التجهيز' },
   { id: 'ready', label: 'جاهزة' },
   { id: 'delivering', label: 'قيد التوصيل' },
   { id: 'delivered', label: 'مكتملة' },
-  { id: 'cancelled', label: 'ملغاة' },
 ];
 
 export const OPS_STATUS_COLORS: Record<string, string> = {
@@ -65,7 +66,8 @@ export function matchesOpsFilter(
 ): boolean {
   if (filter === 'all') return true;
   if (filter === 'pending') return order.status === 'pending';
-  if (filter === 'preparing') return order.status === 'confirmed' || order.status === 'preparing';
+  if (filter === 'confirmed') return order.status === 'confirmed';
+  if (filter === 'preparing') return order.status === 'preparing';
   if (filter === 'ready') return order.status === 'ready' && !isDeliveryOrder(order);
   if (filter === 'delivering') return order.status === 'ready' && isDeliveryOrder(order);
   if (filter === 'delivered') return order.status === 'delivered';
@@ -153,8 +155,10 @@ export function summarizeOrders(orders: any[]) {
   const deliveryNow = orders.filter((o) => o.status === 'ready' && isDeliveryOrder(o)).length;
   return {
     newCount: orders.filter((o) => o.status === 'pending').length,
+    confirmed: orders.filter((o) => o.status === 'confirmed').length,
     needsAction: orders.filter((o) => o.status === 'pending' || o.status === 'confirmed').length,
     preparing: orders.filter((o) => o.status === 'confirmed' || o.status === 'preparing').length,
+    preparingOnly: orders.filter((o) => o.status === 'preparing').length,
     readyPickup: orders.filter((o) => o.status === 'ready' && !isDeliveryOrder(o)).length,
     delivering: deliveryNow,
     completedToday: deliveredToday.length,
@@ -256,4 +260,78 @@ export function flowStepActive(status: string, stepId: string, delivery: boolean
 export function paymentMethodLabel(order: { paymentMethod?: string; paymentStatus?: string }): string {
   if (order.paymentMethod) return String(order.paymentMethod);
   return order.paymentStatus === 'paid' ? 'مدفوع' : 'غير مدفوع';
+}
+
+export function formatSar(amount?: number | null, currency = 'ر.س'): string {
+  const n = Number(amount || 0);
+  const value = Number.isFinite(n) ? n : 0;
+  return `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`;
+}
+
+export function orderQuantityLabel(order: any): string {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  if (items.length > 0) {
+    const kg = items.reduce((sum: number, item: any) => sum + Number(item.weightKg || 0), 0);
+    const qty = items.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0);
+    if (kg > 0) return `${kg} كجم`;
+    if (qty > 0) return `${qty}`;
+    return `${items.length} قطعة`;
+  }
+  if (order?.weightKg != null) return `${order.weightKg} كجم`;
+  if (order?.quantity != null) return String(order.quantity);
+  return '1';
+}
+
+export function formatOrderDateTime(iso?: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('ar-SA', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export type OpsStatusTone = 'green' | 'blue' | 'orange' | 'muted';
+
+export function opsStatusTone(order: { status?: string; deliveryType?: string }): OpsStatusTone {
+  const status = order.status;
+  if (status === 'pending' || status === 'delivered') return 'green';
+  if (status === 'confirmed' || status === 'ready') return 'blue';
+  if (status === 'preparing') return 'orange';
+  if (status === 'cancelled') return 'muted';
+  return 'blue';
+}
+
+export const OPS_TONE_COLORS: Record<OpsStatusTone, string> = {
+  green: '#20B66F',
+  blue: '#3B82F6',
+  orange: '#F59A3A',
+  muted: '#8D99A3',
+};
+
+export function countOpsFilters(orders: any[]): Record<OpsOrderFilter, number> {
+  const counts: Record<OpsOrderFilter, number> = {
+    all: orders.length,
+    pending: 0,
+    confirmed: 0,
+    preparing: 0,
+    ready: 0,
+    delivering: 0,
+    delivered: 0,
+    cancelled: 0,
+  };
+  for (const order of orders) {
+    if (matchesOpsFilter(order, 'pending')) counts.pending += 1;
+    if (matchesOpsFilter(order, 'confirmed')) counts.confirmed += 1;
+    if (matchesOpsFilter(order, 'preparing')) counts.preparing += 1;
+    if (matchesOpsFilter(order, 'ready')) counts.ready += 1;
+    if (matchesOpsFilter(order, 'delivering')) counts.delivering += 1;
+    if (matchesOpsFilter(order, 'delivered')) counts.delivered += 1;
+    if (matchesOpsFilter(order, 'cancelled')) counts.cancelled += 1;
+  }
+  return counts;
 }

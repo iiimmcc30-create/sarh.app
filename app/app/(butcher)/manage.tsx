@@ -36,6 +36,7 @@ import {
   OPS_MANAGE_TABS,
   OPS_PRIMARY_TABS,
   OPS_ORDER_FILTERS,
+  countOpsFilters,
   groupOrdersByHour,
   isSameLocalDay,
   matchesOpsFilter,
@@ -409,6 +410,7 @@ export default function ButcherManageScreen() {
   };
 
   const summary = useMemo(() => summarizeOrders(orders), [orders]);
+  const filterCounts = useMemo(() => countOpsFilters(orders), [orders]);
   const products = butcher?.products || [];
   const offers = butcher?.offers || [];
   const accountName = user?.arabicName || user?.displayName || '';
@@ -723,7 +725,7 @@ export default function ButcherManageScreen() {
               {[...OPS_ORDER_FILTERS].reverse().map((f) => (
                 <FilterChip
                   key={f.id}
-                  label={f.label}
+                  label={`${f.label} ${filterCounts[f.id]}`}
                   selected={orderFilter === f.id}
                   onPress={() => setOrderFilter(f.id)}
                 />
