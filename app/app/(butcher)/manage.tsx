@@ -36,7 +36,6 @@ import {
   OPS_MANAGE_TABS,
   OPS_PRIMARY_TABS,
   OPS_ORDER_FILTERS,
-  OPS_ORDERS_STATUS_CHIPS,
   groupOrdersByHour,
   isSameLocalDay,
   matchesOpsFilter,
@@ -419,34 +418,14 @@ export default function ButcherManageScreen() {
     .join('، ');
 
   const filteredOrders = useMemo(() => {
-    const q = orderQuery.trim().toLowerCase();
+    const q = orderQuery.trim();
     return orders.filter((order) => {
       if (!matchesOpsFilter(order, orderFilter)) return false;
       if (!q) return true;
-      const phone = String(order.customer?.phone || '');
-      const hay = `${orderShortId(order)} ${orderCustomerName(order)} ${phone}`.toLowerCase();
-      return hay.includes(q);
+      const hay = `${orderShortId(order)} ${orderCustomerName(order)}`.toLowerCase();
+      return hay.includes(q.toLowerCase());
     });
   }, [orders, orderFilter, orderQuery]);
-
-  const orderChipCounts = useMemo(() => {
-    const counts: Record<OpsOrderFilter, number> = {
-      all: orders.length,
-      pending: 0,
-      preparing: 0,
-      ready: 0,
-      delivering: 0,
-      delivered: 0,
-      cancelled: 0,
-    };
-    for (const order of orders) {
-      for (const key of Object.keys(counts) as OpsOrderFilter[]) {
-        if (key === 'all') continue;
-        if (matchesOpsFilter(order, key)) counts[key] += 1;
-      }
-    }
-    return counts;
-  }, [orders]);
 
   const actionOrders = orders.filter((o) => o.status === 'pending' || o.status === 'confirmed');
   const todayActive = orders.filter(
@@ -728,87 +707,34 @@ export default function ButcherManageScreen() {
 
         {activeTab === 'orders' && (
           <View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[styles.orderStatusRow, getRtlRow()]}
-            >
-              {OPS_ORDERS_STATUS_CHIPS.map((chip) => {
-                const active = orderFilter === chip.id;
-                const count = orderChipCounts[chip.id] ?? 0;
-                return (
-                  <Pressable
-                    key={chip.id}
-                    onPress={() => setOrderFilter(chip.id)}
-                    style={[styles.orderStatusChip, active && styles.orderStatusChipOn]}
-                  >
-                    <View style={[styles.orderStatusInner, getRtlRow()]}>
-                      <AppIcon
-                        name={chip.icon}
-                        size={14}
-                        color={active ? colors.electricBright : colors.textMuted}
-                      />
-                      <Text
-                        style={[styles.orderStatusLabel, active && styles.orderStatusLabelOn]}
-                      >
-                        {chip.label}
-                      </Text>
-                      <Text
-                        style={[styles.orderStatusCount, active && styles.orderStatusCountOn]}
-                      >
-                        {count}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            <View style={[styles.searchRow, getRtlRow()]}>
-              <View style={[styles.searchField, getRtlRow()]}>
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="ابحث برقم الطلب أو اسم العميل أو الجوال"
-                  placeholderTextColor={colors.textSubtle}
-                  value={orderQuery}
-                  onChangeText={setOrderQuery}
-                  textAlign="right"
+            <RtlTextShell>
+              <RtlText style={styles.pageTitle}>الطلبات</RtlText>
+            </RtlTextShell>
+            <TextInput
+              style={styles.search}
+              placeholder="بحث برقم الطلب أو اسم العميل"
+              placeholderTextColor={colors.textSubtle}
+              value={orderQuery}
+              onChangeText={setOrderQuery}
+              textAlign="right"
+            />
+            <FilterChipRow contentPaddingHorizontal={0} style={styles.filterRowWrap}>
+              {[...OPS_ORDER_FILTERS].reverse().map((f) => (
+                <FilterChip
+                  key={f.id}
+                  label={f.label}
+                  selected={orderFilter === f.id}
+                  onPress={() => setOrderFilter(f.id)}
                 />
-                <AppIcon name="search" size={16} color={colors.textMuted} />
-              </View>
-              <Pressable
-                style={[styles.filterBtn, orderFilter !== 'all' && styles.filterBtnOn]}
-                onPress={() => setOrderFilter(orderFilter === 'all' ? 'pending' : 'all')}
-              >
-                <View style={[styles.filterBtnInner, getRtlRow()]}>
-                  <AppIcon
-                    name="settings-sliders"
-                    size={14}
-                    color={orderFilter !== 'all' ? '#fff' : colors.electricBright}
-                  />
-                  <Text
-                    style={[
-                      styles.filterBtnText,
-                      orderFilter !== 'all' && styles.filterBtnTextOn,
-                    ]}
-                  >
-                    تصفية
-                  </Text>
-                </View>
-              </Pressable>
-            </View>
-
+              ))}
+            </FilterChipRow>
             {filteredOrders.map((order) => (
               <OpsOrderCard
                 key={order.id}
                 order={order}
+                compact
                 butcherAddress={butcherAddress}
-                onOpen={() =>
-                  router.push({
-                    pathname: '/butchers/manage-order/[id]',
-                    params: { id: order.id },
-                  })
-                }
+                onOpen={() => router.push({ pathname: '/butchers/manage-order/[id]', params: { id: order.id } })}
                 onAdvance={(next) => void transitionOrder(order.id, next)}
                 onCancel={() => setCancelOrderId(order.id)}
                 onChat={() => openChat(order)}
@@ -1147,8 +1073,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerBrand: {
       ...typography.h3,
       fontFamily: OFFICIAL_APP_FONT,
-      fontSize: 22,
-      lineHeight: 30,
       color: colors.textPrimary,
       textAlign: 'right',
       writingDirection: 'rtl',
@@ -1162,104 +1086,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       textAlign: 'right',
       writingDirection: 'rtl',
       includeFontPadding: false,
-    },
-    orderStatusRow: {
-      gap: 8,
-      paddingBottom: spacing.md,
-      alignItems: 'center',
-    },
-    orderStatusChip: {
-      minHeight: 52,
-      minWidth: 78,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 14,
-      backgroundColor: cardBg,
-      borderWidth: 1,
-      borderColor: border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    orderStatusChipOn: {
-      backgroundColor: accentSoft,
-      borderColor: `${colors.electricBright}66`,
-    },
-    orderStatusInner: {
-      alignItems: 'center',
-      gap: 6,
-    },
-    orderStatusLabel: {
-      ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    orderStatusLabelOn: {
-      color: colors.electricBright,
-    },
-    orderStatusCount: {
-      ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
-      fontSize: 16,
-      color: colors.textPrimary,
-      includeFontPadding: false,
-    },
-    orderStatusCountOn: {
-      color: colors.electricBright,
-    },
-    searchRow: {
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: spacing.md,
-    },
-    searchField: {
-      flex: 1,
-      minHeight: 46,
-      borderRadius: 12,
-      backgroundColor: cardBg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: border,
-      paddingHorizontal: spacing.md,
-      alignItems: 'center',
-      gap: 8,
-    },
-    searchInput: {
-      flex: 1,
-      ...typography.secondary,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-      paddingVertical: 10,
-    },
-    filterBtn: {
-      minHeight: 46,
-      paddingHorizontal: 12,
-      borderRadius: 12,
-      backgroundColor: cardBg,
-      borderWidth: 1,
-      borderColor: colors.electricBright,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    filterBtnOn: {
-      backgroundColor: colors.electricBright,
-      borderColor: colors.electricBright,
-    },
-    filterBtnInner: {
-      alignItems: 'center',
-      gap: 6,
-    },
-    filterBtnText: {
-      ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.electricBright,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    filterBtnTextOn: {
-      color: '#FFFFFF',
     },
     iconBtn: {
       width: 36,

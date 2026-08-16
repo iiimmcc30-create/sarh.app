@@ -363,7 +363,7 @@ const MAP: Record<string, LucideIcon> = {
   'tool-box': Wand2,
   tools: Wand2,
   box: Box,
-  'truck-delivery-outline': Truck,
+  'truck-delivery-outline': Box,
   'apple-whole': Tag,
   'food-apple-outline': Tag,
   gavel: Flag,

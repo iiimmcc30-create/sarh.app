@@ -14,29 +14,24 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { rtlBackIcon } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { PAYMENT_STATUS_LABELS, cutLabelAr } from '@/services/butcherData';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
-import { safePush } from '@/lib/safeNavigate';
 import {
   OPS_FLOW_DELIVERY,
   OPS_FLOW_PICKUP,
-  formatOpsOrderDate,
-  formatOpsOrderTime,
   flowStepActive,
   flowStepDone,
   isDeliveryOrder,
   mapsUrlForAddress,
-  opsStatusAccent,
   opsStatusLabel,
   orderCustomerName,
-  orderLineSummary,
   orderShortId,
   primaryAdvanceAction,
 } from '@/lib/butcherOps';
@@ -113,17 +108,6 @@ export default function ButcherManageOrderScreen() {
     }
   };
 
-  const openChat = () => {
-    if (!order?.customer?.id) return;
-    safePush('/butchers/chat', {
-      receiverUserId: order.customer.id,
-      receiverName: orderCustomerName(order),
-      receiverAvatar: order.customer?.avatar || '',
-      threadType: 'BUTCHER',
-      ...(order.butcherId ? { butcherId: order.butcherId } : {}),
-    }, router);
-  };
-
   if (loading) {
     return (
       <SafeAreaView style={s.screen}>
@@ -149,125 +133,46 @@ export default function ButcherManageOrderScreen() {
   const phone = order.customer?.phone as string | undefined;
   const address = delivery
     ? order.deliveryAddress || 'لم يُحدد عنوان التوصيل'
-    : [order.butcher?.addressAr, order.butcher?.cityAr].filter(Boolean).join('، ') ||
-      'استلام من الملحمة';
-  const items =
-    Array.isArray(order.items) && order.items.length > 0
-      ? order.items
-      : [
-          {
-            product: order.product,
-            cutType: order.cutType,
-            weightKg: order.weightKg,
-            lineTotal: order.totalPrice,
-          },
-        ];
-  const allowed: string[] = Array.isArray(order.allowedNextStatuses)
-    ? order.allowedNextStatuses
-    : [];
-  const statusColor = opsStatusAccent(order, colors.textMuted);
-  const paidLabel =
-    PAYMENT_STATUS_LABELS[order.paymentStatus as 'paid' | 'unpaid'] ?? order.paymentStatus;
-  const line = orderLineSummary(order);
-  const total = `${Number(order.totalPrice || 0).toLocaleString('en-US')} ${
-    order.currency === 'SAR' || !order.currency ? 'SAR' : order.currency
-  }`;
+    : [order.butcher?.addressAr, order.butcher?.cityAr].filter(Boolean).join('، ') || 'استلام من الملحمة';
+  const items = Array.isArray(order.items) && order.items.length > 0
+    ? order.items
+    : [{ product: order.product, cutType: order.cutType, weightKg: order.weightKg, lineTotal: order.totalPrice }];
+  const allowed: string[] = Array.isArray(order.allowedNextStatuses) ? order.allowedNextStatuses : [];
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <View style={[s.header, getRtlRow()]}>
+      <View style={s.header}>
+        <RtlTextShell flex>
+          <RtlText style={s.headerTitle}>{orderShortId(order)}</RtlText>
+          <RtlText style={s.headerSub}>{opsStatusLabel(order.status, order.deliveryType)}</RtlText>
+        </RtlTextShell>
         <Pressable onPress={() => router.back()} style={s.iconBtn}>
           <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
         </Pressable>
-        <View style={s.headerText}>
-          <Text style={s.headerBrand}>سرح</Text>
-          <Text style={s.headerSub}>{orderShortId(order)}</Text>
-        </View>
-        <View style={s.iconBtnGhost} />
       </View>
 
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <View style={s.heroCard}>
-          <CoverTrailRow justify="space-between" gap={10}>
-            <View style={s.statusBlock}>
-              <View
-                style={[
-                  s.badge,
-                  { backgroundColor: `${statusColor}18`, borderColor: `${statusColor}55` },
-                ]}
-              >
-                <Text style={[s.badgeText, { color: statusColor }]}>
-                  {opsStatusLabel(order.status, order.deliveryType)}
-                </Text>
-              </View>
-              {order.createdAt ? (
-                <>
-                  <View style={[s.metaTiny, getRtlRow()]}>
-                    <AppIcon name="calendar-outline" size={12} color={colors.textMuted} />
-                    <Text style={s.metaTinyText}>{formatOpsOrderDate(order.createdAt)}</Text>
-                  </View>
-                  <View style={[s.metaTiny, getRtlRow()]}>
-                    <AppIcon name="time-outline" size={12} color={colors.textMuted} />
-                    <Text style={s.metaTinyText}>{formatOpsOrderTime(order.createdAt)}</Text>
-                  </View>
-                </>
-              ) : null}
-            </View>
-            <View style={s.customerBlock}>
-              <View style={[s.customerRow, getRtlRow()]}>
-                <View style={s.avatar}>
-                  <AppIcon name="person-outline" size={18} color={colors.textMuted} />
-                </View>
-                <View style={s.customerText}>
-                  <Text style={s.customer}>{customer}</Text>
-                  <Text style={s.lines} numberOfLines={2}>
-                    {line}
-                  </Text>
-                </View>
-              </View>
-              {phone ? (
-                <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)}>
-                  <Text style={s.phone}>{phone}</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          </CoverTrailRow>
-
-          <View style={s.detailRow}>
-            <View style={s.detailCol}>
-              <AppIcon name="cube-outline" size={15} color={colors.textMuted} />
-              <Text style={s.detailText}>{line}</Text>
-            </View>
-            <View style={s.detailCol}>
-              <AppIcon
-                name={delivery ? 'bicycle-outline' : 'storefront-outline'}
-                size={15}
-                color={colors.textMuted}
-              />
-              <Text style={s.detailText}>{delivery ? 'توصيل الملحمة' : 'استلام'}</Text>
-              <Text style={s.detailSub}>{address}</Text>
-            </View>
-            <View style={s.detailCol}>
-              <AppIcon
-                name={order.paymentStatus === 'paid' ? 'checkmark-circle' : 'card-outline'}
-                size={15}
-                color={order.paymentStatus === 'paid' ? colors.electricBright : colors.textMuted}
-              />
-              <Text style={s.detailText}>{paidLabel}</Text>
-              <Text style={s.detailPrice}>{total}</Text>
-            </View>
-          </View>
-
-          <Pressable style={s.chatBtn} onPress={openChat}>
-            <View style={[s.chatInner, getRtlRow()]}>
-              <AppIcon name="chatbubble-outline" size={15} color={colors.electricBright} />
-              <Text style={s.chatText}>محادثة العميل</Text>
-            </View>
-          </Pressable>
+      <ScrollView contentContainerStyle={s.scroll}>
+        <View style={s.card}>
+          <RtlTextShell>
+            <RtlText style={s.section}>معلومات العميل</RtlText>
+            <RtlText style={s.value}>{customer}</RtlText>
+          </RtlTextShell>
+          {phone ? (
+            <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)}>
+              <CoverTrailRow justify="flex-end" gap={8}>
+                <RtlTextShell flex>
+                  <RtlText style={s.link}>{phone}</RtlText>
+                </RtlTextShell>
+                <AppIcon name="call-outline" size={16} color={colors.electric} />
+              </CoverTrailRow>
+            </Pressable>
+          ) : null}
         </View>
 
         <View style={s.card}>
-          <Text style={s.section}>المنتجات</Text>
+          <RtlTextShell>
+            <RtlText style={s.section}>المنتجات</RtlText>
+          </RtlTextShell>
           {items.map((item: any, idx: number) => (
             <View key={item.id || idx} style={s.itemRow}>
               <RtlTextShell>
@@ -277,8 +182,7 @@ export default function ButcherManageOrderScreen() {
                   {item.weightKg != null ? `${item.weightKg} كغ` : ''}
                 </RtlText>
                 <RtlText style={s.value}>
-                  {Number(item.lineTotal ?? item.totalPrice ?? 0).toLocaleString('en-US')}{' '}
-                  {order.currency || 'ر.س'}
+                  {Number(item.lineTotal ?? item.totalPrice ?? 0).toLocaleString()} {order.currency || 'ر.س'}
                 </RtlText>
               </RtlTextShell>
             </View>
@@ -286,9 +190,24 @@ export default function ButcherManageOrderScreen() {
         </View>
 
         <View style={s.card}>
-          <Text style={s.section}>التوصيل</Text>
-          <Text style={s.value}>{delivery ? 'توصيل الملحمة' : 'استلام من الملحمة'}</Text>
-          <Text style={s.muted}>{address}</Text>
+          <RtlTextShell>
+            <RtlText style={s.section}>الدفع</RtlText>
+            <RtlText style={s.value}>
+              {PAYMENT_STATUS_LABELS[order.paymentStatus as 'paid' | 'unpaid'] ?? order.paymentStatus}
+            </RtlText>
+            <RtlText style={s.muted}>الإجمالي {Number(order.totalPrice || 0).toLocaleString()} {order.currency || 'ر.س'}</RtlText>
+          </RtlTextShell>
+        </View>
+
+        <View style={s.card}>
+          <RtlTextShell>
+            <RtlText style={s.section}>التوصيل</RtlText>
+            <RtlText style={s.value}>{delivery ? 'توصيل الملحمة' : 'استلام من الملحمة'}</RtlText>
+            <RtlText style={s.muted}>{address}</RtlText>
+            {order.createdAt ? (
+              <RtlText style={s.muted}>وقت الطلب: {new Date(order.createdAt).toLocaleString('ar-SA')}</RtlText>
+            ) : null}
+          </RtlTextShell>
           {delivery && order.deliveryAddress ? (
             <Pressable
               style={s.mapBtn}
@@ -302,15 +221,21 @@ export default function ButcherManageOrderScreen() {
 
         {order.notes ? (
           <View style={s.card}>
-            <Text style={s.section}>ملاحظات العميل</Text>
-            <Text style={s.value}>{order.notes}</Text>
+            <RtlTextShell>
+              <RtlText style={s.section}>ملاحظات العميل</RtlText>
+              <RtlText style={s.value}>{order.notes}</RtlText>
+            </RtlTextShell>
           </View>
         ) : null}
 
         <View style={s.card}>
-          <Text style={s.section}>متابعة الطلب</Text>
+          <RtlTextShell>
+            <RtlText style={s.section}>متابعة الطلب</RtlText>
+          </RtlTextShell>
           {order.status === 'cancelled' ? (
-            <Text style={[s.value, { color: colors.danger }]}>ملغى</Text>
+            <RtlTextShell>
+              <RtlText style={[s.value, { color: colors.danger }]}>ملغى</RtlText>
+            </RtlTextShell>
           ) : (
             flow.map((step) => {
               const done = flowStepDone(order.status, step.id, delivery);
@@ -318,9 +243,7 @@ export default function ButcherManageOrderScreen() {
               return (
                 <View key={step.id} style={s.tlRow}>
                   <RtlTextShell flex>
-                    <RtlText style={[s.tlLabel, done && s.tlDone, active && s.tlActive]}>
-                      {step.label}
-                    </RtlText>
+                    <RtlText style={[s.tlLabel, done && s.tlDone, active && s.tlActive]}>{step.label}</RtlText>
                   </RtlTextShell>
                   <View style={[s.tlDot, done && s.tlDotDone, active && s.tlDotActive]}>
                     {done ? <AppIcon name="checkmark" size={10} color="#fff" /> : null}
@@ -349,21 +272,27 @@ export default function ButcherManageOrderScreen() {
       <Modal visible={cancelOpen} transparent animationType="fade">
         <View style={s.modalBackdrop}>
           <View style={s.modalCard}>
-            <Text style={s.section}>إلغاء الطلب</Text>
+            <RtlTextShell>
+              <RtlText style={s.section}>إلغاء الطلب</RtlText>
+            </RtlTextShell>
             {CANCEL_REASONS.map((reason) => (
               <Pressable
                 key={reason}
                 style={[s.reason, cancelReasonPreset === reason && s.reasonOn]}
                 onPress={() => setCancelReasonPreset(reason)}
               >
-                <Text style={s.value}>{reason}</Text>
+                <RtlTextShell>
+                  <RtlText style={s.value}>{reason}</RtlText>
+                </RtlTextShell>
               </Pressable>
             ))}
             <Pressable
               style={[s.reason, cancelReasonPreset === '__custom__' && s.reasonOn]}
               onPress={() => setCancelReasonPreset('__custom__')}
             >
-              <Text style={s.value}>سبب آخر</Text>
+              <RtlTextShell>
+                <RtlText style={s.value}>سبب آخر</RtlText>
+              </RtlTextShell>
             </Pressable>
             {cancelReasonPreset === '__custom__' ? (
               <TextInput
@@ -383,9 +312,7 @@ export default function ButcherManageOrderScreen() {
                 style={[s.danger, { flex: 1, marginTop: 0 }]}
                 onPress={() => {
                   const reason =
-                    cancelReasonPreset === '__custom__'
-                      ? cancelReasonCustom.trim()
-                      : cancelReasonPreset;
+                    cancelReasonPreset === '__custom__' ? cancelReasonCustom.trim() : cancelReasonPreset;
                   if (!reason) {
                     Alert.alert('خطأ', 'يرجى تحديد سبب الإلغاء');
                     return;
@@ -405,315 +332,156 @@ export default function ButcherManageOrderScreen() {
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const cardBg = scheme === 'light' ? '#FFFFFF' : colors.bgElevated;
-  const pageBg = scheme === 'light' ? '#F2F4F6' : colors.screenRoot;
+  const cardBg = colors.bgElevated;
+  const softBg = scheme === 'light' ? colors.bgDeep : colors.bgSurface;
   const border = colors.borderSoft;
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: pageBg },
-    error: {
-      color: colors.textMuted,
-      marginTop: 80,
-      paddingHorizontal: spacing.lg,
-      fontFamily: OFFICIAL_APP_FONT,
-    },
-    header: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      gap: 10,
-    },
-    headerText: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
-    headerBrand: {
-      ...typography.h3,
-      fontFamily: OFFICIAL_APP_FONT,
-      fontSize: 22,
-      lineHeight: 30,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    headerSub: {
-      ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    iconBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      backgroundColor: cardBg,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: border,
-    },
-    iconBtnGhost: { width: 36, height: 36 },
-    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxxl },
-    heroCard: {
-      backgroundColor: cardBg,
-      borderRadius: 16,
-      padding: spacing.md,
-      gap: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: border,
-      marginBottom: spacing.md,
-    },
-    statusBlock: { alignItems: 'flex-start', gap: 4, maxWidth: '42%' },
-    badge: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 999,
-      borderWidth: 1,
-      alignSelf: 'flex-start',
-    },
-    badgeText: {
-      ...typography.badge,
-      fontFamily: OFFICIAL_APP_FONT,
-      includeFontPadding: false,
-    },
-    metaTiny: { alignItems: 'center', gap: 4 },
-    metaTinyText: {
-      ...typography.micro,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    customerBlock: { flex: 1, minWidth: 0, alignItems: 'flex-end', gap: 6 },
-    customerRow: { alignItems: 'center', gap: 8, maxWidth: '100%' },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    customerText: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
-    customer: {
-      ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      width: '100%',
-      includeFontPadding: false,
-    },
-    lines: {
-      ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      width: '100%',
-      includeFontPadding: false,
-      marginTop: 2,
-    },
-    phone: {
-      ...typography.emphasis,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.electricBright,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    detailRow: {
-      flexDirection: 'row-reverse',
-      gap: 8,
-      paddingTop: 8,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: border,
-    },
-    detailCol: { flex: 1, alignItems: 'flex-end', gap: 4, minWidth: 0 },
-    detailText: {
-      ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      width: '100%',
-      includeFontPadding: false,
-    },
-    detailSub: {
-      ...typography.micro,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      width: '100%',
-      includeFontPadding: false,
-    },
-    detailPrice: {
-      ...typography.emphasis,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      width: '100%',
-      includeFontPadding: false,
-    },
-    chatBtn: {
-      minHeight: 44,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: colors.electricBright,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    chatInner: { alignItems: 'center', gap: 6 },
-    chatText: {
-      ...typography.emphasis,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.electricBright,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    card: {
-      backgroundColor: cardBg,
-      borderRadius: 16,
-      padding: spacing.md,
-      marginBottom: spacing.sm,
-      gap: 8,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: border,
-    },
-    section: {
-      ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    value: {
-      ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    muted: {
-      ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      includeFontPadding: false,
-    },
-    itemRow: {
-      paddingVertical: 8,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: border,
-    },
-    itemName: {
-      ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-    },
-    mapBtn: {
-      marginTop: 8,
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 10,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: border,
-      paddingHorizontal: 12,
-    },
-    link: {
-      ...typography.emphasis,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.electric,
-    },
-    tlRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      gap: 10,
-      paddingVertical: 8,
-    },
-    tlLabel: {
-      ...typography.secondary,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textMuted,
-    },
-    tlDone: { color: colors.textPrimary },
-    tlActive: { color: colors.electricBright },
-    tlDot: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      borderWidth: 1.5,
-      borderColor: border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    tlDotDone: { backgroundColor: colors.electricBright, borderColor: colors.electricBright },
-    tlDotActive: { borderColor: colors.electricBright },
-    primary: {
-      backgroundColor: colors.electricBright,
-      borderRadius: 14,
-      minHeight: 50,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: spacing.sm,
-    },
-    primaryText: {
-      ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: '#fff',
-      includeFontPadding: false,
-    },
-    danger: {
-      backgroundColor: colors.danger,
-      borderRadius: 14,
-      minHeight: 50,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: spacing.sm,
-    },
-    modalBackdrop: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      padding: spacing.lg,
-    },
-    modalCard: {
-      backgroundColor: cardBg,
-      borderRadius: 16,
-      padding: spacing.lg,
-      gap: 8,
-    },
-    reason: {
-      padding: spacing.md,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: border,
-    },
-    reasonOn: {
-      borderColor: colors.electricBright,
-      backgroundColor: `${colors.electricBright}14`,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: border,
-      borderRadius: 12,
-      padding: spacing.md,
-      color: colors.textPrimary,
-      fontFamily: OFFICIAL_APP_FONT,
-      textAlign: 'right',
-    },
-    modalActions: { flexDirection: 'row', gap: 10, marginTop: spacing.sm },
-  });
+  screen: { flex: 1, backgroundColor: colors.screenRoot },
+  error: {
+    color: colors.textMuted,
+    marginTop: 80,
+    paddingHorizontal: spacing.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    gap: 10,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: softBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: border,
+  },
+  headerTitle: {
+    ...butcherTypography.title,
+    color: colors.textPrimary,
+  },
+  headerSub: {
+    ...butcherTypography.secondary,
+    color: colors.electric,
+  },
+  scroll: { padding: spacing.lg, gap: spacing.md },
+  card: {
+    backgroundColor: cardBg,
+    borderRadius: 14,
+    padding: spacing.md,
+    gap: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: border,
+  },
+  section: {
+    ...butcherTypography.emphasis,
+    color: colors.textMuted,
+  },
+  value: {
+    ...butcherTypography.body,
+    color: colors.textPrimary,
+  },
+  muted: {
+    ...butcherTypography.secondary,
+    color: colors.textMuted,
+  },
+  link: {
+    ...butcherTypography.emphasis,
+    color: colors.electric,
+  },
+  itemRow: { paddingVertical: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: border },
+  itemName: {
+    ...butcherTypography.primary,
+    color: colors.textPrimary,
+  },
+  mapBtn: {
+    marginTop: 8,
+    flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: softBg,
+  },
+  tlRow: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 6,
+  },
+  tlDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: colors.textMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tlDotDone: { backgroundColor: colors.electric, borderColor: colors.electric },
+  tlDotActive: { borderColor: colors.electric, backgroundColor: colors.electric },
+  tlLabel: {
+    ...butcherTypography.secondary,
+    color: colors.textMuted,
+  },
+  tlDone: { color: colors.textPrimary },
+  tlActive: { ...butcherTypography.emphasis, color: colors.electric },
+  primary: {
+    backgroundColor: colors.electric,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  primaryText: {
+    ...butcherTypography.primary,
+    color: '#fff',
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    direction: 'ltr',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 8,
+  },
+  danger: {
+    marginTop: 8,
+    backgroundColor: colors.danger,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: spacing.lg },
+  modalCard: {
+    backgroundColor: cardBg,
+    borderRadius: 16,
+    padding: spacing.lg,
+    gap: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: border,
+  },
+  reason: {
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: softBg,
+  },
+  reasonOn: { borderWidth: 1, borderColor: colors.danger },
+  input: {
+    backgroundColor: softBg,
+    borderRadius: 12,
+    padding: 10,
+    color: colors.textPrimary,
+  },
+});
 }

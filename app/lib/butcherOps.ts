@@ -34,19 +34,6 @@ export const OPS_ORDER_FILTERS: { id: OpsOrderFilter; label: string }[] = [
   { id: 'cancelled', label: 'ملغاة' },
 ];
 
-/** Orders-tab status chips — matches the butcher orders reference. */
-export const OPS_ORDERS_STATUS_CHIPS: {
-  id: OpsOrderFilter;
-  label: string;
-  icon: string;
-}[] = [
-  { id: 'all', label: 'الكل', icon: 'list' },
-  { id: 'delivering', label: 'قيد التوصيل', icon: 'truck-delivery-outline' },
-  { id: 'ready', label: 'جاهزة', icon: 'time-outline' },
-  { id: 'delivered', label: 'مكتملة', icon: 'checkmark' },
-  { id: 'cancelled', label: 'ملغاة', icon: 'close' },
-];
-
 export const OPS_STATUS_COLORS: Record<string, string> = {
   pending: '#D4A017',
   confirmed: '#20B66F',
@@ -119,44 +106,9 @@ export function primaryAdvanceAction(order: {
 }
 
 export function orderShortId(order: { orderNumber?: string; id?: string }): string {
-  if (order.orderNumber) {
-    const raw = String(order.orderNumber).trim();
-    return raw.startsWith('#') ? raw : `#${raw}`;
-  }
+  if (order.orderNumber) return String(order.orderNumber);
   if (order.id) return `#${String(order.id).slice(0, 8).toUpperCase()}`;
   return 'طلب';
-}
-
-/** Accent color for ops status badges on order cards. */
-export function opsStatusAccent(
-  order: { status?: string; deliveryType?: string },
-  fallback = '#657985',
-): string {
-  const bucket = opsBucket(order);
-  if (bucket === 'delivering') return '#F59E0B';
-  if (bucket === 'delivered') return '#20B66F';
-  if (bucket === 'ready') return '#20B66F';
-  if (bucket === 'preparing') return '#5B8FA8';
-  if (bucket === 'pending') return '#D4A017';
-  if (bucket === 'cancelled') return '#E85D5D';
-  return OPS_STATUS_COLORS[order.status ?? ''] ?? fallback;
-}
-
-export function formatOpsOrderDate(iso?: string): string {
-  if (!iso) return '';
-  return new Date(iso).toLocaleDateString('ar-SA', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-export function formatOpsOrderTime(iso?: string): string {
-  if (!iso) return '';
-  return new Date(iso).toLocaleTimeString('ar-SA', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 export function orderCustomerName(order: {
