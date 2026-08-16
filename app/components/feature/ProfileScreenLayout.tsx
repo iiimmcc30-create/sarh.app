@@ -252,17 +252,17 @@ export function ProfileScreenLayout({
                    * the rating chip (long Arabic names like «محمد بن عبدالعزيز» were clipped).
                    */}
                   <View style={styles.nameRow}>
-                    <View style={styles.nameShell}>
-                      <Text style={styles.displayName} numberOfLines={2}>
-                        {displayName}
-                      </Text>
-                    </View>
                     {user.verified ? <VerificationBadge size={18} /> : null}
                     {user.isAI ? (
                       <View style={styles.aiBadge}>
                         <Text style={styles.aiBadgeText}>AI</Text>
                       </View>
                     ) : null}
+                    <View style={styles.nameShell}>
+                      <Text style={styles.displayName} numberOfLines={2}>
+                        {displayName}
+                      </Text>
+                    </View>
                   </View>
                   <View style={styles.nameMetaRow}>
                     <View style={styles.handleShell}>
@@ -494,7 +494,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     nameShell: {
       direction: 'ltr',
-      flex: 1,
+      flexShrink: 1,
       minWidth: 0,
     },
     aiBadge: {
