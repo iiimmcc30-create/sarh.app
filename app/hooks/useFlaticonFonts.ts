@@ -6,7 +6,10 @@ import {
   useFonts,
 } from '@expo-google-fonts/ibm-plex-sans-arabic';
 
-/** Loads IBM Plex Sans Arabic (icons are SVG — no font preload). */
+/**
+ * Loads the sole app typeface: IBM Plex Sans Arabic (400 / 500 / 600 / 700).
+ * Icons are SVG — no Flaticon font preload.
+ */
 export function useFlaticonFonts() {
   const [loaded, error] = useFonts({
     IBMPlexSansArabic_400Regular,

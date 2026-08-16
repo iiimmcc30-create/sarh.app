@@ -1,5 +1,6 @@
-import { appFont, resolveAppFontFace } from '@/constants/fonts';
+import { appFont, APP_FONT_FACES, APP_FONT_NAME, resolveAppFontFace } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
+import packageJson from '../package.json';
 
 describe('resolveAppFontFace', () => {
   it('maps content weights to loaded IBM Plex files', () => {
@@ -49,6 +50,17 @@ describe('resolveAppFontFace', () => {
   it('preserves monospace', () => {
     expect(resolveAppFontFace('600', 'monospace').fontFamily).toBe('monospace');
   });
+
+  it('remaps legacy Tajawal family names to IBM Plex', () => {
+    expect(resolveAppFontFace('700', 'Tajawal_700Bold')).toEqual({
+      fontFamily: appFont.bold,
+      fontWeight: '700',
+    });
+    expect(resolveAppFontFace(undefined, 'Tajawal-Regular')).toEqual({
+      fontFamily: appFont.medium,
+      fontWeight: '500',
+    });
+  });
 });
 
 describe('typography tokens', () => {
@@ -76,5 +88,31 @@ describe('typography tokens', () => {
     expect(typography.button).toMatchObject({ fontSize: 15, fontWeight: '600', lineHeight: 20 });
     expect(typography.caption).toMatchObject({ fontSize: 12, fontWeight: '500', lineHeight: 18 });
     expect(typography.badge).toMatchObject({ fontSize: 12, fontWeight: '600', lineHeight: 18 });
+  });
+
+  it('uses only IBM Plex Sans Arabic for content faces', () => {
+    expect(APP_FONT_NAME).toBe('IBM Plex Sans Arabic');
+    expect(APP_FONT_FACES).toEqual([
+      'IBMPlexSansArabic_400Regular',
+      'IBMPlexSansArabic_500Medium',
+      'IBMPlexSansArabic_600SemiBold',
+      'IBMPlexSansArabic_700Bold',
+    ]);
+    for (const token of Object.values(typography)) {
+      const family = (token as { fontFamily?: string }).fontFamily;
+      if (!family) continue;
+      expect(family.startsWith('IBMPlexSansArabic_')).toBe(true);
+    }
+  });
+});
+
+describe('package fonts', () => {
+  it('does not depend on Tajawal', () => {
+    const deps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
+    expect(Object.keys(deps).some((name) => /tajawal/i.test(name))).toBe(false);
+    expect(deps['@expo-google-fonts/ibm-plex-sans-arabic']).toBeTruthy();
   });
 });
