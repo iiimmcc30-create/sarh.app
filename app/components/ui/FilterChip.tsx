@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import { typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
+import { getCoverTrailRowStyle, getRtlRow } from '@/lib/rtl';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { FILTER_CHIP } from '@/components/ui/filterChipTokens';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 
 export { FILTER_CHIP } from '@/components/ui/filterChipTokens';
 
@@ -32,6 +33,8 @@ type FilterChipProps = {
   chevron?: boolean;
   /** Optional emoji / custom node before the label (RTL: visual right). */
   leading?: ReactNode;
+  /** Cover trail: physical LTR, accessory on the right of the label. */
+  cover?: boolean;
 };
 
 export function FilterChip({
@@ -45,6 +48,7 @@ export function FilterChip({
   selectedCheck = false,
   chevron = false,
   leading,
+  cover = false,
 }: FilterChipProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createChipStyles(theme.colors),
@@ -68,26 +72,48 @@ export function FilterChip({
         style,
       ]}
     >
-      <View style={[styles.inner, getRtlRow()]}>
-        {selected && selectedCheck ? (
-          <View style={styles.checkCircle}>
-            <AppIcon name="checkmark" size={11} color={colors.electricBright} />
-          </View>
-        ) : leading ? (
-          leading
-        ) : icon ? (
-          <AppIcon name={icon} size={15} color={iconColor} />
-        ) : null}
-        <Text
-          numberOfLines={1}
-          style={[styles.label, selected && styles.labelSelected]}
-        >
-          {label}
-        </Text>
-        {chevron ? (
-          <AppIcon name="angle-down" size={13} color={iconColor} />
-        ) : null}
-      </View>
+      {cover ? (
+        <CoverTrailRow justify="flex-end" gap={7}>
+          <Text
+            numberOfLines={1}
+            style={[styles.label, selected && styles.labelSelected]}
+          >
+            {label}
+          </Text>
+          {selected && selectedCheck ? (
+            <View style={styles.checkCircle}>
+              <AppIcon name="checkmark" size={11} color={colors.electricBright} />
+            </View>
+          ) : leading ? (
+            leading
+          ) : icon ? (
+            <AppIcon name={icon} size={15} color={iconColor} />
+          ) : chevron ? (
+            <AppIcon name="angle-down" size={13} color={iconColor} />
+          ) : null}
+        </CoverTrailRow>
+      ) : (
+        <View style={[styles.inner, getRtlRow()]}>
+          {selected && selectedCheck ? (
+            <View style={styles.checkCircle}>
+              <AppIcon name="checkmark" size={11} color={colors.electricBright} />
+            </View>
+          ) : leading ? (
+            leading
+          ) : icon ? (
+            <AppIcon name={icon} size={15} color={iconColor} />
+          ) : null}
+          <Text
+            numberOfLines={1}
+            style={[styles.label, selected && styles.labelSelected]}
+          >
+            {label}
+          </Text>
+          {chevron ? (
+            <AppIcon name="angle-down" size={13} color={iconColor} />
+          ) : null}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -98,6 +124,8 @@ type FilterChipRowProps = {
   style?: StyleProp<ViewStyle>;
   /** Horizontal inset around the row (default 16). */
   contentPaddingHorizontal?: number;
+  /** Physical LTR cover trail — chips hug the right edge. */
+  cover?: boolean;
 };
 
 /** Horizontal scroller for FilterChip items — RTL-aware, no flex stretch. */
@@ -106,6 +134,7 @@ export function FilterChipRow({
   contentContainerStyle,
   style,
   contentPaddingHorizontal = 16,
+  cover = false,
 }: FilterChipRowProps) {
   const styles = useThemedStyles(({ colors }) => createRowStyles(colors));
 
@@ -116,7 +145,9 @@ export function FilterChipRow({
       style={[styles.scroll, style]}
       contentContainerStyle={[
         styles.content,
-        getRtlRow(),
+        cover
+          ? getCoverTrailRowStyle({ justifyContent: 'flex-end', gap: FILTER_CHIP.gap })
+          : getRtlRow(),
         { paddingHorizontal: contentPaddingHorizontal },
         contentContainerStyle,
       ]}
