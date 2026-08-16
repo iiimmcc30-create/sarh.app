@@ -1,9 +1,8 @@
 /**
- * Project-wide official typeface = listing price Bold
- * (`IBMPlexSansArabic_700Bold`).
+ * Project-wide IBM Plex Sans Arabic — pairs fontFamily with the matching weight.
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
-import { OFFICIAL_APP_FONT, resolveAppFontFace } from '@/constants/fonts';
+import { appFont, resolveAppFontFace } from '@/constants/fonts';
 
 type AnyTextProps = {
   style?: StyleProp<TextStyle>;
@@ -32,7 +31,7 @@ function patchHost(
   Component.defaultProps = {
     ...Component.defaultProps,
     style: withAppFont([
-      { fontFamily: OFFICIAL_APP_FONT, fontWeight: '700' },
+      { fontFamily: appFont.medium, fontWeight: '500' },
       Component.defaultProps?.style as StyleProp<TextStyle>,
     ]),
   };
