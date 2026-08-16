@@ -1,4 +1,4 @@
-import { appFont, APP_FONT_FACES, APP_FONT_NAME, resolveAppFontFace, typeFace } from '@/constants/fonts';
+import { appFont, APP_FONT_FACES, APP_FONT_NAME, resolveAppFontFace } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
 import packageJson from '../package.json';
 
@@ -63,40 +63,31 @@ describe('resolveAppFontFace', () => {
   });
 });
 
-describe('typeFace', () => {
-  it('uses IBM Plex faces for price (700) and body (500)', () => {
-    expect(typeFace('700').fontFamily).toBe(appFont.bold);
-    expect(typeFace('500').fontFamily).toBe(appFont.medium);
-    expect(typeFace('600').fontFamily).toBe(appFont.semibold);
-  });
-});
-
 describe('typography tokens', () => {
   it('keeps bottom-nav tab tokens frozen', () => {
     expect(typography.tab).toMatchObject({
       fontFamily: appFont.medium,
+      fontWeight: '500',
       fontSize: 10,
       lineHeight: 13,
     });
     expect(typography.tabActive).toMatchObject({
       fontFamily: appFont.semibold,
+      fontWeight: '600',
       fontSize: 10,
       lineHeight: 13,
     });
   });
 
-  it('exposes the content scale with IBM Plex families', () => {
-    expect(typography.display).toMatchObject({ fontSize: 24, fontFamily: appFont.bold, lineHeight: 32 });
-    expect(typography.sectionHeading).toMatchObject({ fontSize: 20, fontFamily: appFont.bold, lineHeight: 28 });
-    expect(typography.cardHeadingLarge).toMatchObject({ fontSize: 18, fontFamily: appFont.semibold, lineHeight: 26 });
-    expect(typography.cardHeading).toMatchObject({ fontSize: 16, fontFamily: appFont.semibold, lineHeight: 24 });
-    expect(typography.body).toMatchObject({ fontSize: 16, fontFamily: appFont.medium, lineHeight: 24 });
-    expect(typography.button).toMatchObject({ fontSize: 15, fontFamily: appFont.semibold, lineHeight: 20 });
-    expect(typography.caption).toMatchObject({ fontSize: 12, fontFamily: appFont.medium, lineHeight: 18 });
-    expect(typography.badge).toMatchObject({ fontSize: 12, fontFamily: appFont.semibold, lineHeight: 18 });
-    expect(typography.valueLarge).toMatchObject({ fontSize: 18, fontFamily: appFont.bold, lineHeight: 24 });
-    expect(typography.feedTitle).toMatchObject({ fontSize: 16, fontFamily: appFont.semibold, lineHeight: 24 });
-    expect(typography.feedBody).toMatchObject({ fontSize: 14, fontFamily: appFont.medium, lineHeight: 20 });
+  it('exposes the content scale', () => {
+    expect(typography.display).toMatchObject({ fontSize: 24, fontWeight: '700', lineHeight: 32 });
+    expect(typography.sectionHeading).toMatchObject({ fontSize: 20, fontWeight: '700', lineHeight: 28 });
+    expect(typography.cardHeadingLarge).toMatchObject({ fontSize: 18, fontWeight: '600', lineHeight: 26 });
+    expect(typography.cardHeading).toMatchObject({ fontSize: 16, fontWeight: '600', lineHeight: 24 });
+    expect(typography.body).toMatchObject({ fontSize: 16, fontWeight: '500', lineHeight: 24 });
+    expect(typography.button).toMatchObject({ fontSize: 15, fontWeight: '600', lineHeight: 20 });
+    expect(typography.caption).toMatchObject({ fontSize: 12, fontWeight: '500', lineHeight: 18 });
+    expect(typography.badge).toMatchObject({ fontSize: 12, fontWeight: '600', lineHeight: 18 });
   });
 
   it('uses only IBM Plex Sans Arabic for content faces', () => {

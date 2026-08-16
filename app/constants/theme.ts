@@ -3,7 +3,7 @@
 
 import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';
-import { typeFace } from './fonts';
+import { appFont } from './fonts';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -308,9 +308,18 @@ const directionalText = {
   writingDirection: 'rtl' as const,
 };
 
-const face500 = typeFace('500');
-const face600 = typeFace('600');
-const face700 = typeFace('700');
+const face500 = {
+  fontFamily: appFont.medium,
+  fontWeight: '500' as const,
+};
+const face600 = {
+  fontFamily: appFont.semibold,
+  fontWeight: '600' as const,
+};
+const face700 = {
+  fontFamily: appFont.bold,
+  fontWeight: '700' as const,
+};
 
 /**
  * Sarh content typography — 500 / 600 / 700 and scale 12 / 14 / 15 / 16 / 18 / 20 / 24.
@@ -430,7 +439,8 @@ export const typography = {
    * Do not change size, weight, or line height.
    */
   tab: {
-    ...typeFace('500'),
+    fontFamily: appFont.medium,
+    fontWeight: '500' as const,
     fontSize: 10,
     lineHeight: 13,
     textAlign: 'center' as const,
@@ -441,7 +451,8 @@ export const typography = {
    * Do not change size, weight, or line height.
    */
   tabActive: {
-    ...typeFace('600'),
+    fontFamily: appFont.semibold,
+    fontWeight: '600' as const,
     fontSize: 10,
     lineHeight: 13,
     textAlign: 'center' as const,
