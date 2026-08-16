@@ -1,5 +1,5 @@
 import { APP_LOGO } from '@/constants/branding';
-import { appFont } from '@/constants/fonts';
+import { typeFace } from '@/constants/fonts';
 import { ds } from '@/constants/designSystem';
 import { typography } from '@/constants/theme';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -312,8 +312,7 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 20,
     fontSize: 30,
-    fontFamily: appFont.semibold,
-    fontWeight: '600',
+    ...typeFace('600'),
     color: BRAND_GREEN,
     letterSpacing: 0.3,
   },
