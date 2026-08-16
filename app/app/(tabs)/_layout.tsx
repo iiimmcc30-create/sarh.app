@@ -2,14 +2,17 @@
 // SAFAT — Tabs Layout
 
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FloatingTabBar } from '@/components/navigation/FloatingTabBar';
 import { ds } from '@/constants/designSystem';
 import { sarh } from '@/constants/sarhTokens';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const sceneBg = isDark ? colors.bgDeep || sarh.color.bg : colors.bgDeep;
+  const tabBarHeight = ds.tabBar.height + Math.max(insets.bottom, ds.tabBar.marginBottom);
 
   return (
     <Tabs
@@ -23,7 +26,7 @@ export default function TabsLayout() {
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
-          height: ds.tabBar.height + 28,
+          height: tabBarHeight,
         },
       }}
     >
