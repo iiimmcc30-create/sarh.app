@@ -139,6 +139,7 @@ export default function ProfileConnectionsScreen() {
           avatarSize={USER_IDENTITY.listAvatarSize}
           avatarRadius={USER_IDENTITY.listAvatarRadius}
           avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+          avatarSide="end"
           nameLines={2}
           colors={colors}
           style={styles.identity}
