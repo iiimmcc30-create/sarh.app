@@ -19,6 +19,8 @@ import {
 } from '@/lib/butcherOps';
 import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type Props = {
   order: any;
@@ -73,15 +75,17 @@ export function OpsOrderCard({
         </View>
 
         <View style={styles.identity}>
-          <Text style={styles.orderNo} numberOfLines={1}>
-            {orderShortId(order).replace(/^#/, '')}
-          </Text>
-          <Text style={styles.customer} numberOfLines={1}>
-            {customer}
-          </Text>
-          <Text style={styles.lines} numberOfLines={1}>
-            {orderLineSummary(order)}
-          </Text>
+          <RtlTextShell>
+            <RtlText style={styles.orderNo} numberOfLines={1}>
+              {orderShortId(order).replace(/^#/, '')}
+            </RtlText>
+            <RtlText style={styles.customer} numberOfLines={1}>
+              {customer}
+            </RtlText>
+            <RtlText style={styles.lines} numberOfLines={1}>
+              {orderLineSummary(order)}
+            </RtlText>
+          </RtlTextShell>
         </View>
 
         <View style={[styles.avatar, { backgroundColor: `${accent}22` }]}>
@@ -91,8 +95,12 @@ export function OpsOrderCard({
 
       <View style={styles.midRow}>
         <View style={styles.fulfill}>
-          <Text style={styles.fulfillLabel}>طريقة الاستلام</Text>
-          <Text style={styles.fulfillValue}>{delivery ? 'توصيل الملحمة' : 'استلام من الملحمة'}</Text>
+          <RtlTextShell>
+            <RtlText style={styles.fulfillLabel}>طريقة الاستلام</RtlText>
+            <RtlText style={styles.fulfillValue}>
+              {delivery ? 'توصيل الملحمة' : 'استلام من الملحمة'}
+            </RtlText>
+          </RtlTextShell>
           <View style={styles.metaLine}>
             <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
             <Text style={styles.metaText} numberOfLines={1}>
@@ -203,7 +211,6 @@ function createStyles(colors: ThemeColors) {
     identity: {
       flex: 1,
       minWidth: 0,
-      alignItems: 'flex-end',
     },
     orderNo: {
       ...butcherTypography.meta,
@@ -214,15 +221,11 @@ function createStyles(colors: ThemeColors) {
       ...butcherTypography.primary,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     lines: {
       ...butcherTypography.secondary,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     avatar: {
       width: 40,
@@ -233,9 +236,10 @@ function createStyles(colors: ThemeColors) {
     },
     midRow: {
       gap: 4,
+      width: '100%',
     },
     fulfill: {
-      alignItems: 'flex-end',
+      width: '100%',
       gap: 3,
     },
     fulfillLabel: {
@@ -247,7 +251,6 @@ function createStyles(colors: ThemeColors) {
       ...butcherTypography.emphasis,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      writingDirection: 'rtl',
     },
     metaLine: {
       flexDirection: 'row',
