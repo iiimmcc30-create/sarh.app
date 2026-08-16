@@ -19,6 +19,7 @@ import {
 } from '@/lib/butcherOps';
 import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
@@ -56,7 +57,7 @@ export function OpsOrderCard({
 
   return (
     <Pressable onPress={onOpen} style={({ pressed }) => [styles.card, pressed && { opacity: 0.96 }]}>
-      <View style={styles.topRow}>
+      <CoverTrailRow justify="space-between" gap={10} style={styles.topRow}>
         <View style={styles.qtyPrice}>
           <View style={styles.metric}>
             <Text style={styles.metricLabel}>الكمية</Text>
@@ -74,8 +75,8 @@ export function OpsOrderCard({
           </View>
         </View>
 
-        <View style={styles.identity}>
-          <RtlTextShell>
+        <CoverTrailRow flex justify="flex-end" gap={10} style={styles.identity}>
+          <RtlTextShell flex>
             <RtlText style={styles.orderNo} numberOfLines={1}>
               {orderShortId(order).replace(/^#/, '')}
             </RtlText>
@@ -86,12 +87,11 @@ export function OpsOrderCard({
               {orderLineSummary(order)}
             </RtlText>
           </RtlTextShell>
-        </View>
-
-        <View style={[styles.avatar, { backgroundColor: `${accent}22` }]}>
-          <AppIcon name="person-outline" size={20} color={accent} />
-        </View>
-      </View>
+          <View style={[styles.avatar, { backgroundColor: `${accent}22` }]}>
+            <AppIcon name="person-outline" size={20} color={accent} />
+          </View>
+        </CoverTrailRow>
+      </CoverTrailRow>
 
       <View style={styles.midRow}>
         <View style={styles.fulfill}>
@@ -167,9 +167,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     topRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: 10,
+      width: '100%',
     },
     qtyPrice: {
       flexDirection: 'row',
@@ -209,7 +207,6 @@ function createStyles(colors: ThemeColors) {
       fontFamily: OFFICIAL_APP_FONT,
     },
     identity: {
-      flex: 1,
       minWidth: 0,
     },
     orderNo: {
