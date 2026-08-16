@@ -56,10 +56,21 @@ async function bootstrap() {
   app.use(urlencoded({ extended: true, limit: '64kb' }));
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    const origin = resolveAllowedOrigin(req.headers.origin);
+    const isPublicUpload =
+      req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS'
+        ? (req.path || '').startsWith('/uploads')
+        : false;
+    const origin = isPublicUpload
+      ? req.headers.origin || '*'
+      : resolveAllowedOrigin(req.headers.origin);
     if (origin) {
       res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      if (!isPublicUpload) {
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+      }
+    }
+    if (isPublicUpload) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     }
     res.setHeader(
       'Access-Control-Allow-Methods',

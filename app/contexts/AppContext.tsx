@@ -13,6 +13,8 @@ import { fetchPublicFeed } from '@/services/fetchPublicFeed';
 import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
+import { listingVideoUrl } from '@/lib/listingMedia';
+import { resolveMediaUrl } from '@/services/media';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 const REFETCH_TTL_MS = 60_000;
@@ -163,9 +165,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         l.marketSubcategory?.requiresWeight === true ||
         l.category === 'slaughter',
       images: l.images && l.images.length > 0 ? l.images : [],
-      videoUrl: typeof l.videoUrl === 'string' && l.videoUrl.trim() ? l.videoUrl : undefined,
-      thumbnailUrl:
+      videoUrl: resolveMediaUrl(listingVideoUrl({ images: l.images, videoUrl: l.videoUrl })),
+      thumbnailUrl: resolveMediaUrl(
         typeof l.thumbnailUrl === 'string' && l.thumbnailUrl.trim() ? l.thumbnailUrl : undefined,
+      ),
       description: l.description,
       arabicDescription: l.arabicDescription,
       seller: mapBackendUser(l.seller),

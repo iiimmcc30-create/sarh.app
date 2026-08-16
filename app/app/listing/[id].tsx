@@ -35,6 +35,7 @@ import { ListingCommentsSection } from '@/components/feature/ListingCommentsSect
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
 import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
 import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
+import { resolveMediaUrl } from '@/services/media';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
@@ -110,11 +111,14 @@ export default function ListingDetailScreen() {
           raw.marketSubcategory?.requiresWeight === true ||
           raw.category === 'slaughter',
         images: raw.images?.length ? raw.images : [],
-        videoUrl: typeof raw.videoUrl === 'string' && raw.videoUrl.trim() ? raw.videoUrl : undefined,
-        thumbnailUrl:
+        videoUrl: resolveMediaUrl(
+          listingVideoUrl({ images: raw.images, videoUrl: raw.videoUrl }),
+        ),
+        thumbnailUrl: resolveMediaUrl(
           typeof raw.thumbnailUrl === 'string' && raw.thumbnailUrl.trim()
             ? raw.thumbnailUrl
             : undefined,
+        ),
         description: raw.description,
         arabicDescription: raw.arabicDescription,
         seller: {
@@ -487,6 +491,17 @@ export default function ListingDetailScreen() {
           ) : null}
         </View>
 
+        {videoUri ? (
+          <View style={styles.galleryBlock}>
+            <RtlTextShell>
+              <RtlText style={styles.galleryHeading}>الفيديو</RtlText>
+            </RtlTextShell>
+            <View style={styles.galleryImageWrap}>
+              <ListingVideoPlayer uri={videoUri} posterUri={listing.thumbnailUrl} />
+            </View>
+          </View>
+        ) : null}
+
         <ImageViewerModal
           visible={imageViewerVisible}
           images={images}
@@ -522,17 +537,6 @@ export default function ListingDetailScreen() {
                 <RtlText style={styles.desc}>{listing.description}</RtlText>
               </RtlTextShell>
             ) : null}
-          </View>
-        ) : null}
-
-        {videoUri ? (
-          <View style={styles.galleryBlock}>
-            <RtlTextShell>
-              <RtlText style={styles.galleryHeading}>الفيديو</RtlText>
-            </RtlTextShell>
-            <View style={styles.galleryImageWrap}>
-              <ListingVideoPlayer uri={videoUri} posterUri={listing.thumbnailUrl} />
-            </View>
           </View>
         ) : null}
 

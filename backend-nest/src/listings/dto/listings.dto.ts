@@ -337,6 +337,14 @@ export class UpdateListingDto {
   @Max(50_000)
   @Type(() => Number)
   weightKg?: number;
+
+  @IsOptional()
+  @IsUrl(MEDIA_URL_OPTS)
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsUrl(MEDIA_URL_OPTS)
+  thumbnailUrl?: string;
 }
 
 export class CreateListingCommentDto {

@@ -30,6 +30,7 @@ import { getRtlText, rtlBackIcon } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { Country } from '@/services/types';
+import { resolveMediaUrl } from '@/services/media';
 import { uploadImageFromUri } from '@/services/upload';
 import { ListingVideoSection, type ListingVideoState } from '@/components/listing/ListingVideoSection';
 import { uploadListingVideo } from '@/services/listingVideo';
@@ -231,7 +232,12 @@ export default function CreateListingScreen() {
         videoFileSize?: number;
       } = {};
 
-      if (videoState.status === 'picked' && videoState.meta) {
+      if (videoState.status === 'ready' && videoState.videoUrl) {
+        videoFields = {
+          videoUrl: resolveMediaUrl(videoState.videoUrl) ?? videoState.videoUrl,
+          thumbnailUrl: resolveMediaUrl(videoState.thumbnailUrl) ?? videoState.thumbnailUrl ?? undefined,
+        };
+      } else if (videoState.status === 'picked' && videoState.meta) {
         setVideoState({ status: 'uploading', meta: videoState.meta, progress: 0 });
         try {
           const result = await uploadListingVideo(accessToken, videoState.meta, (p) => {
@@ -240,8 +246,9 @@ export default function CreateListingScreen() {
             );
           });
           videoFields = {
-            videoUrl: result.videoUrl,
-            thumbnailUrl: result.thumbnailUrl ?? undefined,
+            videoUrl: resolveMediaUrl(result.videoUrl) ?? result.videoUrl,
+            thumbnailUrl:
+              resolveMediaUrl(result.thumbnailUrl) ?? result.thumbnailUrl ?? undefined,
             videoDuration: result.videoDuration,
             videoWidth: result.videoWidth,
             videoHeight: result.videoHeight,

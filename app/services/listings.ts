@@ -1,3 +1,5 @@
+import { listingVideoUrl } from '@/lib/listingMedia';
+import { resolveMediaUrl } from '@/services/media';
 import { ensureApiReachable } from './api';
 import { countries, type Listing, type Country } from './types';
 
@@ -81,8 +83,8 @@ function mapListing(l: BackendListing): Listing {
       l.marketSubcategory?.requiresWeight === true ||
       l.category === 'slaughter',
     images: l.images?.length ? l.images : [],
-    videoUrl: l.videoUrl?.trim() || undefined,
-    thumbnailUrl: l.thumbnailUrl?.trim() || undefined,
+    videoUrl: resolveMediaUrl(listingVideoUrl({ images: l.images, videoUrl: l.videoUrl })),
+    thumbnailUrl: resolveMediaUrl(l.thumbnailUrl?.trim() || undefined),
     description: l.description,
     arabicDescription: l.arabicDescription,
     seller: {

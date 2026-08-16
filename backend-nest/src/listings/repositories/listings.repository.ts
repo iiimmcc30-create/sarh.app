@@ -80,6 +80,7 @@ export class ListingsRepository {
         subcategoryId: true,
         country: true,
         weightKg: true,
+        videoUrl: true,
         pinned: true,
         featured: true,
         marketCategory: { select: { requiresWeight: true, slug: true } },

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { createElement, useEffect, useMemo, useRef } from 'react';
+import { Linking, Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
-import { getExpoVideoModule } from '@/lib/expoVideo';
+import { getExpoVideoModule, isExpoVideoNativeAvailable } from '@/lib/expoVideo';
 import { resolveMediaUrl } from '@/services/media';
 
 type Props = {
@@ -20,60 +20,70 @@ export function ListingVideoPlayer({
 }: Props) {
   const videoUri = resolveMediaUrl(uri) ?? uri;
   const poster = resolveMediaUrl(posterUri) ?? posterUri ?? undefined;
-  const [playing, setPlaying] = useState(false);
-  const [nativeAvailable] = useState(() => getExpoVideoModule() != null);
 
   const containerStyle = useMemo(
     () => [styles.container, { aspectRatio }, style],
     [aspectRatio, style],
   );
 
-  if (!nativeAvailable || Platform.OS === 'web' || !playing) {
+  if (Platform.OS === 'web') {
     return (
       <View style={containerStyle}>
-        {poster ? (
-          <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="contain" />
-        ) : null}
-        <Pressable
-          style={styles.playBtn}
-          onPress={() => setPlaying(true)}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="تشغيل فيديو الإعلان"
-        >
-          <View style={styles.playBtnCircle}>
-            <AppIcon name="play" size={24} color="#fff" />
-          </View>
-        </Pressable>
+        {createElement('video', {
+          src: videoUri,
+          poster,
+          controls: true,
+          playsInline: true,
+          preload: 'metadata',
+          style: {
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            backgroundColor: '#000',
+          },
+        })}
       </View>
     );
   }
 
+  if (isExpoVideoNativeAvailable()) {
+    return <NativeListingVideo uri={videoUri} posterUri={poster} containerStyle={containerStyle} />;
+  }
+
   return (
-    <NativeListingVideo
-      uri={videoUri}
-      containerStyle={containerStyle}
-      onClose={() => setPlaying(false)}
-    />
+    <View style={containerStyle}>
+      {poster ? (
+        <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="contain" />
+      ) : null}
+      <Pressable
+        style={styles.playBtn}
+        onPress={() => void Linking.openURL(videoUri)}
+        accessibilityRole="button"
+        accessibilityLabel="تشغيل فيديو الإعلان"
+      >
+        <View style={styles.playBtnCircle}>
+          <AppIcon name="play" size={24} color="#fff" />
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
 function NativeListingVideo({
   uri,
+  posterUri,
   containerStyle,
-  onClose,
 }: {
   uri: string;
+  posterUri?: string;
   containerStyle: ViewStyle[];
-  onClose: () => void;
 }) {
   const mod = getExpoVideoModule()!;
   const { useVideoPlayer, VideoView } = mod;
 
-  const player = useVideoPlayer(uri, (p: { loop: boolean; muted: boolean; play: () => void }) => {
+  const player = useVideoPlayer(uri, (p: { loop: boolean; muted: boolean }) => {
     p.loop = false;
     p.muted = false;
-    p.play();
   });
 
   const playerRef = useRef(player);
@@ -91,15 +101,16 @@ function NativeListingVideo({
 
   return (
     <View style={containerStyle}>
+      {posterUri ? (
+        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFill} contentFit="contain" />
+      ) : null}
       <VideoView
         player={player}
         style={StyleSheet.absoluteFill}
         contentFit="contain"
         nativeControls
+        playsInline
       />
-      <Pressable style={styles.closeBtn} onPress={onClose} hitSlop={8} accessibilityLabel="إيقاف الفيديو">
-        <AppIcon name="close-circle" size={26} color="#fff" />
-      </Pressable>
     </View>
   );
 }
@@ -124,10 +135,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
   },
 });
