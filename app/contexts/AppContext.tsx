@@ -166,7 +166,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         l.marketCategory?.requiresWeight === true ||
         l.marketSubcategory?.requiresWeight === true ||
         l.category === 'slaughter',
-      images: l.images && l.images.length > 0 ? l.images : [],
+      images: (l.images ?? [])
+        .map((uri: string) => {
+          const raw = typeof uri === 'string' ? uri.trim() : '';
+          return resolveMediaUrl(raw) ?? raw;
+        })
+        .filter((uri: string) => uri.length > 0),
       videoUrl: resolveMediaUrl(listingVideoUrl({ images: l.images, videoUrl: l.videoUrl })),
       thumbnailUrl: resolveMediaUrl(
         typeof l.thumbnailUrl === 'string' && l.thumbnailUrl.trim() ? l.thumbnailUrl : undefined,
