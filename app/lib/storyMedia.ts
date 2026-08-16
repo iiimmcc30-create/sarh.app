@@ -64,14 +64,22 @@ export function validateStoryVideoDuration(seconds: number | null): string | nul
   return null;
 }
 
-export function storyClipEndSec(startSec: number, totalDurationSec: number): number {
+export function storyClipEndSec(
+  startSec: number,
+  totalDurationSec: number,
+  maxDurationSec = STORY_MAX_DURATION_SEC,
+  minDurationSec = STORY_MIN_DURATION_SEC,
+): number {
   const remaining = Math.max(0, totalDurationSec - startSec);
-  const clipLength = Math.min(STORY_MAX_DURATION_SEC, remaining);
-  return startSec + Math.max(clipLength, STORY_MIN_DURATION_SEC);
+  const clipLength = Math.min(maxDurationSec, remaining);
+  return startSec + Math.max(clipLength, minDurationSec);
 }
 
-export function storyTrimStartMax(totalDurationSec: number): number {
-  return Math.max(0, totalDurationSec - STORY_MIN_DURATION_SEC);
+export function storyTrimStartMax(
+  totalDurationSec: number,
+  minDurationSec = STORY_MIN_DURATION_SEC,
+): number {
+  return Math.max(0, totalDurationSec - minDurationSec);
 }
 
 /** Native trim — lazy-loaded so Metro can register routes before a rebuild. */

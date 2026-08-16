@@ -108,6 +108,8 @@ export interface Listing {
   createdAt?: string;
   /** View count from API when available */
   views?: number;
+  /** Owner edits used — regular users may edit once */
+  editCount?: number;
 }
 
 export interface Post {

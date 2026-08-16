@@ -83,6 +83,7 @@ export class ListingsRepository {
         videoUrl: true,
         pinned: true,
         featured: true,
+        editCount: true,
         marketCategory: { select: { requiresWeight: true, slug: true } },
       },
     });

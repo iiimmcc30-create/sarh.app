@@ -29,6 +29,9 @@ type StoryVideoTrimmerProps = {
   visible: boolean;
   uri: string;
   durationSec: number;
+  maxDurationSec?: number;
+  minDurationSec?: number;
+  title?: string;
   onCancel: () => void;
   onConfirm: (result: { uri: string; durationSec: number }) => void;
 };
@@ -86,6 +89,9 @@ export function StoryVideoTrimmer({
   visible,
   uri,
   durationSec,
+  maxDurationSec = STORY_MAX_DURATION_SEC,
+  minDurationSec = 1,
+  title = 'اختر مقطع الفيديو',
   onCancel,
   onConfirm,
 }: StoryVideoTrimmerProps) {
@@ -94,8 +100,8 @@ export function StoryVideoTrimmer({
   const [startSec, setStartSec] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  const maxStart = storyTrimStartMax(durationSec);
-  const endSec = storyClipEndSec(startSec, durationSec);
+  const maxStart = storyTrimStartMax(durationSec, minDurationSec);
+  const endSec = storyClipEndSec(startSec, durationSec, maxDurationSec, minDurationSec);
   const clipDuration = Math.round(endSec - startSec);
 
   useEffect(() => {
@@ -125,7 +131,7 @@ export function StoryVideoTrimmer({
           <Pressable onPress={onCancel} disabled={busy} hitSlop={8} style={styles.iconBtn}>
             <AppIcon name="close" size={22} color={colors.textPrimary} />
           </Pressable>
-          <Text style={styles.title}>اختر مقطع الفيديو</Text>
+          <Text style={styles.title}>{title}</Text>
           <View style={styles.iconBtn} />
         </View>
 
@@ -135,7 +141,7 @@ export function StoryVideoTrimmer({
 
         <View style={styles.panel}>
           <Text style={styles.hint}>
-            اسحب لتحديد بداية المقطع — الحد الأقصى {STORY_MAX_DURATION_SEC} ثانية
+            اسحب لتحديد بداية المقطع — الحد الأقصى {maxDurationSec} ثانية
           </Text>
 
           <View style={styles.rangeRow}>

@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { calculateCommission, shouldCreateFee, type ListingCat } from '../lib/commissions';
-import { throwApi } from '../common/exceptions/api.exception';
+import { ApiException, throwApi } from '../common/exceptions/api.exception';
+import {
+  LISTING_DAILY_LIMIT_MESSAGE_AR,
+  LISTING_EDIT_LIMIT_MESSAGE_AR,
+  LISTING_OWNER_EDIT_LIMIT,
+} from './listing-policy';
 import { LoggerService } from '../common/services/logger.service';
 import { RedisCacheService } from '../redis/services/redis-cache.service';
 import { FeeCheckQueueService } from '../queue/services/fee-check-queue.service';
@@ -300,6 +305,7 @@ export class ListingsService {
     const effectivePlanSlug = await this.entitlements.assertCanCreateListing(
       user.userId,
       { images: dto.images, featured, pinned },
+      { role: user.role },
     );
 
     const permissions = await this.entitlements.getPermissionsForUser(user.userId);
@@ -401,6 +407,7 @@ export class ListingsService {
       );
       return listing;
     } catch (err: unknown) {
+      if (err instanceof ApiException) throw err;
       const e = err as { code?: string; limit?: number; message?: string };
       if (e.code === 'listing_limit' || e.code === 'featured_limit' || e.code === 'pinned_limit') {
         throwApi(
@@ -410,7 +417,7 @@ export class ListingsService {
             ? `وصلت للحد الأقصى للإعلانات المميزة (${e.limit}).`
             : e.code === 'pinned_limit'
               ? `وصلت للحد الأقصى للإعلانات المثبتة (${e.limit}).`
-              : `وصلت للحد الأقصى (${e.limit} إعلانات). يرجى ترقية الباقة.`,
+              : LISTING_DAILY_LIMIT_MESSAGE_AR,
         );
       }
       this.logger.error({ err }, 'Create listing error');
@@ -423,6 +430,12 @@ export class ListingsService {
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
     if (listing.sellerId !== user.userId && user.role !== 'ADMIN') {
       throwApi(403, 'forbidden', 'غير مسموح');
+    }
+    if (
+      user.role !== 'ADMIN' &&
+      (listing.editCount ?? 0) >= LISTING_OWNER_EDIT_LIMIT
+    ) {
+      throwApi(403, 'listing_edit_limit', LISTING_EDIT_LIMIT_MESSAGE_AR);
     }
 
     let category = dto.category ?? listing.category;
@@ -471,14 +484,16 @@ export class ListingsService {
     }
     if (dto.price !== undefined) updateData.price = dto.price;
     if (dto.images !== undefined) updateData.images = dto.images;
-    if (dto.videoUrl !== undefined || dto.images !== undefined) {
-      updateData.videoUrl = extractListingVideoUrl(
-        dto.videoUrl ?? listing.videoUrl,
-        dto.images ?? undefined,
-      );
+    if (dto.videoUrl !== undefined) {
+      updateData.videoUrl = extractListingVideoUrl(dto.videoUrl, dto.images);
+    } else if (dto.images !== undefined) {
+      updateData.videoUrl = extractListingVideoUrl(listing.videoUrl, dto.images);
     }
     if (dto.thumbnailUrl !== undefined) {
       updateData.thumbnailUrl = dto.thumbnailUrl;
+    }
+    if (user.role !== 'ADMIN') {
+      updateData.editCount = { increment: 1 };
     }
     if (dto.breed !== undefined) updateData.breed = dto.breed;
     if (dto.age !== undefined) updateData.age = dto.age;

@@ -42,6 +42,7 @@ type BackendListing = {
   promotedUntil?: string;
   promotionWeight?: number;
   views?: number;
+  editCount?: number;
   createdAt: string;
   seller: {
     id: string;
@@ -109,6 +110,7 @@ function mapListing(l: BackendListing): Listing {
     postedAt: new Date(l.createdAt).toLocaleDateString('ar-SA'),
     createdAt: l.createdAt,
     views: typeof l.views === 'number' ? l.views : undefined,
+    editCount: typeof l.editCount === 'number' ? l.editCount : 0,
   };
 }
 

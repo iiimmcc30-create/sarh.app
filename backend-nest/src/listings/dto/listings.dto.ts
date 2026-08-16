@@ -339,12 +339,14 @@ export class UpdateListingDto {
   weightKg?: number;
 
   @IsOptional()
+  @ValidateIf((_, value) => value != null && value !== '')
   @IsUrl(MEDIA_URL_OPTS)
-  videoUrl?: string;
+  videoUrl?: string | null;
 
   @IsOptional()
+  @ValidateIf((_, value) => value != null && value !== '')
   @IsUrl(MEDIA_URL_OPTS)
-  thumbnailUrl?: string;
+  thumbnailUrl?: string | null;
 }
 
 export class CreateListingCommentDto {

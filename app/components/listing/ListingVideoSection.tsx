@@ -25,6 +25,11 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { LISTING_VIDEO_CONFIG } from '@/constants/listingVideoConfig';
+import { StoryVideoTrimmer } from '@/components/feature/StoryVideoTrimmer';
+import {
+  listingVideoDurationFromPicker,
+  listingVideoNeedsTrim,
+} from '@/lib/listingLimits';
 import {
   generateVideoThumbnail,
   listingVideoValidationMessage,
@@ -59,6 +64,41 @@ export function ListingVideoSection({
 }: Props) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const [trimDraft, setTrimDraft] = useState<{
+    uri: string;
+    durationSec: number;
+    width: number;
+    height: number;
+    fileSizeBytes: number;
+  } | null>(null);
+
+  const applyPickedVideo = useCallback(
+    async (input: {
+      localUri: string;
+      durationSecs: number;
+      width: number;
+      height: number;
+      fileSizeBytes: number;
+    }) => {
+      const validationErr = validateListingVideo(input.durationSecs, input.fileSizeBytes);
+      if (validationErr) {
+        Alert.alert('فيديو غير صالح', listingVideoValidationMessage(validationErr));
+        return;
+      }
+
+      const thumbnailUri = await generateVideoThumbnail(input.localUri);
+      const meta: ListingVideoMeta = {
+        localUri: input.localUri,
+        thumbnailUri,
+        durationSecs: clamp(input.durationSecs, 0, LISTING_VIDEO_CONFIG.MAX_DURATION_S),
+        width: input.width,
+        height: input.height,
+        fileSizeBytes: input.fileSizeBytes,
+      };
+      onChange({ status: 'picked', meta });
+    },
+    [onChange],
+  );
 
   const pickVideo = useCallback(async () => {
     if (disabled) return;
@@ -74,7 +114,6 @@ export function ListingVideoSection({
       result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['videos'],
         allowsMultipleSelection: false,
-        videoMaxDuration: LISTING_VIDEO_CONFIG.MAX_DURATION_S,
       });
     } catch {
       Alert.alert('خطأ', 'تعذّر فتح معرض الوسائط.');
@@ -85,30 +124,36 @@ export function ListingVideoSection({
 
     const asset = result.assets[0];
     const localUri = asset.uri;
-    const durationSecs = asset.duration != null ? asset.duration / 1000 : 0;
+    const durationSecs = listingVideoDurationFromPicker(asset.duration);
     const fileSizeBytes = asset.fileSize ?? 0;
     const width = asset.width ?? 0;
     const height = asset.height ?? 0;
 
-    const validationErr = validateListingVideo(durationSecs, fileSizeBytes);
-    if (validationErr) {
-      Alert.alert('فيديو غير صالح', listingVideoValidationMessage(validationErr));
+    const sizeErr = validateListingVideo(null, fileSizeBytes);
+    if (sizeErr) {
+      Alert.alert('فيديو غير صالح', listingVideoValidationMessage(sizeErr));
       return;
     }
 
-    const thumbnailUri = await generateVideoThumbnail(localUri);
+    if (listingVideoNeedsTrim(durationSecs, LISTING_VIDEO_CONFIG.MAX_DURATION_S)) {
+      setTrimDraft({
+        uri: localUri,
+        durationSec: durationSecs,
+        width,
+        height,
+        fileSizeBytes,
+      });
+      return;
+    }
 
-    const meta: ListingVideoMeta = {
+    await applyPickedVideo({
       localUri,
-      thumbnailUri,
-      durationSecs: clamp(durationSecs, 0, LISTING_VIDEO_CONFIG.MAX_DURATION_S),
+      durationSecs,
       width,
       height,
       fileSizeBytes,
-    };
-
-    onChange({ status: 'picked', meta });
-  }, [disabled, onChange]);
+    });
+  }, [applyPickedVideo, disabled]);
 
   const removeVideo = useCallback(() => {
     Alert.alert('حذف الفيديو', 'هل تريد إزالة الفيديو من الإعلان؟', [
@@ -127,6 +172,40 @@ export function ListingVideoSection({
     state.status === 'ready' ||
     state.status === 'failed';
 
+  const trimmer = (
+    <StoryVideoTrimmer
+      visible={trimDraft != null}
+      uri={trimDraft?.uri ?? ''}
+      durationSec={trimDraft?.durationSec ?? 0}
+      maxDurationSec={LISTING_VIDEO_CONFIG.MAX_DURATION_S}
+      minDurationSec={1}
+      title="قص فيديو الإعلان"
+      onCancel={() => setTrimDraft(null)}
+      onConfirm={async (result) => {
+        const draft = trimDraft;
+        setTrimDraft(null);
+        if (!draft) return;
+        let fileSizeBytes = draft.fileSizeBytes;
+        try {
+          const FileSystem = await import('expo-file-system');
+          const info = await FileSystem.getInfoAsync(result.uri);
+          if (info.exists && 'size' in info && typeof info.size === 'number') {
+            fileSizeBytes = info.size;
+          }
+        } catch {
+          // keep original size estimate
+        }
+        await applyPickedVideo({
+          localUri: result.uri,
+          durationSecs: result.durationSec,
+          width: draft.width,
+          height: draft.height,
+          fileSizeBytes,
+        });
+      }}
+    />
+  );
+
   if (state.status === 'idle') {
     return (
       <View style={[styles.addBtn, style]}>
@@ -139,8 +218,9 @@ export function ListingVideoSection({
         >
           <AppIcon name="videocam-outline" size={22} color={colors.textMuted} />
           <Text style={styles.addBtnText}>🎥 إضافة فيديو</Text>
-          <Text style={styles.addBtnSub}>اختياري · حتى {LISTING_VIDEO_CONFIG.MAX_DURATION_S} ثانية</Text>
+          <Text style={styles.addBtnSub}>اختياري · حتى {LISTING_VIDEO_CONFIG.MAX_DURATION_S} ثانية · يمكن قص الأطول</Text>
         </Pressable>
+        {trimmer}
       </View>
     );
   }
@@ -233,6 +313,7 @@ export function ListingVideoSection({
           )}
         </View>
       </View>
+      {trimmer}
     </View>
   );
 }
