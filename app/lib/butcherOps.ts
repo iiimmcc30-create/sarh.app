@@ -21,6 +21,9 @@ export const OPS_MANAGE_TABS: { id: OpsManageTab; label: string; icon: string }[
   { id: 'shop', label: 'الملحمة', icon: 'storefront-outline' },
 ];
 
+/** Primary dashboard chips — matches the ops reference (shop stays via edit/sidebar). */
+export const OPS_PRIMARY_TABS = OPS_MANAGE_TABS.filter((t) => t.id !== 'shop');
+
 export const OPS_ORDER_FILTERS: { id: OpsOrderFilter; label: string }[] = [
   { id: 'all', label: 'الكل' },
   { id: 'pending', label: 'جديدة' },

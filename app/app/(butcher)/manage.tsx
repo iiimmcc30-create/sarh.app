@@ -34,6 +34,7 @@ import { AddOfferForm, AddProductForm } from '@/components/butcher/ops/ButcherMa
 import { OpsOrderCard } from '@/components/butcher/ops/OpsOrderCard';
 import {
   OPS_MANAGE_TABS,
+  OPS_PRIMARY_TABS,
   OPS_ORDER_FILTERS,
   groupOrdersByHour,
   isSameLocalDay,
@@ -47,6 +48,8 @@ import {
 } from '@/lib/butcherOps';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { getRtlRow } from '@/lib/rtl';
 
 const CANCEL_REASONS = [
   'المنتج غير متوفر',
@@ -467,60 +470,89 @@ export default function ButcherManageScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => safePush('/butcher-sidebar', undefined, router)} hitSlop={12} style={styles.iconBtn}>
-          <AppIcon name="menu" size={20} color={colors.textPrimary} />
-        </Pressable>
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{butcher.nameAr}</Text>
-          {accountName ? <Text style={styles.headerSub} numberOfLines={1}>{accountName}</Text> : null}
-        </View>
+      <View style={[styles.header, getRtlRow()]}>
         <Pressable onPress={() => router.push('/butchers/edit')} hitSlop={12} style={styles.iconBtn}>
           <AppIcon name="create-outline" size={18} color={colors.textPrimary} />
         </Pressable>
+        <View style={styles.headerText}>
+          <Text style={styles.headerBrand} numberOfLines={1}>
+            سرح
+          </Text>
+          {accountName ? (
+            <Text style={styles.headerSub} numberOfLines={1}>
+              {accountName}
+            </Text>
+          ) : butcher.nameAr ? (
+            <Text style={styles.headerSub} numberOfLines={1}>
+              {butcher.nameAr}
+            </Text>
+          ) : null}
+        </View>
+        <Pressable
+          onPress={() => safePush('/butcher-sidebar', undefined, router)}
+          hitSlop={12}
+          style={styles.iconBtn}
+        >
+          <AppIcon name="menu" size={20} color={colors.textPrimary} />
+        </Pressable>
       </View>
 
-      <View style={styles.statusBar}>
+      <View style={[styles.statusBar, getRtlRow()]}>
+        <View style={[styles.statusLeft, getRtlRow()]}>
+          <View
+            style={[
+              styles.liveDot,
+              { backgroundColor: butcher.isOpen ? colors.electricBright : colors.textMuted },
+            ]}
+          />
+          <Text style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
+            {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
+          </Text>
+        </View>
         <Pressable
           disabled={savingOpen}
           onPress={() => void setShopOpen(!butcher.isOpen)}
-          style={[styles.openToggle, butcher.isOpen ? styles.openToggleOn : styles.openToggleOff]}
+          style={[styles.openToggle, butcher.isOpen ? styles.openToggleIdle : styles.openToggleOff]}
+          accessibilityRole="button"
+          accessibilityLabel={butcher.isOpen ? 'إيقاف' : 'فتح الملحمة'}
         >
           {savingOpen ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={colors.textPrimary} />
           ) : (
-            <Text style={[styles.openToggleText, !butcher.isOpen && styles.openToggleTextOn]}>
-              {butcher.isOpen ? 'إيقاف الاستقبال' : 'فتح الملحمة'}
-            </Text>
+            <View style={[styles.openToggleInner, getRtlRow()]}>
+              {butcher.isOpen ? (
+                <AppIcon name="pause" size={14} color={colors.textPrimary} />
+              ) : null}
+              <Text style={[styles.openToggleText, !butcher.isOpen && styles.openToggleTextOn]}>
+                {butcher.isOpen ? 'إيقاف' : 'فتح'}
+              </Text>
+            </View>
           )}
         </Pressable>
-        <View style={styles.statusLeft}>
-          <RtlTextShell flex>
-            <RtlText style={[styles.statusLabel, butcher.isOpen && styles.statusLabelOn]}>
-              {butcher.isOpen ? 'مفتوح الآن' : 'متوقف عن استقبال الطلبات'}
-            </RtlText>
-          </RtlTextShell>
-          <View style={[styles.liveDot, { backgroundColor: butcher.isOpen ? colors.electric : colors.textMuted }]} />
-        </View>
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.navRow}
+        contentContainerStyle={[styles.navRow, getRtlRow()]}
       >
-        {[...OPS_MANAGE_TABS].reverse().map((item) => {
+        {OPS_PRIMARY_TABS.map((item) => {
           const active = activeTab === item.id;
           const count = item.id === 'orders' ? summary.newCount : undefined;
           return (
-            <Pressable key={item.id} onPress={() => setActiveTab(item.id)} style={[styles.navChip, active && styles.navChipOn]}>
+            <Pressable
+              key={item.id}
+              onPress={() => setActiveTab(item.id)}
+              style={[styles.navChip, active && styles.navChipOn]}
+            >
               {!!count && count > 0 ? (
                 <View style={[styles.navBadge, active && styles.navBadgeOn]}>
-                  <Text style={[styles.navBadgeText, active && styles.navBadgeTextOn]}>{count > 99 ? '99+' : count}</Text>
+                  <Text style={[styles.navBadgeText, active && styles.navBadgeTextOn]}>
+                    {count > 99 ? '99+' : count}
+                  </Text>
                 </View>
               ) : null}
               <Text style={[styles.navChipText, active && styles.navChipTextOn]}>{item.label}</Text>
-              <AppIcon name={item.icon} size={12} color={active ? '#fff' : colors.textMuted} />
             </Pressable>
           );
         })}
@@ -529,64 +561,97 @@ export default function ButcherManageScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {activeTab === 'home' && (
           <View>
-            <View style={styles.kpiRow}>
+            <View style={styles.statsGrid}>
               {[
-                { label: 'جديدة', value: summary.newCount, color: colors.amber, filter: 'pending' as const },
-                { label: 'قيد التجهيز', value: summary.preparing, color: '#5B8FA8', filter: 'preparing' as const },
-                { label: 'جاهزة', value: summary.readyPickup, color: colors.electric, filter: 'ready' as const },
-                { label: 'قيد التوصيل', value: summary.delivering, color: colors.electric, filter: 'delivering' as const },
-                { label: 'مكتملة اليوم', value: summary.completedToday, color: colors.textMuted, filter: 'delivered' as const },
-              ].map((kpi) => (
-                <Pressable key={kpi.label} onPress={() => goOrders(kpi.filter)} style={styles.kpi}>
-                  <RtlTextShell>
-                    <RtlText style={[styles.kpiValue, { color: kpi.color }]}>{kpi.value}</RtlText>
-                    <RtlText style={styles.kpiLabel}>{kpi.label}</RtlText>
-                  </RtlTextShell>
+                {
+                  label: 'جديدة',
+                  value: String(summary.newCount),
+                  accent: true,
+                  onPress: () => goOrders('pending'),
+                },
+                {
+                  label: 'قيد التوصيل',
+                  value: String(summary.delivering),
+                  accent: true,
+                  onPress: () => goOrders('delivering'),
+                },
+                {
+                  label: 'قيد التجهيز',
+                  value: String(summary.preparing),
+                  accent: true,
+                  onPress: () => goOrders('preparing'),
+                },
+                {
+                  label: 'جاهزة',
+                  value: String(summary.readyPickup),
+                  accent: true,
+                  onPress: () => goOrders('ready'),
+                },
+                {
+                  label: 'مخزون منخفض',
+                  value: String(lowStock.length),
+                  accent: false,
+                  onPress: () => setActiveTab('products'),
+                },
+                {
+                  label: 'توصيل يحتاج خروج',
+                  value: String(summary.deliveryNow),
+                  accent: false,
+                  onPress: () => goOrders('delivering'),
+                },
+                {
+                  label: 'مبيعات اليوم',
+                  value: `${summary.salesToday.toLocaleString('en-US')} ر.س`,
+                  accent: false,
+                },
+                {
+                  label: 'مكتملة اليوم',
+                  value: String(summary.completedToday),
+                  accent: false,
+                  onPress: () => goOrders('delivered'),
+                },
+              ].map((stat) => (
+                <Pressable
+                  key={stat.label}
+                  onPress={stat.onPress}
+                  disabled={!stat.onPress}
+                  style={styles.statCard}
+                >
+                  <Text style={[styles.statValue, stat.accent && styles.statValueAccent]}>
+                    {stat.value}
+                  </Text>
+                  <Text style={styles.statLabel} numberOfLines={2}>
+                    {stat.label}
+                  </Text>
                 </Pressable>
               ))}
             </View>
 
-            <View style={styles.insightRow}>
-              <View style={styles.insight}>
-                <RtlTextShell>
-                  <RtlText style={styles.insightValue}>{summary.salesToday.toLocaleString()} ر.س</RtlText>
-                  <RtlText style={styles.insightLabel}>مبيعات اليوم</RtlText>
-                </RtlTextShell>
-              </View>
-              <View style={styles.insight}>
-                <RtlTextShell>
-                  <RtlText style={styles.insightValue}>{summary.deliveryNow}</RtlText>
-                  <RtlText style={styles.insightLabel}>توصيل يحتاج خروج</RtlText>
-                </RtlTextShell>
-              </View>
-              <View style={styles.insight}>
-                <RtlTextShell>
-                  <RtlText style={styles.insightValue}>{lowStock.length}</RtlText>
-                  <RtlText style={styles.insightLabel}>مخزون منخفض</RtlText>
-                </RtlTextShell>
-              </View>
+            <View style={styles.actionCard}>
+              <Text style={styles.actionCardTitle}>الطلبات التي تحتاج إجراء</Text>
+              {actionOrders.length === 0 ? (
+                <Text style={styles.actionCardEmpty}>لا توجد طلبات بانتظار إجرائك</Text>
+              ) : (
+                <View style={styles.actionList}>
+                  {actionOrders.map((order) => (
+                    <OpsOrderCard
+                      key={order.id}
+                      order={order}
+                      butcherAddress={butcherAddress}
+                      onOpen={() =>
+                        router.push({
+                          pathname: '/butchers/manage-order/[id]',
+                          params: { id: order.id },
+                        })
+                      }
+                      onAdvance={(next) => void transitionOrder(order.id, next)}
+                      onCancel={() => setCancelOrderId(order.id)}
+                      onChat={() => openChat(order)}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
-
-            <RtlTextShell>
-              <RtlText style={styles.sectionTitle}>الطلبات التي تحتاج إجراء</RtlText>
-            </RtlTextShell>
-            {actionOrders.length === 0 ? (
-              <RtlTextShell>
-                <RtlText style={styles.emptyInline}>لا توجد طلبات بانتظار إجراءك</RtlText>
-              </RtlTextShell>
-            ) : (
-              actionOrders.map((order) => (
-                <OpsOrderCard
-                  key={order.id}
-                  order={order}
-                  butcherAddress={butcherAddress}
-                  onOpen={() => router.push({ pathname: '/butchers/manage-order/[id]', params: { id: order.id } })}
-                  onAdvance={(next) => void transitionOrder(order.id, next)}
-                  onCancel={() => setCancelOrderId(order.id)}
-                  onChat={() => openChat(order)}
-                />
-              ))
-            )}
 
             {hourGroups.length > 0 ? (
               <>
@@ -613,12 +678,25 @@ export default function ButcherManageScreen() {
                 {lowStock.slice(0, 4).map((p: any) => {
                   const stock = productStock(p);
                   return (
-                    <Pressable key={p.id} onPress={() => { setActiveTab('products'); }} style={styles.stockRow}>
+                    <Pressable
+                      key={p.id}
+                      onPress={() => {
+                        setActiveTab('products');
+                      }}
+                      style={styles.stockRow}
+                    >
                       <Text style={styles.stockLabel}>{stock.label}</Text>
                       <RtlTextShell flex>
-                        <RtlText style={styles.stockName} numberOfLines={1}>{p.nameAr}</RtlText>
+                        <RtlText style={styles.stockName} numberOfLines={1}>
+                          {p.nameAr}
+                        </RtlText>
                       </RtlTextShell>
-                      <View style={[styles.stockDot, stock.kind === 'out' ? styles.stockOut : styles.stockLow]} />
+                      <View
+                        style={[
+                          styles.stockDot,
+                          stock.kind === 'out' ? styles.stockOut : styles.stockLow,
+                        ]}
+                      />
                     </Pressable>
                   );
                 })}
@@ -974,38 +1052,46 @@ export default function ButcherManageScreen() {
 }
 
 function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const cardBg = colors.bgElevated;
-  const softBg = scheme === 'light' ? colors.bgDeep : colors.bgSurface;
+  const cardBg = scheme === 'light' ? '#FFFFFF' : colors.bgElevated;
+  const pageBg = scheme === 'light' ? '#F2F4F6' : colors.screenRoot;
+  const softBg = scheme === 'light' ? '#FFFFFF' : colors.bgSurface;
   const border = colors.borderSoft;
+  const accentSoft = `${colors.electricBright}18`;
 
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
+    screen: { flex: 1, backgroundColor: pageBg },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.md },
-    mutedCenter: { ...typography.body, color: colors.textMuted, marginTop: spacing.md },
+    mutedCenter: { ...typography.body, fontFamily: OFFICIAL_APP_FONT, color: colors.textMuted, marginTop: spacing.md },
     header: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
       alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       gap: 10,
     },
-    headerText: { flex: 1, minWidth: 0, direction: 'ltr' },
-    headerTitle: {
+    headerText: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
+    headerBrand: {
       ...typography.h3,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      includeFontPadding: false,
     },
     headerSub: {
       ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       marginTop: 2,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      includeFontPadding: false,
     },
     iconBtn: {
       width: 36,
       height: 36,
       borderRadius: 10,
-      backgroundColor: softBg,
+      backgroundColor: cardBg,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
@@ -1015,22 +1101,17 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       marginHorizontal: spacing.lg,
       marginBottom: spacing.sm,
       paddingHorizontal: spacing.md,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderRadius: 14,
       backgroundColor: cardBg,
-      flexDirection: 'row',
-      direction: 'ltr',
       alignItems: 'center',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       gap: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
     },
     statusLeft: {
       flex: 1,
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 8,
       minWidth: 0,
@@ -1038,120 +1119,185 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     liveDot: { width: 8, height: 8, borderRadius: 4 },
     statusLabel: {
       ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
-      fontWeight: '600',
-    },
-    statusLabelOn: { color: colors.electric },
-    openToggle: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, flexShrink: 0 },
-    openToggleOn: { backgroundColor: softBg },
-    openToggleOff: { backgroundColor: colors.electric },
-    openToggleText: {
-      ...typography.micro,
-      color: colors.textPrimary,
-      fontWeight: '600',
       writingDirection: 'rtl',
+      includeFontPadding: false,
+    },
+    statusLabelOn: { color: colors.electricBright },
+    openToggle: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 12,
+      flexShrink: 0,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: border,
+      backgroundColor: softBg,
+    },
+    openToggleIdle: {
+      backgroundColor: scheme === 'light' ? '#F7F8FA' : colors.bgSurface,
+    },
+    openToggleOff: {
+      backgroundColor: colors.electricBright,
+      borderColor: colors.electricBright,
+    },
+    openToggleInner: {
+      alignItems: 'center',
+      gap: 6,
+    },
+    openToggleText: {
+      ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
+      color: colors.textPrimary,
+      writingDirection: 'rtl',
+      includeFontPadding: false,
     },
     openToggleTextOn: { color: '#fff' },
     navRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
       paddingHorizontal: spacing.lg,
-      gap: 6,
+      gap: 8,
       paddingBottom: spacing.sm,
+      alignItems: 'center',
     },
     navChip: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
       alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 5,
-      borderRadius: 999,
-      backgroundColor: softBg,
+      justifyContent: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: cardBg,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
+      minHeight: 40,
     },
-    navChipOn: { backgroundColor: colors.electric, borderColor: colors.electric },
+    navChipOn: {
+      backgroundColor: accentSoft,
+      borderColor: `${colors.electricBright}55`,
+    },
     navChipText: {
-      ...typography.badge,
-      color: colors.textMuted,
+      ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
+      color: colors.textPrimary,
       writingDirection: 'rtl',
+      includeFontPadding: false,
     },
-    navChipTextOn: { color: '#fff' },
+    navChipTextOn: { color: colors.electricBright },
     navBadge: {
-      minWidth: 14,
-      height: 14,
-      borderRadius: 7,
+      position: 'absolute',
+      top: -4,
+      left: -4,
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
       backgroundColor: colors.danger,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 3,
     },
-    navBadgeOn: { backgroundColor: colors.screenRoot },
-    navBadgeText: { ...typography.badge, color: '#fff' },
-    navBadgeTextOn: { color: colors.textPrimary },
-    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
-    kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
-    kpi: {
-      width: '31%',
-      flexGrow: 1,
+    navBadgeOn: { backgroundColor: colors.electricBright },
+    navBadgeText: { ...typography.badge, fontFamily: OFFICIAL_APP_FONT, color: '#fff' },
+    navBadgeTextOn: { color: '#fff' },
+    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxxl },
+    statsGrid: {
+      flexDirection: 'row-reverse',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: spacing.md,
+    },
+    statCard: {
+      width: '23.5%',
+      flexGrow: 0,
+      flexShrink: 0,
       backgroundColor: cardBg,
       borderRadius: 14,
-      paddingVertical: 12,
-      paddingHorizontal: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 6,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 78,
     },
-    kpiValue: {
+    statValue: {
       ...typography.valueLarge,
+      fontFamily: OFFICIAL_APP_FONT,
+      fontSize: 18,
+      lineHeight: 24,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      includeFontPadding: false,
     },
-    kpiLabel: {
+    statValueAccent: {
+      color: colors.electricBright,
+    },
+    statLabel: {
       ...typography.micro,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
-      marginTop: 2,
+      marginTop: 4,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      includeFontPadding: false,
     },
-    insightRow: { flexDirection: 'row', gap: 8, marginBottom: spacing.lg },
-    insight: {
-      flex: 1,
-      backgroundColor: softBg,
-      borderRadius: 14,
-      padding: 10,
+    actionCard: {
+      backgroundColor: cardBg,
+      borderRadius: 16,
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: border,
+      marginBottom: spacing.lg,
+      alignItems: 'center',
     },
-    insightValue: {
+    actionCardTitle: {
       ...typography.bodyStrong,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      includeFontPadding: false,
+      marginBottom: spacing.sm,
     },
-    insightLabel: {
-      ...typography.micro,
+    actionCardEmpty: {
+      ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
-      marginTop: 2,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      includeFontPadding: false,
+    },
+    actionList: {
+      width: '100%',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
     },
     sectionTitle: {
       ...typography.bodyStrong,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
       marginTop: spacing.sm,
     },
     pageTitle: {
       ...typography.h3,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       marginBottom: spacing.md,
     },
     emptyInline: {
       ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       marginBottom: spacing.lg,
     },
     emptyTitle: {
       ...typography.h3,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
     },
     emptySub: {
       ...typography.body,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
     },
     emptyBox: { alignItems: 'center', paddingVertical: 48, gap: 8 },
