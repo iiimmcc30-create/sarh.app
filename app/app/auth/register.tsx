@@ -481,8 +481,8 @@ function createStyles(colors: ThemeColors) {
   },
 
   header: { alignItems: 'center', marginBottom: 25, gap: 10, width: '100%' },
-  title: { fontSize: 24, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
-  sub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20, lineHeight: 18 },
+  title: { ...typography.display, color: colors.textPrimary, textAlign: 'center' },
+  sub: { ...typography.secondary, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20 },
 
   card: {
     width: '100%', borderRadius: 20, padding: spacing.xl,
@@ -491,7 +491,7 @@ function createStyles(colors: ThemeColors) {
   },
 
   fieldGroup: { gap: 6, width: '100%' },
-  fieldLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', textAlign: 'right' },
+  fieldLabel: { ...typography.smallHeading, color: colors.textPrimary, textAlign: 'right' },
   
   inputWrap: {
     ...getRtlRow(), alignItems: 'center',
@@ -501,14 +501,14 @@ function createStyles(colors: ThemeColors) {
   },
   inputWrapError: { borderColor: colors.danger },
   inputIcon: marginStart(8),
-  input: { flex: 1, fontSize: 14, color: colors.textPrimary, height: '100%', ...getRtlText() },
-  atSign: { fontSize: 14, color: colors.textMuted, fontWeight: '600', ...marginStart(8) },
+  input: { flex: 1, ...typography.secondary, color: colors.textPrimary, height: '100%', ...getRtlText() },
+  atSign: { ...typography.smallHeading, color: colors.textMuted, ...marginStart(8) },
   
-  fieldError: { fontSize: 11, color: colors.danger, ...getRtlText(), marginTop: 2 },
-  fieldHint: { fontSize: 11, color: colors.textMuted, ...getRtlText(), marginTop: 2, lineHeight: 16 },
+  fieldError: { ...typography.caption, color: colors.danger, ...getRtlText(), marginTop: 2 },
+  fieldHint: { ...typography.caption, color: colors.textMuted, ...getRtlText(), marginTop: 2 },
   fieldHintLink: { color: colors.textBrandStrong, fontWeight: '500' },
 
-  pickerValueText: { flex: 1, fontSize: 14, color: colors.textPrimary, ...getRtlText(), ...marginEnd(8) },
+  pickerValueText: { flex: 1, ...typography.secondary, color: colors.textPrimary, ...getRtlText(), ...marginEnd(8) },
   pickerValueFlag: { fontSize: 16 },
 
   pickerDropdown: {
@@ -523,14 +523,14 @@ function createStyles(colors: ThemeColors) {
   },
   pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
   pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, fontSize: 13, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
-  pickerCode: { fontSize: 13, color: colors.textMuted },
+  pickerLabel: { flex: 1, ...typography.secondary, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
+  pickerCode: { ...typography.secondary, color: colors.textMuted },
 
   agreeRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
     gap: 8, width: '100%', marginVertical: 4,
   },
-  agreeText: { fontSize: 13, color: colors.textMuted, textAlign: 'right' },
+  agreeText: { ...typography.secondary, color: colors.textMuted, textAlign: 'right' },
   agreeLink: { color: colors.textBrandStrong, fontWeight: '600' },
   checkbox: {
     width: 20, height: 20, borderRadius: 5,
@@ -541,25 +541,25 @@ function createStyles(colors: ThemeColors) {
 
   submitBtn: { width: '100%', borderRadius: 20, overflow: 'hidden', marginTop: 5 },
   submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  submitText: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+  submitText: { ...typography.button, color: colors.textPrimary },
 
   otpVerifyContainer: {
     backgroundColor: 'rgba(30,111,241,0.05)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(30,111,241,0.15)',
     padding: spacing.md, gap: spacing.sm, width: '100%',
   },
-  otpInput: { flex: 1, fontSize: 18, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center', fontWeight: '600' },
+  otpInput: { flex: 1, ...typography.valueLarge, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center' },
   otpActionsRow: { ...getRtlRow(), gap: spacing.md, width: '100%' },
   otpVerifyBtn: {
     backgroundColor: colors.electric, borderRadius: 12,
     height: 44, alignItems: 'center', justifyContent: 'center', flex: 2,
   },
-  otpVerifyText: { fontSize: 13, color: colors.textPrimary, fontWeight: '600' },
+  otpVerifyText: { ...typography.button, color: colors.textPrimary },
   otpEditBtn: {
     borderWidth: 1, borderColor: colors.borderHairline, borderRadius: 12,
     height: 44, alignItems: 'center', justifyContent: 'center', flex: 1,
   },
-  otpEditText: { fontSize: 12, color: colors.textMuted },
+  otpEditText: { ...typography.caption, color: colors.textMuted },
 
   errorContainer: {
     ...getRtlRow(), alignItems: 'center', gap: 6,
@@ -567,12 +567,12 @@ function createStyles(colors: ThemeColors) {
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
     width: '100%',
   },
-  errorText: { fontSize: 12, color: colors.danger, ...getRtlText(), flex: 1 },
+  errorText: { ...typography.caption, color: colors.danger, ...getRtlText(), flex: 1 },
 
   footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },
-  footerLinkText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+  footerLinkText: { ...typography.secondary, color: colors.textMuted, textAlign: 'center' },
   footerLinkActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  disclaimerText: { fontSize: 11, color: '#6b7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 16 },
+  disclaimerText: { ...typography.caption, color: '#6b7280', textAlign: 'center', paddingHorizontal: 20 },
   disclaimerLink: { color: colors.textBrandStrong, textDecorationLine: 'underline' },
   });
 }

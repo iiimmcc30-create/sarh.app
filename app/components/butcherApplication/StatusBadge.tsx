@@ -60,7 +60,7 @@ function createStyles() {
       fontWeight: '600',
     },
     compactLabel: {
-      fontSize: 11,
+      ...typography.badge,
     },
   });
 }

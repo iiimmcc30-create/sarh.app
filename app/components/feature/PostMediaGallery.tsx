@@ -17,7 +17,7 @@ import { ScrollView } from 'react-native';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
-import { radius, type ThemeColors } from '@/constants/theme';
+import { radius, typography, type ThemeColors } from '@/constants/theme';
 
 const ASPECT_RATIO = 16 / 11;
 
@@ -224,9 +224,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   countText: {
+    ...typography.badge,
     color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
   },
   dotsRow: {
     position: 'absolute',

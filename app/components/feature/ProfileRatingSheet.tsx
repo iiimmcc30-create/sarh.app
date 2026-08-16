@@ -118,10 +118,8 @@ function createStyles(colors: ThemeColors) {
       minWidth: 160,
     },
     scoreValue: {
-      ...typography.h1,
-      fontSize: 32,
+      ...typography.display,
       color: colors.textPrimary,
-      fontWeight: '600',
     },
     scoreHint: {
       ...typography.caption,

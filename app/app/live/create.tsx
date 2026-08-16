@@ -502,14 +502,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radius.pill,
   },
-  viewerPillText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  viewerPillText: { ...typography.badge, color: '#fff' },
   previewBadge: {
     backgroundColor: colors.electric,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  previewBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  previewBadgeText: { ...typography.badge, color: '#fff' },
   previewSide: {
     position: 'absolute',
     left: spacing.md,
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
   },
-  allowBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  allowBtnText: { ...typography.button, color: '#fff' },
   errorBanner: {
     position: 'absolute',
     bottom: 0,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  errorBannerText: { color: '#fff', fontSize: 11, textAlign: 'center', lineHeight: 16 },
+  errorBannerText: { ...typography.caption, color: '#fff', textAlign: 'center' },
   hint: { ...typography.caption, color: colors.textMuted, ...getRtlText(), lineHeight: 18 },
   titleInput: {
     backgroundColor: colors.bgSurface,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
     color: colors.textPrimary,
-    fontSize: 15,
+    ...typography.body,
   },
   catHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'flex-end' },
   catHeaderText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
@@ -607,5 +607,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: radius.xl,
   },
-  startBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  startBtnText: { ...typography.button, color: '#fff' },
 });

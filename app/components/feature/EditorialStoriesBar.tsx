@@ -153,9 +153,7 @@ function createStyles(colors: ThemeColors) {
       zIndex: 1,
     },
     cardTitle: {
-      ...typography.bodyStrong,
-      fontSize: 13,
-      lineHeight: 18,
+      ...typography.cardHeading,
       color: '#fff',
       width: '100%',
       textAlign: 'right',

@@ -267,9 +267,8 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
     },
     sectionLabel: {
-      ...typography.bodyStrong,
+      ...typography.smallHeading,
       color: colors.textPrimary,
-      fontSize: 15,
     },
     row: {
       alignItems: 'center',
@@ -295,9 +294,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: `${colors.textBrandStrong}18`,
     },
     changeBtnText: {
-      ...typography.bodyStrong,
+      ...typography.button,
       color: colors.textBrandStrong,
-      fontSize: 14,
     },
     hint: {
       ...typography.caption,
@@ -334,9 +332,8 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.sm,
     },
     dangerTitle: {
-      ...typography.bodyStrong,
+      ...typography.smallHeading,
       color: colors.danger,
-      fontSize: 15,
     },
     dangerText: {
       ...typography.body,
@@ -356,9 +353,8 @@ function createStyles(colors: ThemeColors) {
       opacity: 0.6,
     },
     deleteBtnText: {
-      ...typography.bodyStrong,
+      ...typography.button,
       color: '#fff',
-      fontSize: 15,
       textAlign: 'center',
       writingDirection: 'rtl',
     },

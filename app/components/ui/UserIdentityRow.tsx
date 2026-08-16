@@ -186,9 +186,7 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     displayName: {
-      ...typography.bodyStrong,
-      fontSize: 15,
-      fontWeight: '600',
+      ...typography.cardHeading,
       color: colors.textPrimary,
     },
     usernameText: {

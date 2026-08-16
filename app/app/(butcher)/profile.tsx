@@ -456,9 +456,8 @@ function createStyles(colors: ThemeColors) {
     gap: 6,
   },
   displayName: {
-    ...typography.h1,
+    ...typography.cardHeadingLarge,
     color: colors.textPrimary,
-    fontSize: 22,
   },
   englishName: {
     ...typography.body,

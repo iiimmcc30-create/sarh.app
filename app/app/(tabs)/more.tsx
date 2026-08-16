@@ -212,9 +212,8 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     rowTitle: {
-      ...typography.bodyStrong,
+      ...typography.cardHeading,
       color: colors.textPrimary,
-      fontSize: 15,
     },
     insetDivider: {
       height: StyleSheet.hairlineWidth,
@@ -226,9 +225,8 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: spacing.sm,
     },
     cardTitle: {
-      ...typography.bodyStrong,
+      ...typography.smallHeading,
       color: colors.textPrimary,
-      fontSize: 15,
     },
     langTrack: {
       flexDirection: 'row-reverse',
@@ -250,9 +248,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.success,
     },
     langText: {
-      ...typography.caption,
+      ...typography.badge,
       color: colors.textMuted,
-      fontWeight: '600',
     },
     langTextActive: {
       color: '#FFFFFF',

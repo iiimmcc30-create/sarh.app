@@ -10,7 +10,6 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { appFont } from '@/constants/fonts';
 import { controls, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ltrInputText, marginStart, rtlInputText, getRtlRow } from '@/lib/rtl';
@@ -135,9 +134,7 @@ export const AppTextInput = memo(AppTextInputComponent);
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     label: {
-      ...typography.caption,
-      fontFamily: appFont.medium,
-      fontWeight: '500',
+      ...typography.smallHeading,
       color: colors.textSecondary,
       marginBottom: spacing.xs,
     },
@@ -172,12 +169,12 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.md,
     },
     error: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.danger,
       marginTop: spacing.xs,
     },
     hint: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
       marginTop: spacing.xs,
     },

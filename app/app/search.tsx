@@ -398,7 +398,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     backgroundColor: colors.liveRed, borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1,
   },
   liveDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#fff' },
-  liveBadgeText: { fontSize: 9, fontWeight: '600', color: '#fff' },
+  liveBadgeText: { ...typography.badge, color: '#fff' },
   liveViewers: { ...typography.micro, color: colors.textMuted },
   noResults: { alignItems: 'center', paddingVertical: 60, gap: spacing.md },
   noResultsIcon: { fontSize: 48 },

@@ -428,8 +428,8 @@ function createStyles(colors: ThemeColors) {
     minHeight: 60, maxHeight: 200,
     paddingTop: 0,
   },
-  textInputAr: { ...rtlInputText, fontSize: 17, lineHeight: 26 },
-  textInputEn: { ...ltrInputText, fontSize: 14, color: colors.textSecondary },
+  textInputAr: { ...rtlInputText, ...typography.body },
+  textInputEn: { ...ltrInputText, ...typography.secondary, color: colors.textSecondary },
   audienceRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     marginHorizontal: spacing.lg, marginTop: spacing.md,
@@ -543,6 +543,6 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 2, borderColor: colors.electric,
     alignItems: 'center', justifyContent: 'center',
   },
-  charCountText: { fontSize: 10, fontWeight: '600', color: colors.textBrandAlt },
+  charCountText: { ...typography.badge, color: colors.textBrandAlt },
   });
 }

@@ -656,14 +656,14 @@ function createViewerStyles(colors: ThemeColors) {
       borderWidth: 1.5,
       borderColor: 'rgba(255,255,255,0.5)',
     },
-    username: { color: '#fff', ...typography.bodyStrong, fontSize: 14 },
+    username: { color: '#fff', ...typography.cardHeading },
     meta: { color: 'rgba(255,255,255,0.72)', ...typography.micro, marginTop: 1 },
     iconBtn: {
       padding: 5,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    viewsCount: { color: '#fff', fontSize: 9, marginTop: 1 },
+    viewsCount: { color: '#fff', ...typography.caption, marginTop: 1 },
     tapRow: {
       ...StyleSheet.absoluteFillObject,
       flexDirection: 'row',
@@ -761,8 +761,7 @@ function createViewerStyles(colors: ThemeColors) {
       paddingHorizontal: 16,
       paddingVertical: Platform.OS === 'ios' ? 11 : 9,
       color: '#fff',
-      ...typography.body,
-      fontSize: 14,
+      ...typography.secondary,
     },
     sendBtn: {
       width: 40,

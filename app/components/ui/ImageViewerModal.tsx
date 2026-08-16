@@ -4,6 +4,7 @@
  * Uses only React Native core APIs (no extra packages required).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { typography } from '@/constants/theme';
 import { resolveMediaUrl } from '@/services/media';
 import React, {
   useCallback,
@@ -360,9 +361,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   counterText: {
+    ...typography.badge,
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
     backgroundColor: 'rgba(0,0,0,0.4)',
     paddingHorizontal: 10,
     paddingVertical: 3,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     right: 0,
     textAlign: 'center',
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 11,
+    ...typography.caption,
     zIndex: 100,
   },
 });

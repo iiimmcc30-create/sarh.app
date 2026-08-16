@@ -1,6 +1,7 @@
 import { APP_LOGO } from '@/constants/branding';
 import { appFont } from '@/constants/fonts';
 import { ds } from '@/constants/designSystem';
+import { typography } from '@/constants/theme';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -317,10 +318,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   sub: {
+    ...typography.secondary,
     marginTop: 8,
-    fontSize: 13,
-    fontFamily: appFont.regular,
-    fontWeight: '400',
     color: MUTED,
     textAlign: 'center',
     paddingHorizontal: 36,

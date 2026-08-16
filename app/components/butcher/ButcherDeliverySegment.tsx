@@ -81,10 +81,9 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     optionText: {
-      ...butcherTypography.primary,
+      ...butcherTypography.secondary,
       ...getRtlText(),
       color: colors.textSecondary,
-      fontSize: 14,
     },
     optionTextActive: {
       color: '#fff',

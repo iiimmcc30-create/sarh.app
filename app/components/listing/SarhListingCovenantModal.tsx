@@ -196,9 +196,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: `${colors.electric}30`,
     },
     feeBadgeText: {
-      ...typography.bodyStrong,
+      ...typography.badge,
       color: colors.textBrandStrong,
-      fontSize: 14,
     },
     oathCard: {
       backgroundColor: colors.bgSurface,
@@ -210,8 +209,6 @@ function createStyles(colors: ThemeColors) {
     oathText: {
       ...typography.body,
       color: colors.textPrimary,
-      lineHeight: 28,
-      fontSize: 15,
     },
     brand: {
       fontWeight: '600',
@@ -250,10 +247,8 @@ function createStyles(colors: ThemeColors) {
     },
     checkboxText: {
       flex: 1,
-      ...typography.body,
+      ...typography.secondary,
       color: colors.textSecondary,
-      lineHeight: 24,
-      fontSize: 14,
     },
     link: {
       color: colors.textBrandStrong,

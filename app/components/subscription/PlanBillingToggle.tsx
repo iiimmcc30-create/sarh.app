@@ -64,9 +64,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
     },
     label: {
-      ...typography.bodyStrong,
+      ...typography.smallHeading,
       color: colors.textMuted,
-      fontSize: 14,
     },
     labelActive: {
       color: '#fff',
@@ -78,8 +77,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     saveText: {
-      fontSize: 10,
-      fontWeight: '600',
+      ...typography.badge,
       color: '#fff',
     },
   });

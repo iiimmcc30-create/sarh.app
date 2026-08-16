@@ -98,8 +98,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 4,
     },
     name: {
-      ...butcherTypography.primary,
-      fontSize: 15,
+      ...butcherTypography.title,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',

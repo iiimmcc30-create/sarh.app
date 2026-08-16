@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: '#000' },
   loadingScreen: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
   loadingDim:   { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
-  loadingText:  { color: '#ccc', marginTop: 12, fontSize: 14 },
+  loadingText:  { ...typography.secondary, color: '#ccc', marginTop: 12 },
   waitingOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   topOverlay: { position: 'absolute', top: 0, left: 0, right: 0 },
@@ -336,23 +336,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
   },
   liveDot:   { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' },
-  liveText:  { color: '#fff', fontSize: 12, fontWeight: '600' },
+  liveText:  { ...typography.badge, color: '#fff' },
   hostRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hostAvatar: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
-  hostName:  { color: '#fff', fontSize: 13, fontWeight: '600' },
-  hostHandle: { color: 'rgba(255,255,255,0.6)', fontSize: 11 },
+  hostName:  { ...typography.cardHeading, color: '#fff' },
+  hostHandle: { ...typography.caption, color: 'rgba(255,255,255,0.6)' },
   viewerPill: {
     marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: radius.pill,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  viewerText: { color: '#fff', fontSize: 12 },
+  viewerText: { ...typography.caption, color: '#fff' },
   closeBtn: {
     width: 36, height: 36, borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
   },
   streamTitle: {
-    color: '#fff', fontSize: 14, fontWeight: '600',
+    ...typography.cardHeading, color: '#fff',
     paddingHorizontal: spacing.lg, paddingTop: 4, paddingBottom: 8,
   },
 
@@ -363,9 +363,9 @@ const styles = StyleSheet.create({
     padding: spacing.sm, marginBottom: 6, alignSelf: 'flex-start',
   },
   offerBubble:  { backgroundColor: 'rgba(200,40,40,0.7)', borderWidth: 1, borderColor: colors.liveRed },
-  bubbleUser:   { color: colors.textBrandStrong, fontSize: 11, fontWeight: '600', marginBottom: 2 },
-  offerAmt:     { color: '#FFD700', fontSize: 13, fontWeight: '600' },
-  bubbleText:   { color: '#fff', fontSize: 13 },
+  bubbleUser:   { ...typography.badge, color: colors.textBrandStrong, marginBottom: 2 },
+  offerAmt:     { ...typography.value, color: '#FFD700' },
+  bubbleText:   { ...typography.secondary, color: '#fff' },
 
   bottomBar:    { position: 'absolute', bottom: 0, left: 0, right: 0 },
   inputRow: {
@@ -375,11 +375,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: radius.xl,
     paddingHorizontal: spacing.md, paddingVertical: 10,
-    color: '#fff', fontSize: 14,
+    color: '#fff', ...typography.secondary,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
   sendBtn:    { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.electricBright, alignItems: 'center', justifyContent: 'center' },
   sendBtnOff: { opacity: 0.35 },
   likeBtn:    { alignItems: 'center' },
-  likesText:  { color: '#fff', fontSize: 11, marginTop: 2 },
+  likesText:  { ...typography.caption, color: '#fff', marginTop: 2 },
 });

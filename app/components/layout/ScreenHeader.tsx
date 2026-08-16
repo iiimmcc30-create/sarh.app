@@ -98,15 +98,14 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       alignItems: 'center',
     },
     title: {
-      ...typography.h3,
+      ...typography.sectionHeading,
       color: colors.textPrimary,
-      lineHeight: 26,
       width: '100%',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
     arabic: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
       marginTop: 1,
       width: '100%',

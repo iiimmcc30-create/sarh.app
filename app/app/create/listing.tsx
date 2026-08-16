@@ -943,6 +943,6 @@ function createStyles(colors: ThemeColors) {
   continueBtnInner: {
     paddingVertical: spacing.md, alignItems: 'center', borderRadius: radius.xl,
   },
-  continueBtnText: { ...typography.h3, color: '#fff' },
+  continueBtnText: { ...typography.button, color: '#fff' },
   });
 }

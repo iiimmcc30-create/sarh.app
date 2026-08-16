@@ -308,68 +308,136 @@ const directionalText = {
   writingDirection: 'rtl' as const,
 };
 
-/** IBM Plex Sans Arabic — prefer 600 for titles, 500 for item labels, 400 for body. */
+const face500 = {
+  fontFamily: appFont.medium,
+  fontWeight: '500' as const,
+};
+const face600 = {
+  fontFamily: appFont.semibold,
+  fontWeight: '600' as const,
+};
+const face700 = {
+  fontFamily: appFont.bold,
+  fontWeight: '700' as const,
+};
+
+/**
+ * Sarh content typography — 500 / 600 / 700 and scale 12 / 14 / 15 / 16 / 18 / 20 / 24.
+ * `tab` / `tabActive` are frozen for bottom navigation. Do not restyle those tokens.
+ */
 export const typography = {
   display: {
-    fontSize: 36,
-    fontFamily: appFont.semibold,
-    fontWeight: '600' as const,
-    letterSpacing: -0.4,
-    lineHeight: 44,
+    fontSize: 24,
+    lineHeight: 32,
+    ...face700,
     ...directionalText,
   },
-  h1: {
-    fontSize: 28,
-    fontFamily: appFont.semibold,
-    fontWeight: '600' as const,
-    letterSpacing: -0.3,
-    lineHeight: 36,
+  sectionHeading: {
+    fontSize: 20,
+    lineHeight: 28,
+    ...face700,
     ...directionalText,
   },
-  h2: {
-    fontSize: 22,
-    fontFamily: appFont.semibold,
-    fontWeight: '600' as const,
-    lineHeight: 30,
-    ...directionalText,
-  },
-  h3: {
+  cardHeadingLarge: {
     fontSize: 18,
-    fontFamily: appFont.semibold,
-    fontWeight: '600' as const,
     lineHeight: 26,
+    ...face600,
+    ...directionalText,
+  },
+  cardHeading: {
+    fontSize: 16,
+    lineHeight: 24,
+    ...face600,
     ...directionalText,
   },
   body: {
-    fontSize: 15,
-    fontFamily: appFont.regular,
-    fontWeight: '400' as const,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
+    ...face500,
     ...directionalText,
   },
-  bodyStrong: {
+  smallHeading: {
+    fontSize: 14,
+    lineHeight: 20,
+    ...face500,
+    ...directionalText,
+  },
+  secondary: {
+    fontSize: 14,
+    lineHeight: 20,
+    ...face500,
+    ...directionalText,
+  },
+  button: {
     fontSize: 15,
-    fontFamily: appFont.medium,
-    fontWeight: '500' as const,
+    lineHeight: 20,
+    ...face600,
+    ...directionalText,
+  },
+  value: {
+    fontSize: 16,
     lineHeight: 22,
+    ...face700,
+    ...directionalText,
+  },
+  valueLarge: {
+    fontSize: 18,
+    lineHeight: 24,
+    ...face700,
     ...directionalText,
   },
   caption: {
-    fontSize: 13,
-    fontFamily: appFont.regular,
-    fontWeight: '400' as const,
+    fontSize: 12,
     lineHeight: 18,
+    ...face500,
     ...directionalText,
   },
+  badge: {
+    fontSize: 12,
+    lineHeight: 18,
+    ...face600,
+    ...directionalText,
+  },
+
+  /** @deprecated Use `display` */
+  h1: {
+    fontSize: 24,
+    lineHeight: 32,
+    ...face700,
+    ...directionalText,
+  },
+  /** @deprecated Use `sectionHeading` */
+  h2: {
+    fontSize: 20,
+    lineHeight: 28,
+    ...face700,
+    ...directionalText,
+  },
+  /** @deprecated Use `cardHeadingLarge` */
+  h3: {
+    fontSize: 18,
+    lineHeight: 26,
+    ...face600,
+    ...directionalText,
+  },
+  /** @deprecated Use `button` for CTAs */
+  bodyStrong: {
+    fontSize: 15,
+    lineHeight: 20,
+    ...face600,
+    ...directionalText,
+  },
+  /** @deprecated Use `caption` */
   micro: {
-    fontSize: 11,
-    fontFamily: appFont.regular,
-    fontWeight: '400' as const,
-    letterSpacing: 0.2,
-    lineHeight: 15,
+    fontSize: 12,
+    lineHeight: 18,
+    ...face500,
     ...directionalText,
   },
-  /** Bottom tab labels — inactive (FloatingTabBar / ButchersTabBar). */
+  /**
+   * Frozen — FloatingTabBar / ButchersTabBar only.
+   * Do not change size, weight, or line height.
+   */
   tab: {
     fontFamily: appFont.medium,
     fontWeight: '500' as const,
@@ -378,7 +446,10 @@ export const typography = {
     textAlign: 'center' as const,
     ...directionalText,
   },
-  /** Bottom tab labels — active. */
+  /**
+   * Frozen — active bottom-tab label.
+   * Do not change size, weight, or line height.
+   */
   tabActive: {
     fontFamily: appFont.semibold,
     fontWeight: '600' as const,
@@ -387,26 +458,22 @@ export const typography = {
     textAlign: 'center' as const,
     ...directionalText,
   },
-  /** Mild emphasis — chips, badges (medium 500, not 700). */
   emphasis: {
-    fontFamily: appFont.medium,
-    fontWeight: '500' as const,
+    ...face500,
     ...directionalText,
   },
-  /**
-   * Posts / listings titles — same weight as active bottom tab (600 SemiBold).
-   */
+  /** Card / list titles — 16 / 600 / 24 */
   feedTitle: {
-    fontFamily: appFont.semibold,
-    fontWeight: '600' as const,
+    fontSize: 16,
+    lineHeight: 24,
+    ...face600,
     ...directionalText,
   },
-  /**
-   * Posts / listings body & meta — same weight as inactive bottom tab (500 Medium).
-   */
+  /** Secondary / meta copy — 14 / 500 / 20 */
   feedBody: {
-    fontFamily: appFont.medium,
-    fontWeight: '500' as const,
+    fontSize: 14,
+    lineHeight: 20,
+    ...face500,
     ...directionalText,
   },
 };

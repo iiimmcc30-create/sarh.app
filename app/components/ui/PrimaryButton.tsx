@@ -192,7 +192,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: spacing.sm,
     },
     label: {
-      ...typography.bodyStrong,
+      ...typography.button,
       ...getRtlText(),
       textAlign: 'center',
     },

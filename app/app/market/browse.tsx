@@ -299,8 +299,7 @@ function createStyles(
       minWidth: 0,
     },
     crumb: {
-      ...typography.bodyStrong,
-      fontSize: 14,
+      ...typography.cardHeading,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',
@@ -330,8 +329,7 @@ function createStyles(
     },
     searchInput: {
       flex: 1,
-      ...typography.body,
-      fontSize: 14,
+      ...typography.secondary,
       color: colors.textPrimary,
       writingDirection: 'rtl',
       textAlign: 'right',
@@ -356,10 +354,8 @@ function createStyles(
       backgroundColor: isDark ? colors.electric : colors.electric,
     },
     filterChipText: {
-      ...typography.caption,
-      fontSize: 12,
+      ...typography.badge,
       color: colors.textSecondary,
-      fontWeight: '600',
       writingDirection: 'rtl',
     },
     filterChipTextActive: {
@@ -375,7 +371,6 @@ function createStyles(
     },
     count: {
       ...typography.caption,
-      fontSize: 12,
       color: colors.textMuted,
       writingDirection: 'rtl',
     },

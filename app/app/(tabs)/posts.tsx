@@ -254,8 +254,7 @@ function createPostsStyles(
       position: 'relative',
     },
     tabText: {
-      ...typography.feedBody,
-      fontSize: 15,
+      ...typography.smallHeading,
       color: colors.textMuted,
     },
     tabTextActive: {

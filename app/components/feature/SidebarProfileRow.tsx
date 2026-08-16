@@ -101,9 +101,7 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
       paddingVertical: SIDEBAR_MENU_ITEM.outlinePaddingVertical + 4,
     },
     displayName: {
-      ...typography.h3,
-      fontSize: 17,
-      fontWeight: '600',
+      ...typography.cardHeadingLarge,
     },
     badgePill: {
       marginTop: 4,
@@ -114,8 +112,7 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
       backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
     },
     badgePillText: {
-      ...typography.micro,
-      fontWeight: '600',
+      ...typography.badge,
       color: isDark ? colors.textPrimary : '#3FA82E',
       writingDirection: 'rtl',
     },

@@ -343,9 +343,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     title: {
-      ...typography.h3,
+      ...typography.sectionHeading,
       color: colors.textPrimary,
-      fontSize: 20,
     },
     subtitle: {
       ...typography.body,
@@ -378,10 +377,9 @@ function createStyles(colors: ThemeColors) {
     },
     amountInput: {
       flex: 1,
-      ...typography.h3,
+      ...typography.valueLarge,
       color: colors.textPrimary,
       paddingVertical: spacing.md,
-      fontSize: 22,
     },
     fieldHint: {
       ...typography.caption,
@@ -445,9 +443,8 @@ function createStyles(colors: ThemeColors) {
     },
     payBtnPressed: { opacity: 0.88 },
     payBtnText: {
-      ...typography.bodyStrong,
+      ...typography.button,
       color: '#fff',
-      fontSize: 17,
     },
     resultWrap: {
       padding: spacing.xl,

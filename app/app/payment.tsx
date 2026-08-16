@@ -178,8 +178,8 @@ const virtualCardStyles = StyleSheet.create({
   chipLine: { width: '80%', height: 3, backgroundColor: '#C8A000', borderRadius: 2 },
   cardNumber: { color: '#fff', fontSize: 18, letterSpacing: 2.5, fontFamily: 'monospace', fontWeight: '600', textAlign: 'center' },
   bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  cardLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 10, letterSpacing: 1, marginBottom: 3, textTransform: 'uppercase' },
-  cardValue: { color: '#fff', fontSize: 13, fontWeight: '600', letterSpacing: 1 },
+  cardLabel: { ...typography.caption, color: 'rgba(255,255,255,0.55)', letterSpacing: 1, marginBottom: 3, textTransform: 'uppercase' },
+  cardValue: { ...typography.badge, color: '#fff', letterSpacing: 1 },
   circle: { position: 'absolute', borderRadius: 999, backgroundColor: '#fff' },
 });
 
@@ -694,7 +694,7 @@ function FloatingField({ label, value, onChangeText, placeholder, keyboardType, 
   };
 
   const labelTop = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 4] });
-  const labelSize = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [15, 11] });
+  const labelSize = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [15, 12] });
   const labelColor = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.textSubtle, colors.electricBright] });
 
   return (
@@ -747,8 +747,7 @@ const floatStyles = StyleSheet.create({
     height: 38,
     paddingHorizontal: 16,
     paddingTop: 0,
-    fontSize: 15,
-    fontWeight: '500',
+    ...typography.button,
   },
   iconWrap: {
     position: 'absolute',
@@ -763,8 +762,8 @@ function ReceiptRow({ label, value, highlight, small }: { label: string; value: 
   const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
-      <Text style={{ fontSize: 13, color: colors.textMuted }}>{label}</Text>
-      <Text style={{ fontSize: highlight ? 16 : small ? 11 : 13, fontWeight: highlight ? '800' : '600', color: highlight ? colors.electricBright : small ? colors.textSubtle : colors.textSecondary, ...getRtlText(), flex: 1, marginStart: 8 }}>
+      <Text style={{ ...typography.secondary, color: colors.textMuted }}>{label}</Text>
+      <Text style={{ ...(highlight ? typography.value : small ? typography.caption : typography.secondary), color: highlight ? colors.electricBright : small ? colors.textSubtle : colors.textSecondary, ...getRtlText(), flex: 1, marginStart: 8 }}>
         {value}
       </Text>
     </View>
@@ -784,15 +783,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerCenter: { flex: 1, alignItems: 'center' },
     headerTitle: { ...typography.h3, color: colors.textPrimary },
     headerSecure: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
-    headerSecureText: { fontSize: 11, color: colors.emerald, fontWeight: '600' },
+    headerSecureText: { ...typography.badge, color: colors.emerald },
 
     // Step indicator
     stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, paddingBottom: 12, gap: 0 },
     stepItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     stepDot: { width: 22, height: 22, borderRadius: 12, backgroundColor: colors.bgElevated, borderWidth: 1.5, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
     stepDotActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-    stepDotText: { fontSize: 11, fontWeight: '600', color: colors.textMuted },
-    stepLabel: { fontSize: 11, color: colors.textMuted, marginHorizontal: 4 },
+    stepDotText: { ...typography.badge, color: colors.textMuted },
+    stepLabel: { ...typography.caption, color: colors.textMuted, marginHorizontal: 4 },
     stepLabelActive: { color: colors.electricBright, fontWeight: '600' },
     stepLine: { width: 24, height: 1.5, backgroundColor: colors.borderSoft, marginHorizontal: 2 },
     stepLineActive: { backgroundColor: colors.electric },
@@ -802,13 +801,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     // Order card
     orderCard: { borderRadius: 20, padding: spacing.xl, marginBottom: spacing.xl, gap: spacing.sm },
     orderTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-    orderLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500', marginBottom: 4 },
-    orderPlanName: { fontSize: 22, fontWeight: '600', color: '#fff' },
+    orderLabel: { ...typography.caption, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
+    orderPlanName: { ...typography.sectionHeading, color: '#fff' },
     orderAmountWrap: { alignItems: 'flex-end' },
-    orderAmount: { fontSize: 38, fontWeight: '600', color: '#fff', lineHeight: 42 },
-    orderCurrency: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.8)' },
+    orderAmount: { ...typography.display, color: '#fff' },
+    orderCurrency: { ...typography.smallHeading, color: 'rgba(255,255,255,0.8)' },
     savingsTag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.22)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99, alignSelf: 'flex-start', marginTop: 4 },
-    savingsText: { fontSize: 12, color: '#fff', fontWeight: '600' },
+    savingsText: { ...typography.badge, color: '#fff' },
 
     sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: 14 },
 
@@ -816,16 +815,16 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     methodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
     methodCard: { flex: 1, minWidth: '28%', aspectRatio: 1.4, backgroundColor: cardBg, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: colors.borderSoft, position: 'relative' },
     methodCardActive: { borderWidth: 2, backgroundColor: colors.bgDeep },
-    methodName: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+    methodName: { ...typography.badge, color: colors.textSecondary },
     methodCheck: { position: 'absolute', top: 8, left: 8, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
 
     // Wallet list
-    walletTitle: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 10, letterSpacing: 0.5 },
+    walletTitle: { ...typography.smallHeading, color: colors.textMuted, marginBottom: 10, letterSpacing: 0.5 },
     walletList: { gap: 10, marginBottom: 20 },
     walletCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: 16, backgroundColor: cardBg, borderWidth: 1.5, borderColor: colors.borderSoft },
     walletCardActive: { borderWidth: 2, backgroundColor: colors.bgDeep },
-    walletName: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
-    walletSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+    walletName: { ...typography.cardHeading, color: colors.textPrimary },
+    walletSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
     radioCircle: { width: 22, height: 22, borderRadius: 12, borderWidth: 2, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
     radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' },
 
@@ -835,23 +834,23 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
 
     // Secure
     secureRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.emerald + '12', borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: colors.emerald + '30', marginBottom: spacing.lg },
-    secureText: { fontSize: 12, color: colors.textSecondary, fontWeight: '500' },
+    secureText: { ...typography.caption, color: colors.textSecondary },
 
     // Trust
     trustRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xl, marginVertical: spacing.lg },
     trustBadge: { alignItems: 'center', gap: 5 },
-    trustLabel: { fontSize: 10, color: colors.textSubtle, fontWeight: '600' },
+    trustLabel: { ...typography.badge, color: colors.textSubtle },
 
     niBrand: { flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'center', paddingBottom: spacing.sm },
-    niText: { fontSize: 12, color: colors.textSubtle },
+    niText: { ...typography.caption, color: colors.textSubtle },
 
     // CTA
     ctaWrap: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.bgDeep + 'EE' },
     ctaBtn: { borderRadius: 16, overflow: 'hidden', marginBottom: 4 },
     ctaBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17, borderRadius: 16 },
-    ctaBtnText: { ...typography.bodyStrong, color: '#fff', fontSize: 16 },
+    ctaBtnText: { ...typography.button, color: '#fff' },
     ctaAmountPill: { backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99 },
-    ctaAmountText: { fontSize: 12, fontWeight: '600', color: '#fff' },
+    ctaAmountText: { ...typography.badge, color: '#fff' },
 
     // Processing
     processingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
@@ -859,7 +858,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     processingTitle: { ...typography.h2, color: colors.textPrimary },
     processingSubtitle: { ...typography.body, color: colors.textMuted },
     processingBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99, backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSoft, marginTop: spacing.md },
-    processingBadgeText: { fontSize: 12, color: colors.emerald, fontWeight: '600' },
+    processingBadgeText: { ...typography.badge, color: colors.emerald },
 
     // Success
     successWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.lg },
@@ -868,10 +867,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     successSub: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
     receiptCard: { width: '100%', backgroundColor: cardBg, borderRadius: 20, padding: spacing.lg, borderWidth: 1, borderColor: colors.borderMid },
     receiptHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    receiptHeaderText: { fontSize: 13, fontWeight: '600', color: colors.textMuted, letterSpacing: 0.5 },
+    receiptHeaderText: { ...typography.smallHeading, color: colors.textMuted, letterSpacing: 0.5 },
     receiptDivider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 10 },
     successBtn: { width: '100%', borderRadius: 16, overflow: 'hidden' },
     successBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
-    successBtnText: { ...typography.bodyStrong, color: '#fff', fontSize: 16 },
+    successBtnText: { ...typography.button, color: '#fff' },
   });
 }

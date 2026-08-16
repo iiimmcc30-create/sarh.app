@@ -7,7 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
+import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
 
 export default function OrderSuccessScreen() {
   const router = useRouter();
@@ -187,7 +187,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, paddingVertical: 16,
   },
-  chatBtnText: { ...butcherTypography.primary, color: '#fff', fontSize: 16 },
+  chatBtnText: { ...typography.button, color: '#fff' },
   backBtn: {
     width: '100%', paddingVertical: 14,
     borderRadius: radius.xl,

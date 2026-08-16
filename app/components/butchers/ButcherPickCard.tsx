@@ -98,11 +98,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingVertical: 3,
       borderRadius: 6,
     },
-    promoText: { ...butcherTypography.emphasis, color: '#fff', fontSize: 10 },
+    promoText: { ...butcherTypography.badge, color: '#fff' },
     rtlShell: { width: '100%', direction: 'ltr', paddingHorizontal: spacing.sm, paddingTop: 8 },
     name: {
-      ...butcherTypography.primary,
-      fontSize: 14,
+      ...butcherTypography.title,
       color: colors.textPrimary,
       width: '100%',
       textAlign: 'right',

@@ -234,9 +234,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     screenTitle: {
-      ...typography.feedTitle,
+      ...typography.cardHeading,
       color: colors.textPrimary,
-      fontSize: 17,
     },
     scroll: {
       paddingBottom: spacing.xxxl,

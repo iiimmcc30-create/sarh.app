@@ -119,10 +119,8 @@ function createStyles(colors: ThemeColors) {
       gap: 6,
     },
     tabText: {
-      ...typography.body,
-      fontSize: 14,
+      ...typography.smallHeading,
       color: colors.textMuted,
-      fontWeight: '500',
       writingDirection: 'rtl',
     },
     tabTextActive: {
@@ -158,8 +156,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
     },
     chipText: {
-      ...typography.caption,
-      fontSize: 13,
+      ...typography.secondary,
       color: colors.textPrimary,
       writingDirection: 'rtl',
     },

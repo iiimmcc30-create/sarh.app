@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MENU_CARD } from '@/components/feature/SidebarMenu';
+import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -262,9 +263,8 @@ function createCompactStyles(colors: ThemeColors) {
     },
     nameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     name: {
-      ...typography.caption,
+      ...butcherTypography.title,
       color: colors.textPrimary,
-      fontWeight: '600',
       flex: 1,
     },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
@@ -318,10 +318,8 @@ function createFullStyles(colors: ThemeColors, _isDark: boolean) {
       borderRadius: radius.pill,
     },
     statusBadgeText: {
-      ...typography.micro,
+      ...typography.badge,
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 10,
     },
     favBtn: {
       position: 'absolute',
@@ -375,10 +373,8 @@ function createFullStyles(colors: ThemeColors, _isDark: boolean) {
       gap: 6,
     },
     name: {
-      ...typography.bodyStrong,
+      ...butcherTypography.title,
       color: colors.textPrimary,
-      fontWeight: '600',
-      fontSize: 16,
       flexShrink: 1,
       writingDirection: 'rtl',
     },
@@ -443,16 +439,13 @@ function createFullStyles(colors: ThemeColors, _isDark: boolean) {
       gap: 2,
     },
     statNum: {
-      ...typography.caption,
+      ...typography.value,
       color: colors.textPrimary,
-      fontWeight: '600',
-      fontSize: 13,
     },
     statLbl: {
-      ...typography.micro,
+      ...typography.caption,
       color: colors.textMuted,
       textAlign: 'center',
-      fontSize: 10,
     },
     statDivider: {
       width: StyleSheet.hairlineWidth,

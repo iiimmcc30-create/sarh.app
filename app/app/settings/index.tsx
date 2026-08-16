@@ -151,7 +151,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     introSubtitle: {
       ...typography.caption,
       color: colors.textSecondary,
-      lineHeight: 19,
       textAlign: 'right',
       writingDirection: 'rtl',
     },

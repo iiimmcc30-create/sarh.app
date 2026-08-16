@@ -220,9 +220,7 @@ function createStyles(colors: ThemeColors) {
     },
     section: { gap: spacing.sm },
     sectionTitle: {
-      ...typography.caption,
-      fontWeight: '600',
-      fontSize: 12,
+      ...typography.smallHeading,
       letterSpacing: 0.4,
       color: colors.textMuted,
       textAlign: 'right',

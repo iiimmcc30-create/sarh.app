@@ -7,7 +7,6 @@ import {
   SidebarMenuItem as SidebarMenuItemRow,
   type SidebarMenuItemProps,
 } from '@/components/ui/SidebarMenuItem';
-import { appFont } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { I18nManager, Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
 
@@ -286,7 +285,7 @@ const sectionStyles = StyleSheet.create({
     paddingHorizontal: MENU_CARD.sectionTitlePad,
   },
   title: {
-    ...typography.bodyStrong,
+    ...typography.smallHeading,
   },
   card: {},
 });
@@ -320,17 +319,13 @@ const themeStyles = StyleSheet.create({
     width: '100%',
   },
   title: {
-    ...typography.bodyStrong,
-    fontSize: 15,
-    fontWeight: '600',
+    ...typography.smallHeading,
   },
   subLabelShell: {
     paddingHorizontal: 4,
   },
   subLabel: {
-    ...typography.caption,
-    fontSize: 12,
-    fontWeight: '600',
+    ...typography.badge,
   },
   track: {
     borderRadius: radius.lg,
@@ -357,9 +352,7 @@ const themeStyles = StyleSheet.create({
     elevation: 2,
   },
   optionText: {
-    ...typography.caption,
-    fontWeight: '600',
-    fontSize: 13,
+    ...typography.badge,
   },
 });
 
@@ -386,9 +379,6 @@ const logoutStyles = StyleSheet.create({
     flexShrink: 0,
   },
   text: {
-    ...typography.bodyStrong,
-    fontFamily: appFont.semibold,
-    fontWeight: '600',
-    fontSize: 15,
+    ...typography.button,
   },
 });

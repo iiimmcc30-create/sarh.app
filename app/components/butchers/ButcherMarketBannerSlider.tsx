@@ -120,7 +120,6 @@ function createStyles(colors: ThemeColors) {
     },
     subtitle: {
       ...butcherTypography.title,
-      fontSize: 18,
       color: '#fff',
       textAlign: 'center',
     },
