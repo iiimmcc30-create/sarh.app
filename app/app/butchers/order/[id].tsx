@@ -1,6 +1,29 @@
-// Customer order details with realtime timeline
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { Image, uriSource } from '@/components/ui/AppImage';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { butcherTypography } from '@/constants/butcherTypography';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOrderSocket } from '@/hooks/useOrderSocket';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import {
+  CUSTOMER_FLOW_LABELS,
+  CUSTOMER_ORDER_FLOW,
+  firstProductImage,
+  flowReached,
+  formatOrderStamp,
+  orderLineItems,
+  orderMoneySummary,
+  timelineStamp,
+} from '@/lib/customerOrders';
+import { rtlBackIcon } from '@/lib/rtl';
+import { API_BASE } from '@/services/api';
+import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
+import { ORDER_STATUS_COLORS, orderStatusLabel } from '@/services/butcherData';
+import { formatCurrency } from '@/services/butcherOrders';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -13,39 +36,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
-import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
-import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
-import { CUT_LABELS, CutType } from '@/services/butcherData';
-import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
-import { useOrderSocket } from '@/hooks/useOrderSocket';
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'قيد الانتظار',
-  confirmed: 'مؤكد',
-  preparing: 'قيد التحضير',
-  ready: 'جاهز',
-  delivered: 'تم التسليم',
-  cancelled: 'ملغي',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: colors.amber,
-  confirmed: colors.electricBright,
-  preparing: colors.cyan,
-  ready: colors.success,
-  delivered: colors.success,
-  cancelled: colors.danger,
-};
-
-const FLOW: string[] = ['pending', 'confirmed', 'preparing', 'ready', 'delivered'];
 
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { accessToken } = useAuth();
+  const { colors } = useTheme();
+  const s = useThemedStyles(({ colors }) => createStyles(colors));
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,9 +56,7 @@ export default function OrderDetailsScreen() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = await res.json();
-      if (res.ok && json.success) {
-        setOrder(json.data);
-      }
+      if (res.ok && json.success) setOrder(json.data);
     } catch (err) {
       console.warn('[OrderDetails] load failed', err);
     } finally {
@@ -79,7 +74,7 @@ export default function OrderDetailsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={s.screen}>
+      <SafeAreaView style={s.screen} edges={['top']}>
         <ActivityIndicator size="large" color={colors.electricBright} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
@@ -87,318 +82,513 @@ export default function OrderDetailsScreen() {
 
   if (!order) {
     return (
-      <SafeAreaView style={s.screen}>
+      <SafeAreaView style={s.screen} edges={['top']}>
+        <Pressable onPress={() => router.back()} style={s.backBtn}>
+          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
+        </Pressable>
         <Text style={s.errorText}>تعذر تحميل تفاصيل الطلب</Text>
       </SafeAreaView>
     );
   }
 
-  const statusColor = STATUS_COLORS[order.status] ?? colors.textMuted;
-  const timeline: any[] = Array.isArray(order.timeline) ? order.timeline : [];
-  const reached = new Set(timeline.map((t) => t.status));
+  const statusColor = ORDER_STATUS_COLORS[order.status] ?? colors.textMuted;
+  const statusText = orderStatusLabel(order.status, order.deliveryType);
   const isPickup = order.deliveryType !== 'delivery';
-  const customerName =
-    order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
+  const customerName = order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
   const customerPhone = order.customer?.phone as string | undefined;
-  const butcherName = order.butcher?.nameAr || 'ملحمة';
   const butcherPhone = order.butcher?.phone as string | undefined;
-  const butcherLocation = [order.butcher?.addressAr, order.butcher?.cityAr]
-    .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
-    .filter(Boolean)
-    .join('، ');
+  const deliveryLabel = isPickup ? 'استلام' : 'توصيل';
+  const locationValue = isPickup
+    ? [order.butcher?.addressAr, order.butcher?.cityAr]
+        .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
+        .filter(Boolean)
+        .join('، ')
+    : order.deliveryAddress;
+  const locationLabel = isPickup ? 'موقع الملحمة' : 'موقع التوصيل';
+  const lines = orderLineItems(order);
+  const money = orderMoneySummary(order);
+  const reached = flowReached(order);
+  const canChat = isOrderChatEligible(order.status) && order.butcherId;
+  const delivered = order.status === 'delivered';
+
+  const openChat = () =>
+    router.push(
+      butcherChatRouteParams({
+        butcherId: order.butcherId,
+        orderId: order.id,
+        receiverName: order.butcher?.nameAr,
+        receiverAvatar: order.butcher?.logo,
+      }),
+    );
 
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-
-      <View style={s.header}>
+      <CoverTrailRow justify="space-between" style={s.navRow}>
         <Pressable onPress={() => router.back()} style={s.backBtn}>
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text style={s.headerTitle}>تفاصيل الطلب</Text>
         <View style={{ width: 40 }} />
-      </View>
+      </CoverTrailRow>
 
-      <ScrollView contentContainerStyle={s.scroll}>
-        <View style={s.card}>
-          <Text style={s.orderNumber}>{order.orderNumber}</Text>
-          <View style={[s.badge, { borderColor: statusColor + '88', backgroundColor: statusColor + '22' }]}>
-            <Text style={[s.badgeText, { color: statusColor }]}>
-              {STATUS_LABELS[order.status] ?? order.status}
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        <CoverTrailRow justify="space-between" gap={spacing.md} style={s.headerRow}>
+          <View
+            style={[
+              s.statusBadge,
+              delivered
+                ? { backgroundColor: colors.success, borderColor: colors.success }
+                : { backgroundColor: statusColor + '22', borderColor: statusColor + '55' },
+            ]}
+          >
+            {delivered ? <AppIcon name="checkmark" size={13} color="#fff" /> : null}
+            <Text style={[s.statusBadgeText, { color: delivered ? '#fff' : statusColor }]}>
+              {CUSTOMER_FLOW_LABELS[order.status] ?? statusText}
             </Text>
           </View>
-        </View>
+          <RtlTextShell flex>
+            <RtlText style={s.orderNumber} numberOfLines={1}>
+              {order.orderNumber}
+            </RtlText>
+            <RtlText style={s.orderStamp}>{formatOrderStamp(order.createdAt)}</RtlText>
+          </RtlTextShell>
+        </CoverTrailRow>
 
         <View style={s.card}>
-          <Text style={s.sectionTitle}>متابعة الطلب</Text>
+          <RtlTextShell>
+            <RtlText style={s.sectionTitle}>متابعة الطلب</RtlText>
+          </RtlTextShell>
           {order.status === 'cancelled' ? (
-            timeline.map((event) => (
-              <View key={event.id} style={s.timelineItem}>
-                <View style={s.timelineTrack}>
-                  <View style={[s.timelineDot, { backgroundColor: colors.danger, borderColor: colors.danger + '55' }]} />
-                </View>
-                <View style={s.timelineContent}>
-                  <Text style={[s.timelineLabel, s.timelineDone]}>
-                    {STATUS_LABELS[event.status] ?? event.status}
-                  </Text>
-                  {event.note ? <Text style={s.timelineNote}>{event.note}</Text> : null}
-                </View>
-              </View>
-            ))
+            <RtlTextShell>
+              <RtlText style={s.cancelNote}>
+                {order.cancellationReason ? `ملغي · ${order.cancellationReason}` : 'تم إلغاء هذا الطلب'}
+              </RtlText>
+            </RtlTextShell>
           ) : (
-            FLOW.map((step, index) => {
-              const done = reached.has(step) || FLOW.indexOf(order.status) >= index;
-              const active = order.status === step;
-              const stepColor = done ? colors.electric : colors.textSubtle;
-              return (
-                <View key={step} style={s.timelineItem}>
-                  <View style={s.timelineTrack}>
+            <View style={s.trackRow}>
+              {CUSTOMER_ORDER_FLOW.map((step, index) => {
+                const done = reached.has(step);
+                const time = timelineStamp(order.timeline, step, order.createdAt);
+                return (
+                  <View key={step} style={s.trackStep}>
+                    {index > 0 ? (
+                      <View
+                        style={[
+                          s.trackLine,
+                          { backgroundColor: done ? colors.success : colors.borderSoft },
+                        ]}
+                      />
+                    ) : null}
                     <View
                       style={[
-                        s.timelineDot,
-                        done && s.timelineDotDone,
-                        active && s.timelineDotActive,
-                        { borderColor: stepColor + '66' },
+                        s.trackDot,
+                        {
+                          backgroundColor: done ? colors.success : colors.bgElevated,
+                          borderColor: done ? colors.success : colors.borderMid,
+                        },
                       ]}
                     >
-                      {done ? (
-                        <AppIcon name="checkmark" size={12} color="#fff" />
-                      ) : null}
+                      {done ? <AppIcon name="checkmark" size={11} color="#fff" /> : null}
                     </View>
-                    {index < FLOW.length - 1 ? (
-                      <View style={[s.timelineLine, done && { backgroundColor: colors.electric + '55' }]} />
-                    ) : null}
-                  </View>
-                  <View style={s.timelineContent}>
-                    <Text style={[s.timelineLabel, done && s.timelineDone, active && s.timelineActive]}>
-                      {STATUS_LABELS[step]}
+                    <Text style={[s.trackLabel, done && { color: colors.textPrimary }]}>
+                      {CUSTOMER_FLOW_LABELS[step]}
                     </Text>
+                    {time ? <Text style={s.trackTime}>{time}</Text> : <Text style={s.trackTime}> </Text>}
                   </View>
-                </View>
-              );
-            })
+                );
+              })}
+            </View>
           )}
         </View>
 
-        {isOrderChatEligible(order.status) && order.butcherId ? (
+        {canChat ? (
           <Pressable
-            style={s.chatBtn}
-            onPress={() =>
-              router.push(
-                butcherChatRouteParams({
-                  butcherId: order.butcherId,
-                  orderId: order.id,
-                  receiverName: order.butcher?.nameAr,
-                  receiverAvatar: order.butcher?.logo,
-                }),
-              )
-            }
+            style={({ pressed }) => [s.card, s.chatCard, pressed && { opacity: 0.92 }]}
+            onPress={openChat}
           >
-            <AppIcon name="chatbubbles-outline" size={20} color="#fff" />
-            <Text style={s.chatBtnText}>محادثة الملحمة</Text>
+            <CoverTrailRow justify="space-between" gap={spacing.md}>
+              <AppIcon name="chevron-back" size={18} color={colors.textMuted} />
+              <CoverTrailRow flex justify="flex-end" gap={spacing.sm}>
+                <RtlTextShell flex>
+                  <RtlText style={s.chatTitle}>محادثة الملحمة</RtlText>
+                  <RtlText style={s.chatSub}>تواصل مباشرة مع الملحمة</RtlText>
+                </RtlTextShell>
+                <View style={s.chatIconWrap}>
+                  <AppIcon name="chatbubbles-outline" size={18} color={colors.electricBright} />
+                </View>
+              </CoverTrailRow>
+            </CoverTrailRow>
           </Pressable>
         ) : null}
 
         <View style={s.card}>
-          <Text style={s.sectionTitle}>العميل والاستلام</Text>
-          <Row label="العميل" value={customerName} />
+          <SectionHead icon="person-outline" title="العميل والاستلام" colors={colors} styles={s} />
+          <InfoRow styles={s} label="العميل" value={customerName} />
           {customerPhone ? (
             <Pressable onPress={() => void Linking.openURL(`tel:${customerPhone}`)}>
-              <Row label="الجوال" value={customerPhone} />
+              <InfoRow styles={s} label="الجوال" value={customerPhone} valueColor={colors.electricBright} />
             </Pressable>
           ) : null}
-          <Row
+          <InfoRow
+            styles={s}
             label="طريقة الاستلام"
-            value={isPickup ? 'استلام من الملحمة' : 'توصيل'}
+            value={deliveryLabel}
+            icon={isPickup ? 'storefront-outline' : 'truck'}
+            iconColor={colors.success}
           />
-          {isPickup ? (
-            <>
-              <Row label="الملحمة" value={butcherName} />
-              {butcherPhone ? (
-                <Pressable onPress={() => void Linking.openURL(`tel:${butcherPhone}`)}>
-                  <Row label="هاتف الملحمة" value={butcherPhone} />
-                </Pressable>
-              ) : null}
-              {butcherLocation ? <Row label="موقع الملحمة" value={butcherLocation} /> : null}
-            </>
-          ) : order.deliveryAddress ? (
-            <Row label="موقع التوصيل" value={order.deliveryAddress} />
+          {locationValue ? (
+            <InfoRow
+              styles={s}
+              label={locationLabel}
+              value={locationValue}
+              icon="location-outline"
+              iconColor={colors.success}
+            />
           ) : null}
         </View>
 
         <View style={s.card}>
-          <Text style={s.sectionTitle}>تفاصيل الطلب</Text>
-          {Array.isArray(order.items) && order.items.length > 0 ? (
-            order.items.map((item: {
-              id: string;
-              cutType: string;
-              weightKg: number;
-              linePrice: number;
-              product?: { nameAr?: string };
-            }) => (
-              <View key={item.id} style={s.itemBlock}>
-                <Row label="المنتج" value={item.product?.nameAr ?? '—'} />
-                <Row
-                  label="التقطيع"
-                  value={CUT_LABELS[item.cutType as CutType]?.ar ?? item.cutType}
-                />
-                <Row label="الوزن" value={`${item.weightKg} كغ`} />
-                <Row label="السعر" value={`${item.linePrice} ${order.currency || 'SAR'}`} />
-              </View>
-            ))
-          ) : (
-            <>
-              <Row label="المنتج" value={order.product?.nameAr ?? '—'} />
-              <Row label="التقطيع" value={CUT_LABELS[order.cutType as CutType]?.ar ?? order.cutType} />
-              <Row label="الوزن" value={`${order.weightKg} كغ`} />
-              <Row label="الكمية المحجوزة" value={`${order.reservedQuantity ?? order.weightKg} كغ`} />
-            </>
-          )}
-          <Row label="الإجمالي" value={`${order.totalPrice} ${order.currency || 'SAR'}`} />
-          {order.notes ? <Row label="ملاحظات" value={order.notes} /> : null}
-          {order.cancellationReason ? (
-            <Row label="سبب الإلغاء" value={order.cancellationReason} />
-          ) : null}
+          <SectionHead icon="cart-outline" title="تفاصيل الطلب" colors={colors} styles={s} />
+          {lines.map((item) => {
+            const thumb = uriSource(item.image ?? firstProductImage(order));
+            return (
+              <CoverTrailRow key={item.id} justify="space-between" gap={spacing.sm} style={s.itemRow}>
+                <View style={s.itemPriceCol}>
+                  <Text style={s.itemLinePrice}>
+                    {formatCurrency(item.linePrice, order.currency)}
+                  </Text>
+                  <Text style={s.itemQty}>{item.quantity} قطعة</Text>
+                </View>
+                <RtlTextShell flex>
+                  <RtlText style={s.itemName} numberOfLines={1}>
+                    {item.name}
+                  </RtlText>
+                  <RtlText style={s.itemMeta} numberOfLines={2}>
+                    {item.weightKg > 0
+                      ? `${item.weightKg} كجم × ${formatCurrency(item.unitPrice, order.currency)}`
+                      : item.cutLabel}
+                  </RtlText>
+                </RtlTextShell>
+                <View style={s.thumb}>
+                  {thumb ? (
+                    <Image source={thumb} style={s.thumbImg} contentFit="cover" />
+                  ) : (
+                    <AppIcon name="cart-outline" size={18} color={colors.textMuted} />
+                  )}
+                </View>
+              </CoverTrailRow>
+            );
+          })}
+
+          <View style={s.summaryBlock}>
+            <InfoRow
+              styles={s}
+              label="المجموع الفرعي"
+              value={formatCurrency(money.subtotal, order.currency)}
+            />
+            <InfoRow
+              styles={s}
+              label="رسوم التوصيل"
+              value={
+                money.deliveryFee == null
+                  ? '—'
+                  : formatCurrency(money.deliveryFee, order.currency)
+              }
+            />
+            <InfoRow
+              styles={s}
+              label="الإجمالي"
+              value={formatCurrency(money.total, order.currency)}
+              valueColor={colors.success}
+              strong
+            />
+            <Text style={s.vatNote}>شامل الضريبة</Text>
+          </View>
+          {order.notes ? <InfoRow styles={s} label="ملاحظات" value={order.notes} /> : null}
         </View>
+
+        <CoverTrailRow justify="space-between" gap={spacing.sm} style={s.footerRow}>
+          <Pressable
+            style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
+            onPress={() => router.push('/support' as never)}
+          >
+            <AppIcon name="headset" size={20} color={colors.electricBright} />
+            <Text style={s.footerTitle}>الدعم والمساعدة</Text>
+            <Text style={s.footerSub}>مساعدة سريعة لأي استفسار</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
+            onPress={() => {
+              if (butcherPhone) void Linking.openURL(`tel:${butcherPhone}`);
+            }}
+          >
+            <AppIcon name="call-outline" size={20} color={colors.electricBright} />
+            <Text style={s.footerTitle}>اتصل بالملحمة</Text>
+            <Text style={s.footerSub}>{butcherPhone || 'الرقم غير متوفر'}</Text>
+          </Pressable>
+        </CoverTrailRow>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function SectionHead({
+  icon,
+  title,
+  colors,
+  styles,
+}: {
+  icon: string;
+  title: string;
+  colors: ThemeColors;
+  styles: ReturnType<typeof createStyles>;
+}) {
   return (
-    <View style={s.row}>
-      <Text style={s.rowLabel}>{label}</Text>
-      <Text style={s.rowValue}>{value}</Text>
-    </View>
+    <CoverTrailRow justify="flex-end" gap={8} style={styles.sectionHead}>
+      <RtlTextShell>
+        <RtlText style={styles.sectionTitle}>{title}</RtlText>
+      </RtlTextShell>
+      <AppIcon name={icon} size={16} color={colors.success} />
+    </CoverTrailRow>
   );
 }
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  header: {
-    ...getRtlRow(),
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.bgGlass,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: { flex: 1, textAlign: 'center', ...butcherTypography.title, color: colors.textPrimary },
-  scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  orderNumber: {
-    ...butcherTypography.titleLarge,
-    color: colors.textPrimary,
-    writingDirection: 'rtl',
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  badgeText: { ...butcherTypography.secondary, writingDirection: 'rtl' },
-  sectionTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
-    writingDirection: 'rtl',
-    marginBottom: spacing.sm,
-  },
-  timelineItem: {
-    ...getRtlRow(),
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    minHeight: 48,
-  },
-  timelineTrack: {
-    width: 28,
-    alignItems: 'center',
-  },
-  timelineDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.borderMid,
-    backgroundColor: colors.bgElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timelineDotDone: {
-    backgroundColor: colors.electric,
-    borderColor: colors.electric,
-  },
-  timelineDotActive: {
-    shadowColor: colors.electric,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  timelineLine: {
-    width: 2,
-    flex: 1,
-    minHeight: 20,
-    backgroundColor: colors.borderSoft,
-    marginVertical: 2,
-  },
-  timelineContent: {
-    flex: 1,
-    paddingBottom: spacing.sm,
-  },
-  timelineLabel: { ...butcherTypography.body, color: colors.textMuted, writingDirection: 'rtl' },
-  timelineDone: { ...butcherTypography.emphasis, color: colors.textPrimary },
-  timelineActive: { ...butcherTypography.emphasis, color: colors.electricBright },
-  timelineNote: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl', marginTop: 2 },
-  row: {
-    ...getRtlRow(),
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    paddingVertical: 4,
-  },
-  rowLabel: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },
-  rowValue: {
-    ...butcherTypography.emphasis,
-    color: colors.textPrimary,
-    flex: 1,
-    writingDirection: 'rtl',
-  },
-  itemBlock: {
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
-    paddingTop: spacing.sm,
-    marginTop: spacing.sm,
-    gap: 2,
-  },
-  errorText: { ...butcherTypography.body, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
-  chatBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.electric,
-    borderRadius: radius.xxl,
-    paddingVertical: 14,
-    marginBottom: spacing.xs,
-  },
-  chatBtnText: {
-    ...butcherTypography.primary,
-    color: '#fff',
-    writingDirection: 'rtl',
-  },
-});
+function InfoRow({
+  styles,
+  label,
+  value,
+  icon,
+  iconColor,
+  valueColor,
+  strong,
+}: {
+  styles: ReturnType<typeof createStyles>;
+  label: string;
+  value: string;
+  icon?: string;
+  iconColor?: string;
+  valueColor?: string;
+  strong?: boolean;
+}) {
+  return (
+    <CoverTrailRow justify="space-between" gap={spacing.md} style={styles.infoRow}>
+      <CoverTrailRow gap={6} style={styles.infoValueWrap}>
+        {icon ? <AppIcon name={icon} size={14} color={iconColor} /> : null}
+        <Text style={[styles.infoValue, valueColor ? { color: valueColor } : null, strong && styles.infoValueStrong]}>
+          {value}
+        </Text>
+      </CoverTrailRow>
+      <Text style={styles.infoLabel}>{label}</Text>
+    </CoverTrailRow>
+  );
+}
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
+    navRow: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.bgGlass,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
+    headerRow: { alignItems: 'flex-start' },
+    orderNumber: {
+      ...butcherTypography.titleLarge,
+      color: colors.textPrimary,
+    },
+    orderStamp: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
+      marginTop: 4,
+    },
+    statusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      flexShrink: 0,
+    },
+    statusBadgeText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      padding: spacing.lg,
+      gap: spacing.sm,
+    },
+    sectionHead: { marginBottom: 4 },
+    sectionTitle: {
+      ...butcherTypography.title,
+      color: colors.textPrimary,
+    },
+    cancelNote: {
+      ...butcherTypography.secondary,
+      color: colors.danger,
+    },
+    trackRow: {
+      flexDirection: 'row-reverse',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      paddingTop: spacing.sm,
+    },
+    trackStep: {
+      flex: 1,
+      alignItems: 'center',
+      position: 'relative',
+      minWidth: 0,
+    },
+    trackLine: {
+      position: 'absolute',
+      top: 10,
+      left: '50%',
+      width: '100%',
+      height: 2,
+    },
+    trackDot: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1,
+    },
+    trackLabel: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      marginTop: 6,
+    },
+    trackTime: {
+      ...typography.caption,
+      color: colors.textSubtle,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+    chatCard: { paddingVertical: 16 },
+    chatIconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: colors.electric + '1A',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chatTitle: {
+      ...butcherTypography.primary,
+      color: colors.textPrimary,
+    },
+    chatSub: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    infoRow: { paddingVertical: 5 },
+    infoLabel: {
+      ...butcherTypography.secondary,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+      flexShrink: 0,
+    },
+    infoValueWrap: { flexShrink: 1, maxWidth: '62%' },
+    infoValue: {
+      ...butcherTypography.emphasis,
+      color: colors.textPrimary,
+      writingDirection: 'rtl',
+      textAlign: 'left',
+    },
+    infoValueStrong: {
+      ...butcherTypography.title,
+      color: colors.success,
+    },
+    itemRow: {
+      paddingVertical: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderSoft,
+    },
+    thumb: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    thumbImg: { width: '100%', height: '100%' },
+    itemName: {
+      ...butcherTypography.primary,
+      color: colors.textPrimary,
+    },
+    itemMeta: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
+      marginTop: 4,
+    },
+    itemPriceCol: { alignItems: 'flex-start', flexShrink: 0 },
+    itemLinePrice: {
+      ...butcherTypography.emphasis,
+      color: colors.textPrimary,
+    },
+    itemQty: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    summaryBlock: {
+      marginTop: spacing.sm,
+      paddingTop: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderSoft,
+      gap: 2,
+    },
+    vatNote: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
+      textAlign: 'left',
+      writingDirection: 'rtl',
+    },
+    footerRow: { alignItems: 'stretch' },
+    footerCard: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      padding: spacing.md,
+      gap: 6,
+      alignItems: 'flex-end',
+    },
+    footerTitle: {
+      ...butcherTypography.emphasis,
+      color: colors.textPrimary,
+      writingDirection: 'rtl',
+      textAlign: 'right',
+    },
+    footerSub: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
+      writingDirection: 'rtl',
+      textAlign: 'right',
+    },
+    errorText: {
+      ...butcherTypography.body,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginTop: 80,
+    },
+  });
+}
