@@ -23,6 +23,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { PostComment, User } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 
 interface PostCommentsModalProps {
   visible: boolean;
@@ -155,12 +157,17 @@ export function PostCommentsModal({
                         <Image source={{ uri: c.author.avatar }} style={styles.avatar} contentFit="cover" />
                       </UserProfileLink>
                       <View style={styles.commentBody}>
-                        <UserProfileLink userId={c.author.id} style={styles.commentHeader}>
-                          <Text style={styles.commentName}>{c.author.arabicName}</Text>
-                          {c.author.verified ? (
-                            <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
-                          ) : null}
-                          <Text style={styles.commentTime}>{c.createdAt}</Text>
+                        <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
+                          <CoverTrailRow justify="flex-end" gap={4} style={styles.commentHeader}>
+                            <Text style={styles.commentTime}>{c.createdAt}</Text>
+                            <Text style={styles.metaDot}>·</Text>
+                            <VerifiedInlineName
+                              name={c.author.arabicName || c.author.displayName}
+                              verified={c.author.verified}
+                              badgeSize={14}
+                              nameStyle={styles.commentName}
+                            />
+                          </CoverTrailRow>
                         </UserProfileLink>
                         <Text style={styles.commentText}>{c.content}</Text>
                       </View>
@@ -271,9 +278,21 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
   },
   commentBody: { flex: 1, gap: 4 },
-  commentHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
+  commentMeta: {
+    flex: 1,
+    minWidth: 0,
+  },
+  commentHeader: {
+    width: '100%',
+    minWidth: 0,
+  },
   commentName: { ...typography.caption, color: colors.textPrimary, fontWeight: '600' },
-  commentTime: { ...typography.micro, color: colors.textMuted },
+  metaDot: {
+    ...typography.micro,
+    color: colors.textSubtle,
+    flexShrink: 0,
+  },
+  commentTime: { ...typography.micro, color: colors.textMuted, flexShrink: 0 },
   commentText: { ...typography.body, color: colors.textSecondary, ...getRtlText(), lineHeight: 22 },
   inputRow: {
     flexDirection: 'row',
