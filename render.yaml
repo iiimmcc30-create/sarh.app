@@ -90,7 +90,9 @@ services:
     plan: starter
     rootDir: backend-nest
     dockerfilePath: Dockerfile
-    dockerCommand: worker
+    # Must be a real executable. A bare word like `worker` replaces the image
+    # ENTRYPOINT/CMD and exits 128 (binary not found, no app logs).
+    dockerCommand: node dist/queue/worker.main.js
     envVars:
       - fromGroup: sarh-shared
       - key: SERVICE_MODE
@@ -124,7 +126,9 @@ services:
     plan: starter
     rootDir: backend-nest
     dockerfilePath: Dockerfile
-    dockerCommand: socket
+    # Must be a real executable. Render Docker Command replaces the image
+    # ENTRYPOINT (not passed as argv). `socket` is not a binary → exit 128.
+    dockerCommand: node dist/gateway/socket.main.js
     healthCheckPath: /health
     envVars:
       - fromGroup: sarh-shared
