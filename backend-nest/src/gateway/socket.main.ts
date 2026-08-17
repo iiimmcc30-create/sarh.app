@@ -7,7 +7,10 @@ import { GatewayModule } from './gateway.module';
 async function bootstrap() {
   initialiseSentry();
   const app = await NestFactory.create(GatewayModule, { logger: false });
-  const port = parseInt(process.env.PORT || '3002', 10);
+  const rawPort = process.env.PORT?.trim();
+  const port =
+    rawPort && /^\d+$/.test(rawPort) ? parseInt(rawPort, 10) : 3002;
+  console.log(`Socket.IO binding 0.0.0.0:${port} (PORT=${rawPort ?? ''})`);
   await app.listen(port, '0.0.0.0');
 
   const logger = app.get(LoggerService);
