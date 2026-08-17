@@ -50,6 +50,8 @@ type Props = {
   onChange: (next: ListingVideoState) => void;
   style?: ViewStyle;
   disabled?: boolean;
+  /** Compact media tile used on the create-listing first step. */
+  variant?: 'default' | 'tile';
 };
 
 function clamp(n: number, lo: number, hi: number) {
@@ -61,6 +63,7 @@ export function ListingVideoSection({
   onChange,
   style,
   disabled = false,
+  variant = 'default',
 }: Props) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
@@ -207,6 +210,24 @@ export function ListingVideoSection({
   );
 
   if (state.status === 'idle') {
+    if (variant === 'tile') {
+      return (
+        <View style={[{ flex: 1 }, style]}>
+          <Pressable
+            onPress={pickVideo}
+            disabled={disabled}
+            style={({ pressed }) => [styles.tileBtn, pressed && { opacity: 0.82 }]}
+            accessibilityRole="button"
+            accessibilityLabel="إضافة فيديو للعرض"
+          >
+            <AppIcon name="videocam" size={22} color={colors.electricBright} />
+            <Text style={styles.tileTitle}>فيديو</Text>
+            <Text style={styles.tileSub}>أضف فيديو للعرض</Text>
+          </Pressable>
+          {trimmer}
+        </View>
+      );
+    }
     return (
       <View style={[styles.addBtn, style]}>
         <Pressable
@@ -216,8 +237,8 @@ export function ListingVideoSection({
           accessibilityRole="button"
           accessibilityLabel="إضافة فيديو للإعلان"
         >
-          <AppIcon name="videocam-outline" size={22} color={colors.textMuted} />
-          <Text style={styles.addBtnText}>🎥 إضافة فيديو</Text>
+          <AppIcon name="videocam" size={22} color={colors.textMuted} />
+          <Text style={styles.addBtnText}>إضافة فيديو</Text>
           <Text style={styles.addBtnSub}>اختياري · حتى {LISTING_VIDEO_CONFIG.MAX_DURATION_S} ثانية · يمكن قص الأطول</Text>
         </Pressable>
         {trimmer}
@@ -530,6 +551,28 @@ function createStyles(colors: ThemeColors) {
     },
     actionBtn: {
       padding: 4,
+    },
+    tileBtn: {
+      flex: 1,
+      minHeight: 108,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+    },
+    tileTitle: {
+      ...typography.feedTitle,
+      color: colors.textPrimary,
+    },
+    tileSub: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: 'center',
     },
   });
 }
