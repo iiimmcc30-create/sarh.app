@@ -497,7 +497,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       flexDirection: 'row-reverse',
       alignItems: 'center',
       flexWrap: 'nowrap',
-      gap: 0,
+      gap: 4,
       alignSelf: 'flex-end',
       maxWidth: '100%',
     },
