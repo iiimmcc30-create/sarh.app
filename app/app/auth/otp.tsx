@@ -22,7 +22,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { AppLogo } from '@/components/ui/AppLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
 function formatDisplayPhone(phone: string): string {
@@ -190,35 +189,21 @@ export default function OtpScreen() {
           style={styles.kav}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          {/* Back button top right */}
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
 
-          {/* Logo */}
           <View style={styles.header}>
-            <AppLogo size={90} />
-          </View>
-
-          {/* Card */}
-          <View style={styles.card}>
-            
-            {/* Channel icon */}
-            <View style={styles.channelIconWrap}>
-              {params.channel === 'whatsapp' ? (
-                <AppIcon name="whatsapp" size={32} color="#25D366" />
-              ) : (
-                <AppIcon name="chatbubble-ellipses" size={32} color="#1099ec" />
-              )}
-            </View>
-
-            <Text style={styles.cardTitle}>أدخل رمز التحقق</Text>
+            <Text style={styles.largeTitle}>رمز التحقق</Text>
             <Text style={styles.cardSub}>
-              أرسلنا رمزاً مكوناً من {OTP_LENGTH} أرقام إلى{'\n'}
+              أرسلنا رمزاً من {OTP_LENGTH} أرقام إلى{'\n'}
               <Text style={styles.phoneHighlight}>
                 {formatDisplayPhone(params.phone || '')}
               </Text>
             </Text>
+          </View>
+
+          <View style={styles.card}>
 
             {/* OTP boxes */}
             <Animated.View style={[styles.otpRow, { transform: [{ translateX: shakeAnim }] }]}>
@@ -258,7 +243,7 @@ export default function OtpScreen() {
 
             {/* Loading indicator */}
             {loading && (
-              <ActivityIndicator size="small" color="#1099ec" style={{ marginTop: 10 }} />
+              <ActivityIndicator size="small" color={colors.electricBright} style={{ marginTop: 10 }} />
             )}
 
             {/* Countdown + Resend */}
@@ -276,7 +261,7 @@ export default function OtpScreen() {
                   disabled={resendLoading}
                   style={styles.resendActionBtn}
                 >
-                  <AppIcon name="refresh" size={15} color="#1099ec" />
+                  <AppIcon name="refresh" size={15} color={colors.electricBright} />
                   <Text style={styles.resendActionText}>
                     {resendLoading ? 'جارٍ الإرسال...' : 'إعادة إرسال الرمز'}
                   </Text>
@@ -286,28 +271,15 @@ export default function OtpScreen() {
 
             {/* Verify Button (Manual fallback) */}
             <Pressable
-              style={[styles.verifyBtn, (loading || otp.join('').length < OTP_LENGTH) && styles.verifyBtnDisabled]}
+              style={[
+                styles.verifyBtn,
+                (loading || otp.join('').length < OTP_LENGTH) && styles.verifyBtnDisabled,
+              ]}
               onPress={() => handleVerify(otp.join(''))}
               disabled={loading || otp.join('').length < OTP_LENGTH}
             >
-              <LinearGradient
-                colors={otp.join('').length === OTP_LENGTH ? [colors.electric, colors.electricBright] : [colors.borderHairline, colors.borderHairline]}
-                style={styles.verifyGrad}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.verifyText}>تأكيد الرمز</Text>
-              </LinearGradient>
+              <Text style={styles.verifyText}>تأكيد</Text>
             </Pressable>
-
-            {/* Disclaimer badge */}
-            <View style={styles.poweredRow}>
-              <Text style={styles.poweredText}>التحقق مدعوم بـ</Text>
-              <View style={styles.twilioBadge}>
-                <View style={styles.twilioDot} />
-                <Text style={styles.twilioText}>Twilio Verify</Text>
-              </View>
-            </View>
 
           </View>
         </KeyboardAvoidingView>
@@ -320,26 +292,29 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.screenRoot },
   safe: { flex: 1 },
-  kav: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.xl },
+  kav: { flex: 1, paddingHorizontal: 22, paddingTop: 56 },
 
   backBtn: {
-    position: 'absolute', top: 16, ...inlineEnd(spacing.xl),
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
+    position: 'absolute', top: 8, ...inlineEnd(8),
+    width: 36, height: 36, borderRadius: 18,
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
   },
 
-  header: { alignItems: 'center', marginBottom: 25 },
+  header: { alignItems: 'center', marginBottom: 28, gap: 8 },
+  largeTitle: {
+    ...typography.h1,
+    fontSize: 32,
+    lineHeight: 40,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
 
   card: {
-    width: '100%', borderRadius: 20, padding: spacing.xl,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline,
+    width: '100%',
     gap: spacing.md,
   },
-  channelIconWrap: { alignItems: 'center', marginBottom: -spacing.sm },
-  cardTitle: { ...typography.sectionHeading, color: colors.textPrimary, textAlign: 'center' },
-  cardSub: { ...typography.secondary, color: colors.textMuted, textAlign: 'center' },
-  phoneHighlight: { color: colors.textBrandStrong, fontWeight: '600' },
+  cardSub: { ...typography.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
+  phoneHighlight: { color: colors.textPrimary, fontWeight: '600' },
 
   otpRow: {
     flexDirection: 'row', justifyContent: 'center', gap: spacing.sm,
@@ -352,7 +327,7 @@ function createStyles(colors: ThemeColors) {
   },
   otpBoxFilled: {
     borderColor: colors.electric,
-    backgroundColor: 'rgba(30,111,241,0.1)',
+    backgroundColor: `${colors.electric}18`,
   },
   otpBoxError: { borderColor: colors.danger, backgroundColor: 'rgba(239, 68, 68, 0.1)' },
   otpInput: {
@@ -378,20 +353,17 @@ function createStyles(colors: ThemeColors) {
   resendActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   resendActionText: { ...typography.button, color: colors.textBrandStrong },
 
-  verifyBtn: { width: '100%', borderRadius: 20, overflow: 'hidden', marginTop: 10 },
-  verifyBtnDisabled: { opacity: 0.5 },
-  verifyGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  verifyText: { ...typography.button, color: colors.textPrimary },
-
-  poweredRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  poweredText: { ...typography.caption, color: '#6b7280' },
-  twilioBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(239, 47, 70, 0.1)', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 12, borderWidth: 1, borderColor: colors.borderHairline,
+  verifyBtn: {
+    width: '100%',
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: colors.electric,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
   },
-  twilioDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#f22f46' },
-  twilioText: { ...typography.badge, color: '#f22f46' },
+  verifyBtnDisabled: { opacity: 0.45 },
+  verifyText: { ...typography.button, color: '#fff' },
 
   // Success screen
   successCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },

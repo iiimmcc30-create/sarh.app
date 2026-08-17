@@ -26,7 +26,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  BRAND_JOIN_TITLE_AR,
   BRAND_MARKET_TERMS_AR,
   BRAND_REGISTER_SUBTITLE_AR,
 } from '@/constants/brandCopy';
@@ -197,15 +196,14 @@ export default function RegisterScreen() {
           
           {/* Back button top right */}
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
+            <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-            {/* Header section with Circular Logo */}
             <View style={styles.header}>
-              <AppLogo size={90} />
-              <Text style={styles.title}>{BRAND_JOIN_TITLE_AR}</Text>
+              <AppLogo size={56} showRing={false} />
+              <Text style={styles.title}>إنشاء حساب</Text>
               <Text style={styles.sub}>{BRAND_REGISTER_SUBTITLE_AR}</Text>
             </View>
 
@@ -434,7 +432,7 @@ export default function RegisterScreen() {
                     {loading ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Text style={styles.submitText}>إرسال رمز التحقق ←</Text>
+                      <Text style={styles.submitText}>إرسال رمز التحقق</Text>
                     )}
                   </LinearGradient>
                 </Pressable>
@@ -480,13 +478,15 @@ function createStyles(colors: ThemeColors) {
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
   },
 
-  header: { alignItems: 'center', marginBottom: 25, gap: 10, width: '100%' },
-  title: { ...typography.display, color: colors.textPrimary, textAlign: 'center' },
-  sub: { ...typography.secondary, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20 },
+  header: { alignItems: 'center', marginBottom: 22, gap: 8, width: '100%' },
+  title: { ...typography.h1, fontSize: 32, lineHeight: 40, color: colors.textPrimary, textAlign: 'center' },
+  sub: { ...typography.caption, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20 },
 
   card: {
-    width: '100%', borderRadius: 20, padding: spacing.xl,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline,
+    width: '100%',
+    borderRadius: 14,
+    padding: spacing.lg,
+    backgroundColor: colors.bgSurface,
     gap: spacing.md,
   },
 
@@ -539,9 +539,9 @@ function createStyles(colors: ThemeColors) {
   },
   checkboxChecked: { backgroundColor: colors.electric, borderColor: colors.electric },
 
-  submitBtn: { width: '100%', borderRadius: 20, overflow: 'hidden', marginTop: 5 },
-  submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  submitText: { ...typography.button, color: colors.textPrimary },
+  submitBtn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginTop: 5 },
+  submitGrad: { height: 52, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.electric },
+  submitText: { ...typography.button, color: '#fff' },
 
   otpVerifyContainer: {
     backgroundColor: 'rgba(30,111,241,0.05)', borderRadius: 12,
