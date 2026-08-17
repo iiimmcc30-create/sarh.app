@@ -19,8 +19,10 @@ import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getCountryInfo } from '@/services/types';
 import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -153,9 +155,9 @@ export function ProfileScreenLayout({
   }, [activeTab, tabOpacity]);
 
   const displayName = user.arabicName || user.displayName || user.username;
-  const country = getCountryInfo(user.country);
   const hasRating = user.rating != null && (user.reviewCount ?? 0) > 0;
-  const ratingLabel = hasRating ? user.rating!.toFixed(1) : '—';
+  const ratingLabel = hasRating ? user.rating!.toFixed(1) : null;
+  const filledStars = hasRating ? Math.round(user.rating!) : 0;
 
   const stats = useMemo(
     () => [
@@ -247,44 +249,55 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  {/*
-                   * Physical LTR shell — name must not share a shrinking row with
-                   * the rating chip (long Arabic names like «محمد بن عبدالعزيز» were clipped).
-                   */}
-                  <View style={styles.nameRow}>
-                    {user.verified ? <VerificationBadge size={18} /> : null}
-                    {user.isAI ? (
-                      <View style={styles.aiBadge}>
-                        <Text style={styles.aiBadgeText}>AI</Text>
-                      </View>
-                    ) : null}
-                    <View style={styles.nameShell}>
-                      <Text style={styles.displayName} numberOfLines={2}>
-                        {displayName}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.nameMetaRow}>
-                    <View style={styles.handleShell}>
-                      <Text style={styles.handleText} numberOfLines={1}>
-                        @{user.username}
-                      </Text>
-                    </View>
+                  <CoverTrailRow justify="flex-end" gap={0} style={styles.nameRow}>
+                    <CoverTrailRow justify="flex-end" gap={0} style={styles.nameWithBadge}>
+                      {user.verified ? <VerificationBadge size={18} /> : null}
+                      <RtlTextShell style={styles.nameShell}>
+                        <RtlText style={styles.displayName} numberOfLines={2}>
+                          {displayName}
+                        </RtlText>
+                      </RtlTextShell>
+                    </CoverTrailRow>
+                  </CoverTrailRow>
+
+                  <CoverTrailRow justify="space-between" gap={8} style={styles.handleRow}>
                     <Pressable
                       onPress={onRatePress}
                       disabled={!onRatePress}
                       style={({ pressed }) => [
-                        styles.ratingChip,
+                        styles.ratingRow,
                         pressed && onRatePress && styles.ratingChipPressed,
                       ]}
                     >
-                      <AppIcon name="star" size={13} color={themeColors.gold} />
-                      <Text style={styles.ratingText}>{ratingLabel}</Text>
-                      {(user.reviewCount ?? 0) > 0 ? (
-                        <Text style={styles.ratingCount}>({user.reviewCount})</Text>
-                      ) : null}
+                      <CoverTrailRow justify="flex-start" gap={4}>
+                        <View style={styles.starsRow}>
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <AppIcon
+                              key={n}
+                              name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
+                              size={11}
+                              color={
+                                hasRating && n <= filledStars
+                                  ? themeColors.gold
+                                  : themeColors.textSubtle
+                              }
+                            />
+                          ))}
+                        </View>
+                        {ratingLabel ? (
+                          <Text style={styles.ratingText}>{ratingLabel}</Text>
+                        ) : null}
+                        {(user.reviewCount ?? 0) > 0 ? (
+                          <Text style={styles.ratingCount}>({user.reviewCount})</Text>
+                        ) : null}
+                      </CoverTrailRow>
                     </Pressable>
-                  </View>
+                    <RtlTextShell flex>
+                      <RtlText style={styles.handleText} numberOfLines={1}>
+                        @{user.username}
+                      </RtlText>
+                    </RtlTextShell>
+                  </CoverTrailRow>
                 </View>
 
                 <View style={styles.statsCard}>
@@ -309,17 +322,12 @@ export function ProfileScreenLayout({
                 </View>
 
                 {!!user.bio ? (
-                  <Text style={styles.bio} numberOfLines={3}>
-                    {user.bio}
-                  </Text>
+                  <RtlTextShell style={styles.bioShell}>
+                    <RtlText style={styles.bio} numberOfLines={4}>
+                      {user.bio}
+                    </RtlText>
+                  </RtlTextShell>
                 ) : null}
-
-                <View style={[styles.locationRow, getRtlRow()]}>
-                  <AppIcon name="map-marker-outline" size={14} color={themeColors.textMuted} />
-                  <Text style={styles.locationText}>
-                    {country.flag} {country.ar}
-                  </Text>
-                </View>
               </View>
 
               <Pressable
@@ -485,58 +493,34 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: '100%',
     },
     nameRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 8,
       width: '100%',
+      minWidth: 0,
+    },
+    nameWithBadge: {
+      flexShrink: 1,
+      maxWidth: '100%',
+      alignItems: 'center',
     },
     nameShell: {
-      direction: 'ltr',
       flexShrink: 1,
       minWidth: 0,
     },
-    aiBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 6,
-      backgroundColor: `${colors.electric}22`,
+    handleRow: {
+      width: '100%',
+      minWidth: 0,
     },
-    aiBadgeText: {
-      ...typography.badge,
-      color: colors.electric,
+    ratingRow: {
+      paddingVertical: 2,
+      flexShrink: 0,
+    },
+    starsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
     },
     displayName: {
       ...typography.cardHeadingLarge,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    nameMetaRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 8,
-      width: '100%',
-    },
-    handleShell: {
-      direction: 'ltr',
-      flexShrink: 1,
-      minWidth: 0,
-    },
-    ratingChip: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-      flexShrink: 0,
     },
     ratingChipPressed: {
       opacity: 0.75,
@@ -552,7 +536,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     handleText: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
       writingDirection: 'ltr',
     },
     statsCard: {
@@ -596,22 +579,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       textAlign: 'center',
       ...getRtlText(),
     },
+    bioShell: {
+      alignSelf: 'stretch',
+      width: '100%',
+      marginTop: 4,
+    },
     bio: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-      ...getRtlText(),
-      marginTop: 2,
-    },
-    locationRow: {
-      alignItems: 'center',
-      gap: 4,
-      marginTop: 2,
-    },
-    locationText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      ...getRtlText(),
     },
     avatarCol: {
       position: 'relative',
