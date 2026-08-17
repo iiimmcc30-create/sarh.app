@@ -489,6 +489,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     nameBlock: {
       gap: 4,
       width: '100%',
+      // Physical LTR island — without this, parent RTL flips flex-end to the left edge.
+      direction: 'ltr',
     },
     nameWithBadge: {
       direction: 'ltr',
