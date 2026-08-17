@@ -21,6 +21,9 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getCountryInfo } from '@/services/types';
 import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -155,7 +158,8 @@ export function ProfileScreenLayout({
   const displayName = user.arabicName || user.displayName || user.username;
   const country = getCountryInfo(user.country);
   const hasRating = user.rating != null && (user.reviewCount ?? 0) > 0;
-  const ratingLabel = hasRating ? user.rating!.toFixed(1) : '—';
+  const ratingLabel = hasRating ? user.rating!.toFixed(1) : null;
+  const filledStars = hasRating ? Math.round(user.rating!) : 0;
 
   const stats = useMemo(
     () => [
@@ -247,45 +251,68 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  {/*
-                   * Physical LTR shell — name must not share a shrinking row with
-                   * the rating chip (long Arabic names like «محمد بن عبدالعزيز» were clipped).
-                   */}
-                  <View style={styles.nameRow}>
+                  <CoverTrailRow justify="flex-end" gap={8} style={styles.nameRow}>
                     {user.verified ? <VerificationBadge size={18} /> : null}
                     {user.isAI ? (
                       <View style={styles.aiBadge}>
                         <Text style={styles.aiBadgeText}>AI</Text>
                       </View>
                     ) : null}
-                    <View style={styles.nameShell}>
-                      <Text style={styles.displayName} numberOfLines={2}>
+                    <RtlTextShell flex>
+                      <RtlText style={styles.displayName} numberOfLines={2}>
                         {displayName}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.nameMetaRow}>
-                    <View style={styles.handleShell}>
-                      <Text style={styles.handleText} numberOfLines={1}>
+                      </RtlText>
+                    </RtlTextShell>
+                  </CoverTrailRow>
+
+                  <CoverTrailRow justify="flex-end" gap={6} style={styles.handleRow}>
+                    <RtlTextShell>
+                      <RtlText style={styles.handleText} numberOfLines={1}>
                         @{user.username}
-                      </Text>
-                    </View>
-                    <Pressable
-                      onPress={onRatePress}
-                      disabled={!onRatePress}
-                      style={({ pressed }) => [
-                        styles.ratingChip,
-                        pressed && onRatePress && styles.ratingChipPressed,
-                      ]}
-                    >
-                      <AppIcon name="star" size={13} color={themeColors.gold} />
-                      <Text style={styles.ratingText}>{ratingLabel}</Text>
+                      </RtlText>
+                    </RtlTextShell>
+                  </CoverTrailRow>
+
+                  <Pressable
+                    onPress={onRatePress}
+                    disabled={!onRatePress}
+                    style={({ pressed }) => [
+                      styles.ratingRow,
+                      pressed && onRatePress && styles.ratingChipPressed,
+                    ]}
+                  >
+                    <CoverTrailRow justify="flex-end" gap={6}>
+                      <View style={styles.starsRow}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <AppIcon
+                            key={n}
+                            name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
+                            size={11}
+                            color={
+                              hasRating && n <= filledStars
+                                ? themeColors.gold
+                                : themeColors.textSubtle
+                            }
+                          />
+                        ))}
+                      </View>
+                      {ratingLabel ? (
+                        <Text style={styles.ratingText}>{ratingLabel}</Text>
+                      ) : null}
                       {(user.reviewCount ?? 0) > 0 ? (
                         <Text style={styles.ratingCount}>({user.reviewCount})</Text>
                       ) : null}
-                    </Pressable>
-                  </View>
+                    </CoverTrailRow>
+                  </Pressable>
                 </View>
+
+                {!!user.bio ? (
+                  <RtlTextShell style={styles.bioShell}>
+                    <RtlText style={styles.bio} numberOfLines={4}>
+                      {user.bio}
+                    </RtlText>
+                  </RtlTextShell>
+                ) : null}
 
                 <View style={styles.statsCard}>
                   <View style={[styles.statsRow, getRtlRow()]}>
@@ -307,12 +334,6 @@ export function ProfileScreenLayout({
                     ))}
                   </View>
                 </View>
-
-                {!!user.bio ? (
-                  <Text style={styles.bio} numberOfLines={3}>
-                    {user.bio}
-                  </Text>
-                ) : null}
 
                 <View style={[styles.locationRow, getRtlRow()]}>
                   <AppIcon name="map-marker-outline" size={14} color={themeColors.textMuted} />
@@ -485,17 +506,21 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: '100%',
     },
     nameRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 8,
       width: '100%',
-    },
-    nameShell: {
-      direction: 'ltr',
-      flexShrink: 1,
       minWidth: 0,
+    },
+    handleRow: {
+      width: '100%',
+      minWidth: 0,
+    },
+    ratingRow: {
+      alignSelf: 'flex-end',
+      paddingVertical: 2,
+    },
+    starsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
     },
     aiBadge: {
       paddingHorizontal: 6,
@@ -510,33 +535,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayName: {
       ...typography.cardHeadingLarge,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-    },
-    nameMetaRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 8,
-      width: '100%',
-    },
-    handleShell: {
-      direction: 'ltr',
-      flexShrink: 1,
-      minWidth: 0,
-    },
-    ratingChip: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-      flexShrink: 0,
     },
     ratingChipPressed: {
       opacity: 0.75,
@@ -552,7 +550,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     handleText: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
       writingDirection: 'ltr',
     },
     statsCard: {
@@ -596,12 +593,14 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       textAlign: 'center',
       ...getRtlText(),
     },
+    bioShell: {
+      alignSelf: 'stretch',
+      width: '100%',
+    },
     bio: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-      ...getRtlText(),
-      marginTop: 2,
     },
     locationRow: {
       alignItems: 'center',

@@ -24,7 +24,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, marginEnd } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
-import { Country, countries } from '@/services/types';
+import { Country } from '@/services/types';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦' },
@@ -43,11 +43,6 @@ export default function EditProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [coverUri, setCoverUri] = useState<string | null>(null);
-  const [privacySettings, setPrivacySettings] = useState({
-    showInSearch: true,
-    allowFollow: true,
-    showFollowers: false,
-  });
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -81,10 +76,6 @@ export default function EditProfileScreen() {
     if (!result.canceled && result.assets[0]) {
       setCoverUri(result.assets[0].uri);
     }
-  };
-
-  const togglePrivacy = (key: keyof typeof privacySettings) => {
-    setPrivacySettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSave = async () => {
@@ -249,27 +240,6 @@ export default function EditProfileScreen() {
                 ))}
               </View>
             </View>
-
-            {/* Divider */}
-            <View style={styles.sectionDivider}>
-              <Text style={styles.sectionLabel}>إعدادات الخصوصية</Text>
-            </View>
-
-            {([
-              { key: 'showInSearch' as const, label: 'إظهار الحساب في نتائج البحث' },
-              { key: 'allowFollow' as const, label: 'السماح بمتابعتي مباشرة' },
-              { key: 'showFollowers' as const, label: 'إظهار عدد المتابعين' },
-            ]).map((setting) => (
-              <View key={setting.key} style={styles.settingRow}>
-                <Text style={styles.settingLabel}>{setting.label}</Text>
-                <Pressable
-                  onPress={() => togglePrivacy(setting.key)}
-                  style={[styles.toggle, privacySettings[setting.key] && styles.toggleOn]}
-                >
-                  <View style={[styles.toggleThumb, privacySettings[setting.key] && styles.toggleThumbOn]} />
-                </Pressable>
-              </View>
-            ))}
           </View>
 
           <View style={{ height: 60 }} />
@@ -372,30 +342,5 @@ function createStyles(colors: ThemeColors) {
   countryFlag: { fontSize: 16 },
   countryLabel: { ...typography.caption, color: colors.textMuted },
   countryLabelActive: { color: colors.textBrandStrong },
-  sectionDivider: {
-    paddingVertical: spacing.md, marginTop: spacing.sm,
-    borderTopWidth: 1, borderTopColor: colors.borderSoft,
-  },
-  sectionLabel: { ...typography.micro, color: colors.textMuted, letterSpacing: 0.8 },
-  settingRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-  },
-  settingLabel: { ...typography.body, color: colors.textSecondary, flex: 1 },
-  toggle: {
-    width: 44, height: 24, borderRadius: 12,
-    backgroundColor: colors.bgElevated, justifyContent: 'center',
-    paddingHorizontal: 2, borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  toggleOn: { backgroundColor: colors.electric, borderColor: colors.electric },
-  toggleThumb: {
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: colors.textMuted,
-  },
-  toggleThumbOn: {
-    backgroundColor: '#fff',
-    alignSelf: 'flex-end',
-  },
   });
 }
