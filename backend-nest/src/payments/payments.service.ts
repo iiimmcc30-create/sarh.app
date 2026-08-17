@@ -97,6 +97,8 @@ function sleep(ms: number): Promise<void> {
 
 const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000; // every 5 min
 const STALE_AFTER_MINUTES = 10; // payments older than 10 min
+/** Crash window: pending row exists but checkout URL was never written. */
+const STALE_PENDING_WITHOUT_CHECKOUT_MS = 2 * 60 * 1000;
 
 @Injectable()
 export class PaymentsService
@@ -257,6 +259,19 @@ export class PaymentsService
     );
 
     if (!existing.checkoutUrl?.trim()) {
+      const pendingAgeMs = Date.now() - existing.createdAt.getTime();
+      if (pendingAgeMs >= STALE_PENDING_WITHOUT_CHECKOUT_MS) {
+        this.logger.warn(
+          {
+            paymentId: existing.id,
+            pendingAgeMs,
+            reason: 'stale_pending_without_checkout',
+          },
+          'Stale pending payment has no checkout URL — allowing recovery',
+        );
+        return null;
+      }
+
       const waitUntil = Date.now() + 8_000;
       while (Date.now() < waitUntil) {
         await sleep(250);

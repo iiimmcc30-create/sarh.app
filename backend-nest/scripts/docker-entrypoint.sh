@@ -30,38 +30,16 @@ then
   exit 1
 fi
 
-MIGRATE_OK=0
 if [ "${SKIP_MIGRATIONS:-false}" = "true" ]; then
-  echo "SKIP_MIGRATIONS=true — skipping migrate deploy."
-  MIGRATE_OK=1
+  echo "SKIP_MIGRATIONS=true — skipping migrate deploy (no schema changes)."
 else
   echo "Running prisma migrate deploy..."
-  MIGRATE_LOG=/tmp/prisma-migrate.log
-  if timeout 120 npx prisma migrate deploy 2>&1 | tee "$MIGRATE_LOG"; then
-    MIGRATE_OK=1
-    echo "Migrations applied successfully."
-  elif grep -q "P3009" "$MIGRATE_LOG" 2>/dev/null; then
-    FAILED=$(sed -n 's/.*The `\([^`]*\)` migration.*/\1/p' "$MIGRATE_LOG" | head -1)
-    if [ -n "$FAILED" ]; then
-      echo "Resolving failed migration: $FAILED"
-      npx prisma migrate resolve --rolled-back "$FAILED" || true
-      npx prisma migrate resolve --applied "$FAILED" || true
-      if timeout 120 npx prisma migrate deploy; then
-        MIGRATE_OK=1
-      fi
-    fi
-  else
-    echo "WARN: migrate deploy failed or timed out."
+  if ! timeout 120 npx prisma migrate deploy; then
+    echo "ERROR: prisma migrate deploy failed."
+    echo "Refusing to start. Production will not fall back to db push or alter schema automatically."
+    exit 1
   fi
-fi
-
-if [ "$MIGRATE_OK" = "1" ]; then
-  echo "Schema current — skipping db push."
-elif [ "${SKIP_DB_PUSH:-false}" != "true" ]; then
-  echo "Syncing schema (db push fallback)..."
-  if ! timeout 120 npx prisma db push --accept-data-loss --skip-generate; then
-    echo "WARN: db push failed — starting API anyway."
-  fi
+  echo "Migrations applied successfully."
 fi
 
 echo "Starting NestJS API on port ${PORT:-3001}..."

@@ -25,8 +25,10 @@ describe('PaymentsService', () => {
     }),
     createPendingPaymentOrReturnExisting: jest.fn(),
     createPendingPayment: jest.fn(),
+    archiveInvalidPendingPayment: jest.fn(),
     markPaymentFailed: jest.fn(),
     updatePaymentCheckout: jest.fn(),
+    findPaymentByIdFull: jest.fn(),
   };
   const logger = {
     info: jest.fn(),
@@ -157,5 +159,53 @@ describe('PaymentsService', () => {
       status: 500,
       body: { error: 'webhook_processing_failed' },
     });
+  });
+
+  it('recovers a stale pending payment that never received a checkout URL', async () => {
+    repo.findOwnedListingForCommission.mockResolvedValue({
+      id: 'listing-a',
+      status: 'active',
+      fee: null,
+    });
+    repo.createPendingPaymentOrReturnExisting.mockResolvedValue({
+      existingPending: {
+        id: 'pay-stuck',
+        checkoutUrl: null,
+        orderId: 'SFAT-STUCK',
+        transactionId: null,
+        createdAt: new Date(Date.now() - 3 * 60 * 1000),
+      },
+    });
+    repo.archiveInvalidPendingPayment.mockResolvedValue({ id: 'pay-stuck' });
+    repo.createPendingPayment.mockResolvedValue({
+      id: 'pay-fresh',
+      orderId: 'SFAT-FRESH',
+    });
+    jest.spyOn(service as any, 'createCheckoutForPayment').mockResolvedValue({
+      paymentId: 'pay-fresh',
+      orderId: 'SFAT-FRESH',
+      checkoutUrl: 'https://checkout.example/pay-fresh',
+      status: 'pending',
+      devMode: true,
+    } as never);
+
+    const result = await service.initiate(
+      { userId: 'u1', role: 'USER' } as never,
+      {
+        amount: 25,
+        method: 'visa',
+        type: 'commission',
+        referenceId: 'listing-a',
+      } as never,
+    );
+
+    expect(repo.archiveInvalidPendingPayment).toHaveBeenCalledWith(
+      'pay-stuck',
+      'ni_order_invalid_or_expired',
+      { supersededBy: 'new_ni_order' },
+    );
+    expect(repo.createPendingPayment).toHaveBeenCalled();
+    expect(result.paymentId).toBe('pay-fresh');
+    expect(repo.findPaymentByIdFull).not.toHaveBeenCalled();
   });
 });
