@@ -1,19 +1,18 @@
-// Powered by OnSpace.AI
-// SAFAT — Create Listing Screen (إنشاء إعلان)
+// SAFAT — Create Listing (إضافة عرض)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
-import { elevatedControlStyle, menuCardStyle } from '@/components/feature/SidebarMenu';
-
+import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -26,7 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -44,25 +43,29 @@ import { cloudinaryVideoFirstFrameUrl } from '@/lib/listingMedia';
 import { ListingVideoSection, type ListingVideoState } from '@/components/listing/ListingVideoSection';
 import { uploadListingVideo } from '@/services/listingVideo';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
-import * as Location from 'expo-location';
-import { hasValidCoords } from '@/lib/butcherLocation';
 import { categoryRequiresWeight } from '@/lib/listingCategories';
 import { resolveLegacyListingCategory } from '@/lib/marketCategoriesFallback';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import type { MarketCategory } from '@/services/categories';
+import {
+  classifyListingTitle,
+  findCategoryBySlug,
+  suggestionMode,
+  type CategorySuggestion,
+} from '@/lib/categoryIntelligence';
+import {
+  detectCurrentListingLocation,
+  formatListingAddress,
+  type ListingGeo,
+  type LocationDetectStatus,
+} from '@/lib/listingLocation';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string; currency: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦', currency: 'SAR' },
 ];
 
-const STEPS = ['النوع', 'التفاصيل', 'السعر', 'المراجعة'];
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CAT_COLS = 4;
-const CAT_GAP = spacing.md;
-const CAT_CARD_SIZE =
-  (SCREEN_WIDTH - spacing.lg * 2 - CAT_GAP * (CAT_COLS - 1)) / CAT_COLS;
+const STEPS = ['الأساسيات', 'التفاصيل', 'المراجعة'];
 
 function normalizeContactPhone(value: string, country: Country): string {
   let digits = value.replace(/\D/g, '');
@@ -103,13 +106,22 @@ export default function CreateListingScreen() {
   const [weightKg, setWeightKg] = useState('');
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [listingGeo, setListingGeo] = useState<ListingGeo | null>(null);
   const [locating, setLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<LocationDetectStatus>('idle');
+  const [locationHint, setLocationHint] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [videoState, setVideoState] = useState<ListingVideoState>({ status: 'idle' });
   const [submitting, setSubmitting] = useState(false);
   const [showBoostUpsell, setShowBoostUpsell] = useState(false);
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
+  const [categoryLocked, setCategoryLocked] = useState(false);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+  const [suggestion, setSuggestion] = useState<CategorySuggestion | null>(null);
+  const [stepError, setStepError] = useState<string | null>(null);
   const { hasAnyBoostService } = usePaidServices();
+  const titleDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isEditing || !editId || !accessToken) {
@@ -150,8 +162,7 @@ export default function CreateListingScreen() {
         );
         if (raw.videoUrl) {
           const video = resolveMediaUrl(raw.videoUrl) ?? raw.videoUrl;
-          const thumb =
-            resolveMediaUrl(raw.thumbnailUrl) ?? raw.thumbnailUrl ?? null;
+          const thumb = resolveMediaUrl(raw.thumbnailUrl) ?? raw.thumbnailUrl ?? null;
           setVideoState({
             status: 'ready',
             videoUrl: video,
@@ -170,6 +181,7 @@ export default function CreateListingScreen() {
           parentId: raw.categoryId ?? raw.marketCategory?.id,
           subId: raw.subcategoryId ?? raw.marketSubcategory?.id,
         });
+        setCategoryLocked(true);
       } catch {
         if (active) {
           Alert.alert('خطأ', 'تعذر تحميل الإعلان');
@@ -193,12 +205,10 @@ export default function CreateListingScreen() {
 
   useEffect(() => {
     if (!pendingCategoryIds || parents.length === 0) return;
-    const parent =
-      parents.find((item) => item.id === pendingCategoryIds.parentId) ?? null;
+    const parent = parents.find((item) => item.id === pendingCategoryIds.parentId) ?? null;
     if (!parent) return;
     setParentCategory(parent);
-    const sub =
-      parent.children?.find((item) => item.id === pendingCategoryIds.subId) ?? null;
+    const sub = parent.children?.find((item) => item.id === pendingCategoryIds.subId) ?? null;
     setSubCategory(sub);
   }, [parents, pendingCategoryIds]);
 
@@ -207,10 +217,68 @@ export default function CreateListingScreen() {
     requiresWeight: parentCategory?.requiresWeight,
   });
 
+  const applySuggestion = (next: CategorySuggestion | null) => {
+    setSuggestion(next);
+    const mode = suggestionMode(next);
+    if (!next || mode === 'none' || categoryLocked) return;
+    const found = findCategoryBySlug(parents, next.parentSlug, next.childSlug);
+    if (!found) return;
+    if (mode === 'auto' || mode === 'suggest') {
+      setParentCategory(found.parent);
+      if (found.child) setSubCategory(found.child);
+    }
+  };
+
+  useEffect(() => {
+    if (categoryLocked || parents.length === 0) return;
+    if (titleDebounce.current) clearTimeout(titleDebounce.current);
+    titleDebounce.current = setTimeout(() => {
+      applySuggestion(classifyListingTitle(titleAr, { categories: parents }));
+    }, 400);
+    return () => {
+      if (titleDebounce.current) clearTimeout(titleDebounce.current);
+    };
+    // categoryLocked / applySuggestion intentionally omitted — lock must freeze auto updates
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [titleAr, parents, categoryLocked]);
+
+  const detectLocation = async (force = false) => {
+    setLocating(true);
+    setLocationStatus('requesting');
+    const result = await detectCurrentListingLocation();
+    setLocationStatus(result.status);
+    setLocationHint(result.message ?? null);
+    if (result.geo) {
+      setListingGeo(result.geo);
+      setLat(result.geo.latitude);
+      setLng(result.geo.longitude);
+      const label = formatListingAddress(result.geo);
+      if (label && (force || !location.trim())) setLocation(label);
+    }
+    setLocating(false);
+  };
+
+  useEffect(() => {
+    if (isEditing) return;
+    void detectLocation(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing]);
+
   const selectParent = (cat: MarketCategory) => {
     setParentCategory(cat);
     setSubCategory(null);
     setWeightKg('');
+    setCategoryLocked(true);
+  };
+
+  const selectSub = (sub: MarketCategory) => {
+    setSubCategory(sub);
+    setCategoryLocked(true);
+  };
+
+  const reSuggest = () => {
+    setCategoryLocked(false);
+    applySuggestion(classifyListingTitle(titleAr, { categories: parents }));
   };
 
   const pickImages = async () => {
@@ -219,18 +287,14 @@ export default function CreateListingScreen() {
       Alert.alert('إذن مطلوب', 'يرجى السماح بالوصول إلى الصور لإضافتها للإعلان');
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
       selectionLimit: 8 - imageUris.length,
       quality: 0.85,
     });
-
     if (!result.canceled && result.assets.length > 0) {
-      setImageUris((prev) =>
-        [...prev, ...result.assets.map((a) => a.uri)].slice(0, 8),
-      );
+      setImageUris((prev) => [...prev, ...result.assets.map((a) => a.uri)].slice(0, 8));
     }
   };
 
@@ -238,63 +302,40 @@ export default function CreateListingScreen() {
     setImageUris((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const useCurrentLocation = async () => {
-    setLocating(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('إذن الموقع', 'يرجى السماح بالوصول للموقع لتحديد مكان الإعلان');
-        return;
-      }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      setLat(Math.round(pos.coords.latitude * 1_000_000) / 1_000_000);
-      setLng(Math.round(pos.coords.longitude * 1_000_000) / 1_000_000);
-
-      try {
-        const [geo] = await Location.reverseGeocodeAsync({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
-        const city = geo?.city || geo?.subregion || geo?.region;
-        if (city && !location.trim()) setLocation(city);
-      } catch {
-        // city name optional
-      }
-    } catch {
-      Alert.alert('خطأ', 'تعذّر الحصول على موقعك. حاول مجدداً.');
-    } finally {
-      setLocating(false);
-    }
-  };
-
   const hasListingVideo =
     videoState.status === 'picked' ||
     videoState.status === 'ready' ||
     videoState.status === 'uploading';
 
-  const canContinue = () => {
-    if (step === 0) return !!parentCategory && !!subCategory;
+  const stepHint = (): string | null => {
+    if (step === 0) {
+      if (titleAr.trim().length < 3) return 'أدخل عنوان العرض';
+      if (!location.trim()) return 'حدد موقع العرض';
+      if (!parentCategory || !subCategory) return 'اختر التصنيف';
+      return null;
+    }
     if (step === 1) {
+      if (descAr.trim().length < 10) return 'أدخل وصف العرض';
+      if (!price.trim() || Number(price) <= 0) return 'أدخل السعر';
       const weightValid =
-        !needsWeight ||
-        (/^\d+(\.\d{1,2})?$/.test(weightKg.trim()) && Number(weightKg) > 0);
-      return (
-        titleAr.trim().length >= 3 &&
-        descAr.trim().length >= 10 &&
-        (imageUris.length > 0 || hasListingVideo) &&
-        weightValid
-      );
-    }
-    if (step === 2) {
+        !needsWeight || (/^\d+(\.\d{1,2})?$/.test(weightKg.trim()) && Number(weightKg) > 0);
+      if (!weightValid) return 'أدخل الوزن';
       const normalizedPhone = normalizeContactPhone(contactPhone, country);
-      const phoneValid =
-        !contactPhone.trim() || /^\+[0-9]{8,15}$/.test(normalizedPhone);
-      return price.trim().length > 0 && location.trim().length > 0 && phoneValid;
+      if (contactPhone.trim() && !/^\+[0-9]{8,15}$/.test(normalizedPhone)) return 'تحقق من رقم الجوال';
+      return null;
     }
-    return true;
+    return null;
   };
 
+  const canContinue = () => stepHint() == null;
+
   const handleNext = () => {
+    const hint = stepHint();
+    if (hint) {
+      setStepError(hint);
+      return;
+    }
+    setStepError(null);
     if (step < STEPS.length - 1) {
       setStep((s) => s + 1);
     } else {
@@ -325,7 +366,6 @@ export default function CreateListingScreen() {
         }
       }
 
-      // Upload video if one was picked (optional unless there are no photos)
       let videoFields: {
         videoUrl?: string;
         thumbnailUrl?: string;
@@ -379,12 +419,10 @@ export default function CreateListingScreen() {
             setSubmitting(false);
             return;
           }
-          // With photos, video failure is non-blocking
           setVideoState({ status: 'failed', meta: videoState.meta, error: 'فشل رفع الفيديو' });
         }
       }
 
-      // Video-only: use first-frame thumbnail as the outer card cover image
       if (uploadedUrls.length === 0) {
         const cover =
           videoFields.thumbnailUrl ??
@@ -408,6 +446,7 @@ export default function CreateListingScreen() {
           ? Number(weightKg)
           : undefined;
       const legacyCategory = resolveLegacyListingCategory(subCategory, parentCategory);
+      const locationLabel = location.trim();
       const payload = {
         title,
         arabicTitle: title,
@@ -421,8 +460,8 @@ export default function CreateListingScreen() {
         breed: breed.trim() || undefined,
         age: age.trim() || undefined,
         quantity: 1,
-        location: location.trim(),
-        arabicLocation: location.trim(),
+        location: locationLabel,
+        arabicLocation: locationLabel,
         country,
         contactPhone: contactPhone.trim()
           ? normalizeContactPhone(contactPhone, country)
@@ -457,22 +496,27 @@ export default function CreateListingScreen() {
         );
       }
     } catch (err: any) {
-      Alert.alert(
-        'خطأ',
-        sanitizeListingLimitMessage(err?.message || 'فشل نشر الإعلان.'),
-      );
+      Alert.alert('خطأ', sanitizeListingLimitMessage(err?.message || 'فشل نشر الإعلان.'));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const categoryMode = suggestionMode(suggestion);
+  const categoryAutoLabel =
+    parentCategory && !categoryLocked && categoryMode === 'auto'
+      ? 'تم تحديد التصنيف تلقائياً'
+      : parentCategory && !categoryLocked && categoryMode === 'suggest'
+        ? 'اقتراح — يمكنك تغييره'
+        : categoryLocked
+          ? 'تم اختياره يدوياً'
+          : null;
+
   if (loadingListing) {
     return (
-      <SafeAreaView style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, styles.center]} edges={['top', 'bottom']}>
         <ActivityIndicator color={colors.electricBright} />
-        <Text style={{ ...typography.body, color: colors.textMuted, marginTop: spacing.md }}>
-          جاري تحميل الإعلان...
-        </Text>
+        <Text style={styles.loadingText}>جاري تحميل الإعلان...</Text>
       </SafeAreaView>
     );
   }
@@ -483,47 +527,21 @@ export default function CreateListingScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Header — cover-style elevated control */}
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => (step > 0 ? setStep((s) => s - 1) : router.back())}
-            style={styles.backBtn}
-            hitSlop={8}
-          >
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
+        <View style={[styles.header, getRtlRow()]}>
+          <Pressable onPress={() => router.back()} hitSlop={8} style={styles.cancelBtn}>
+            <Text style={styles.cancelText}>إلغاء</Text>
           </Pressable>
-          <View style={styles.headerTitleShell}>
-            <Text style={styles.headerTitle}>{isEditing ? 'تعديل الإعلان' : 'إنشاء إعلان'}</Text>
-          </View>
-          <View style={styles.headerSide} />
+          <Text style={styles.headerTitle}>{isEditing ? 'تعديل العرض' : 'إضافة عرض'}</Text>
+          <AppLogo size={34} showRing={false} />
         </View>
 
-        {/* Step bar — fixed height, no vertical flex expansion */}
-        <View style={styles.stepBarWrap}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.stepBarScroll}
-            contentContainerStyle={styles.stepBar}
-          >
-            {STEPS.map((s, i) => (
-              <View key={s} style={styles.stepItem}>
-                <View style={[styles.stepDot, i <= step && styles.stepDotActive]}>
-                  {i < step ? (
-                    <AppIcon name="checkmark" size={12} color="#fff" />
-                  ) : (
-                    <Text style={styles.stepNum}>{i + 1}</Text>
-                  )}
-                </View>
-                <Text style={[styles.stepLabel, i === step && styles.stepLabelActive]} numberOfLines={1}>
-                  {s}
-                </Text>
-                {i < STEPS.length - 1 && (
-                  <View style={[styles.stepLine, i < step && styles.stepLineActive]} />
-                )}
-              </View>
-            ))}
-          </ScrollView>
+        <View style={styles.progressRow}>
+          {STEPS.map((_, i) => (
+            <View
+              key={STEPS[i]}
+              style={[styles.progressSeg, i <= step && styles.progressSegActive]}
+            />
+          ))}
         </View>
 
         <ScrollView
@@ -532,87 +550,111 @@ export default function CreateListingScreen() {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Step 0 - Category */}
           {step === 0 && (
             <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>ما نوع الإعلان؟</Text>
-              <Text style={styles.stepSubtitle}>اختر التصنيف ثم النوع</Text>
-
-              {categoriesLoading && parents.length === 0 ? (
-                <ActivityIndicator color={colors.electricBright} style={{ marginVertical: spacing.lg }} />
-              ) : null}
-
-              <Text style={[styles.fieldLabel, { marginBottom: spacing.sm }]}>التصنيف</Text>
-              <View style={styles.catGrid}>
-                {parents.map((cat) => (
-                  <Pressable
-                    key={cat.id}
-                    onPress={() => selectParent(cat)}
-                    style={[
-                      styles.catCard,
-                      parentCategory?.id === cat.id && styles.catCardActive,
-                    ]}
-                  >
-                    <Text style={styles.catIcon}>{cat.emoji || '📦'}</Text>
-                    <Text
-                      style={[
-                        styles.catLabel,
-                        parentCategory?.id === cat.id && styles.catLabelActive,
-                      ]}
-                    >
-                      {cat.nameAr}
-                    </Text>
-                    {parentCategory?.id === cat.id && (
-                      <View style={styles.catCheck}>
-                        <AppIcon name="checkmark-circle" size={16} color={colors.electricBright} />
-                      </View>
-                    )}
-                  </Pressable>
-                ))}
+              <View style={styles.mediaRow}>
+                <Pressable
+                  onPress={pickImages}
+                  style={({ pressed }) => [styles.mediaTile, pressed && styles.pressed]}
+                >
+                  <AppIcon name="images-outline" size={22} color={colors.electricBright} />
+                  <Text style={styles.mediaTitle}>صور</Text>
+                  <Text style={styles.mediaSub}>
+                    {imageUris.length > 0 ? `${imageUris.length} صور` : 'أضف صور العرض'}
+                  </Text>
+                </Pressable>
+                {videoState.status === 'idle' ? (
+                  <ListingVideoSection
+                    variant="tile"
+                    state={videoState}
+                    onChange={setVideoState}
+                    disabled={submitting}
+                    style={styles.mediaTileFlex}
+                  />
+                ) : (
+                  <View style={styles.mediaTile}>
+                    <AppIcon name="videocam" size={22} color={colors.electricBright} />
+                    <Text style={styles.mediaTitle}>فيديو</Text>
+                    <Text style={styles.mediaSub}>تمت الإضافة ✓</Text>
+                  </View>
+                )}
               </View>
 
-              {parentCategory ? (
-                <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
-                  <Text style={styles.fieldLabel}>النوع *</Text>
-                  <View style={styles.subList}>
-                    {subOptions.map((sub) => (
-                      <Pressable
-                        key={sub.id}
-                        onPress={() => setSubCategory(sub)}
-                        style={[
-                          styles.subChip,
-                          subCategory?.id === sub.id && styles.subChipActive,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.subChipText,
-                            subCategory?.id === sub.id && styles.subChipTextActive,
-                          ]}
-                        >
-                          {sub.emoji ? `${sub.emoji} ` : ''}
-                          {sub.nameAr}
-                        </Text>
+              {imageUris.length > 0 ? (
+                <View style={styles.imageGrid}>
+                  {imageUris.map((uri, idx) => (
+                    <View key={uri} style={styles.imageThumbWrap}>
+                      <Image source={{ uri }} style={styles.imageThumb} contentFit="cover" />
+                      <Pressable style={styles.imageRemove} onPress={() => removeImage(idx)} hitSlop={6}>
+                        <AppIcon name="close-circle" size={20} color={colors.rose} />
                       </Pressable>
-                    ))}
-                  </View>
+                    </View>
+                  ))}
                 </View>
               ) : null}
-            </View>
-          )}
 
-          {/* Step 1 - Details */}
-          {step === 1 && (
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>تفاصيل الإعلان</Text>
+              {videoState.status !== 'idle' ? (
+                <ListingVideoSection
+                  state={videoState}
+                  onChange={setVideoState}
+                  disabled={submitting}
+                />
+              ) : null}
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>عنوان الإعلان *</Text>
-                <View style={styles.inputWrap}>
+                <Text style={styles.fieldLabel}>موقع العرض</Text>
+                <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
+                  <AppIcon name="location-outline" size={18} color={colors.electricBright} />
+                  <TextInput
+                    value={location}
+                    onChangeText={(v) => {
+                      setLocation(v);
+                      setLocationStatus('manual');
+                    }}
+                    placeholder="حدد موقع العرض يدوياً"
+                    placeholderTextColor={colors.textMuted}
+                    style={[styles.input, { textAlign: 'right' }]}
+                  />
+                  {locating ? (
+                    <ActivityIndicator size="small" color={colors.electricBright} />
+                  ) : (
+                    <Pressable onPress={() => void detectLocation(true)} hitSlop={8}>
+                      <AppIcon name="refresh" size={16} color={colors.textMuted} />
+                    </Pressable>
+                  )}
+                </View>
+                {locationHint && !location.trim() ? (
+                  <Text style={styles.fieldHintMuted}>{locationHint}</Text>
+                ) : locationStatus === 'ready' ? (
+                  <Text style={styles.fieldHintSuccess}>تم تحديد موقعك الحالي</Text>
+                ) : null}
+                <Pressable onPress={() => setShowMap((v) => !v)} style={styles.linkBtn}>
+                  <Text style={styles.linkText}>{showMap ? 'إخفاء الخريطة' : 'اختيار من الخريطة'}</Text>
+                </Pressable>
+                {showMap ? (
+                  <LocationMapPreview
+                    country={country}
+                    cityLabel={location.trim() || undefined}
+                    lat={lat}
+                    lng={lng}
+                    height={180}
+                    showLocateButton
+                    onLocate={() => void detectLocation(true)}
+                    locating={locating}
+                  />
+                ) : null}
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>عنوان العرض</Text>
+                <View style={[styles.inputWrap, titleAr.trim() ? styles.inputFilled : null]}>
                   <TextInput
                     value={titleAr}
-                    onChangeText={setTitleAr}
-                    placeholder="مثال: ناقة نجدية أصيلة..."
+                    onChangeText={(v) => {
+                      setTitleAr(v);
+                      setStepError(null);
+                    }}
+                    placeholder="مثال: أغنام حريات للبيع"
                     placeholderTextColor={colors.textMuted}
                     style={[styles.input, { textAlign: 'right' }]}
                     maxLength={80}
@@ -621,35 +663,133 @@ export default function CreateListingScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الوصف *</Text>
-                <View style={[styles.inputWrap, { height: 100, alignItems: 'flex-start', paddingTop: spacing.sm }]}>
+                <View style={[styles.categoryLabelRow, getRtlRow()]}>
+                  <Text style={styles.fieldLabel}>التصنيف</Text>
+                  {parentCategory ? (
+                    <Pressable onPress={reSuggest} hitSlop={6}>
+                      <Text style={styles.linkText}>إعادة الاقتراح</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+                <Pressable
+                  onPress={() => setCategoryPickerOpen(true)}
+                  style={[
+                    styles.inputWrap,
+                    styles.categoryField,
+                    parentCategory ? styles.inputFilled : null,
+                    !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
+                  ]}
+                >
+                  <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
+                  <View style={styles.categoryValue}>
+                    <Text
+                      style={[
+                        styles.categoryValueText,
+                        !parentCategory && { color: colors.textMuted },
+                      ]}
+                    >
+                      {parentCategory
+                        ? `${parentCategory.nameAr}${subCategory ? ` · ${subCategory.nameAr}` : ''}${
+                            !categoryLocked && categoryMode === 'auto' ? ' ✓' : ''
+                          }`
+                        : 'اختر التصنيف'}
+                    </Text>
+                    {categoryAutoLabel ? (
+                      <Text style={styles.fieldHintSuccess}>{categoryAutoLabel}</Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+                {categoriesLoading && parents.length === 0 ? (
+                  <ActivityIndicator size="small" color={colors.electricBright} />
+                ) : null}
+              </View>
+            </View>
+          )}
+
+          {step === 1 && (
+            <View style={styles.stepContent}>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>الوصف</Text>
+                <View style={[styles.inputWrap, styles.textareaWrap]}>
                   <TextInput
                     value={descAr}
                     onChangeText={setDescAr}
-                    placeholder="صف الحيوان بالتفصيل: العمر، الجنس، الحالة الصحية..."
+                    placeholder="اكتب وصف العرض بالتفصيل..."
                     placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { ...getRtlText(), textAlignVertical: 'top', height: 80 }]}
+                    style={[styles.input, styles.textarea, getRtlText()]}
                     multiline
-                    maxLength={500}
+                    maxLength={1000}
                   />
+                  <Text style={styles.charCount}>{descAr.length}/1000</Text>
                 </View>
               </View>
 
+              <View style={styles.compactRow}>
+                <View style={styles.compactField}>
+                  <Text style={styles.compactLabel}>السعر</Text>
+                  <View style={styles.compactInput}>
+                    <TextInput
+                      value={price}
+                      onChangeText={(t) => setPrice(t.replace(/[^0-9]/g, ''))}
+                      placeholder="0"
+                      placeholderTextColor={colors.textMuted}
+                      style={[styles.compactText, { textAlign: 'right' }]}
+                      keyboardType="numeric"
+                    />
+                    <Text style={styles.compactUnit}>ر.س</Text>
+                  </View>
+                </View>
+                <View style={styles.compactField}>
+                  <Text style={styles.compactLabel}>
+                    الوزن{needsWeight ? '' : ' (اختياري)'}
+                  </Text>
+                  <View style={styles.compactInput}>
+                    <TextInput
+                      value={weightKg}
+                      onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
+                      placeholder="0"
+                      placeholderTextColor={colors.textMuted}
+                      style={[styles.compactText, { textAlign: 'right' }]}
+                      keyboardType="decimal-pad"
+                    />
+                    <Text style={styles.compactUnit}>كجم</Text>
+                  </View>
+                </View>
+                <View style={[styles.compactField, styles.compactPhone]}>
+                  <Text style={styles.compactLabel}>الجوال</Text>
+                  <View style={styles.compactInput}>
+                    <AppIcon name="call-outline" size={14} color={colors.electricBright} />
+                    <TextInput
+                      value={contactPhone}
+                      onChangeText={(text) => setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))}
+                      placeholder="05XXXXXXXX"
+                      placeholderTextColor={colors.textMuted}
+                      style={[styles.compactText, { flex: 1, textAlign: 'right' }]}
+                      keyboardType="phone-pad"
+                      maxLength={20}
+                    />
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.privacyNote}>
+                رقم الجوال يُستخدم للتواصل داخل سرح ولا يُعرض علناً إن لم تضفه.
+              </Text>
+
               <View style={styles.row}>
                 <View style={[styles.fieldGroup, { flex: 1 }]}>
-                  <Text style={styles.fieldLabel}>السلالة / النوع</Text>
+                  <Text style={styles.fieldLabel}>السلالة (اختياري)</Text>
                   <View style={styles.inputWrap}>
                     <TextInput
                       value={breed}
                       onChangeText={setBreed}
-                      placeholder="مثال: نجدية"
+                      placeholder="مثال: حرية"
                       placeholderTextColor={colors.textMuted}
                       style={[styles.input, { textAlign: 'right' }]}
                     />
                   </View>
                 </View>
                 <View style={[styles.fieldGroup, { flex: 1 }]}>
-                  <Text style={styles.fieldLabel}>العمر</Text>
+                  <Text style={styles.fieldLabel}>العمر (اختياري)</Text>
                   <View style={styles.inputWrap}>
                     <TextInput
                       value={age}
@@ -661,175 +801,17 @@ export default function CreateListingScreen() {
                   </View>
                 </View>
               </View>
-
-              {needsWeight || parentCategory?.slug === 'livestock' ? (
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>
-                    الوزن (كجم){needsWeight ? ' *' : ' (اختياري)'}
-                  </Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      value={weightKg}
-                      onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
-                      placeholder="مثال: 450"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="decimal-pad"
-                      style={[styles.input, { textAlign: 'right' }]}
-                    />
-                    <Text style={styles.currencyLabel}>كجم</Text>
-                  </View>
-                  {needsWeight ? (
-                    <Text style={styles.fieldHint}>
-                      إلزامي لتصنيف الذبائح
-                    </Text>
-                  ) : null}
-                </View>
-              ) : null}
-
-              {/* Images */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الصور{hasListingVideo ? '' : ' *'}</Text>
-                <View style={styles.imageGrid}>
-                  {imageUris.map((uri, idx) => (
-                    <View key={uri} style={styles.imageThumbWrap}>
-                      <Image source={{ uri }} style={styles.imageThumb} contentFit="cover" />
-                      <Pressable style={styles.imageRemove} onPress={() => removeImage(idx)} hitSlop={6}>
-                        <AppIcon name="close-circle" size={22} color={colors.rose} />
-                      </Pressable>
-                    </View>
-                  ))}
-                  {imageUris.length < 8 && (
-                    <Pressable style={styles.imageAddBtn} onPress={pickImages}>
-                      <AppIcon name="add" size={28} color={colors.textMuted} />
-                      <Text style={styles.imagePickerText}>إضافة</Text>
-                    </Pressable>
-                  )}
-                </View>
-                <Text style={styles.imagePickerSub}>حتى 8 صور · JPG، PNG</Text>
-              </View>
-
-              {/* Video — completely independent section, always optional */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>فيديو (اختياري)</Text>
-                <ListingVideoSection
-                  state={videoState}
-                  onChange={setVideoState}
-                  disabled={submitting}
-                />
-              </View>
             </View>
           )}
 
-          {/* Step 2 - Price & Location */}
           {step === 2 && (
             <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>السعر والموقع</Text>
-
-              {/* Country */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الدولة</Text>
-                <View style={styles.countryRow}>
-                  {GCC_COUNTRIES.map((c) => (
-                    <Pressable
-                      key={c.code}
-                      onPress={() => setCountry(c.code)}
-                      style={[styles.countryChip, country === c.code && styles.countryChipActive]}
-                    >
-                      <Text style={styles.countryFlag}>{c.flag}</Text>
-                      <Text style={[styles.countryLabel, country === c.code && { color: colors.textBrandStrong }]}>
-                        {c.ar}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>السعر * ({selectedCountry.currency})</Text>
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={price}
-                    onChangeText={(t) => setPrice(t.replace(/[^0-9]/g, ''))}
-                    placeholder="0"
-                    placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { flex: 1, textAlign: 'right' }]}
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.currencyLabel}>{selectedCountry.currency}</Text>
-                </View>
-                {price ? (
-                  <Text style={styles.fieldHint}>
-                    {Number(price).toLocaleString()} {selectedCountry.currency}
-                  </Text>
-                ) : null}
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الموقع على الخريطة *</Text>
-                <LocationMapPreview
-                  country={country}
-                  cityLabel={location.trim() || undefined}
-                  lat={lat}
-                  lng={lng}
-                  height={220}
-                  showLocateButton
-                  onLocate={useCurrentLocation}
-                  locating={locating}
-                />
-                <View style={styles.inputWrap}>
-                  <AppIcon name="location-outline" size={16} color={colors.textMuted} />
-                  <TextInput
-                    value={location}
-                    onChangeText={setLocation}
-                    placeholder="مثال: الرياض"
-                    placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { flex: 1, textAlign: 'right' }]}
-                  />
-                </View>
-                {hasValidCoords(lat, lng) ? (
-                  <Text style={styles.fieldHint}>✓ تم تحديد الموقع على الخريطة</Text>
-                ) : (
-                  <Text style={styles.mapHint}>اضغط «موقعي الحالي» أو أدخل اسم المدينة</Text>
-                )}
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>رقم التواصل عبر واتساب (اختياري)</Text>
-                <View style={styles.inputWrap}>
-                  <AppIcon name="whatsapp" size={18} color="#25D366" />
-                  <TextInput
-                    value={contactPhone}
-                    onChangeText={(text) =>
-                      setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))
-                    }
-                    placeholder="مثال: +9665XXXXXXXX"
-                    placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { flex: 1, textAlign: 'right' }]}
-                    keyboardType="phone-pad"
-                    maxLength={20}
-                  />
-                </View>
-                <Text style={styles.mapHint}>
-                  سيظهر زر واتساب في تفاصيل الإعلان عند إضافة الرقم
-                </Text>
-              </View>
-
-            </View>
-          )}
-
-          {/* Step 3 - Review */}
-          {step === 3 && (
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>مراجعة الإعلان</Text>
               <View style={styles.reviewCard}>
                 <View style={styles.reviewRow}>
                   <Text style={styles.reviewLabel}>التصنيف</Text>
                   <Text style={styles.reviewValue}>
-                    {parentCategory?.emoji ? `${parentCategory.emoji} ` : ''}
                     {parentCategory?.nameAr || '—'}
-                    {subCategory
-                      ? ` / ${subCategory.emoji ? `${subCategory.emoji} ` : ''}${subCategory.nameAr}`
-                      : ''}
+                    {subCategory ? ` · ${subCategory.nameAr}` : ''}
                   </Text>
                 </View>
                 <View style={styles.reviewRow}>
@@ -837,35 +819,23 @@ export default function CreateListingScreen() {
                   <Text style={styles.reviewValue}>{titleAr || '—'}</Text>
                 </View>
                 <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>الموقع</Text>
+                  <Text style={styles.reviewValue}>{location || '—'}</Text>
+                </View>
+                <View style={styles.reviewRow}>
                   <Text style={styles.reviewLabel}>السعر</Text>
                   <Text style={styles.reviewValue}>
-                    {price ? `${Number(price).toLocaleString()} ${selectedCountry.currency}` : '—'}
+                    {price ? `${Number(price).toLocaleString()} ر.س` : '—'}
                   </Text>
                 </View>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>الموقع</Text>
-                  <Text style={styles.reviewValue}>{location || '—'} {selectedCountry.flag}</Text>
+                  <Text style={styles.reviewLabel}>الوسائط</Text>
+                  <Text style={styles.reviewValue}>
+                    {imageUris.length} صور
+                    {hasListingVideo ? ' · فيديو' : ''}
+                  </Text>
                 </View>
-                <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>واتساب</Text>
-                  <Text style={styles.reviewValue}>{contactPhone.trim() || 'غير مضاف'}</Text>
-                </View>
-                <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>الصور</Text>
-                  <Text style={styles.reviewValue}>{imageUris.length} صورة</Text>
-                </View>
-                {videoState.status !== 'idle' && (
-                  <View style={styles.reviewRow}>
-                    <Text style={styles.reviewLabel}>الفيديو</Text>
-                    <Text style={styles.reviewValue}>
-                      {videoState.status === 'picked' || videoState.status === 'ready'
-                        ? `✓ ${Math.round((videoState.meta as any).durationSecs)}ث`
-                        : 'تمت الإضافة'}
-                    </Text>
-                  </View>
-                )}
               </View>
-
               <View style={styles.termsBox}>
                 <AppIcon name="information-circle-outline" size={16} color={colors.textMuted} />
                 <Text style={styles.termsText}>
@@ -874,19 +844,17 @@ export default function CreateListingScreen() {
               </View>
             </View>
           )}
-
-          <View style={{ height: spacing.md }} />
         </ScrollView>
 
-        {/* Bottom CTA */}
         <View style={styles.bottomBar}>
+          {stepError ? <Text style={styles.stepError}>{stepError}</Text> : null}
           <Pressable
             style={[styles.continueBtn, (!canContinue() || submitting) && styles.continueBtnDisabled]}
             onPress={handleNext}
-            disabled={!canContinue() || submitting}
+            disabled={submitting}
           >
             <LinearGradient
-              colors={canContinue() && !submitting ? gradients.royal : [colors.bgSurface, colors.bgSurface]}
+              colors={canContinue() && !submitting ? gradients.electric : [colors.bgSurface, colors.bgSurface]}
               style={styles.continueBtnInner}
             >
               {submitting ? (
@@ -896,13 +864,72 @@ export default function CreateListingScreen() {
                   {step === STEPS.length - 1
                     ? isEditing
                       ? 'حفظ التعديل'
-                      : '🚀 نشر الإعلان'
-                    : 'التالي ← '}
+                      : 'نشر العرض'
+                    : 'التالي'}
                 </Text>
               )}
             </LinearGradient>
           </Pressable>
+          {step > 0 ? (
+            <Pressable onPress={() => setStep((s) => s - 1)} style={styles.backStep}>
+              <Text style={styles.linkText}>رجوع</Text>
+            </Pressable>
+          ) : null}
         </View>
+
+        <Modal
+          visible={categoryPickerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCategoryPickerOpen(false)}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setCategoryPickerOpen(false)}>
+            <Pressable style={styles.modalSheet} onPress={() => undefined}>
+              <Text style={styles.modalTitle}>اختر التصنيف</Text>
+              <ScrollView style={styles.modalScroll}>
+                {parents.map((cat) => (
+                  <View key={cat.id} style={styles.modalGroup}>
+                    <Pressable
+                      onPress={() => selectParent(cat)}
+                      style={[
+                        styles.modalParent,
+                        parentCategory?.id === cat.id && styles.modalParentActive,
+                      ]}
+                    >
+                      <Text style={styles.modalParentText}>{cat.nameAr}</Text>
+                    </Pressable>
+                    {parentCategory?.id === cat.id ? (
+                      <View style={styles.subList}>
+                        {subOptions.map((sub) => (
+                          <Pressable
+                            key={sub.id}
+                            onPress={() => {
+                              selectSub(sub);
+                              setCategoryPickerOpen(false);
+                            }}
+                            style={[
+                              styles.subChip,
+                              subCategory?.id === sub.id && styles.subChipActive,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.subChipText,
+                                subCategory?.id === sub.id && styles.subChipTextActive,
+                              ]}
+                            >
+                              {sub.nameAr}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : null}
+                  </View>
+                ))}
+              </ScrollView>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         {publishedListingId && hasAnyBoostService ? (
           <ListingBoostSheet
@@ -926,196 +953,243 @@ export default function CreateListingScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.screenRoot },
-  flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    minHeight: 56,
-    flexShrink: 0,
-    backgroundColor: colors.screenRoot,
-  },
-  backBtn: {
-    ...elevatedControlStyle(colors),
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerSide: { width: 44 },
-  headerTitleShell: {
-    flex: 1,
-    direction: 'ltr',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    width: '100%',
-    textAlign: 'center',
-    writingDirection: 'rtl',
-  },
-  stepBarWrap: {
-    flexShrink: 0,
-    flexGrow: 0,
-  },
-  stepBarScroll: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  stepBar: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-  },
-  stepItem: { flexDirection: 'row', alignItems: 'center', minWidth: 72 },
-  stepDot: {
-    width: 24, height: 24, borderRadius: 12,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSoft,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stepDotActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-  stepNum: { ...typography.micro, color: colors.textMuted },
-  stepLabel: { ...typography.micro, color: colors.textMuted, marginStart: 4, maxWidth: 56 },
-  stepLabelActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  stepLine: { width: 20, height: 1, backgroundColor: colors.borderSoft, marginHorizontal: 4 },
-  stepLineActive: { backgroundColor: colors.electric },
-  scrollView: { flex: 1, flexShrink: 1 },
-  scroll: {
-    paddingBottom: spacing.lg,
-    ...(Platform.OS === 'web' ? { flexGrow: 0 } : {}),
-  },
-  stepContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.md, gap: spacing.md },
-  stepTitle: { ...typography.h2, color: colors.textPrimary, textAlign: 'right' },
-  stepSubtitle: { ...typography.body, color: colors.textMuted, ...getRtlText(), marginBottom: spacing.xs },
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: CAT_GAP },
-  catCard: {
-    width: CAT_CARD_SIZE,
-    height: CAT_CARD_SIZE,
-    ...menuCardStyle(colors),
-    alignItems: 'center', justifyContent: 'center', gap: 4,
-    position: 'relative',
-  },
-  catCardActive: { backgroundColor: `${colors.success}18` },
-  catIcon: { fontSize: 24 },
-  catLabel: { ...typography.micro, color: colors.textMuted, textAlign: 'center' },
-  catLabelActive: { color: colors.textBrandStrong },
-  catCheck: { position: 'absolute', top: 4, right: 4 },
-  subList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    justifyContent: 'flex-end',
-  },
-  subChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: colors.bgElevated,
-  },
-  subChipActive: {
-    backgroundColor: `${colors.success}18`,
-  },
-  subChipText: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: '600',
-    writingDirection: 'rtl',
-    textAlign: 'right',
-  },
-  subChipTextActive: { color: colors.textBrandStrong },
-  fieldGroup: { gap: spacing.sm },
-  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.bgSurface, borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  input: {
-    flex: 1, ...typography.body, color: colors.textPrimary,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-  },
-  currencyLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-  fieldHint: { ...typography.micro, color: colors.gold },
-  mapHint: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
-  row: { flexDirection: 'row', gap: spacing.md },
-  imageGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm,
-  },
-  imageThumbWrap: {
-    width: 88, height: 88, borderRadius: radius.lg, overflow: 'hidden',
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  imageThumb: { width: '100%', height: '100%' },
-  imageRemove: {
-    position: 'absolute', top: 2, right: 2,
-    backgroundColor: 'rgba(6,9,26,0.6)', borderRadius: 12,
-  },
-  imageAddBtn: {
-    width: 88, height: 88, borderRadius: radius.lg,
-    backgroundColor: colors.bgSurface, borderWidth: 1,
-    borderColor: colors.borderSoft, borderStyle: 'dashed',
-    alignItems: 'center', justifyContent: 'center', gap: 2,
-  },
-  imagePickerText: { ...typography.caption, color: colors.textMuted },
-  imagePickerSub: { ...typography.micro, color: colors.textSubtle, textAlign: 'right' },
-  countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  countryChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: spacing.md, paddingVertical: 7,
-    borderRadius: radius.pill, backgroundColor: colors.bgSurface,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  countryChipActive: { borderColor: colors.electric, backgroundColor: `${colors.electric}15` },
-  countryFlag: { fontSize: 16 },
-  countryLabel: { ...typography.caption, color: colors.textMuted },
-  featuredToggle: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: spacing.lg, backgroundColor: colors.bgSurface,
-    borderRadius: radius.lg, borderWidth: 1, borderColor: `${colors.gold}40`,
-  },
-  featuredInfo: { gap: 2 },
-  featuredTitle: { ...typography.bodyStrong, color: colors.gold },
-  featuredSub: { ...typography.caption, color: colors.textMuted },
-  toggle: {
-    width: 51, height: 31, borderRadius: 16,
-    backgroundColor: colors.bgDeep, justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleOn: { backgroundColor: colors.success },
-  toggleThumb: { width: 27, height: 27, borderRadius: 14, backgroundColor: '#FFFFFF' },
-  toggleThumbOn: { alignSelf: 'flex-end' },
-  reviewCard: {
-    ...menuCardStyle(colors),
-  },
-  reviewRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft,
-  },
-  reviewLabel: { ...typography.caption, color: colors.textMuted },
-  reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right' },
-  termsBox: {
-    flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start',
-    padding: spacing.md, backgroundColor: `${colors.electric}10`,
-    borderRadius: radius.lg, borderWidth: 1, borderColor: `${colors.electric}20`,
-  },
-  termsText: { ...typography.caption, color: colors.textMuted, flex: 1, lineHeight: 18, textAlign: 'right' },
-  bottomBar: {
-    flexShrink: 0,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
-    backgroundColor: colors.bgDeep,
-  },
-  continueBtn: { borderRadius: radius.xl, overflow: 'hidden' },
-  continueBtnDisabled: { opacity: 0.5 },
-  continueBtnInner: {
-    paddingVertical: spacing.md, alignItems: 'center', borderRadius: radius.xl,
-  },
-  continueBtnText: { ...typography.button, color: '#fff' },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
+    flex: { flex: 1 },
+    center: { alignItems: 'center', justifyContent: 'center' },
+    loadingText: { ...typography.body, color: colors.textMuted, marginTop: spacing.md },
+    header: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      minHeight: 52,
+    },
+    cancelBtn: { minWidth: 52, paddingVertical: 8 },
+    cancelText: { ...typography.body, color: colors.textPrimary },
+    headerTitle: {
+      ...typography.h3,
+      color: colors.textPrimary,
+      textAlign: 'center',
+    },
+    progressRow: {
+      flexDirection: 'row',
+      gap: 6,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    progressSeg: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.borderSoft,
+    },
+    progressSegActive: { backgroundColor: colors.electric },
+    scrollView: { flex: 1 },
+    scroll: { paddingBottom: spacing.lg },
+    stepContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      gap: spacing.md,
+    },
+    mediaRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    mediaTile: {
+      flex: 1,
+      minHeight: 108,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingVertical: spacing.md,
+    },
+    mediaTileFlex: { flex: 1 },
+    mediaTitle: { ...typography.feedTitle, color: colors.textPrimary },
+    mediaSub: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
+    pressed: { opacity: 0.82 },
+    fieldGroup: { gap: 6 },
+    fieldLabel: {
+      ...typography.caption,
+      color: colors.textMuted,
+      fontWeight: '600',
+      textAlign: 'right',
+    },
+    inputWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      minHeight: 48,
+    },
+    inputFilled: { borderColor: colors.borderMid },
+    inputAuto: { borderColor: `${colors.electric}66` },
+    input: {
+      flex: 1,
+      ...typography.body,
+      color: colors.textPrimary,
+      paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    },
+    textareaWrap: {
+      alignItems: 'flex-start',
+      minHeight: 120,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    textarea: {
+      textAlignVertical: 'top',
+      minHeight: 88,
+    },
+    charCount: {
+      ...typography.micro,
+      color: colors.textSubtle,
+      alignSelf: 'flex-start',
+    },
+    fieldHintMuted: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
+    fieldHintSuccess: { ...typography.micro, color: colors.electricBright, textAlign: 'right' },
+    linkBtn: { alignSelf: 'flex-end' },
+    linkText: { ...typography.caption, color: colors.electricBright },
+    categoryLabelRow: { justifyContent: 'space-between', alignItems: 'center' },
+    categoryField: { minHeight: 56, alignItems: 'center' },
+    categoryValue: { flex: 1, alignItems: 'flex-end' },
+    categoryValueText: { ...typography.body, color: colors.textPrimary, textAlign: 'right' },
+    compactRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    compactField: { flex: 1, gap: 4 },
+    compactPhone: { flex: 1.25 },
+    compactLabel: {
+      ...typography.micro,
+      color: colors.textMuted,
+      textAlign: 'right',
+    },
+    compactInput: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      minHeight: 44,
+      borderRadius: radius.md,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      paddingHorizontal: 8,
+    },
+    compactText: { ...typography.caption, color: colors.textPrimary, flex: 1 },
+    compactUnit: { ...typography.micro, color: colors.textMuted },
+    privacyNote: {
+      ...typography.micro,
+      color: colors.textMuted,
+      textAlign: 'right',
+      lineHeight: 18,
+    },
+    row: { flexDirection: 'row', gap: spacing.md },
+    imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    imageThumbWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: radius.md,
+      overflow: 'hidden',
+      backgroundColor: colors.bgSurface,
+    },
+    imageThumb: { width: '100%', height: '100%' },
+    imageRemove: {
+      position: 'absolute',
+      top: 2,
+      right: 2,
+    },
+    reviewCard: { ...menuCardStyle(colors) },
+    reviewRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSoft,
+    },
+    reviewLabel: { ...typography.caption, color: colors.textMuted },
+    reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right', flex: 1 },
+    termsBox: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      alignItems: 'flex-start',
+      padding: spacing.md,
+      backgroundColor: `${colors.electric}10`,
+      borderRadius: radius.lg,
+    },
+    termsText: {
+      ...typography.caption,
+      color: colors.textMuted,
+      flex: 1,
+      lineHeight: 18,
+      textAlign: 'right',
+    },
+    bottomBar: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      backgroundColor: colors.screenRoot,
+    },
+    stepError: {
+      ...typography.caption,
+      color: colors.rose,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    continueBtn: { borderRadius: radius.xl, overflow: 'hidden' },
+    continueBtnDisabled: { opacity: 0.5 },
+    continueBtnInner: {
+      paddingVertical: 14,
+      alignItems: 'center',
+      borderRadius: radius.xl,
+    },
+    continueBtnText: { ...typography.button, color: '#fff' },
+    backStep: { alignItems: 'center', paddingTop: 10 },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      justifyContent: 'flex-end',
+    },
+    modalSheet: {
+      backgroundColor: colors.bgDeep,
+      borderTopLeftRadius: radius.xxl,
+      borderTopRightRadius: radius.xxl,
+      padding: spacing.lg,
+      maxHeight: '72%',
+    },
+    modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right', marginBottom: spacing.md },
+    modalScroll: { maxHeight: 420 },
+    modalGroup: { marginBottom: spacing.md },
+    modalParent: {
+      paddingVertical: 12,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+    },
+    modalParentActive: { backgroundColor: `${colors.electric}18` },
+    modalParentText: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right' },
+    subList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      justifyContent: 'flex-end',
+      marginTop: spacing.sm,
+    },
+    subChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+    },
+    subChipActive: { backgroundColor: `${colors.electric}22` },
+    subChipText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
+    subChipTextActive: { color: colors.electricBright },
   });
 }
