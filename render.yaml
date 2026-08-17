@@ -90,9 +90,11 @@ services:
     plan: starter
     rootDir: backend-nest
     dockerfilePath: Dockerfile
-    dockerCommand: node dist/queue/worker.main.js
+    dockerCommand: worker
     envVars:
       - fromGroup: sarh-shared
+      - key: SERVICE_MODE
+        value: worker
       - key: REDIS_URL
         fromService:
           name: sarh-redis
@@ -122,10 +124,12 @@ services:
     plan: starter
     rootDir: backend-nest
     dockerfilePath: Dockerfile
-    dockerCommand: node dist/gateway/socket.main.js
+    dockerCommand: socket
     healthCheckPath: /health
     envVars:
       - fromGroup: sarh-shared
+      - key: SERVICE_MODE
+        value: socket
       - key: REDIS_URL
         fromService:
           name: sarh-redis

@@ -39,6 +39,8 @@ COPY --from=builder /app/dist ./dist
 COPY scripts/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
-EXPOSE 3001
+# Render assigns PORT at runtime. Do not hardcode a listen port here.
+EXPOSE 3001 3002
 
-CMD ["./docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["api"]
