@@ -53,5 +53,50 @@ services:
       sh -c "npx prisma migrate deploy &&
              node dist/main.js"
 
+  worker:
+    build:
+      context: ./backend-nest
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend-nest/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sarouh
+      DIRECT_URL: postgresql://postgres:postgres@postgres:5432/sarouh
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_ENABLED: "true"
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["node", "dist/queue/worker.main.js"]
+
+  socket:
+    build:
+      context: ./backend-nest
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./backend-nest/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sarouh
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_ENABLED: "true"
+      PORT: "3002"
+      RUN_UNPAID_ORDER_EXPIRY: "false"
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["node", "dist/gateway/socket.main.js"]
+
 volumes:
   postgres_data:

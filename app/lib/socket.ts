@@ -9,6 +9,10 @@ function usesSameOriginWebSocket(): boolean {
 }
 
 function resolveSocketUrl(): string {
+  const fromEnv = process.env.EXPO_PUBLIC_SOCKET_URL?.trim().replace(/\/$/, '');
+  if (fromEnv && /^https?:\/\//i.test(fromEnv)) {
+    return fromEnv;
+  }
   if (usesSameOriginWebSocket()) {
     return '';
   }

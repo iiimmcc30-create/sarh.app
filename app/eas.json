@@ -15,10 +15,16 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SOCKET_URL": "https://sarh-socket.onrender.com"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SOCKET_URL": "https://sarh-socket.onrender.com"
+      }
     }
   },
   "submit": {

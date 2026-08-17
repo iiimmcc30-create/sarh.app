@@ -3,6 +3,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import IORedis from 'ioredis';
 import { Server } from 'socket.io';
 import { LoggerService } from '../../common/services/logger.service';
+import { redisConnection } from '../../redis/redis-connection';
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 const FORCE_MEMORY = process.env.SOCKET_USE_MEMORY_ADAPTER === 'true';
@@ -23,16 +24,12 @@ export class SocketRedisAdapterService implements OnModuleDestroy {
       return;
     }
 
-    const redisOpts = {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || undefined,
-      db: 3,
+    const redisOpts = redisConnection(3, {
       lazyConnect: true,
       connectTimeout: 3000,
       maxRetriesPerRequest: null as null,
       retryStrategy: () => null,
-    };
+    });
 
     const probe = new IORedis(redisOpts);
     probe.on('error', () => {});

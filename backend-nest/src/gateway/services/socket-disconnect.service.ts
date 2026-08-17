@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import IORedis from 'ioredis';
 import { LoggerService } from '../../common/services/logger.service';
+import { redisConnection } from '../../redis/redis-connection';
 
 const DISCONNECT_CHANNEL = 'socket:disconnect';
 
@@ -14,13 +15,11 @@ export class SocketDisconnectService implements OnModuleInit, OnModuleDestroy {
     if (process.env.REDIS_ENABLED === 'false') return;
     if (process.env.SOCKET_USE_MEMORY_ADAPTER === 'true') return;
 
-    this.pub = new IORedis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || undefined,
-      db: 3,
-      lazyConnect: true,
-    });
+    this.pub = new IORedis(
+      redisConnection(3, {
+        lazyConnect: true,
+      }),
+    );
     this.pub.connect().catch(() => {
       this.logger.warn({}, 'Socket disconnect pub client unavailable');
     });

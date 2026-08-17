@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import IORedis from 'ioredis';
 import { LoggerService } from '../../common/services/logger.service';
+import { redisConnection } from '../../redis/redis-connection';
 import { DISCONNECT_CHANNEL } from './socket-disconnect.service';
 import { SocketEmitService } from './socket-emit.service';
 
@@ -19,14 +20,12 @@ export class SocketDisconnectListenerService
     if (process.env.REDIS_ENABLED === 'false') return;
     if (process.env.SOCKET_USE_MEMORY_ADAPTER === 'true') return;
 
-    this.sub = new IORedis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || undefined,
-      db: 3,
-      lazyConnect: true,
-      maxRetriesPerRequest: null,
-    });
+    this.sub = new IORedis(
+      redisConnection(3, {
+        lazyConnect: true,
+        maxRetriesPerRequest: null,
+      }),
+    );
 
     this.sub.on('error', (err) => {
       this.logger.error({ err: err.message }, 'Socket disconnect sub error');

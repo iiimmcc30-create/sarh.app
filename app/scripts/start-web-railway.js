@@ -14,6 +14,9 @@ const { URL } = require('url');
 const PRODUCTION_API = (
   process.env.RAILWAY_API_URL || 'https://sarh-new4.onrender.com'
 ).replace(/\/$/, '');
+const PRODUCTION_SOCKET = (
+  process.env.EXPO_PUBLIC_SOCKET_URL || 'https://sarh-socket.onrender.com'
+).replace(/\/$/, '');
 const LOCAL_API = (process.env.LOCAL_API_URL || 'http://127.0.0.1:3001').replace(
   /\/$/,
   '',
@@ -79,7 +82,7 @@ proxy.listen(PROXY_PORT, '127.0.0.1', () => {
 process.env.EXPO_PUBLIC_API_URL = `http://127.0.0.1:${PROXY_PORT}`;
 process.env.EXPO_PUBLIC_SOCKET_URL = useLocal
   ? LOCAL_SOCKET
-  : process.env.EXPO_PUBLIC_SOCKET_URL || PRODUCTION_API;
+  : PRODUCTION_SOCKET;
 process.env.EXPO_PUBLIC_SKIP_ADB = 'true';
 
 const child = spawn('npx', ['expo', 'start', '--web', '--clear'], {

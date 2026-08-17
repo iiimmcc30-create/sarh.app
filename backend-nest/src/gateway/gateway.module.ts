@@ -8,6 +8,7 @@ import { QueueModule } from '../queue/queue.module';
 import { ButchersModule } from '../butchers/butchers.module';
 import { AppGateway } from './app.gateway';
 import { GatewaySharedModule } from './gateway-shared.module';
+import { SocketHealthController } from './socket-health.controller';
 import { SocketRepository } from './repositories/socket.repository';
 import { SocketDisconnectListenerService } from './services/socket-disconnect-listener.service';
 import { SocketGatewayService } from './services/socket-gateway.service';
@@ -24,6 +25,7 @@ import { SocketRedisAdapterService } from './services/socket-redis-adapter.servi
     GatewaySharedModule,
     AuthModule,
   ],
+  controllers: [SocketHealthController],
   providers: [
     SocketRepository,
     SocketGatewayService,

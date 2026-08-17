@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { RateLimiterRedis, RateLimiterMemory } from 'rate-limiter-flexible';
 import IORedis from 'ioredis';
 import { LoggerService } from './logger.service';
+import { redisConnection } from '../../redis/redis-connection';
 
 export type RateLimitType = 'api' | 'auth' | 'payment';
 
@@ -30,21 +31,19 @@ export class RateLimitService {
 
   private getRedisClient(): IORedis {
     if (!this.redisClient) {
-      this.redisClient = new IORedis({
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-        password: process.env.REDIS_PASSWORD || undefined,
-        db: 0,
-        maxRetriesPerRequest: 1,
-        enableReadyCheck: false,
-        connectTimeout: 3000,
-        commandTimeout: 3000,
-        lazyConnect: true,
-        retryStrategy(times: number) {
-          if (times > 2) return null;
-          return Math.min(times * 200, 1000);
-        },
-      });
+      this.redisClient = new IORedis(
+        redisConnection(0, {
+          maxRetriesPerRequest: 1,
+          enableReadyCheck: false,
+          connectTimeout: 3000,
+          commandTimeout: 3000,
+          lazyConnect: true,
+          retryStrategy(times: number) {
+            if (times > 2) return null;
+            return Math.min(times * 200, 1000);
+          },
+        }),
+      );
     }
     return this.redisClient;
   }
