@@ -23,7 +23,6 @@ import { SocketEmitService } from './services/socket-emit.service';
 import { SocketGatewayService } from './services/socket-gateway.service';
 import { SocketRedisAdapterService } from './services/socket-redis-adapter.service';
 
-const SOCKET_PORT = parseInt(process.env.SOCKET_PORT || '3002', 10);
 const ALLOWED_ORIGINS = (
   process.env.ALLOWED_ORIGINS || 'http://localhost:8081'
 ).split(',');
@@ -33,7 +32,7 @@ interface AuthenticatedSocket extends Socket {
 }
 
 @Injectable()
-@WebSocketGateway(SOCKET_PORT, {
+@WebSocketGateway({
   cors: { origin: ALLOWED_ORIGINS, credentials: true },
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,

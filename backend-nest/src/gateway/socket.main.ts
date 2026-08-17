@@ -7,12 +7,11 @@ import { GatewayModule } from './gateway.module';
 async function bootstrap() {
   initialiseSentry();
   const app = await NestFactory.create(GatewayModule, { logger: false });
-  const socketPort = parseInt(process.env.SOCKET_PORT || '3002', 10);
-  const httpPort = parseInt(process.env.SOCKET_HTTP_PORT || '3003', 10);
-  await app.listen(httpPort, '0.0.0.0');
+  const port = parseInt(process.env.PORT || '3002', 10);
+  await app.listen(port, '0.0.0.0');
 
   const logger = app.get(LoggerService);
-  logger.info({ socketPort, httpPort }, '🔌 Socket.IO server running');
+  logger.info({ port }, 'Socket.IO server running');
 }
 
 bootstrap().catch((err) => {

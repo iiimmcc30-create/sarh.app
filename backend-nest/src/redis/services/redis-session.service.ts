@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import IORedis from 'ioredis';
 import { LoggerService } from '../../common/services/logger.service';
+import { redisConnection } from '../redis-connection';
 
 @Injectable()
 export class RedisSessionService {
@@ -17,11 +18,7 @@ export class RedisSessionService {
   }
 
   private baseOpts() {
-    return {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || undefined,
-      db: 2,
+    return redisConnection(2, {
       maxRetriesPerRequest: 1,
       enableReadyCheck: false,
       connectTimeout: 3000,
@@ -31,7 +28,7 @@ export class RedisSessionService {
         if (times > 2) return null;
         return Math.min(times * 200, 1000);
       },
-    };
+    });
   }
 
   getClient(): IORedis {
