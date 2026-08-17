@@ -23,6 +23,7 @@ import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
 import { RtlText } from '@/components/ui/RtlText';
@@ -215,14 +216,12 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
                           {c.createdAt}
                         </Text>
                         <Text style={styles.metaDot}>·</Text>
-                        {c.author.verified ? (
-                          <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
-                        ) : null}
-                        <RtlTextShell flex>
-                          <RtlText style={styles.commentName} numberOfLines={1}>
-                            {c.author.arabicName || c.author.displayName}
-                          </RtlText>
-                        </RtlTextShell>
+                        <VerifiedInlineName
+                          name={c.author.arabicName || c.author.displayName}
+                          verified={c.author.verified}
+                          badgeSize={14}
+                          nameStyle={styles.commentName}
+                        />
                       </CoverTrailRow>
                     </UserProfileLink>
                     {canDeleteComment(c.author.id, postOwnerId, user, me) ? (
