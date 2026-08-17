@@ -19,6 +19,6 @@ import { GatewaySharedModule } from '../gateway/gateway-shared.module';
     ButcherRankingService,
     UnpaidOrderExpiryService,
   ],
-  exports: [ButcherRankingService],
+  exports: [ButcherRankingService, OrderLifecycleService],
 })
 export class ButchersModule {}

@@ -134,6 +134,8 @@ services:
       - fromGroup: sarh-shared
       - key: SERVICE_MODE
         value: socket
+      - key: DIRECT_URL
+        sync: false
       - key: REDIS_URL
         fromService:
           name: sarh-redis

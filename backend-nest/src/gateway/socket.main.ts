@@ -4,9 +4,19 @@ import { LoggerService } from '../common/services/logger.service';
 import { initialiseSentry } from '../shared/lib/sentry';
 import { GatewayModule } from './gateway.module';
 
+function printStartupError(err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  console.error('Socket server failed:', message);
+  if (stack) console.error(stack);
+}
+
 async function bootstrap() {
   initialiseSentry();
-  const app = await NestFactory.create(GatewayModule, { logger: false });
+  const app = await NestFactory.create(GatewayModule, {
+    logger: ['error', 'fatal', 'warn'],
+    abortOnError: false,
+  });
   const rawPort = process.env.PORT?.trim();
   const port =
     rawPort && /^\d+$/.test(rawPort) ? parseInt(rawPort, 10) : 3002;
@@ -18,6 +28,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('Socket server failed', err);
+  printStartupError(err);
   process.exit(1);
 });

@@ -28,6 +28,7 @@ export class UnpaidOrderExpiryService
 
   onApplicationBootstrap() {
     if (process.env.NODE_ENV === 'test') return;
+    if (process.env.SERVICE_MODE === 'socket') return;
     if (process.env.RUN_UNPAID_ORDER_EXPIRY === 'false') return;
 
     const intervalMs = parsePositiveInt(
