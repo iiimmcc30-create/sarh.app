@@ -197,11 +197,6 @@ function PostItemComponent({
                     <Text style={styles.ratingMiniText}>{authorRating}</Text>
                   </View>
                 ) : null}
-                {post.author.isAI ? (
-                  <View style={styles.aiBadge}>
-                    <Text style={styles.aiBadgeText}>AI</Text>
-                  </View>
-                ) : null}
                 <Text style={styles.metaDot}>·</Text>
                 <Text style={styles.metaMuted} numberOfLines={1}>
                   {timestamp}
@@ -422,19 +417,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       color: colors.textSubtle,
       flexShrink: 0,
     },
-    aiBadge: {
-      paddingHorizontal: 5,
-      paddingVertical: 1,
-      borderRadius: 4,
-      backgroundColor: colors.electric + '25',
-      borderWidth: 1,
-      borderColor: colors.electric + '55',
-    },
-    aiBadgeText: {
-      ...typography.badge,
-      color: colors.textSecondary,
-    },
-    menuBtn: {
+    metaDot: {
       width: 30,
       height: 30,
       borderRadius: 16,

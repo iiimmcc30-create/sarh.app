@@ -249,18 +249,15 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  <CoverTrailRow justify="flex-end" gap={8} style={styles.nameRow}>
-                    {user.verified ? <VerificationBadge size={18} /> : null}
-                    {user.isAI ? (
-                      <View style={styles.aiBadge}>
-                        <Text style={styles.aiBadgeText}>AI</Text>
-                      </View>
-                    ) : null}
-                    <RtlTextShell flex>
-                      <RtlText style={styles.displayName} numberOfLines={2}>
-                        {displayName}
-                      </RtlText>
-                    </RtlTextShell>
+                  <CoverTrailRow justify="flex-end" gap={0} style={styles.nameRow}>
+                    <CoverTrailRow justify="flex-end" gap={0} style={styles.nameWithBadge}>
+                      {user.verified ? <VerificationBadge size={18} /> : null}
+                      <RtlTextShell style={styles.nameShell}>
+                        <RtlText style={styles.displayName} numberOfLines={2}>
+                          {displayName}
+                        </RtlText>
+                      </RtlTextShell>
+                    </CoverTrailRow>
                   </CoverTrailRow>
 
                   <CoverTrailRow justify="space-between" gap={8} style={styles.handleRow}>
@@ -499,6 +496,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: '100%',
       minWidth: 0,
     },
+    nameWithBadge: {
+      flexShrink: 1,
+      maxWidth: '100%',
+      alignItems: 'center',
+    },
+    nameShell: {
+      flexShrink: 1,
+      minWidth: 0,
+    },
     handleRow: {
       width: '100%',
       minWidth: 0,
@@ -511,16 +517,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 2,
-    },
-    aiBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 6,
-      backgroundColor: `${colors.electric}22`,
-    },
-    aiBadgeText: {
-      ...typography.badge,
-      color: colors.electric,
     },
     displayName: {
       ...typography.cardHeadingLarge,
