@@ -249,16 +249,14 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  <CoverTrailRow justify="flex-end" gap={0} style={styles.nameRow}>
-                    <CoverTrailRow justify="flex-end" gap={0} style={styles.nameWithBadge}>
-                      {user.verified ? <VerificationBadge size={18} /> : null}
-                      <RtlTextShell style={styles.nameShell}>
-                        <RtlText style={styles.displayName} numberOfLines={2}>
-                          {displayName}
-                        </RtlText>
-                      </RtlTextShell>
-                    </CoverTrailRow>
-                  </CoverTrailRow>
+                  <View style={styles.nameWithBadge}>
+                    <View style={styles.nameShell}>
+                      <RtlText style={[styles.displayName, styles.displayNameInline]} numberOfLines={2}>
+                        {displayName}
+                      </RtlText>
+                    </View>
+                    {user.verified ? <VerificationBadge size={18} /> : null}
+                  </View>
 
                   <CoverTrailRow justify="space-between" gap={8} style={styles.handleRow}>
                     <Pressable
@@ -492,16 +490,17 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 4,
       width: '100%',
     },
-    nameRow: {
-      width: '100%',
-      minWidth: 0,
-    },
     nameWithBadge: {
-      flexShrink: 1,
-      maxWidth: '100%',
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
       alignItems: 'center',
+      flexWrap: 'nowrap',
+      gap: 0,
+      alignSelf: 'flex-end',
+      maxWidth: '100%',
     },
     nameShell: {
+      direction: 'ltr',
       flexShrink: 1,
       minWidth: 0,
     },
@@ -521,6 +520,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayName: {
       ...typography.cardHeadingLarge,
       color: colors.textPrimary,
+    },
+    displayNameInline: {
+      width: 'auto',
+      flexShrink: 1,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     ratingChipPressed: {
       opacity: 0.75,
