@@ -22,6 +22,7 @@ import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
+import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
 import { RtlText } from '@/components/ui/RtlText';
@@ -176,13 +177,15 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
 
     return (
       <View style={styles.wrap}>
-        <View style={[styles.header, getRtlRow()]}>
-          <View style={styles.sectionBar} />
-          <View style={styles.titleShell}>
-            <Text style={styles.title}>التعليقات</Text>
-          </View>
+        <CoverTrailRow justify="space-between" gap={8} style={styles.header}>
           <Text style={styles.count}>{comments.length}</Text>
-        </View>
+          <CoverTrailRow justify="flex-end" gap={8} flex style={styles.headerTrail}>
+            <RtlTextShell flex>
+              <RtlText style={styles.title}>التعليقات</RtlText>
+            </RtlTextShell>
+            <View style={styles.sectionBar} />
+          </CoverTrailRow>
+        </CoverTrailRow>
 
         {loading ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
@@ -207,20 +210,20 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
                 <View style={styles.commentBubble}>
                   <View style={[styles.commentHeader, getRtlRow()]}>
                     <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
-                      <View style={styles.nameTimeShell}>
-                        <View style={styles.nameShell}>
-                          <Text style={styles.commentName} numberOfLines={1}>
-                            {c.author.arabicName || c.author.displayName}
-                          </Text>
-                        </View>
-                        {c.author.verified ? (
-                          <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
-                        ) : null}
-                        <Text style={styles.metaDot}>·</Text>
+                      <CoverTrailRow justify="flex-end" gap={4} style={styles.nameTimeRow}>
                         <Text style={styles.commentTime} numberOfLines={1}>
                           {c.createdAt}
                         </Text>
-                      </View>
+                        <Text style={styles.metaDot}>·</Text>
+                        {c.author.verified ? (
+                          <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
+                        ) : null}
+                        <RtlTextShell flex>
+                          <RtlText style={styles.commentName} numberOfLines={1}>
+                            {c.author.arabicName || c.author.displayName}
+                          </RtlText>
+                        </RtlTextShell>
+                      </CoverTrailRow>
                     </UserProfileLink>
                     {canDeleteComment(c.author.id, postOwnerId, user, me) ? (
                       <Pressable
@@ -289,8 +292,10 @@ function createStyles(colors: ThemeColors) {
       borderTopColor: colors.borderHairline,
     },
     header: {
-      alignItems: 'center',
-      gap: 8,
+      width: '100%',
+    },
+    headerTrail: {
+      minWidth: 0,
     },
     sectionBar: {
       width: 4,
@@ -298,11 +303,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 2,
       backgroundColor: colors.electricBright,
     },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    titleShell: {
-      flex: 1,
-      direction: 'ltr',
-    },
+    /** Accent bar sits on physical right beside the section title. */
     title: {
       ...typography.feedTitle,
       color: colors.textBrandStrong,
@@ -383,14 +384,8 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 0,
     },
-    nameTimeShell: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      flexWrap: 'nowrap',
-      gap: 4,
-      alignSelf: 'flex-end',
-      maxWidth: '100%',
+    nameTimeRow: {
+      minWidth: 0,
     },
     commentName: {
       ...typography.feedTitle,
