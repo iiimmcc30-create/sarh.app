@@ -1,8 +1,9 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { VerificationBadge } from '@/components/ui/VerificationBadge';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { RtlText } from '@/components/ui/RtlText';
+import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import {
   ActivityIndicator,
   Animated,
@@ -21,8 +22,6 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -249,14 +248,14 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  <View style={styles.nameWithBadge}>
-                    <View style={styles.nameShell}>
-                      <RtlText style={[styles.displayName, styles.displayNameInline]} numberOfLines={2}>
-                        {displayName}
-                      </RtlText>
-                    </View>
-                    {user.verified ? <VerificationBadge size={18} /> : null}
-                  </View>
+                  <VerifiedInlineName
+                    name={displayName}
+                    verified={user.verified}
+                    badgeSize={18}
+                    nameStyle={styles.displayName}
+                    numberOfLines={2}
+                    style={styles.nameWithBadgeAlign}
+                  />
 
                   <CoverTrailRow justify="space-between" gap={8} style={styles.handleRow}>
                     <Pressable
@@ -492,19 +491,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       // Physical LTR island — without this, parent RTL flips flex-end to the left edge.
       direction: 'ltr',
     },
-    nameWithBadge: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      flexWrap: 'nowrap',
-      gap: 4,
+    nameWithBadgeAlign: {
       alignSelf: 'flex-end',
-      maxWidth: '100%',
-    },
-    nameShell: {
-      direction: 'ltr',
-      flexShrink: 1,
-      minWidth: 0,
     },
     handleRow: {
       width: '100%',
@@ -522,12 +510,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayName: {
       ...typography.cardHeadingLarge,
       color: colors.textPrimary,
-    },
-    displayNameInline: {
-      width: 'auto',
-      flexShrink: 1,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     ratingChipPressed: {
       opacity: 0.75,
