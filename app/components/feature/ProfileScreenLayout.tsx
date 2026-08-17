@@ -19,7 +19,6 @@ import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getCountryInfo } from '@/services/types';
 import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
@@ -156,7 +155,6 @@ export function ProfileScreenLayout({
   }, [activeTab, tabOpacity]);
 
   const displayName = user.arabicName || user.displayName || user.username;
-  const country = getCountryInfo(user.country);
   const hasRating = user.rating != null && (user.reviewCount ?? 0) > 0;
   const ratingLabel = hasRating ? user.rating!.toFixed(1) : null;
   const filledStars = hasRating ? Math.round(user.rating!) : 0;
@@ -265,54 +263,45 @@ export function ProfileScreenLayout({
                     </RtlTextShell>
                   </CoverTrailRow>
 
-                  <CoverTrailRow justify="flex-end" gap={6} style={styles.handleRow}>
-                    <RtlTextShell>
+                  <CoverTrailRow justify="space-between" gap={8} style={styles.handleRow}>
+                    <Pressable
+                      onPress={onRatePress}
+                      disabled={!onRatePress}
+                      style={({ pressed }) => [
+                        styles.ratingRow,
+                        pressed && onRatePress && styles.ratingChipPressed,
+                      ]}
+                    >
+                      <CoverTrailRow justify="flex-start" gap={4}>
+                        <View style={styles.starsRow}>
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <AppIcon
+                              key={n}
+                              name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
+                              size={11}
+                              color={
+                                hasRating && n <= filledStars
+                                  ? themeColors.gold
+                                  : themeColors.textSubtle
+                              }
+                            />
+                          ))}
+                        </View>
+                        {ratingLabel ? (
+                          <Text style={styles.ratingText}>{ratingLabel}</Text>
+                        ) : null}
+                        {(user.reviewCount ?? 0) > 0 ? (
+                          <Text style={styles.ratingCount}>({user.reviewCount})</Text>
+                        ) : null}
+                      </CoverTrailRow>
+                    </Pressable>
+                    <RtlTextShell flex>
                       <RtlText style={styles.handleText} numberOfLines={1}>
                         @{user.username}
                       </RtlText>
                     </RtlTextShell>
                   </CoverTrailRow>
-
-                  <Pressable
-                    onPress={onRatePress}
-                    disabled={!onRatePress}
-                    style={({ pressed }) => [
-                      styles.ratingRow,
-                      pressed && onRatePress && styles.ratingChipPressed,
-                    ]}
-                  >
-                    <CoverTrailRow justify="flex-end" gap={6}>
-                      <View style={styles.starsRow}>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <AppIcon
-                            key={n}
-                            name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
-                            size={11}
-                            color={
-                              hasRating && n <= filledStars
-                                ? themeColors.gold
-                                : themeColors.textSubtle
-                            }
-                          />
-                        ))}
-                      </View>
-                      {ratingLabel ? (
-                        <Text style={styles.ratingText}>{ratingLabel}</Text>
-                      ) : null}
-                      {(user.reviewCount ?? 0) > 0 ? (
-                        <Text style={styles.ratingCount}>({user.reviewCount})</Text>
-                      ) : null}
-                    </CoverTrailRow>
-                  </Pressable>
                 </View>
-
-                {!!user.bio ? (
-                  <RtlTextShell style={styles.bioShell}>
-                    <RtlText style={styles.bio} numberOfLines={4}>
-                      {user.bio}
-                    </RtlText>
-                  </RtlTextShell>
-                ) : null}
 
                 <View style={styles.statsCard}>
                   <View style={[styles.statsRow, getRtlRow()]}>
@@ -335,12 +324,13 @@ export function ProfileScreenLayout({
                   </View>
                 </View>
 
-                <View style={[styles.locationRow, getRtlRow()]}>
-                  <AppIcon name="map-marker-outline" size={14} color={themeColors.textMuted} />
-                  <Text style={styles.locationText}>
-                    {country.flag} {country.ar}
-                  </Text>
-                </View>
+                {!!user.bio ? (
+                  <RtlTextShell style={styles.bioShell}>
+                    <RtlText style={styles.bio} numberOfLines={4}>
+                      {user.bio}
+                    </RtlText>
+                  </RtlTextShell>
+                ) : null}
               </View>
 
               <Pressable
@@ -514,8 +504,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       minWidth: 0,
     },
     ratingRow: {
-      alignSelf: 'flex-end',
       paddingVertical: 2,
+      flexShrink: 0,
     },
     starsRow: {
       flexDirection: 'row',
@@ -596,21 +586,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     bioShell: {
       alignSelf: 'stretch',
       width: '100%',
+      marginTop: 4,
     },
     bio: {
       ...typography.body,
       color: colors.textSecondary,
       lineHeight: 22,
-    },
-    locationRow: {
-      alignItems: 'center',
-      gap: 4,
-      marginTop: 2,
-    },
-    locationText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      ...getRtlText(),
     },
     avatarCol: {
       position: 'relative',
