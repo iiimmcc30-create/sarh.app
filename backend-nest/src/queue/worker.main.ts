@@ -1,10 +1,12 @@
 import '../load-env';
 import { NestFactory } from '@nestjs/core';
 import { LoggerService } from '../common/services/logger.service';
+import { initialiseSentry } from '../shared/lib/sentry';
 import { WorkerModule } from './queue.module';
 import { WorkerCronService } from './services/worker-cron.service';
 
 async function bootstrap() {
+  initialiseSentry();
   const app = await NestFactory.createApplicationContext(WorkerModule, {
     logger: false,
   });

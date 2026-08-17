@@ -36,6 +36,10 @@ type OrderInventoryLine = {
   reservedQuantity: number;
 };
 
+const SYSTEM_ORDER_EXPIRY_ACTOR = 'system:unpaid-order-expiry';
+const UNPAID_ORDER_EXPIRED_REASON =
+  'انتهت مهلة الدفع لهذا الطلب وتم تحرير الكمية المحجوزة';
+
 @Injectable()
 export class OrderLifecycleService {
   constructor(
@@ -246,70 +250,74 @@ export class OrderLifecycleService {
 
   async createOrder(input: CreateOrderInput) {
     if (!input.items.length) {
-      throwApi(400, 'validation_error', 'يجب أن يحتوي الطلب على منتج واحد على الأقل');
+      throwApi(
+        400,
+        'validation_error',
+        'يجب أن يحتوي الطلب على منتج واحد على الأقل',
+      );
     }
 
     const firstItem = input.items[0];
     const created = await this.prisma.$transaction(
       async (tx) => {
-      for (const item of input.items) {
-        const productLock = await tx.$executeRaw`
+        for (const item of input.items) {
+          const productLock = await tx.$executeRaw`
           UPDATE "ButcherProduct"
           SET "reservedQuantity" = "reservedQuantity" + ${item.reservedQuantity}
           WHERE "id" = ${item.productId}
             AND "inStock" = true
             AND ("availableQuantity" - "reservedQuantity") >= ${item.reservedQuantity}
         `;
-        if (productLock === 0) {
-          throwApi(409, 'insufficient_inventory', 'الكمية غير متوفرة حالياً');
+          if (productLock === 0) {
+            throwApi(409, 'insufficient_inventory', 'الكمية غير متوفرة حالياً');
+          }
         }
-      }
 
-      const orderNumber = await this.nextOrderNumber(tx);
+        const orderNumber = await this.nextOrderNumber(tx);
 
-      const order = await tx.butcherOrder.create({
-        data: {
-          butcherId: input.butcherId,
-          customerId: input.customerId,
-          productId: firstItem.productId,
-          cutType: firstItem.cutType,
-          weightKg: firstItem.weightKg,
-          reservedQuantity: firstItem.reservedQuantity,
-          deliveryType: input.deliveryType,
-          deliveryAddress: input.deliveryAddress,
-          notes: input.notes,
-          currency: input.currency,
-          totalPrice: input.totalPrice,
-          orderNumber,
-          status: 'pending',
-          paymentStatus: 'unpaid',
-          items: {
-            create: input.items.map((item) => ({
-              productId: item.productId,
-              cutType: item.cutType,
-              weightKg: item.weightKg,
-              linePrice: item.linePrice,
-              reservedQuantity: item.reservedQuantity,
-            })),
+        const order = await tx.butcherOrder.create({
+          data: {
+            butcherId: input.butcherId,
+            customerId: input.customerId,
+            productId: firstItem.productId,
+            cutType: firstItem.cutType,
+            weightKg: firstItem.weightKg,
+            reservedQuantity: firstItem.reservedQuantity,
+            deliveryType: input.deliveryType,
+            deliveryAddress: input.deliveryAddress,
+            notes: input.notes,
+            currency: input.currency,
+            totalPrice: input.totalPrice,
+            orderNumber,
+            status: 'pending',
+            paymentStatus: 'unpaid',
+            items: {
+              create: input.items.map((item) => ({
+                productId: item.productId,
+                cutType: item.cutType,
+                weightKg: item.weightKg,
+                linePrice: item.linePrice,
+                reservedQuantity: item.reservedQuantity,
+              })),
+            },
           },
-        },
-        include: {
-          butcher: { select: { id: true, userId: true, nameAr: true } },
-          product: true,
-          items: { include: { product: true } },
-        },
-      });
+          include: {
+            butcher: { select: { id: true, userId: true, nameAr: true } },
+            product: true,
+            items: { include: { product: true } },
+          },
+        });
 
-      const timeline = await tx.orderTimeline.create({
-        data: {
-          orderId: order.id,
-          status: 'pending',
-          note: 'Order Created — awaiting payment',
-          createdBy: input.customerId,
-        },
-      });
+        const timeline = await tx.orderTimeline.create({
+          data: {
+            orderId: order.id,
+            status: 'pending',
+            note: 'Order Created — awaiting payment',
+            createdBy: input.customerId,
+          },
+        });
 
-      return { order, timeline };
+        return { order, timeline };
       },
       { maxWait: 10000, timeout: 30000 },
     );
@@ -345,6 +353,52 @@ export class OrderLifecycleService {
     return created.order;
   }
 
+  async expireStaleUnpaidOrders(cutoff: Date, limit = 50) {
+    const candidates = await this.prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT o.id
+      FROM "ButcherOrder" o
+      WHERE o.status = 'pending'
+        AND o."paymentStatus" = 'unpaid'
+        AND o."createdAt" < ${cutoff}
+        AND NOT EXISTS (
+          SELECT 1
+          FROM "Payment" p
+          WHERE p."referenceType" = 'butcher_order'
+            AND p."referenceId" = o.id
+            AND p.status = 'pending'
+        )
+      ORDER BY o."createdAt" ASC
+      LIMIT ${limit}
+    `;
+
+    let expired = 0;
+    let skipped = 0;
+
+    for (const candidate of candidates) {
+      try {
+        const result = await this.transitionOrder({
+          orderId: candidate.id,
+          actorId: SYSTEM_ORDER_EXPIRY_ACTOR,
+          nextStatus: 'cancelled',
+          cancellationReason: UNPAID_ORDER_EXPIRED_REASON,
+        });
+        if (result.status === 'cancelled') {
+          expired += 1;
+        } else {
+          skipped += 1;
+        }
+      } catch {
+        skipped += 1;
+      }
+    }
+
+    return {
+      scanned: candidates.length,
+      expired,
+      skipped,
+    };
+  }
+
   async transitionOrder(params: {
     orderId: string;
     actorId: string;
@@ -353,94 +407,100 @@ export class OrderLifecycleService {
   }) {
     const updated = await this.prisma.$transaction(
       async (tx) => {
-      const locked = await this.lockOrderRow(tx, params.orderId);
-      if (!locked) throwApi(404, 'not_found', 'الطلب غير موجود');
+        const locked = await this.lockOrderRow(tx, params.orderId);
+        if (!locked) throwApi(404, 'not_found', 'الطلب غير موجود');
 
-      if (locked.status === params.nextStatus) {
-        const order = await tx.butcherOrder.findUnique({
+        if (locked.status === params.nextStatus) {
+          const order = await tx.butcherOrder.findUnique({
+            where: { id: params.orderId },
+            include: {
+              butcher: { select: { id: true, userId: true } },
+              items: { include: { product: true } },
+            },
+          });
+          if (!order) throwApi(404, 'not_found', 'الطلب غير موجود');
+          return {
+            order,
+            timeline: null,
+            noop: true as const,
+            locked,
+            inventoryLines: [] as OrderInventoryLine[],
+          };
+        }
+
+        this.stateMachine.assertTransition(locked.status, params.nextStatus);
+
+        if (
+          params.nextStatus === 'confirmed' &&
+          locked.paymentStatus !== 'paid'
+        ) {
+          throwApi(
+            402,
+            'payment_required',
+            'لا يمكن تأكيد الطلب قبل إتمام الدفع عبر بوابة المنصة',
+          );
+        }
+
+        const inventoryLines = await this.loadInventoryLines(
+          tx,
+          params.orderId,
+          locked,
+        );
+
+        if (params.nextStatus === 'cancelled') {
+          await this.releaseReservedInventory(tx, inventoryLines);
+        }
+
+        if (params.nextStatus === 'delivered') {
+          await this.finalizeDeliveredInventory(tx, inventoryLines);
+        }
+
+        const order = await tx.butcherOrder.update({
           where: { id: params.orderId },
+          data: {
+            status: params.nextStatus,
+            ...(params.nextStatus === 'cancelled'
+              ? {
+                  cancelledBy: params.actorId,
+                  cancellationReason: params.cancellationReason ?? null,
+                  cancelledAt: new Date(),
+                }
+              : {}),
+          },
           include: {
             butcher: { select: { id: true, userId: true } },
             items: { include: { product: true } },
           },
         });
-        if (!order) throwApi(404, 'not_found', 'الطلب غير موجود');
-        return { order, timeline: null, noop: true as const, locked, inventoryLines: [] as OrderInventoryLine[] };
-      }
 
-      this.stateMachine.assertTransition(locked.status, params.nextStatus);
+        const timeline = await tx.orderTimeline.create({
+          data: {
+            orderId: params.orderId,
+            status: params.nextStatus,
+            note:
+              params.nextStatus === 'cancelled'
+                ? (params.cancellationReason ?? 'Order Cancelled')
+                : null,
+            createdBy: params.actorId,
+          },
+        });
 
-      if (
-        params.nextStatus === 'confirmed' &&
-        locked.paymentStatus !== 'paid'
-      ) {
-        throwApi(
-          402,
-          'payment_required',
-          'لا يمكن تأكيد الطلب قبل إتمام الدفع عبر بوابة المنصة',
-        );
-      }
+        await tx.orderStatusAudit.create({
+          data: {
+            orderId: params.orderId,
+            previousStatus: locked.status,
+            newStatus: params.nextStatus,
+            changedBy: params.actorId,
+          },
+        });
 
-      const inventoryLines = await this.loadInventoryLines(
-        tx,
-        params.orderId,
-        locked,
-      );
-
-      if (params.nextStatus === 'cancelled') {
-        await this.releaseReservedInventory(tx, inventoryLines);
-      }
-
-      if (params.nextStatus === 'delivered') {
-        await this.finalizeDeliveredInventory(tx, inventoryLines);
-      }
-
-      const order = await tx.butcherOrder.update({
-        where: { id: params.orderId },
-        data: {
-          status: params.nextStatus,
-          ...(params.nextStatus === 'cancelled'
-            ? {
-                cancelledBy: params.actorId,
-                cancellationReason: params.cancellationReason ?? null,
-                cancelledAt: new Date(),
-              }
-            : {}),
-        },
-        include: {
-          butcher: { select: { id: true, userId: true } },
-          items: { include: { product: true } },
-        },
-      });
-
-      const timeline = await tx.orderTimeline.create({
-        data: {
-          orderId: params.orderId,
-          status: params.nextStatus,
-          note:
-            params.nextStatus === 'cancelled'
-              ? (params.cancellationReason ?? 'Order Cancelled')
-              : null,
-          createdBy: params.actorId,
-        },
-      });
-
-      await tx.orderStatusAudit.create({
-        data: {
-          orderId: params.orderId,
-          previousStatus: locked.status,
-          newStatus: params.nextStatus,
-          changedBy: params.actorId,
-        },
-      });
-
-      return {
-        order,
-        timeline,
-        noop: false as const,
-        locked,
-        inventoryLines,
-      };
+        return {
+          order,
+          timeline,
+          noop: false as const,
+          locked,
+          inventoryLines,
+        };
       },
       { maxWait: 10000, timeout: 30000 },
     );

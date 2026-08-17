@@ -8,8 +8,13 @@ import { Response } from 'express';
 import { ApiException } from '../exceptions/api.exception';
 import { RateLimitException } from '../exceptions/rate-limit.exception';
 import { isButcherApplicationError } from '../../butcher-applications/errors';
+import { Sentry } from '../../shared/lib/sentry';
 
-function sendJson(res: Response, status: number, body: Record<string, unknown>) {
+function sendJson(
+  res: Response,
+  status: number,
+  body: Record<string, unknown>,
+) {
   if (res.headersSent) return;
   res.status(status).json(body);
 }
@@ -23,7 +28,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (res.headersSent) return;
 
     if (exception instanceof ApiException) {
-      sendJson(res, exception.status, exception.toJSON() as Record<string, unknown>);
+      sendJson(
+        res,
+        exception.status,
+        exception.toJSON() as Record<string, unknown>,
+      );
       return;
     }
 
@@ -53,6 +62,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const payload = exception.getResponse();
 
+      if (status >= 500) {
+        Sentry.captureException(exception);
+      }
+
       if (typeof payload === 'object' && payload !== null) {
         if ('success' in payload) {
           sendJson(res, status, {
@@ -70,7 +83,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
         sendJson(res, status, {
           success: false,
-          error: body.error ?? (status === 400 ? 'validation_error' : 'http_error'),
+          error:
+            body.error ?? (status === 400 ? 'validation_error' : 'http_error'),
           messageAr,
           timestamp: new Date().toISOString(),
         });
@@ -82,8 +96,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         return;
       }
 
-      const messageAr =
-        typeof payload === 'string' ? payload : 'طلب غير صالح';
+      const messageAr = typeof payload === 'string' ? payload : 'طلب غير صالح';
       sendJson(res, status, {
         success: false,
         error: status === 400 ? 'validation_error' : 'http_error',
@@ -93,6 +106,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return;
     }
 
+    Sentry.captureException(exception);
     sendJson(res, 500, {
       success: false,
       error: 'server_error',

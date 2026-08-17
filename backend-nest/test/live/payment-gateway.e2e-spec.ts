@@ -72,52 +72,75 @@ describe('§14 Real payment gateway (NI) — promote, fees, butcher', () => {
     assertWiredToGateway(res);
   });
 
-  t('promote page: visibility promotion is wired to the real gateway', async () => {
-    if (!listingId) return;
-    const res = await request(API)
-      .post(`/api/listings/${listingId}/promotion`)
-      .set(authHeader(user.accessToken))
-      .send({ durationDays: 3, amount: 39, method: 'visa', promotionGoal: 'visibility' });
-    assertWiredToGateway(res);
-  });
+  t(
+    'promote page: visibility promotion is wired to the real gateway',
+    async () => {
+      if (!listingId) return;
+      const res = await request(API)
+        .post(`/api/listings/${listingId}/promotion`)
+        .set(authHeader(user.accessToken))
+        .send({
+          durationDays: 3,
+          amount: 39,
+          method: 'visa',
+          promotionGoal: 'visibility',
+        });
+      assertWiredToGateway(res);
+    },
+  );
 
   // ── Fee / commission payment (§14) ──────────────────────────
-  t('fee payment: commission initiation is wired to the real gateway', async () => {
-    const res = await request(API)
-      .post('/api/payments/initiate')
-      .set(authHeader(user.accessToken))
-      .send({ amount: 25, method: 'visa', type: 'commission' });
-    assertWiredToGateway(res);
-  });
+  t(
+    'fee payment: own-listing commission initiation is wired to the real gateway',
+    async () => {
+      if (!listingId) return;
+      const res = await request(API)
+        .post('/api/payments/initiate')
+        .set(authHeader(user.accessToken))
+        .send({
+          amount: 25,
+          method: 'visa',
+          type: 'commission',
+          referenceId: listingId,
+        });
+      assertWiredToGateway(res);
+    },
+  );
 
-  t('fee payment: unknown fee reference is rejected before charging (404)', async () => {
-    const res = await request(API)
-      .post('/api/payments/initiate')
-      .set(authHeader(user.accessToken))
-      .send({
-        amount: 25,
-        method: 'visa',
-        type: 'listing_fee',
-        referenceId: '00000000-0000-0000-0000-000000000000',
-      });
-    expect(res.status).toBe(404);
-    expect(res.body.error).toBe('fee_not_found');
-  });
+  t(
+    'fee payment: unknown fee reference is rejected before charging (404)',
+    async () => {
+      const res = await request(API)
+        .post('/api/payments/initiate')
+        .set(authHeader(user.accessToken))
+        .send({
+          amount: 25,
+          method: 'visa',
+          type: 'listing_fee',
+          referenceId: '00000000-0000-0000-0000-000000000000',
+        });
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('fee_not_found');
+    },
+  );
 
   // ── Butcher order payment (§12/§14) ─────────────────────────
-  t('butcher payment: unknown order reference is rejected before charging (404)', async () => {
-    const res = await request(API)
-      .post('/api/payments/initiate')
-      .set(authHeader(user.accessToken))
-      .send({
-        amount: 100,
-        method: 'visa',
-        type: 'butcher_order',
-        referenceId: '00000000-0000-0000-0000-000000000000',
-      });
-    expect(res.status).toBe(404);
-    expect(res.body.error).toBe('order_not_found');
-  });
+  t(
+    'butcher payment: unknown order reference is rejected before charging (404)',
+    async () => {
+      const res = await request(API)
+        .post('/api/payments/initiate')
+        .set(authHeader(user.accessToken))
+        .send({
+          amount: 100,
+          method: 'visa',
+          type: 'butcher_order',
+          referenceId: '00000000-0000-0000-0000-000000000000',
+        });
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('order_not_found');
+    },
+  );
 
   // ── Common gateway invariants ───────────────────────────────
   t('all payment initiations require authentication (401)', async () => {
@@ -132,7 +155,9 @@ describe('§14 Real payment gateway (NI) — promote, fees, butcher', () => {
   });
 
   t('payment return bridge pages respond (redirect flow)', async () => {
-    const result = await request(API).get('/payment/result').query({ paymentId: 'x' });
+    const result = await request(API)
+      .get('/payment/result')
+      .query({ paymentId: 'x' });
     const cancel = await request(API).get('/payment/cancel');
     expect(result.status).toBeLessThan(500);
     expect(cancel.status).toBeLessThan(500);
@@ -140,7 +165,9 @@ describe('§14 Real payment gateway (NI) — promote, fees, butcher', () => {
 
   afterAll(async () => {
     if (live && listingId) {
-      await request(API).delete(`/api/listings/${listingId}`).set(authHeader(user.accessToken));
+      await request(API)
+        .delete(`/api/listings/${listingId}`)
+        .set(authHeader(user.accessToken));
     }
   });
 });

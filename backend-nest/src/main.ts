@@ -17,6 +17,7 @@ import {
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { logger } from './shared/lib/logger';
+import { initialiseSentry } from './shared/lib/sentry';
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:8081')
   .split(',')
@@ -34,6 +35,7 @@ function resolveAllowedOrigin(origin: string | undefined): string | null {
 }
 
 async function bootstrap() {
+  initialiseSentry();
   const app = await NestFactory.create(AppModule, { bodyParser: false });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
