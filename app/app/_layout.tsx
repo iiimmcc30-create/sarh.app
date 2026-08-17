@@ -29,7 +29,7 @@ import { bootstrapTheme } from '@/constants/themeBootstrap';
 bootstrapTheme().catch(() => {});
 setupRtl();
 
-SplashScreen.preventAutoHideAsync().catch(() => {});
+void SplashScreen.hideAsync().catch(() => {});
 
 WebBrowser.maybeCompleteAuthSession();
 
