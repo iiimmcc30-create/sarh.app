@@ -25,6 +25,7 @@ import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
+import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
@@ -199,14 +200,12 @@ export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCom
                         {c.createdAt}
                       </Text>
                       <Text style={styles.metaDot}>·</Text>
-                      {c.author.verified ? (
-                        <AppIcon name="checkmark-circle" size={12} color={colors.electricBright} />
-                      ) : null}
-                      <RtlTextShell flex>
-                        <RtlText style={styles.commentName} numberOfLines={1}>
-                          {c.author.arabicName || c.author.displayName}
-                        </RtlText>
-                      </RtlTextShell>
+                      <VerifiedInlineName
+                        name={c.author.arabicName || c.author.displayName}
+                        verified={c.author.verified}
+                        badgeSize={14}
+                        nameStyle={styles.commentName}
+                      />
                     </CoverTrailRow>
                   </UserProfileLink>
                   {canDeleteComment(c.author.id, listingOwnerId, user, me) ? (
