@@ -57,8 +57,6 @@ import {
 import {
   detectCurrentListingLocation,
   formatListingAddress,
-  type ListingGeo,
-  type LocationDetectStatus,
 } from '@/lib/listingLocation';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string; currency: string }[] = [
@@ -97,8 +95,6 @@ export default function CreateListingScreen() {
   const [subCategory, setSubCategory] = useState<MarketCategory | null>(null);
   const [titleAr, setTitleAr] = useState('');
   const [descAr, setDescAr] = useState('');
-  const [breed, setBreed] = useState('');
-  const [age, setAge] = useState('');
   const [price, setPrice] = useState('');
   const [country, setCountry] = useState<Country>('SA');
   const [location, setLocation] = useState('');
@@ -106,10 +102,7 @@ export default function CreateListingScreen() {
   const [weightKg, setWeightKg] = useState('');
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const [listingGeo, setListingGeo] = useState<ListingGeo | null>(null);
   const [locating, setLocating] = useState(false);
-  const [locationStatus, setLocationStatus] = useState<LocationDetectStatus>('idle');
-  const [locationHint, setLocationHint] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [videoState, setVideoState] = useState<ListingVideoState>({ status: 'idle' });
@@ -148,8 +141,6 @@ export default function CreateListingScreen() {
         }
         setTitleAr(raw.arabicTitle ?? raw.title ?? '');
         setDescAr(raw.arabicDescription ?? raw.description ?? '');
-        setBreed(raw.breed ?? '');
-        setAge(raw.age ?? '');
         setPrice(raw.price != null ? String(raw.price) : '');
         setCountry((raw.country as Country) || 'SA');
         setLocation(raw.arabicLocation ?? raw.location ?? '');
@@ -244,12 +235,8 @@ export default function CreateListingScreen() {
 
   const detectLocation = async (force = false) => {
     setLocating(true);
-    setLocationStatus('requesting');
     const result = await detectCurrentListingLocation();
-    setLocationStatus(result.status);
-    setLocationHint(result.message ?? null);
     if (result.geo) {
-      setListingGeo(result.geo);
       setLat(result.geo.latitude);
       setLng(result.geo.longitude);
       const label = formatListingAddress(result.geo);
@@ -457,8 +444,6 @@ export default function CreateListingScreen() {
         category: legacyCategory,
         categoryId: parentCategory.id,
         subcategoryId: subCategory.id,
-        breed: breed.trim() || undefined,
-        age: age.trim() || undefined,
         quantity: 1,
         location: locationLabel,
         arabicLocation: locationLabel,
@@ -503,14 +488,6 @@ export default function CreateListingScreen() {
   };
 
   const categoryMode = suggestionMode(suggestion);
-  const categoryAutoLabel =
-    parentCategory && !categoryLocked && categoryMode === 'auto'
-      ? 'تم تحديد التصنيف تلقائياً'
-      : parentCategory && !categoryLocked && categoryMode === 'suggest'
-        ? 'اقتراح — يمكنك تغييره'
-        : categoryLocked
-          ? 'تم اختياره يدوياً'
-          : null;
 
   if (loadingListing) {
     return (
@@ -606,10 +583,7 @@ export default function CreateListingScreen() {
                 <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
                   <TextInput
                     value={location}
-                    onChangeText={(v) => {
-                      setLocation(v);
-                      setLocationStatus('manual');
-                    }}
+                    onChangeText={setLocation}
                     placeholder="حدد موقع العرض يدوياً"
                     placeholderTextColor={colors.textMuted}
                     style={styles.input}
@@ -623,11 +597,6 @@ export default function CreateListingScreen() {
                   )}
                   <AppIcon name="location-outline" size={18} color={colors.electricBright} />
                 </View>
-                {locationHint && !location.trim() ? (
-                  <Text style={styles.fieldHintMuted}>{locationHint}</Text>
-                ) : locationStatus === 'ready' ? (
-                  <Text style={styles.fieldHintSuccess}>تم تحديد موقعك الحالي</Text>
-                ) : null}
                 <Pressable onPress={() => setShowMap((v) => !v)} style={styles.linkBtn}>
                   <Text style={styles.linkText}>{showMap ? 'إخفاء الخريطة' : 'اختيار من الخريطة'}</Text>
                 </Pressable>
@@ -693,9 +662,6 @@ export default function CreateListingScreen() {
                           }`
                         : 'اختر التصنيف'}
                     </Text>
-                    {categoryAutoLabel ? (
-                      <Text style={styles.fieldHintSuccess}>{categoryAutoLabel}</Text>
-                    ) : null}
                   </View>
                   <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
                 </Pressable>
@@ -708,6 +674,64 @@ export default function CreateListingScreen() {
 
           {step === 1 && (
             <View style={styles.stepContent}>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>موقع العرض</Text>
+                <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
+                  <TextInput
+                    value={location}
+                    onChangeText={setLocation}
+                    placeholder="حدد موقع العرض يدوياً"
+                    placeholderTextColor={colors.textMuted}
+                    style={styles.input}
+                  />
+                  <AppIcon name="location-outline" size={18} color={colors.electricBright} />
+                </View>
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>عنوان العرض</Text>
+                <View style={[styles.inputWrap, titleAr.trim() ? styles.inputFilled : null]}>
+                  <TextInput
+                    value={titleAr}
+                    onChangeText={(v) => {
+                      setTitleAr(v);
+                      setStepError(null);
+                    }}
+                    placeholder="مثال: أغنام حريات للبيع"
+                    placeholderTextColor={colors.textMuted}
+                    style={styles.input}
+                    maxLength={80}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>التصنيف</Text>
+                <Pressable
+                  onPress={() => setCategoryPickerOpen(true)}
+                  style={[
+                    styles.inputWrap,
+                    styles.categoryField,
+                    parentCategory ? styles.inputFilled : null,
+                    !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
+                  ]}
+                >
+                  <View style={styles.categoryValue}>
+                    <Text
+                      style={[
+                        styles.categoryValueText,
+                        !parentCategory && { color: colors.textMuted },
+                      ]}
+                    >
+                      {parentCategory
+                        ? `${parentCategory.nameAr}${subCategory ? ` · ${subCategory.nameAr}` : ''}`
+                        : 'اختر التصنيف'}
+                    </Text>
+                  </View>
+                  <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
+                </Pressable>
+              </View>
+
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>الوصف</Text>
                 <View style={[styles.inputWrap, styles.textareaWrap]}>
@@ -755,50 +779,21 @@ export default function CreateListingScreen() {
                     <Text style={styles.compactUnit}>كجم</Text>
                   </View>
                 </View>
-                <View style={[styles.compactField, styles.compactPhone]}>
-                  <Text style={styles.compactLabel}>الجوال</Text>
-                  <View style={styles.compactInput}>
-                    <TextInput
-                      value={contactPhone}
-                      onChangeText={(text) => setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))}
-                      placeholder="05XXXXXXXX"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.compactText}
-                      keyboardType="phone-pad"
-                      maxLength={20}
-                    />
-                    <AppIcon name="call-outline" size={14} color={colors.electricBright} />
-                  </View>
-                </View>
               </View>
-              <Text style={styles.privacyNote}>
-                رقم الجوال يُستخدم للتواصل داخل سرح ولا يُعرض علناً إن لم تضفه.
-              </Text>
 
-              <View style={styles.row}>
-                <View style={[styles.fieldGroup, { flex: 1 }]}>
-                  <Text style={styles.fieldLabel}>السلالة (اختياري)</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      value={breed}
-                      onChangeText={setBreed}
-                      placeholder="مثال: حرية"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.input}
-                    />
-                  </View>
-                </View>
-                <View style={[styles.fieldGroup, { flex: 1 }]}>
-                  <Text style={styles.fieldLabel}>العمر (اختياري)</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      value={age}
-                      onChangeText={setAge}
-                      placeholder="مثال: 3 سنوات"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.input}
-                    />
-                  </View>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>الجوال</Text>
+                <View style={[styles.inputWrap, styles.phoneField]}>
+                  <TextInput
+                    value={contactPhone}
+                    onChangeText={(text) => setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))}
+                    placeholder="05XXXXXXXX"
+                    placeholderTextColor={colors.textMuted}
+                    style={styles.input}
+                    keyboardType="phone-pad"
+                    maxLength={20}
+                  />
+                  <AppIcon name="call-outline" size={18} color={colors.electricBright} />
                 </View>
               </View>
             </View>
@@ -1062,8 +1057,6 @@ function createStyles(colors: ThemeColors) {
       textAlign: 'right',
       writingDirection: 'rtl',
     },
-    fieldHintMuted: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
-    fieldHintSuccess: { ...typography.micro, color: colors.electricBright, textAlign: 'right' },
     linkBtn: { alignSelf: 'flex-end' },
     linkText: { ...typography.caption, color: colors.electricBright },
     categoryLabelRow: {
@@ -1089,7 +1082,6 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     compactField: { flex: 1, gap: 4, minWidth: 0, alignItems: 'stretch' },
-    compactPhone: { flex: 1.25 },
     compactLabel: {
       ...typography.micro,
       color: colors.textMuted,
@@ -1119,17 +1111,8 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     compactUnit: { ...typography.micro, color: colors.textMuted, flexShrink: 0 },
-    privacyNote: {
-      ...typography.micro,
-      color: colors.textMuted,
-      textAlign: 'right',
-      lineHeight: 18,
-    },
-    row: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
-      gap: spacing.md,
-      width: '100%',
+    phoneField: {
+      minHeight: 54,
     },
     imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     imageThumbWrap: {
