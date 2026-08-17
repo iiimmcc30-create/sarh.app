@@ -25,7 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -604,7 +604,6 @@ export default function CreateListingScreen() {
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>موقع العرض</Text>
                 <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
-                  <AppIcon name="location-outline" size={18} color={colors.electricBright} />
                   <TextInput
                     value={location}
                     onChangeText={(v) => {
@@ -613,7 +612,7 @@ export default function CreateListingScreen() {
                     }}
                     placeholder="حدد موقع العرض يدوياً"
                     placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { textAlign: 'right' }]}
+                    style={styles.input}
                   />
                   {locating ? (
                     <ActivityIndicator size="small" color={colors.electricBright} />
@@ -622,6 +621,7 @@ export default function CreateListingScreen() {
                       <AppIcon name="refresh" size={16} color={colors.textMuted} />
                     </Pressable>
                   )}
+                  <AppIcon name="location-outline" size={18} color={colors.electricBright} />
                 </View>
                 {locationHint && !location.trim() ? (
                   <Text style={styles.fieldHintMuted}>{locationHint}</Text>
@@ -656,20 +656,20 @@ export default function CreateListingScreen() {
                     }}
                     placeholder="مثال: أغنام حريات للبيع"
                     placeholderTextColor={colors.textMuted}
-                    style={[styles.input, { textAlign: 'right' }]}
+                    style={styles.input}
                     maxLength={80}
                   />
                 </View>
               </View>
 
               <View style={styles.fieldGroup}>
-                <View style={[styles.categoryLabelRow, getRtlRow()]}>
-                  <Text style={styles.fieldLabel}>التصنيف</Text>
+                <View style={styles.categoryLabelRow}>
                   {parentCategory ? (
                     <Pressable onPress={reSuggest} hitSlop={6}>
                       <Text style={styles.linkText}>إعادة الاقتراح</Text>
                     </Pressable>
                   ) : null}
+                  <Text style={styles.fieldLabel}>التصنيف</Text>
                 </View>
                 <Pressable
                   onPress={() => setCategoryPickerOpen(true)}
@@ -680,7 +680,6 @@ export default function CreateListingScreen() {
                     !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
                   ]}
                 >
-                  <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
                   <View style={styles.categoryValue}>
                     <Text
                       style={[
@@ -698,6 +697,7 @@ export default function CreateListingScreen() {
                       <Text style={styles.fieldHintSuccess}>{categoryAutoLabel}</Text>
                     ) : null}
                   </View>
+                  <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
                 </Pressable>
                 {categoriesLoading && parents.length === 0 ? (
                   <ActivityIndicator size="small" color={colors.electricBright} />
@@ -716,7 +716,7 @@ export default function CreateListingScreen() {
                     onChangeText={setDescAr}
                     placeholder="اكتب وصف العرض بالتفصيل..."
                     placeholderTextColor={colors.textMuted}
-                    style={[styles.input, styles.textarea, getRtlText()]}
+                    style={[styles.input, styles.textarea]}
                     multiline
                     maxLength={1000}
                   />
@@ -733,7 +733,7 @@ export default function CreateListingScreen() {
                       onChangeText={(t) => setPrice(t.replace(/[^0-9]/g, ''))}
                       placeholder="0"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.compactText, { textAlign: 'right' }]}
+                      style={styles.compactText}
                       keyboardType="numeric"
                     />
                     <Text style={styles.compactUnit}>ر.س</Text>
@@ -749,7 +749,7 @@ export default function CreateListingScreen() {
                       onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
                       placeholder="0"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.compactText, { textAlign: 'right' }]}
+                      style={styles.compactText}
                       keyboardType="decimal-pad"
                     />
                     <Text style={styles.compactUnit}>كجم</Text>
@@ -758,16 +758,16 @@ export default function CreateListingScreen() {
                 <View style={[styles.compactField, styles.compactPhone]}>
                   <Text style={styles.compactLabel}>الجوال</Text>
                   <View style={styles.compactInput}>
-                    <AppIcon name="call-outline" size={14} color={colors.electricBright} />
                     <TextInput
                       value={contactPhone}
                       onChangeText={(text) => setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))}
                       placeholder="05XXXXXXXX"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.compactText, { flex: 1, textAlign: 'right' }]}
+                      style={styles.compactText}
                       keyboardType="phone-pad"
                       maxLength={20}
                     />
+                    <AppIcon name="call-outline" size={14} color={colors.electricBright} />
                   </View>
                 </View>
               </View>
@@ -784,7 +784,7 @@ export default function CreateListingScreen() {
                       onChangeText={setBreed}
                       placeholder="مثال: حرية"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.input, { textAlign: 'right' }]}
+                      style={styles.input}
                     />
                   </View>
                 </View>
@@ -796,7 +796,7 @@ export default function CreateListingScreen() {
                       onChangeText={setAge}
                       placeholder="مثال: 3 سنوات"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.input, { textAlign: 'right' }]}
+                      style={styles.input}
                     />
                   </View>
                 </View>
@@ -1010,15 +1010,18 @@ function createStyles(colors: ThemeColors) {
     mediaTitle: { ...typography.feedTitle, color: colors.textPrimary },
     mediaSub: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
     pressed: { opacity: 0.82 },
-    fieldGroup: { gap: 6 },
+    fieldGroup: { gap: 6, width: '100%', alignItems: 'stretch' },
     fieldLabel: {
       ...typography.caption,
       color: colors.textMuted,
       fontWeight: '600',
+      width: '100%',
       textAlign: 'right',
+      writingDirection: 'rtl',
     },
     inputWrap: {
-      flexDirection: 'row',
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
       alignItems: 'center',
       gap: 8,
       backgroundColor: colors.bgSurface,
@@ -1027,17 +1030,22 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderSoft,
       minHeight: 48,
+      width: '100%',
     },
     inputFilled: { borderColor: colors.borderMid },
     inputAuto: { borderColor: `${colors.electric}66` },
     input: {
       flex: 1,
+      minWidth: 0,
       ...typography.body,
       color: colors.textPrimary,
       paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     textareaWrap: {
-      alignItems: 'flex-start',
+      flexDirection: 'column',
+      alignItems: 'stretch',
       minHeight: 120,
       paddingTop: spacing.sm,
       paddingBottom: spacing.sm,
@@ -1045,33 +1053,53 @@ function createStyles(colors: ThemeColors) {
     textarea: {
       textAlignVertical: 'top',
       minHeight: 88,
+      width: '100%',
     },
     charCount: {
       ...typography.micro,
       color: colors.textSubtle,
-      alignSelf: 'flex-start',
+      alignSelf: 'flex-end',
+      textAlign: 'right',
+      writingDirection: 'rtl',
     },
     fieldHintMuted: { ...typography.micro, color: colors.textMuted, textAlign: 'right' },
     fieldHintSuccess: { ...typography.micro, color: colors.electricBright, textAlign: 'right' },
     linkBtn: { alignSelf: 'flex-end' },
     linkText: { ...typography.caption, color: colors.electricBright },
-    categoryLabelRow: { justifyContent: 'space-between', alignItems: 'center' },
-    categoryField: { minHeight: 56, alignItems: 'center' },
-    categoryValue: { flex: 1, alignItems: 'flex-end' },
-    categoryValueText: { ...typography.body, color: colors.textPrimary, textAlign: 'right' },
-    compactRow: {
+    categoryLabelRow: {
+      direction: 'ltr',
       flexDirection: 'row',
-      gap: 8,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      width: '100%',
     },
-    compactField: { flex: 1, gap: 4 },
+    categoryField: { minHeight: 56, alignItems: 'center' },
+    categoryValue: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
+    categoryValueText: {
+      ...typography.body,
+      color: colors.textPrimary,
+      width: '100%',
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    compactRow: {
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
+      gap: 8,
+      width: '100%',
+    },
+    compactField: { flex: 1, gap: 4, minWidth: 0, alignItems: 'stretch' },
     compactPhone: { flex: 1.25 },
     compactLabel: {
       ...typography.micro,
       color: colors.textMuted,
+      width: '100%',
       textAlign: 'right',
+      writingDirection: 'rtl',
     },
     compactInput: {
-      flexDirection: 'row',
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
       alignItems: 'center',
       gap: 4,
       minHeight: 44,
@@ -1080,16 +1108,29 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderSoft,
       paddingHorizontal: 8,
+      width: '100%',
     },
-    compactText: { ...typography.caption, color: colors.textPrimary, flex: 1 },
-    compactUnit: { ...typography.micro, color: colors.textMuted },
+    compactText: {
+      ...typography.caption,
+      color: colors.textPrimary,
+      flex: 1,
+      minWidth: 0,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+    },
+    compactUnit: { ...typography.micro, color: colors.textMuted, flexShrink: 0 },
     privacyNote: {
       ...typography.micro,
       color: colors.textMuted,
       textAlign: 'right',
       lineHeight: 18,
     },
-    row: { flexDirection: 'row', gap: spacing.md },
+    row: {
+      direction: 'ltr',
+      flexDirection: 'row-reverse',
+      gap: spacing.md,
+      width: '100%',
+    },
     imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     imageThumbWrap: {
       width: 72,
