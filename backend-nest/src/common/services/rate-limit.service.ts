@@ -140,6 +140,15 @@ export class RateLimitService {
     return this.paymentLimiterInstance;
   }
 
+  private shouldFailClosedOnRedisError(
+    req: Request,
+    type: RateLimitType,
+  ): boolean {
+    if (!this.isRedisEnabled()) return false;
+    if (type === 'auth' || type === 'payment') return true;
+    return (req.originalUrl || req.url || '').startsWith('/api/admin');
+  }
+
   async consume(
     req: Request,
     res: Response,
@@ -187,6 +196,10 @@ export class RateLimitService {
           { err: rejRes.message, ip, type },
           'Rate limiter Redis error, failing open',
         );
+        if (this.shouldFailClosedOnRedisError(req, type)) {
+          res.setHeader('Retry-After', 5);
+          return false;
+        }
         return true;
       }
 

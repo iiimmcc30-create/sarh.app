@@ -54,10 +54,12 @@ describe('OrderLifecycleService', () => {
     service = moduleRef.get(OrderLifecycleService);
   });
 
-  function transitionTx(overrides: {
-    inventoryItems?: Array<{ productId: string; reservedQuantity: number }>;
-    nextStatus?: string;
-  } = {}) {
+  function transitionTx(
+    overrides: {
+      inventoryItems?: Array<{ productId: string; reservedQuantity: number }>;
+      nextStatus?: string;
+    } = {},
+  ) {
     const executeRaw = jest.fn().mockResolvedValue(1);
     const orderUpdate = jest.fn().mockResolvedValue({
       id: 'order-1',
@@ -123,9 +125,9 @@ describe('OrderLifecycleService', () => {
     prisma.$transaction.mockImplementation(
       async (fn: (tx: unknown) => Promise<unknown>) =>
         fn({
-          $queryRaw: jest.fn().mockResolvedValue([
-            { ...lockedRow, paymentStatus: 'unpaid' },
-          ]),
+          $queryRaw: jest
+            .fn()
+            .mockResolvedValue([{ ...lockedRow, paymentStatus: 'unpaid' }]),
           butcherOrderItem: { findMany: jest.fn() },
           butcherOrder: { findUnique: jest.fn(), update: jest.fn() },
           orderTimeline: { create: jest.fn() },
@@ -293,5 +295,47 @@ describe('OrderLifecycleService', () => {
         }),
       }),
     );
+  });
+
+  it('expires stale unpaid orders through the normal cancel path', async () => {
+    prisma.$queryRaw = jest.fn().mockResolvedValue([{ id: 'order-1' }]);
+    const transitionSpy = jest
+      .spyOn(service, 'transitionOrder')
+      .mockResolvedValue({
+        id: 'order-1',
+        status: 'cancelled',
+      } as never);
+
+    const result = await service.expireStaleUnpaidOrders(
+      new Date('2026-08-17T08:00:00Z'),
+    );
+
+    expect(prisma.$queryRaw).toHaveBeenCalled();
+    expect(transitionSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderId: 'order-1',
+        nextStatus: 'cancelled',
+      }),
+    );
+    expect(result).toEqual({ scanned: 1, expired: 1, skipped: 0 });
+  });
+
+  it('skips stale unpaid orders that fail transition safely', async () => {
+    prisma.$queryRaw = jest
+      .fn()
+      .mockResolvedValue([{ id: 'order-1' }, { id: 'order-2' }]);
+    jest
+      .spyOn(service, 'transitionOrder')
+      .mockRejectedValueOnce(new ApiException(409, 'inventory_conflict', 'x'))
+      .mockResolvedValueOnce({
+        id: 'order-2',
+        status: 'cancelled',
+      } as never);
+
+    const result = await service.expireStaleUnpaidOrders(
+      new Date('2026-08-17T08:00:00Z'),
+    );
+
+    expect(result).toEqual({ scanned: 2, expired: 1, skipped: 1 });
   });
 });

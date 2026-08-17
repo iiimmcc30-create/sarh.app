@@ -31,6 +31,28 @@ export class PaymentsRepository {
     });
   }
 
+  findOwnedListingForCommission(referenceId: string, userId: string) {
+    return this.prisma.listing.findFirst({
+      where: {
+        id: referenceId,
+        sellerId: userId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        status: true,
+        fee: {
+          select: {
+            id: true,
+            status: true,
+            commission: true,
+            dueDate: true,
+          },
+        },
+      },
+    });
+  }
+
   findUnpaidButcherOrder(referenceId: string, userId: string) {
     return this.prisma.butcherOrder.findFirst({
       where: {
@@ -108,7 +130,9 @@ export class PaymentsRepository {
         metadata: params.metadata as Prisma.InputJsonValue,
         referenceId: params.referenceId,
         referenceType: params.referenceType,
-        ...(params.subscriptionId ? { subscriptionId: params.subscriptionId } : {}),
+        ...(params.subscriptionId
+          ? { subscriptionId: params.subscriptionId }
+          : {}),
         ...(params.feeId ? { feeId: params.feeId } : {}),
       },
     });
@@ -122,7 +146,12 @@ export class PaymentsRepository {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.payment.findUnique({
         where: { id: paymentId },
-        select: { metadata: true, checkoutUrl: true, transactionId: true, orderId: true },
+        select: {
+          metadata: true,
+          checkoutUrl: true,
+          transactionId: true,
+          orderId: true,
+        },
       });
       if (!existing) return null;
 
@@ -482,8 +511,7 @@ export class PaymentsRepository {
         | { id: string; boostType: string; listingId: string; expiresAt: Date }
         | undefined;
       let promotion:
-        | { id: string; listingId: string; expiresAt: Date }
-        | undefined;
+        { id: string; listingId: string; expiresAt: Date } | undefined;
 
       if (
         (params.type === 'featured_ad' || params.type === 'pinned_ad') &&
@@ -491,7 +519,13 @@ export class PaymentsRepository {
       ) {
         const existing = await tx.listingBoost.findUnique({
           where: { id: params.referenceId },
-          select: { id: true, boostType: true, listingId: true, durationDays: true, status: true },
+          select: {
+            id: true,
+            boostType: true,
+            listingId: true,
+            durationDays: true,
+            status: true,
+          },
         });
 
         if (existing && existing.status !== 'paid') {
@@ -501,7 +535,9 @@ export class PaymentsRepository {
             params.storedMeta.durationHours > 0
               ? params.storedMeta.durationHours
               : existing.durationDays * 24;
-          const expires = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
+          const expires = new Date(
+            now.getTime() + durationHours * 60 * 60 * 1000,
+          );
 
           await tx.listingBoost.update({
             where: { id: params.referenceId },
@@ -529,7 +565,12 @@ export class PaymentsRepository {
                     },
           });
 
-          boost = { id: existing.id, boostType: existing.boostType, listingId: existing.listingId, expiresAt: expires };
+          boost = {
+            id: existing.id,
+            boostType: existing.boostType,
+            listingId: existing.listingId,
+            expiresAt: expires,
+          };
         }
       }
 
@@ -554,7 +595,9 @@ export class PaymentsRepository {
             params.storedMeta.durationHours > 0
               ? params.storedMeta.durationHours
               : existing.durationDays * 24;
-          const expires = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
+          const expires = new Date(
+            now.getTime() + durationHours * 60 * 60 * 1000,
+          );
           const listing = await tx.listing.findUnique({
             where: { id: existing.listingId },
             select: { views: true },

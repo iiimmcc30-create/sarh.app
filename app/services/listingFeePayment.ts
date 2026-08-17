@@ -1,6 +1,6 @@
-import { API_BASE } from '@/services/api';
-import { authFetch } from '@/services/authFetch';
-import type { NIPaymentMethod } from '@/services/network_international';
+import { API_BASE } from "@/services/api";
+import { authFetch } from "@/services/authFetch";
+import type { NIPaymentMethod } from "@/services/network_international";
 
 export type ListingFeePaymentInit = {
   paymentId?: string;
@@ -13,16 +13,19 @@ export async function initiateListingFeePayment(params: {
   amount: number;
   method: NIPaymentMethod;
   listingTitle?: string;
-}): Promise<{ ok: true; data: ListingFeePaymentInit } | { ok: false; message: string }> {
+}): Promise<
+  { ok: true; data: ListingFeePaymentInit } | { ok: false; message: string }
+> {
   try {
     const res = await authFetch(`${API_BASE}/api/payments/initiate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         amount: params.amount,
-        currency: 'SAR',
+        currency: "SAR",
         method: params.method,
-        type: 'commission',
+        type: "commission",
+        referenceId: params.listingId,
         description: `sarh listing commission ${params.listingId}`,
         descriptionAr: params.listingTitle
           ? `سداد عمولة سرح — ${params.listingTitle}`
@@ -36,11 +39,11 @@ export async function initiateListingFeePayment(params: {
         message:
           json.messageAr ??
           json.message ??
-          'تعذّر بدء عملية الدفع. حاول مرة أخرى.',
+          "تعذّر بدء عملية الدفع. حاول مرة أخرى.",
       };
     }
     return { ok: true, data: json.data as ListingFeePaymentInit };
   } catch {
-    return { ok: false, message: 'تعذّر الاتصال بالخادم' };
+    return { ok: false, message: "تعذّر الاتصال بالخادم" };
   }
 }

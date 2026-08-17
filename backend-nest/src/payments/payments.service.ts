@@ -1,4 +1,8 @@
-import { Injectable, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
+import {
+  Injectable,
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import crypto from 'crypto';
 import { PaymentReferenceType, PlanAudience } from '@prisma/client';
 import { normalizePlanSlug, type BillingCycle } from '../lib/plans';
@@ -28,6 +32,7 @@ import {
   type NiLogFn,
 } from './ni-client';
 import { PaidServicesService } from '../settings/paid-services.service';
+import { Sentry } from '../shared/lib/sentry';
 
 function buildNIOrderReference(userId: string): string {
   const ts = Date.now().toString(36).toUpperCase();
@@ -78,11 +83,38 @@ function niStateIsFailure(state: string): boolean {
   return classifyNiOrderState(state) === 'failed';
 }
 
-const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;  // every 5 min
-const STALE_AFTER_MINUTES   = 10;              // payments older than 10 min
+function normalizeMoney(value: number): number {
+  return Math.round(value * 100);
+}
+
+function sameMoneyAmount(a: number, b: number): boolean {
+  return normalizeMoney(a) === normalizeMoney(b);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000; // every 5 min
+const STALE_AFTER_MINUTES = 10; // payments older than 10 min
+/** Crash window: pending row exists but checkout URL was never written. */
+const STALE_PENDING_WITHOUT_CHECKOUT_MS = 2 * 60 * 1000;
 
 @Injectable()
-export class PaymentsService implements OnApplicationBootstrap, OnApplicationShutdown {
+export class PaymentsService
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
+  private readonly inFlightInitiations = new Map<
+    string,
+    Promise<{
+      paymentId: string;
+      orderId: string | null;
+      checkoutUrl: string;
+      status: 'pending';
+      devMode: boolean;
+    }>
+  >();
+
   constructor(
     private readonly repo: PaymentsRepository,
     private readonly logger: LoggerService,
@@ -143,7 +175,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       if (!fee) {
         throwApi(404, 'fee_not_found', 'الرسوم غير موجودة أو مسددة بالفعل');
       }
-      if (Math.abs(fee.commission - amount) > 1) {
+      if (!sameMoneyAmount(fee.commission, amount)) {
         throwApi(
           400,
           'amount_mismatch',
@@ -156,13 +188,9 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     if (type === 'butcher_order') {
       const order = await this.repo.findUnpaidButcherOrder(referenceId, userId);
       if (!order) {
-        throwApi(
-          404,
-          'order_not_found',
-          'الطلب غير موجود أو تم سداده مسبقاً',
-        );
+        throwApi(404, 'order_not_found', 'الطلب غير موجود أو تم سداده مسبقاً');
       }
-      if (Math.abs(order.totalPrice - amount) > 1) {
+      if (!sameMoneyAmount(order.totalPrice, amount)) {
         throwApi(
           400,
           'amount_mismatch',
@@ -174,7 +202,17 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
 
     if (type === 'commission') {
       await this.paidServices.assertListingFeesEnabled();
-      // Custom commission payments — user enters any amount; no linked record required.
+      const listing = await this.repo.findOwnedListingForCommission(
+        referenceId,
+        userId,
+      );
+      if (!listing) {
+        throwApi(
+          404,
+          'listing_not_found',
+          'الإعلان غير موجود أو لا تملك صلاحية سداد رسومه',
+        );
+      }
       return;
     }
 
@@ -195,14 +233,13 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     return orderId || null;
   }
 
-  private async tryReuseExistingPendingPayment(
-    existing: {
-      id: string;
-      checkoutUrl: string | null;
-      orderId: string | null;
-      transactionId: string | null;
-    },
-  ): Promise<{
+  private async tryReuseExistingPendingPayment(existing: {
+    id: string;
+    checkoutUrl: string | null;
+    orderId: string | null;
+    transactionId: string | null;
+    createdAt: Date;
+  }): Promise<{
     paymentId: string;
     orderId: string | null;
     checkoutUrl: string;
@@ -222,11 +259,46 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     );
 
     if (!existing.checkoutUrl?.trim()) {
+      const pendingAgeMs = Date.now() - existing.createdAt.getTime();
+      if (pendingAgeMs >= STALE_PENDING_WITHOUT_CHECKOUT_MS) {
+        this.logger.warn(
+          {
+            paymentId: existing.id,
+            pendingAgeMs,
+            reason: 'stale_pending_without_checkout',
+          },
+          'Stale pending payment has no checkout URL — allowing recovery',
+        );
+        return null;
+      }
+
+      const waitUntil = Date.now() + 8_000;
+      while (Date.now() < waitUntil) {
+        await sleep(250);
+        const refreshed = await this.repo.findPaymentByIdFull(existing.id);
+        if (refreshed?.checkoutUrl?.trim()) {
+          existing = {
+            id: refreshed.id,
+            checkoutUrl: refreshed.checkoutUrl,
+            orderId: refreshed.orderId,
+            transactionId: refreshed.transactionId,
+            createdAt: refreshed.createdAt,
+          };
+          break;
+        }
+      }
+    }
+
+    if (!existing.checkoutUrl?.trim()) {
       this.logger.warn(
         { paymentId: existing.id, reason: 'missing_checkout_url' },
         'Existing pending payment invalid — no checkout URL',
       );
-      return null;
+      throwApi(
+        409,
+        'payment_in_progress',
+        'عملية الدفع قيد التهيئة. حاول مجدداً خلال ثوانٍ.',
+      );
     }
 
     if (isDev) {
@@ -281,22 +353,26 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     const checkoutUrl = verification.checkoutUrl ?? existing.checkoutUrl;
     if (
       checkoutUrl !== existing.checkoutUrl ||
-      verification.niOrderReference &&
-        verification.niOrderReference !== existing.transactionId
+      (verification.niOrderReference &&
+        verification.niOrderReference !== existing.transactionId)
     ) {
       const full = await this.repo.findPaymentByIdFull(existing.id);
       const prevMeta = (full?.metadata ?? {}) as Record<string, unknown>;
-      await this.repo.updatePaymentCheckout(existing.id, {
-        transactionId:
-          verification.niOrderReference ?? existing.transactionId ?? niOrderRef,
-        checkoutUrl,
-        metadata: {
-          ...prevMeta,
-          checkoutUrlRefreshedAt: new Date().toISOString(),
-          niOrderReference:
-            verification.niOrderReference ?? prevMeta.niOrderReference,
-        },
-      }).catch(() => {});
+      await this.repo
+        .updatePaymentCheckout(existing.id, {
+          transactionId:
+            verification.niOrderReference ??
+            existing.transactionId ??
+            niOrderRef,
+          checkoutUrl,
+          metadata: {
+            ...prevMeta,
+            checkoutUrlRefreshedAt: new Date().toISOString(),
+            niOrderReference:
+              verification.niOrderReference ?? prevMeta.niOrderReference,
+          },
+        })
+        .catch(() => {});
     }
 
     this.logger.info(
@@ -332,7 +408,11 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     userId: string;
     planId?: string;
     billingCycle?: string;
-    contact?: { displayName?: string | null; arabicName?: string | null; email?: string | null } | null;
+    contact?: {
+      displayName?: string | null;
+      arabicName?: string | null;
+      email?: string | null;
+    } | null;
   }) {
     const {
       payment,
@@ -429,6 +509,19 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
   }
 
   async initiate(user: JwtPayload, dto: InitiatePaymentDto) {
+    const referenceId = dto.referenceId ?? 'no-ref';
+    const inFlightKey = `${user.userId}:${dto.type}:${referenceId}`;
+    const running = this.inFlightInitiations.get(inFlightKey);
+    if (running) return running;
+
+    const promise = this.initiateInternal(user, dto).finally(() => {
+      this.inFlightInitiations.delete(inFlightKey);
+    });
+    this.inFlightInitiations.set(inFlightKey, promise);
+    return promise;
+  }
+
+  private async initiateInternal(user: JwtPayload, dto: InitiatePaymentDto) {
     const {
       amount,
       currency = 'SAR',
@@ -456,7 +549,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
         audience,
         billingCycle as BillingCycle,
       );
-      if (Math.abs(expectedAmount - amount) > 1) {
+      if (!sameMoneyAmount(expectedAmount, amount)) {
         throwApi(
           400,
           'amount_mismatch',
@@ -465,10 +558,8 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       }
     }
 
-    if (type !== 'commission') {
-      if (!referenceId) throwApi(400, 'ref_required', 'معرّف المرجع مطلوب');
-      await this.checkReference(user.userId, type, referenceId, amount, planId);
-    }
+    if (!referenceId) throwApi(400, 'ref_required', 'معرّف المرجع مطلوب');
+    await this.checkReference(user.userId, type, referenceId, amount, planId);
 
     const orderReference = buildNIOrderReference(user.userId);
     const contact = await this.repo.findUserContact(user.userId);
@@ -498,9 +589,8 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       feeId: type === 'fee' || type === 'listing_fee' ? referenceId : undefined,
     };
 
-    const txResult = await this.repo.createPendingPaymentOrReturnExisting(
-      pendingParams,
-    );
+    const txResult =
+      await this.repo.createPendingPaymentOrReturnExisting(pendingParams);
 
     if ('existingPending' in txResult && txResult.existingPending) {
       const existingPending = txResult.existingPending;
@@ -509,8 +599,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
         return reused;
       }
 
-      const archiveReason =
-        'ni_order_invalid_or_expired';
+      const archiveReason = 'ni_order_invalid_or_expired';
       await this.repo.archiveInvalidPendingPayment(
         existingPending.id,
         archiveReason,
@@ -564,6 +653,7 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           },
           'NI API error after archiving stale pending payment',
         );
+        Sentry.captureException(err);
         throwApi(502, 'payment_gateway_error', message);
       }
     }
@@ -594,11 +684,14 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
         {
           err: message,
           paymentId: payment.id,
-          httpStatus: err instanceof NiGatewayError ? err.httpStatus : undefined,
-          niResponseBody: err instanceof NiGatewayError ? err.niBody : undefined,
+          httpStatus:
+            err instanceof NiGatewayError ? err.httpStatus : undefined,
+          niResponseBody:
+            err instanceof NiGatewayError ? err.niBody : undefined,
         },
         'NI API error',
       );
+      Sentry.captureException(err);
       throwApi(502, 'payment_gateway_error', message);
     }
   }
@@ -643,6 +736,8 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       await this.handleNIWebhook(event);
     } catch (err) {
       this.logger.error({ err, event }, 'NI Webhook processing error');
+      Sentry.captureException(err);
+      return { status: 500, body: { error: 'webhook_processing_failed' } };
     }
 
     return { status: 200, body: { received: true } };
@@ -843,7 +938,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
           const b = fulfillment.boost;
           const boostCopy =
             b.boostType === 'both'
-              ? { titleAr: '🚀 تم تثبيت وتمييز إعلانك', actionAr: 'مثبّت ومميز' }
+              ? {
+                  titleAr: '🚀 تم تثبيت وتمييز إعلانك',
+                  actionAr: 'مثبّت ومميز',
+                }
               : b.boostType === 'featured'
                 ? { titleAr: '⭐ تم تمييز إعلانك', actionAr: 'مميز' }
                 : { titleAr: '📌 تم تثبيت إعلانك', actionAr: 'مثبّت' };
@@ -852,7 +950,11 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
             type: 'system',
             titleAr: boostCopy.titleAr,
             bodyAr: `إعلانك ${boostCopy.actionAr} حتى ${b.expiresAt.toLocaleDateString('ar-SA')}.`,
-            data: { boostId: b.id, listingId: b.listingId, boostType: b.boostType },
+            data: {
+              boostId: b.id,
+              listingId: b.listingId,
+              boostType: b.boostType,
+            },
           });
         } else if (type === 'commission') {
           await this.notifications.notifyUser({
@@ -860,7 +962,11 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
             type: 'system',
             titleAr: '✅ شكراً على دعمك لسرح',
             bodyAr: `تم استلام عمولتك بمبلغ ${payment.amount} ${payment.currency}. رقم العملية: ${niTransactionId}`,
-            data: { paymentId: payment.id, transactionId: niTransactionId, type: 'commission' },
+            data: {
+              paymentId: payment.id,
+              transactionId: niTransactionId,
+              type: 'commission',
+            },
           });
         } else {
           await this.notifications.notifyUser({
@@ -881,7 +987,9 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       await this.repo.markPaymentFailedById(payment.id);
 
       if (type === 'butcher_order' && referenceId) {
-        await this.repo.markButcherOrderPaymentFailed(referenceId).catch(() => {});
+        await this.repo
+          .markButcherOrderPaymentFailed(referenceId)
+          .catch(() => {});
       }
 
       if (type === 'subscription' && targetPlanId) {
@@ -917,7 +1025,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       void this.runAutoSync();
     }, AUTO_SYNC_INTERVAL_MS);
 
-    this.logger.info({}, `Payment auto-sync started (every ${AUTO_SYNC_INTERVAL_MS / 60000} min)`);
+    this.logger.info(
+      {},
+      `Payment auto-sync started (every ${AUTO_SYNC_INTERVAL_MS / 60000} min)`,
+    );
   }
 
   onApplicationShutdown() {
@@ -930,16 +1041,23 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
    */
   private async runAutoSync() {
     try {
-      const stalePending = await this.repo.findStalePendingPayments(STALE_AFTER_MINUTES);
+      const stalePending =
+        await this.repo.findStalePendingPayments(STALE_AFTER_MINUTES);
       if (!stalePending.length) return;
 
-      this.logger.info({ count: stalePending.length }, 'Payment auto-sync: checking stale payments');
+      this.logger.info(
+        { count: stalePending.length },
+        'Payment auto-sync: checking stale payments',
+      );
 
       await Promise.allSettled(
-        stalePending.map((p) => this.syncPaymentByOrderRef(p.id, p.orderId ?? '')),
+        stalePending.map((p) =>
+          this.syncPaymentByOrderRef(p.id, p.orderId ?? ''),
+        ),
       );
     } catch (err) {
       this.logger.error({ err }, 'Payment auto-sync error');
+      Sentry.captureException(err);
     }
   }
 
@@ -948,7 +1066,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
    * Exposed as POST /api/payments/:id/sync (authenticated, own payment only).
    */
   async syncPayment(user: JwtPayload, paymentId: string) {
-    const payment = await this.repo.findPaymentOwnedByUser(paymentId, user.userId);
+    const payment = await this.repo.findPaymentOwnedByUser(
+      paymentId,
+      user.userId,
+    );
     if (!payment) throwApi(404, 'not_found', 'الدفعة غير موجودة');
 
     if (payment.status === 'paid') {
@@ -996,7 +1117,8 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
     try {
       const existing = await this.repo.findPaymentByIdFull(paymentId);
       const niRef =
-        existing?.transactionId && !String(existing.transactionId).startsWith('DEV-')
+        existing?.transactionId &&
+        !String(existing.transactionId).startsWith('DEV-')
           ? String(existing.transactionId)
           : orderRef;
 
@@ -1042,10 +1164,13 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
         payment.referenceType ??
         (storedMeta.referenceType as string | undefined) ??
         (storedMeta.type as string | undefined);
-      const referenceId = payment.referenceId ?? (storedMeta.referenceId as string | undefined);
-      const userId     = payment.userId ?? (storedMeta.userId as string | undefined) ?? '';
-      const targetPlanId = (storedMeta.targetPlanId as string | undefined);
-      const billingCycle = (storedMeta.billingCycle as string | undefined) ?? 'monthly';
+      const referenceId =
+        payment.referenceId ?? (storedMeta.referenceId as string | undefined);
+      const userId =
+        payment.userId ?? (storedMeta.userId as string | undefined) ?? '';
+      const targetPlanId = storedMeta.targetPlanId as string | undefined;
+      const billingCycle =
+        (storedMeta.billingCycle as string | undefined) ?? 'monthly';
 
       if (niStateIsSuccess(state)) {
         const fulfillment = await this.repo.processSuccessfulPayment({
@@ -1067,7 +1192,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
             const b = fulfillment.boost;
             const boostCopy =
               b.boostType === 'both'
-                ? { titleAr: '🚀 تم تثبيت وتمييز إعلانك', actionAr: 'مثبّت ومميز' }
+                ? {
+                    titleAr: '🚀 تم تثبيت وتمييز إعلانك',
+                    actionAr: 'مثبّت ومميز',
+                  }
                 : b.boostType === 'featured'
                   ? { titleAr: '⭐ تم تمييز إعلانك', actionAr: 'مميز' }
                   : { titleAr: '📌 تم تثبيت إعلانك', actionAr: 'مثبّت' };
@@ -1076,7 +1204,11 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
               type: 'system',
               titleAr: boostCopy.titleAr,
               bodyAr: `إعلانك ${boostCopy.actionAr} حتى ${b.expiresAt.toLocaleDateString('ar-SA')}.`,
-              data: { boostId: b.id, listingId: b.listingId, boostType: b.boostType },
+              data: {
+                boostId: b.id,
+                listingId: b.listingId,
+                boostType: b.boostType,
+              },
             });
           } else {
             await this.notifications.notifyUser({
@@ -1088,7 +1220,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
             });
           }
 
-          this.logger.info({ paymentId, orderRef, state }, 'Payment synced → paid');
+          this.logger.info(
+            { paymentId, orderRef, state },
+            'Payment synced → paid',
+          );
         }
         return {
           paymentId,
@@ -1116,7 +1251,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       if (outcome === 'failed') {
         await this.repo.markPaymentFailedById(paymentId);
         if (type === 'subscription' && targetPlanId) {
-          await this.subscriptionLifecycle.notifyRenewalFailed(userId, targetPlanId);
+          await this.subscriptionLifecycle.notifyRenewalFailed(
+            userId,
+            targetPlanId,
+          );
         } else {
           await this.notifications.notifyUser({
             userId,
@@ -1126,7 +1264,10 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
             data: { paymentId },
           });
         }
-        this.logger.warn({ paymentId, orderRef, state }, 'Payment synced → failed');
+        this.logger.warn(
+          { paymentId, orderRef, state },
+          'Payment synced → failed',
+        );
         return {
           paymentId,
           status: 'failed',
@@ -1148,7 +1289,11 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error({ err: message, paymentId, orderRef }, 'NI sync API error');
+      this.logger.error(
+        { err: message, paymentId, orderRef },
+        'NI sync API error',
+      );
+      Sentry.captureException(err);
       throwApi(502, 'sync_error', 'تعذر الاتصال ببوابة الدفع للتحقق من الحالة');
     }
   }
@@ -1185,7 +1330,8 @@ export class PaymentsService implements OnApplicationBootstrap, OnApplicationShu
       referenceId,
       userId: user.userId,
       targetPlanId: storedMeta.targetPlanId as string | undefined,
-      billingCycle: (storedMeta.billingCycle as string | undefined) ?? 'monthly',
+      billingCycle:
+        (storedMeta.billingCycle as string | undefined) ?? 'monthly',
       storedMeta,
     });
 
