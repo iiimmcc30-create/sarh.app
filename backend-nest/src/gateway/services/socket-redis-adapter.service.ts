@@ -3,7 +3,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import IORedis from 'ioredis';
 import { Server } from 'socket.io';
 import { LoggerService } from '../../common/services/logger.service';
-import { redisConnection } from '../../redis/redis-connection';
+import { getSharedRedisClient } from '../../redis/redis-connection';
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 const FORCE_MEMORY = process.env.SOCKET_USE_MEMORY_ADAPTER === 'true';
@@ -24,42 +24,31 @@ export class SocketRedisAdapterService implements OnModuleDestroy {
       return;
     }
 
-    const redisOpts = redisConnection(3, {
-      lazyConnect: true,
-      connectTimeout: 3000,
-      maxRetriesPerRequest: null as null,
-      retryStrategy: () => null,
-    });
-
-    const probe = new IORedis(redisOpts);
-    probe.on('error', () => {});
+    const pubClient = getSharedRedisClient(3, 'default');
+    pubClient.on('error', () => {});
 
     try {
-      await probe.connect();
-      await probe.ping();
+      if (pubClient.status !== 'ready') {
+        await pubClient.connect();
+      }
+      await pubClient.ping();
     } catch (err) {
       if (!IS_DEV) {
-        probe.disconnect();
         throw err;
       }
       this.logger.warn(
         { err: err instanceof Error ? err.message : String(err) },
         'Redis unavailable — using in-memory Socket.IO adapter (dev single-instance)',
       );
-      probe.disconnect();
       return;
     }
 
-    probe.disconnect();
+    this.pubClient = pubClient;
+    this.subClient = getSharedRedisClient(3, 'subscriber');
 
-    this.pubClient = new IORedis({
-      ...redisOpts,
-      retryStrategy: (times: number) => Math.min(times * 200, 3000),
-    });
-    this.subClient = this.pubClient.duplicate();
-
-    await this.pubClient.connect();
-    await this.subClient.connect();
+    if (this.subClient.status !== 'ready') {
+      await this.subClient.connect();
+    }
 
     server.adapter(createAdapter(this.pubClient, this.subClient));
 
@@ -73,7 +62,7 @@ export class SocketRedisAdapterService implements OnModuleDestroy {
   }
 
   onModuleDestroy() {
-    this.pubClient?.disconnect();
-    this.subClient?.disconnect();
+    this.pubClient = null;
+    this.subClient = null;
   }
 }

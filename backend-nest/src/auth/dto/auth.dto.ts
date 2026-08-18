@@ -10,6 +10,13 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { SUPPORTED_COUNTRIES } from '../../lib/countries';
+import { normalizeE164Phone, SAUDI_MOBILE_E164 } from '../../lib/phone';
+
+const saudiMobileMessage = 'رقم الجوال يجب أن يكون بصيغة +9665xxxxxxxx';
+
+function normalizePhoneTransform({ value }: { value: unknown }) {
+  return typeof value === 'string' ? normalizeE164Phone(value.trim()) : value;
+}
 
 export class LoginDto {
   @Transform(({ value }) =>
@@ -41,7 +48,8 @@ export class LogoutDto {
 }
 
 export class RegisterDto {
-  @Matches(/^\+\d{9,14}$/)
+  @Transform(normalizePhoneTransform)
+  @Matches(SAUDI_MOBILE_E164, { message: saudiMobileMessage })
   phone!: string;
 
   @IsString()
@@ -110,9 +118,8 @@ export class ChangePasswordDto {
 }
 
 export class SendOtpDto {
-  @Matches(/^\+\d{9,14}$/, {
-    message: 'رقم الجوال يجب أن يبدأ بـ + ويحتوي على أرقام فقط',
-  })
+  @Transform(normalizePhoneTransform)
+  @Matches(SAUDI_MOBILE_E164, { message: saudiMobileMessage })
   phone!: string;
 
   @IsOptional()
@@ -121,7 +128,8 @@ export class SendOtpDto {
 }
 
 export class VerifyOtpDto {
-  @Matches(/^\+\d{9,14}$/)
+  @Transform(normalizePhoneTransform)
+  @Matches(SAUDI_MOBILE_E164, { message: saudiMobileMessage })
   phone!: string;
 
   @Length(6, 6)
@@ -140,7 +148,8 @@ export class GoogleAuthDto {
 }
 
 export class ResetPasswordDto {
-  @Matches(/^\+\d{9,14}$/)
+  @Transform(normalizePhoneTransform)
+  @Matches(SAUDI_MOBILE_E164, { message: saudiMobileMessage })
   phone!: string;
 
   @IsString()

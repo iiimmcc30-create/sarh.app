@@ -1,4 +1,8 @@
-import { redisConnection } from './redis-connection';
+import {
+  closeSharedRedisClients,
+  getSharedRedisClient,
+  redisConnection,
+} from './redis-connection';
 
 describe('redisConnection', () => {
   const keys = [
@@ -47,5 +51,23 @@ describe('redisConnection', () => {
       password: 'local',
       db: 2,
     });
+  });
+});
+
+describe('getSharedRedisClient', () => {
+  afterEach(async () => {
+    await closeSharedRedisClients();
+  });
+
+  it('returns the same instance per db/kind', () => {
+    const a = getSharedRedisClient(0, 'default');
+    const b = getSharedRedisClient(0, 'default');
+    expect(a).toBe(b);
+  });
+
+  it('uses separate instances for different kinds on the same db', () => {
+    const pub = getSharedRedisClient(3, 'default');
+    const sub = getSharedRedisClient(3, 'subscriber');
+    expect(pub).not.toBe(sub);
   });
 });

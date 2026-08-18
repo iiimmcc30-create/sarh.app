@@ -25,6 +25,7 @@ import {
   VerifyEmailDto,
   VerifyOtpDto,
 } from '../dto/auth.dto';
+import { isValidSaudiMobileE164, normalizeE164Phone } from '../../lib/phone';
 
 const DEFAULT_SESSION_TTL_DAYS = 3650; // ~10 years — until explicit logout or app uninstall
 
@@ -81,7 +82,8 @@ export class AuthService {
   private sessionTtlMs(): number {
     const raw = this.config.get<string>('SESSION_TTL_DAYS');
     const days = raw ? parseInt(raw, 10) : DEFAULT_SESSION_TTL_DAYS;
-    const safe = Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_TTL_DAYS;
+    const safe =
+      Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_TTL_DAYS;
     return safe * 24 * 60 * 60 * 1000;
   }
 
@@ -353,6 +355,15 @@ export class AuthService {
   }
 
   async sendOtp(dto: SendOtpDto) {
+    const phone = normalizeE164Phone(dto.phone);
+    if (!isValidSaudiMobileE164(phone)) {
+      throwApi(
+        400,
+        'invalid_phone',
+        'رقم الجوال غير صحيح. استخدم صيغة +9665xxxxxxxx',
+      );
+    }
+
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
@@ -365,10 +376,7 @@ export class AuthService {
       accountSid.startsWith('AC...') ||
       accountSid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
     ) {
-      this.logger.warn(
-        { phone: dto.phone },
-        'Twilio not configured — using dev OTP mode',
-      );
+      this.logger.warn({ phone }, 'Twilio not configured — using dev OTP mode');
       return {
         success: true,
         dev_mode: true,
@@ -378,22 +386,38 @@ export class AuthService {
 
     try {
       const client = twilio(accountSid, authToken);
-      const to =
-        dto.channel === 'whatsapp' ? `whatsapp:${dto.phone}` : dto.phone;
+      const to = dto.channel === 'whatsapp' ? `whatsapp:${phone}` : phone;
       await client.verify.v2.services(serviceSid).verifications.create({
         to,
         channel: dto.channel === 'whatsapp' ? 'whatsapp' : 'sms',
       });
 
-      this.logger.info({ phone: dto.phone }, 'OTP sent via Twilio');
+      this.logger.info({ phone }, 'OTP sent via Twilio');
       return { success: true, expiresIn: 120 };
     } catch (err) {
-      this.logger.error({ err, phone: dto.phone }, 'Twilio send OTP error');
+      const twilioCode = (err as { code?: number }).code;
+      this.logger.error({ err, phone }, 'Twilio send OTP error');
+      if (twilioCode === 60200) {
+        throwApi(
+          400,
+          'invalid_phone',
+          'رقم الجوال غير صحيح. تأكد من الصيغة الدولية +9665xxxxxxxx',
+        );
+      }
       throwApi(500, 'otp_send_failed', 'فشل إرسال رمز التحقق. حاول مجدداً.');
     }
   }
 
   async verifyOtp(dto: VerifyOtpDto, req: Request) {
+    const phone = normalizeE164Phone(dto.phone);
+    if (!isValidSaudiMobileE164(phone)) {
+      throwApi(
+        400,
+        'invalid_phone',
+        'رقم الجوال غير صحيح. استخدم صيغة +9665xxxxxxxx',
+      );
+    }
+
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
@@ -415,24 +439,24 @@ export class AuthService {
         const client = twilio(accountSid!, authToken!);
         const check = await client.verify.v2
           .services(serviceSid!)
-          .verificationChecks.create({ to: dto.phone, code: dto.code });
+          .verificationChecks.create({ to: phone, code: dto.code });
         if (check.status !== 'approved') {
-          this.logger.warn({ phone: dto.phone }, 'OTP verification failed');
+          this.logger.warn({ phone }, 'OTP verification failed');
           throwApi(400, 'invalid_code', 'الرمز غير صحيح أو منتهي الصلاحية');
         }
       } catch (err) {
         if (err instanceof ApiException) throw err;
-        this.logger.error({ err, phone: dto.phone }, 'Twilio verify error');
+        this.logger.error({ err, phone }, 'Twilio verify error');
         throwApi(500, 'verify_failed', 'فشل التحقق. حاول مجدداً.');
       }
     }
 
-    const user = await this.repo.findUserByPhone(dto.phone);
+    const user = await this.repo.findUserByPhone(phone);
 
     if (dto.purpose === 'reset_password') {
       if (!user) throwApi(404, 'not_found', 'لا يوجد حساب مرتبط بهذا الرقم');
       const phoneToken = jwt.sign(
-        { phone: dto.phone, verified: true, purpose: 'reset_password' },
+        { phone, verified: true, purpose: 'reset_password' },
         this.config.get<string>('JWT_SECRET')!,
         { expiresIn: '15m' },
       );
@@ -440,7 +464,7 @@ export class AuthService {
       return {
         verified: true,
         purpose: 'reset_password',
-        phone: dto.phone,
+        phone,
         phone_token: phoneToken,
         message: 'تم التحقق — يمكنك تعيين كلمة مرور جديدة',
       };
@@ -448,14 +472,14 @@ export class AuthService {
 
     if (!user) {
       const phoneToken = jwt.sign(
-        { phone: dto.phone, verified: true },
+        { phone, verified: true },
         this.config.get<string>('JWT_SECRET')!,
         { expiresIn: '15m' },
       );
       return {
         verified: true,
         is_new_user: true,
-        phone: dto.phone,
+        phone,
         phone_token: phoneToken,
         message: 'مستخدم جديد — يجب إكمال التسجيل',
       };

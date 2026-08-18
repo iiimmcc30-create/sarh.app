@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import IORedis from 'ioredis';
 import { LoggerService } from '../../common/services/logger.service';
-import { redisConnection } from '../redis-connection';
+import { getSharedRedisClient } from '../redis-connection';
 
 const DEFAULT_TTL = 300;
 
 @Injectable()
 export class RedisCacheService {
-  private client: IORedis | null = null;
   private markedUnavailable = false;
   private unavailableLogged = false;
 
@@ -20,33 +18,9 @@ export class RedisCacheService {
     return true;
   }
 
-  private baseOpts() {
-    return redisConnection(0, {
-      maxRetriesPerRequest: 1,
-      enableReadyCheck: false,
-      connectTimeout: 3000,
-      commandTimeout: 3000,
-      lazyConnect: true,
-      retryStrategy(times: number) {
-        if (times > 2) return null;
-        return Math.min(times * 200, 1000);
-      },
-    });
-  }
-
-  getClient(): IORedis {
+  getClient() {
     if (!this.isEnabled()) throw new Error('Redis disabled');
-    if (!this.client) {
-      this.client = new IORedis(this.baseOpts());
-      this.client.on('error', (err) => {
-        this.logger.error({ err: err.message }, 'Redis cache error');
-        this.markUnavailable(err);
-      });
-      this.client.on('connect', () =>
-        this.logger.info({}, 'Redis cache connected'),
-      );
-    }
-    return this.client;
+    return getSharedRedisClient(0);
   }
 
   private markUnavailable(err?: unknown) {

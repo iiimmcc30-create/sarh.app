@@ -1,14 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import IORedis from 'ioredis';
-import { LoggerService } from '../../common/services/logger.service';
-import { redisConnection } from '../redis-connection';
+import { getSharedRedisClient } from '../redis-connection';
 
 @Injectable()
 export class RedisSessionService {
-  private client: IORedis | null = null;
   private markedUnavailable = false;
-
-  constructor(private readonly logger: LoggerService) {}
 
   isEnabled(): boolean {
     if (process.env.REDIS_ENABLED === 'false') return false;
@@ -17,31 +12,9 @@ export class RedisSessionService {
     return true;
   }
 
-  private baseOpts() {
-    return redisConnection(2, {
-      maxRetriesPerRequest: 1,
-      enableReadyCheck: false,
-      connectTimeout: 3000,
-      commandTimeout: 3000,
-      lazyConnect: true,
-      retryStrategy(times: number) {
-        if (times > 2) return null;
-        return Math.min(times * 200, 1000);
-      },
-    });
-  }
-
-  getClient(): IORedis {
+  getClient() {
     if (!this.isEnabled()) throw new Error('Redis disabled');
-    if (!this.client) {
-      this.client = new IORedis(this.baseOpts());
-      this.client.on('error', (err) => {
-        this.logger.error({ err: err.message }, 'Redis session error');
-        if (process.env.NODE_ENV !== 'production')
-          this.markedUnavailable = true;
-      });
-    }
-    return this.client;
+    return getSharedRedisClient(2);
   }
 
   async set(key: string, value: unknown, ttl: number): Promise<void> {
