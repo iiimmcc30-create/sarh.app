@@ -29,6 +29,8 @@ import {
   resolveNiOrderState,
   validateNiEnvironment,
   verifyNiOrderForCheckout,
+  isNiOrderUuid,
+  isInternalMerchantOrderReference,
   type NiLogFn,
 } from './ni-client';
 import { PaidServicesService } from '../settings/paid-services.service';
@@ -228,9 +230,8 @@ export class PaymentsService
     orderId?: string | null;
   }): string | null {
     const tx = payment.transactionId?.trim();
-    if (tx && !tx.startsWith('DEV-')) return tx;
-    const orderId = payment.orderId?.trim();
-    return orderId || null;
+    if (tx && !tx.startsWith('DEV-') && isNiOrderUuid(tx)) return tx;
+    return null;
   }
 
   private async tryReuseExistingPendingPayment(existing: {
@@ -1118,9 +1119,32 @@ export class PaymentsService
       const existing = await this.repo.findPaymentByIdFull(paymentId);
       const niRef =
         existing?.transactionId &&
-        !String(existing.transactionId).startsWith('DEV-')
+        !String(existing.transactionId).startsWith('DEV-') &&
+        isNiOrderUuid(String(existing.transactionId))
           ? String(existing.transactionId)
-          : orderRef;
+          : isNiOrderUuid(orderRef)
+            ? orderRef
+            : null;
+
+      if (!niRef) {
+        this.logger.warn(
+          {
+            paymentId,
+            orderId: existing?.orderId ?? orderRef,
+            transactionId: existing?.transactionId ?? null,
+            reason: 'missing_ni_uuid',
+          },
+          'Cannot sync payment — no NI UUID (internal merchant ref only)',
+        );
+        return {
+          paymentId,
+          status: 'pending',
+          outcome: 'processing',
+          synced: false,
+          messageAr:
+            'لم يُنشأ طلب الدفع في N-Genius بعد. أعد محاولة الدفع من التطبيق.',
+        };
+      }
 
       const { order, state } = await fetchNiOrderResolved(niRef, this.niLog);
       const outcome = classifyNiOrderState(state);

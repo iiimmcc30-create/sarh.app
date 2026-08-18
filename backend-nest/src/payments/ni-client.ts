@@ -158,18 +158,65 @@ function extractCheckoutUrl(data: Record<string, unknown>): string | undefined {
   );
 }
 
-function extractNiOrderReference(
-  data: Record<string, unknown>,
-  fallback?: string,
-): string {
-  const id = data?._id as string | undefined;
-  return (
-    (data.reference as string | undefined) ||
-    (id?.replace?.(/^urn:order:/, '') ?? '') ||
-    (data.orderReference as string | undefined) ||
-    fallback ||
-    ''
+/** Sarh internal merchant refs (Payment.orderId) — not valid in NI GET /orders/{ref}. */
+const INTERNAL_MERCHANT_PREFIXES = [
+  'SFAT',
+  'FTR',
+  'PRM',
+  'PIN',
+  'BOTH',
+] as const;
+
+const NI_ORDER_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isNiOrderUuid(ref: string | null | undefined): boolean {
+  const trimmed = ref?.trim();
+  return Boolean(trimmed && NI_ORDER_UUID.test(trimmed));
+}
+
+export function isInternalMerchantOrderReference(
+  ref: string | null | undefined,
+): boolean {
+  const trimmed = ref?.trim();
+  if (!trimmed) return false;
+  return INTERNAL_MERCHANT_PREFIXES.some((prefix) =>
+    trimmed.startsWith(`${prefix}-`),
   );
+}
+
+/** Resolve the NI system order UUID from a create-order or fetch-order payload. */
+export function extractNiOrderReference(
+  data: Record<string, unknown>,
+): string | null {
+  const candidates: Array<string | undefined> = [];
+
+  const reference = data.reference as string | undefined;
+  if (reference) candidates.push(reference);
+
+  const id = data._id as string | undefined;
+  if (id) {
+    candidates.push(id.replace(/^urn:order:/i, ''));
+    const hrefMatch = id.match(/\/orders\/([0-9a-f-]{36})/i);
+    if (hrefMatch?.[1]) candidates.push(hrefMatch[1]);
+  }
+
+  const orderReference = data.orderReference as string | undefined;
+  if (orderReference) candidates.push(orderReference);
+
+  const selfHref = (
+    (data._links as Record<string, { href?: string }> | undefined)?.self?.href
+  );
+  if (selfHref) {
+    const hrefMatch = selfHref.match(/\/orders\/([0-9a-f-]{36})/i);
+    if (hrefMatch?.[1]) candidates.push(hrefMatch[1]);
+  }
+
+  for (const candidate of candidates) {
+    if (isNiOrderUuid(candidate)) return candidate!.trim();
+  }
+
+  return null;
 }
 
 function logHttpError(
@@ -360,8 +407,15 @@ export async function createNiCheckout(
 
   const niOrderReference = extractNiOrderReference(
     (data ?? {}) as Record<string, unknown>,
-    input.orderReference,
   );
+  if (!niOrderReference) {
+    throw new NiGatewayError(
+      'NI create order response missing UUID order reference',
+      'create_order',
+      status,
+      data,
+    );
+  }
 
   log?.('create_order_success', {
     httpStatus: status,
@@ -396,6 +450,17 @@ async function fetchNiOrderRaw(
   orderRef: string,
   log?: NiLogFn,
 ): Promise<{ data: unknown; status: number }> {
+  const trimmed = orderRef.trim();
+  if (!isNiOrderUuid(trimmed)) {
+    throw new NiGatewayError(
+      isInternalMerchantOrderReference(trimmed)
+        ? `Invalid NI order reference: internal merchant ref "${trimmed}" cannot be used in GET /orders/{ref}`
+        : `Invalid NI order reference: expected UUID, got "${trimmed}"`,
+      'fetch_order',
+      400,
+    );
+  }
+
   const outletId = process.env.NI_OUTLET_ID?.trim();
   if (!outletId) {
     throw new NiGatewayError('NI_OUTLET_ID is not configured', 'config');
@@ -438,7 +503,7 @@ export async function verifyNiOrderForCheckout(
 ): Promise<NiOrderVerification> {
   const { niOrderRef, storedCheckoutUrl, merchantOrderReference } = params;
 
-  if (!niOrderRef?.trim()) {
+  if (!niOrderRef?.trim() || !isNiOrderUuid(niOrderRef)) {
     return { valid: false, reason: 'missing_ni_order_ref' };
   }
 
@@ -487,7 +552,7 @@ export async function verifyNiOrderForCheckout(
         valid: false,
         reason: 'already_paid',
         state,
-        niOrderReference: extractNiOrderReference(order, niOrderRef),
+        niOrderReference: extractNiOrderReference(order) ?? niOrderRef,
         errorBody: data,
       };
     }
@@ -497,7 +562,7 @@ export async function verifyNiOrderForCheckout(
         valid: false,
         reason: 'order_not_usable',
         state,
-        niOrderReference: extractNiOrderReference(order, niOrderRef),
+        niOrderReference: extractNiOrderReference(order) ?? niOrderRef,
         errorBody: data,
       };
     }
@@ -508,13 +573,14 @@ export async function verifyNiOrderForCheckout(
         valid: false,
         reason: 'no_payment_url_on_order',
         state,
-        niOrderReference: extractNiOrderReference(order, niOrderRef),
+        niOrderReference: extractNiOrderReference(order) ?? niOrderRef,
         errorBody: data,
       };
     }
 
+    const resolvedRef = extractNiOrderReference(order) ?? niOrderRef;
     log?.('verify_order_success', {
-      orderReference: extractNiOrderReference(order, niOrderRef),
+      orderReference: resolvedRef,
       merchantOrderReference,
       paymentUrl: liveCheckoutUrl,
       orderState: state,
@@ -525,7 +591,7 @@ export async function verifyNiOrderForCheckout(
       valid: true,
       state,
       checkoutUrl: liveCheckoutUrl,
-      niOrderReference: extractNiOrderReference(order, niOrderRef),
+      niOrderReference: resolvedRef,
       httpStatus: status,
     };
   } catch (err: unknown) {

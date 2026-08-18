@@ -1,6 +1,9 @@
 import {
   classifyNiOrderState,
+  extractNiOrderReference,
   formatNiGatewayError,
+  isInternalMerchantOrderReference,
+  isNiOrderUuid,
   NiGatewayError,
   niOrderStateLabelAr,
   resolveNiOrderState,
@@ -81,6 +84,60 @@ describe('NI payment state classification', () => {
 
     it('returns empty array when no payments', () => {
       expect(extractNiPaymentStates({})).toEqual([]);
+    });
+  });
+
+  describe('isNiOrderUuid', () => {
+    it('accepts lowercase UUID', () => {
+      expect(
+        isNiOrderUuid('a13f81f3-27b4-48b6-88de-22b9ddc1e1dc'),
+      ).toBe(true);
+    });
+
+    it('rejects internal merchant refs', () => {
+      expect(isNiOrderUuid('FTR-4916FD-MSPXSTSH')).toBe(false);
+      expect(isNiOrderUuid('SFAT-U1-TEST')).toBe(false);
+    });
+  });
+
+  describe('isInternalMerchantOrderReference', () => {
+    it('detects Sarh merchant order prefixes', () => {
+      expect(isInternalMerchantOrderReference('FTR-4916FD-MSPXSTSH')).toBe(
+        true,
+      );
+      expect(isInternalMerchantOrderReference('PRM-ABC123')).toBe(true);
+    });
+
+    it('rejects NI UUIDs', () => {
+      expect(
+        isInternalMerchantOrderReference('a13f81f3-27b4-48b6-88de-22b9ddc1e1dc'),
+      ).toBe(false);
+    });
+  });
+
+  describe('extractNiOrderReference', () => {
+    const niUuid = 'a13f81f3-27b4-48b6-88de-22b9ddc1e1dc';
+
+    it('extracts UUID from reference field', () => {
+      expect(extractNiOrderReference({ reference: niUuid })).toBe(niUuid);
+    });
+
+    it('extracts UUID from _id urn:order href', () => {
+      expect(
+        extractNiOrderReference({ _id: `urn:order:${niUuid}` }),
+      ).toBe(niUuid);
+    });
+
+    it('does not fall back to merchant orderReference', () => {
+      expect(
+        extractNiOrderReference({
+          orderReference: 'FTR-4916FD-MSPXSTSH',
+        }),
+      ).toBeNull();
+    });
+
+    it('returns null when no UUID is present', () => {
+      expect(extractNiOrderReference({ state: 'STARTED' })).toBeNull();
     });
   });
 
