@@ -22,10 +22,7 @@ import {
 import { SocketEmitService } from './services/socket-emit.service';
 import { SocketGatewayService } from './services/socket-gateway.service';
 import { SocketRedisAdapterService } from './services/socket-redis-adapter.service';
-
-const ALLOWED_ORIGINS = (
-  process.env.ALLOWED_ORIGINS || 'http://localhost:8081'
-).split(',');
+import { isAllowedCorsOrigin } from '../lib/cors-origins';
 
 interface AuthenticatedSocket extends Socket {
   data: { user?: JwtPayload; streamId?: string };
@@ -33,7 +30,15 @@ interface AuthenticatedSocket extends Socket {
 
 @Injectable()
 @WebSocketGateway({
-  cors: { origin: ALLOWED_ORIGINS, credentials: true },
+  cors: {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      callback(null, isAllowedCorsOrigin(origin));
+    },
+    credentials: true,
+  },
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,
   pingInterval: 25000,

@@ -19,6 +19,10 @@ export class FeeCheckProcessor extends WorkerHost {
   }
 
   async process(job: Job<FeeCheckJob>): Promise<void> {
+    if (job.name === 'probe') {
+      this.logger.info({ jobId: job.id }, 'BullMQ probe job completed');
+      return;
+    }
     if (job.name !== 'check') return;
 
     const { listingFeeId, userId, amount } = job.data;
@@ -45,6 +49,8 @@ export class FeeCheckProcessor extends WorkerHost {
         this.logger.warn({ listingFeeId, userId }, 'Fee marked overdue');
       }
     });
+
+    this.logger.info({ jobId: job.id, listingFeeId }, 'Fee check job processed');
 
     if (overdueListingId) {
       await this.notifications.notifyUser({

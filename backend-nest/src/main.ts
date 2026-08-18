@@ -18,21 +18,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { logger } from './shared/lib/logger';
 import { initialiseSentry } from './shared/lib/sentry';
-
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:8081')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
-
-function resolveAllowedOrigin(origin: string | undefined): string | null {
-  if (!origin) return null;
-  if (ALLOWED_ORIGINS.includes('*')) return origin;
-  if (ALLOWED_ORIGINS.includes(origin)) return origin;
-  if (process.env.NODE_ENV !== 'production') {
-    if (/^http:\/\/localhost:\d+$/.test(origin)) return origin;
-  }
-  return null;
-}
+import { isAllowedCorsOrigin } from './lib/cors-origins';
 
 async function bootstrap() {
   initialiseSentry();
@@ -64,7 +50,9 @@ async function bootstrap() {
         : false;
     const origin = isPublicUpload
       ? req.headers.origin || '*'
-      : resolveAllowedOrigin(req.headers.origin);
+      : req.headers.origin && isAllowedCorsOrigin(req.headers.origin)
+        ? req.headers.origin
+        : null;
     if (origin) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       if (!isPublicUpload) {
@@ -137,6 +125,7 @@ async function bootstrap() {
   }
 
   const port = parseInt(process.env.PORT || '3001', 10);
+  app.enableShutdownHooks();
   await app.listen(port, '0.0.0.0');
   logger.info({ port }, 'سرح NestJS API running');
 }

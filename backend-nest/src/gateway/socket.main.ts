@@ -17,6 +17,7 @@ async function bootstrap() {
     logger: ['error', 'fatal', 'warn'],
     abortOnError: false,
   });
+  app.enableShutdownHooks();
   const rawPort = process.env.PORT?.trim();
   const port =
     rawPort && /^\d+$/.test(rawPort) ? parseInt(rawPort, 10) : 3002;

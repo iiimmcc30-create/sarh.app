@@ -1,4 +1,8 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  OnApplicationShutdown,
+  OnModuleInit,
+} from '@nestjs/common';
 import {
   closeSharedRedisClients,
   duplicateSharedRedisClient,
@@ -8,7 +12,7 @@ import {
 } from './redis-connection';
 
 @Injectable()
-export class SharedRedisService implements OnModuleInit, OnModuleDestroy {
+export class SharedRedisService implements OnModuleInit, OnApplicationShutdown {
   isEnabled(): boolean {
     return process.env.REDIS_ENABLED !== 'false';
   }
@@ -31,7 +35,7 @@ export class SharedRedisService implements OnModuleInit, OnModuleDestroy {
     return duplicateSharedRedisClient(db, kind);
   }
 
-  async onModuleDestroy() {
+  async onApplicationShutdown() {
     await closeSharedRedisClients();
   }
 }

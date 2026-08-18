@@ -1,12 +1,21 @@
-import { redisConnection } from '../redis/redis-connection';
+import {
+  createBullmqClient,
+  getBullmqSharedConnection,
+} from '../redis/redis-connection';
 
 export const isRedisEnabled = () => process.env.REDIS_ENABLED !== 'false';
 
-/** BullMQ connection options (DB 1). Uses options object to avoid ioredis version mismatch with BullMQ bundle. */
-export const QUEUE_CONNECTION = redisConnection(1, {
-  maxRetriesPerRequest: null,
-  enableReadyCheck: false,
-});
+/**
+ * Shared BullMQ root config. Queues reuse one ioredis command client via
+ * `createClient`. Subscriber is shared; blocking clients are duplicated.
+ * Connection is created lazily so importing this module does not open Redis.
+ */
+export function bullRootConfig() {
+  return {
+    connection: getBullmqSharedConnection(),
+    createClient: createBullmqClient,
+  };
+}
 
 export const QUEUE_NAMES = {
   NOTIFICATIONS: 'notifications',

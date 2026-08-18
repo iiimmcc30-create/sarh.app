@@ -1,5 +1,8 @@
+import IORedis from 'ioredis';
 import {
   closeSharedRedisClients,
+  createBullmqClient,
+  getBullmqSharedConnection,
   getSharedRedisClient,
   isRedisCircuitOpen,
   redisConnection,
@@ -71,6 +74,32 @@ describe('getSharedRedisClient', () => {
     const pub = getSharedRedisClient(3, 'default');
     const sub = getSharedRedisClient(3, 'subscriber');
     expect(pub).not.toBe(sub);
+  });
+});
+
+describe('createBullmqClient', () => {
+  afterEach(async () => {
+    await closeSharedRedisClients();
+  });
+
+  it('reuses the shared client for command connections', () => {
+    const shared = getBullmqSharedConnection();
+    expect(createBullmqClient('client')).toBe(shared);
+    expect(createBullmqClient()).toBe(shared);
+  });
+
+  it('reuses one subscriber and duplicates blocking clients', () => {
+    const shared = getBullmqSharedConnection();
+    const subscriberA = createBullmqClient('subscriber') as IORedis;
+    const subscriberB = createBullmqClient('subscriber') as IORedis;
+    const bclientA = createBullmqClient('bclient') as IORedis;
+    const bclientB = createBullmqClient('bclient') as IORedis;
+    expect(subscriberA).not.toBe(shared);
+    expect(subscriberA).toBe(subscriberB);
+    expect(bclientA).not.toBe(shared);
+    expect(bclientA).not.toBe(bclientB);
+    bclientA.disconnect();
+    bclientB.disconnect();
   });
 });
 
