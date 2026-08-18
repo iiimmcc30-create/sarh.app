@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { RateLimiterRedis, RateLimiterMemory } from 'rate-limiter-flexible';
-import IORedis from 'ioredis';
 import { LoggerService } from './logger.service';
-import { redisConnection } from '../../redis/redis-connection';
+import { getSharedRedisClient } from '../../redis/redis-connection';
 
 export type RateLimitType = 'api' | 'auth' | 'payment';
 
@@ -21,7 +20,6 @@ export class RateLimitService {
   private paymentLimiterInstance: RateLimiterRedis | RateLimiterMemory | null =
     null;
   private memoryLimiters: Record<string, RateLimiterMemory> = {};
-  private redisClient: IORedis | null = null;
 
   constructor(private readonly logger: LoggerService) {}
 
@@ -29,23 +27,8 @@ export class RateLimitService {
     return process.env.REDIS_ENABLED !== 'false';
   }
 
-  private getRedisClient(): IORedis {
-    if (!this.redisClient) {
-      this.redisClient = new IORedis(
-        redisConnection(0, {
-          maxRetriesPerRequest: 1,
-          enableReadyCheck: false,
-          connectTimeout: 3000,
-          commandTimeout: 3000,
-          lazyConnect: true,
-          retryStrategy(times: number) {
-            if (times > 2) return null;
-            return Math.min(times * 200, 1000);
-          },
-        }),
-      );
-    }
-    return this.redisClient;
+  private getRedisClient() {
+    return getSharedRedisClient(0);
   }
 
   getClientIp(req: Request): string {

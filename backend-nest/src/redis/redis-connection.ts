@@ -1,4 +1,4 @@
-import type { RedisOptions } from 'ioredis';
+import IORedis, { RedisOptions } from 'ioredis';
 
 type ParsedRedisUrl = {
   host: string;
@@ -6,6 +6,14 @@ type ParsedRedisUrl = {
   password?: string;
   username?: string;
 };
+
+export type SharedRedisKind =
+  | 'default'
+  | 'bullmq'
+  | 'subscriber'
+  | 'listener-sub';
+
+const sharedClients = new Map<string, IORedis>();
 
 function parseRedisUrl(raw: string): ParsedRedisUrl | null {
   try {
@@ -46,4 +54,63 @@ export function redisConnection(
     ...extra,
     db,
   };
+}
+
+function clientKey(db: number, kind: SharedRedisKind): string {
+  return `${db}:${kind}`;
+}
+
+/** One TCP connection per DB/kind per process — reduces Render Redis max-clients pressure. */
+export function getSharedRedisClient(
+  db: number,
+  kind: SharedRedisKind = 'default',
+): IORedis {
+  const key = clientKey(db, kind);
+  const existing = sharedClients.get(key);
+  if (existing) return existing;
+
+  const extra: RedisOptions =
+    kind === 'bullmq' ||
+    kind === 'subscriber' ||
+    kind === 'listener-sub'
+      ? {
+          maxRetriesPerRequest: null,
+          enableReadyCheck: false,
+          lazyConnect: kind === 'bullmq' ? false : true,
+        }
+      : {
+          maxRetriesPerRequest: 1,
+          enableReadyCheck: false,
+          connectTimeout: 3000,
+          commandTimeout: 3000,
+          lazyConnect: true,
+          retryStrategy(times: number) {
+            if (times > 2) return null;
+            return Math.min(times * 200, 1000);
+          },
+        };
+
+  const client = new IORedis(redisConnection(db, extra));
+  sharedClients.set(key, client);
+  return client;
+}
+
+export function duplicateSharedRedisClient(
+  db: number,
+  kind: SharedRedisKind = 'default',
+): IORedis {
+  return getSharedRedisClient(db, kind).duplicate();
+}
+
+export async function closeSharedRedisClients(): Promise<void> {
+  await Promise.all(
+    [...sharedClients.values()].map((client) => {
+      try {
+        client.disconnect();
+      } catch {
+        /* ignore */
+      }
+    }),
+  );
+  sharedClients.clear();
 }
