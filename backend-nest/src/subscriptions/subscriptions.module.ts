@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { PlansModule } from '../plans/plans.module';
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionsRepository } from './repositories/subscriptions.repository';
@@ -12,6 +13,7 @@ export { SubscriptionEntitlementService as SubscriptionEntitlementsService } fro
 
 @Global()
 @Module({
+  imports: [PlansModule],
   controllers: [SubscriptionsController],
   providers: [
     SubscriptionsService,

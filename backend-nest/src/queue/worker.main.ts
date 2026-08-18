@@ -8,7 +8,7 @@ import { WorkerCronService } from './services/worker-cron.service';
 async function bootstrap() {
   initialiseSentry();
   const app = await NestFactory.createApplicationContext(WorkerModule, {
-    logger: false,
+    logger: ['error', 'warn', 'log'],
   });
   app.get(WorkerCronService);
   const logger = app.get(LoggerService);
