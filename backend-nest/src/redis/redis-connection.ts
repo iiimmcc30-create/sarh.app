@@ -162,3 +162,49 @@ export async function closeSharedRedisClients(): Promise<void> {
   }
   sharedClients.clear();
 }
+
+export type RedisServerStats = {
+  connected_clients: number | null;
+  blocked_clients: number | null;
+  maxclients: number | null;
+  maxmemory_policy: string | null;
+};
+
+/** Parse Redis/Valkey INFO text. Server-wide — not per logical DB. */
+export function parseRedisInfo(info: string): RedisServerStats {
+  const map: Record<string, string> = {};
+  for (const line of info.split(/\r?\n/)) {
+    if (!line || line.startsWith('#')) continue;
+    const idx = line.indexOf(':');
+    if (idx <= 0) continue;
+    map[line.slice(0, idx)] = line.slice(idx + 1).trim();
+  }
+  const num = (key: string): number | null => {
+    const raw = map[key];
+    if (raw == null || raw === '') return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  };
+  return {
+    connected_clients: num('connected_clients'),
+    blocked_clients: num('blocked_clients'),
+    maxclients: num('maxclients'),
+    maxmemory_policy: map.maxmemory_policy || null,
+  };
+}
+
+export async function fetchRedisServerStats(
+  client: IORedis,
+): Promise<RedisServerStats | null> {
+  if (client.status !== 'ready') return null;
+  const info = await client.info();
+  return parseRedisInfo(info);
+}
+
+/** DBs this process should open at boot. Worker does not use sessions (db 2). */
+export function redisWarmupDbs(
+  serviceMode = process.env.SERVICE_MODE,
+): number[] {
+  if (serviceMode === 'worker') return [0];
+  return [0, 2];
+}

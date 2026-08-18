@@ -20,7 +20,7 @@ export class SocketDisconnectListenerService
     if (process.env.REDIS_ENABLED === 'false') return;
     if (process.env.SOCKET_USE_MEMORY_ADAPTER === 'true') return;
 
-    this.sub = getSharedRedisClient(3, 'listener-sub');
+    this.sub = getSharedRedisClient(3, 'subscriber');
 
     this.sub.on('error', (err) => {
       this.logger.error({ err: err.message }, 'Socket disconnect sub error');
