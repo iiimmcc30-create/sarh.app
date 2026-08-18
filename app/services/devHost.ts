@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const PRODUCTION_API = 'https://sarh-new4.onrender.com';
+const PRODUCTION_SOCKET = 'https://sarh-socket.onrender.com';
 /** @deprecated Railway is decommissioned; kept as alias for imports. */
 const RAILWAY_API = PRODUCTION_API;
 
@@ -27,8 +28,13 @@ function isLoopbackHost(host: string): boolean {
 export function resolveDevServiceUrl(envUrl: string | undefined, port: number): string {
   const fromEnv = envUrl?.replace(/\/$/, '');
 
-  if (fromEnv && /^https:\/\//i.test(fromEnv)) {
+  if (fromEnv && /^https?:\/\//i.test(fromEnv)) {
     return fromEnv;
+  }
+
+  // Store / production builds must never wait on localhost.
+  if (!__DEV__) {
+    return port === 3002 ? PRODUCTION_SOCKET : PRODUCTION_API;
   }
 
   // Honor explicit URL from start scripts (LAN / USB / local mock).
@@ -57,4 +63,4 @@ export function resolveDevServiceUrl(envUrl: string | undefined, port: number): 
   return `http://localhost:${port}`;
 }
 
-export { PRODUCTION_API, RAILWAY_API };
+export { PRODUCTION_API, PRODUCTION_SOCKET, RAILWAY_API };

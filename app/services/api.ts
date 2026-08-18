@@ -19,7 +19,7 @@ export let API_BASE = resolveApiBase();
 
 let reachabilityChecked = false;
 
-async function probeApiHealth(baseUrl: string, timeoutMs = 4000): Promise<boolean> {
+async function probeApiHealth(baseUrl: string, timeoutMs = 800): Promise<boolean> {
   if (!baseUrl) return true;
   try {
     const controller = new AbortController();
@@ -34,9 +34,12 @@ async function probeApiHealth(baseUrl: string, timeoutMs = 4000): Promise<boolea
   }
 }
 
-/** Dev-only: switch to Railway when the configured API is unreachable. */
+/** Skip health probes when already on the live API — they were blocking first paint. */
 export async function ensureApiReachable(): Promise<string> {
-  if (!__DEV__ || usesSameOriginWebApi()) {
+  if (!API_BASE || usesSameOriginWebApi()) {
+    return API_BASE;
+  }
+  if (!__DEV__ || API_BASE.includes('onrender.com') || /^https:\/\//i.test(API_BASE)) {
     return API_BASE;
   }
   if (reachabilityChecked) {

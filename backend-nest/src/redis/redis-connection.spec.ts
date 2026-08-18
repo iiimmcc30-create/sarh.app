@@ -1,7 +1,9 @@
 import {
   closeSharedRedisClients,
   getSharedRedisClient,
+  isRedisCircuitOpen,
   redisConnection,
+  tripRedisCircuit,
 } from './redis-connection';
 
 describe('redisConnection', () => {
@@ -69,5 +71,12 @@ describe('getSharedRedisClient', () => {
     const pub = getSharedRedisClient(3, 'default');
     const sub = getSharedRedisClient(3, 'subscriber');
     expect(pub).not.toBe(sub);
+  });
+});
+
+describe('redis circuit', () => {
+  it('opens after tripRedisCircuit', () => {
+    tripRedisCircuit();
+    expect(isRedisCircuitOpen()).toBe(true);
   });
 });

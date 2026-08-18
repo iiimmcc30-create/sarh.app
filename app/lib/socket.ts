@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
-import { resolveDevServiceUrl } from '@/services/devHost';
+import { PRODUCTION_SOCKET, resolveDevServiceUrl } from '@/services/devHost';
 
 function usesSameOriginWebSocket(): boolean {
   if (Platform.OS !== 'web') return false;
@@ -15,6 +15,9 @@ function resolveSocketUrl(): string {
   }
   if (usesSameOriginWebSocket()) {
     return '';
+  }
+  if (!__DEV__) {
+    return PRODUCTION_SOCKET;
   }
   return resolveDevServiceUrl(process.env.EXPO_PUBLIC_SOCKET_URL, 3002);
 }

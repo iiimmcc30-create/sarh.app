@@ -9,7 +9,9 @@ import { NotificationQueueService } from '../queue/services/notification-queue.s
 function readAppVersion(): string {
   try {
     const pkgPath = join(__dirname, '..', '..', 'package.json');
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: string };
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
+      version?: string;
+    };
     if (typeof pkg.version === 'string' && pkg.version.trim()) {
       return pkg.version.trim();
     }
@@ -53,26 +55,34 @@ export class HealthService {
         checks.db = true;
       }),
       redisEnabled
-        ? this.cache.ping().then((ok: boolean) => {
-            if (ok) checks.redis_cache = true;
-          })
+        ? Promise.race([
+            this.cache.ping().then((ok: boolean) => {
+              if (ok) checks.redis_cache = true;
+            }),
+            new Promise((resolve) => setTimeout(resolve, 200)),
+          ])
         : Promise.resolve(),
       redisEnabled
-        ? this.sessions.ping().then((ok: boolean) => {
-            if (ok) checks.redis_session = true;
-          })
+        ? Promise.race([
+            this.sessions.ping().then((ok: boolean) => {
+              if (ok) checks.redis_session = true;
+            }),
+            new Promise((resolve) => setTimeout(resolve, 200)),
+          ])
         : Promise.resolve(),
       (async () => {
         if (this.notificationQueue.isEnabled()) {
-          await this.notificationQueue.getJobCounts();
-          checks.queue = true;
+          await Promise.race([
+            this.notificationQueue.getJobCounts().then(() => {
+              checks.queue = true;
+            }),
+            new Promise((resolve) => setTimeout(resolve, 200)),
+          ]);
         }
       })(),
     ]);
 
-    const healthy =
-      checks.db &&
-      (!redisEnabled || (checks.redis_cache && checks.redis_session));
+    const healthy = checks.db;
     const duration = Date.now() - start;
 
     return {
@@ -82,7 +92,10 @@ export class HealthService {
       uptime: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
       version: readAppVersion(),
-      build: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) || process.env.GIT_COMMIT || 'local',
+      build:
+        process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ||
+        process.env.GIT_COMMIT ||
+        'local',
       apiFeatures: {
         userBlock: true,
         postCommentDelete: true,

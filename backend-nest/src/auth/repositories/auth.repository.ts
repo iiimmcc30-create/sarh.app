@@ -227,7 +227,7 @@ export class AuthRepository {
   getPasswordVersion(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
-      select: { passwordVersion: true },
+      select: { passwordVersion: true, isActive: true },
     });
   }
 

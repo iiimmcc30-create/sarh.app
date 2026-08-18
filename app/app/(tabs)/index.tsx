@@ -88,7 +88,7 @@ export default function HomeScreen() {
     setCanShowLive(canStream);
   }, [accessToken, isAuthenticated]);
 
-  const lastPostsFocusAt = useRef(0);
+  const lastPostsFocusAt = useRef(Date.now());
 
   useFocusEffect(
     useCallback(() => {

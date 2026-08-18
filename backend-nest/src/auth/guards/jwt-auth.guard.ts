@@ -80,8 +80,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         });
       }
 
-      const active = await this.authRepo.isUserActive(payload.userId);
-      if (!active?.isActive) {
+      if (!user.isActive) {
         throw new UnauthorizedException({
           success: false,
           error: 'token_revoked',

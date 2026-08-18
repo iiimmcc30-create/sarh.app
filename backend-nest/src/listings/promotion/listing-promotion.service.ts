@@ -69,13 +69,23 @@ export class ListingPromotionService {
 
   private async getPromotionBase(): Promise<number> {
     try {
-      const s = await this.prisma.appSetting.findUnique({ where: { key: 'pricing.promotion.per24h' } });
+      const s = await this.prisma.appSetting.findUnique({
+        where: { key: 'pricing.promotion.per24h' },
+      });
       if (s && typeof s.value === 'number' && s.value > 0) return s.value;
-    } catch { /* fall through */ }
+    } catch {
+      /* fall through */
+    }
     return PROMOTION_DEFAULT_BASE_PER_24H;
   }
 
+  private lastExpireAt = 0;
+
   async expireStalePromotions() {
+    const started = Date.now();
+    if (started - this.lastExpireAt < 60_000) return;
+    this.lastExpireAt = started;
+
     const now = new Date();
     const expired = await this.prisma.listingPromotion.findMany({
       where: { status: 'paid', expiresAt: { lt: now } },
@@ -154,7 +164,10 @@ export class ListingPromotionService {
     if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
       throwApi(400, 'invalid_amount', 'المبلغ غير صالح');
     }
-    if (durationHours < PROMOTE_DURATION_HOURS_MIN || durationHours > PROMOTE_DURATION_HOURS_MAX) {
+    if (
+      durationHours < PROMOTE_DURATION_HOURS_MIN ||
+      durationHours > PROMOTE_DURATION_HOURS_MAX
+    ) {
       throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
     }
 
@@ -162,66 +175,75 @@ export class ListingPromotionService {
     const orderRef = buildOrderRef(user.userId);
     const descriptionAr = `ترويج إعلان: ${listing.arabicTitle} — ${durationHours} ساعة (${amount} ر.س)`;
 
-    const prismaMethod = ['mada', 'visa', 'mastercard', 'apple_pay', 'stc_pay'].includes(
-      options.method,
-    )
-      ? (options.method as 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
+    const prismaMethod = [
+      'mada',
+      'visa',
+      'mastercard',
+      'apple_pay',
+      'stc_pay',
+    ].includes(options.method)
+      ? (options.method as
+          'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
       : 'visa';
 
     const niMethod = this.mapMethod(options.method);
 
     const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+    const endTime = new Date(
+      startTime.getTime() + durationHours * 60 * 60 * 1000,
+    );
     const promotionGoal = options.promotionGoal ?? 'visibility';
 
-    const { promotion, payment } = await this.prisma.$transaction(async (tx) => {
-      const promotion = await tx.listingPromotion.create({
-        data: {
-          listingId,
-          userId: user.userId,
-          tier: tierConfig.key,
-          weight: tierConfig.weight,
-          durationDays,
-          amount,
-          currency,
-          status: 'pending',
-          baselineViews: listing.views ?? 0,
-        },
-      });
-
-      const payment = await tx.payment.create({
-        data: {
-          userId: user.userId,
-          orderId: orderRef,
-          amount,
-          currency,
-          method: prismaMethod,
-          status: 'pending',
-          referenceId: promotion.id,
-          referenceType: 'promoted_ad',
-          descriptionAr,
-          description: descriptionAr,
-          metadata: {
-            promotionId: promotion.id,
+    const { promotion, payment } = await this.prisma.$transaction(
+      async (tx) => {
+        const promotion = await tx.listingPromotion.create({
+          data: {
             listingId,
-            tier: tierConfig.key,
             userId: user.userId,
+            tier: tierConfig.key,
+            weight: tierConfig.weight,
             durationDays,
-            durationHours,
-            promotionGoal,
-            promotionAmount: amount,
-            promotionDurationHours: durationHours,
-            totalAmount: amount,
-            adId: listingId,
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString(),
-            referenceType: 'promoted_ad',
-          } as Prisma.InputJsonValue,
-        },
-      });
+            amount,
+            currency,
+            status: 'pending',
+            baselineViews: listing.views ?? 0,
+          },
+        });
 
-      return { promotion, payment };
-    });
+        const payment = await tx.payment.create({
+          data: {
+            userId: user.userId,
+            orderId: orderRef,
+            amount,
+            currency,
+            method: prismaMethod,
+            status: 'pending',
+            referenceId: promotion.id,
+            referenceType: 'promoted_ad',
+            descriptionAr,
+            description: descriptionAr,
+            metadata: {
+              promotionId: promotion.id,
+              listingId,
+              tier: tierConfig.key,
+              userId: user.userId,
+              durationDays,
+              durationHours,
+              promotionGoal,
+              promotionAmount: amount,
+              promotionDurationHours: durationHours,
+              totalAmount: amount,
+              adId: listingId,
+              startTime: startTime.toISOString(),
+              endTime: endTime.toISOString(),
+              referenceType: 'promoted_ad',
+            } as Prisma.InputJsonValue,
+          },
+        });
+
+        return { promotion, payment };
+      },
+    );
 
     let checkoutUrl: string;
 
@@ -239,25 +261,28 @@ export class ListingPromotionService {
       const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
 
       try {
-        const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout({
-          amount,
-          currency,
-          orderReference: orderRef,
-          description: descriptionAr,
-          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=promotion&listingId=${listingId}`,
-          cancelUrl: `${appUrl}/payment/cancel`,
-          firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
-          email: contact?.email ?? '',
-          paymentMethods: [niMethod],
-          customData: {
-            paymentId: payment.id,
-            promotionId: promotion.id,
-            listingId,
-            tier: tierConfig.key,
-            userId: user.userId,
-            referenceType: 'promoted_ad',
+        const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout(
+          {
+            amount,
+            currency,
+            orderReference: orderRef,
+            description: descriptionAr,
+            redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=promotion&listingId=${listingId}`,
+            cancelUrl: `${appUrl}/payment/cancel`,
+            firstName:
+              contact?.displayName ?? contact?.arabicName ?? 'Customer',
+            email: contact?.email ?? '',
+            paymentMethods: [niMethod],
+            customData: {
+              paymentId: payment.id,
+              promotionId: promotion.id,
+              listingId,
+              tier: tierConfig.key,
+              userId: user.userId,
+              referenceType: 'promoted_ad',
+            },
           },
-        });
+        );
 
         checkoutUrl = niUrl;
         await this.prisma.payment.update({
@@ -266,7 +291,10 @@ export class ListingPromotionService {
         });
       } catch (err: unknown) {
         const message = formatNiGatewayError(err);
-        this.logger.error({ err: message, promotionId: promotion.id }, 'NI promotion checkout failed');
+        this.logger.error(
+          { err: message, promotionId: promotion.id },
+          'NI promotion checkout failed',
+        );
         throwApi(502, 'payment_gateway_error', message);
       }
     }
@@ -347,7 +375,8 @@ export class ListingPromotionService {
   }
 
   async devCompletePromotion(user: JwtPayload, promotionId: string) {
-    if (!isNiSandboxMockMode()) throwApi(403, 'forbidden', 'غير متاح في الإنتاج');
+    if (!isNiSandboxMockMode())
+      throwApi(403, 'forbidden', 'غير متاح في الإنتاج');
 
     const promotion = await this.prisma.listingPromotion.findFirst({
       where: { id: promotionId, userId: user.userId },
@@ -357,7 +386,11 @@ export class ListingPromotionService {
 
     await this.prisma.payment.updateMany({
       where: { referenceId: promotionId, status: 'pending' },
-      data: { status: 'paid', paidAt: new Date(), transactionId: `DEV-${promotionId}` },
+      data: {
+        status: 'paid',
+        paidAt: new Date(),
+        transactionId: `DEV-${promotionId}`,
+      },
     });
 
     await this.fulfillPromotion(promotionId, `DEV-${promotionId}`);
@@ -367,7 +400,13 @@ export class ListingPromotionService {
   async getPromotionStats(user: JwtPayload, listingId: string) {
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, sellerId: user.userId, deletedAt: null },
-      select: { id: true, views: true, promoted: true, promotedUntil: true, promotionTier: true },
+      select: {
+        id: true,
+        views: true,
+        promoted: true,
+        promotedUntil: true,
+        promotionTier: true,
+      },
     });
     if (!listing) throwApi(404, 'listing_not_found', 'الإعلان غير موجود');
 
@@ -383,7 +422,11 @@ export class ListingPromotionService {
     const clicks = active?.clicks ?? 0;
     const viewsDelta = Math.max(0, currentViews - baseline);
     const increasePercent =
-      baseline > 0 ? Math.round((viewsDelta / baseline) * 100) : viewsDelta > 0 ? 100 : 0;
+      baseline > 0
+        ? Math.round((viewsDelta / baseline) * 100)
+        : viewsDelta > 0
+          ? 100
+          : 0;
 
     const remainingMs = active?.expiresAt
       ? Math.max(0, active.expiresAt.getTime() - Date.now())

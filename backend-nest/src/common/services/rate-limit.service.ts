@@ -144,8 +144,8 @@ export class RateLimitService {
     const limits = { api: 100, auth: 5, payment: 10 };
     const windows = { api: 900, auth: 900, payment: 3600 };
 
-    const redisClient = this.getRedisClient();
-    const isRedisReady = redisClient.status === 'ready';
+    const isRedisReady =
+      this.isRedisEnabled() && this.getRedisClient().status === 'ready';
 
     try {
       let result;
