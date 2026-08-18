@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { CommonModule } from '../common/common.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
-import { isRedisEnabled, QUEUE_CONNECTION, QUEUE_NAMES } from './constants';
+import { bullRootConfig, isRedisEnabled, QUEUE_NAMES } from './constants';
 import { NotificationProcessor } from './processors/notification.processor';
 import { PushProcessor } from './processors/push.processor';
 import { EmailProcessor } from './processors/email.processor';
@@ -26,7 +26,7 @@ import { KnowledgeModule } from '../knowledge/knowledge.module';
 
 const bullImports = isRedisEnabled()
   ? [
-      BullModule.forRoot({ connection: QUEUE_CONNECTION }),
+      BullModule.forRoot(bullRootConfig()),
       BullModule.registerQueue(
         { name: QUEUE_NAMES.NOTIFICATIONS },
         {

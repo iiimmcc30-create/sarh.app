@@ -525,7 +525,9 @@ export class AdminService {
   }
 
   async runCleanupAuthorized(cronSecret?: string, authHeader?: string) {
-    if (cronSecret && cronSecret === process.env.CRON_SECRET) {
+    const expected = process.env.CRON_SECRET?.trim();
+    const provided = cronSecret?.trim();
+    if (expected && provided && provided === expected) {
       return this.runCleanup();
     }
     await this.assertAdminBearer(authHeader);

@@ -1,7 +1,8 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Job } from 'bullmq';
 import nodemailer from 'nodemailer';
+import { LoggerService } from '../../common/services/logger.service';
 import { QUEUE_NAMES } from '../constants';
 import type { EmailJob } from '../types/queue.types';
 
@@ -15,9 +16,32 @@ const transporter = nodemailer.createTransport({
 
 @Injectable()
 @Processor(QUEUE_NAMES.EMAILS, { concurrency: 3 })
-export class EmailProcessor extends WorkerHost {
+export class EmailProcessor extends WorkerHost implements OnModuleInit {
+  constructor(private readonly logger: LoggerService) {
+    super();
+  }
+
+  async onModuleInit() {
+    if (!process.env.SMTP_HOST || !process.env.SMTP_PASS) {
+      this.logger.warn({}, 'SMTP not configured — email jobs will be skipped');
+      return;
+    }
+    try {
+      await transporter.verify();
+      this.logger.info({ host: process.env.SMTP_HOST }, 'SMTP ready');
+    } catch (err) {
+      this.logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        'SMTP verify failed',
+      );
+    }
+  }
   async process(job: Job<EmailJob>): Promise<void> {
     if (job.name !== 'send') return;
+    if (!process.env.SMTP_HOST || !process.env.SMTP_PASS) {
+      this.logger.warn({}, 'SMTP not configured — skipping email job');
+      return;
+    }
 
     const { to, subject, template, variables } = job.data;
     const templates: Record<string, string> = {

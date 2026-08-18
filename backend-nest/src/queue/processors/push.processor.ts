@@ -12,13 +12,21 @@ export class PushProcessor extends WorkerHost {
   constructor(private readonly prisma: PrismaService) {
     super();
     if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        }),
-      });
+      try {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          }),
+        });
+        console.log('Firebase messaging initialized');
+      } catch (err) {
+        console.error(
+          'Firebase init failed',
+          err instanceof Error ? err.message : String(err),
+        );
+      }
     }
   }
 

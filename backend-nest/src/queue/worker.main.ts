@@ -4,15 +4,28 @@ import { LoggerService } from '../common/services/logger.service';
 import { initialiseSentry } from '../shared/lib/sentry';
 import { WorkerModule } from './queue.module';
 import { WorkerCronService } from './services/worker-cron.service';
+import { FeeCheckQueueService } from './services/fee-check-queue.service';
 
 async function bootstrap() {
   initialiseSentry();
   const app = await NestFactory.createApplicationContext(WorkerModule, {
     logger: ['error', 'warn', 'log'],
   });
+  app.enableShutdownHooks();
   app.get(WorkerCronService);
   const logger = app.get(LoggerService);
   logger.info({}, 'Worker application context started');
+
+  try {
+    const fees = app.get(FeeCheckQueueService);
+    const job = await fees.addProbeJob();
+    logger.info({ jobId: job?.id ?? null }, 'BullMQ probe job enqueued');
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      'BullMQ probe enqueue failed',
+    );
+  }
 }
 
 bootstrap().catch((err) => {

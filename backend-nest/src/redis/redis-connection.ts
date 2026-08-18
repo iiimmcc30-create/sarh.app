@@ -1,4 +1,5 @@
 import IORedis, { RedisOptions } from 'ioredis';
+import type { ConnectionOptions } from 'bullmq';
 
 type ParsedRedisUrl = {
   host: string;
@@ -8,9 +9,13 @@ type ParsedRedisUrl = {
 };
 
 export type SharedRedisKind =
-  'default' | 'bullmq' | 'subscriber' | 'listener-sub';
+  | 'default'
+  | 'bullmq'
+  | 'subscriber'
+  | 'listener-sub';
 
 const sharedClients = new Map<string, IORedis>();
+let bullmqSubscriber: IORedis | null = null;
 
 let redisCircuitOpenUntil = 0;
 const REDIS_CIRCUIT_MS = 15_000;
@@ -109,7 +114,45 @@ export function duplicateSharedRedisClient(
   return getSharedRedisClient(db, kind).duplicate();
 }
 
+/**
+ * One command connection for all BullMQ queues in this process.
+ * Worker/subscriber sockets still duplicate (BullMQ blocking requirement).
+ */
+export function getBullmqSharedConnection(): ConnectionOptions {
+  return getSharedRedisClient(1, 'bullmq') as unknown as ConnectionOptions;
+}
+
+/**
+ * BullMQ `createClient` hook.
+ * - command `client`: reused singleton
+ * - `subscriber`: one shared duplicate (pub/sub can multiplex)
+ * - `bclient`: unique duplicate per worker (blocking BRPOP cannot be shared)
+ */
+export function createBullmqClient(
+  type: 'client' | 'subscriber' | 'bclient' = 'client',
+): ConnectionOptions {
+  const shared = getSharedRedisClient(1, 'bullmq');
+  if (type === 'client') {
+    return shared as unknown as ConnectionOptions;
+  }
+  if (type === 'subscriber') {
+    if (!bullmqSubscriber) {
+      bullmqSubscriber = shared.duplicate();
+    }
+    return bullmqSubscriber as unknown as ConnectionOptions;
+  }
+  return shared.duplicate() as unknown as ConnectionOptions;
+}
+
 export async function closeSharedRedisClients(): Promise<void> {
+  if (bullmqSubscriber) {
+    try {
+      bullmqSubscriber.disconnect();
+    } catch {
+      /* ignore */
+    }
+    bullmqSubscriber = null;
+  }
   for (const client of sharedClients.values()) {
     try {
       client.disconnect();

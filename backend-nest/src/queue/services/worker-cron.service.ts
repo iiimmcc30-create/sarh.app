@@ -104,11 +104,23 @@ export class WorkerCronService implements OnModuleDestroy {
   }
 
   private async runDbCleanupCron(): Promise<void> {
-    const appUrl = process.env.APP_URL || 'http://localhost:3001';
+    const appUrl = (process.env.APP_URL || 'http://localhost:3001').replace(
+      /\/$/,
+      '',
+    );
+    if (
+      process.env.NODE_ENV === 'production' &&
+      /localhost|127\.0\.0\.1/i.test(appUrl)
+    ) {
+      this.logger.warn(
+        {},
+        'APP_URL points at localhost in production — cleanup will not reach the API',
+      );
+    }
     await this.withLock('cron:db_cleanup:lock', 300, async () => {
       this.logger.info({}, 'Running daily database cleanup');
       try {
-        await axios.post(
+        const response = await axios.post(
           `${appUrl}/api/admin/cleanup`,
           {},
           {
@@ -116,10 +128,14 @@ export class WorkerCronService implements OnModuleDestroy {
             timeout: 30000,
           },
         );
-        this.logger.info({}, 'Database cleanup triggered via API');
+        this.logger.info(
+          { status: response.status },
+          'Database cleanup triggered via API',
+        );
       } catch (err: unknown) {
+        const status = axios.isAxiosError(err) ? err.response?.status : undefined;
         const message = err instanceof Error ? err.message : String(err);
-        this.logger.error({ err: message }, 'DB cleanup cron failed');
+        this.logger.error({ err: message, status }, 'DB cleanup cron failed');
       }
     });
   }
