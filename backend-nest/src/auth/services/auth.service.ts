@@ -25,10 +25,7 @@ import {
   VerifyEmailDto,
   VerifyOtpDto,
 } from '../dto/auth.dto';
-import {
-  isValidSaudiMobileE164,
-  normalizeE164Phone,
-} from '../../lib/phone';
+import { isValidSaudiMobileE164, normalizeE164Phone } from '../../lib/phone';
 
 const DEFAULT_SESSION_TTL_DAYS = 3650; // ~10 years — until explicit logout or app uninstall
 
@@ -85,7 +82,8 @@ export class AuthService {
   private sessionTtlMs(): number {
     const raw = this.config.get<string>('SESSION_TTL_DAYS');
     const days = raw ? parseInt(raw, 10) : DEFAULT_SESSION_TTL_DAYS;
-    const safe = Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_TTL_DAYS;
+    const safe =
+      Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_TTL_DAYS;
     return safe * 24 * 60 * 60 * 1000;
   }
 

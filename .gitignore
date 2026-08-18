@@ -55,3 +55,4 @@ backend/prisma/*.db-journal
 uploads/
 tmp/
 temp/
+dump.rdb

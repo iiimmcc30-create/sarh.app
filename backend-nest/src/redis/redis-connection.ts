@@ -8,10 +8,7 @@ type ParsedRedisUrl = {
 };
 
 export type SharedRedisKind =
-  | 'default'
-  | 'bullmq'
-  | 'subscriber'
-  | 'listener-sub';
+  'default' | 'bullmq' | 'subscriber' | 'listener-sub';
 
 const sharedClients = new Map<string, IORedis>();
 
@@ -70,9 +67,7 @@ export function getSharedRedisClient(
   if (existing) return existing;
 
   const extra: RedisOptions =
-    kind === 'bullmq' ||
-    kind === 'subscriber' ||
-    kind === 'listener-sub'
+    kind === 'bullmq' || kind === 'subscriber' || kind === 'listener-sub'
       ? {
           maxRetriesPerRequest: null,
           enableReadyCheck: false,
@@ -103,14 +98,12 @@ export function duplicateSharedRedisClient(
 }
 
 export async function closeSharedRedisClients(): Promise<void> {
-  await Promise.all(
-    [...sharedClients.values()].map((client) => {
-      try {
-        client.disconnect();
-      } catch {
-        /* ignore */
-      }
-    }),
-  );
+  for (const client of sharedClients.values()) {
+    try {
+      client.disconnect();
+    } catch {
+      /* ignore */
+    }
+  }
   sharedClients.clear();
 }
