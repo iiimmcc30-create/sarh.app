@@ -1,20 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../common/services/logger.service';
-import { getSharedRedisClient } from '../redis-connection';
+import {
+  getSharedRedisClient,
+  isRedisCircuitOpen,
+  tripRedisCircuit,
+} from '../redis-connection';
 
 const DEFAULT_TTL = 300;
 
 @Injectable()
 export class RedisCacheService {
-  private markedUnavailable = false;
   private unavailableLogged = false;
 
   constructor(private readonly logger: LoggerService) {}
 
   isEnabled(): boolean {
     if (process.env.REDIS_ENABLED === 'false') return false;
-    if (this.markedUnavailable && process.env.NODE_ENV !== 'production')
-      return false;
+    if (isRedisCircuitOpen()) return false;
     return true;
   }
 
@@ -24,25 +26,22 @@ export class RedisCacheService {
   }
 
   private markUnavailable(err?: unknown) {
-    if (
-      process.env.NODE_ENV !== 'production' &&
-      process.env.REDIS_ENABLED !== 'false'
-    ) {
-      this.markedUnavailable = true;
-      if (!this.unavailableLogged) {
-        this.unavailableLogged = true;
-        this.logger.warn(
-          { err: err instanceof Error ? err.message : String(err) },
-          'Redis unavailable — cache skipped (dev)',
-        );
-      }
+    tripRedisCircuit();
+    if (!this.unavailableLogged) {
+      this.unavailableLogged = true;
+      this.logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        'Redis unavailable — cache skipped',
+      );
     }
   }
 
   async get<T>(key: string): Promise<T | null> {
     if (!this.isEnabled()) return null;
     try {
-      const val = await this.getClient().get(key);
+      const client = this.getClient();
+      if (client.status !== 'ready') return null;
+      const val = await client.get(key);
       return val ? (JSON.parse(val) as T) : null;
     } catch (err) {
       this.markUnavailable(err);
@@ -53,7 +52,9 @@ export class RedisCacheService {
   async set(key: string, value: unknown, ttl = DEFAULT_TTL): Promise<void> {
     if (!this.isEnabled()) return;
     try {
-      await this.getClient().set(key, JSON.stringify(value), 'EX', ttl);
+      const client = this.getClient();
+      if (client.status !== 'ready') return;
+      await client.set(key, JSON.stringify(value), 'EX', ttl);
     } catch (err) {
       this.markUnavailable(err);
     }

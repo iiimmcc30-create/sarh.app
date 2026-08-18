@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { getSharedRedisClient } from '../redis-connection';
+import {
+  getSharedRedisClient,
+  isRedisCircuitOpen,
+  tripRedisCircuit,
+} from '../redis-connection';
 
 @Injectable()
 export class RedisSessionService {
-  private markedUnavailable = false;
-
   isEnabled(): boolean {
     if (process.env.REDIS_ENABLED === 'false') return false;
-    if (this.markedUnavailable && process.env.NODE_ENV !== 'production')
-      return false;
+    if (isRedisCircuitOpen()) return false;
     return true;
   }
 
@@ -21,18 +22,20 @@ export class RedisSessionService {
     if (!this.isEnabled()) return;
     try {
       await this.getClient().set(key, JSON.stringify(value), 'EX', ttl);
-    } catch (err) {
-      if (process.env.NODE_ENV !== 'production') this.markedUnavailable = true;
-      else throw err;
+    } catch {
+      tripRedisCircuit();
     }
   }
 
   async get<T>(key: string): Promise<T | null> {
     if (!this.isEnabled()) return null;
     try {
-      const val = await this.getClient().get(key);
+      const client = this.getClient();
+      if (client.status !== 'ready') return null;
+      const val = await client.get(key);
       return val ? (JSON.parse(val) as T) : null;
     } catch {
+      tripRedisCircuit();
       return null;
     }
   }
@@ -52,6 +55,7 @@ export class RedisSessionService {
       await this.getClient().ping();
       return true;
     } catch {
+      tripRedisCircuit();
       return false;
     }
   }

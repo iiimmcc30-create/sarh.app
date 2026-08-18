@@ -5,7 +5,7 @@ import { createContext, ReactNode, useState, useEffect, useCallback, useMemo, us
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Post, Listing } from '@/services/types';
 import { useAuth } from './AuthContext';
-import { API_BASE, ensureApiReachable } from '@/services/api';
+import { API_BASE } from '@/services/api';
 import { parseApiError } from '@/services/apiError';
 import { sanitizeListingLimitMessage } from '@/lib/listingLimits';
 import { authFetch, getAccessToken } from '@/services/authFetch';
@@ -236,18 +236,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
         const marketPromise = fetchList(`${API_BASE}/api/listings`);
-        const minePromise =
-          accessToken && resolveCurrentUserId(user, me)
-            ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(resolveCurrentUserId(user, me))}`)
-            : Promise.resolve([] as Listing[]);
+        const sellerId = accessToken ? resolveCurrentUserId(user, me) : '';
+        const minePromise = sellerId
+          ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(sellerId)}`)
+          : Promise.resolve([] as Listing[]);
 
-        const [market, mine] = await Promise.all([marketPromise, minePromise]);
+        const market = await marketPromise;
         if (market === null) return;
 
         const byId = new Map<string, Listing>();
-        for (const l of [...(mine ?? []), ...market]) byId.set(l.id, l);
+        for (const l of market) byId.set(l.id, l);
         setListingsState(Array.from(byId.values()));
         succeeded = true;
+
+        const mine = await minePromise;
+        if (mine && mine.length > 0) {
+          for (const l of mine) byId.set(l.id, l);
+          setListingsState(Array.from(byId.values()));
+        }
       } catch (err) {
         console.warn('[AppContext] Failed to fetch listings:', err);
       }
@@ -368,7 +374,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [fetchPosts, fetchListings]);
 
   const bootstrapFeeds = useCallback(async () => {
-    await ensureApiReachable();
     const [postsOk, listingsOk] = await Promise.all([fetchPosts(), fetchListings()]);
     if (!postsOk || !listingsOk) {
       scheduleFeedRetry();

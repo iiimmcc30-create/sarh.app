@@ -12,6 +12,17 @@ export type SharedRedisKind =
 
 const sharedClients = new Map<string, IORedis>();
 
+let redisCircuitOpenUntil = 0;
+const REDIS_CIRCUIT_MS = 15_000;
+
+export function isRedisCircuitOpen(): boolean {
+  return Date.now() < redisCircuitOpenUntil;
+}
+
+export function tripRedisCircuit(): void {
+  redisCircuitOpenUntil = Date.now() + REDIS_CIRCUIT_MS;
+}
+
 function parseRedisUrl(raw: string): ParsedRedisUrl | null {
   try {
     const parsed = new URL(raw);
@@ -76,12 +87,13 @@ export function getSharedRedisClient(
       : {
           maxRetriesPerRequest: 1,
           enableReadyCheck: false,
-          connectTimeout: 3000,
-          commandTimeout: 3000,
+          enableOfflineQueue: false,
+          connectTimeout: 800,
+          commandTimeout: 500,
           lazyConnect: true,
           retryStrategy(times: number) {
-            if (times > 2) return null;
-            return Math.min(times * 200, 1000);
+            if (times > 1) return null;
+            return 150;
           },
         };
 

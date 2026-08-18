@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { calculateCommission, shouldCreateFee, type ListingCat } from '../lib/commissions';
+import {
+  calculateCommission,
+  shouldCreateFee,
+  type ListingCat,
+} from '../lib/commissions';
 import { ApiException, throwApi } from '../common/exceptions/api.exception';
 import {
   LISTING_DAILY_LIMIT_MESSAGE_AR,
@@ -93,7 +97,7 @@ export class ListingsService {
   }
 
   async list(query: ListListingsQueryDto, viewerId?: string) {
-    await this.promotions.expireStalePromotions().catch(() => {});
+    this.promotions.expireStalePromotions().catch(() => {});
 
     const {
       cursor,
@@ -142,22 +146,18 @@ export class ListingsService {
       andFilters.push({ subcategoryId });
     } else if (categoryId) {
       andFilters.push({
-        OR: [
-          { categoryId },
-          { marketSubcategory: { parentId: categoryId } },
-        ],
+        OR: [{ categoryId }, { marketSubcategory: { parentId: categoryId } }],
       });
     }
 
     if (viewerId) {
-      const blockedIds = await this.usersRepo.findBlockedRelationshipIds(viewerId);
+      const blockedIds =
+        await this.usersRepo.findBlockedRelationshipIds(viewerId);
       if (blockedIds.length > 0) {
         if (sellerId && blockedIds.includes(sellerId)) {
           return { listings: [], nextCursor: null, hasMore: false };
         }
-        where.sellerId = sellerId
-          ? sellerId
-          : { notIn: blockedIds };
+        where.sellerId = sellerId ? sellerId : { notIn: blockedIds };
       }
     }
 
@@ -187,7 +187,11 @@ export class ListingsService {
       where,
       take: PAGE_SIZE + 1,
       cursor,
-      orderBy: [{ pinned: 'desc' }, { featured: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [
+        { pinned: 'desc' },
+        { featured: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
 
     const hasMore = listings.length > PAGE_SIZE;
@@ -207,13 +211,19 @@ export class ListingsService {
       const priorityDiff =
         this.sellerPriorityBoost(
           b.seller as {
-            subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
+            subscription?: {
+              planId?: string;
+              planAudience?: 'USER' | 'BUTCHER';
+            };
             verified?: boolean;
           },
         ) -
         this.sellerPriorityBoost(
           a.seller as {
-            subscription?: { planId?: string; planAudience?: 'USER' | 'BUTCHER' };
+            subscription?: {
+              planId?: string;
+              planAudience?: 'USER' | 'BUTCHER';
+            };
             verified?: boolean;
           },
         );
@@ -223,7 +233,8 @@ export class ListingsService {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    const ranked = suggested || promoted ? sorted : interleavePromotedListings(sorted);
+    const ranked =
+      suggested || promoted ? sorted : interleavePromotedListings(sorted);
 
     const nextCursor = hasMore ? (ranked[ranked.length - 1]?.id ?? null) : null;
 
@@ -236,7 +247,7 @@ export class ListingsService {
   async getById(id: string) {
     if (!id) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
-    await this.promotions.expireStalePromotions().catch(() => {});
+    this.promotions.expireStalePromotions().catch(() => {});
 
     const cacheKey = `listing:${id}`;
     const cached = await this.cache.get<{ promoted?: boolean }>(cacheKey);
@@ -271,7 +282,8 @@ export class ListingsService {
     let parentRequiresWeight: boolean | null = null;
 
     if (subcategoryId) {
-      const sub = await this.marketCategories.findSubcategoryWithParent(subcategoryId);
+      const sub =
+        await this.marketCategories.findSubcategoryWithParent(subcategoryId);
       if (!sub || !sub.parent) {
         throwApi(400, 'invalid_subcategory', 'التصنيف الفرعي غير صالح');
       }
@@ -308,7 +320,9 @@ export class ListingsService {
       { role: user.role },
     );
 
-    const permissions = await this.entitlements.getPermissionsForUser(user.userId);
+    const permissions = await this.entitlements.getPermissionsForUser(
+      user.userId,
+    );
     const audience = await this.entitlements.getAudienceForUser(user.userId);
 
     const { commission, dueDate } = calculateCommission(
@@ -402,14 +416,23 @@ export class ListingsService {
       await this.cache.delPattern('listings:v2:*');
 
       this.logger.info(
-        { listingId: listing.id, userId: user.userId, commission, plan: effectivePlanSlug },
+        {
+          listingId: listing.id,
+          userId: user.userId,
+          commission,
+          plan: effectivePlanSlug,
+        },
         'Listing created',
       );
       return listing;
     } catch (err: unknown) {
       if (err instanceof ApiException) throw err;
       const e = err as { code?: string; limit?: number; message?: string };
-      if (e.code === 'listing_limit' || e.code === 'featured_limit' || e.code === 'pinned_limit') {
+      if (
+        e.code === 'listing_limit' ||
+        e.code === 'featured_limit' ||
+        e.code === 'pinned_limit'
+      ) {
         throwApi(
           403,
           e.code,
@@ -439,9 +462,12 @@ export class ListingsService {
     }
 
     let category = dto.category ?? listing.category;
-    let categoryId = dto.categoryId !== undefined ? dto.categoryId : listing.categoryId;
+    let categoryId =
+      dto.categoryId !== undefined ? dto.categoryId : listing.categoryId;
     let subcategoryId =
-      dto.subcategoryId !== undefined ? dto.subcategoryId : listing.subcategoryId;
+      dto.subcategoryId !== undefined
+        ? dto.subcategoryId
+        : listing.subcategoryId;
     let parentRequiresWeight = listing.marketCategory?.requiresWeight ?? null;
 
     if (dto.subcategoryId) {
@@ -472,7 +498,9 @@ export class ListingsService {
     }
 
     const weightKg =
-      dto.weightKg !== undefined ? dto.weightKg : listing.weightKg ?? undefined;
+      dto.weightKg !== undefined
+        ? dto.weightKg
+        : (listing.weightKg ?? undefined);
     this.assertWeightForCategory(category, weightKg, parentRequiresWeight);
 
     const updateData: Prisma.ListingUpdateInput = {};
@@ -487,7 +515,10 @@ export class ListingsService {
     if (dto.videoUrl !== undefined) {
       updateData.videoUrl = extractListingVideoUrl(dto.videoUrl, dto.images);
     } else if (dto.images !== undefined) {
-      updateData.videoUrl = extractListingVideoUrl(listing.videoUrl, dto.images);
+      updateData.videoUrl = extractListingVideoUrl(
+        listing.videoUrl,
+        dto.images,
+      );
     }
     if (dto.thumbnailUrl !== undefined) {
       updateData.thumbnailUrl = dto.thumbnailUrl;
@@ -498,8 +529,10 @@ export class ListingsService {
     if (dto.breed !== undefined) updateData.breed = dto.breed;
     if (dto.age !== undefined) updateData.age = dto.age;
     if (dto.location !== undefined) updateData.location = dto.location;
-    if (dto.arabicLocation !== undefined) updateData.arabicLocation = dto.arabicLocation;
-    if (dto.contactPhone !== undefined) updateData.contactPhone = dto.contactPhone;
+    if (dto.arabicLocation !== undefined)
+      updateData.arabicLocation = dto.arabicLocation;
+    if (dto.contactPhone !== undefined)
+      updateData.contactPhone = dto.contactPhone;
     if (dto.category !== undefined || dto.subcategoryId || dto.categoryId) {
       updateData.category = category;
     }
@@ -534,8 +567,8 @@ export class ListingsService {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
-    let wantsFeatured = Boolean(dto.featured) && !listing.featured;
-    let wantsPinned = Boolean(dto.pinned) && !listing.pinned;
+    const wantsFeatured = Boolean(dto.featured) && !listing.featured;
+    const wantsPinned = Boolean(dto.pinned) && !listing.pinned;
 
     const flags = await this.paidServices.getFlags();
     if (wantsFeatured && !flags.featureEnabled) {
@@ -546,7 +579,11 @@ export class ListingsService {
     }
 
     if (!wantsFeatured && !wantsPinned) {
-      throwApi(400, 'already_promoted', 'الإعلان مُفعَّل بالفعل أو لم تُحدَّد ترقية جديدة');
+      throwApi(
+        400,
+        'already_promoted',
+        'الإعلان مُفعَّل بالفعل أو لم تُحدَّد ترقية جديدة',
+      );
     }
 
     await this.entitlements.assertCanApplyListingPromotion(user.userId, {
@@ -566,7 +603,12 @@ export class ListingsService {
       await this.cache.delPattern('listings:v2:*');
 
       this.logger.info(
-        { listingId: id, userId: user.userId, featured: wantsFeatured, pinned: wantsPinned },
+        {
+          listingId: id,
+          userId: user.userId,
+          featured: wantsFeatured,
+          pinned: wantsPinned,
+        },
         'Listing plan promotion applied',
       );
       return updated;
@@ -621,7 +663,9 @@ export class ListingsService {
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
 
     if (listing.sellerId !== user.userId) {
-      const owner = await this.usersRepo.findUserCommentsAudience(listing.sellerId);
+      const owner = await this.usersRepo.findUserCommentsAudience(
+        listing.sellerId,
+      );
       if (owner?.commentsAudience === 'followers') {
         const follows = await this.usersRepo.findFollow(
           user.userId,
@@ -660,11 +704,7 @@ export class ListingsService {
     return comment;
   }
 
-  async deleteComment(
-    user: JwtPayload,
-    listingId: string,
-    commentId: string,
-  ) {
+  async deleteComment(user: JwtPayload, listingId: string, commentId: string) {
     if (!listingId || !commentId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
     const listing = await this.repo.findActiveListingMeta(listingId);
