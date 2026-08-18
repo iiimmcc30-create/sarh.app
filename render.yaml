@@ -59,6 +59,8 @@ services:
     healthCheckPath: /api/health
     envVars:
       - fromGroup: sarh-shared
+      - key: SERVICE_MODE
+        value: api
       - key: REDIS_URL
         fromService:
           name: sarh-redis
@@ -83,6 +85,9 @@ services:
       - key: NI_WEBHOOK_SECRET
         sync: false
 
+  # Independent Background Worker (not a web service, not sarh-api).
+  # Same Blueprint repo/branch as sarh-api. Docker build only — no npm start:prod.
+  # Do not set PORT or healthCheckPath: this process has no HTTP server.
   - type: worker
     name: sarh-worker
     runtime: docker
@@ -90,18 +95,30 @@ services:
     plan: starter
     rootDir: backend-nest
     dockerfilePath: Dockerfile
-    # Must be a real executable. A bare word like `worker` replaces the image
-    # ENTRYPOINT/CMD and exits 128 (binary not found, no app logs).
+    # Render Docker Command replaces the image ENTRYPOINT. Must be a real
+    # executable. Never use `worker`, `api`, or `npm run start:prod`.
     dockerCommand: node dist/queue/worker.main.js
     envVars:
       - fromGroup: sarh-shared
       - key: SERVICE_MODE
         value: worker
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_ENABLED
+        value: "true"
       - key: REDIS_URL
         fromService:
           name: sarh-redis
           type: keyvalue
           property: connectionString
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: FIREBASE_CLIENT_EMAIL

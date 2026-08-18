@@ -3,7 +3,14 @@ set -eu
 
 # Render web services must bind process.env.PORT quickly.
 # Socket and worker skip migrate: only the API process owns prisma migrate deploy.
-# SERVICE_MODE (env) wins so a missed dockerCommand still starts the right process.
+#
+# If Render Docker Command is passed through as argv (node …), honor it first
+# so sarh-worker never falls through to CMD ["api"] / dist/main.js.
+
+if [ "${1:-}" = "node" ]; then
+  echo "Starting command: $*"
+  exec "$@"
+fi
 
 role="${SERVICE_MODE:-}"
 if [ -z "$role" ]; then
@@ -11,10 +18,6 @@ if [ -z "$role" ]; then
     socket | worker | api)
       role="$1"
       shift
-      ;;
-    node)
-      echo "Starting command: $*"
-      exec "$@"
       ;;
     *)
       role="api"
