@@ -7,6 +7,7 @@ import {
   closeSharedRedisClients,
   duplicateSharedRedisClient,
   getSharedRedisClient,
+  redisWarmupDbs,
   tripRedisCircuit,
   type SharedRedisKind,
 } from './redis-connection';
@@ -19,7 +20,7 @@ export class SharedRedisService implements OnModuleInit, OnApplicationShutdown {
 
   onModuleInit() {
     if (!this.isEnabled()) return;
-    for (const db of [0, 2]) {
+    for (const db of redisWarmupDbs()) {
       const client = getSharedRedisClient(db);
       if (client.status === 'wait') {
         client.connect().catch(() => tripRedisCircuit());

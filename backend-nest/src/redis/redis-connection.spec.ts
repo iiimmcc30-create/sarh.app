@@ -5,7 +5,9 @@ import {
   getBullmqSharedConnection,
   getSharedRedisClient,
   isRedisCircuitOpen,
+  parseRedisInfo,
   redisConnection,
+  redisWarmupDbs,
   tripRedisCircuit,
 } from './redis-connection';
 
@@ -107,5 +109,34 @@ describe('redis circuit', () => {
   it('opens after tripRedisCircuit', () => {
     tripRedisCircuit();
     expect(isRedisCircuitOpen()).toBe(true);
+  });
+});
+
+describe('parseRedisInfo', () => {
+  it('reads client and eviction fields', () => {
+    const stats = parseRedisInfo(
+      [
+        '# Clients',
+        'connected_clients:17',
+        'blocked_clients:6',
+        'maxclients:50',
+        '# Memory',
+        'maxmemory_policy:noeviction',
+      ].join('\n'),
+    );
+    expect(stats).toEqual({
+      connected_clients: 17,
+      blocked_clients: 6,
+      maxclients: 50,
+      maxmemory_policy: 'noeviction',
+    });
+  });
+});
+
+describe('redisWarmupDbs', () => {
+  it('skips session db on the worker', () => {
+    expect(redisWarmupDbs('worker')).toEqual([0]);
+    expect(redisWarmupDbs('api')).toEqual([0, 2]);
+    expect(redisWarmupDbs('socket')).toEqual([0, 2]);
   });
 });

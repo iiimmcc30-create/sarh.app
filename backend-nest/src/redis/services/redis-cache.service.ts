@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../common/services/logger.service';
 import {
+  fetchRedisServerStats,
   getSharedRedisClient,
   isRedisCircuitOpen,
   tripRedisCircuit,
@@ -115,6 +116,15 @@ export class RedisCacheService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  async serverStats() {
+    if (!this.isEnabled()) return null;
+    try {
+      return await fetchRedisServerStats(this.getClient());
+    } catch {
+      return null;
     }
   }
 

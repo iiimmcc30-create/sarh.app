@@ -82,12 +82,18 @@ export class HealthService {
       })(),
     ]);
 
+    const redis =
+      redisEnabled && checks.redis_cache
+        ? await this.cache.serverStats().catch(() => null)
+        : null;
+
     const healthy = checks.db;
     const duration = Date.now() - start;
 
     return {
       status: healthy ? 'ok' : 'degraded',
       checks,
+      redis,
       duration: `${duration}ms`,
       uptime: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
