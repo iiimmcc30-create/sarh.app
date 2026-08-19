@@ -73,6 +73,10 @@ npm run dev
 
 ## المرحلة الحالية
 
-Phase 1 — Foundation فقط: تسجيل الدخول، التحقق من الملحمة، الهيكل، الشريط الجانبي، الرأس، CORS.
+Phase 2 — Orders + Dashboard APIs:
 
-صفحات الطلبات/المنتجات/المخزون/العملاء/التقارير/الإعدادات تظهر كصفحات انتظار بدون بيانات وهمية حتى المرحلة التالية.
+- `GET /api/butchers/dashboard` ملخص حقيقي لصاحب الملحمة
+- `GET /api/butchers/orders?page&limit&status&q&from&to` مع عقد متوافق مع الموبايل (بدون query يبقى مصفوفة)
+- صفحات `/dashboard` و `/dashboard/orders` و `/dashboard/orders/[id]`
+
+صفحات المنتجات/المخزون/العملاء/التقارير/الإعدادات ما زالت placeholders حتى المراحل التالية.

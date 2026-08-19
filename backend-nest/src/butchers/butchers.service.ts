@@ -18,7 +18,17 @@ import { OrderStateMachineService } from './services/order-state-machine.service
 import { ButcherRankingService } from './services/butcher-ranking.service';
 import { REVIEW_EDIT_WINDOW_DAYS } from './lib/butcher-ranking.util';
 import type { ButcherListSort } from './repositories/butchers.repository';
-import { resolveProductAvailableQuantity } from './lib/product-inventory.util';
+import {
+  classifyProductStock,
+  LOW_STOCK_DISPLAY_THRESHOLD_KG,
+  resolveProductAvailableQuantity,
+  sellableQuantity,
+} from './lib/product-inventory.util';
+import {
+  buildOrderListWhere,
+  parseOrderListQuery,
+  startOfTodayRiyadh,
+} from './lib/order-list-query';
 import {
   sumOrderLinePrices,
   validateAndPriceOrderLine,
@@ -710,24 +720,137 @@ export class ButchersService {
     return { deleted: true };
   }
 
-  async getOrders(user: JwtPayload) {
+  async getDashboardSummary(user: JwtPayload) {
+    const butcher = await this.repo.findButcherForStats(user.userId);
+    if (!butcher) {
+      throwApi(403, 'no_butcher_profile', 'ليس لديك ملف ملحمة مسجل');
+    }
+
+    const today = startOfTodayRiyadh();
+    const [
+      statusGroups,
+      salesToday,
+      deliveredToday,
+      cancelledToday,
+      recentOrders,
+      products,
+    ] = await Promise.all([
+      this.repo.groupOrderStatusCounts(butcher.id),
+      this.repo.sumSalesSince(butcher.id, today),
+      this.repo.countOrdersSince(butcher.id, today, 'delivered'),
+      this.repo.countOrdersSince(butcher.id, today, 'cancelled'),
+      this.repo.findRecentOrdersForButcher(butcher.id, 8),
+      this.repo.findProductsInventory(butcher.id),
+    ]);
+
+    const counts: Record<OrderStatus, number> = {
+      pending: 0,
+      confirmed: 0,
+      preparing: 0,
+      ready: 0,
+      delivered: 0,
+      cancelled: 0,
+    };
+    for (const row of statusGroups) {
+      counts[row.status] = row._count._all;
+    }
+
+    const inventoryLow = [];
+    const inventoryOut = [];
+    for (const product of products) {
+      const kind = classifyProductStock(product);
+      const item = {
+        id: product.id,
+        nameAr: product.nameAr,
+        availableQuantity: product.availableQuantity,
+        reservedQuantity: product.reservedQuantity,
+        sellableQuantity: sellableQuantity(product),
+        inStock: product.inStock,
+        stock: kind,
+      };
+      if (kind === 'out') inventoryOut.push(item);
+      else if (kind === 'low') inventoryLow.push(item);
+    }
+
+    return {
+      butcher: {
+        id: butcher.id,
+        nameAr: butcher.nameAr,
+        nameEn: butcher.nameEn,
+        isOpen: butcher.isOpen,
+      },
+      counts: {
+        pending: counts.pending,
+        confirmed: counts.confirmed,
+        preparing: counts.preparing,
+        ready: counts.ready,
+        delivered: counts.delivered,
+        cancelled: counts.cancelled,
+        deliveredToday,
+        cancelledToday,
+      },
+      salesToday: salesToday._sum.totalPrice ?? 0,
+      ordersToday: salesToday._count._all,
+      currency: 'SAR',
+      inventory: {
+        thresholdKg: LOW_STOCK_DISPLAY_THRESHOLD_KG,
+        low: inventoryLow,
+        out: inventoryOut,
+      },
+      recentOrders: recentOrders.map((order) => ({
+        ...order,
+        allowedNextStatuses: this.orderStateMachine.getAllowedNext(
+          order.status as OrderStatus,
+        ),
+      })),
+    };
+  }
+
+  async getOrders(user: JwtPayload, rawQuery: Record<string, unknown> = {}) {
+    const parsed = parseOrderListQuery(rawQuery);
+    if (!parsed.ok) {
+      throwApi(400, 'validation_error', parsed.message);
+    }
+
     const butcher = await this.repo.findButcherIdByUser(user.userId);
-    if (butcher) {
-      const orders = await this.repo.findOrdersForButcher(butcher.id);
-      return orders.map((order) => ({
+    const withNext = <T extends { status: OrderStatus | string }>(
+      orders: T[],
+    ) =>
+      orders.map((order) => ({
         ...order,
         allowedNextStatuses: this.orderStateMachine.getAllowedNext(
           order.status as OrderStatus,
         ),
       }));
+
+    if (!parsed.query.paged) {
+      if (butcher) {
+        return withNext(await this.repo.findOrdersForButcher(butcher.id));
+      }
+      return withNext(await this.repo.findOrdersForCustomer(user.userId));
     }
-    const orders = await this.repo.findOrdersForCustomer(user.userId);
-    return orders.map((order) => ({
-      ...order,
-      allowedNextStatuses: this.orderStateMachine.getAllowedNext(
-        order.status as OrderStatus,
-      ),
-    }));
+
+    const where = buildOrderListWhere({
+      butcherId: butcher?.id,
+      customerId: butcher ? undefined : user.userId,
+      status: parsed.query.status,
+      search: parsed.query.search,
+      from: parsed.query.from,
+      to: parsed.query.to,
+    });
+    const skip = (parsed.query.page - 1) * parsed.query.limit;
+    const [items, total] = await Promise.all([
+      this.repo.findOrdersPage(where, skip, parsed.query.limit, !butcher),
+      this.repo.countOrders(where),
+    ]);
+
+    return {
+      items: withNext(items),
+      total,
+      page: parsed.query.page,
+      limit: parsed.query.limit,
+      hasMore: skip + items.length < total,
+    };
   }
 
   async createOrder(user: JwtPayload, body: unknown) {
@@ -854,7 +977,8 @@ export class ButchersService {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
-    const audits = isAdmin ? await this.repo.findOrderAudits(id) : undefined;
+    const audits =
+      isButcher || isAdmin ? await this.repo.findOrderAudits(id) : undefined;
     return {
       ...order,
       allowedNextStatuses: this.orderStateMachine.getAllowedNext(
