@@ -325,25 +325,19 @@ export class ButchersService {
       if (existing.userId !== viewerId) {
         await this.repo.incrementProfileViews(id);
       }
-    } else {
-      const cacheKey = `butcher:${id}`;
-      const cached = await this.redis.cacheGet(cacheKey);
-      if (cached) return cached;
     }
 
     let butcher;
     if (isMe) {
       if (!viewer?.userId) throwApi(401, 'unauthorized', 'غير مصرح');
+      // Never cache `/butchers/me` under a shared key — that would leak
+      // Butcher A profile to Butcher B. Resolve strictly from JWT userId.
       butcher = await this.repo.findButcherByUserId(viewer.userId);
     } else {
       butcher = await this.repo.findButcherById(id);
     }
 
     if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
-
-    if (isMe) {
-      await this.redis.cacheSet(`butcher:${id}`, butcher, 300);
-    }
     return butcher;
   }
 
