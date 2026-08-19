@@ -67,12 +67,7 @@ export default function ProductsPage() {
     setBusy(true);
     try {
       if (editing && editing.id) {
-        const payload = body as ProductWritePayload;
-        const updateBody =
-          payload.images.length > 0
-            ? payload
-            : { ...payload, images: undefined };
-        await updateMyProduct(editing.id, updateBody);
+        await updateMyProduct(editing.id, body as ProductWritePayload);
         toast.show('تم تحديث المنتج');
       } else {
         await createMyProduct(body as ProductWritePayload);
@@ -170,8 +165,20 @@ export default function ProductsPage() {
               {visible.map((product) => (
                 <tr key={product.id} className="border-b border-white/5 last:border-0">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-ink">{product.nameAr}</p>
-                    <p className="text-xs text-ink-muted">{CATEGORY_LABELS[product.category]}</p>
+                    <div className="flex items-center gap-3">
+                      {product.images[0] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={product.images[0]}
+                          alt=""
+                          className="h-10 w-10 rounded-lg object-cover"
+                        />
+                      ) : null}
+                      <div>
+                        <p className="font-medium text-ink">{product.nameAr}</p>
+                        <p className="text-xs text-ink-muted">{CATEGORY_LABELS[product.category]}</p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-ink-secondary">{pricingLabel(product)}</td>
                   <td className="px-4 py-3 text-ink-muted">

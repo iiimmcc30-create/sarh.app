@@ -292,6 +292,40 @@ describe('Butcher customers, reports, and settings isolation', () => {
       isOpen: false,
     });
   });
+
+  it('refuses butcher A replacing butcher B logo/cover', async () => {
+    repo.findButcherOwner.mockResolvedValue({
+      id: 'butcher-b',
+      userId: 'user-b',
+    });
+    await expect(
+      service.updateButcher('butcher-b', jwt('user-a'), {
+        logo: 'https://res.cloudinary.com/demo/image/upload/v1/b.jpg',
+        cover: 'https://res.cloudinary.com/demo/image/upload/v1/c.jpg',
+      }),
+    ).rejects.toMatchObject({ status: 403 } satisfies Partial<ApiException>);
+    expect(repo.updateButcher).not.toHaveBeenCalled();
+  });
+
+  it('persists logo/cover for the JWT butcher via PUT me', async () => {
+    repo.findButcherOwnerByUser.mockResolvedValue({
+      id: 'butcher-a',
+      userId: 'user-a',
+    });
+    repo.updateButcher.mockResolvedValue({
+      id: 'butcher-a',
+      logo: 'https://res.cloudinary.com/demo/image/upload/v1/logo.jpg',
+      cover: null,
+    });
+    await service.updateButcher('me', jwt('user-a'), {
+      logo: 'https://res.cloudinary.com/demo/image/upload/v1/logo.jpg',
+      cover: null,
+    });
+    expect(repo.updateButcher).toHaveBeenCalledWith('butcher-a', {
+      logo: 'https://res.cloudinary.com/demo/image/upload/v1/logo.jpg',
+      cover: null,
+    });
+  });
 });
 
 describe('Butcher product isolation', () => {
@@ -343,6 +377,32 @@ describe('Butcher product isolation', () => {
       service.updateProduct('p-b', jwt('user-a'), { inStock: false }),
     ).rejects.toMatchObject({ status: 403 } satisfies Partial<ApiException>);
     expect(repo.updateProduct).not.toHaveBeenCalled();
+  });
+
+  it('refuses butcher A replacing butcher B product images', async () => {
+    repo.findProductWithButcher.mockResolvedValue({
+      id: 'p-b',
+      butcher: { userId: 'user-b', id: 'butcher-b' },
+    });
+    await expect(
+      service.updateProduct('p-b', jwt('user-a'), {
+        images: ['https://res.cloudinary.com/demo/image/upload/v1/stolen.jpg'],
+      }),
+    ).rejects.toMatchObject({ status: 403 } satisfies Partial<ApiException>);
+    expect(repo.updateProduct).not.toHaveBeenCalled();
+  });
+
+  it('allows the owner to replace or clear product images', async () => {
+    repo.findProductWithButcher.mockResolvedValue({
+      id: 'p-a',
+      butcher: { userId: 'user-a', id: 'butcher-a' },
+    });
+    repo.updateProduct.mockResolvedValue({ id: 'p-a', images: [] });
+    await service.updateProduct('p-a', jwt('user-a'), { images: [] });
+    expect(repo.updateProduct).toHaveBeenCalledWith(
+      'p-a',
+      expect.objectContaining({ images: [] }),
+    );
   });
 
   it('refuses butcher A deleting butcher B product', async () => {
