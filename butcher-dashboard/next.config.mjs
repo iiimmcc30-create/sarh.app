@@ -8,6 +8,17 @@ const apiUrl = /:(3000|3002|3003)(\/|$)/.test(rawApiUrl)
 const nextConfig = {
   // Vercel uses its own output tracing; standalone is for Docker/self-host.
   ...(process.env.VERCEL ? {} : { output: 'standalone' }),
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

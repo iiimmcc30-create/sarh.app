@@ -17,6 +17,7 @@ import {
 } from '@/services/orders.service';
 import { getApiErrorMessage } from '@/services/api.client';
 import { notifyAllLiveRefresh, subscribeLiveRefresh } from '@/lib/live-refresh';
+import { isBrowserOnline } from '@/lib/pwa';
 
 export default function OrderDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -27,6 +28,18 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
   const [busy, setBusy] = useState(false);
+  const [online, setOnline] = useState(true);
+
+  useEffect(() => {
+    const sync = () => setOnline(isBrowserOnline());
+    sync();
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+    };
+  }, []);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -51,6 +64,10 @@ export default function OrderDetailsPage() {
 
   const confirmChange = async () => {
     if (!pendingStatus || !id) return;
+    if (!isBrowserOnline()) {
+      toast.show('لا يمكن تغيير حالة الطلب بدون اتصال');
+      return;
+    }
     setBusy(true);
     try {
       const updated = await updateButcherOrderStatus(id, pendingStatus);
@@ -137,13 +154,15 @@ export default function OrderDetailsPage() {
         <h2 className="mb-3 text-base font-semibold text-ink">تغيير الحالة</h2>
         {next.length === 0 ? (
           <p className="text-sm text-ink-muted">لا توجد انتقالات متاحة لهذه الحالة.</p>
+        ) : !online ? (
+          <p className="text-sm text-amber-200">لا يمكن تغيير حالة الطلب بدون اتصال.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {next.map((status) => (
               <button
                 key={status}
                 type="button"
-                className="rounded-xl bg-brand px-3 py-2 text-sm text-ink hover:bg-brand-hover"
+                className="min-h-11 rounded-xl bg-brand px-4 py-2 text-sm text-ink hover:bg-brand-hover"
                 onClick={() => setPendingStatus(status)}
               >
                 {ORDER_STATUS_LABELS[status]}
