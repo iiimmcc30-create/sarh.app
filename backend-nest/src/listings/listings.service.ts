@@ -30,7 +30,11 @@ import {
   interleavePromotedListings,
   promotionSearchScore,
 } from './promotion/promotion-ranking.util';
-import { extractListingVideoUrl } from '../shared/lib/media-url';
+import {
+  extractListingVideoUrl,
+  isEphemeralDiskUploadUrl,
+  sanitizeListingMedia,
+} from '../shared/lib/media-url';
 import { SubscriptionEntitlementService } from '../subscriptions/services/subscription-entitlement.service';
 import { PlanResolverService } from '../plans/plan-resolver.service';
 import { PlanPermissionService } from '../plans/plan-permission.service';
@@ -96,6 +100,20 @@ export class ListingsService {
     }
   }
 
+  private assertDurableListingMedia(urls: Array<string | null | undefined>) {
+    if (process.env.NODE_ENV !== 'production') return;
+    const ephemeral = urls.filter(
+      (url) => typeof url === 'string' && isEphemeralDiskUploadUrl(url),
+    );
+    if (ephemeral.length > 0) {
+      throwApi(
+        400,
+        'ephemeral_media',
+        'مسارات /uploads غير مدعومة في الإنتاج. ارفع الملفات عبر Cloudinary.',
+      );
+    }
+  }
+
   async list(query: ListListingsQueryDto, viewerId?: string) {
     this.promotions.expireStalePromotions().catch(() => {});
 
@@ -131,7 +149,14 @@ export class ListingsService {
         nextCursor: string | null;
         hasMore: boolean;
       }>(cacheKey);
-      if (cached) return cached;
+      if (cached) {
+        return {
+          ...cached,
+          listings: cached.listings.map((item) =>
+            sanitizeListingMedia((item ?? {}) as object),
+          ),
+        };
+      }
     }
 
     const where: Prisma.ListingWhereInput = { status: 'active', ...notDeleted };
@@ -235,10 +260,13 @@ export class ListingsService {
 
     const ranked =
       suggested || promoted ? sorted : interleavePromotedListings(sorted);
+    const publicListings = ranked.map((item) => sanitizeListingMedia(item));
 
-    const nextCursor = hasMore ? (ranked[ranked.length - 1]?.id ?? null) : null;
+    const nextCursor = hasMore
+      ? (publicListings[publicListings.length - 1]?.id ?? null)
+      : null;
 
-    const result = { listings: ranked, nextCursor, hasMore };
+    const result = { listings: publicListings, nextCursor, hasMore };
 
     if (cacheKey) await this.cache.set(cacheKey, result, 90);
     return result;
@@ -256,7 +284,7 @@ export class ListingsService {
       if (cached.promoted) {
         void this.promotions.trackPromotionEvent(id, 'view');
       }
-      return cached;
+      return sanitizeListingMedia(cached);
     }
 
     const listing = await this.repo.findById(id);
@@ -267,7 +295,7 @@ export class ListingsService {
       void this.promotions.trackPromotionEvent(id, 'view');
     }
     await this.cache.set(cacheKey, listing, 300);
-    return listing;
+    return sanitizeListingMedia(listing);
   }
 
   async create(user: JwtPayload, dto: CreateListingDto) {
@@ -275,6 +303,11 @@ export class ListingsService {
     const currency = dto.currency ?? 'SAR';
     const featured = dto.featured ?? false;
     const pinned = dto.pinned ?? false;
+    this.assertDurableListingMedia([
+      ...(dto.images ?? []),
+      dto.thumbnailUrl,
+      dto.videoUrl,
+    ]);
 
     let legacyCategory = dto.category;
     let categoryId = dto.categoryId ?? null;
@@ -424,7 +457,7 @@ export class ListingsService {
         },
         'Listing created',
       );
-      return listing;
+      return sanitizeListingMedia(listing);
     } catch (err: unknown) {
       if (err instanceof ApiException) throw err;
       const e = err as { code?: string; limit?: number; message?: string };
@@ -460,6 +493,12 @@ export class ListingsService {
     ) {
       throwApi(403, 'listing_edit_limit', LISTING_EDIT_LIMIT_MESSAGE_AR);
     }
+
+    this.assertDurableListingMedia([
+      ...(dto.images ?? []),
+      dto.thumbnailUrl,
+      dto.videoUrl,
+    ]);
 
     let category = dto.category ?? listing.category;
     let categoryId =
@@ -553,7 +592,7 @@ export class ListingsService {
     const updated = await this.repo.update(id, updateData);
     await this.cache.del(`listing:${id}`);
     await this.cache.delPattern('listings:v2:*');
-    return updated;
+    return sanitizeListingMedia(updated);
   }
 
   async applyPlanPromotion(
@@ -611,7 +650,7 @@ export class ListingsService {
         },
         'Listing plan promotion applied',
       );
-      return updated;
+      return sanitizeListingMedia(updated);
     } catch (err: unknown) {
       const e = err as { code?: string; limit?: number };
       if (e.code === 'featured_limit' || e.code === 'pinned_limit') {
