@@ -4,14 +4,14 @@ import { middleware } from '@/middleware';
 function request(path: string, cookie?: string) {
   const headers = new Headers();
   if (cookie) headers.set('cookie', cookie);
-  return new NextRequest(new URL(path, 'http://localhost:3002'), { headers });
+  return new NextRequest(new URL(path, 'http://localhost:3003'), { headers });
 }
 
 describe('butcher dashboard middleware', () => {
   it('redirects protected pages to /login when cookie missing', () => {
     const res = middleware(request('/dashboard'));
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toBe('http://localhost:3002/login');
+    expect(res.headers.get('location')).toBe('http://localhost:3003/login');
   });
 
   it('allows /login without token', () => {

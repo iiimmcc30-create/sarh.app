@@ -540,6 +540,19 @@ export class ButchersService {
     return this.repo.findProducts(butcherId);
   }
 
+  async getMyProducts(user: JwtPayload) {
+    const butcher = await this.repo.findButcherIdByUser(user.userId);
+    if (!butcher) {
+      throwApi(403, 'no_butcher_profile', 'ليس لديك ملف ملحمة مسجل');
+    }
+    const products = await this.repo.findProducts(butcher.id);
+    return products.map((product) => ({
+      ...product,
+      sellableQuantity: sellableQuantity(product),
+      stock: classifyProductStock(product),
+    }));
+  }
+
   async createProduct(user: JwtPayload, body: unknown) {
     const butcher = await this.repo.findButcherIdByUser(user.userId);
     if (!butcher) {

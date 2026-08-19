@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001';
 // Guard: proxy must target backend (:3001), never this dashboard (:3002) or admin (:3000)
-const apiUrl = /:(3000|3002)(\/|$)/.test(rawApiUrl)
+const apiUrl = /:(3000|3002|3003)(\/|$)/.test(rawApiUrl)
   ? 'http://127.0.0.1:3001'
   : rawApiUrl.replace(/\/$/, '').replace('localhost', '127.0.0.1');
 
