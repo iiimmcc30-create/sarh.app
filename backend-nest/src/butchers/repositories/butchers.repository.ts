@@ -29,6 +29,21 @@ const BUTCHER_DETAIL_INCLUDE = {
   user: { select: { id: true, username: true, avatar: true } },
 } as const;
 
+const ORDER_CUSTOMER_SELECT = {
+  id: true,
+  displayName: true,
+  arabicName: true,
+  avatar: true,
+  phone: true,
+} as const;
+
+const BUTCHER_ORDER_LIST_INCLUDE = {
+  customer: { select: ORDER_CUSTOMER_SELECT },
+  product: true,
+  items: { include: { product: true } },
+  timeline: { orderBy: { createdAt: 'asc' as const } },
+} as const;
+
 @Injectable()
 export class ButchersRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -205,6 +220,8 @@ export class ButchersRepository {
       select: {
         id: true,
         nameAr: true,
+        nameEn: true,
+        isOpen: true,
         profileViews: true,
         rating: true,
         reviewCount: true,
@@ -292,20 +309,7 @@ export class ButchersRepository {
     return this.prisma.butcherOrder.findMany({
       where: { butcherId },
       orderBy: { createdAt: 'desc' },
-      include: {
-        customer: {
-          select: {
-            id: true,
-            displayName: true,
-            arabicName: true,
-            avatar: true,
-            phone: true,
-          },
-        },
-        product: true,
-        items: { include: { product: true } },
-        timeline: { orderBy: { createdAt: 'asc' } },
-      },
+      include: BUTCHER_ORDER_LIST_INCLUDE,
     });
   }
 
@@ -319,6 +323,95 @@ export class ButchersRepository {
         items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
+    });
+  }
+
+  findOrdersPage(
+    where: Prisma.ButcherOrderWhereInput,
+    skip: number,
+    take: number,
+    forCustomer: boolean,
+  ) {
+    return this.prisma.butcherOrder.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: forCustomer
+        ? {
+            butcher: true,
+            product: true,
+            items: { include: { product: true } },
+            timeline: { orderBy: { createdAt: 'asc' as const } },
+          }
+        : BUTCHER_ORDER_LIST_INCLUDE,
+    });
+  }
+
+  countOrders(where: Prisma.ButcherOrderWhereInput) {
+    return this.prisma.butcherOrder.count({ where });
+  }
+
+  groupOrderStatusCounts(butcherId: string) {
+    return this.prisma.butcherOrder.groupBy({
+      by: ['status'],
+      where: { butcherId },
+      _count: { _all: true },
+    });
+  }
+
+  sumSalesSince(butcherId: string, from: Date) {
+    return this.prisma.butcherOrder.aggregate({
+      where: {
+        butcherId,
+        createdAt: { gte: from },
+        status: { not: 'cancelled' },
+      },
+      _sum: { totalPrice: true },
+      _count: { _all: true },
+    });
+  }
+
+  countOrdersSince(
+    butcherId: string,
+    from: Date,
+    status: Prisma.EnumOrderStatusFilter['equals'],
+  ) {
+    return this.prisma.butcherOrder.count({
+      where: { butcherId, createdAt: { gte: from }, status },
+    });
+  }
+
+  findRecentOrdersForButcher(butcherId: string, take: number) {
+    return this.prisma.butcherOrder.findMany({
+      where: { butcherId },
+      orderBy: { createdAt: 'desc' },
+      take,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            displayName: true,
+            arabicName: true,
+            avatar: true,
+          },
+        },
+        product: { select: { id: true, nameAr: true } },
+      },
+    });
+  }
+
+  findProductsInventory(butcherId: string) {
+    return this.prisma.butcherProduct.findMany({
+      where: { butcherId, ...notDeleted },
+      select: {
+        id: true,
+        nameAr: true,
+        inStock: true,
+        availableQuantity: true,
+        reservedQuantity: true,
+      },
+      orderBy: { nameAr: 'asc' },
     });
   }
 

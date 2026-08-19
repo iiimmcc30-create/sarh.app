@@ -67,6 +67,13 @@ export class ButchersController {
     return successResponse(await this.butchers.getStats(user, period));
   }
 
+  @RateLimit('api')
+  @Get('dashboard')
+  @HttpCode(HttpStatus.OK)
+  async dashboard(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.butchers.getDashboardSummary(user));
+  }
+
   @OptionalAuth()
   @RateLimit('api')
   @Get('products')
@@ -138,8 +145,11 @@ export class ButchersController {
   @RateLimit('api')
   @Get('orders')
   @HttpCode(HttpStatus.OK)
-  async getOrders(@CurrentUser() user: JwtPayload) {
-    return successResponse(await this.butchers.getOrders(user));
+  async getOrders(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: Record<string, unknown>,
+  ) {
+    return successResponse(await this.butchers.getOrders(user, query ?? {}));
   }
 
   @RateLimit('api')
