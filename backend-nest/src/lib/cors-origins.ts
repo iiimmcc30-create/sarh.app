@@ -22,6 +22,10 @@ export function resolveCorsOrigins(): string[] {
     .filter(Boolean);
   const frontend = (process.env.FRONTEND_URL || '').replace(/\/$/, '').trim();
   if (frontend) fromEnv.push(frontend);
+  const butcherDashboard = (process.env.BUTCHER_DASHBOARD_URL || '')
+    .replace(/\/$/, '')
+    .trim();
+  if (butcherDashboard) fromEnv.push(butcherDashboard);
 
   const production = process.env.NODE_ENV === 'production';
   const origins = new Set<string>();
@@ -36,6 +40,11 @@ export function resolveCorsOrigins(): string[] {
     for (const origin of PRODUCTION_ORIGINS) origins.add(origin);
   } else if (origins.size === 0) {
     origins.add('http://localhost:8081');
+  }
+
+  if (!production) {
+    origins.add('http://localhost:3002');
+    origins.add('http://127.0.0.1:3002');
   }
 
   return [...origins];
