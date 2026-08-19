@@ -53,7 +53,8 @@ describe('cors origins', () => {
     const origins = resolveCorsOrigins();
     expect(origins).toContain('http://localhost:3002');
     expect(origins).toContain('http://127.0.0.1:3002');
-    expect(isAllowedCorsOrigin('http://localhost:3002')).toBe(true);
+    expect(origins).toContain('http://localhost:3003');
+    expect(isAllowedCorsOrigin('http://localhost:3003')).toBe(true);
   });
 
   it('ignores localhost FRONTEND_URL in production', () => {

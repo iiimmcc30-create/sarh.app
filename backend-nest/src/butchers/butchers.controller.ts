@@ -74,6 +74,13 @@ export class ButchersController {
     return successResponse(await this.butchers.getDashboardSummary(user));
   }
 
+  @RateLimit('api')
+  @Get('products/mine')
+  @HttpCode(HttpStatus.OK)
+  async getMyProducts(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.butchers.getMyProducts(user));
+  }
+
   @OptionalAuth()
   @RateLimit('api')
   @Get('products')

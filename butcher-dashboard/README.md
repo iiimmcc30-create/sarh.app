@@ -33,7 +33,7 @@ npm install
 npm run dev
 ```
 
-اللوحة تعمل على [http://localhost:3002](http://localhost:3002).
+اللوحة تعمل على [http://localhost:3003](http://localhost:3003) حتى لا تتعارض مع Socket.IO المحلي (3002).
 
 طلبات المتصفح تذهب إلى `/api/*` ويُعاد توجيهها من Next.js إلى NestJS (نفس أسلوب `admin-panel`) لتفادي CORS في التطوير.
 
@@ -79,4 +79,6 @@ Phase 2 — Orders + Dashboard APIs:
 - `GET /api/butchers/orders?page&limit&status&q&from&to` مع عقد متوافق مع الموبايل (بدون query يبقى مصفوفة)
 - صفحات `/dashboard` و `/dashboard/orders` و `/dashboard/orders/[id]`
 
-صفحات المنتجات/المخزون/العملاء/التقارير/الإعدادات ما زالت placeholders حتى المراحل التالية.
+- `GET /api/butchers/products/mine` منتجات المالك من JWT
+- صفحات `/dashboard/products` و `/dashboard/inventory`
+- Socket.IO على `user:{userId}` بدون أحداث `admin.*`

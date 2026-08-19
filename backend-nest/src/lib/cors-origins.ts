@@ -45,6 +45,8 @@ export function resolveCorsOrigins(): string[] {
   if (!production) {
     origins.add('http://localhost:3002');
     origins.add('http://127.0.0.1:3002');
+    origins.add('http://localhost:3003');
+    origins.add('http://127.0.0.1:3003');
   }
 
   return [...origins];

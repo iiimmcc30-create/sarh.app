@@ -24,6 +24,11 @@ describe('Butcher order isolation', () => {
     countOrdersSince: jest.fn(),
     findRecentOrdersForButcher: jest.fn(),
     findProductsInventory: jest.fn(),
+    findProducts: jest.fn(),
+    findProductWithButcher: jest.fn(),
+    updateProduct: jest.fn(),
+    softDeleteProduct: jest.fn(),
+    createProduct: jest.fn(),
   };
   const redis = {
     cacheDel: jest.fn(),
@@ -142,5 +147,68 @@ describe('Butcher order isolation', () => {
     });
     expect(result.status).toBe('preparing');
     expect(orderLifecycle.transitionOrder).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Butcher product isolation', () => {
+  const repo = {
+    findButcherIdByUser: jest.fn(),
+    findProducts: jest.fn(),
+    findProductWithButcher: jest.fn(),
+    updateProduct: jest.fn(),
+    softDeleteProduct: jest.fn(),
+  };
+  const redis = { cacheDel: jest.fn() };
+  let service: ButchersService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new ButchersService(
+      repo as never,
+      redis as never,
+      {} as never,
+      new OrderStateMachineService(),
+      {} as never,
+    );
+  });
+
+  it('lists only products of the JWT butcher', async () => {
+    repo.findButcherIdByUser.mockResolvedValue({ id: 'butcher-a' });
+    repo.findProducts.mockResolvedValue([
+      {
+        id: 'p1',
+        butcherId: 'butcher-a',
+        inStock: true,
+        availableQuantity: 12,
+        reservedQuantity: 9,
+        nameAr: 'لحم',
+      },
+    ]);
+    const result = await service.getMyProducts(jwt('user-a'));
+    expect(repo.findProducts).toHaveBeenCalledWith('butcher-a');
+    expect(result[0].sellableQuantity).toBe(3);
+    expect(result[0].stock).toBe('low');
+  });
+
+  it('refuses butcher A updating butcher B product', async () => {
+    repo.findProductWithButcher.mockResolvedValue({
+      id: 'p-b',
+      butcher: { userId: 'user-b', id: 'butcher-b' },
+    });
+    await expect(
+      service.updateProduct('p-b', jwt('user-a'), { inStock: false }),
+    ).rejects.toMatchObject({ status: 403 } satisfies Partial<ApiException>);
+    expect(repo.updateProduct).not.toHaveBeenCalled();
+  });
+
+  it('refuses butcher A deleting butcher B product', async () => {
+    repo.findProductWithButcher.mockResolvedValue({
+      id: 'p-b',
+      butcher: { userId: 'user-b', id: 'butcher-b' },
+    });
+    await expect(
+      service.deleteProduct('p-b', jwt('user-a')),
+    ).rejects.toMatchObject({ status: 403 } satisfies Partial<ApiException>);
+    expect(repo.softDeleteProduct).not.toHaveBeenCalled();
   });
 });
