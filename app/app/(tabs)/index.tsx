@@ -4,6 +4,7 @@
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, useRef } from 'react';
 import {
+  InteractionManager,
   StyleSheet,
   Text,
   View,
@@ -92,7 +93,10 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void refreshLiveAccess();
+      const task = InteractionManager.runAfterInteractions(() => {
+        void refreshLiveAccess();
+      });
+      return () => task.cancel();
     }, [refreshLiveAccess]),
   );
 

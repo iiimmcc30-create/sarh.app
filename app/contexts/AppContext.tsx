@@ -18,7 +18,38 @@ import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
+const FEED_SNAPSHOT_KEY = 'sarouh:feed_snapshot_v1';
+const FEED_SNAPSHOT_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const REFETCH_TTL_MS = 60_000;
+
+type FeedSnapshot = { posts: Post[]; listings: Listing[]; savedAt: number };
+
+async function readFeedSnapshot(): Promise<FeedSnapshot | null> {
+  try {
+    const raw = await AsyncStorage.getItem(FEED_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as FeedSnapshot;
+    if (!parsed || Date.now() - parsed.savedAt > FEED_SNAPSHOT_MAX_AGE_MS) return null;
+    if (!Array.isArray(parsed.posts) || !Array.isArray(parsed.listings)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+async function patchFeedSnapshot(partial: { posts?: Post[]; listings?: Listing[] }) {
+  try {
+    const prev = (await readFeedSnapshot()) ?? { posts: [], listings: [], savedAt: 0 };
+    const next: FeedSnapshot = {
+      posts: partial.posts ?? prev.posts,
+      listings: partial.listings ?? prev.listings,
+      savedAt: Date.now(),
+    };
+    await AsyncStorage.setItem(FEED_SNAPSHOT_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore quota */
+  }
+}
 
 let userFetchInflight: Promise<void> | null = null;
 let listingsFetchInflight: Promise<void> | null = null;
@@ -248,11 +279,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         for (const l of market) byId.set(l.id, l);
         setListingsState(Array.from(byId.values()));
         succeeded = true;
+        void patchFeedSnapshot({ listings: Array.from(byId.values()) });
 
         const mine = await minePromise;
         if (mine && mine.length > 0) {
           for (const l of mine) byId.set(l.id, l);
-          setListingsState(Array.from(byId.values()));
+          const merged = Array.from(byId.values());
+          setListingsState(merged);
+          void patchFeedSnapshot({ listings: merged });
         }
       } catch (err) {
         console.warn('[AppContext] Failed to fetch listings:', err);
@@ -313,6 +347,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setLikedPosts(liked);
             setRepostedPosts(reposted);
             succeeded = true;
+            void patchFeedSnapshot({ posts: fetchedPosts });
           }
         }
       } catch (err) {
@@ -384,8 +419,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Public feed — available to guests and logged-in users
   useEffect(() => {
-    void bootstrapFeeds();
+    let cancelled = false;
+    (async () => {
+      const snapshot = await readFeedSnapshot();
+      if (cancelled) return;
+      if (snapshot) {
+        if (snapshot.posts.length > 0) setPosts(snapshot.posts);
+        if (snapshot.listings.length > 0) setListingsState(snapshot.listings);
+      }
+      await bootstrapFeeds();
+    })();
     return () => {
+      cancelled = true;
       const retry = feedRetryRef.current;
       if (retry.timer) {
         clearTimeout(retry.timer);
@@ -410,8 +455,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const key = `${accessToken}:${user?.id ?? ''}`;
     if (lastBootstrapKey.current === key) return;
     lastBootstrapKey.current = key;
-    void Promise.all([fetchUserData(), fetchPosts(), fetchListings()]);
-  }, [isAuthenticated, accessToken, user?.id, fetchUserData, fetchPosts, fetchListings]);
+    void Promise.all([fetchUserData(), fetchPosts()]);
+  }, [isAuthenticated, accessToken, user?.id, fetchUserData, fetchPosts]);
 
   const updateMe = useCallback(async (updates: Partial<User>): Promise<ActionResult> => {
     if (!isAuthenticated || !accessToken || !user) {

@@ -2,7 +2,7 @@
 // SAFAT — useButcher hook
 
 import { useMemo, useState, useEffect } from 'react';
-import { API_BASE, ensureApiReachable } from '@/services/api';
+import { API_BASE } from '@/services/api';
 import { fetchPublicFeed } from '@/services/fetchPublicFeed';
 import {
   ButcherOffer,
@@ -32,23 +32,50 @@ type ButcherCatalogCache = {
   butchers: ButcherProfile[];
   stories: ButcherStory[];
   fetchedAt: number;
+  includeStories: boolean;
 };
 let butcherCatalogCache: ButcherCatalogCache | null = null;
-let butcherCatalogInflight: Promise<ButcherCatalogCache> | null = null;
+let butcherCatalogInflight: {
+  includeStories: boolean;
+  promise: Promise<ButcherCatalogCache>;
+} | null = null;
 
-async function loadButcherCatalog(): Promise<ButcherCatalogCache> {
+export function resetButcherCatalogCache() {
+  butcherCatalogCache = null;
+  butcherCatalogInflight = null;
+}
+
+export async function loadButcherCatalog(includeStories = true): Promise<ButcherCatalogCache> {
   const now = Date.now();
-  if (butcherCatalogCache && now - butcherCatalogCache.fetchedAt < BUTCHER_CACHE_TTL_MS) {
+  if (
+    butcherCatalogCache &&
+    now - butcherCatalogCache.fetchedAt < BUTCHER_CACHE_TTL_MS &&
+    (!includeStories || butcherCatalogCache.includeStories)
+  ) {
+    if (!includeStories) {
+      return { ...butcherCatalogCache, stories: [], includeStories: false };
+    }
     return butcherCatalogCache;
   }
-  if (butcherCatalogInflight) return butcherCatalogInflight;
+  if (
+    butcherCatalogInflight &&
+    (!includeStories || butcherCatalogInflight.includeStories)
+  ) {
+    const result = await butcherCatalogInflight.promise;
+    if (!includeStories) {
+      return { ...result, stories: [], includeStories: false };
+    }
+    return result;
+  }
 
-  butcherCatalogInflight = (async () => {
-    await ensureApiReachable();
+  const promise = (async () => {
     let fetchOk = false;
+    const storyPromise = includeStories
+      ? fetchPublicFeed(`${API_BASE}/api/butchers/stories`)
+      : Promise.resolve(null);
     const [resB, resS] = await Promise.all([
       fetchPublicFeed(`${API_BASE}/api/butchers`),
-      fetchPublicFeed(`${API_BASE}/api/butchers/stories`),
+      storyPromise,
     ]);
 
     let butchers: ButcherProfile[] = [];
@@ -63,7 +90,7 @@ async function loadButcherCatalog(): Promise<ButcherCatalogCache> {
       }
     }
 
-    if (resS.ok) {
+    if (includeStories && resS && resS.ok) {
       const json = await resS.json();
       if (json.success && Array.isArray(json.data)) {
         stories = json.data.map((s: any) => ({
@@ -89,14 +116,24 @@ async function loadButcherCatalog(): Promise<ButcherCatalogCache> {
       throw new Error('[useButcher] Butchers catalog fetch failed');
     }
 
-    const next: ButcherCatalogCache = { butchers, stories, fetchedAt: Date.now() };
-    butcherCatalogCache = next;
+    const next: ButcherCatalogCache = {
+      butchers,
+      stories,
+      fetchedAt: Date.now(),
+      includeStories,
+    };
+    if (!(butcherCatalogCache?.includeStories && !includeStories)) {
+      butcherCatalogCache = next;
+    }
     return next;
   })().finally(() => {
-    butcherCatalogInflight = null;
+    if (butcherCatalogInflight?.promise === promise) {
+      butcherCatalogInflight = null;
+    }
   });
 
-  return butcherCatalogInflight;
+  butcherCatalogInflight = { includeStories, promise };
+  return promise;
 }
 
 /**
@@ -104,7 +141,8 @@ async function loadButcherCatalog(): Promise<ButcherCatalogCache> {
  * Provides ranked + filtered butcher list, story management,
  * and per-butcher data helpers.
  */
-export function useButcher() {
+export function useButcher(options?: { includeStories?: boolean }) {
+  const includeStories = options?.includeStories !== false;
   const [filter, setFilter] = useState<ButcherFilter>(DEFAULT_FILTER);
   const [seenStoryIds, setSeenStoryIds] = useState<Set<string>>(new Set());
   const [selectedButcherId, setSelectedButcherId] = useState<string | null>(null);
@@ -124,7 +162,7 @@ export function useButcher() {
 
     const fetchAll = async () => {
       try {
-        const catalog = await loadButcherCatalog();
+        const catalog = await loadButcherCatalog(includeStories);
         if (!active) return;
         setButchers(catalog.butchers);
         setButcherStories(catalog.stories);
@@ -146,7 +184,7 @@ export function useButcher() {
       active = false;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, []);
+  }, [includeStories]);
 
   useEffect(() => {
     if (!selectedButcherId) {

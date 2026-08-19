@@ -58,7 +58,9 @@ export function ButcherMiniSection({
   const gridGap = spacing.md;
   const GRID_CARD_W = Math.round((screenWidth - spacing.lg * 2) * 0.72);
 
-  const { filteredButchers, stories, loading } = useButcher();
+  const { filteredButchers, stories, loading } = useButcher({
+    includeStories: showStories,
+  });
   const ranked = filteredButchers.slice(0, limit);
 
   const openButcher = (id: string) => {
