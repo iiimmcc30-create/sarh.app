@@ -20,11 +20,12 @@ describe('Phase 4 dashboard clients', () => {
         data: { items: [], total: 0, page: 1, limit: 20, hasMore: false },
       },
     });
+    const getMock = apiClient.get as jest.Mock;
     await fetchButcherCustomers({ page: 1, limit: 20, q: 'أحمد' });
-    expect(apiClient.get).toHaveBeenCalledWith('/butchers/customers', {
+    expect(getMock).toHaveBeenCalledWith('/butchers/customers', {
       params: { page: '1', limit: '20', q: 'أحمد' },
     });
-    expect(apiClient.get.mock.calls[0][1].params).not.toHaveProperty('butcherId');
+    expect(getMock.mock.calls[0][1].params).not.toHaveProperty('butcherId');
   });
 
   it('loads reports without a client butcherId', async () => {
@@ -34,11 +35,12 @@ describe('Phase 4 dashboard clients', () => {
         data: { salesTotal: 0, definition: { labelAr: 'x' } },
       },
     });
+    const getMock = apiClient.get as jest.Mock;
     await fetchButcherReports({ period: '7d' });
-    expect(apiClient.get).toHaveBeenCalledWith('/butchers/reports', {
+    expect(getMock).toHaveBeenCalledWith('/butchers/reports', {
       params: { period: '7d', from: undefined, to: undefined },
     });
-    expect(apiClient.get.mock.calls[0][1].params).not.toHaveProperty('butcherId');
+    expect(getMock.mock.calls[0][1].params).not.toHaveProperty('butcherId');
   });
 
   it('saves settings through PUT /butchers/me', async () => {

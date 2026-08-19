@@ -619,7 +619,10 @@ export class ButchersService {
       parsed.query.to,
     );
     const salesOrders = orders.filter(isCompletedSale);
-    const salesTotal = salesOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const salesTotal = salesOrders.reduce(
+      (sum, order) => sum + order.totalPrice,
+      0,
+    );
     const salesCount = salesOrders.length;
     const avgOrderValue = salesCount > 0 ? salesTotal / salesCount : 0;
 

@@ -1,4 +1,8 @@
-import { isoWeekKeyFromDay, parseReportsQuery, riyadhCalendarDay } from './reports-query';
+import {
+  isoWeekKeyFromDay,
+  parseReportsQuery,
+  riyadhCalendarDay,
+} from './reports-query';
 
 describe('parseReportsQuery', () => {
   const now = new Date('2026-08-19T12:00:00.000+03:00');

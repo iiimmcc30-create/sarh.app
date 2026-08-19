@@ -88,9 +88,7 @@ export class ButchersController {
     @CurrentUser() user: JwtPayload,
     @Query() query: Record<string, unknown>,
   ) {
-    return successResponse(
-      await this.butchers.getCustomers(user, query ?? {}),
-    );
+    return successResponse(await this.butchers.getCustomers(user, query ?? {}));
   }
 
   @RateLimit('api')
