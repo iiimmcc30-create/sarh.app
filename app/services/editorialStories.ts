@@ -1,5 +1,6 @@
-import { API_BASE, ensureApiReachable } from '@/services/api';
+import { API_BASE } from '@/services/api';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
+import { FEED_TIMEOUT_MS } from '@/services/fetchPublicFeed';
 
 export type EditorialStory = {
   id: string;
@@ -16,8 +17,7 @@ export type EditorialStory = {
 
 export async function fetchEditorialStories(): Promise<EditorialStory[]> {
   try {
-    await ensureApiReachable();
-    const res = await fetchWithTimeout(`${API_BASE}/api/editorial-stories`);
+    const res = await fetchWithTimeout(`${API_BASE}/api/editorial-stories`, {}, FEED_TIMEOUT_MS);
     if (!res.ok) return [];
     const json = (await res.json()) as { data?: { stories?: EditorialStory[] } };
     const stories = json?.data?.stories;
