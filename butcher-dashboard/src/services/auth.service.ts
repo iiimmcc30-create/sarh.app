@@ -1,3 +1,4 @@
+import { normalizeLoginIdentifier } from '@/lib/login-identifier';
 import { apiClient, unwrap } from './api.client';
 import {
   ACCESS_TOKEN_KEY,
@@ -54,7 +55,10 @@ export function clearSession() {
 }
 
 export async function platformLogin(login: string, password: string): Promise<LoginResult> {
-  const res = await apiClient.post('/auth/login', { login, password });
+  const res = await apiClient.post('/auth/login', {
+    login: normalizeLoginIdentifier(login),
+    password,
+  });
   return unwrap<LoginResult>(res);
 }
 
