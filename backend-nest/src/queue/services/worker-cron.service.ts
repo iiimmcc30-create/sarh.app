@@ -10,6 +10,7 @@ import { KnowledgeCenterService } from '../../knowledge/services/knowledge-cente
 @Injectable()
 export class WorkerCronService implements OnModuleDestroy {
   private interval: ReturnType<typeof setInterval> | null = null;
+  private keepAliveInterval: ReturnType<typeof setInterval> | null = null;
   private readonly lastRun: Record<string, string> = {};
 
   constructor(
@@ -21,13 +22,19 @@ export class WorkerCronService implements OnModuleDestroy {
     private readonly logger: LoggerService,
   ) {
     this.interval = setInterval(() => void this.tick(), 60 * 60 * 1000);
+    this.keepAliveInterval = setInterval(
+      () => void this.pingPublicHealth(),
+      8 * 60 * 1000,
+    );
     this.logger.info({}, '🔧 Workers started');
     // Kick an initial delayed sync so knowledge starts without waiting a full hour
     setTimeout(() => void this.runKnowledgeSyncCron(), 20_000);
+    setTimeout(() => void this.pingPublicHealth(), 15_000);
   }
 
   onModuleDestroy() {
     if (this.interval) clearInterval(this.interval);
+    if (this.keepAliveInterval) clearInterval(this.keepAliveInterval);
   }
 
   private shouldRun(key: string, hour: number): boolean {
@@ -133,7 +140,9 @@ export class WorkerCronService implements OnModuleDestroy {
           'Database cleanup triggered via API',
         );
       } catch (err: unknown) {
-        const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+        const status = axios.isAxiosError(err)
+          ? err.response?.status
+          : undefined;
         const message = err instanceof Error ? err.message : String(err);
         this.logger.error({ err: message, status }, 'DB cleanup cron failed');
       }
@@ -174,6 +183,46 @@ export class WorkerCronService implements OnModuleDestroy {
     }
 
     await this.withLock('cron:knowledge_sync:lock', 50 * 60, run);
+  }
+
+  private healthPingTargets(): string[] {
+    const fromEnv = [
+      process.env.API_HEALTH_URL,
+      process.env.SOCKET_HEALTH_URL,
+    ].filter((url): url is string => Boolean(url?.trim()));
+    if (fromEnv.length) return fromEnv;
+    if (process.env.NODE_ENV !== 'production') return [];
+    return [
+      'https://sarh-new4.onrender.com/api/health',
+      'https://sarh-socket.onrender.com/health',
+    ];
+  }
+
+  /** Wake Render-hosted API/socket before Cloudflare 522 on cold start. */
+  private async pingPublicHealth(): Promise<void> {
+    const targets = this.healthPingTargets();
+    await Promise.allSettled(
+      targets.map(async (url) => {
+        try {
+          const res = await axios.get(url, {
+            timeout: 25_000,
+            validateStatus: () => true,
+          });
+          this.logger.info(
+            { url, httpStatus: res.status },
+            'Keep-alive health ping',
+          );
+        } catch (err) {
+          this.logger.warn(
+            {
+              url,
+              err: err instanceof Error ? err.message : String(err),
+            },
+            'Keep-alive health ping failed',
+          );
+        }
+      }),
+    );
   }
 
   private async tick(): Promise<void> {

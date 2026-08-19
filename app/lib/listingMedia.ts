@@ -38,10 +38,12 @@ export function isListingVideoUri(uri?: string | null): boolean {
 }
 
 export function listingPhotoUris(listing: Pick<Listing, 'images'>): string[] {
-  return (listing.images ?? []).filter((uri) => {
+  const photos = (listing.images ?? []).filter((uri) => {
     const value = trimUri(uri);
     return !!value && !isListingVideoUri(value);
   });
+  const durable = photos.filter((uri) => !isEphemeralListingUploadUri(uri));
+  return durable;
 }
 
 export function listingVideoUrl(
@@ -100,5 +102,7 @@ export function listingThumbUri(
   const videoFrame = cloudinaryVideoFirstFrameUrl(listingVideoUrl(listing));
   if (videoFrame) return videoFrame;
 
-  return photos[0] ?? thumb;
+  if (photos[0] && !isEphemeralListingUploadUri(photos[0])) return photos[0];
+  if (thumb && !isEphemeralListingUploadUri(thumb)) return thumb;
+  return undefined;
 }

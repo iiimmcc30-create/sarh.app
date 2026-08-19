@@ -84,6 +84,14 @@ describe('listingMedia', () => {
     expect(listingThumbUri(listing)).toBe(listing.thumbnailUrl);
   });
 
+  it('does not expose ephemeral /uploads photos in the gallery', () => {
+    expect(
+      listingPhotoUris({
+        images: ['https://sarh-new4.onrender.com/uploads/listings/dead.jpeg'],
+      }),
+    ).toEqual([]);
+  });
+
   it('keeps a durable photo as the outer card cover when available', () => {
     const photo =
       'https://res.cloudinary.com/demo/image/upload/v1/sarh/listings/photo.jpg';

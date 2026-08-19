@@ -99,6 +99,7 @@ export class HealthService {
       timestamp: new Date().toISOString(),
       version: readAppVersion(),
       build:
+        process.env.RENDER_GIT_COMMIT?.slice(0, 7) ||
         process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ||
         process.env.GIT_COMMIT ||
         'local',
