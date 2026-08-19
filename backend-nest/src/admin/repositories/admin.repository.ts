@@ -644,6 +644,33 @@ export class AdminRepository {
     });
   }
 
+  findPaymentIntegrationForButcherOrder(orderId: string) {
+    return this.prisma.payment.findFirst({
+      where: { referenceId: orderId, referenceType: 'butcher_order' },
+      select: {
+        id: true,
+        orderId: true,
+        status: true,
+        amount: true,
+        transactionId: true,
+        checkoutUrl: true,
+        integrationOrder: {
+          select: {
+            id: true,
+            provider: true,
+            status: true,
+            merchantOrderReference: true,
+            externalOrderId: true,
+            lastError: true,
+            retryCount: true,
+            lastAttemptAt: true,
+            syncedAt: true,
+          },
+        },
+      },
+    });
+  }
+
   ensureDefaultSettings() {
     const defaults = [
       { key: 'maintenanceMode', value: false, labelAr: 'وضع الصيانة', category: 'system' },

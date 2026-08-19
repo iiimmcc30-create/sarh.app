@@ -35,6 +35,7 @@ async function bootstrap() {
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (
       req.path === '/api/payments/webhook' ||
+      req.path === '/api/integrations/ni/webhook' ||
       req.path === '/api/upload/direct'
     )
       return next();

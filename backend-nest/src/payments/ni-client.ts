@@ -2,7 +2,21 @@
  * Network International (N-Genius) API client.
  * Flow: access-token (Basic) → create order (Bearer) → payment page URL.
  */
-import axios, { type AxiosError } from 'axios';
+import axios from 'axios';
+import {
+  NI_RETRY_ATTEMPTS,
+  NI_RETRY_BASE_DELAY_MS,
+} from '../integrations/constants/integration.constants';
+import { withExponentialBackoff } from '../integrations/utils/retry.util';
+
+function isAxiosTimeout(err: unknown): boolean {
+  return (
+    axios.isAxiosError(err) &&
+    (err.code === 'ECONNABORTED' ||
+      err.code === 'ETIMEDOUT' ||
+      err.code === 'ECONNRESET')
+  );
+}
 
 export type NiCheckoutInput = {
   amount: number;
@@ -17,10 +31,7 @@ export type NiCheckoutInput = {
   customData?: Record<string, unknown>;
 };
 
-export type NiLogFn = (
-  event: string,
-  data: Record<string, unknown>,
-) => void;
+export type NiLogFn = (event: string, data: Record<string, unknown>) => void;
 
 export type NiOrderVerification = {
   valid: boolean;
@@ -108,10 +119,7 @@ export function validateNiEnvironment(log?: NiLogFn): void {
   });
 
   if (!outletId) {
-    throw new NiGatewayError(
-      'NI_OUTLET_ID is not configured',
-      'config',
-    );
+    throw new NiGatewayError('NI_OUTLET_ID is not configured', 'config');
   }
 
   if (!apiKey) {
@@ -119,8 +127,7 @@ export function validateNiEnvironment(log?: NiLogFn): void {
   }
 
   const keyLooksSandbox =
-    apiKey.startsWith('test_') ||
-    apiKey.toLowerCase().includes('sandbox');
+    apiKey.startsWith('test_') || apiKey.toLowerCase().includes('sandbox');
 
   if (env === 'production' && keyLooksSandbox) {
     throw new NiGatewayError(
@@ -133,9 +140,7 @@ export function validateNiEnvironment(log?: NiLogFn): void {
 function basicAuthHeader(): string {
   const preencoded = process.env.NI_BASIC_AUTH?.trim();
   if (preencoded) {
-    return preencoded.startsWith('Basic ')
-      ? preencoded
-      : `Basic ${preencoded}`;
+    return preencoded.startsWith('Basic ') ? preencoded : `Basic ${preencoded}`;
   }
 
   const key = process.env.NI_API_KEY?.trim() ?? '';
@@ -205,8 +210,8 @@ export function extractNiOrderReference(
   if (orderReference) candidates.push(orderReference);
 
   const selfHref = (
-    (data._links as Record<string, { href?: string }> | undefined)?.self?.href
-  );
+    data._links as Record<string, { href?: string }> | undefined
+  )?.self?.href;
   if (selfHref) {
     const hrefMatch = selfHref.match(/\/orders\/([0-9a-f-]{36})/i);
     if (hrefMatch?.[1]) candidates.push(hrefMatch[1]);
@@ -365,15 +370,24 @@ export async function createNiCheckout(
     requestBody: body,
   });
 
-  const { data, status } = await axios.post(url, body, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/vnd.ni-payment.v2+json',
-      Accept: 'application/vnd.ni-payment.v2+json',
+  const { data, status } = await withExponentialBackoff(
+    () =>
+      axios.post(url, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/vnd.ni-payment.v2+json',
+          Accept: 'application/vnd.ni-payment.v2+json',
+        },
+        timeout: 15000,
+        validateStatus: () => true,
+      }),
+    {
+      attempts: NI_RETRY_ATTEMPTS,
+      baseDelayMs: NI_RETRY_BASE_DELAY_MS,
+      getStatus: (r) => r.status,
+      isTimeout: isAxiosTimeout,
     },
-    timeout: 15000,
-    validateStatus: () => true,
-  });
+  );
 
   log?.('create_order_response', {
     httpStatus: status,
@@ -395,7 +409,9 @@ export async function createNiCheckout(
     );
   }
 
-  const checkoutUrl = extractCheckoutUrl((data ?? {}) as Record<string, unknown>);
+  const checkoutUrl = extractCheckoutUrl(
+    (data ?? {}) as Record<string, unknown>,
+  );
   if (!checkoutUrl) {
     throw new NiGatewayError(
       'NI returned no payment link',
@@ -471,14 +487,23 @@ async function fetchNiOrderRaw(
 
   log?.('fetch_order_request', { url, orderReference: orderRef });
 
-  const { data, status } = await axios.get(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.ni-payment.v2+json',
+  const { data, status } = await withExponentialBackoff(
+    () =>
+      axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.ni-payment.v2+json',
+        },
+        timeout: 12000,
+        validateStatus: () => true,
+      }),
+    {
+      attempts: NI_RETRY_ATTEMPTS,
+      baseDelayMs: NI_RETRY_BASE_DELAY_MS,
+      getStatus: (r) => r.status,
+      isTimeout: isAxiosTimeout,
     },
-    timeout: 12000,
-    validateStatus: () => true,
-  });
+  );
 
   log?.('fetch_order_response', {
     httpStatus: status,
@@ -595,9 +620,9 @@ export async function verifyNiOrderForCheckout(
       httpStatus: status,
     };
   } catch (err: unknown) {
-    const axiosErr = err as AxiosError;
-    const status = axiosErr.response?.status;
-    const body = axiosErr.response?.data;
+    const axiosErr = axios.isAxiosError(err) ? err : null;
+    const status = axiosErr?.response?.status;
+    const body = axiosErr?.response?.data;
     log?.('verify_order_error', {
       orderReference: niOrderRef,
       httpStatus: status,
@@ -613,7 +638,9 @@ export async function verifyNiOrderForCheckout(
   }
 }
 
-export function extractNiPaymentStates(order: Record<string, unknown>): string[] {
+export function extractNiPaymentStates(
+  order: Record<string, unknown>,
+): string[] {
   const states: string[] = [];
   const push = (value: unknown) => {
     if (value == null || value === '') return;
@@ -692,18 +719,30 @@ export async function fetchNiOrderResolved(
   return { order, state };
 }
 
-export function classifyNiOrderState(state: string): 'success' | 'failed' | 'processing' {
+export function classifyNiOrderState(
+  state: string,
+): 'success' | 'failed' | 'processing' {
   const s = state.toUpperCase();
-  if (['CAPTURED', 'PURCHASED', 'PAID', 'SUCCESS'].includes(s)) return 'success';
+  if (['CAPTURED', 'PURCHASED', 'PAID', 'SUCCESS'].includes(s))
+    return 'success';
   if (
-    ['FAILED', 'DECLINED', 'CANCELLED', 'EXPIRED', 'REVERSED', 'CLOSED'].includes(s)
+    [
+      'FAILED',
+      'DECLINED',
+      'CANCELLED',
+      'EXPIRED',
+      'REVERSED',
+      'CLOSED',
+    ].includes(s)
   ) {
     return 'failed';
   }
   return 'processing';
 }
 
-export function niOrderStateLabelAr(outcome: ReturnType<typeof classifyNiOrderState>): string {
+export function niOrderStateLabelAr(
+  outcome: ReturnType<typeof classifyNiOrderState>,
+): string {
   switch (outcome) {
     case 'success':
       return 'تم الدفع بنجاح';
