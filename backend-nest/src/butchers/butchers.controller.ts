@@ -81,6 +81,26 @@ export class ButchersController {
     return successResponse(await this.butchers.getMyProducts(user));
   }
 
+  @RateLimit('api')
+  @Get('customers')
+  @HttpCode(HttpStatus.OK)
+  async getCustomers(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: Record<string, unknown>,
+  ) {
+    return successResponse(await this.butchers.getCustomers(user, query ?? {}));
+  }
+
+  @RateLimit('api')
+  @Get('reports')
+  @HttpCode(HttpStatus.OK)
+  async getReports(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: Record<string, unknown>,
+  ) {
+    return successResponse(await this.butchers.getReports(user, query ?? {}));
+  }
+
   @OptionalAuth()
   @RateLimit('api')
   @Get('products')

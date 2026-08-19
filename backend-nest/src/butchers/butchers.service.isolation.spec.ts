@@ -150,6 +150,150 @@ describe('Butcher order isolation', () => {
   });
 });
 
+describe('Butcher customers, reports, and settings isolation', () => {
+  const repo = {
+    findButcherIdByUser: jest.fn(),
+    findCustomersPage: jest.fn(),
+    countCustomers: jest.fn(),
+    findOrdersForReports: jest.fn(),
+    findButcherOwner: jest.fn(),
+    findButcherOwnerByUser: jest.fn(),
+    updateButcher: jest.fn(),
+  };
+  const redis = {
+    cacheDel: jest.fn(),
+    cacheDelPattern: jest.fn().mockResolvedValue(undefined),
+  };
+  let service: ButchersService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new ButchersService(
+      repo as never,
+      redis as never,
+      {} as never,
+      new OrderStateMachineService(),
+      {} as never,
+    );
+  });
+
+  it('lists customers of the JWT butcher and ignores a forged butcherId', async () => {
+    repo.findButcherIdByUser.mockResolvedValue({ id: 'butcher-a' });
+    repo.findCustomersPage.mockResolvedValue([]);
+    repo.countCustomers.mockResolvedValue(0);
+
+    await service.getCustomers(jwt('user-a'), {
+      page: '1',
+      butcherId: 'butcher-b',
+    });
+
+    expect(repo.findCustomersPage).toHaveBeenCalledWith(
+      'butcher-a',
+      undefined,
+      0,
+      20,
+    );
+    expect(repo.findCustomersPage.mock.calls[0][0]).not.toBe('butcher-b');
+  });
+
+  it('aggregates reports from JWT butcher orders only', async () => {
+    repo.findButcherIdByUser.mockResolvedValue({ id: 'butcher-a' });
+    const createdAt = new Date('2026-08-19T10:00:00.000+03:00');
+    repo.findOrdersForReports.mockResolvedValue([
+      {
+        id: 'paid-delivered',
+        customerId: 'c1',
+        productId: 'p1',
+        status: 'delivered',
+        paymentStatus: 'paid',
+        totalPrice: 100,
+        createdAt,
+        product: { id: 'p1', nameAr: 'لحم' },
+        items: [],
+      },
+      {
+        id: 'unpaid',
+        customerId: 'c2',
+        productId: 'p1',
+        status: 'pending',
+        paymentStatus: 'unpaid',
+        totalPrice: 50,
+        createdAt,
+        product: { id: 'p1', nameAr: 'لحم' },
+        items: [],
+      },
+      {
+        id: 'cancelled-paid',
+        customerId: 'c3',
+        productId: 'p1',
+        status: 'cancelled',
+        paymentStatus: 'paid',
+        totalPrice: 80,
+        createdAt,
+        product: { id: 'p1', nameAr: 'لحم' },
+        items: [],
+      },
+      {
+        id: 'paid-preparing',
+        customerId: 'c4',
+        productId: 'p2',
+        status: 'preparing',
+        paymentStatus: 'paid',
+        totalPrice: 40,
+        createdAt,
+        product: { id: 'p2', nameAr: 'دجاج' },
+        items: [],
+      },
+    ]);
+
+    const result = await service.getReports(jwt('user-a'), {
+      period: '30d',
+      butcherId: 'butcher-b',
+    });
+
+    expect(repo.findOrdersForReports).toHaveBeenCalledWith(
+      'butcher-a',
+      expect.any(Date),
+      expect.any(Date),
+    );
+    expect(repo.findOrdersForReports.mock.calls[0][0]).not.toBe('butcher-b');
+    expect(result.salesTotal).toBe(140);
+    expect(result.salesCount).toBe(2);
+    expect(result.avgOrderValue).toBe(70);
+    expect(result.classification).toEqual({
+      unpaid: 1,
+      cancelled: 1,
+      paidPreparing: 1,
+      paidDelivered: 1,
+      sales: 2,
+    });
+  });
+
+  it('refuses butcher A updating butcher B settings', async () => {
+    repo.findButcherOwner.mockResolvedValue({
+      id: 'butcher-b',
+      userId: 'user-b',
+    });
+    await expect(
+      service.updateButcher('butcher-b', jwt('user-a'), { isOpen: false }),
+    ).rejects.toMatchObject({ status: 403 } satisfies Partial<ApiException>);
+    expect(repo.updateButcher).not.toHaveBeenCalled();
+  });
+
+  it('updates settings via PUT me using the JWT butcher only', async () => {
+    repo.findButcherOwnerByUser.mockResolvedValue({
+      id: 'butcher-a',
+      userId: 'user-a',
+    });
+    repo.updateButcher.mockResolvedValue({ id: 'butcher-a', isOpen: false });
+    await service.updateButcher('me', jwt('user-a'), { isOpen: false });
+    expect(repo.findButcherOwnerByUser).toHaveBeenCalledWith('user-a');
+    expect(repo.updateButcher).toHaveBeenCalledWith('butcher-a', {
+      isOpen: false,
+    });
+  });
+});
+
 describe('Butcher product isolation', () => {
   const repo = {
     findButcherIdByUser: jest.fn(),
