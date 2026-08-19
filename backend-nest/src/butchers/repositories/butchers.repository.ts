@@ -637,4 +637,120 @@ export class ButchersRepository {
   countFavorites(butcherId: string) {
     return this.prisma.butcherFavorite.count({ where: { butcherId } });
   }
+
+  findOrdersForReports(butcherId: string, from: Date, to: Date) {
+    return this.prisma.butcherOrder.findMany({
+      where: {
+        butcherId,
+        createdAt: { gte: from, lte: to },
+      },
+      select: {
+        id: true,
+        customerId: true,
+        productId: true,
+        status: true,
+        paymentStatus: true,
+        totalPrice: true,
+        createdAt: true,
+        product: { select: { id: true, nameAr: true } },
+        items: {
+          select: {
+            productId: true,
+            linePrice: true,
+            weightKg: true,
+            product: { select: { id: true, nameAr: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async findCustomersPage(
+    butcherId: string,
+    search: string | undefined,
+    skip: number,
+    take: number,
+  ) {
+    const pattern = search ? `%${search.replace(/[%_]/g, '')}%` : null;
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        customerId: string;
+        arabicName: string;
+        displayName: string;
+        phone: string | null;
+        avatar: string | null;
+        orderCount: number;
+        paidTotal: number;
+        lastOrderAt: Date;
+        lastOrderNumber: string | null;
+      }>
+    >`
+      SELECT
+        o."customerId" AS "customerId",
+        u."arabicName" AS "arabicName",
+        u."displayName" AS "displayName",
+        u.phone AS phone,
+        u.avatar AS avatar,
+        COUNT(*)::int AS "orderCount",
+        COALESCE(
+          SUM(
+            CASE
+              WHEN o."paymentStatus" = 'paid' AND o.status <> 'cancelled'
+              THEN o."totalPrice" ELSE 0
+            END
+          ),
+          0
+        )::float AS "paidTotal",
+        MAX(o."createdAt") AS "lastOrderAt",
+        (
+          SELECT b."orderNumber"
+          FROM "ButcherOrder" b
+          WHERE b."butcherId" = o."butcherId"
+            AND b."customerId" = o."customerId"
+          ORDER BY b."createdAt" DESC
+          LIMIT 1
+        ) AS "lastOrderNumber"
+      FROM "ButcherOrder" o
+      INNER JOIN "User" u ON u.id = o."customerId"
+      WHERE o."butcherId" = ${butcherId}
+        ${
+          pattern
+            ? Prisma.sql`AND (
+                u."arabicName" ILIKE ${pattern}
+                OR u."displayName" ILIKE ${pattern}
+                OR COALESCE(u.phone, '') ILIKE ${pattern}
+              )`
+            : Prisma.sql``
+        }
+      GROUP BY o."customerId", o."butcherId", u."arabicName", u."displayName", u.phone, u.avatar
+      ORDER BY MAX(o."createdAt") DESC
+      OFFSET ${skip}
+      LIMIT ${take}
+    `;
+    return rows;
+  }
+
+  async countCustomers(butcherId: string, search: string | undefined) {
+    const pattern = search ? `%${search.replace(/[%_]/g, '')}%` : null;
+    const rows = await this.prisma.$queryRaw<Array<{ count: number }>>`
+      SELECT COUNT(*)::int AS count
+      FROM (
+        SELECT o."customerId"
+        FROM "ButcherOrder" o
+        INNER JOIN "User" u ON u.id = o."customerId"
+        WHERE o."butcherId" = ${butcherId}
+          ${
+            pattern
+              ? Prisma.sql`AND (
+                  u."arabicName" ILIKE ${pattern}
+                  OR u."displayName" ILIKE ${pattern}
+                  OR COALESCE(u.phone, '') ILIKE ${pattern}
+                )`
+              : Prisma.sql``
+          }
+        GROUP BY o."customerId"
+      ) t
+    `;
+    return rows[0]?.count ?? 0;
+  }
 }

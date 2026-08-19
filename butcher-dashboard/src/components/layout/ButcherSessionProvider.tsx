@@ -11,15 +11,8 @@ import {
 } from 'react';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
-import {
-  clearSession,
-  getStoredButcher,
-  getStoredUser,
-  tryRestoreSession,
-  type AuthUser,
-} from '@/services/auth.service';
+import { persistButcher, getStoredButcher, getStoredUser, tryRestoreSession, type AuthUser, clearSession, NO_BUTCHER_MESSAGE } from '@/services/auth.service';
 import { fetchMyButcher, type ButcherProfile } from '@/services/butcher.service';
-import { NO_BUTCHER_MESSAGE } from '@/services/auth.service';
 
 type SessionValue = {
   user: AuthUser | null;
@@ -67,6 +60,7 @@ export function ButcherSessionProvider({ children }: { children: ReactNode }) {
 
   const refreshButcher = useCallback(async () => {
     const profile = await fetchMyButcher();
+    persistButcher(profile);
     setButcher(profile);
   }, []);
 

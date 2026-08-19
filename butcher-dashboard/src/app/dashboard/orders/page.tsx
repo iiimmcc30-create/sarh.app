@@ -137,7 +137,7 @@ export default function OrdersPage() {
             </tbody>
           </table>
           <div className="px-4 pb-4">
-            <Pagination page={page} total={total} limit={limit} onPage={setPage} />
+            <Pagination page={page} total={total} limit={limit} onPage={setPage} noun="طلب" />
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ type Handler = () => void;
 
 const listeners = new Map<string, Set<Handler>>();
 
-export type LiveTopic = 'orders' | 'dashboard' | 'products' | 'inventory';
+export type LiveTopic = 'orders' | 'dashboard' | 'products' | 'inventory' | 'customers' | 'reports';
 
 export function subscribeLiveRefresh(topic: LiveTopic, handler: Handler): () => void {
   const set = listeners.get(topic) ?? new Set<Handler>();
@@ -22,6 +22,8 @@ export function notifyAllLiveRefresh(): void {
   notifyLiveRefresh('dashboard');
   notifyLiveRefresh('products');
   notifyLiveRefresh('inventory');
+  notifyLiveRefresh('customers');
+  notifyLiveRefresh('reports');
 }
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;

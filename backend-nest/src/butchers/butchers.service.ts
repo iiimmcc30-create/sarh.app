@@ -30,6 +30,12 @@ import {
   startOfTodayRiyadh,
 } from './lib/order-list-query';
 import {
+  isoWeekKeyFromDay,
+  parseReportsQuery,
+  riyadhCalendarDay,
+} from './lib/reports-query';
+import { isCompletedSale, SALES_DEFINITION } from './lib/sales.util';
+import {
   sumOrderLinePrices,
   validateAndPriceOrderLine,
 } from './lib/order-line.util';
@@ -551,6 +557,152 @@ export class ButchersService {
       sellableQuantity: sellableQuantity(product),
       stock: classifyProductStock(product),
     }));
+  }
+
+  async getCustomers(user: JwtPayload, rawQuery: Record<string, unknown> = {}) {
+    const butcher = await this.repo.findButcherIdByUser(user.userId);
+    if (!butcher) {
+      throwApi(403, 'no_butcher_profile', 'ليس لديك ملف ملحمة مسجل');
+    }
+    const parsed = parseOrderListQuery({
+      page: rawQuery.page ?? '1',
+      limit: rawQuery.limit ?? '20',
+      q: rawQuery.q,
+      search: rawQuery.search,
+    });
+    if (!parsed.ok) {
+      throwApi(400, 'validation_error', parsed.message);
+    }
+    const skip = (parsed.query.page - 1) * parsed.query.limit;
+    const [rows, total] = await Promise.all([
+      this.repo.findCustomersPage(
+        butcher.id,
+        parsed.query.search,
+        skip,
+        parsed.query.limit,
+      ),
+      this.repo.countCustomers(butcher.id, parsed.query.search),
+    ]);
+    const items = rows.map((row) => ({
+      customerId: row.customerId,
+      name: row.arabicName || row.displayName || 'عميل',
+      arabicName: row.arabicName,
+      displayName: row.displayName,
+      phone: row.phone,
+      avatar: row.avatar,
+      orderCount: Number(row.orderCount),
+      paidTotal: Number(row.paidTotal),
+      lastOrderAt: row.lastOrderAt,
+      lastOrderNumber: row.lastOrderNumber,
+    }));
+    return {
+      items,
+      total: Number(total),
+      page: parsed.query.page,
+      limit: parsed.query.limit,
+      hasMore: skip + items.length < Number(total),
+    };
+  }
+
+  async getReports(user: JwtPayload, rawQuery: Record<string, unknown> = {}) {
+    const butcher = await this.repo.findButcherIdByUser(user.userId);
+    if (!butcher) {
+      throwApi(403, 'no_butcher_profile', 'ليس لديك ملف ملحمة مسجل');
+    }
+    const parsed = parseReportsQuery(rawQuery);
+    if (!parsed.ok) {
+      throwApi(400, 'validation_error', parsed.message);
+    }
+    const orders = await this.repo.findOrdersForReports(
+      butcher.id,
+      parsed.query.from,
+      parsed.query.to,
+    );
+    const salesOrders = orders.filter(isCompletedSale);
+    const salesTotal = salesOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const salesCount = salesOrders.length;
+    const avgOrderValue = salesCount > 0 ? salesTotal / salesCount : 0;
+
+    const classification = {
+      unpaid: orders.filter((o) => o.paymentStatus === 'unpaid').length,
+      cancelled: orders.filter((o) => o.status === 'cancelled').length,
+      paidPreparing: orders.filter(
+        (o) => o.paymentStatus === 'paid' && o.status === 'preparing',
+      ).length,
+      paidDelivered: orders.filter(
+        (o) => o.paymentStatus === 'paid' && o.status === 'delivered',
+      ).length,
+      sales: salesCount,
+    };
+
+    const productMap: Record<
+      string,
+      { productId: string; nameAr: string; quantity: number; revenue: number }
+    > = {};
+    for (const order of salesOrders) {
+      const lines =
+        order.items.length > 0
+          ? order.items
+          : [
+              {
+                productId: order.productId,
+                linePrice: order.totalPrice,
+                weightKg: 1,
+                product: order.product,
+              },
+            ];
+      for (const line of lines) {
+        const key = line.productId;
+        if (!productMap[key]) {
+          productMap[key] = {
+            productId: key,
+            nameAr: line.product?.nameAr ?? order.product?.nameAr ?? 'منتج',
+            quantity: 0,
+            revenue: 0,
+          };
+        }
+        productMap[key].quantity += line.weightKg ?? 1;
+        productMap[key].revenue += line.linePrice;
+      }
+    }
+    const ranked = Object.values(productMap).sort(
+      (a, b) => b.revenue - a.revenue,
+    );
+
+    const dailyMap: Record<string, number> = {};
+    const weeklyMap: Record<string, number> = {};
+    const monthlyMap: Record<string, number> = {};
+    for (const order of salesOrders) {
+      const day = riyadhCalendarDay(order.createdAt);
+      dailyMap[day] = (dailyMap[day] ?? 0) + order.totalPrice;
+      const week = isoWeekKeyFromDay(day);
+      weeklyMap[week] = (weeklyMap[week] ?? 0) + order.totalPrice;
+      const month = day.slice(0, 7);
+      monthlyMap[month] = (monthlyMap[month] ?? 0) + order.totalPrice;
+    }
+
+    return {
+      definition: SALES_DEFINITION,
+      period: parsed.query.period,
+      from: parsed.query.from,
+      to: parsed.query.to,
+      salesTotal,
+      salesCount,
+      avgOrderValue,
+      orderCountInPeriod: orders.length,
+      classification,
+      topProducts: ranked.slice(0, 5),
+      bottomProducts: [...ranked].reverse().slice(0, 5),
+      daily: Object.entries(dailyMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, total]) => ({ date, total })),
+      weekly: Object.entries(weeklyMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([week, total]) => ({ week, total })),
+      monthly: Object.entries(monthlyMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, total]) => ({ month, total })),
+    };
   }
 
   async createProduct(user: JwtPayload, body: unknown) {
