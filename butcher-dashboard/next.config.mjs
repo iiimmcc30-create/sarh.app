@@ -1,14 +1,49 @@
 /** @type {import('next').NextConfig} */
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001';
-// Guard: proxy must target backend (:3001), never this dashboard (:3002) or admin (:3000)
-const apiUrl = /:(3000|3002|3003)(\/|$)/.test(rawApiUrl)
-  ? 'http://127.0.0.1:3001'
-  : rawApiUrl.replace(/\/$/, '').replace('localhost', '127.0.0.1');
+function resolveApiOrigin() {
+  let raw = (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001')
+    .trim()
+    .replace(/^['"]|['"]$/g, '');
+  if (!raw) raw = 'http://127.0.0.1:3001';
+  if (!/^https?:\/\//i.test(raw)) {
+    raw = `https://${raw}`;
+  }
+  raw = raw.replace(/\/$/, '').replace(/\/api$/i, '');
+  raw = raw.replace('localhost', '127.0.0.1');
+  if (/:(3000|3002|3003)(\/|$)/.test(raw)) {
+    raw = 'http://127.0.0.1:3001';
+  }
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    if (
+      process.env.VERCEL &&
+      (url.hostname === '127.0.0.1' || url.hostname === 'localhost')
+    ) {
+      return null;
+    }
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+const apiUrl = resolveApiOrigin() ?? (process.env.VERCEL ? 'https://sarh-new4.onrender.com' : null);
 
 const nextConfig = {
-  // Vercel uses its own output tracing; standalone is for Docker/self-host.
   ...(process.env.VERCEL ? {} : { output: 'standalone' }),
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+    ];
+  },
   async rewrites() {
+    if (!apiUrl) return [];
     return [
       {
         source: '/api/:path*',

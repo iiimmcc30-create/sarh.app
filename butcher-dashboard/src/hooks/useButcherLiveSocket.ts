@@ -51,7 +51,18 @@ export function useButcherLiveSocket(butcherId: string | null) {
       socket.on(event, onEvent);
     }
 
+    const reconnectIfNeeded = () => {
+      if (!socket.connected) socket.connect();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') reconnectIfNeeded();
+    };
+    window.addEventListener('online', reconnectIfNeeded);
+    document.addEventListener('visibilitychange', onVisible);
+
     return () => {
+      window.removeEventListener('online', reconnectIfNeeded);
+      document.removeEventListener('visibilitychange', onVisible);
       for (const event of USER_EVENTS) {
         socket.off(event, onEvent);
       }

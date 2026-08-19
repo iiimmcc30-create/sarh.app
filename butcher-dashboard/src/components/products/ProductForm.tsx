@@ -99,10 +99,10 @@ export function ProductForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1622]/70 p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0B1622]/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:items-center">
       <form
         onSubmit={submit}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-surface p-6"
+        className="max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-surface p-6"
       >
         <h2 className="text-lg font-semibold text-ink">{product ? 'تعديل المنتج' : 'إضافة منتج'}</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">

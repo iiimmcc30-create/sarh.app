@@ -149,7 +149,39 @@ export default function ProductsPage() {
       {visible.length === 0 ? (
         <EmptyState icon={Package} title="لا توجد منتجات" description="أضف منتجًا أو غيّر فلتر البحث." />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-white/5 bg-surface">
+        <>
+          <div className="space-y-3 md:hidden">
+            {visible.map((product) => (
+              <div key={product.id} className="rounded-2xl border border-white/5 bg-surface p-4">
+                <div className="flex items-center gap-3">
+                  {product.images[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={product.images[0]} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                  ) : null}
+                  <div className="min-w-0">
+                    <p className="font-medium text-ink">{product.nameAr}</p>
+                    <p className="text-xs text-ink-muted">{CATEGORY_LABELS[product.category]}</p>
+                    <p className="mt-1 text-sm text-ink-secondary">{pricingLabel(product)}</p>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-ink-muted">
+                  إجمالي {product.availableQuantity} · محجوز {product.reservedQuantity}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(product)}>
+                    تعديل
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => void toggleStock(product)}>
+                    {product.inStock ? 'إخفاء' : 'إظهار'}
+                  </Button>
+                  <Button type="button" size="sm" variant="danger" onClick={() => setDeleting(product)}>
+                    حذف
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto rounded-2xl border border-white/5 bg-surface md:block">
           <table className="min-w-full text-sm">
             <thead className="text-ink-muted">
               <tr className="border-b border-white/5">
@@ -210,6 +242,7 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {editing !== undefined ? (

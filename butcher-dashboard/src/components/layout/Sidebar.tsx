@@ -36,7 +36,7 @@ export function Sidebar() {
   const open = butcher?.isOpen === true;
 
   return (
-    <aside className="flex h-screen w-72 shrink-0 flex-col border-e border-white/5 bg-surface">
+    <aside className="hidden h-dvh w-72 shrink-0 flex-col border-e border-white/5 bg-surface md:flex">
       <div className="border-b border-white/5 p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/15 text-sm font-bold text-brand">

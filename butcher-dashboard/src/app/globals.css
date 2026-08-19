@@ -17,12 +17,15 @@
 
 html {
   direction: rtl;
+  height: 100%;
 }
 
 body {
   color: var(--ink);
   background: var(--background);
   font-family: var(--font-sarh), 'IBM Plex Sans Arabic', sans-serif;
+  min-height: 100dvh;
+  padding: 0;
 }
 
 * {

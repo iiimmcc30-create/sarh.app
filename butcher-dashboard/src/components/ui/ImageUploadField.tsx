@@ -11,16 +11,19 @@ function AlbumFileInput({
   inputRef,
   disabled,
   onFile,
+  capture,
 }: {
   inputRef: RefObject<HTMLInputElement>;
   disabled?: boolean;
   onFile: (file: File | undefined) => void;
+  capture?: boolean;
 }) {
   return (
     <input
       ref={inputRef}
       type="file"
       accept={ALBUM_ACCEPT}
+      capture={capture ? 'environment' : undefined}
       className="sr-only"
       disabled={disabled}
       onChange={(e) => {
@@ -42,6 +45,7 @@ export function ImageUploadField({
   onChange: (url: string | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -73,6 +77,7 @@ export function ImageUploadField({
       setPreview(null);
       setBusy(false);
       if (inputRef.current) inputRef.current.value = '';
+      if (cameraRef.current) cameraRef.current.value = '';
     }
   };
 
@@ -87,6 +92,12 @@ export function ImageUploadField({
     <div className="space-y-2">
       <p className="text-sm text-ink-muted">{label}</p>
       <AlbumFileInput inputRef={inputRef} disabled={disabled || busy} onFile={(file) => void onFile(file)} />
+      <AlbumFileInput
+        inputRef={cameraRef}
+        disabled={disabled || busy}
+        capture
+        onFile={(file) => void onFile(file)}
+      />
       <button
         type="button"
         disabled={disabled || busy}
@@ -106,6 +117,15 @@ export function ImageUploadField({
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" variant="secondary" disabled={disabled || busy} onClick={pickFromAlbum}>
           {shown ? 'استبدال من الألبوم' : 'اختيار من الألبوم'}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={disabled || busy}
+          onClick={() => cameraRef.current?.click()}
+        >
+          كاميرا
         </Button>
         {shown ? (
           <Button type="button" size="sm" variant="ghost" disabled={disabled || busy} onClick={clear}>

@@ -101,7 +101,32 @@ export default function OrdersPage() {
       ) : items.length === 0 ? (
         <EmptyState icon={ClipboardList} title="لا توجد طلبات" description="عند ورود طلبات جديدة ستظهر في هذه القائمة." />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-white/5 bg-surface">
+        <>
+          <div className="space-y-3 md:hidden">
+            {items.map((order) => (
+              <Link
+                key={order.id}
+                href={`/dashboard/orders/${order.id}`}
+                className="block rounded-2xl border border-white/5 bg-surface p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium text-ink">{order.orderNumber}</p>
+                  <StatusBadge status={order.status} deliveryType={order.deliveryType} />
+                </div>
+                <p className="mt-2 text-sm text-ink-secondary">
+                  {order.customer?.arabicName || order.customer?.displayName || '—'}
+                </p>
+                <p className="mt-1 text-sm text-ink">
+                  {order.totalPrice.toLocaleString('ar-SA')} ر.س
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">
+                  {new Date(order.createdAt).toLocaleString('ar-SA')}
+                </p>
+              </Link>
+            ))}
+            <Pagination page={page} total={total} limit={limit} onPage={setPage} noun="طلب" />
+          </div>
+          <div className="hidden overflow-x-auto rounded-2xl border border-white/5 bg-surface md:block">
           <table className="min-w-full text-sm">
             <thead className="text-ink-muted">
               <tr className="border-b border-white/5">
@@ -139,7 +164,8 @@ export default function OrdersPage() {
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} onPage={setPage} noun="طلب" />
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

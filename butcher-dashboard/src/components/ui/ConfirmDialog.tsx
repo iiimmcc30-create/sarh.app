@@ -23,7 +23,7 @@ export function ConfirmDialog({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1622]/70 p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0B1622]/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:items-center">
       <div
         role="dialog"
         aria-modal="true"
