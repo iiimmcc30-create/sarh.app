@@ -67,7 +67,12 @@ export default function LoginPage() {
       await loginAndRequireButcher(loginValue, passwordValue);
       window.location.assign('/dashboard');
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'فشل تسجيل الدخول'));
+      const message = getApiErrorMessage(err, 'فشل تسجيل الدخول');
+      setError(
+        message === 'بيانات الدخول غير صحيحة'
+          ? 'بيانات الدخول غير صحيحة. استخدم كلمة مرور الحساب وليس رمز التحقق، وتحقق من رقم الجوال أو البريد.'
+          : message,
+      );
     } finally {
       setLoading(false);
     }
@@ -92,7 +97,7 @@ export default function LoginPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm text-ink-muted">البريد / اسم المستخدم</label>
+            <label className="mb-1 block text-sm text-ink-muted">الجوال / البريد / اسم المستخدم</label>
             <input
               name="login"
               value={login}
@@ -125,7 +130,8 @@ export default function LoginPage() {
           </Button>
         </form>
         <p className="mt-6 text-center text-xs text-ink-muted">
-          لحسابات الملاحم المعتمدة فقط. إدارة المنصة تتم من لوحة الإدارة المنفصلة.
+          نفس حساب الملحمة في تطبيق سرح: كلمة المرور وليست رمز SMS. رقم الجوال مثل 05xxxxxxxx أو
+          +9665xxxxxxxx. لحسابات الملاحم المعتمدة فقط، وليست لوحة إدارة المنصة.
         </p>
       </div>
     </div>
