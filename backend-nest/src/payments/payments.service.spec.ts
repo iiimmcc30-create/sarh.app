@@ -29,6 +29,7 @@ describe('PaymentsService', () => {
     markPaymentFailed: jest.fn(),
     updatePaymentCheckout: jest.fn(),
     findPaymentByIdFull: jest.fn(),
+    findPaymentOwnedByUser: jest.fn(),
   };
   const logger = {
     info: jest.fn(),
@@ -159,6 +160,34 @@ describe('PaymentsService', () => {
       status: 500,
       body: { error: 'webhook_processing_failed' },
     });
+  });
+
+  it('does not call NI sync when only internal merchant ref exists', async () => {
+    repo.findPaymentOwnedByUser.mockResolvedValue({
+      id: 'pay-ftr',
+      status: 'pending',
+      orderId: 'FTR-4916FD-MSPXSTSH',
+      transactionId: null,
+    });
+    repo.findPaymentByIdFull.mockResolvedValue({
+      id: 'pay-ftr',
+      status: 'pending',
+      orderId: 'FTR-4916FD-MSPXSTSH',
+      transactionId: null,
+    });
+
+    const result = await service.syncPayment(
+      { userId: 'u1', role: 'USER' } as never,
+      'pay-ftr',
+    );
+
+    expect(result).toMatchObject({
+      paymentId: 'pay-ftr',
+      status: 'pending',
+      synced: false,
+      outcome: 'processing',
+    });
+    expect(result.messageAr).toContain('N-Genius');
   });
 
   it('recovers a stale pending payment that never received a checkout URL', async () => {
