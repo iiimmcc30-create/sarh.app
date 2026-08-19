@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ProductImagesField } from '@/components/ui/ImageUploadField';
 import { Button } from '@/components/ui/Button';
 import {
   CUT_OPTIONS,
@@ -15,7 +16,7 @@ const emptyForm = {
   nameAr: '',
   nameEn: '',
   category: 'lamb' as MeatCategory,
-  images: '',
+  images: [] as string[],
   pricePerKg: '',
   priceFixed: '',
   availableCuts: ['whole'] as string[],
@@ -51,7 +52,7 @@ export function ProductForm({
       nameAr: product.nameAr,
       nameEn: product.nameEn,
       category: product.category,
-      images: product.images.join('\n'),
+      images: product.images ?? [],
       pricePerKg: product.pricePerKg?.toString() ?? '',
       priceFixed: product.priceFixed?.toString() ?? '',
       availableCuts: product.availableCuts.length ? product.availableCuts : ['whole'],
@@ -77,15 +78,11 @@ export function ProductForm({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const images = form.images
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean);
     const payload: ProductWritePayload = {
       nameAr: form.nameAr.trim(),
       nameEn: form.nameEn.trim() || form.nameAr.trim(),
       category: form.category,
-      images,
+      images: form.images,
       pricePerKg: form.pricePerKg ? Number(form.pricePerKg) : null,
       priceFixed: form.priceFixed ? Number(form.priceFixed) : null,
       availableCuts: form.availableCuts,
@@ -222,15 +219,11 @@ export function ProductForm({
             rows={2}
           />
         </label>
-        <label className="mt-3 block text-sm text-ink-muted">
-          روابط الصور (سطر لكل رابط)
-          <textarea
-            value={form.images}
-            onChange={(e) => setForm({ ...form, images: e.target.value })}
-            className="mt-1 w-full rounded-xl border border-white/10 bg-surface-raised px-3 py-2 text-ink"
-            rows={2}
-          />
-        </label>
+        <ProductImagesField
+          values={form.images}
+          disabled={busy}
+          onChange={(images) => setForm({ ...form, images })}
+        />
         <label className="mt-3 flex items-center gap-2 text-sm text-ink-secondary">
           <input
             type="checkbox"

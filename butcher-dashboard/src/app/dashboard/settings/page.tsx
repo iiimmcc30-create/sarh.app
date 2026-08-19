@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useButcherSession } from '@/components/layout/ButcherSessionProvider';
+import { ImageUploadField } from '@/components/ui/ImageUploadField';
 import { persistButcher } from '@/services/auth.service';
 import { getApiErrorMessage } from '@/services/api.client';
 import {
@@ -90,6 +91,20 @@ export default function SettingsPage() {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
+  const persistImageField = async (field: 'logo' | 'cover', url: string | null) => {
+    setField(field, url ?? '');
+    setError('');
+    setSaved('');
+    try {
+      const updated = await updateMyButcher({ [field]: url });
+      persistButcher(updated);
+      await refreshButcher();
+      setSaved(url ? 'تم حفظ الصورة' : 'تم حذف الصورة');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'تعذر حفظ الصورة'));
+    }
+  };
+
   const toggleDay = (id: string) => {
     setForm((prev) => {
       if (!prev) return prev;
@@ -160,12 +175,20 @@ export default function SettingsPage() {
           <Field label="اسم الملحمة (إنجليزي)">
             <input required value={form.nameEn} onChange={(e) => setField('nameEn', e.target.value)} className={inputClass} />
           </Field>
-          <Field label="رابط الشعار">
-            <input value={form.logo} onChange={(e) => setField('logo', e.target.value)} className={inputClass} dir="ltr" />
-          </Field>
-          <Field label="رابط صورة الغلاف">
-            <input value={form.cover} onChange={(e) => setField('cover', e.target.value)} className={inputClass} dir="ltr" />
-          </Field>
+          <div className="md:col-span-2 grid gap-4 md:grid-cols-2">
+            <ImageUploadField
+              label="شعار الملحمة"
+              value={form.logo || null}
+              disabled={saving}
+              onChange={(url) => void persistImageField('logo', url)}
+            />
+            <ImageUploadField
+              label="صورة الغلاف"
+              value={form.cover || null}
+              disabled={saving}
+              onChange={(url) => void persistImageField('cover', url)}
+            />
+          </div>
           <Field label="الهاتف">
             <input required value={form.phone} onChange={(e) => setField('phone', e.target.value)} className={inputClass} dir="ltr" />
           </Field>

@@ -122,7 +122,7 @@ const updateProductSchema = z
         'special_orders',
       ])
       .optional(),
-    images: z.array(z.string().url()).min(1).max(5).optional(),
+    images: z.array(z.string().url()).min(0).max(5).optional(),
     pricePerKg: z.number().positive().optional().nullable(),
     priceFixed: z.number().positive().optional().nullable(),
     pricingNoteAr: z.string().max(100).optional().nullable(),
