@@ -12,9 +12,11 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import {
   CUSTOMER_FLOW_LABELS,
   CUSTOMER_ORDER_FLOW,
+  customerOrderHeadline,
   firstProductImage,
   flowReached,
   formatOrderStamp,
+  isPayableButcherOrder,
   orderLineItems,
   orderMoneySummary,
   timelineStamp,
@@ -22,8 +24,8 @@ import {
 import { rtlBackIcon } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
-import { ORDER_STATUS_COLORS, orderStatusLabel } from '@/services/butcherData';
-import { formatCurrency } from '@/services/butcherOrders';
+import { ORDER_STATUS_COLORS } from '@/services/butcherData';
+import { completeButcherOrderPayment, formatCurrency } from '@/services/butcherOrders';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -45,6 +47,7 @@ export default function OrderDetailsScreen() {
   const s = useThemedStyles(({ colors }) => createStyles(colors));
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
 
   const loadOrder = useCallback(async () => {
     if (!id || !accessToken) {
@@ -92,7 +95,9 @@ export default function OrderDetailsScreen() {
   }
 
   const statusColor = ORDER_STATUS_COLORS[order.status] ?? colors.textMuted;
-  const statusText = orderStatusLabel(order.status, order.deliveryType);
+  const headline = customerOrderHeadline(order);
+  const statusText = headline.label;
+  const canPay = isPayableButcherOrder(order) && Boolean(accessToken);
   const isPickup = order.deliveryType !== 'delivery';
   const customerName = order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
   const customerPhone = order.customer?.phone as string | undefined;
@@ -121,6 +126,23 @@ export default function OrderDetailsScreen() {
       }),
     );
 
+  const handleCompletePayment = async () => {
+    if (!accessToken || paying) return;
+    setPaying(true);
+    try {
+      const outcome = await completeButcherOrderPayment({ accessToken, order });
+      if (outcome === 'blocked') {
+        await loadOrder();
+        return;
+      }
+      if (outcome === 'cancelled' || outcome === 'failed') {
+        await loadOrder();
+      }
+    } finally {
+      setPaying(false);
+    }
+  };
+
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <CoverTrailRow justify="space-between" style={s.navRow}>
@@ -142,7 +164,7 @@ export default function OrderDetailsScreen() {
           >
             {delivered ? <AppIcon name="checkmark" size={13} color="#fff" /> : null}
             <Text style={[s.statusBadgeText, { color: delivered ? '#fff' : statusColor }]}>
-              {CUSTOMER_FLOW_LABELS[order.status] ?? statusText}
+              {statusText}
             </Text>
           </View>
           <RtlTextShell flex>
@@ -152,6 +174,39 @@ export default function OrderDetailsScreen() {
             <RtlText style={s.orderStamp}>{formatOrderStamp(order.createdAt)}</RtlText>
           </RtlTextShell>
         </CoverTrailRow>
+
+        {headline.awaitingPayment ? (
+          <View style={s.card}>
+            <RtlTextShell>
+              <RtlText style={s.sectionTitle}>لم يكتمل الدفع</RtlText>
+              <RtlText style={s.payHint}>
+                يمكنك إكمال الدفع لهذا الطلب دون إنشاء طلب جديد. الملحمة لا تقبل الطلب قبل السداد.
+              </RtlText>
+            </RtlTextShell>
+            <Pressable
+              style={({ pressed }) => [s.payBtn, (pressed || paying) && { opacity: 0.88 }]}
+              onPress={() => void handleCompletePayment()}
+              disabled={paying || !canPay}
+            >
+              {paying ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={s.payBtnText}>إكمال الدفع</Text>
+              )}
+            </Pressable>
+          </View>
+        ) : null}
+
+        {headline.expired ? (
+          <View style={s.card}>
+            <RtlTextShell>
+              <RtlText style={s.sectionTitle}>انتهت صلاحية الطلب</RtlText>
+              <RtlText style={s.payHint}>
+                انتهت مهلة الدفع وتم تحرير الكمية. يمكنك إنشاء طلب جديد من الملحمة.
+              </RtlText>
+            </RtlTextShell>
+          </View>
+        ) : null}
 
         <View style={s.card}>
           <RtlTextShell>
@@ -435,6 +490,25 @@ function createStyles(colors: ThemeColors) {
     cancelNote: {
       ...butcherTypography.secondary,
       color: colors.danger,
+    },
+    payHint: {
+      ...butcherTypography.secondary,
+      color: colors.textMuted,
+      marginTop: 4,
+    },
+    payBtn: {
+      marginTop: spacing.sm,
+      backgroundColor: colors.electricBright,
+      borderRadius: 14,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    payBtnText: {
+      ...butcherTypography.emphasis,
+      color: '#fff',
+      writingDirection: 'rtl',
     },
     trackRow: {
       flexDirection: 'row-reverse',

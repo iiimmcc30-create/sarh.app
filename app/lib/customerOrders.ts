@@ -15,12 +15,67 @@ export const CUSTOMER_ORDER_FLOW: OrderStatus[] = [
 
 export const CUSTOMER_FLOW_LABELS: Record<string, string> = {
   pending: 'قيد الانتظار',
-  confirmed: 'مؤكد',
+  confirmed: 'تم قبول الطلب',
   preparing: 'قيد التحضير',
   ready: 'جاهز',
-  delivered: 'تم التسليم',
+  delivered: 'مكتمل',
   cancelled: 'ملغي',
 };
+
+/** Same copy as OrderLifecycleService unpaid-order expiry. */
+export const UNPAID_ORDER_EXPIRED_REASON =
+  'انتهت مهلة الدفع لهذا الطلب وتم تحرير الكمية المحجوزة';
+
+export function isPayableButcherOrder(order: {
+  status?: string | null;
+  paymentStatus?: string | null;
+}): boolean {
+  return (
+    order.status === 'pending' &&
+    (order.paymentStatus === 'unpaid' || order.paymentStatus === 'failed')
+  );
+}
+
+export function isUnpaidOrderExpired(order: {
+  status?: string | null;
+  cancellationReason?: string | null;
+}): boolean {
+  return (
+    order.status === 'cancelled' &&
+    Boolean(order.cancellationReason) &&
+    String(order.cancellationReason).includes('انتهت مهلة الدفع')
+  );
+}
+
+export function customerOrderHeadline(order: {
+  status?: string | null;
+  paymentStatus?: string | null;
+  cancellationReason?: string | null;
+}): { label: string; awaitingPayment: boolean; expired: boolean } {
+  if (isUnpaidOrderExpired(order)) {
+    return { label: 'انتهت صلاحية الطلب', awaitingPayment: false, expired: true };
+  }
+  if (order.status === 'cancelled') {
+    return { label: 'ملغي', awaitingPayment: false, expired: false };
+  }
+  if (order.status === 'delivered') {
+    return { label: 'مكتمل', awaitingPayment: false, expired: false };
+  }
+  if (isPayableButcherOrder(order)) {
+    return { label: 'بانتظار الدفع', awaitingPayment: true, expired: false };
+  }
+  if (order.paymentStatus === 'paid' && order.status === 'pending') {
+    return { label: 'بانتظار قبول الملحمة', awaitingPayment: false, expired: false };
+  }
+  if (order.status === 'confirmed') {
+    return { label: 'تم قبول الطلب', awaitingPayment: false, expired: false };
+  }
+  return {
+    label: CUSTOMER_FLOW_LABELS[String(order.status ?? '')] ?? 'قيد الانتظار',
+    awaitingPayment: false,
+    expired: false,
+  };
+}
 
 export function formatOrderDatePart(iso?: string | null): string {
   if (!iso) return '';

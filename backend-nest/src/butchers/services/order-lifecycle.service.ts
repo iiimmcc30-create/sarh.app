@@ -358,15 +358,8 @@ export class OrderLifecycleService {
       SELECT o.id
       FROM "ButcherOrder" o
       WHERE o.status = 'pending'
-        AND o."paymentStatus" = 'unpaid'
+        AND o."paymentStatus" IN ('unpaid', 'failed')
         AND o."createdAt" < ${cutoff}
-        AND NOT EXISTS (
-          SELECT 1
-          FROM "Payment" p
-          WHERE p."referenceType" = 'butcher_order'
-            AND p."referenceId" = o.id
-            AND p.status = 'pending'
-        )
       ORDER BY o."createdAt" ASC
       LIMIT ${limit}
     `;
@@ -449,6 +442,14 @@ export class OrderLifecycleService {
 
         if (params.nextStatus === 'cancelled') {
           await this.releaseReservedInventory(tx, inventoryLines);
+          await tx.payment.updateMany({
+            where: {
+              referenceType: 'butcher_order',
+              referenceId: params.orderId,
+              status: 'pending',
+            },
+            data: { status: 'failed' },
+          });
         }
 
         if (params.nextStatus === 'delivered') {

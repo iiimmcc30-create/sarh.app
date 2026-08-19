@@ -420,6 +420,12 @@ export class PaymentsService
 
     const isDev = isNiSandboxMockMode();
     let checkoutUrl: string;
+    const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
+    const cancelUrl =
+      type === 'butcher_order' && referenceId
+        ? `${appUrl}/payment/cancel?context=butcher_order&orderId=${encodeURIComponent(referenceId)}`
+        : `${appUrl}/payment/cancel`;
+    const redirectUrl = `${appUrl}/payment/result?paymentId=${payment.id}`;
 
     if (isDev) {
       await new Promise((r) => setTimeout(r, 300));
@@ -429,8 +435,8 @@ export class PaymentsService
         amount,
         currency,
         description: descriptionAr || description || 'سرح Payment',
-        redirectUrl: `${process.env.APP_URL ?? 'https://sarh-app.up.railway.app'}/payment/result?paymentId=${payment.id}`,
-        cancelUrl: `${process.env.APP_URL ?? 'https://sarh-app.up.railway.app'}/payment/cancel`,
+        redirectUrl,
+        cancelUrl,
         firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
         email: contact?.email ?? '',
         customData: {
@@ -449,15 +455,14 @@ export class PaymentsService
       });
     } else {
       validateNiEnvironment(this.niLog);
-      const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
       const created = await this.integrationCheckout.createHostedCheckout({
         paymentId: payment.id,
         merchantOrderReference: orderReference,
         amount,
         currency,
         description: descriptionAr || description || 'سرح Payment',
-        redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}`,
-        cancelUrl: `${appUrl}/payment/cancel`,
+        redirectUrl,
+        cancelUrl,
         firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
         email: contact?.email ?? '',
         customData: {
@@ -599,7 +604,13 @@ export class PaymentsService
 
     if ('existingPending' in txResult && txResult.existingPending) {
       const existingPending = txResult.existingPending;
-      const reused = await this.tryReuseExistingPendingPayment(existingPending);
+      // Butcher-order retries must open a new NI session. Reusing a pending
+      // checkout after failed/cancelled card attempts returns the shopper to
+      // the same invalid hosted page.
+      const reused =
+        type === 'butcher_order'
+          ? null
+          : await this.tryReuseExistingPendingPayment(existingPending);
       if (reused) {
         return reused;
       }
@@ -989,12 +1000,6 @@ export class PaymentsService
       }
     } else if (isFailure) {
       await this.repo.markPaymentFailedById(payment.id);
-
-      if (type === 'butcher_order' && referenceId) {
-        await this.repo
-          .markButcherOrderPaymentFailed(referenceId)
-          .catch(() => {});
-      }
 
       if (type === 'subscription' && targetPlanId) {
         await this.subscriptionLifecycle.notifyRenewalFailed(

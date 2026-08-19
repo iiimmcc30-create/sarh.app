@@ -96,7 +96,10 @@ export default function PaymentCheckoutScreen() {
         return;
       }
 
-      router.replace('/payment/cancel' as never);
+      router.replace({
+        pathname: '/payment/cancel',
+        params: resultParams,
+      } as never);
     },
     [router, resultParams],
   );
@@ -108,9 +111,12 @@ export default function PaymentCheckoutScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/payment/cancel' as never);
+      router.replace({
+        pathname: '/payment/cancel',
+        params: resultParams,
+      } as never);
     }
-  }, [router]);
+  }, [router, resultParams]);
 
   const handleNavUrl = useCallback(
     (url: string): boolean => {

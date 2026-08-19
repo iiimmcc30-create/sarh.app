@@ -58,8 +58,8 @@ export class PaymentsRepository {
       where: {
         id: referenceId,
         customerId: userId,
-        paymentStatus: 'unpaid',
-        status: { not: 'cancelled' },
+        status: 'pending',
+        paymentStatus: { in: ['unpaid', 'failed'] },
       },
       select: {
         id: true,
@@ -67,6 +67,8 @@ export class PaymentsRepository {
         currency: true,
         orderNumber: true,
         butcherId: true,
+        status: true,
+        paymentStatus: true,
         butcher: { select: { userId: true, nameAr: true } },
       },
     });
@@ -330,6 +332,23 @@ export class PaymentsRepository {
     };
   }> {
     return this.prisma.$transaction(async (tx) => {
+      if (params.type === 'butcher_order' && params.referenceId) {
+        const existingOrder = await tx.butcherOrder.findUnique({
+          where: { id: params.referenceId },
+          select: { id: true, status: true },
+        });
+        if (!existingOrder) {
+          throw new Error('Butcher order not found for payment fulfillment');
+        }
+        if (existingOrder.status === 'cancelled') {
+          await tx.payment.updateMany({
+            where: { id: params.paymentId, status: 'pending' },
+            data: { status: 'failed' },
+          });
+          return { processed: false };
+        }
+      }
+
       const updated = await tx.payment.updateMany({
         where: { id: params.paymentId, status: 'pending' },
         data: {

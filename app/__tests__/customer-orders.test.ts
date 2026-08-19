@@ -1,7 +1,9 @@
 import {
   CUSTOMER_FLOW_LABELS,
   CUSTOMER_ORDER_FLOW,
+  customerOrderHeadline,
   flowReached,
+  isPayableButcherOrder,
   orderLineItems,
   orderMoneySummary,
   orderProductSummary,
@@ -19,7 +21,8 @@ describe('customerOrders', () => {
       'delivered',
     ]);
     expect(CUSTOMER_FLOW_LABELS.pending).toBe('قيد الانتظار');
-    expect(CUSTOMER_FLOW_LABELS.delivered).toBe('تم التسليم');
+    expect(CUSTOMER_FLOW_LABELS.confirmed).toBe('تم قبول الطلب');
+    expect(CUSTOMER_FLOW_LABELS.delivered).toBe('مكتمل');
   });
 
   it('summarizes product and specs for the outer card', () => {
@@ -84,5 +87,37 @@ describe('customerOrders', () => {
         'pending',
       ),
     ).not.toBe('');
+  });
+
+  it('shows complete-payment headline only for pending unpaid orders', () => {
+    expect(
+      customerOrderHeadline({ status: 'pending', paymentStatus: 'unpaid' }),
+    ).toEqual({ label: 'بانتظار الدفع', awaitingPayment: true, expired: false });
+    expect(
+      customerOrderHeadline({ status: 'pending', paymentStatus: 'failed' }),
+    ).toEqual({ label: 'بانتظار الدفع', awaitingPayment: true, expired: false });
+    expect(
+      customerOrderHeadline({ status: 'pending', paymentStatus: 'paid' }),
+    ).toEqual({
+      label: 'بانتظار قبول الملحمة',
+      awaitingPayment: false,
+      expired: false,
+    });
+    expect(
+      customerOrderHeadline({ status: 'confirmed', paymentStatus: 'paid' }),
+    ).toEqual({ label: 'تم قبول الطلب', awaitingPayment: false, expired: false });
+    expect(
+      customerOrderHeadline({ status: 'delivered', paymentStatus: 'paid' }),
+    ).toEqual({ label: 'مكتمل', awaitingPayment: false, expired: false });
+    expect(
+      customerOrderHeadline({
+        status: 'cancelled',
+        paymentStatus: 'unpaid',
+        cancellationReason: 'انتهت مهلة الدفع لهذا الطلب وتم تحرير الكمية المحجوزة',
+      }),
+    ).toEqual({ label: 'انتهت صلاحية الطلب', awaitingPayment: false, expired: true });
+    expect(isPayableButcherOrder({ status: 'pending', paymentStatus: 'unpaid' })).toBe(true);
+    expect(isPayableButcherOrder({ status: 'cancelled', paymentStatus: 'unpaid' })).toBe(false);
+    expect(isPayableButcherOrder({ status: 'pending', paymentStatus: 'paid' })).toBe(false);
   });
 });
