@@ -24,6 +24,9 @@ export type ApiEnvelope<T> = {
 };
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem(ACCESS_TOKEN_KEY);
     if (token) {

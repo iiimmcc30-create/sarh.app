@@ -53,4 +53,24 @@ describe('Phase 4 dashboard clients', () => {
       isOpen: true,
     });
   });
+
+  it('saves logo/cover through PUT /butchers/me without a client butcherId', async () => {
+    (apiClient.put as jest.Mock).mockResolvedValue({
+      data: {
+        success: true,
+        data: { id: 'a', logo: 'https://cdn.example/logo.jpg', cover: null },
+      },
+    });
+    await updateMyButcher({
+      logo: 'https://cdn.example/logo.jpg',
+      cover: null,
+    });
+    expect(apiClient.put).toHaveBeenCalledWith('/butchers/me', {
+      logo: 'https://cdn.example/logo.jpg',
+      cover: null,
+    });
+    expect(JSON.stringify((apiClient.put as jest.Mock).mock.calls[0][1])).not.toMatch(
+      /butcherId/,
+    );
+  });
 });
