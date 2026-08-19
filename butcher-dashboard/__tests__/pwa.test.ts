@@ -34,15 +34,17 @@ describe('butcher dashboard PWA manifest', () => {
 describe('service worker source', () => {
   const sw = fs.readFileSync(path.join(process.cwd(), 'public/sw.js'), 'utf8');
 
-  it('never caches API, sockets, or tokens', () => {
+  it('never intercepts API, sockets, RSC, or navigations', () => {
     expect(sw).toContain("url.pathname.startsWith('/api/')");
-    expect(sw).toContain('if (isSensitiveRequest(url)) return;');
-    expect(sw).not.toContain("cache.put('/api/");
+    expect(sw).toContain("url.searchParams.has('_rsc')");
+    expect(sw).toContain("request.mode === 'navigate'");
+    expect(sw).toContain('function shouldBypass');
+    expect(sw).toContain("return true");
   });
 
-  it('falls back to offline.html for failed navigations only', () => {
-    expect(sw).toContain("request.mode === 'navigate'");
+  it('keeps an offline shell without using it as live dashboard data', () => {
     expect(sw).toContain('/offline.html');
+    expect(sw).toContain('sarh-butcher-static-v2');
   });
 });
 

@@ -1,6 +1,8 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-const SERVER_API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const SERVER_API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001')
+  .trim()
+  .replace(/^['"]|['"]$/g, '');
 
 export const ACCESS_TOKEN_KEY = 'butcher_access_token';
 export const REFRESH_TOKEN_KEY = 'butcher_refresh_token';
@@ -12,7 +14,10 @@ export const SESSION_COOKIE = 'butcher_token';
 export const apiClient = axios.create({
   baseURL: typeof window !== 'undefined' ? '/api' : `${SERVER_API_URL}/api`,
   timeout: 30000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+  },
 });
 
 export type ApiEnvelope<T> = {

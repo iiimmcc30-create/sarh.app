@@ -1,5 +1,5 @@
-/* Sarh butcher dashboard SW: static shell only. Never cache /api or live data. */
-const STATIC_CACHE = 'sarh-butcher-static-v1';
+/* Sarh butcher dashboard SW: static assets only. Never touch /api or App Router data. */
+const STATIC_CACHE = 'sarh-butcher-static-v2';
 const PRECACHE_URLS = [
   '/offline.html',
   '/favicon.ico',
@@ -9,12 +9,29 @@ const PRECACHE_URLS = [
   '/icons/icon-512.png',
 ];
 
-function isSensitiveRequest(url) {
+function shouldBypass(url, request) {
+  if (request.method !== 'GET') return true;
+  if (url.origin !== self.location.origin) return true;
+  if (url.pathname.startsWith('/api/')) return true;
+  if (url.pathname.startsWith('/socket.io')) return true;
+  if (url.searchParams.has('token')) return true;
+  if (url.searchParams.has('_rsc')) return true;
+  if (request.headers.get('RSC') === '1') return true;
+  if (request.headers.get('Next-Router-Prefetch')) return true;
+  if (request.mode === 'navigate') return true;
+  if (request.destination === 'document') return true;
+  return false;
+}
+
+function isStaticAsset(url) {
   return (
-    url.pathname.startsWith('/api/') ||
-    url.pathname.startsWith('/socket.io') ||
-    url.hostname.includes('cloudinary') ||
-    url.searchParams.has('token')
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname === '/favicon.ico' ||
+    url.pathname === '/favicon.png' ||
+    url.pathname === '/apple-touch-icon.png' ||
+    url.pathname === '/offline.html' ||
+    url.pathname === '/manifest.webmanifest'
   );
 }
 
@@ -39,43 +56,22 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
-  if (isSensitiveRequest(url)) return;
-
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(async () => {
-        const offline = await caches.match('/offline.html');
-        return offline || new Response('offline', { status: 503, statusText: 'Offline' });
-      }),
-    );
-    return;
-  }
-
-  const isStatic =
-    url.pathname.startsWith('/_next/static/') ||
-    url.pathname.startsWith('/icons/') ||
-    url.pathname === '/favicon.ico' ||
-    url.pathname === '/favicon.png' ||
-    url.pathname === '/apple-touch-icon.png' ||
-    url.pathname === '/offline.html' ||
-    url.pathname === '/manifest.webmanifest' ||
-    url.pathname === '/manifest.webmanifest.json';
-
-  if (!isStatic) return;
+  if (shouldBypass(url, request)) return;
+  if (!isStaticAsset(url)) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (!response.ok) return response;
-        const copy = response.clone();
-        void caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
-        return response;
-      });
+      const networked = fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => cached);
+      return cached || networked;
     }),
   );
 });
