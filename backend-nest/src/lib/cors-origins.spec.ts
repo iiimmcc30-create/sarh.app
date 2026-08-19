@@ -6,6 +6,8 @@ describe('cors origins', () => {
     'NODE_ENV',
     'FRONTEND_URL',
     'BUTCHER_DASHBOARD_URL',
+    'BUTCHER_DASHBOARD_ALLOW_VERCEL',
+    'BUTCHER_DASHBOARD_VERCEL_HOSTS',
   ] as const;
   let snapshot: Record<string, string | undefined>;
 
@@ -64,5 +66,30 @@ describe('cors origins', () => {
     const origins = resolveCorsOrigins();
     expect(origins.some((origin) => origin.includes('localhost'))).toBe(false);
     expect(origins).toContain('https://sarh.app');
+  });
+
+  it('allows a listed Vercel default hostname in production', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.ALLOWED_ORIGINS = '';
+    process.env.FRONTEND_URL = '';
+    process.env.BUTCHER_DASHBOARD_URL = '';
+    process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL = '';
+    process.env.BUTCHER_DASHBOARD_VERCEL_HOSTS =
+      'sarh-butcher-dashboard.vercel.app';
+    expect(
+      isAllowedCorsOrigin('https://sarh-butcher-dashboard.vercel.app'),
+    ).toBe(true);
+    expect(isAllowedCorsOrigin('https://random-app.vercel.app')).toBe(false);
+  });
+
+  it('optionally allows any *.vercel.app origin when the flag is on', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.ALLOWED_ORIGINS = '';
+    process.env.FRONTEND_URL = '';
+    process.env.BUTCHER_DASHBOARD_URL = '';
+    process.env.BUTCHER_DASHBOARD_VERCEL_HOSTS = '';
+    process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL = 'true';
+    expect(isAllowedCorsOrigin('https://any-preview.vercel.app')).toBe(true);
+    expect(isAllowedCorsOrigin('https://evil.example')).toBe(false);
   });
 });

@@ -6,7 +6,8 @@ const apiUrl = /:(3000|3002|3003)(\/|$)/.test(rawApiUrl)
   : rawApiUrl.replace(/\/$/, '').replace('localhost', '127.0.0.1');
 
 const nextConfig = {
-  output: 'standalone',
+  // Vercel uses its own output tracing; standalone is for Docker/self-host.
+  ...(process.env.VERCEL ? {} : { output: 'standalone' }),
   async rewrites() {
     return [
       {
