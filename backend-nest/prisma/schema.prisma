@@ -207,15 +207,59 @@ model Payment {
   paidAt         DateTime?
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
-  fee            ListingFee?           @relation(fields: [feeId], references: [id])
-  subscription   Subscription?         @relation(fields: [subscriptionId], references: [id])
-  user           User                  @relation(fields: [userId], references: [id])
+  fee               ListingFee?        @relation(fields: [feeId], references: [id])
+  subscription      Subscription?      @relation(fields: [subscriptionId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+  integrationOrder  IntegrationOrder?
 
   @@index([userId])
   @@index([status])
   @@index([orderId])
   @@index([transactionId])
   @@index([userId, referenceId, referenceType, status])
+}
+
+/// External provider checkout (currently Network International / N-Genius).
+/// Local Payment.orderId stays the Sarh merchant reference; externalOrderId is the NI UUID.
+model IntegrationOrder {
+  id                       String               @id @default(uuid())
+  paymentId                String               @unique
+  provider                 IntegrationProvider  @default(ni)
+  status                   IntegrationStatus    @default(pending)
+  merchantOrderReference   String
+  idempotencyKey           String               @unique
+  externalOrderId          String?
+  externalReference        String?
+  checkoutUrl              String?
+  requestPayload           Json?
+  responsePayload          Json?
+  lastError                String?
+  retryCount               Int                  @default(0)
+  lastAttemptAt            DateTime?
+  syncedAt                 DateTime?
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  payment                  Payment              @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([provider, status])
+  @@index([externalOrderId])
+  @@index([merchantOrderReference])
+}
+
+model IntegrationWebhookEvent {
+  id         String              @id @default(uuid())
+  provider   IntegrationProvider
+  eventKey   String
+  eventName  String?
+  payload    Json
+  processed  Boolean             @default(false)
+  paymentId  String?
+  lastError  String?
+  createdAt  DateTime            @default(now())
+
+  @@unique([provider, eventKey])
+  @@index([paymentId])
+  @@index([createdAt])
 }
 
 model MarketCategory {
@@ -1130,6 +1174,19 @@ enum PaymentStatus {
   paid
   failed
   refunded
+}
+
+enum IntegrationProvider {
+  ni
+}
+
+enum IntegrationStatus {
+  pending
+  processing
+  synced
+  failed
+  retrying
+  cancelled
 }
 
 enum NotificationType {

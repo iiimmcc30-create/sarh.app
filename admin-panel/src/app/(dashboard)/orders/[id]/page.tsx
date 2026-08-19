@@ -83,6 +83,40 @@ export default function AdminOrderDetailPage() {
           {order.notes ? <InfoRow label="ملاحظات" value={String(order.notes)} /> : null}
         </section>
 
+        {order.paymentIntegration || order.payment ? (
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 space-y-3">
+            <h2 className="text-lg font-semibold text-white">تكامل الدفع (Network International)</h2>
+            {(() => {
+              const integration = order.paymentIntegration as Record<string, unknown> | null;
+              const payment = order.payment as Record<string, unknown> | null;
+              const status = String(integration?.status ?? payment?.status ?? '—');
+              return (
+                <>
+                  <InfoRow label="الحالة" value={status} />
+                  <InfoRow
+                    label="رقم الطلب الداخلي"
+                    value={String(integration?.merchantOrderReference ?? payment?.merchantOrderReference ?? '—')}
+                  />
+                  <InfoRow
+                    label="NI UUID"
+                    value={String(integration?.externalOrderId ?? payment?.niOrderUuid ?? '—')}
+                  />
+                  <InfoRow label="المحاولات" value={String(integration?.retryCount ?? '0')} />
+                  <InfoRow
+                    label="آخر محاولة"
+                    value={
+                      integration?.lastAttemptAt
+                        ? new Date(String(integration.lastAttemptAt)).toLocaleString('ar-SA')
+                        : '—'
+                    }
+                  />
+                  <InfoRow label="آخر خطأ" value={String(integration?.lastError ?? '—')} />
+                </>
+              );
+            })()}
+          </section>
+        ) : null}
+
         <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 space-y-3">
           <h2 className="text-lg font-semibold text-white">المنتج والمخزون</h2>
           <InfoRow label="المنتج" value={String(product?.nameAr ?? '—')} />

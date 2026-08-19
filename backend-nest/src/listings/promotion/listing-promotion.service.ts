@@ -7,10 +7,10 @@ import { AppNotificationsService } from '../../queue/services/app-notifications.
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import {
-  createNiCheckout,
   formatNiGatewayError,
   isNiSandboxMockMode,
 } from '../../payments/ni-client';
+import { IntegrationCheckoutService } from '../../integrations/services/integration-checkout.service';
 import {
   PROMOTE_AMOUNT_MAX,
   PROMOTE_AMOUNT_MIN,
@@ -58,6 +58,7 @@ export class ListingPromotionService {
     private readonly notifications: AppNotificationsService,
     private readonly cache: RedisCacheService,
     private readonly paidServices: PaidServicesService,
+    private readonly integrationCheckout: IntegrationCheckoutService,
   ) {}
 
   getPromotionPlans() {
@@ -186,8 +187,6 @@ export class ListingPromotionService {
           'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
       : 'visa';
 
-    const niMethod = this.mapMethod(options.method);
-
     const startTime = new Date();
     const endTime = new Date(
       startTime.getTime() + durationHours * 60 * 60 * 1000,
@@ -245,58 +244,46 @@ export class ListingPromotionService {
       },
     );
 
+    const contact = await this.prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { email: true, displayName: true, arabicName: true },
+    });
+    const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
+
     let checkoutUrl: string;
 
-    if (isNiSandboxMockMode()) {
-      checkoutUrl = `https://sandbox.network.ae/demo/${orderRef}`;
+    try {
+      const created = await this.integrationCheckout.createHostedCheckout({
+        paymentId: payment.id,
+        merchantOrderReference: orderRef,
+        amount,
+        currency,
+        description: descriptionAr,
+        redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=promotion&listingId=${listingId}`,
+        cancelUrl: `${appUrl}/payment/cancel`,
+        firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
+        email: contact?.email ?? '',
+        customData: {
+          paymentId: payment.id,
+          promotionId: promotion.id,
+          listingId,
+          tier: tierConfig.key,
+          userId: user.userId,
+          referenceType: 'promoted_ad',
+        },
+      });
+      checkoutUrl = created.checkoutUrl;
       await this.prisma.payment.update({
         where: { id: payment.id },
-        data: { checkoutUrl, transactionId: `DEV-${orderRef}` },
+        data: { checkoutUrl, transactionId: created.externalOrderId },
       });
-    } else {
-      const contact = await this.prisma.user.findUnique({
-        where: { id: user.userId },
-        select: { email: true, displayName: true, arabicName: true },
-      });
-      const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
-
-      try {
-        const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout(
-          {
-            amount,
-            currency,
-            orderReference: orderRef,
-            description: descriptionAr,
-            redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=promotion&listingId=${listingId}`,
-            cancelUrl: `${appUrl}/payment/cancel`,
-            firstName:
-              contact?.displayName ?? contact?.arabicName ?? 'Customer',
-            email: contact?.email ?? '',
-            paymentMethods: [niMethod],
-            customData: {
-              paymentId: payment.id,
-              promotionId: promotion.id,
-              listingId,
-              tier: tierConfig.key,
-              userId: user.userId,
-              referenceType: 'promoted_ad',
-            },
-          },
-        );
-
-        checkoutUrl = niUrl;
-        await this.prisma.payment.update({
-          where: { id: payment.id },
-          data: { checkoutUrl, transactionId: niOrderReference },
-        });
-      } catch (err: unknown) {
-        const message = formatNiGatewayError(err);
-        this.logger.error(
-          { err: message, promotionId: promotion.id },
-          'NI promotion checkout failed',
-        );
-        throwApi(502, 'payment_gateway_error', message);
-      }
+    } catch (err: unknown) {
+      const message = formatNiGatewayError(err);
+      this.logger.error(
+        { err: message, promotionId: promotion.id },
+        'NI promotion checkout failed',
+      );
+      throwApi(502, 'payment_gateway_error', message);
     }
 
     return {

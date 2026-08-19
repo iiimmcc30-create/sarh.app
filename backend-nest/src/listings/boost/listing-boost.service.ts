@@ -7,10 +7,10 @@ import { AppNotificationsService } from '../../queue/services/app-notifications.
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import {
-  createNiCheckout,
   formatNiGatewayError,
   isNiSandboxMockMode,
 } from '../../payments/ni-client';
+import { IntegrationCheckoutService } from '../../integrations/services/integration-checkout.service';
 import { BOOST_PLANS } from './boost-plans.config';
 import {
   boostPriceForHours,
@@ -82,6 +82,7 @@ export class ListingBoostService {
     private readonly notifications: AppNotificationsService,
     private readonly cache: RedisCacheService,
     private readonly paidServices: PaidServicesService,
+    private readonly integrationCheckout: IntegrationCheckoutService,
   ) {}
 
   /** Return available boost plans for the frontend. */
@@ -96,17 +97,35 @@ export class ListingBoostService {
   private async getRateFromSettings(boostType: BoostType): Promise<number> {
     if (boostType === 'both') {
       const [pin, ftr] = await Promise.all([
-        this.prisma.appSetting.findUnique({ where: { key: 'pricing.boost.pin.per12h' } }),
-        this.prisma.appSetting.findUnique({ where: { key: 'pricing.boost.feature.per12h' } }),
+        this.prisma.appSetting.findUnique({
+          where: { key: 'pricing.boost.pin.per12h' },
+        }),
+        this.prisma.appSetting.findUnique({
+          where: { key: 'pricing.boost.feature.per12h' },
+        }),
       ]);
-      const pinRate = typeof pin?.value === 'number' && pin.value > 0 ? pin.value : BOOST_RATE_PER_12H.pinned;
-      const ftrRate = typeof ftr?.value === 'number' && ftr.value > 0 ? ftr.value : BOOST_RATE_PER_12H.featured;
+      const pinRate =
+        typeof pin?.value === 'number' && pin.value > 0
+          ? pin.value
+          : BOOST_RATE_PER_12H.pinned;
+      const ftrRate =
+        typeof ftr?.value === 'number' && ftr.value > 0
+          ? ftr.value
+          : BOOST_RATE_PER_12H.featured;
       return pinRate + ftrRate;
     }
-    const key = boostType === 'pinned' ? 'pricing.boost.pin.per12h' : 'pricing.boost.feature.per12h';
+    const key =
+      boostType === 'pinned'
+        ? 'pricing.boost.pin.per12h'
+        : 'pricing.boost.feature.per12h';
     const setting = await this.prisma.appSetting.findUnique({ where: { key } });
-    const fallback = boostType === 'pinned' ? BOOST_RATE_PER_12H.pinned : BOOST_RATE_PER_12H.featured;
-    return typeof setting?.value === 'number' && setting.value > 0 ? setting.value : fallback;
+    const fallback =
+      boostType === 'pinned'
+        ? BOOST_RATE_PER_12H.pinned
+        : BOOST_RATE_PER_12H.featured;
+    return typeof setting?.value === 'number' && setting.value > 0
+      ? setting.value
+      : fallback;
   }
 
   /**
@@ -146,7 +165,10 @@ export class ListingBoostService {
       throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
     }
 
-    if (durationHours < PROMOTE_DURATION_HOURS_MIN || durationHours > PROMOTE_DURATION_HOURS_MAX) {
+    if (
+      durationHours < PROMOTE_DURATION_HOURS_MIN ||
+      durationHours > PROMOTE_DURATION_HOURS_MAX
+    ) {
       throwApi(400, 'invalid_duration', 'مدة الترقية خارج النطاق المسموح');
     }
 
@@ -154,21 +176,32 @@ export class ListingBoostService {
 
     // Server-side price calculation (slab formula)
     const rate = await this.getRateFromSettings(boostType);
-    const amount = boostPriceForHours(boostType as BoostPlanType, durationHours, rate);
+    const amount = boostPriceForHours(
+      boostType as BoostPlanType,
+      durationHours,
+      rate,
+    );
 
     if (amount < BOOST_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
       throwApi(400, 'invalid_amount', 'المبلغ المحسوب غير صالح');
     }
 
     const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+    const endTime = new Date(
+      startTime.getTime() + durationHours * 60 * 60 * 1000,
+    );
     const promotionGoal =
       options.promotionGoal ??
-      (boostType === 'featured' ? 'featured' : boostType === 'pinned' ? 'pinned' : 'visibility');
+      (boostType === 'featured'
+        ? 'featured'
+        : boostType === 'pinned'
+          ? 'pinned'
+          : 'visibility');
 
     const currency = 'SAR';
     const referenceType = boostType === 'pinned' ? 'pinned_ad' : 'featured_ad';
-    const orderPrefix = boostType === 'pinned' ? 'PIN' : boostType === 'both' ? 'BOTH' : 'FTR';
+    const orderPrefix =
+      boostType === 'pinned' ? 'PIN' : boostType === 'both' ? 'BOTH' : 'FTR';
     const orderRef = buildOrderRef(orderPrefix, user.userId);
 
     const descriptionAr =
@@ -178,14 +211,27 @@ export class ListingBoostService {
           ? `تثبيت إعلان: ${listing.arabicTitle} — ${durationHours} ساعة`
           : `تثبيت وتمييز: ${listing.arabicTitle} — ${durationHours} ساعة`;
 
-    const niMethod = this.mapMethod(method);
-    const prismaMethod = ['mada', 'visa', 'mastercard', 'apple_pay', 'stc_pay'].includes(method)
+    const prismaMethod = [
+      'mada',
+      'visa',
+      'mastercard',
+      'apple_pay',
+      'stc_pay',
+    ].includes(method)
       ? (method as 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay')
       : 'visa';
 
     const { boost, payment } = await this.prisma.$transaction(async (tx) => {
       const boost = await tx.listingBoost.create({
-        data: { listingId, userId: user.userId, boostType, durationDays, amount, currency, status: 'pending' },
+        data: {
+          listingId,
+          userId: user.userId,
+          boostType,
+          durationDays,
+          amount,
+          currency,
+          status: 'pending',
+        },
       });
 
       const payment = await tx.payment.create({
@@ -223,55 +269,46 @@ export class ListingBoostService {
       return { boost, payment };
     });
 
+    const contact = await this.prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { email: true, displayName: true, arabicName: true },
+    });
+    const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
+
     let checkoutUrl: string;
 
-    if (isNiSandboxMockMode()) {
-      checkoutUrl = `https://sandbox.network.ae/demo/${orderRef}`;
-      this.logger.info({ boostId: boost.id, paymentId: payment.id, amount }, 'Boost created in mock mode');
+    try {
+      const created = await this.integrationCheckout.createHostedCheckout({
+        paymentId: payment.id,
+        merchantOrderReference: orderRef,
+        amount,
+        currency,
+        description: descriptionAr,
+        redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=boost&listingId=${listingId}`,
+        cancelUrl: `${appUrl}/payment/cancel`,
+        firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
+        email: contact?.email ?? '',
+        customData: {
+          paymentId: payment.id,
+          boostId: boost.id,
+          listingId,
+          boostType,
+          userId: user.userId,
+          referenceType,
+        },
+      });
+      checkoutUrl = created.checkoutUrl;
       await this.prisma.payment.update({
         where: { id: payment.id },
-        data: { checkoutUrl, transactionId: `DEV-${orderRef}` },
+        data: { checkoutUrl, transactionId: created.externalOrderId },
       });
-    } else {
-      const contact = await this.prisma.user.findUnique({
-        where: { id: user.userId },
-        select: { email: true, displayName: true, arabicName: true },
-      });
-
-      const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
-
-      try {
-        const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout({
-          amount,
-          currency,
-          orderReference: orderRef,
-          description: descriptionAr,
-          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}&context=boost&listingId=${listingId}`,
-          cancelUrl: `${appUrl}/payment/cancel`,
-          firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
-          email: contact?.email ?? '',
-          paymentMethods: [niMethod],
-          customData: {
-            paymentId: payment.id,
-            boostId: boost.id,
-            listingId,
-            boostType,
-            userId: user.userId,
-            referenceType,
-          },
-        });
-
-        checkoutUrl = niUrl;
-
-        await this.prisma.payment.update({
-          where: { id: payment.id },
-          data: { checkoutUrl, transactionId: niOrderReference },
-        });
-      } catch (err: unknown) {
-        const message = formatNiGatewayError(err);
-        this.logger.error({ err: message, boostId: boost.id }, 'NI boost checkout failed');
-        throwApi(502, 'payment_gateway_error', message);
-      }
+    } catch (err: unknown) {
+      const message = formatNiGatewayError(err);
+      this.logger.error(
+        { err: message, boostId: boost.id },
+        'NI boost checkout failed',
+      );
+      throwApi(502, 'payment_gateway_error', message);
     }
 
     return {
@@ -310,7 +347,13 @@ export class ListingBoostService {
     await this.prisma.$transaction([
       this.prisma.listingBoost.update({
         where: { id: boostId },
-        data: { status: 'paid', paidAt: now, transactionId: niTransactionId, startsAt: now, expiresAt: expires },
+        data: {
+          status: 'paid',
+          paidAt: now,
+          transactionId: niTransactionId,
+          startsAt: now,
+          expiresAt: expires,
+        },
       }),
       this.prisma.listing.update({
         where: { id: boost.listingId },
@@ -327,18 +370,27 @@ export class ListingBoostService {
       data: { boostId, listingId: boost.listingId, boostType: boost.boostType },
     });
 
-    this.logger.info({ boostId, boostType: boost.boostType, listingId: boost.listingId }, 'Boost fulfilled');
+    this.logger.info(
+      { boostId, boostType: boost.boostType, listingId: boost.listingId },
+      'Boost fulfilled',
+    );
     await this.cache.delPattern('listings:v2:*').catch(() => {});
     await this.cache.del(`listing:${boost.listingId}`).catch(() => {});
     return {
       processed: true,
-      boost: { id: boostId, boostType: boost.boostType, listingId: boost.listingId, expiresAt: expires },
+      boost: {
+        id: boostId,
+        boostType: boost.boostType,
+        listingId: boost.listingId,
+        expiresAt: expires,
+      },
     };
   }
 
   /** Dev-only: simulate boost payment without NI. */
   async devCompleteBoost(user: JwtPayload, boostId: string) {
-    if (!isNiSandboxMockMode()) throwApi(403, 'forbidden', 'غير متاح في الإنتاج');
+    if (!isNiSandboxMockMode())
+      throwApi(403, 'forbidden', 'غير متاح في الإنتاج');
 
     const boost = await this.prisma.listingBoost.findFirst({
       where: { id: boostId, userId: user.userId },
@@ -349,7 +401,11 @@ export class ListingBoostService {
 
     await this.prisma.payment.updateMany({
       where: { referenceId: boostId, status: 'pending' },
-      data: { status: 'paid', paidAt: new Date(), transactionId: `DEV-${boostId}` },
+      data: {
+        status: 'paid',
+        paidAt: new Date(),
+        transactionId: `DEV-${boostId}`,
+      },
     });
 
     await this.fulfillBoost(boostId, `DEV-${boostId}`);
@@ -373,14 +429,5 @@ export class ListingBoostService {
       },
     });
     return { boosts };
-  }
-
-  private mapMethod(method: string): string {
-    switch (method) {
-      case 'mada': return 'MADA';
-      case 'apple_pay': return 'APPLE_PAY';
-      case 'stc_pay': return 'STC_PAY';
-      default: return 'CARD';
-    }
   }
 }

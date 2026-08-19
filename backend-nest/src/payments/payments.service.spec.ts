@@ -9,6 +9,7 @@ import { SubscriptionEntitlementService } from '../subscriptions/services/subscr
 import { RedisCacheService } from '../redis/services/redis-cache.service';
 import { PlansService } from '../plans/plans.service';
 import { PaidServicesService } from '../settings/paid-services.service';
+import { IntegrationCheckoutService } from '../integrations/services/integration-checkout.service';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -77,6 +78,18 @@ describe('PaymentsService', () => {
         { provide: PlansService, useValue: plans },
         { provide: RedisCacheService, useValue: cache },
         { provide: PaidServicesService, useValue: paidServices },
+        {
+          provide: IntegrationCheckoutService,
+          useValue: {
+            createHostedCheckout: jest.fn().mockResolvedValue({
+              checkoutUrl: 'https://checkout.example/pay',
+              externalOrderId: 'a13f81f3-27b4-48b6-88de-22b9ddc1e1dc',
+              merchantOrderReference: 'SFAT-U1-TEST',
+              reused: false,
+              mock: true,
+            }),
+          },
+        },
       ],
     }).compile();
 

@@ -1,5 +1,7 @@
 import {
   Injectable,
+  Inject,
+  forwardRef,
   OnApplicationBootstrap,
   OnApplicationShutdown,
 } from '@nestjs/common';
@@ -18,7 +20,6 @@ import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import { InitiatePaymentDto } from './dto/payments.dto';
 import { PaymentsRepository } from './repositories/payments.repository';
 import {
-  createNiCheckout,
   classifyNiOrderState,
   extractNiPaymentStates,
   fetchNiOrderResolved,
@@ -30,9 +31,9 @@ import {
   validateNiEnvironment,
   verifyNiOrderForCheckout,
   isNiOrderUuid,
-  isInternalMerchantOrderReference,
   type NiLogFn,
 } from './ni-client';
+import { IntegrationCheckoutService } from '../integrations/services/integration-checkout.service';
 import { PaidServicesService } from '../settings/paid-services.service';
 import { Sentry } from '../shared/lib/sentry';
 
@@ -40,22 +41,6 @@ function buildNIOrderReference(userId: string): string {
   const ts = Date.now().toString(36).toUpperCase();
   const uid = userId.replace(/-/g, '').slice(0, 8).toUpperCase();
   return `SFAT-${uid}-${ts}`;
-}
-
-function mapMethodToNI(method: string): string {
-  switch (method) {
-    case 'mada':
-      return 'MADA';
-    case 'visa':
-    case 'mastercard':
-      return 'CARD';
-    case 'apple_pay':
-      return 'APPLE_PAY';
-    case 'stc_pay':
-      return 'STC_PAY';
-    default:
-      return 'CARD';
-  }
 }
 
 function verifyNISignature(
@@ -127,6 +112,8 @@ export class PaymentsService
     private readonly plans: PlansService,
     private readonly cache: RedisCacheService,
     private readonly paidServices: PaidServicesService,
+    @Inject(forwardRef(() => IntegrationCheckoutService))
+    private readonly integrationCheckout: IntegrationCheckoutService,
   ) {}
 
   private async invalidateListingCaches(listingId?: string) {
@@ -420,7 +407,6 @@ export class PaymentsService
       orderReference,
       amount,
       currency,
-      method,
       description,
       descriptionAr,
       paymentMetadata,
@@ -437,49 +423,67 @@ export class PaymentsService
 
     if (isDev) {
       await new Promise((r) => setTimeout(r, 300));
-      checkoutUrl = `https://sandbox.network.ae/demo/${orderReference}`;
+      const mock = await this.integrationCheckout.createHostedCheckout({
+        paymentId: payment.id,
+        merchantOrderReference: orderReference,
+        amount,
+        currency,
+        description: descriptionAr || description || 'سرح Payment',
+        redirectUrl: `${process.env.APP_URL ?? 'https://sarh-app.up.railway.app'}/payment/result?paymentId=${payment.id}`,
+        cancelUrl: `${process.env.APP_URL ?? 'https://sarh-app.up.railway.app'}/payment/cancel`,
+        firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
+        email: contact?.email ?? '',
+        customData: {
+          paymentId: payment.id,
+          type,
+          referenceId,
+          userId,
+          sandbox: true,
+        },
+      });
+      checkoutUrl = mock.checkoutUrl;
       await this.repo.updatePaymentCheckout(payment.id, {
-        transactionId: `DEV-${orderReference}`,
+        transactionId: mock.externalOrderId,
         checkoutUrl,
         metadata: { ...paymentMetadata, sandbox: true },
       });
     } else {
       validateNiEnvironment(this.niLog);
       const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
-      const { checkoutUrl: niUrl, niOrderReference } = await createNiCheckout(
-        {
-          amount,
-          currency,
-          orderReference,
-          description: descriptionAr || description || 'سرح Payment',
-          redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}`,
-          cancelUrl: `${appUrl}/payment/cancel`,
-          firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
-          email: contact?.email ?? '',
-          paymentMethods: [mapMethodToNI(method)],
-          customData: {
-            paymentId: payment.id,
-            type,
-            referenceId,
-            userId,
-            ...(planId ? { targetPlanId: planId, billingCycle } : {}),
-          },
+      const created = await this.integrationCheckout.createHostedCheckout({
+        paymentId: payment.id,
+        merchantOrderReference: orderReference,
+        amount,
+        currency,
+        description: descriptionAr || description || 'سرح Payment',
+        redirectUrl: `${appUrl}/payment/result?paymentId=${payment.id}`,
+        cancelUrl: `${appUrl}/payment/cancel`,
+        firstName: contact?.displayName ?? contact?.arabicName ?? 'Customer',
+        email: contact?.email ?? '',
+        customData: {
+          paymentId: payment.id,
+          type,
+          referenceId,
+          userId,
+          ...(planId ? { targetPlanId: planId, billingCycle } : {}),
         },
-        this.niLog,
-      );
+      });
 
-      checkoutUrl = niUrl;
+      checkoutUrl = created.checkoutUrl;
 
       await this.repo.updatePaymentCheckout(payment.id, {
-        transactionId: niOrderReference,
+        transactionId: created.externalOrderId,
         checkoutUrl,
-        metadata: { ...paymentMetadata, niOrderReference },
+        metadata: {
+          ...paymentMetadata,
+          niOrderReference: created.externalOrderId,
+        },
       });
 
       this.logger.info(
         {
           paymentId: payment.id,
-          orderReference: niOrderReference,
+          orderReference: created.externalOrderId,
           merchantOrderReference: orderReference,
           paymentUrl: checkoutUrl,
           paymentState: 'pending',
@@ -679,7 +683,6 @@ export class PaymentsService
         contact,
       });
     } catch (err: unknown) {
-      await this.repo.markPaymentFailed(payment.id).catch(() => {});
       const message = formatNiGatewayError(err);
       this.logger.error(
         {
@@ -690,7 +693,7 @@ export class PaymentsService
           niResponseBody:
             err instanceof NiGatewayError ? err.niBody : undefined,
         },
-        'NI API error',
+        'NI API error — local payment kept pending',
       );
       Sentry.captureException(err);
       throwApi(502, 'payment_gateway_error', message);

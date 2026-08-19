@@ -10,6 +10,7 @@ import { PostsModule } from './posts/posts.module';
 import { StoriesModule } from './stories/stories.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { PlansModule } from './plans/plans.module';
 import { ButchersModule } from './butchers/butchers.module';
@@ -50,6 +51,7 @@ import { SettingsModule } from './settings/settings.module';
     StoriesModule,
     NotificationsModule,
     PaymentsModule,
+    IntegrationsModule,
     SubscriptionsModule,
     PlansModule,
     ButchersModule,

@@ -284,7 +284,22 @@ export class AdminService {
   async getOrder(orderId: string) {
     const order = await this.repo.getOrderById(orderId);
     if (!order) throwApi(404, 'not_found', 'الطلب غير موجود');
-    return { order };
+    const payment = await this.repo.findPaymentIntegrationForButcherOrder(orderId);
+    return {
+      order: {
+        ...order,
+        paymentIntegration: payment?.integrationOrder ?? null,
+        payment: payment
+          ? {
+              id: payment.id,
+              merchantOrderReference: payment.orderId,
+              status: payment.status,
+              amount: payment.amount,
+              niOrderUuid: payment.transactionId,
+            }
+          : null,
+      },
+    };
   }
 
   async listSettings() {
