@@ -33,9 +33,13 @@ export function useButcherLiveSocket(butcherId: string | null) {
 
     const socket: Socket = io(resolveSocketUrl(), {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      // Polling first: Render Socket has been seen returning 502 on websocket
+      // upgrade from some networks, then succeeding on polling.
+      transports: ['polling', 'websocket'],
       autoConnect: true,
       reconnection: true,
+      reconnectionAttempts: 12,
+      reconnectionDelay: 800,
     });
 
     const onEvent = (payload: unknown) => {

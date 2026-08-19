@@ -1,84 +1,69 @@
 # سرح — لوحة الملاحم (Butcher Dashboard)
 
-لوحة ويب مستقلة لصاحب الملحمة. ليست لوحة إدارة المنصة، وليست تطبيق الموبايل.
+لوحة ويب مستقلة لصاحب الملحمة داخل منصة Sarh. ليست POS وليست كاشير وليست لوحة إدارة المنصة وليست تطبيق الجوال.
 
 ```text
-Sarh Mobile        → المستخدم النهائي
-butcher-dashboard  → صاحب الملحمة
-admin-panel        → إدارة منصة سرح
-
-الكل يتصل بـ:
-NestJS API → Prisma → PostgreSQL
+المتصفح (Vercel — butcher-dashboard / Next.js)
+        │  /api/*  rewrite
+        ▼
+NestJS API (Render)  →  Prisma  →  PostgreSQL
+        │
+Socket.IO (Render sarh-socket)  ← اتصال المتصفح المباشر بـ NEXT_PUBLIC_SOCKET_URL
 ```
 
-## التقنيات
+إدارة الملحمة في تطبيق React Native **تبقى** حتى تُنشر اللوحة وتُختبر على Production بحساب وطلب حقيقيين.
 
-| الطبقة | التقنية |
-|--------|---------|
-| Frontend | Next.js 14.2 App Router, TypeScript, Tailwind CSS 3.4, Axios |
-| Backend | `backend-nest` الحالي فقط |
-| Auth | `POST /api/auth/login` ثم `GET /api/butchers/me` |
+## الصفحات
 
-لا تتصل اللوحة بقاعدة البيانات مباشرة.
+- الرئيسية `/dashboard`
+- الطلبات `/dashboard/orders` وتفاصيل الطلب
+- المنتجات `/dashboard/products`
+- المخزون `/dashboard/inventory` (عرض `availableQuantity` − `reservedQuantity` فقط)
+- العملاء `/dashboard/customers`
+- التقارير `/dashboard/reports`
+- الإعدادات `/dashboard/settings`
+
+Auth: `POST /api/auth/login` ثم `GET /api/butchers/me`. الملحمة تُحل من JWT `userId`. لا يُوثق `butcherId` من الواجهة.
 
 ## التشغيل المحلي
 
-1. شغّل NestJS على المنفذ `3001`.
-2. انسخ البيئة:
+1. شغّل NestJS على المنفذ `3001` وSocket على `3002`.
+2. `cd butcher-dashboard && cp .env.example .env.local && npm ci && npm run dev`
+3. اللوحة على [http://localhost:3003](http://localhost:3003).
 
-```bash
-cd butcher-dashboard
-cp .env.example .env.local
-npm install
-npm run dev
-```
-
-اللوحة تعمل على [http://localhost:3003](http://localhost:3003) حتى لا تتعارض مع Socket.IO المحلي (3002).
-
-طلبات المتصفح تذهب إلى `/api/*` ويُعاد توجيهها من Next.js إلى NestJS (نفس أسلوب `admin-panel`) لتفادي CORS في التطوير.
-
-## Authentication
-
-1. المستخدم يسجّل الدخول عبر `POST /api/auth/login` (JWT الحالي).
-2. اللوحة تستدعي `GET /api/butchers/me`.
-3. الـ Backend يحدد الملحمة من `userId` داخل JWT، وليس من `butcherId` في الواجهة.
-4. إن لم توجد ملحمة مرتبطة يُرفض الدخول وتُمسح الجلسة.
-
-لا يُستخدم `/admin/auth/login`.
-
-## Authorization (MVP)
-
-صاحب الملحمة المرتبط بصف `Butcher` هو المستخدم الوحيد المسموح له. نظام الموظفين مؤجّل.
-
-## Environment Variables
-
-### `butcher-dashboard`
+## متغيرات الواجهة (ليست أسرارًا)
 
 | المتغير | الغرض |
 |---------|--------|
-| `NEXT_PUBLIC_API_URL` | أصل NestJS لإعادة كتابة `/api` من السيرفر (الافتراضي `http://127.0.0.1:3001`) |
+| `NEXT_PUBLIC_API_URL` | أصل NestJS لإعادة كتابة `/api` من سيرفر Next |
+| `NEXT_PUBLIC_SOCKET_URL` | أصل Socket.IO الحالي (إنتاج: `https://sarh-socket.onrender.com`) |
 
-### `backend-nest`
+لا تضع JWT / DATABASE / REDIS داخل `NEXT_PUBLIC_*`.
+
+## متغيرات Backend (CORS للـ Socket)
+
+طلبات REST من اللوحة تمر عبر rewrite نفس الأصل، فلا تحتاج CORS للمتصفح. Socket يحتاج CORS.
 
 | المتغير | الغرض |
 |---------|--------|
-| `BUTCHER_DASHBOARD_URL` | أصل اللوحة في الإنتاج إذا استدعت المتصفح الـ API مباشرة |
-| `ALLOWED_ORIGINS` | قائمة CORS عامة |
+| `BUTCHER_DASHBOARD_URL` | أصل https النهائي للوحة بعد أول نشر Vercel |
+| `BUTCHER_DASHBOARD_VERCEL_HOSTS` | أسماء مضيف Vercel مفصولة بفاصلة |
+| `BUTCHER_DASHBOARD_ALLOW_VERCEL` | `true` مؤقتًا للسماح بأي `*.vercel.app` حتى يُعرف الرابط |
 
-في غير الإنتاج يُسمح تلقائيًا بـ `http://localhost:3002` و `http://127.0.0.1:3002`.
+لا يُفترض `alsfat.com` ولا يُربط `dashboard.sarh.app` في الكود. النطاق المخصص مرحلة لاحقة بطلب صريح.
 
-## Deployment
+## النشر على Vercel
 
-انشر Next.js (`output: standalone`) على نطاق منفصل عن لوحة الإدارة. أضف النطاق إلى `BUTCHER_DASHBOARD_URL` / `ALLOWED_ORIGINS` إن لم تستخدم reverse proxy لنفس أصل `/api`.
+1. مشروع Vercel جديد، **Root Directory** = `butcher-dashboard`.
+2. Environment:
+   - `NEXT_PUBLIC_API_URL=https://sarh-new4.onrender.com`
+   - `NEXT_PUBLIC_SOCKET_URL=https://sarh-socket.onrender.com`
+3. استخدم نطاق `*.vercel.app` الافتراضي أولًا.
+4. بعد ظهور الرابط، على Render (`sarh-api` و `sarh-socket`):
+   - `BUTCHER_DASHBOARD_URL=https://<المشروع>.vercel.app`
+   - أو `BUTCHER_DASHBOARD_VERCEL_HOSTS=<المشروع>.vercel.app`
+5. Backend يبقى على Render. لا تُنقل Nest إلى Vercel.
 
-## المرحلة الحالية
+## حالة Production (حتى دمج هذا الفرع)
 
-Phase 2 — Orders + Dashboard APIs:
-
-- `GET /api/butchers/dashboard` ملخص حقيقي لصاحب الملحمة
-- `GET /api/butchers/orders?page&limit&status&q&from&to` مع عقد متوافق مع الموبايل (بدون query يبقى مصفوفة)
-- صفحات `/dashboard` و `/dashboard/orders` و `/dashboard/orders/[id]`
-
-- `GET /api/butchers/products/mine` منتجات المالك من JWT
-- صفحات `/dashboard/products` و `/dashboard/inventory`
-- Socket.IO على `user:{userId}` بدون أحداث `admin.*`
+فحص 2026-08-19: `main` المنشور **لا** يحتوي مسارات اللوحة (`/butchers/dashboard` كملخص JWT، `products/mine`، `customers`، `reports`). انظر `docs/butcher-dashboard-phase5-qa.md`. لا تُعتبر اللوحة بديلًا للجوال قبل الدمج + النشر + اختبار ملحمة حقيقية.
