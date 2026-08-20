@@ -23,6 +23,7 @@ import {
   Images,
   PanelsTopLeft,
   FolderTree,
+  Compass,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
@@ -46,6 +47,7 @@ const NAV_ICONS = {
   '/orders': ReceiptText,
   '/plans': CreditCard,
   '/content': Layers,
+  '/home-explore': Compass,
   '/settings': Settings,
 } as const;
 
@@ -79,7 +81,7 @@ export function Sidebar() {
                   : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200',
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
               {label}
             </Link>
           );

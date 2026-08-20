@@ -2,7 +2,7 @@ import { ADMIN_FEATURE_ROUTES, ADMIN_NAV, isAdminNavActive } from '@/constants/a
 import { OFFICIAL_SERVICE_CATEGORIES } from '@/services/official-services.service';
 import { BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
 import { cleanListParams } from '@/services/admin.service';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 
 const DASHBOARD_ROOT = path.join(__dirname, '../src/app/(dashboard)');
@@ -54,6 +54,15 @@ describe('admin navigation & feature routes inventory', () => {
   it('has a page.tsx for every declared admin feature route', () => {
     const missing = ADMIN_FEATURE_ROUTES.filter((route) => !existsSync(routeToPageFile(route)));
     expect(missing).toEqual([]);
+  });
+
+  it('maps a sidebar icon for every primary nav href', () => {
+    const sidebar = readFileSync(
+      path.join(__dirname, '../src/components/layout/Sidebar.tsx'),
+      'utf8',
+    );
+    const missing = ADMIN_NAV.filter((item) => !sidebar.includes(`'${item.href}':`));
+    expect(missing.map((item) => item.href)).toEqual([]);
   });
 
   it('keeps brand identity constants', () => {
