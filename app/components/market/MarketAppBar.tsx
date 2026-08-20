@@ -6,9 +6,10 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-const BAR_H = 44;
-const ICON = 16;
-const SLOT = 36;
+const SEARCH_H = 44;
+const TOOL_H = 40;
+const TOOL_ICON = 18;
+const SEARCH_ICON = 16;
 
 type Props = {
   onSearch: () => void;
@@ -20,7 +21,7 @@ type Props = {
   sortLabel?: string;
 };
 
-/** One market search track: filter · sort · search (flex) · featured. */
+/** Top chrome: filter + sort (separate) · search (flex) · featured star. */
 export function MarketAppBar({
   onSearch,
   onFilterPress,
@@ -37,34 +38,36 @@ export function MarketAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.track}>
-        <Pressable
-          onPress={onFilterPress}
-          style={styles.iconSlot}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel="تصفية"
-        >
-          <AppIcon name="settings-sliders" size={ICON} color={colors.textPrimary} />
-        </Pressable>
+      <View style={styles.bar}>
+        <View style={styles.toolPair}>
+          <Pressable
+            onPress={onFilterPress}
+            style={styles.toolBtn}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel="تصفية"
+          >
+            <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textPrimary} />
+          </Pressable>
 
-        <Pressable
-          onPress={onSortPress}
-          style={styles.iconSlot}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={sortLabel}
-        >
-          <AppIcon name="sort-alt" size={ICON} color={colors.textPrimary} />
-        </Pressable>
+          <Pressable
+            onPress={onSortPress}
+            style={styles.toolBtn}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={sortLabel}
+          >
+            <AppIcon name="sort-alt" size={TOOL_ICON} color={colors.textPrimary} />
+          </Pressable>
+        </View>
 
         <Pressable
           onPress={onSearch}
-          style={[styles.searchSlot, getRtlRow()]}
+          style={[styles.searchPill, getRtlRow()]}
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
-          <AppIcon name="search" size={ICON} color={colors.textMuted} />
+          <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
           <RtlTextShell flex>
             <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
               {searchPlaceholder}
@@ -74,7 +77,7 @@ export function MarketAppBar({
 
         <Pressable
           onPress={onFeaturedPress}
-          style={styles.iconSlot}
+          style={[styles.toolBtn, featuredActive && styles.toolBtnActive]}
           hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel="الإعلانات المميزة"
@@ -82,7 +85,7 @@ export function MarketAppBar({
         >
           <AppIcon
             name="star"
-            size={ICON}
+            size={TOOL_ICON}
             color={featuredActive ? colors.gold : colors.textPrimary}
             variant={featuredActive ? 'sr' : 'rr'}
           />
@@ -99,34 +102,48 @@ function createStyles(colors: ThemeColors) {
       flexGrow: 0,
       flexShrink: 0,
     },
-    track: {
+    bar: {
       flexDirection: 'row',
       direction: 'ltr',
       alignItems: 'center',
-      height: BAR_H,
-      marginHorizontal: spacing.md,
-      marginVertical: spacing.sm,
-      paddingHorizontal: 4,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      minHeight: 56,
+      gap: spacing.sm,
+    },
+    toolPair: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: 6,
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    toolBtn: {
+      width: TOOL_H,
+      height: TOOL_H,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+    },
+    toolBtnActive: {
+      borderColor: colors.gold,
+      backgroundColor: `${colors.gold}14`,
+    },
+    searchPill: {
+      flex: 1,
+      minWidth: 0,
+      height: SEARCH_H,
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.md,
       backgroundColor: colors.bgElevated,
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-    },
-    iconSlot: {
-      width: SLOT,
-      height: BAR_H,
-      flexGrow: 0,
-      flexShrink: 0,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    searchSlot: {
-      flex: 1,
-      minWidth: 0,
-      height: BAR_H,
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 6,
     },
     searchPlaceholder: {
       ...typography.secondary,

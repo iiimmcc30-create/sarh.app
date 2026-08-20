@@ -162,9 +162,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     card: {
       borderRadius: 16,
-      backgroundColor: scheme === 'dark' ? '#0D202C' : colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      backgroundColor: scheme === 'dark' ? '#173445' : colors.bgElevated,
+      borderWidth: 1,
+      borderColor: scheme === 'dark' ? '#2C5164' : colors.borderMid,
       overflow: 'hidden',
       direction: 'ltr',
     },

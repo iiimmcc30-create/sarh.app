@@ -104,6 +104,9 @@ describe('HomeAppBar chrome', () => {
     expect(searchAt).toBeGreaterThan(bellAt);
     expect(src).toContain('iconPair');
     expect(src).toContain("direction: 'ltr'");
+    expect(src).toContain('more-vertical');
+    expect(src).not.toContain('⋮');
+    expect(src).not.toContain("name=\"apps\"");
   });
 
   it('places filter and sort left of market search, with a featured star on the right', () => {
@@ -119,21 +122,22 @@ describe('HomeAppBar chrome', () => {
     expect(sortAt).toBeGreaterThan(filterAt);
     expect(searchAt).toBeGreaterThan(sortAt);
     expect(starAt).toBeGreaterThan(searchAt);
-    expect(src).toContain('styles.track');
-    expect(src).toContain('flex: 1');
-    expect(src).toContain('size={ICON}');
+    expect(src).toContain('styles.toolPair');
+    expect(src).toContain('styles.searchPill');
+    expect(src).toContain('TOOL_ICON');
     expect(src).toContain('ابحث في السوق');
     expect(src).not.toContain('HomeAppBar');
     expect(src).not.toContain('المزيد');
     expect(src).not.toContain('NotificationBellButton');
   });
 
-  it('darkens Explore cards slightly from the elevated surface in dark mode', () => {
+  it('raises Explore card contrast against the page background', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain("scheme === 'dark' ? '#0D202C'");
-    expect(src).not.toContain('#0B1A2E');
+    expect(src).toContain("scheme === 'dark' ? '#173445'");
+    expect(src).toContain("scheme === 'dark' ? '#2C5164'");
+    expect(src).not.toContain('#0D202C');
   });
 });

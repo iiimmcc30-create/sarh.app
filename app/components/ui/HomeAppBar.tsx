@@ -36,7 +36,7 @@ export function HomeAppBar({
             hitSlop={8}
             accessibilityLabel="المزيد"
           >
-            <AppIcon name="apps" size={22} color={colors.textPrimary} />
+            <AppIcon name="more-vertical" size={22} color={colors.textPrimary} />
           </Pressable>
 
           <NotificationBellButton
