@@ -39,6 +39,7 @@ describe('butcherOps', () => {
 
   it('maps primary actions onto existing statuses', () => {
     expect(primaryAdvanceAction({ status: 'pending', allowedNextStatuses: ['confirmed', 'cancelled'], paymentStatus: 'paid' })?.label).toBe('قبول الطلب');
+    expect(primaryAdvanceAction({ status: 'pending', allowedNextStatuses: ['confirmed', 'cancelled'], paymentStatus: 'unpaid' })).toBeNull();
     expect(primaryAdvanceAction({ status: 'confirmed', allowedNextStatuses: ['preparing', 'cancelled'] })?.label).toBe('تأكيد الطلب');
     expect(primaryAdvanceAction({ status: 'preparing', allowedNextStatuses: ['ready'] })?.label).toBe('تم التجهيز');
     expect(primaryAdvanceAction({ status: 'ready', deliveryType: 'delivery', allowedNextStatuses: ['delivered'] })?.label).toBe('تم التسليم');

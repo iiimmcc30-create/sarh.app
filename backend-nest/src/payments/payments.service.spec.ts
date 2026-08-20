@@ -250,4 +250,140 @@ describe('PaymentsService', () => {
     expect(result.paymentId).toBe('pay-fresh');
     expect(repo.findPaymentByIdFull).not.toHaveBeenCalled();
   });
+
+  it('rejects butcher-order payment for another customer', async () => {
+    repo.findUnpaidButcherOrder.mockResolvedValue(null);
+
+    await expect(
+      service.initiate(
+        { userId: 'stranger', role: 'USER' } as never,
+        {
+          amount: 100,
+          method: 'mada',
+          type: 'butcher_order',
+          referenceId: 'ord-1',
+        } as never,
+      ),
+    ).rejects.toMatchObject({ error: 'order_not_found', status: 404 });
+
+    expect(repo.findUnpaidButcherOrder).toHaveBeenCalledWith('ord-1', 'stranger');
+    expect(repo.createPendingPaymentOrReturnExisting).not.toHaveBeenCalled();
+  });
+
+  it('rejects butcher-order payment when the order is no longer payable', async () => {
+    repo.findUnpaidButcherOrder.mockResolvedValue(null);
+
+    await expect(
+      service.initiate(
+        { userId: 'u1', role: 'USER' } as never,
+        {
+          amount: 100,
+          method: 'mada',
+          type: 'butcher_order',
+          referenceId: 'ord-cancelled',
+        } as never,
+      ),
+    ).rejects.toMatchObject({ error: 'order_not_found', status: 404 });
+  });
+
+  it('archives a previous pending butcher payment and creates a new NI attempt', async () => {
+    repo.findUnpaidButcherOrder.mockResolvedValue({
+      id: 'ord-1',
+      totalPrice: 100,
+      currency: 'SAR',
+      orderNumber: 'ORD-1',
+      butcherId: 'b1',
+      status: 'pending',
+      paymentStatus: 'unpaid',
+    });
+    repo.createPendingPaymentOrReturnExisting.mockResolvedValue({
+      existingPending: {
+        id: 'pay-old',
+        checkoutUrl: 'https://ni.example/old-session',
+        orderId: 'SFAT-OLD',
+        transactionId: 'a13f81f3-27b4-48b6-88de-22b9ddc1e1dc',
+        createdAt: new Date(),
+      },
+    });
+    repo.archiveInvalidPendingPayment.mockResolvedValue({ id: 'pay-old' });
+    repo.createPendingPayment.mockResolvedValue({
+      id: 'pay-new',
+      orderId: 'SFAT-NEW',
+    });
+    const reuseSpy = jest
+      .spyOn(service as any, 'tryReuseExistingPendingPayment')
+      .mockResolvedValue({
+        paymentId: 'pay-old',
+        checkoutUrl: 'https://ni.example/old-session',
+        status: 'pending',
+        devMode: true,
+      });
+    jest.spyOn(service as any, 'createCheckoutForPayment').mockResolvedValue({
+      paymentId: 'pay-new',
+      orderId: 'SFAT-NEW',
+      checkoutUrl: 'https://checkout.example/new',
+      status: 'pending',
+      devMode: true,
+    } as never);
+
+    const result = await service.initiate(
+      { userId: 'u1', role: 'USER' } as never,
+      {
+        amount: 100,
+        method: 'mada',
+        type: 'butcher_order',
+        referenceId: 'ord-1',
+      } as never,
+    );
+
+    expect(reuseSpy).not.toHaveBeenCalled();
+    expect(repo.archiveInvalidPendingPayment).toHaveBeenCalledWith(
+      'pay-old',
+      'ni_order_invalid_or_expired',
+      { supersededBy: 'new_ni_order' },
+    );
+    expect(repo.createPendingPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        referenceId: 'ord-1',
+        referenceType: 'butcher_order',
+        amount: 100,
+      }),
+    );
+    expect(result.paymentId).toBe('pay-new');
+  });
+
+  it('retries a butcher order whose previous Payment failed while the order stays unpaid', async () => {
+    repo.findUnpaidButcherOrder.mockResolvedValue({
+      id: 'ord-1',
+      totalPrice: 80,
+      currency: 'SAR',
+      orderNumber: 'ORD-1',
+      butcherId: 'b1',
+      status: 'pending',
+      paymentStatus: 'failed',
+    });
+    repo.createPendingPaymentOrReturnExisting.mockResolvedValue({
+      payment: { id: 'pay-retry', orderId: 'SFAT-RETRY' },
+    });
+    jest.spyOn(service as any, 'createCheckoutForPayment').mockResolvedValue({
+      paymentId: 'pay-retry',
+      orderId: 'SFAT-RETRY',
+      checkoutUrl: 'https://checkout.example/retry',
+      status: 'pending',
+      devMode: true,
+    } as never);
+
+    const result = await service.initiate(
+      { userId: 'u1', role: 'USER' } as never,
+      {
+        amount: 80,
+        method: 'mada',
+        type: 'butcher_order',
+        referenceId: 'ord-1',
+      } as never,
+    );
+
+    expect(result.paymentId).toBe('pay-retry');
+    expect(repo.findUnpaidButcherOrder).toHaveBeenCalledWith('ord-1', 'u1');
+  });
 });

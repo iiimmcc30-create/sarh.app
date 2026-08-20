@@ -1,5 +1,8 @@
+import { Alert } from 'react-native';
 import { API_BASE } from '@/services/api';
 import type { DeliveryType, OrderPaymentStatus, OrderStatus } from '@/services/butcherData';
+import { isPayableButcherOrder } from '@/lib/customerOrders';
+import { launchPaymentCheckout } from '@/services/payments';
 
 export type ButcherOrderRecord = {
   id: string;
@@ -86,4 +89,66 @@ export function formatOrderDate(iso: string): string {
 export function formatCurrency(amount: number, currency = 'SAR'): string {
   const symbol = currency === 'SAR' ? 'ر.س' : currency;
   return `${amount.toLocaleString('ar-SA')} ${symbol}`;
+}
+
+export async function completeButcherOrderPayment(params: {
+  accessToken: string;
+  order: Pick<
+    ButcherOrderRecord,
+    'id' | 'orderNumber' | 'totalPrice' | 'currency' | 'butcherId' | 'status' | 'paymentStatus'
+  >;
+}): Promise<'paid' | 'opened' | 'cancelled' | 'failed' | 'blocked'> {
+  const { accessToken, order } = params;
+  if (!isPayableButcherOrder(order)) {
+    return 'blocked';
+  }
+
+  const amount = Number(order.totalPrice);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    Alert.alert('خطأ', 'مبلغ الطلب غير صالح');
+    return 'failed';
+  }
+
+  try {
+    const payRes = await fetch(`${API_BASE}/api/payments/initiate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        amount,
+        currency: order.currency || 'SAR',
+        method: 'mada',
+        type: 'butcher_order',
+        referenceId: order.id,
+        description: `Butcher order ${order.orderNumber}`,
+        descriptionAr: `دفع طلب ملحمة رقم ${order.orderNumber}`,
+      }),
+    });
+    const payJson = await payRes.json().catch(() => ({}));
+    if (!payRes.ok || !payJson.success || !payJson.data) {
+      Alert.alert(
+        'لم يكتمل الدفع',
+        payJson.messageAr || payJson.message || 'تعذّر بدء عملية الدفع. حاول مرة أخرى.',
+      );
+      return 'failed';
+    }
+
+    return launchPaymentCheckout({
+      accessToken,
+      paymentId: payJson.data.paymentId,
+      checkoutUrl: payJson.data.checkoutUrl,
+      devMode: payJson.data.devMode,
+      context: 'butcher_order',
+      returnParams: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        butcherId: order.butcherId,
+      },
+    });
+  } catch {
+    Alert.alert('خطأ', 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.');
+    return 'failed';
+  }
 }

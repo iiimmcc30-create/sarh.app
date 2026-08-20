@@ -6,12 +6,13 @@ import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import {
+  customerOrderHeadline,
   formatOrderDatePart,
   formatOrderTimePart,
   orderProductSummary,
   orderSpecsLine,
 } from '@/lib/customerOrders';
-import { ORDER_STATUS_COLORS, orderStatusLabel, PAYMENT_STATUS_LABELS } from '@/services/butcherData';
+import { ORDER_STATUS_COLORS, PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import { ButcherOrderRecord, formatCurrency } from '@/services/butcherOrders';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -28,7 +29,8 @@ export function CustomerOrderCard({
 }) {
   const styles = createStyles(colors);
   const statusColor = ORDER_STATUS_COLORS[order.status] ?? colors.textMuted;
-  const statusText = orderStatusLabel(order.status, order.deliveryType);
+  const headline = customerOrderHeadline(order);
+  const statusText = headline.label;
   const isPaid = order.paymentStatus === 'paid';
   const logo = uriSource(order.butcher?.logo);
 
@@ -91,7 +93,9 @@ export function CustomerOrderCard({
         <View style={styles.idCol}>
           <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
           <Text style={[styles.payText, { color: isPaid ? colors.success : colors.gold }]}>
-            {PAYMENT_STATUS_LABELS[order.paymentStatus]}
+            {headline.awaitingPayment
+              ? 'إكمال الدفع'
+              : PAYMENT_STATUS_LABELS[order.paymentStatus] ?? (isPaid ? 'مدفوع' : 'غير مدفوع')}
           </Text>
         </View>
 

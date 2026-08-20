@@ -88,6 +88,7 @@ describe('OrderLifecycleService', () => {
       executeRaw,
       orderUpdate,
       timelineCreate,
+      payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
     };
   }
 
@@ -203,6 +204,16 @@ describe('OrderLifecycleService', () => {
     });
 
     expect(tx.executeRaw).toHaveBeenCalled();
+    expect(tx.payment.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          referenceType: 'butcher_order',
+          referenceId: 'order-1',
+          status: 'pending',
+        }),
+        data: { status: 'failed' },
+      }),
+    );
     expect(tx.timelineCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({

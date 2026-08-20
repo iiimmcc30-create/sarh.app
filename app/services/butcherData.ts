@@ -9,7 +9,7 @@ export type MeatCategory = 'whole_livestock' | 'lamb' | 'beef' | 'camel' | 'chic
 export type CutType = 'whole' | 'half' | 'quarter' | 'ribs' | 'leg' | 'shoulder' | 'neck' | 'liver' | 'mixed' | 'custom';
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 export type DeliveryType = 'pickup' | 'delivery';
-export type OrderPaymentStatus = 'unpaid' | 'paid';
+export type OrderPaymentStatus = 'unpaid' | 'paid' | 'failed' | 'refunded';
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: 'قيد المراجعة',
@@ -32,6 +32,8 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 export const PAYMENT_STATUS_LABELS: Record<OrderPaymentStatus, string> = {
   unpaid: 'غير مدفوع',
   paid: 'مدفوع',
+  failed: 'غير مدفوع',
+  refunded: 'مسترد',
 };
 
 export function orderStatusLabel(

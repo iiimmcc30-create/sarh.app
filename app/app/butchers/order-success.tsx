@@ -35,7 +35,7 @@ export default function OrderSuccessScreen() {
         <Text style={s.sub}>
           {isPaid
             ? 'وصل طلبك المدفوع للملحمة وسيتواصل معك الجزار قريباً لتأكيد التفاصيل'
-            : 'أكمل الدفع عبر بوابة المنصة حتى يصل الطلب للملحمة'}
+            : 'لم يكتمل الدفع. أكمل الدفع من صفحة الطلب حتى يصل للملحمة.'}
         </Text>
 
         {/* Order summary */}
@@ -102,7 +102,7 @@ export default function OrderSuccessScreen() {
             end={{ x: 1, y: 0 }}
           >
             <AppIcon name="receipt-outline" size={20} color="#fff" />
-            <Text style={s.chatBtnText}>تتبع الطلب</Text>
+            <Text style={s.chatBtnText}>{isPaid ? 'تتبع الطلب' : 'إكمال الدفع'}</Text>
           </LinearGradient>
         </Pressable>
 
