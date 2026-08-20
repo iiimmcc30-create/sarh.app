@@ -77,6 +77,18 @@ export const FALLBACK_HOME_EXPLORE: HomeExploreCard[] = (
   ...CATALOG[destination],
 }));
 
+/** Explore cards that use the official Sarh mark instead of a catalog Lucide icon. */
+export const EXPLORE_SARH_LOGO_DESTINATIONS: HomeExploreDestinationKey[] = [
+  'community',
+  'butchers',
+  'listings',
+  'news',
+];
+
+export function usesExploreSarhLogoMark(destination: HomeExploreDestinationKey): boolean {
+  return EXPLORE_SARH_LOGO_DESTINATIONS.includes(destination);
+}
+
 /** First row takes the extra card when the count is odd — matches 3+2 for the default five. */
 export function splitExploreRows<T>(items: T[]): { top: T[]; bottom: T[] } {
   if (items.length <= 1) return { top: items, bottom: [] };
