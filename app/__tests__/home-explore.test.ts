@@ -119,18 +119,21 @@ describe('HomeAppBar chrome', () => {
     expect(sortAt).toBeGreaterThan(filterAt);
     expect(searchAt).toBeGreaterThan(sortAt);
     expect(starAt).toBeGreaterThan(searchAt);
+    expect(src).toContain('styles.track');
+    expect(src).toContain('flex: 1');
+    expect(src).toContain('size={ICON}');
     expect(src).toContain('ابحث في السوق');
     expect(src).not.toContain('HomeAppBar');
     expect(src).not.toContain('المزيد');
     expect(src).not.toContain('NotificationBellButton');
-    expect(src).not.toContain('onMore');
   });
 
-  it('uses a deeper navy Explore card in dark mode', () => {
+  it('darkens Explore cards slightly from the elevated surface in dark mode', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain("scheme === 'dark' ? '#0B1A2E'");
+    expect(src).toContain("scheme === 'dark' ? '#0D202C'");
+    expect(src).not.toContain('#0B1A2E');
   });
 });

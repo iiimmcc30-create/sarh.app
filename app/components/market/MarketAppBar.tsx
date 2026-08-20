@@ -6,7 +6,9 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-const CONTROL = 48;
+const BAR_H = 44;
+const ICON = 16;
+const SLOT = 36;
 
 type Props = {
   onSearch: () => void;
@@ -18,7 +20,7 @@ type Props = {
   sortLabel?: string;
 };
 
-/** Market chrome: filter · sort · search · featured star (physical LTR). */
+/** One market search track: filter · sort · search (flex) · featured. */
 export function MarketAppBar({
   onSearch,
   onFilterPress,
@@ -35,35 +37,35 @@ export function MarketAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.bar}>
+      <View style={styles.track}>
         <Pressable
           onPress={onFilterPress}
-          style={styles.iconBtn}
-          hitSlop={8}
+          style={styles.iconSlot}
+          hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel="تصفية"
         >
-          <AppIcon name="settings-sliders" size={20} color={colors.textPrimary} />
+          <AppIcon name="settings-sliders" size={ICON} color={colors.textPrimary} />
         </Pressable>
 
         <Pressable
           onPress={onSortPress}
-          style={styles.iconBtn}
-          hitSlop={8}
+          style={styles.iconSlot}
+          hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel={sortLabel}
         >
-          <AppIcon name="sort-alt" size={20} color={colors.textPrimary} />
+          <AppIcon name="sort-alt" size={ICON} color={colors.textPrimary} />
         </Pressable>
 
         <Pressable
           onPress={onSearch}
-          style={[styles.searchPill, getRtlRow()]}
+          style={[styles.searchSlot, getRtlRow()]}
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
-          <AppIcon name="search" size={20} color={colors.textMuted} />
-          <RtlTextShell>
+          <AppIcon name="search" size={ICON} color={colors.textMuted} />
+          <RtlTextShell flex>
             <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
               {searchPlaceholder}
             </RtlText>
@@ -72,15 +74,15 @@ export function MarketAppBar({
 
         <Pressable
           onPress={onFeaturedPress}
-          style={[styles.iconBtn, featuredActive && styles.iconBtnActive]}
-          hitSlop={8}
+          style={styles.iconSlot}
+          hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel="الإعلانات المميزة"
           accessibilityState={{ selected: featuredActive }}
         >
           <AppIcon
             name="star"
-            size={20}
+            size={ICON}
             color={featuredActive ? colors.gold : colors.textPrimary}
             variant={featuredActive ? 'sr' : 'rr'}
           />
@@ -97,43 +99,38 @@ function createStyles(colors: ThemeColors) {
       flexGrow: 0,
       flexShrink: 0,
     },
-    bar: {
+    track: {
       flexDirection: 'row',
       direction: 'ltr',
       alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      minHeight: 56,
-      gap: spacing.sm,
+      height: BAR_H,
+      marginHorizontal: spacing.md,
+      marginVertical: spacing.sm,
+      paddingHorizontal: 4,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
     },
-    iconBtn: {
-      width: CONTROL,
-      height: CONTROL,
+    iconSlot: {
+      width: SLOT,
+      height: BAR_H,
+      flexGrow: 0,
+      flexShrink: 0,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgElevated,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
     },
-    iconBtnActive: {
-      borderColor: colors.gold,
-      backgroundColor: `${colors.gold}14`,
-    },
-    searchPill: {
+    searchSlot: {
       flex: 1,
-      height: CONTROL,
-      minHeight: CONTROL,
+      minWidth: 0,
+      height: BAR_H,
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      backgroundColor: colors.bgElevated,
-      borderRadius: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      gap: 6,
+      paddingHorizontal: 6,
     },
     searchPlaceholder: {
       ...typography.secondary,
+      fontSize: 14,
       color: colors.textMuted,
     },
   });
