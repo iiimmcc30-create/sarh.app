@@ -218,7 +218,17 @@ export function ProfileScreenLayout({
             }}
           >
             <View style={[styles.toolbar, getRtlRow()]}>
-              <View style={[styles.toolbarEnd, getRtlRow()]}>
+              <View style={[styles.toolbarSide, getRtlRow()]}>
+                {mode === 'own' && onEditProfile ? (
+                  <Pressable
+                    onPress={onEditProfile}
+                    hitSlop={10}
+                    style={styles.iconBtn}
+                    accessibilityLabel="تعديل الملف"
+                  >
+                    <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
+                  </Pressable>
+                ) : null}
                 {mode === 'visitor' && onBack ? (
                   <Pressable onPress={onBack} hitSlop={10} style={styles.iconBtn}>
                     <AppIcon name={rtlBackIcon()} size={22} color={themeColors.textPrimary} />
@@ -226,15 +236,10 @@ export function ProfileScreenLayout({
                 ) : null}
               </View>
 
-              <View style={[styles.toolbarStart, getRtlRow()]}>
+              <View style={[styles.toolbarSide, getRtlRow()]}>
                 {mode === 'own' && onSettings ? (
                   <Pressable onPress={onSettings} hitSlop={10} style={styles.iconBtn} accessibilityLabel="إعدادات الحساب">
                     <AppIcon name="settings-outline" size={22} color={themeColors.textPrimary} />
-                  </Pressable>
-                ) : null}
-                {mode === 'own' && onEditProfile ? (
-                  <Pressable onPress={onEditProfile} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
                 {mode === 'visitor' && onMenu ? (
@@ -473,12 +478,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingBottom: spacing.sm,
       minHeight: 44,
     },
-    toolbarStart: {
+    toolbarSide: {
       alignItems: 'center',
-      gap: 4,
-    },
-    toolbarEnd: {
-      alignItems: 'center',
+      minWidth: ds.iconBtn.md,
       gap: 4,
     },
     iconBtn: {

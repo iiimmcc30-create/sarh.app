@@ -14,16 +14,18 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { getRtlRow } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_GAP = 10;
+const CARD_GAP = 12;
 const SIDE_PAD = spacing.lg;
-const VISIBLE_CARDS = 4.6;
+/** ~3.4 cards visible — close to the reference, slightly under the original 3.5. */
+const VISIBLE_CARDS = 3.4;
 const CARD_W = Math.round(
   (SCREEN_W - SIDE_PAD - CARD_GAP * 3) / VISIBLE_CARDS,
 );
-const CARD_H = Math.round(CARD_W * 1.12);
+const CARD_H = Math.round(CARD_W * (4 / 3));
 const DOT_SIZE = 6;
 const DOT_ACTIVE_W = 22;
 
@@ -59,7 +61,8 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
           ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
+          style={styles.scroller}
+          contentContainerStyle={[styles.row, getRtlRow()]}
           onScroll={onScroll}
           scrollEventThrottle={16}
           decelerationRate="fast"
@@ -96,7 +99,7 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
         </ScrollView>
 
         {stories.length > 1 ? (
-          <View style={styles.dots}>
+          <View style={[styles.dots, getRtlRow()]}>
             {stories.map((story, i) => (
               <View
                 key={story.id}
@@ -124,6 +127,9 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.xs,
       paddingBottom: spacing.md,
     },
+    scroller: {
+      flexGrow: 0,
+    },
     row: {
       paddingHorizontal: SIDE_PAD,
       gap: CARD_GAP,
@@ -132,7 +138,7 @@ function createStyles(colors: ThemeColors) {
     card: {
       width: CARD_W,
       height: CARD_H,
-      borderRadius: 14,
+      borderRadius: 16,
       overflow: 'hidden',
       backgroundColor: colors.bgElevated,
       justifyContent: 'flex-end',
@@ -162,7 +168,6 @@ function createStyles(colors: ThemeColors) {
       textShadowRadius: 3,
     },
     dots: {
-      flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
       gap: 7,

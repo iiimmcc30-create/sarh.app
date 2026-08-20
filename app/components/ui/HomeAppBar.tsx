@@ -1,12 +1,13 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+
+const HEADER_CONTROL = 48;
 
 type HomeAppBarProps = {
   onMore: () => void;
@@ -34,7 +35,7 @@ export function HomeAppBar({
           hitSlop={8}
           accessibilityLabel="المزيد"
         >
-          <AppIcon name="ellipsis-horizontal" size={ds.icon.md} color={colors.textPrimary} />
+          <AppIcon name="apps" size={22} color={colors.textPrimary} />
         </Pressable>
 
         <Pressable
@@ -43,7 +44,7 @@ export function HomeAppBar({
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
-          <AppIcon name="search" size={20} color={colors.textMuted} />
+          <AppIcon name="search" size={22} color={colors.textMuted} />
           <RtlTextShell>
             <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
               {searchPlaceholder}
@@ -52,8 +53,8 @@ export function HomeAppBar({
         </Pressable>
 
         <NotificationBellButton
-          size={ds.iconBtn.md}
-          iconSize={ds.icon.md}
+          size={HEADER_CONTROL}
+          iconSize={22}
           style={styles.iconBtn}
           iconColor={colors.textPrimary}
           badgeBorderColor={colors.bgElevated}
@@ -80,7 +81,8 @@ function createStyles(colors: ThemeColors) {
     },
     searchPill: {
       flex: 1,
-      minHeight: 48,
+      height: HEADER_CONTROL,
+      minHeight: HEADER_CONTROL,
       alignItems: 'center',
       gap: spacing.sm,
       paddingHorizontal: spacing.lg,
@@ -94,12 +96,12 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
     },
     iconBtn: {
-      width: 44,
-      height: 44,
+      width: HEADER_CONTROL,
+      height: HEADER_CONTROL,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.bgElevated,
-      borderRadius: 14,
+      borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },

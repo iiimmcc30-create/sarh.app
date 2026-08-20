@@ -1,12 +1,11 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { motion, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlForwardIcon } from '@/lib/rtl';
 import type { HomeExploreCard } from '@/lib/homeExplore';
+import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -19,7 +18,8 @@ export function ExploreSarhSection({ sections }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const cardW = Math.min(320, Math.round(width * 0.72));
+  const cardW = Math.min(220, Math.round(width * 0.52));
+  const step = cardW + spacing.md;
 
   if (sections.length === 0) return null;
 
@@ -29,9 +29,10 @@ export function ExploreSarhSection({ sections }: Props) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        style={styles.scroller}
+        contentContainerStyle={[styles.row, getRtlRow()]}
         decelerationRate="fast"
-        snapToInterval={cardW + spacing.md}
+        snapToInterval={step}
         snapToAlignment="start"
       >
         {sections.map((item) => (
@@ -46,9 +47,11 @@ export function ExploreSarhSection({ sections }: Props) {
               pressed && styles.pressed,
             ]}
           >
-            <CoverTrailRow justify="space-between" gap={spacing.md} style={styles.inner}>
-              <AppIcon name={rtlForwardIcon()} size={16} color={styles.chevron.color} />
-              <RtlTextShell flex>
+            <View style={styles.iconRing}>
+              <AppIcon name={item.icon} size={20} color={styles.accent.color} />
+            </View>
+            <View style={styles.copy}>
+              <RtlTextShell>
                 <RtlText style={styles.title} numberOfLines={1}>
                   {item.titleAr}
                 </RtlText>
@@ -56,14 +59,7 @@ export function ExploreSarhSection({ sections }: Props) {
                   {item.descriptionAr}
                 </RtlText>
               </RtlTextShell>
-              <View style={styles.iconHalo}>
-                <View style={styles.iconRing}>
-                  <View style={styles.iconInner}>
-                    <AppIcon name={item.icon} size={22} color={styles.accent.color} />
-                  </View>
-                </View>
-              </View>
-            </CoverTrailRow>
+            </View>
           </Pressable>
         ))}
       </ScrollView>
@@ -76,23 +72,30 @@ function createStyles(colors: ThemeColors) {
     wrap: {
       paddingBottom: spacing.sm,
     },
+    scroller: {
+      flexGrow: 0,
+    },
     row: {
       paddingHorizontal: spacing.lg,
       gap: spacing.md,
       paddingBottom: spacing.sm,
     },
     card: {
-      borderRadius: 20,
+      minHeight: 118,
+      borderRadius: 18,
       backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      paddingVertical: 16,
+      paddingTop: 14,
+      paddingBottom: 14,
       paddingHorizontal: 14,
-      minHeight: 92,
-      justifyContent: 'center',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      direction: 'ltr',
     },
-    inner: {
-      alignItems: 'center',
+    copy: {
+      width: '100%',
+      alignItems: 'flex-end',
     },
     title: {
       ...typography.cardHeading,
@@ -103,35 +106,18 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       marginTop: 4,
     },
-    iconHalo: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.electric + '33',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
     iconRing: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      borderWidth: 1,
-      borderColor: colors.electric + '55',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    iconInner: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: colors.electric + '1A',
+      borderWidth: 1.25,
+      borderColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: 'transparent',
+      flexShrink: 0,
     },
-    accent: { color: colors.electricBright },
-    chevron: { color: colors.textMuted },
+    accent: { color: colors.electric },
     pressed: {
       transform: [{ scale: motion.pressScale }],
       opacity: 0.94,
