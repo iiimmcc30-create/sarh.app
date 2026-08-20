@@ -1,10 +1,15 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { appFont } from '@/constants/fonts';
 import { motion, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { splitExploreRows, type HomeExploreCard } from '@/lib/homeExplore';
+import {
+  splitExploreRows,
+  usesExploreSarhLogoMark,
+  type HomeExploreCard,
+} from '@/lib/homeExplore';
 import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
@@ -99,6 +104,8 @@ function ExploreTile({
   styles: ReturnType<typeof createStyles>;
   onPress: () => void;
 }) {
+  const useSarhMark = usesExploreSarhLogoMark(item.destination);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -110,8 +117,15 @@ function ExploreTile({
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.iconRing} pointerEvents="none">
-        <AppIcon name={item.icon} size={ICON_SIZE} color={styles.accent.color} />
+      <View
+        style={[styles.iconRing, useSarhMark ? styles.iconRingTopCenter : styles.iconRingCorner]}
+        pointerEvents="none"
+      >
+        {useSarhMark ? (
+          <SarhLogoMark size={ICON_SIZE} color={styles.accent.color} />
+        ) : (
+          <AppIcon name={item.icon} size={ICON_SIZE} color={styles.accent.color} />
+        )}
       </View>
       <View style={styles.titleSlot} pointerEvents="none">
         <RtlTextShell>
@@ -147,10 +161,9 @@ function createStyles(colors: ThemeColors) {
       gap: ROW_GAP,
     },
     card: {
-      borderRadius: 16,
+      borderRadius: 14,
       backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderWidth: 0,
       overflow: 'hidden',
       direction: 'ltr',
     },
@@ -193,7 +206,6 @@ function createStyles(colors: ThemeColors) {
     iconRing: {
       position: 'absolute',
       top: 10,
-      right: 10,
       width: ICON_BOX,
       height: ICON_BOX,
       borderRadius: ICON_BOX / 2,
@@ -202,6 +214,13 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'transparent',
+    },
+    iconRingCorner: {
+      right: 10,
+    },
+    iconRingTopCenter: {
+      left: '50%',
+      transform: [{ translateX: -(ICON_BOX / 2) }],
     },
     accent: { color: colors.electric },
     pressed: {

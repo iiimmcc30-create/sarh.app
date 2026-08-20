@@ -11,22 +11,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 type Props = {
   regionSelection: RegionSelection;
   onRegionPress: () => void;
-  onFilterPress: () => void;
   onNearbyPress: () => void;
-  onSortPress: () => void;
-  sortLabel?: string;
-  filterActive?: boolean;
   regionActive?: boolean;
 };
 
 export function MarketFilterBar({
   regionSelection,
   onRegionPress,
-  onFilterPress,
   onNearbyPress,
-  onSortPress,
-  sortLabel = 'الأحدث',
-  filterActive = false,
   regionActive = false,
 }: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
@@ -68,19 +60,7 @@ export function MarketFilterBar({
           />
         </Pressable>
 
-        <FilterChip
-          label="تصفية"
-          icon="settings-sliders"
-          selected={filterActive}
-          onPress={onFilterPress}
-        />
         <FilterChip label="القريب" icon="navigation" onPress={onNearbyPress} />
-        <FilterChip
-          label={sortLabel}
-          icon="sort-alt"
-          chevron
-          onPress={onSortPress}
-        />
       </FilterChipRow>
     </View>
   );

@@ -197,8 +197,12 @@ export default function MarketScreen() {
       {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
       <View style={styles.stickyChrome}>
         <MarketAppBar
-          onMore={() => safePush('/(tabs)/more', undefined, router)}
           onSearch={() => safePush('/search', undefined, router)}
+          onFilterPress={() => setRegionPickerOpen(true)}
+          onSortPress={cycleSort}
+          onFeaturedPress={() => setShowFeaturedOnly((v) => !v)}
+          featuredActive={showFeaturedOnly}
+          sortLabel={sortLabel}
         />
 
         {categories.length > 0 ? (
@@ -218,11 +222,7 @@ export default function MarketScreen() {
         <MarketFilterBar
           regionSelection={regionSelection}
           onRegionPress={() => setRegionPickerOpen(true)}
-          onFilterPress={() => setShowFeaturedOnly((v) => !v)}
           onNearbyPress={() => void onNearby()}
-          onSortPress={cycleSort}
-          sortLabel={sortLabel}
-          filterActive={showFeaturedOnly}
           regionActive={regionPickerOpen}
         />
       </View>

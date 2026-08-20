@@ -1,4 +1,11 @@
-import { FALLBACK_HOME_EXPLORE, resolveExploreCard, splitExploreRows } from '../lib/homeExplore';
+import * as fs from 'fs';
+import * as path from 'path';
+import {
+  FALLBACK_HOME_EXPLORE,
+  resolveExploreCard,
+  splitExploreRows,
+  usesExploreSarhLogoMark,
+} from '../lib/homeExplore';
 
 describe('homeExplore catalog', () => {
   it('maps known destinations to real app routes', () => {
@@ -48,5 +55,92 @@ describe('homeExplore catalog', () => {
     });
     expect(splitExploreRows([1, 2, 3, 4, 5, 6]).top).toHaveLength(3);
     expect(splitExploreRows([1, 2, 3, 4, 5, 6]).bottom).toHaveLength(3);
+  });
+});
+
+describe('Explore Sarh logo mark', () => {
+  it('uses the official mark on community, butchers, listings, services, and news', () => {
+    expect(usesExploreSarhLogoMark('community')).toBe(true);
+    expect(usesExploreSarhLogoMark('butchers')).toBe(true);
+    expect(usesExploreSarhLogoMark('listings')).toBe(true);
+    expect(usesExploreSarhLogoMark('services')).toBe(true);
+    expect(usesExploreSarhLogoMark('news')).toBe(true);
+    expect(usesExploreSarhLogoMark('live')).toBe(false);
+    expect(usesExploreSarhLogoMark('promote')).toBe(false);
+  });
+
+  it('wires SarhLogoMark into those cards at top-center', () => {
+    const section = fs.readFileSync(
+      path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
+      'utf8',
+    );
+    const mark = fs.readFileSync(
+      path.join(__dirname, '../components/ui/SarhLogoMark.tsx'),
+      'utf8',
+    );
+    expect(section).toContain('SarhLogoMark');
+    expect(section).toContain('iconRingTopCenter');
+    expect(section).toContain('usesExploreSarhLogoMark');
+    expect(mark).toContain('assets/images/logo.png');
+    expect(mark).toContain('WAVE_BOTTOM');
+    expect(mark).toContain('WAVE_TOP');
+    expect(mark).toContain('DIAMOND');
+    expect(mark).toContain('fill={color}');
+    expect(mark).not.toContain('AppIcon');
+  });
+});
+
+describe('HomeAppBar chrome', () => {
+  it('places more then notifications then search as separate controls', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
+      'utf8',
+    );
+    const moreAt = src.indexOf('accessibilityLabel="المزيد"');
+    const bellAt = src.indexOf('<NotificationBellButton');
+    const searchAt = src.indexOf('accessibilityRole="search"');
+    expect(moreAt).toBeGreaterThan(-1);
+    expect(bellAt).toBeGreaterThan(moreAt);
+    expect(searchAt).toBeGreaterThan(bellAt);
+    expect(src).toContain('iconPair');
+    expect(src).toContain('styles.topBar');
+    expect(src).toContain('TOOL_ICON');
+    expect(src).toContain("direction: 'ltr'");
+    expect(src).toContain('more-vertical');
+    expect(src).not.toContain('⋮');
+    expect(src).not.toContain("name=\"apps\"");
+  });
+
+  it('places filter and sort left of market search, with a featured star on the right', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/market/MarketAppBar.tsx'),
+      'utf8',
+    );
+    const filterAt = src.indexOf('accessibilityLabel="تصفية"');
+    const sortAt = src.indexOf('accessibilityLabel={sortLabel}');
+    const searchAt = src.indexOf('accessibilityRole="search"');
+    const starAt = src.indexOf('accessibilityLabel="الإعلانات المميزة"');
+    expect(filterAt).toBeGreaterThan(-1);
+    expect(sortAt).toBeGreaterThan(filterAt);
+    expect(searchAt).toBeGreaterThan(sortAt);
+    expect(starAt).toBeGreaterThan(searchAt);
+    expect(src).toContain('styles.topBar');
+    expect(src).toContain('styles.toolPair');
+    expect(src).toContain('styles.searchPill');
+    expect(src).toContain('TOOL_ICON');
+    expect(src).toContain('ابحث في السوق');
+    expect(src).not.toContain('HomeAppBar');
+    expect(src).not.toContain('المزيد');
+    expect(src).not.toContain('NotificationBellButton');
+  });
+
+  it('uses the same elevated surface as listing and post cards', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
+      'utf8',
+    );
+    expect(src).toContain('backgroundColor: colors.bgElevated');
+    expect(src).toContain('borderWidth: 0');
+    expect(src).not.toContain('#173445');
   });
 });
