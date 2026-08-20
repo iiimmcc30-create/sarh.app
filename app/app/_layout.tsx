@@ -94,7 +94,6 @@ function RootNavigator() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
-        <Stack.Screen name="(butcher)" options={{ animation: 'none' }} />
         <Stack.Screen name="butchers" />
         <Stack.Screen name="listing/[id]" />
         <Stack.Screen name="market/categories/[id]" />
@@ -104,7 +103,6 @@ function RootNavigator() {
         <Stack.Screen name="news" />
         <Stack.Screen name="users/[id]" />
         <Stack.Screen name="sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
-        <Stack.Screen name="butcher-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="butchers-market-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="notifications/index" />
         <Stack.Screen name="favorites" />

@@ -55,7 +55,6 @@ type ProfileScreenLayoutProps = {
   onBack?: () => void;
   onShare?: () => void;
   onEditProfile?: () => void;
-  onManageButcher?: () => void;
   onEditAvatar?: () => void;
   onAvatarPress?: () => void;
   hasStoryRing?: boolean;
@@ -125,7 +124,6 @@ export function ProfileScreenLayout({
   onBack,
   onShare,
   onEditProfile,
-  onManageButcher,
   onEditAvatar,
   onAvatarPress,
   hasStoryRing = false,
@@ -373,16 +371,6 @@ export function ProfileScreenLayout({
                 ) : null}
               </Pressable>
             </View>
-
-            {mode === 'own' && onManageButcher ? (
-              <Pressable
-                onPress={onManageButcher}
-                style={({ pressed }) => [styles.manageButcher, pressed && { opacity: 0.9 }]}
-              >
-                <AppIcon name="grid-outline" size={16} color={themeColors.electricBright} />
-                <Text style={styles.manageButcherText}>إدارة الملحمة</Text>
-              </Pressable>
-            ) : null}
 
             {mode === 'visitor' && (onFollow || onMessage) ? (
               <View style={[styles.actionsRow, getRtlRow()]}>
@@ -652,25 +640,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       justifyContent: 'center',
       borderWidth: 2,
       borderColor: colors.bgDeep,
-    },
-    manageButcher: {
-      marginTop: spacing.md,
-      marginHorizontal: spacing.lg,
-      alignSelf: 'flex-end',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    manageButcherText: {
-      ...typography.emphasis,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
     },
     actionsRow: {
       alignSelf: 'stretch',

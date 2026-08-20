@@ -15,7 +15,6 @@ import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
-import { useButcherOwnerAccess } from '@/hooks/useButcherOwnerAccess';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -33,7 +32,6 @@ export default function ProfileScreen() {
     refetchData,
   } = useApp();
   const { accessToken, isAuthenticated } = useAuth();
-  const { isButcherOwner } = useButcherOwnerAccess();
 
   const [hasStories, setHasStories] = useState(false);
   const [myStoryGroup, setMyStoryGroup] = useState<StoryGroup | null>(null);
@@ -185,11 +183,6 @@ export default function ProfileScreen() {
       refreshing={refreshing}
       onRefresh={onRefresh}
       onSettings={() => safePush('/profile/settings', undefined, router)}
-      onManageButcher={
-        isButcherOwner
-          ? () => safePush('/(butcher)/manage', undefined, router)
-          : undefined
-      }
       onEditProfile={() => safePush('/profile/edit', undefined, router)}
       onEditAvatar={() => safePush('/profile/edit', undefined, router)}
       onAvatarPress={() => {

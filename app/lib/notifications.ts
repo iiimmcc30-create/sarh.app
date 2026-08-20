@@ -282,7 +282,7 @@ export function handleNotificationNavigation(
           } as never, undefined, ctx.router);
           return true;
         }
-        safePush('/butchers/dashboard' as never, undefined, ctx.router);
+        safePush('/butchers/my-application' as never, undefined, ctx.router);
         return true;
       }
 
@@ -371,7 +371,7 @@ export function handleNotificationNavigation(
         return true;
       }
       if (orderId) {
-        safePush('/butchers/manage' as never, undefined, ctx.router);
+        safePush('/notifications' as never, undefined, ctx.router);
         return true;
       }
       break;
@@ -408,7 +408,9 @@ export function handleNotificationNavigation(
         return true;
       }
       if (stringField(data, 'threadType') === 'BUTCHER') {
-        safePush('/(butcher)/messages' as never, undefined, ctx.router);
+        safePush({
+          pathname: '/(tabs)/messages',
+        } as never, undefined, ctx.router);
         return true;
       }
       safePush({
