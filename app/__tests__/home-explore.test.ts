@@ -106,16 +106,31 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain("direction: 'ltr'");
   });
 
-  it('keeps market search chrome without more or notifications', () => {
+  it('places filter and sort left of market search, with a featured star on the right', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/market/MarketAppBar.tsx'),
       'utf8',
     );
-    expect(src).toContain('accessibilityRole="search"');
+    const filterAt = src.indexOf('accessibilityLabel="تصفية"');
+    const sortAt = src.indexOf('accessibilityLabel={sortLabel}');
+    const searchAt = src.indexOf('accessibilityRole="search"');
+    const starAt = src.indexOf('accessibilityLabel="الإعلانات المميزة"');
+    expect(filterAt).toBeGreaterThan(-1);
+    expect(sortAt).toBeGreaterThan(filterAt);
+    expect(searchAt).toBeGreaterThan(sortAt);
+    expect(starAt).toBeGreaterThan(searchAt);
     expect(src).toContain('ابحث في السوق');
     expect(src).not.toContain('HomeAppBar');
     expect(src).not.toContain('المزيد');
     expect(src).not.toContain('NotificationBellButton');
     expect(src).not.toContain('onMore');
+  });
+
+  it('uses a deeper navy Explore card in dark mode', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
+      'utf8',
+    );
+    expect(src).toContain("scheme === 'dark' ? '#0B1A2E'");
   });
 });

@@ -33,7 +33,7 @@ const TITLE_LINE = 22;
 export function ExploreSarhSection({ sections }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const { top, bottom } = splitExploreRows(sections);
 
   const inner = width - SIDE_PAD * 2;
@@ -145,7 +145,7 @@ function ExploreTile({
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     wrap: {
       paddingBottom: spacing.sm,
@@ -162,9 +162,9 @@ function createStyles(colors: ThemeColors) {
     },
     card: {
       borderRadius: 16,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: scheme === 'dark' ? '#0B1A2E' : colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      borderColor: scheme === 'dark' ? '#16304A' : colors.borderSoft,
       overflow: 'hidden',
       direction: 'ltr',
     },
