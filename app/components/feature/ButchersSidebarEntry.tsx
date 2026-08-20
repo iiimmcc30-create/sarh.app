@@ -1,6 +1,6 @@
 // Powered by OnSpace.AI
 // SAFAT — ButchersSidebarEntry
-// Public butcher discovery + owner tools when application is approved.
+// Public butcher discovery + own storefront when approved.
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { useRouter } from 'expo-router';
@@ -29,13 +29,6 @@ const APPLICATION_ITEMS: SidebarRouteItem[] = [
   { icon: 'folder-open-outline', arabic: 'طلبي', route: '/butchers/my-application' },
 ];
 
-const OWNER_ITEMS: SidebarRouteItem[] = [
-  { icon: 'bar-chart-outline', arabic: 'لوحة التحليلات', route: '/(butcher)', ownerOnly: true },
-  { icon: 'settings-outline', arabic: 'إدارة الملحمة', route: '/(butcher)/manage', ownerOnly: true },
-  { icon: 'create-outline', arabic: 'تعديل بيانات الملحمة', route: '/butchers/edit', ownerOnly: true },
-  { icon: 'chatbubbles-outline', arabic: 'رسائل العملاء', route: '/(butcher)/messages', ownerOnly: true },
-];
-
 export function ButchersSidebarEntry() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -51,7 +44,6 @@ export function ButchersSidebarEntry() {
     const items: SidebarRouteItem[] = [...PUBLIC_ITEMS];
 
     if (isButcherOwner) {
-      items.push(...OWNER_ITEMS);
       if (provisionedButcherId) {
         items.push({
           icon: 'storefront-outline',

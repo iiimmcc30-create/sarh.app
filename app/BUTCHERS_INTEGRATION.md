@@ -78,12 +78,6 @@ router.push({ pathname: '/butchers/chat', params: { butcherId: 'b1' } });
 // تسجيل ملحمة
 router.push('/butchers/register');
 
-// لوحة التحليلات
-router.push('/butchers/dashboard');
-
-// إدارة الملحمة
-router.push('/butchers/manage');
-
 // الخريطة
 router.push('/butchers/map');
 
