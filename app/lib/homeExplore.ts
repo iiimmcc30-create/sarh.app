@@ -77,6 +77,13 @@ export const FALLBACK_HOME_EXPLORE: HomeExploreCard[] = (
   ...CATALOG[destination],
 }));
 
+/** First row takes the extra card when the count is odd — matches 3+2 for the default five. */
+export function splitExploreRows<T>(items: T[]): { top: T[]; bottom: T[] } {
+  if (items.length <= 1) return { top: items, bottom: [] };
+  const mid = Math.ceil(items.length / 2);
+  return { top: items.slice(0, mid), bottom: items.slice(mid) };
+}
+
 export function resolveExploreCard(
   raw: Partial<HomeExploreCard> & { destination?: string },
 ): HomeExploreCard | null {
