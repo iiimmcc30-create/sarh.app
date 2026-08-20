@@ -24,32 +24,32 @@ const CATALOG: Record<
   Omit<HomeExploreCard, 'destination' | 'id' | 'sortOrder' | 'isActive'>
 > = {
   community: {
-    titleAr: 'المجتمع',
-    descriptionAr: 'منشورات ومتابعات المجتمع',
+    titleAr: 'مجتمع سرح',
+    descriptionAr: 'نقاشات-تجارب-اسئلة-معرفه',
     icon: 'people-outline',
     route: '/(tabs)/posts',
   },
   butchers: {
     titleAr: 'سوق الملاحم',
-    descriptionAr: 'ملاحم موثوقة قريبة منك',
+    descriptionAr: 'تصفح منتجات الملاحم والطلبات',
     icon: 'storefront-outline',
     route: '/butchers',
   },
   listings: {
-    titleAr: 'الإعلانات',
-    descriptionAr: 'أحدث الإعلانات للبيع والشراء',
+    titleAr: 'السوق',
+    descriptionAr: 'اعلانات البيع والشراء والمنتجات',
     icon: 'pricetag-outline',
     route: '/(tabs)/market',
   },
   services: {
     titleAr: 'خدمات الوزارة',
-    descriptionAr: 'خدمات إلكترونية سريعة',
+    descriptionAr: 'الخدمات الالكترونية-التراخيص-التصاريح',
     icon: 'briefcase-outline',
     route: '/sarh-services',
   },
   news: {
-    titleAr: 'الأخبار',
-    descriptionAr: 'آخر أخبار قطاع المواشي',
+    titleAr: 'قطاع الأخبار',
+    descriptionAr: 'اخبار الوزارة-القرارات-الفعاليات',
     icon: 'newspaper-outline',
     route: '/news',
   },
