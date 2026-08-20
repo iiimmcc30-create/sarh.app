@@ -3,12 +3,7 @@
 
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, useRef } from 'react';
-import {
-  InteractionManager,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography } from '@/constants/theme';
@@ -16,23 +11,20 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditorialStoriesBar } from '@/components/feature/EditorialStoriesBar';
+import { ExploreSarhSection } from '@/components/feature/ExploreSarhSection';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
-import { ButcherMiniSection } from '@/components/feature/ButcherMiniSection';
-import { ListingCard } from '@/components/feature/ListingCard';
+import { fetchHomeExploreSections } from '@/services/homeExplore';
+import { FALLBACK_HOME_EXPLORE, type HomeExploreCard } from '@/lib/homeExplore';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { PostItem } from '@/components/feature/PostItem';
 import { HomeAppBar } from '@/components/ui/HomeAppBar';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
-import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
-import { fetchLiveStreamEligibility } from '@/lib/liveStreamAccess';
 import { safePush } from '@/lib/safeNavigate';
 
 const HOME_REFRESH_TTL_MS = 60_000;
-const HOME_LISTINGS_LIMIT = 10;
-const HOME_BUTCHERS_LIMIT = 10;
-const HOME_POSTS_LIMIT = 10;
+const HOME_POSTS_LIMIT = 5;
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
 export default function HomeScreen() {
@@ -44,11 +36,7 @@ export default function HomeScreen() {
       scrollContent: {
         paddingBottom: spacing.lg,
       },
-      listingsSection: {
-        gap: 4,
-      },
       postsSection: {
-        // Keep tight under SectionHeader — same rhythm as listingsSection.
         marginTop: 0,
         gap: 4,
       },
@@ -59,7 +47,6 @@ export default function HomeScreen() {
   );
   const {
     me,
-    listings,
     posts,
     likedPosts,
     bookmarkedPosts,
@@ -67,38 +54,15 @@ export default function HomeScreen() {
     toggleBookmark,
     deletePost,
     fetchPosts,
-    fetchListings,
   } = useApp();
-  const { accessToken, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [editorialStories, setEditorialStories] = useState<EditorialStory[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(false);
-  const [canShowLive, setCanShowLive] = useState(false);
+  const [exploreSections, setExploreSections] = useState<HomeExploreCard[]>(FALLBACK_HOME_EXPLORE);
   const lastStoriesAt = useRef(0);
-  const lastLiveAt = useRef(0);
   const hasStoriesData = useRef(false);
 
-  const refreshLiveAccess = useCallback(async (force = false) => {
-    if (!accessToken || !isAuthenticated) {
-      setCanShowLive(false);
-      return;
-    }
-    const now = Date.now();
-    if (!force && now - lastLiveAt.current < HOME_REFRESH_TTL_MS) return;
-    lastLiveAt.current = now;
-    const { canStream } = await fetchLiveStreamEligibility(accessToken);
-    setCanShowLive(canStream);
-  }, [accessToken, isAuthenticated]);
-
-  const lastPostsFocusAt = useRef(Date.now());
-
-  useFocusEffect(
-    useCallback(() => {
-      const task = InteractionManager.runAfterInteractions(() => {
-        void refreshLiveAccess();
-      });
-      return () => task.cancel();
-    }, [refreshLiveAccess]),
-  );
+  const lastPostsFocusAt = useRef(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -106,8 +70,7 @@ export default function HomeScreen() {
       if (now - lastPostsFocusAt.current < HOME_REFRESH_TTL_MS) return;
       lastPostsFocusAt.current = now;
       void fetchPosts('for_you');
-      void fetchListings();
-    }, [fetchPosts, fetchListings]),
+    }, [fetchPosts]),
   );
 
   const fetchStories = useCallback(async (force = false) => {
@@ -131,15 +94,9 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       void fetchStories();
+      void fetchHomeExploreSections().then(setExploreSections);
     }, [fetchStories]),
   );
-
-  const displayedListings = useMemo(() => {
-    return interleavePromotedListings(listings.slice().sort(compareListingBoostPriority)).slice(
-      0,
-      HOME_LISTINGS_LIMIT,
-    );
-  }, [listings]);
 
   const recentPosts = useMemo(() => {
     return posts
@@ -156,45 +113,16 @@ export default function HomeScreen() {
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <HomeAppBar
-          onMenu={() => safePush('/sidebar', undefined, router)}
+          onMore={() => safePush('/(tabs)/more', undefined, router)}
           onSearch={() => safePush('/search', undefined, router)}
-          onLive={() => safePush('/(tabs)/live', undefined, router)}
-          showLive={canShowLive}
         />
 
         <AppScrollView contentContainerStyle={styles.scrollContent}>
           <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
-
-          {/* 1) ستوريات الأخبار → 2) الملاحم → 3) الإعلانات → 4) المنشورات */}
-          <ButcherMiniSection size="grid" showStories={false} limit={HOME_BUTCHERS_LIMIT} />
+          <ExploreSarhSection sections={exploreSections} />
 
           <SectionHeader
-            title="الإعلانات"
-            onSeeAll={() => safePush('/(tabs)/market', undefined, router)}
-          />
-          <View style={styles.listingsSection}>
-            {displayedListings.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>🛒</Text>
-                <Text style={styles.emptyText}>لا توجد إعلانات بعد</Text>
-              </View>
-            ) : (
-              displayedListings.map((item) => (
-                <ListingCard
-                  key={item.id}
-                  listing={item}
-                  variant="list"
-                  listMode="market"
-                  onPress={() =>
-                    safePush({ pathname: '/listing/[id]', params: { id: item.id } }, undefined, router)
-                  }
-                />
-              ))
-            )}
-          </View>
-
-          <SectionHeader
-            title="المنشورات"
+            title="أحدث المنشورات"
             onSeeAll={() => safePush('/(tabs)/posts', undefined, router)}
           />
           <View style={styles.postsSection}>

@@ -101,6 +101,7 @@ function RootNavigator() {
         <Stack.Screen name="market/browse" />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="search" />
+        <Stack.Screen name="news" />
         <Stack.Screen name="users/[id]" />
         <Stack.Screen name="sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="butcher-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />

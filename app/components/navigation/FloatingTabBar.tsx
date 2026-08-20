@@ -18,15 +18,15 @@ type TabDef =
   | { kind: 'create'; label: string };
 
 /**
- * Visual RTL order (right→left), matching reference:
- * الرئيسية · السوق · إضافة عرض · المحادثات · المزيد
+ * Visual RTL order (right→left):
+ * الرئيسية · السوق · إضافة عرض · المحادثات · الملف الشخصي
  */
 const TABS: TabDef[] = [
   { kind: 'route', route: 'index', icon: 'home-outline', label: 'الرئيسية' },
   { kind: 'route', route: 'market', icon: 'cart-outline', label: 'السوق' },
   { kind: 'create', label: 'إضافة عرض' },
   { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'المحادثات' },
-  { kind: 'route', route: 'more', icon: 'apps', label: 'المزيد' },
+  { kind: 'route', route: 'profile', icon: 'person-outline', label: 'الملف الشخصي' },
 ];
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {

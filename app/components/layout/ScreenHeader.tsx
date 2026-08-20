@@ -15,6 +15,7 @@ interface ScreenHeaderProps {
   onRightPress?: () => void;
   showSidebar?: boolean;
   onSidebar?: () => void;
+  onBackPress?: () => void;
 }
 
 export function ScreenHeader({
@@ -25,6 +26,7 @@ export function ScreenHeader({
   onRightPress,
   showSidebar,
   onSidebar,
+  onBackPress,
 }: ScreenHeaderProps) {
   const router = useRouter();
   const { styles, colors } = useThemedStyles((theme) => ({
@@ -39,7 +41,7 @@ export function ScreenHeader({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="رجوع"
-            onPress={() => router.back()}
+            onPress={() => (onBackPress ? onBackPress() : router.back())}
             hitSlop={12}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
           >

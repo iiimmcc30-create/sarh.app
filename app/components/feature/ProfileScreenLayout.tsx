@@ -51,9 +51,11 @@ type ProfileScreenLayoutProps = {
   refreshing?: boolean;
   onRefresh?: () => void;
   onMenu?: () => void;
+  onSettings?: () => void;
   onBack?: () => void;
   onShare?: () => void;
   onEditProfile?: () => void;
+  onManageButcher?: () => void;
   onEditAvatar?: () => void;
   onAvatarPress?: () => void;
   hasStoryRing?: boolean;
@@ -119,9 +121,11 @@ export function ProfileScreenLayout({
   refreshing = false,
   onRefresh,
   onMenu,
+  onSettings,
   onBack,
   onShare,
   onEditProfile,
+  onManageButcher,
   onEditAvatar,
   onAvatarPress,
   hasStoryRing = false,
@@ -214,10 +218,15 @@ export function ProfileScreenLayout({
             }}
           >
             <View style={[styles.toolbar, getRtlRow()]}>
-              <View style={[styles.toolbarEnd, getRtlRow()]}>
-                {mode === 'own' && onMenu ? (
-                  <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
+              <View style={[styles.toolbarSide, getRtlRow()]}>
+                {mode === 'own' && onEditProfile ? (
+                  <Pressable
+                    onPress={onEditProfile}
+                    hitSlop={10}
+                    style={styles.iconBtn}
+                    accessibilityLabel="تعديل الملف"
+                  >
+                    <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
                 {mode === 'visitor' && onBack ? (
@@ -227,10 +236,10 @@ export function ProfileScreenLayout({
                 ) : null}
               </View>
 
-              <View style={[styles.toolbarStart, getRtlRow()]}>
-                {mode === 'own' && onEditProfile ? (
-                  <Pressable onPress={onEditProfile} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
+              <View style={[styles.toolbarSide, getRtlRow()]}>
+                {mode === 'own' && onSettings ? (
+                  <Pressable onPress={onSettings} hitSlop={10} style={styles.iconBtn} accessibilityLabel="إعدادات الحساب">
+                    <AppIcon name="settings-outline" size={22} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
                 {mode === 'visitor' && onMenu ? (
@@ -365,6 +374,16 @@ export function ProfileScreenLayout({
               </Pressable>
             </View>
 
+            {mode === 'own' && onManageButcher ? (
+              <Pressable
+                onPress={onManageButcher}
+                style={({ pressed }) => [styles.manageButcher, pressed && { opacity: 0.9 }]}
+              >
+                <AppIcon name="grid-outline" size={16} color={themeColors.electricBright} />
+                <Text style={styles.manageButcherText}>إدارة الملحمة</Text>
+              </Pressable>
+            ) : null}
+
             {mode === 'visitor' && (onFollow || onMessage) ? (
               <View style={[styles.actionsRow, getRtlRow()]}>
                 {onMessage ? (
@@ -459,12 +478,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingBottom: spacing.sm,
       minHeight: 44,
     },
-    toolbarStart: {
+    toolbarSide: {
       alignItems: 'center',
-      gap: 4,
-    },
-    toolbarEnd: {
-      alignItems: 'center',
+      minWidth: ds.iconBtn.md,
       gap: 4,
     },
     iconBtn: {
@@ -636,6 +652,25 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       justifyContent: 'center',
       borderWidth: 2,
       borderColor: colors.bgDeep,
+    },
+    manageButcher: {
+      marginTop: spacing.md,
+      marginHorizontal: spacing.lg,
+      alignSelf: 'flex-end',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+    },
+    manageButcherText: {
+      ...typography.emphasis,
+      color: colors.textPrimary,
+      writingDirection: 'rtl',
     },
     actionsRow: {
       alignSelf: 'stretch',

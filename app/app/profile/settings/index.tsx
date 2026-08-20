@@ -182,7 +182,7 @@ export default function ProfileSettingsScreen() {
   );
   return (
     <ProfileSettingsMenuScreen
-      title="الإعدادات والخصوصية"
+      title="إعدادات الحساب"
       onLogout={() => void handleLogout()}
       sections={[
         {
@@ -211,17 +211,33 @@ export default function ProfileSettingsScreen() {
           ],
         },
         {
-          title: 'التفاعلات',
-          items: interactionItems,
+          title: 'الخصوصية',
+          items: [
+            {
+              key: 'privacy',
+              icon: 'shield-outline',
+              label: 'الخصوصية',
+              subtitle: 'الظهور والبحث والرسائل',
+              route: '/profile/settings/privacy',
+            },
+            ...interactionItems,
+          ],
         },
         {
-          title: 'الخصوصية والأمان',
+          title: 'الأمان',
           items: [
             {
               key: 'blocked',
               icon: 'block',
               label: 'المحظورين',
               route: '/settings/blocked',
+            },
+            {
+              key: 'account-security',
+              icon: 'shield-check-outline',
+              label: 'إعدادات الحساب',
+              subtitle: 'التحقق والأمان',
+              route: '/settings/account',
             },
           ],
         },
