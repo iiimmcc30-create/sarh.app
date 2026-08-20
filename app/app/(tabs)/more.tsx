@@ -30,7 +30,6 @@ import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const TAB_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 24;
-
 const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.safat.app';
 
@@ -67,22 +66,18 @@ export default function MoreScreen() {
       const needsRtl = next === 'ar';
       if (I18nManager.isRTL !== needsRtl) {
         setupRtl(next);
-        Alert.alert(
-          'تغيير اللغة',
-          'سيتم تطبيق اتجاه الواجهة بعد إعادة تشغيل التطبيق.',
-          [
-            {
-              text: 'حسنًا',
-              onPress: () => {
-                try {
-                  DevSettings.reload();
-                } catch {
-                  /* cold start will apply */
-                }
-              },
+        Alert.alert('تغيير اللغة', 'سيتم تطبيق اتجاه الواجهة بعد إعادة تشغيل التطبيق.', [
+          {
+            text: 'حسنًا',
+            onPress: () => {
+              try {
+                DevSettings.reload();
+              } catch {
+                /* cold start will apply */
+              }
             },
-          ],
-        );
+          },
+        ]);
       }
     },
     [locale],
@@ -90,9 +85,17 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScreenHeader title="المزيد" />
+      <ScreenHeader
+        title="المزيد"
+        showBack
+        onBackPress={() => router.navigate('/(tabs)' as never)}
+      />
       <AppScrollView contentContainerStyle={styles.content}>
-        {/* اللغة */}
+        <View style={styles.sectionLabelWrap}>
+          <RtlTextShell>
+            <RtlText style={styles.sectionLabel}>عام</RtlText>
+          </RtlTextShell>
+        </View>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
@@ -116,46 +119,33 @@ export default function MoreScreen() {
               <Text style={[styles.langText, locale === 'en' && styles.langTextActive]}>ENGLISH</Text>
             </Pressable>
           </View>
-        </View>
-
-        {/* الوضع الداكن + خدمات الوزارة */}
-        <View style={styles.card}>
+          <View style={[styles.insetDivider, { backgroundColor: colors.borderSoft }]} />
           <View style={styles.switchRow}>
             <BrandSwitch value={isDark} onValueChange={onToggleTheme} colors={colors} />
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
               <RtlTextShell flex>
-                <RtlText style={styles.rowTitle}>الوضع الداكن</RtlText>
+                <RtlText style={styles.rowTitle}>المظهر</RtlText>
               </RtlTextShell>
               <AppIcon name="weather-night" size={22} color={colors.textPrimary} />
             </CoverTrailRow>
           </View>
-          <View style={[styles.insetDivider, { backgroundColor: colors.borderSoft }]} />
-          <SidebarMenuItem
-            icon="briefcase-outline"
-            title="خدمات وزارة البيئة والمياه والزراعة"
-            colors={colors}
-            showDivider={false}
-            onPress={() => safePush('/sarh-services', undefined, router)}
-          />
         </View>
 
-        {/* السياسات والشروط */}
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>السياسات والشروط</RtlText>
+            <RtlText style={styles.sectionLabel}>المحفوظات</RtlText>
           </RtlTextShell>
         </View>
         <View style={styles.card}>
           <SidebarMenuItem
-            icon="file-document-outline"
-            title="السياسات والشروط"
+            icon="heart"
+            title="المفضلة"
             colors={colors}
             showDivider={false}
-            onPress={() => safePush('/info/policies', undefined, router)}
+            onPress={() => safePush('/favorites', undefined, router)}
           />
         </View>
 
-        {/* عن سرح */}
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
             <RtlText style={styles.sectionLabel}>عن سرح</RtlText>
@@ -170,11 +160,33 @@ export default function MoreScreen() {
             onPress={() => safePush('/info/about', undefined, router)}
           />
           <SidebarMenuItem
+            icon="file-document-outline"
+            title="السياسات والشروط"
+            colors={colors}
+            showDivider
+            onPress={() => safePush('/info/policies', undefined, router)}
+          />
+          <SidebarMenuItem
             icon="mail-outline"
             title="تواصل معنا"
             colors={colors}
-            showDivider
+            showDivider={false}
             onPress={() => safePush('/info/contact', undefined, router)}
+          />
+        </View>
+
+        <View style={styles.sectionLabelWrap}>
+          <RtlTextShell>
+            <RtlText style={styles.sectionLabel}>المساعدة</RtlText>
+          </RtlTextShell>
+        </View>
+        <View style={styles.card}>
+          <SidebarMenuItem
+            icon="lifebuoy"
+            title="الدعم والمساعدة"
+            colors={colors}
+            showDivider
+            onPress={() => safePush('/support', undefined, router)}
           />
           <SidebarMenuItem
             icon="star-outline"
@@ -196,7 +208,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: TAB_CLEARANCE,
-      gap: spacing.lg,
+      gap: spacing.md,
     },
     card: menuCardStyle(colors),
     switchRow: {
@@ -207,14 +219,8 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 14,
       gap: spacing.md,
     },
-    coverTrail: {
-      flex: 1,
-      minWidth: 0,
-    },
-    rowTitle: {
-      ...typography.cardHeading,
-      color: colors.textPrimary,
-    },
+    coverTrail: { flex: 1, minWidth: 0 },
+    rowTitle: { ...typography.cardHeading, color: colors.textPrimary },
     insetDivider: {
       height: StyleSheet.hairlineWidth,
       marginHorizontal: spacing.lg,
@@ -224,10 +230,7 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
     },
-    cardTitle: {
-      ...typography.smallHeading,
-      color: colors.textPrimary,
-    },
+    cardTitle: { ...typography.smallHeading, color: colors.textPrimary },
     langTrack: {
       flexDirection: 'row-reverse',
       backgroundColor: colors.bgDeep,
@@ -244,23 +247,10 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    langOptionActive: {
-      backgroundColor: colors.success,
-    },
-    langText: {
-      ...typography.badge,
-      color: colors.textMuted,
-    },
-    langTextActive: {
-      color: '#FFFFFF',
-    },
-    sectionLabelWrap: {
-      marginTop: spacing.xs,
-      paddingHorizontal: spacing.lg,
-    },
-    sectionLabel: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-    },
+    langOptionActive: { backgroundColor: colors.success },
+    langText: { ...typography.badge, color: colors.textMuted },
+    langTextActive: { color: '#FFFFFF' },
+    sectionLabelWrap: { marginTop: spacing.xs, paddingHorizontal: 4 },
+    sectionLabel: { ...typography.bodyStrong, color: colors.textMuted },
   });
 }

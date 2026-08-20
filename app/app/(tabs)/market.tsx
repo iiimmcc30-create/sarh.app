@@ -197,7 +197,7 @@ export default function MarketScreen() {
       {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
       <View style={styles.stickyChrome}>
         <MarketAppBar
-          onMenu={() => safePush('/sidebar', undefined, router)}
+          onMore={() => safePush('/(tabs)/more', undefined, router)}
           onSearch={() => safePush('/search', undefined, router)}
         />
 

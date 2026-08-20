@@ -17,14 +17,13 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_GAP = 12;
+const CARD_GAP = 10;
 const SIDE_PAD = spacing.lg;
-// Show 3 full cards + half of the 4th peeking to hint horizontal scroll.
-const VISIBLE_CARDS = 3.5;
+const VISIBLE_CARDS = 4.6;
 const CARD_W = Math.round(
   (SCREEN_W - SIDE_PAD - CARD_GAP * 3) / VISIBLE_CARDS,
 );
-const CARD_H = Math.round(CARD_W * (4 / 3));
+const CARD_H = Math.round(CARD_W * 1.12);
 const DOT_SIZE = 6;
 const DOT_ACTIVE_W = 22;
 
@@ -133,7 +132,7 @@ function createStyles(colors: ThemeColors) {
     card: {
       width: CARD_W,
       height: CARD_H,
-      borderRadius: 16,
+      borderRadius: 14,
       overflow: 'hidden',
       backgroundColor: colors.bgElevated,
       justifyContent: 'flex-end',

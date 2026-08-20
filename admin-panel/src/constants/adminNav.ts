@@ -26,6 +26,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/orders', label: 'الطلبات' },
   { href: '/plans', label: 'الباقات' },
   { href: '/content', label: 'السياسات والمحتوى' },
+  { href: '/home-explore', label: 'استكشف سرح' },
   { href: '/settings', label: 'الإعدادات' },
 ];
 
@@ -58,6 +59,7 @@ export const ADMIN_FEATURE_ROUTES = [
   '/plans',
   '/plans/[id]',
   '/content',
+  '/home-explore',
   '/settings',
 ] as const;
 

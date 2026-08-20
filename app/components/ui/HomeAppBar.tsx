@@ -1,27 +1,24 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type HomeAppBarProps = {
-  onMenu: () => void;
+  onMore: () => void;
   onSearch: () => void;
-  onLive?: () => void;
-  showLive?: boolean;
   searchPlaceholder?: string;
 };
 
-/** Home header — matches MarketAppBar (menu · search pill · notifications). */
+/** iOS-style home header: more · search · notifications (RTL). */
 export function HomeAppBar({
-  onMenu,
+  onMore,
   onSearch,
-  searchPlaceholder = 'ابحث عن خدمة معينة',
+  searchPlaceholder = 'ابحث في سرح',
 }: HomeAppBarProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
@@ -31,8 +28,13 @@ export function HomeAppBar({
   return (
     <View style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
-        <Pressable onPress={onMenu} style={styles.iconBtn} hitSlop={8} accessibilityLabel="القائمة">
-          <AppIcon name="menu" size={ds.icon.md} color={colors.textPrimary} />
+        <Pressable
+          onPress={onMore}
+          style={styles.iconBtn}
+          hitSlop={8}
+          accessibilityLabel="المزيد"
+        >
+          <AppIcon name="ellipsis-horizontal" size={ds.icon.md} color={colors.textPrimary} />
         </Pressable>
 
         <Pressable
@@ -41,7 +43,7 @@ export function HomeAppBar({
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
-          <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
+          <AppIcon name="search" size={20} color={colors.textMuted} />
           <RtlTextShell>
             <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
               {searchPlaceholder}
@@ -52,7 +54,7 @@ export function HomeAppBar({
         <NotificationBellButton
           size={ds.iconBtn.md}
           iconSize={ds.icon.md}
-          style={styles.notifBtn}
+          style={styles.iconBtn}
           iconColor={colors.textPrimary}
           badgeBorderColor={colors.bgElevated}
         />
@@ -64,8 +66,7 @@ export function HomeAppBar({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     shell: {
-      backgroundColor: colors.bgElevated,
-      borderBottomWidth: 0,
+      backgroundColor: colors.screenRoot,
       flexGrow: 0,
       flexShrink: 0,
     },
@@ -74,36 +75,33 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      minHeight: 52,
+      minHeight: 56,
       gap: spacing.sm,
     },
     searchPill: {
       flex: 1,
-      minHeight: 44,
+      minHeight: 48,
       alignItems: 'center',
       gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      backgroundColor: colors.bgDeep,
-      borderRadius: MENU_CARD.controlRadius,
-      borderWidth: 0,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
     },
-    /** Physical LTR shell — same as AppTextInput / listing titles. */
     searchPlaceholder: {
       ...typography.secondary,
       color: colors.textMuted,
     },
     iconBtn: {
-      width: ds.iconBtn.md,
-      height: ds.iconBtn.md,
+      width: 44,
+      height: 44,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgDeep,
-      borderRadius: 12,
-      borderWidth: 0,
-    },
-    notifBtn: {
-      backgroundColor: colors.bgDeep,
-      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
     },
   });
 }

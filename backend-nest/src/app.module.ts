@@ -33,6 +33,7 @@ import { EditorialStoriesModule } from './editorial-stories/editorial-stories.mo
 import { ButcherBannersModule } from './butcher-banners/butcher-banners.module';
 import { MarketCategoriesModule } from './market-categories/market-categories.module';
 import { SettingsModule } from './settings/settings.module';
+import { HomeExploreModule } from './home-explore/home-explore.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { SettingsModule } from './settings/settings.module';
     AuthModule,
     UsersModule,
     SettingsModule,
+    HomeExploreModule,
     MarketCategoriesModule,
     ListingsModule,
     PostsModule,

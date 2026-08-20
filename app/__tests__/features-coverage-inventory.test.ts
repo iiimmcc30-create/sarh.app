@@ -31,13 +31,14 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
   {
     id: 'home-market-listings',
     titleAr: 'الرئيسية / السوق / الإعلانات',
-    routes: ['/(tabs)', '/(tabs)/market', '/listing/[id]', '/search', '/favorites'],
+    routes: ['/(tabs)', '/(tabs)/market', '/listing/[id]', '/search', '/favorites', '/news'],
     coveredByTests: [
       'core-flows.test.ts',
       'features-butcher-services.test.ts',
       'features-locale-user.test.ts',
+      'home-explore.test.ts',
     ],
-    modules: ['lib/listingSort.ts', 'lib/listingCategories.ts'],
+    modules: ['lib/listingSort.ts', 'lib/listingCategories.ts', 'lib/homeExplore.ts'],
   },
   {
     id: 'promote-ads-payment',

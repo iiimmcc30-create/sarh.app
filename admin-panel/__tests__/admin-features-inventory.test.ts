@@ -39,6 +39,7 @@ describe('admin navigation & feature routes inventory', () => {
       '/orders',
       '/plans',
       '/content',
+      '/home-explore',
       '/settings',
     ]);
   });
