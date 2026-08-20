@@ -121,11 +121,10 @@ function ExploreTile({
   styles: ReturnType<typeof createStyles>;
   onPress: () => void;
 }) {
-  const showDesc = variant === 'wide';
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={item.titleAr}
+      accessibilityLabel={`${item.titleAr}. ${item.descriptionAr}`}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -133,19 +132,17 @@ function ExploreTile({
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.iconRing}>
+      <View style={styles.iconRing} pointerEvents="none">
         <AppIcon name={item.icon} size={ICON_SIZE} color={styles.accent.color} />
       </View>
       <View style={styles.copy}>
         <RtlTextShell>
-          <RtlText style={styles.title} numberOfLines={variant === 'square' ? 2 : 1}>
+          <RtlText style={styles.title} numberOfLines={1}>
             {item.titleAr}
           </RtlText>
-          {showDesc ? (
-            <RtlText style={styles.desc} numberOfLines={1}>
-              {item.descriptionAr}
-            </RtlText>
-          ) : null}
+          <RtlText style={styles.desc} numberOfLines={variant === 'square' ? 2 : 1}>
+            {item.descriptionAr}
+          </RtlText>
         </RtlTextShell>
       </View>
     </Pressable>
@@ -172,31 +169,39 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      paddingTop: 10,
-      paddingBottom: 10,
       paddingHorizontal: 10,
-      justifyContent: 'space-between',
-      alignItems: 'flex-end',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
       direction: 'ltr',
     },
     copy: {
       width: '100%',
-      alignItems: 'flex-end',
-      gap: 2,
+      paddingHorizontal: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
     },
     title: {
       ...typography.smallHeading,
       fontSize: 13,
       lineHeight: 18,
       color: colors.textPrimary,
+      textAlign: 'center',
+      width: '100%',
     },
     desc: {
       ...typography.caption,
       fontSize: 11,
       lineHeight: 16,
       color: colors.textMuted,
+      textAlign: 'center',
+      width: '100%',
     },
     iconRing: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
       width: ICON_BOX,
       height: ICON_BOX,
       borderRadius: ICON_BOX / 2,
