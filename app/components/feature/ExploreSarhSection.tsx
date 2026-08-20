@@ -14,8 +14,6 @@ type Props = {
   sections: HomeExploreCard[];
 };
 
-type TileVariant = 'square' | 'wide';
-
 const ROW_GAP = 10;
 const SIDE_PAD = spacing.lg;
 const STRIP_GAP = 8;
@@ -45,7 +43,6 @@ export function ExploreSarhSection({ sections }: Props) {
       <View style={styles.strips}>
         <ExploreStrip
           items={top}
-          variant="square"
           cardW={squareW}
           cardH={cardH}
           styles={styles}
@@ -54,7 +51,6 @@ export function ExploreSarhSection({ sections }: Props) {
         {bottom.length > 0 ? (
           <ExploreStrip
             items={bottom}
-            variant="wide"
             cardW={wideW}
             cardH={cardH}
             styles={styles}
@@ -68,14 +64,12 @@ export function ExploreSarhSection({ sections }: Props) {
 
 function ExploreStrip({
   items,
-  variant,
   cardW,
   cardH,
   styles,
   onPress,
 }: {
   items: HomeExploreCard[];
-  variant: TileVariant;
   cardW: number;
   cardH: number;
   styles: ReturnType<typeof createStyles>;
@@ -95,7 +89,6 @@ function ExploreStrip({
         <ExploreTile
           key={item.id ?? item.destination}
           item={item}
-          variant={variant}
           width={cardW}
           height={cardH}
           styles={styles}
@@ -108,14 +101,12 @@ function ExploreStrip({
 
 function ExploreTile({
   item,
-  variant,
   width,
   height,
   styles,
   onPress,
 }: {
   item: HomeExploreCard;
-  variant: TileVariant;
   width: number;
   height: number;
   styles: ReturnType<typeof createStyles>;
@@ -135,12 +126,16 @@ function ExploreTile({
       <View style={styles.iconRing} pointerEvents="none">
         <AppIcon name={item.icon} size={ICON_SIZE} color={styles.accent.color} />
       </View>
-      <View style={styles.copy}>
+      <View style={styles.titleSlot} pointerEvents="none">
         <RtlTextShell>
           <RtlText style={styles.title} numberOfLines={1}>
             {item.titleAr}
           </RtlText>
-          <RtlText style={styles.desc} numberOfLines={variant === 'square' ? 2 : 1}>
+        </RtlTextShell>
+      </View>
+      <View style={styles.descSlot} pointerEvents="none">
+        <RtlTextShell>
+          <RtlText style={styles.desc} numberOfLines={2}>
             {item.descriptionAr}
           </RtlText>
         </RtlTextShell>
@@ -169,18 +164,24 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-      paddingHorizontal: 10,
-      justifyContent: 'center',
-      alignItems: 'center',
       overflow: 'hidden',
       direction: 'ltr',
     },
-    copy: {
-      width: '100%',
-      paddingHorizontal: 6,
+    titleSlot: {
+      position: 'absolute',
+      left: 8,
+      right: 8,
+      top: '50%',
+      transform: [{ translateY: -9 }],
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: 4,
+    },
+    descSlot: {
+      position: 'absolute',
+      left: 8,
+      right: 8,
+      top: '50%',
+      marginTop: 12,
+      alignItems: 'center',
     },
     title: {
       ...typography.smallHeading,
