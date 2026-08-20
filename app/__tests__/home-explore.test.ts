@@ -105,4 +105,17 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain('iconPair');
     expect(src).toContain("direction: 'ltr'");
   });
+
+  it('keeps market search chrome without more or notifications', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/market/MarketAppBar.tsx'),
+      'utf8',
+    );
+    expect(src).toContain('accessibilityRole="search"');
+    expect(src).toContain('ابحث في السوق');
+    expect(src).not.toContain('HomeAppBar');
+    expect(src).not.toContain('المزيد');
+    expect(src).not.toContain('NotificationBellButton');
+    expect(src).not.toContain('onMore');
+  });
 });

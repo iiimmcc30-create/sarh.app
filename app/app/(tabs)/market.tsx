@@ -196,10 +196,7 @@ export default function MarketScreen() {
     <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
       {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
       <View style={styles.stickyChrome}>
-        <MarketAppBar
-          onMore={() => safePush('/(tabs)/more', undefined, router)}
-          onSearch={() => safePush('/search', undefined, router)}
-        />
+        <MarketAppBar onSearch={() => safePush('/search', undefined, router)} />
 
         {categories.length > 0 ? (
           <MarketCategoryNav
