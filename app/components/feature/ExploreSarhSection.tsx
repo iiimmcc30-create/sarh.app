@@ -171,8 +171,8 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     title: {
-      fontFamily: appFont.semibold,
-      fontWeight: '600',
+      fontFamily: appFont.medium,
+      fontWeight: '500',
       fontSize: 16,
       lineHeight: TITLE_LINE,
       color: colors.textPrimary,
