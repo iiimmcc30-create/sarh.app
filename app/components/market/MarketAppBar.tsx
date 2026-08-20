@@ -38,7 +38,7 @@ export function MarketAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.bar}>
+      <View style={styles.topBar}>
         <View style={styles.toolPair}>
           <Pressable
             onPress={onFilterPress}
@@ -102,7 +102,7 @@ function createStyles(colors: ThemeColors) {
       flexGrow: 0,
       flexShrink: 0,
     },
-    bar: {
+    topBar: {
       flexDirection: 'row',
       direction: 'ltr',
       alignItems: 'center',

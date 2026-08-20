@@ -103,6 +103,8 @@ describe('HomeAppBar chrome', () => {
     expect(bellAt).toBeGreaterThan(moreAt);
     expect(searchAt).toBeGreaterThan(bellAt);
     expect(src).toContain('iconPair');
+    expect(src).toContain('styles.topBar');
+    expect(src).toContain('TOOL_ICON');
     expect(src).toContain("direction: 'ltr'");
     expect(src).toContain('more-vertical');
     expect(src).not.toContain('⋮');
@@ -122,6 +124,7 @@ describe('HomeAppBar chrome', () => {
     expect(sortAt).toBeGreaterThan(filterAt);
     expect(searchAt).toBeGreaterThan(sortAt);
     expect(starAt).toBeGreaterThan(searchAt);
+    expect(src).toContain('styles.topBar');
     expect(src).toContain('styles.toolPair');
     expect(src).toContain('styles.searchPill');
     expect(src).toContain('TOOL_ICON');
@@ -131,13 +134,13 @@ describe('HomeAppBar chrome', () => {
     expect(src).not.toContain('NotificationBellButton');
   });
 
-  it('raises Explore card contrast against the page background', () => {
+  it('uses the same elevated surface as listing and post cards', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain("scheme === 'dark' ? '#173445'");
-    expect(src).toContain("scheme === 'dark' ? '#2C5164'");
-    expect(src).not.toContain('#0D202C');
+    expect(src).toContain('backgroundColor: colors.bgElevated');
+    expect(src).toContain('borderWidth: 0');
+    expect(src).not.toContain('#173445');
   });
 });
