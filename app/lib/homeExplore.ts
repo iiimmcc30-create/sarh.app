@@ -82,6 +82,7 @@ export const EXPLORE_SARH_LOGO_DESTINATIONS: HomeExploreDestinationKey[] = [
   'community',
   'butchers',
   'listings',
+  'services',
   'news',
 ];
 

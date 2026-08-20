@@ -15,7 +15,7 @@ type HomeAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** iOS-style home header: more · search · notifications (RTL). */
+/** Home header: more · notifications · search (physical LTR). */
 export function HomeAppBar({
   onMore,
   onSearch,
@@ -28,15 +28,25 @@ export function HomeAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={[styles.bar, getRtlRow()]}>
-        <Pressable
-          onPress={onMore}
-          style={styles.iconBtn}
-          hitSlop={8}
-          accessibilityLabel="المزيد"
-        >
-          <AppIcon name="apps" size={22} color={colors.textPrimary} />
-        </Pressable>
+      <View style={styles.bar}>
+        <View style={styles.iconPair}>
+          <Pressable
+            onPress={onMore}
+            style={styles.iconBtn}
+            hitSlop={8}
+            accessibilityLabel="المزيد"
+          >
+            <AppIcon name="apps" size={22} color={colors.textPrimary} />
+          </Pressable>
+
+          <NotificationBellButton
+            size={HEADER_CONTROL}
+            iconSize={22}
+            style={styles.iconBtn}
+            iconColor={colors.textPrimary}
+            badgeBorderColor={colors.bgElevated}
+          />
+        </View>
 
         <Pressable
           onPress={onSearch}
@@ -51,14 +61,6 @@ export function HomeAppBar({
             </RtlText>
           </RtlTextShell>
         </Pressable>
-
-        <NotificationBellButton
-          size={HEADER_CONTROL}
-          iconSize={22}
-          style={styles.iconBtn}
-          iconColor={colors.textPrimary}
-          badgeBorderColor={colors.bgElevated}
-        />
       </View>
     </View>
   );
@@ -72,11 +74,18 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     bar: {
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       minHeight: 56,
+      gap: spacing.sm,
+    },
+    iconPair: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
       gap: spacing.sm,
     },
     searchPill: {

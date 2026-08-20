@@ -59,17 +59,17 @@ describe('homeExplore catalog', () => {
 });
 
 describe('Explore Sarh logo mark', () => {
-  it('uses the official mark on community, butchers, listings, and news only', () => {
+  it('uses the official mark on community, butchers, listings, services, and news', () => {
     expect(usesExploreSarhLogoMark('community')).toBe(true);
     expect(usesExploreSarhLogoMark('butchers')).toBe(true);
     expect(usesExploreSarhLogoMark('listings')).toBe(true);
+    expect(usesExploreSarhLogoMark('services')).toBe(true);
     expect(usesExploreSarhLogoMark('news')).toBe(true);
-    expect(usesExploreSarhLogoMark('services')).toBe(false);
     expect(usesExploreSarhLogoMark('live')).toBe(false);
     expect(usesExploreSarhLogoMark('promote')).toBe(false);
   });
 
-  it('wires SarhLogoMark into those four cards at top-center', () => {
+  it('wires SarhLogoMark into those cards at top-center', () => {
     const section = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
@@ -87,5 +87,22 @@ describe('Explore Sarh logo mark', () => {
     expect(mark).toContain('DIAMOND');
     expect(mark).toContain('fill={color}');
     expect(mark).not.toContain('AppIcon');
+  });
+});
+
+describe('HomeAppBar chrome', () => {
+  it('places more then notifications then search as separate controls', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
+      'utf8',
+    );
+    const moreAt = src.indexOf('accessibilityLabel="المزيد"');
+    const bellAt = src.indexOf('<NotificationBellButton');
+    const searchAt = src.indexOf('accessibilityRole="search"');
+    expect(moreAt).toBeGreaterThan(-1);
+    expect(bellAt).toBeGreaterThan(moreAt);
+    expect(searchAt).toBeGreaterThan(bellAt);
+    expect(src).toContain('iconPair');
+    expect(src).toContain("direction: 'ltr'");
   });
 });
