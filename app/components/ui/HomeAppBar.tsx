@@ -18,7 +18,7 @@ type HomeAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** Home header: more · notifications · search pill (physical LTR). */
+/** Home header: full-width search bar with compact more + notifications inside (physical left). */
 export function HomeAppBar({
   onMore,
   onSearch,
@@ -31,38 +31,44 @@ export function HomeAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={[styles.topBar, getRtlRow()]}>
-        <Pressable
-          onPress={onMore}
-          style={styles.iconBtn}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="المزيد"
-        >
-          <AppIcon name="more-vertical" size={TOOL_ICON} color={colors.textPrimary} />
-        </Pressable>
+      <View style={styles.searchRow}>
+        <View style={[styles.searchBar, getRtlRow()]}>
+          <View style={styles.iconPair}>
+            <Pressable
+              onPress={onMore}
+              style={styles.inlineIconBtn}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="المزيد"
+            >
+              <AppIcon name="more-vertical" size={TOOL_ICON} color={colors.textPrimary} />
+            </Pressable>
 
-        <NotificationBellButton
-          size={TOOL_H}
-          iconSize={TOOL_ICON}
-          style={styles.iconBtn}
-          iconColor={colors.textPrimary}
-          badgeBorderColor={colors.bgElevated}
-        />
+            <NotificationBellButton
+              size={TOOL_H}
+              iconSize={TOOL_ICON}
+              style={styles.inlineIconBtn}
+              iconColor={colors.textPrimary}
+              badgeBorderColor={colors.bgElevated}
+            />
+          </View>
 
-        <Pressable
-          onPress={onSearch}
-          style={[styles.searchPill, getRtlRow()]}
-          accessibilityRole="search"
-          accessibilityLabel={searchPlaceholder}
-        >
-          <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
-          <RtlTextShell flex>
-            <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
-              {searchPlaceholder}
-            </RtlText>
-          </RtlTextShell>
-        </Pressable>
+          <View style={styles.searchDivider} />
+
+          <Pressable
+            onPress={onSearch}
+            style={[styles.searchTap, getRtlRow()]}
+            accessibilityRole="search"
+            accessibilityLabel={searchPlaceholder}
+          >
+            <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
+            <RtlTextShell flex>
+              <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
+                {searchPlaceholder}
+              </RtlText>
+            </RtlTextShell>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -74,37 +80,52 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
       flexGrow: 0,
       flexShrink: 0,
+      paddingBottom: spacing.xs,
     },
-    topBar: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+    searchRow: {
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      gap: spacing.xs,
+      paddingTop: spacing.sm,
     },
-    iconBtn: {
-      width: TOOL_H,
-      height: TOOL_H,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.bgElevated,
-      borderRadius: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      flexShrink: 0,
-    },
-    searchPill: {
-      flex: 1,
-      minWidth: 0,
+    searchBar: {
+      width: '100%',
       height: SEARCH_H,
       alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: spacing.xs,
       backgroundColor: colors.bgElevated,
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
+    },
+    iconPair: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: 2,
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    inlineIconBtn: {
+      width: TOOL_H,
+      height: TOOL_H,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+    },
+    searchDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 22,
+      backgroundColor: colors.borderSoft,
+      marginHorizontal: 4,
+      flexShrink: 0,
+    },
+    searchTap: {
+      flex: 1,
+      minWidth: 0,
+      height: '100%',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: spacing.xs,
     },
     searchPlaceholder: {
       ...typography.secondary,
