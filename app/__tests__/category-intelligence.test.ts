@@ -1,4 +1,4 @@
-import { MARKET_CATEGORIES_FALLBACK } from '../lib/marketCategoriesFallback';
+import { MARKET_CATEGORIES_FALLBACK, resolveCategoryChipDisplay } from '../lib/marketCategoriesFallback';
 import {
   classifyListingTitle,
   findCategoryBySlug,
@@ -62,5 +62,15 @@ describe('classifyListingTitle', () => {
     const found = findCategoryBySlug(cats, 'livestock', 'sheep');
     expect(found?.parent.nameAr).toBe('المواشي');
     expect(found?.child?.nameAr).toBe('أغنام');
+  });
+});
+
+describe('resolveCategoryChipDisplay', () => {
+  it('falls back to bundled emoji/icons for parent market slugs', () => {
+    expect(resolveCategoryChipDisplay({ slug: 'livestock', emoji: null, icon: null }).emoji).toBe('🐪');
+    expect(resolveCategoryChipDisplay({ slug: 'feed', emoji: null, icon: null }).emoji).toBe('🌾');
+    expect(resolveCategoryChipDisplay({ slug: 'transport', emoji: null, icon: null }).emoji).toBe('🚚');
+    expect(resolveCategoryChipDisplay({ slug: 'slaughter', emoji: null, icon: null }).emoji).toBe('🥩');
+    expect(resolveCategoryChipDisplay({ slug: 'equipment', emoji: null, icon: null }).emoji).toBe('🔧');
   });
 });
