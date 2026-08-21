@@ -3,8 +3,6 @@ import { resolveCategoryChipDisplay } from '@/lib/marketCategoriesFallback';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
-import { MARKET_CHIP } from '@/components/ui/filterChipTokens';
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {
@@ -15,32 +13,13 @@ type Props = {
   onSelectSub: (sub: MarketCategory | null) => void;
 };
 
-function CategoryChipLeading({
-  category,
-  selected,
-  colors,
-  emojiStyle,
-}: {
-  category: Pick<MarketCategory, 'slug' | 'emoji' | 'icon'>;
-  selected: boolean;
-  colors: ThemeColors;
-  emojiStyle: { fontSize: number; lineHeight: number };
-}) {
-  const { emoji, icon } = resolveCategoryChipDisplay(category);
-  const tint = selected ? '#FFFFFF' : colors.textSecondary;
-
-  if (emoji) {
-    return <Text style={emojiStyle}>{emoji}</Text>;
-  }
-
-  if (icon) {
-    return <AppIcon name={icon} size={MARKET_CHIP.iconSize} color={tint} />;
-  }
-
-  return null;
+function subCategoryLeading(sub: MarketCategory, emojiStyle: { fontSize: number; lineHeight: number }) {
+  const { emoji } = resolveCategoryChipDisplay(sub);
+  if (!emoji) return undefined;
+  return <Text style={emojiStyle}>{emoji}</Text>;
 }
 
-/** Two-row market category nav — parent and sub chips share the same compact card style. */
+/** Parent chips are text-only; subcategory chips may show emoji. */
 export function MarketCategoryNav({
   categories,
   activeParentId,
@@ -48,9 +27,8 @@ export function MarketCategoryNav({
   onSelectParent,
   onSelectSub,
 }: Props) {
-  const { styles, colors } = useThemedStyles((theme) => ({
+  const { styles } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
-    colors: theme.colors,
   }));
 
   const activeParent = categories.find((c) => c.id === activeParentId) ?? null;
@@ -62,31 +40,19 @@ export function MarketCategoryNav({
         <FilterChip
           label="الكل"
           compact
-          icon="apps"
           selected={!activeParentId}
           selectedCheck
           onPress={() => onSelectParent(null)}
         />
-        {categories.map((cat) => {
-          const selected = activeParentId === cat.id;
-          return (
-            <FilterChip
-              key={cat.id}
-              label={cat.nameAr}
-              compact
-              selected={selected}
-              leading={
-                <CategoryChipLeading
-                  category={cat}
-                  selected={selected}
-                  colors={colors}
-                  emojiStyle={styles.chipEmoji}
-                />
-              }
-              onPress={() => onSelectParent(cat)}
-            />
-          );
-        })}
+        {categories.map((cat) => (
+          <FilterChip
+            key={cat.id}
+            label={cat.nameAr}
+            compact
+            selected={activeParentId === cat.id}
+            onPress={() => onSelectParent(cat)}
+          />
+        ))}
       </FilterChipRow>
 
       {activeParent && subs.length > 0 ? (
@@ -94,31 +60,20 @@ export function MarketCategoryNav({
           <FilterChip
             label="الكل"
             compact
-            icon="apps"
             selected={!activeSubId}
             selectedCheck
             onPress={() => onSelectSub(null)}
           />
-          {subs.map((sub) => {
-            const selected = activeSubId === sub.id;
-            return (
-              <FilterChip
-                key={sub.id}
-                label={sub.nameAr}
-                compact
-                selected={selected}
-                leading={
-                  <CategoryChipLeading
-                    category={sub}
-                    selected={selected}
-                    colors={colors}
-                    emojiStyle={styles.chipEmoji}
-                  />
-                }
-                onPress={() => onSelectSub(sub)}
-              />
-            );
-          })}
+          {subs.map((sub) => (
+            <FilterChip
+              key={sub.id}
+              label={sub.nameAr}
+              compact
+              selected={activeSubId === sub.id}
+              leading={subCategoryLeading(sub, styles.chipEmoji)}
+              onPress={() => onSelectSub(sub)}
+            />
+          ))}
         </FilterChipRow>
       ) : null}
     </View>
