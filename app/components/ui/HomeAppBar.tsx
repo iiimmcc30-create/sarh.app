@@ -8,8 +8,8 @@ import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const SEARCH_H = 44;
-const TOOL_H = 40;
-const TOOL_ICON = 18;
+const TOOL_H = 32;
+const TOOL_ICON = 16;
 const SEARCH_ICON = 16;
 
 type HomeAppBarProps = {
@@ -18,7 +18,7 @@ type HomeAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** Top bar: MoreVertical · notifications · search (physical LTR). */
+/** Home header: compact more + notifications (physical left), then full-width search. */
 export function HomeAppBar({
   onMore,
   onSearch,
@@ -31,12 +31,12 @@ export function HomeAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.topBar}>
+      <View style={styles.actionsRow}>
         <View style={styles.iconPair}>
           <Pressable
             onPress={onMore}
             style={styles.iconBtn}
-            hitSlop={6}
+            hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="المزيد"
           >
@@ -51,10 +51,12 @@ export function HomeAppBar({
             badgeBorderColor={colors.bgElevated}
           />
         </View>
+      </View>
 
+      <View style={styles.searchRow}>
         <Pressable
           onPress={onSearch}
-          style={[styles.searchPill, getRtlRow()]}
+          style={[styles.searchFull, getRtlRow()]}
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
@@ -76,30 +78,32 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
       flexGrow: 0,
       flexShrink: 0,
+      paddingBottom: spacing.xs,
     },
-    topBar: {
+    actionsRow: {
       flexDirection: 'row',
       direction: 'ltr',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      minHeight: 56,
-      gap: spacing.sm,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xs,
     },
     iconPair: {
       flexDirection: 'row',
       direction: 'ltr',
       alignItems: 'center',
-      gap: 6,
+      gap: 4,
       flexGrow: 0,
       flexShrink: 0,
     },
-    searchPill: {
-      flex: 1,
-      minWidth: 0,
+    searchRow: {
+      paddingHorizontal: spacing.md,
+    },
+    searchFull: {
+      width: '100%',
       height: SEARCH_H,
       alignItems: 'center',
-      gap: 6,
+      gap: 8,
       paddingHorizontal: spacing.md,
       backgroundColor: colors.bgElevated,
       borderRadius: 16,
@@ -117,7 +121,7 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.bgElevated,
-      borderRadius: 14,
+      borderRadius: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },

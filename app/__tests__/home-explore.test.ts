@@ -91,7 +91,7 @@ describe('Explore Sarh logo mark', () => {
 });
 
 describe('HomeAppBar chrome', () => {
-  it('places more then notifications then search as separate controls', () => {
+  it('places compact more and notifications left, then a full-width search row', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
       'utf8',
@@ -103,7 +103,9 @@ describe('HomeAppBar chrome', () => {
     expect(bellAt).toBeGreaterThan(moreAt);
     expect(searchAt).toBeGreaterThan(bellAt);
     expect(src).toContain('iconPair');
-    expect(src).toContain('styles.topBar');
+    expect(src).toContain('styles.actionsRow');
+    expect(src).toContain('styles.searchRow');
+    expect(src).toContain('styles.searchFull');
     expect(src).toContain('TOOL_ICON');
     expect(src).toContain("direction: 'ltr'");
     expect(src).toContain('more-vertical');
