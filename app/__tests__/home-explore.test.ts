@@ -114,27 +114,39 @@ describe('HomeAppBar chrome', () => {
     expect(src).not.toContain("name=\"apps\"");
   });
 
-  it('embeds filter and sort inside market search bar with featured star on the right', () => {
+  it('embeds filter inside market search bar with featured star on the right', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/market/MarketAppBar.tsx'),
       'utf8',
     );
     const filterAt = src.indexOf('accessibilityLabel="تصفية"');
-    const sortAt = src.indexOf('accessibilityLabel={sortLabel}');
     const searchAt = src.indexOf('accessibilityRole="search"');
     const starAt = src.indexOf('accessibilityLabel="الإعلانات المميزة"');
     expect(filterAt).toBeGreaterThan(-1);
-    expect(sortAt).toBeGreaterThan(filterAt);
-    expect(searchAt).toBeGreaterThan(sortAt);
+    expect(searchAt).toBeGreaterThan(filterAt);
     expect(starAt).toBeGreaterThan(searchAt);
     expect(src).toContain('styles.searchBar');
-    expect(src).toContain('styles.toolPair');
     expect(src).toContain('styles.searchTap');
     expect(src).toContain('TOOL_ICON');
     expect(src).toContain('ابحث في السوق');
+    expect(src).not.toContain('sort-alt');
+    expect(src).not.toContain('sortLabel');
     expect(src).not.toContain('HomeAppBar');
     expect(src).not.toContain('المزيد');
     expect(src).not.toContain('NotificationBellButton');
+  });
+
+  it('places sort chip beside nearby in the market filter row', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/market/MarketFilterBar.tsx'),
+      'utf8',
+    );
+    const nearbyAt = src.indexOf('label="القريب"');
+    const sortIconAt = src.indexOf('icon="sort-alt"', nearbyAt);
+    expect(nearbyAt).toBeGreaterThan(-1);
+    expect(sortIconAt).toBeGreaterThan(nearbyAt);
+    expect(src).toContain('sort-alt');
+    expect(src).toContain('onSortPress');
   });
 
   it('uses the same elevated surface as listing and post cards', () => {

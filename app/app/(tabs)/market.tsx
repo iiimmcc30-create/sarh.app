@@ -199,10 +199,8 @@ export default function MarketScreen() {
         <MarketAppBar
           onSearch={() => safePush('/search', undefined, router)}
           onFilterPress={() => setRegionPickerOpen(true)}
-          onSortPress={cycleSort}
           onFeaturedPress={() => setShowFeaturedOnly((v) => !v)}
           featuredActive={showFeaturedOnly}
-          sortLabel={sortLabel}
         />
 
         {categories.length > 0 ? (
@@ -223,6 +221,8 @@ export default function MarketScreen() {
           regionSelection={regionSelection}
           onRegionPress={() => setRegionPickerOpen(true)}
           onNearbyPress={() => void onNearby()}
+          onSortPress={cycleSort}
+          sortLabel={sortLabel}
           regionActive={regionPickerOpen}
         />
       </View>

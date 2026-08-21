@@ -12,6 +12,8 @@ type Props = {
   regionSelection: RegionSelection;
   onRegionPress: () => void;
   onNearbyPress: () => void;
+  onSortPress: () => void;
+  sortLabel: string;
   regionActive?: boolean;
 };
 
@@ -19,6 +21,8 @@ export function MarketFilterBar({
   regionSelection,
   onRegionPress,
   onNearbyPress,
+  onSortPress,
+  sortLabel,
   regionActive = false,
 }: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
@@ -61,6 +65,13 @@ export function MarketFilterBar({
         </Pressable>
 
         <FilterChip label="القريب" icon="navigation" compact onPress={onNearbyPress} />
+        <FilterChip
+          label={sortLabel}
+          icon="sort-alt"
+          compact
+          onPress={onSortPress}
+          testID="market-sort-chip"
+        />
       </FilterChipRow>
     </View>
   );

@@ -14,22 +14,18 @@ const SEARCH_ICON = 16;
 type Props = {
   onSearch: () => void;
   onFilterPress: () => void;
-  onSortPress: () => void;
   onFeaturedPress: () => void;
   featuredActive?: boolean;
   searchPlaceholder?: string;
-  sortLabel?: string;
 };
 
-/** Market header: filter + sort inside full-width search bar (physical left), featured star inside right. */
+/** Market header: filter inside full-width search bar (physical left), featured star inside right. */
 export function MarketAppBar({
   onSearch,
   onFilterPress,
-  onSortPress,
   onFeaturedPress,
   featuredActive = false,
   searchPlaceholder = 'ابحث في السوق',
-  sortLabel = 'الأحدث',
 }: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
@@ -40,27 +36,15 @@ export function MarketAppBar({
     <View style={styles.shell}>
       <View style={styles.searchRow}>
         <View style={[styles.searchBar, getRtlRow()]}>
-          <View style={styles.toolPair}>
-            <Pressable
-              onPress={onFilterPress}
-              style={styles.inlineToolBtn}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="تصفية"
-            >
-              <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textPrimary} />
-            </Pressable>
-
-            <Pressable
-              onPress={onSortPress}
-              style={styles.inlineToolBtn}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={sortLabel}
-            >
-              <AppIcon name="sort-alt" size={TOOL_ICON} color={colors.textPrimary} />
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={onFilterPress}
+            style={styles.inlineToolBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="تصفية"
+          >
+            <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textPrimary} />
+          </Pressable>
 
           <View style={styles.searchDivider} />
 
@@ -122,14 +106,6 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    toolPair: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: 2,
-      flexGrow: 0,
-      flexShrink: 0,
-    },
     inlineToolBtn: {
       width: TOOL_H,
       height: TOOL_H,
@@ -138,6 +114,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: 'transparent',
       borderWidth: 0,
       borderRadius: 8,
+      flexShrink: 0,
     },
     inlineToolBtnActive: {
       backgroundColor: `${colors.gold}14`,
