@@ -21,7 +21,7 @@ type Props = {
   sortLabel?: string;
 };
 
-/** Market header: filter + sort inside full-width search bar (physical left), featured star inside right. */
+/** Market header: filter (left) · search pill · featured star outside the pill. */
 export function MarketAppBar({
   onSearch,
   onFilterPress,
@@ -38,29 +38,27 @@ export function MarketAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.searchRow}>
-        <View style={[styles.searchBar, getRtlRow()]}>
-          <View style={styles.toolPair}>
-            <Pressable
-              onPress={onFilterPress}
-              style={styles.inlineToolBtn}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="تصفية"
-            >
-              <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textPrimary} />
-            </Pressable>
+      <View style={[styles.topBar, getRtlRow()]}>
+        <Pressable
+          onPress={onFilterPress}
+          style={styles.toolBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="تصفية"
+        >
+          <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textPrimary} />
+        </Pressable>
 
-            <Pressable
-              onPress={onSortPress}
-              style={styles.inlineToolBtn}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={sortLabel}
-            >
-              <AppIcon name="sort-alt" size={TOOL_ICON} color={colors.textPrimary} />
-            </Pressable>
-          </View>
+        <View style={[styles.searchPill, getRtlRow()]}>
+          <Pressable
+            onPress={onSortPress}
+            style={styles.sortHit}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={sortLabel}
+          >
+            <AppIcon name="sort-alt" size={TOOL_ICON} color={colors.textPrimary} />
+          </Pressable>
 
           <View style={styles.searchDivider} />
 
@@ -77,25 +75,23 @@ export function MarketAppBar({
               </RtlText>
             </RtlTextShell>
           </Pressable>
-
-          <View style={styles.searchDivider} />
-
-          <Pressable
-            onPress={onFeaturedPress}
-            style={[styles.inlineToolBtn, featuredActive && styles.inlineToolBtnActive]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="الإعلانات المميزة"
-            accessibilityState={{ selected: featuredActive }}
-          >
-            <AppIcon
-              name="star"
-              size={TOOL_ICON}
-              color={featuredActive ? colors.gold : colors.textPrimary}
-              variant={featuredActive ? 'sr' : 'rr'}
-            />
-          </Pressable>
         </View>
+
+        <Pressable
+          onPress={onFeaturedPress}
+          style={[styles.toolBtn, featuredActive && styles.toolBtnActive]}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="الإعلانات المميزة"
+          accessibilityState={{ selected: featuredActive }}
+        >
+          <AppIcon
+            name="star"
+            size={TOOL_ICON}
+            color={featuredActive ? colors.gold : colors.textPrimary}
+            variant={featuredActive ? 'sr' : 'rr'}
+          />
+        </Pressable>
       </View>
     </View>
   );
@@ -108,12 +104,32 @@ function createStyles(colors: ThemeColors) {
       flexGrow: 0,
       flexShrink: 0,
     },
-    searchRow: {
+    topBar: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
+      gap: spacing.xs,
     },
-    searchBar: {
-      width: '100%',
+    toolBtn: {
+      width: TOOL_H,
+      height: TOOL_H,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgElevated,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      flexShrink: 0,
+    },
+    toolBtnActive: {
+      borderColor: colors.gold,
+      backgroundColor: `${colors.gold}14`,
+    },
+    searchPill: {
+      flex: 1,
+      minWidth: 0,
       height: SEARCH_H,
       alignItems: 'center',
       paddingHorizontal: spacing.xs,
@@ -122,31 +138,11 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    toolPair: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: 2,
-      flexGrow: 0,
-      flexShrink: 0,
-    },
-    inlineToolBtn: {
+    sortHit: {
       width: TOOL_H,
       height: TOOL_H,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      borderRadius: 8,
-    },
-    inlineToolBtnActive: {
-      backgroundColor: `${colors.gold}14`,
-    },
-    searchDivider: {
-      width: StyleSheet.hairlineWidth,
-      height: 22,
-      backgroundColor: colors.borderSoft,
-      marginHorizontal: 4,
       flexShrink: 0,
     },
     searchTap: {
@@ -156,6 +152,12 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       gap: 8,
       paddingHorizontal: spacing.xs,
+    },
+    searchDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 22,
+      backgroundColor: colors.borderSoft,
+      flexShrink: 0,
     },
     searchPlaceholder: {
       ...typography.secondary,

@@ -91,7 +91,7 @@ describe('Explore Sarh logo mark', () => {
 });
 
 describe('HomeAppBar chrome', () => {
-  it('embeds compact more and notifications inside the full-width search bar', () => {
+  it('places more then notifications then search as separate controls', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
       'utf8',
@@ -102,19 +102,17 @@ describe('HomeAppBar chrome', () => {
     expect(moreAt).toBeGreaterThan(-1);
     expect(bellAt).toBeGreaterThan(moreAt);
     expect(searchAt).toBeGreaterThan(bellAt);
-    expect(src).toContain('iconPair');
-    expect(src).toContain('styles.searchBar');
-    expect(src).toContain('styles.searchTap');
-    expect(src).toContain('styles.searchDivider');
+    expect(src).toContain('styles.topBar');
+    expect(src).toContain('styles.searchPill');
     expect(src).toContain('TOOL_ICON');
     expect(src).toContain("direction: 'ltr'");
     expect(src).toContain('more-vertical');
-    expect(src).not.toContain('styles.actionsRow');
+    expect(src).not.toContain('styles.searchBar');
     expect(src).not.toContain('⋮');
     expect(src).not.toContain("name=\"apps\"");
   });
 
-  it('embeds filter and sort inside market search bar with featured star on the right', () => {
+  it('places filter left of search pill with featured star outside the pill', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/market/MarketAppBar.tsx'),
       'utf8',
@@ -127,9 +125,9 @@ describe('HomeAppBar chrome', () => {
     expect(sortAt).toBeGreaterThan(filterAt);
     expect(searchAt).toBeGreaterThan(sortAt);
     expect(starAt).toBeGreaterThan(searchAt);
-    expect(src).toContain('styles.searchBar');
-    expect(src).toContain('styles.toolPair');
-    expect(src).toContain('styles.searchTap');
+    expect(src).toContain('styles.topBar');
+    expect(src).toContain('styles.searchPill');
+    expect(src).toContain('styles.toolBtn');
     expect(src).toContain('TOOL_ICON');
     expect(src).toContain('ابحث في السوق');
     expect(src).not.toContain('HomeAppBar');
