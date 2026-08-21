@@ -18,7 +18,7 @@ type HomeAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** Home header: full-width search bar with compact more + notifications inside (physical left). */
+/** Home header: full-width search bar; more + notifications pinned physical left inside. */
 export function HomeAppBar({
   onMore,
   onSearch,
@@ -32,7 +32,7 @@ export function HomeAppBar({
   return (
     <View style={styles.shell}>
       <View style={styles.searchRow}>
-        <View style={[styles.searchBar, getRtlRow()]}>
+        <View style={styles.searchBar}>
           <View style={styles.iconPair}>
             <Pressable
               onPress={onMore}
@@ -89,6 +89,8 @@ function createStyles(colors: ThemeColors) {
     searchBar: {
       width: '100%',
       height: SEARCH_H,
+      flexDirection: 'row',
+      direction: 'ltr',
       alignItems: 'center',
       paddingHorizontal: spacing.xs,
       backgroundColor: colors.bgElevated,

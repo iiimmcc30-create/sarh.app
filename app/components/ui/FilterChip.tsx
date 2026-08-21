@@ -132,6 +132,8 @@ export function FilterChipRow({
 
 function createChipStyles(colors: ThemeColors, compact: boolean) {
   const tokens = compact ? MARKET_CHIP : FILTER_CHIP;
+  const idleBackground = compact ? colors.bgElevated : colors.bgSurface || FILTER_CHIP.idleSurfaceFallback;
+  const idleBorderWidth = compact ? 0 : StyleSheet.hairlineWidth;
   return StyleSheet.create({
     chip: {
       height: tokens.height,
@@ -143,8 +145,8 @@ function createChipStyles(colors: ThemeColors, compact: boolean) {
       flexShrink: 0,
       flexGrow: 0,
       maxWidth: '100%',
-      backgroundColor: colors.bgSurface || FILTER_CHIP.idleSurfaceFallback,
-      borderWidth: StyleSheet.hairlineWidth,
+      backgroundColor: idleBackground,
+      borderWidth: idleBorderWidth,
       borderColor: colors.borderSoft,
       overflow: 'hidden',
     },

@@ -149,6 +149,15 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain('onSortPress');
   });
 
+  it('uses elevated listing-card surface for compact market chips', () => {
+    const chipSrc = fs.readFileSync(
+      path.join(__dirname, '../components/ui/FilterChip.tsx'),
+      'utf8',
+    );
+    expect(chipSrc).toContain('compact ? colors.bgElevated');
+    expect(chipSrc).toContain('const idleBorderWidth = compact ? 0');
+  });
+
   it('uses the same elevated surface as listing and post cards', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),

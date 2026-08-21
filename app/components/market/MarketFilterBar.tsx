@@ -4,7 +4,7 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
-import { FilterChip, FilterChipRow, FILTER_CHIP, MARKET_CHIP } from '@/components/ui/FilterChip';
+import { FilterChip, FilterChipRow, MARKET_CHIP } from '@/components/ui/FilterChip';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -91,13 +91,13 @@ function createStyles(colors: ThemeColors) {
       gap: MARKET_CHIP.gap,
       paddingHorizontal: MARKET_CHIP.paddingHorizontal,
       borderRadius: MARKET_CHIP.radius,
-      backgroundColor: colors.bgSurface || FILTER_CHIP.idleSurfaceFallback,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
       maxWidth: 160,
       flexShrink: 0,
     },
     regionBtnActive: {
+      borderWidth: 1,
       borderColor: colors.electricBright,
       backgroundColor: `${colors.electricBright}14`,
     },
