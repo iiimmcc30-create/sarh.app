@@ -18,7 +18,7 @@ type HomeAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** Home header: compact more + notifications (physical left), then full-width search. */
+/** Home header: full-width search bar with compact more + notifications inside (physical left). */
 export function HomeAppBar({
   onMore,
   onSearch,
@@ -31,42 +31,44 @@ export function HomeAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.actionsRow}>
-        <View style={styles.iconPair}>
-          <Pressable
-            onPress={onMore}
-            style={styles.iconBtn}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="المزيد"
-          >
-            <AppIcon name="more-vertical" size={TOOL_ICON} color={colors.textPrimary} />
-          </Pressable>
-
-          <NotificationBellButton
-            size={TOOL_H}
-            iconSize={TOOL_ICON}
-            style={styles.iconBtn}
-            iconColor={colors.textPrimary}
-            badgeBorderColor={colors.bgElevated}
-          />
-        </View>
-      </View>
-
       <View style={styles.searchRow}>
-        <Pressable
-          onPress={onSearch}
-          style={[styles.searchFull, getRtlRow()]}
-          accessibilityRole="search"
-          accessibilityLabel={searchPlaceholder}
-        >
-          <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
-          <RtlTextShell flex>
-            <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
-              {searchPlaceholder}
-            </RtlText>
-          </RtlTextShell>
-        </Pressable>
+        <View style={[styles.searchBar, getRtlRow()]}>
+          <View style={styles.iconPair}>
+            <Pressable
+              onPress={onMore}
+              style={styles.inlineIconBtn}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="المزيد"
+            >
+              <AppIcon name="more-vertical" size={TOOL_ICON} color={colors.textPrimary} />
+            </Pressable>
+
+            <NotificationBellButton
+              size={TOOL_H}
+              iconSize={TOOL_ICON}
+              style={styles.inlineIconBtn}
+              iconColor={colors.textPrimary}
+              badgeBorderColor={colors.bgElevated}
+            />
+          </View>
+
+          <View style={styles.searchDivider} />
+
+          <Pressable
+            onPress={onSearch}
+            style={[styles.searchTap, getRtlRow()]}
+            accessibilityRole="search"
+            accessibilityLabel={searchPlaceholder}
+          >
+            <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
+            <RtlTextShell flex>
+              <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
+                {searchPlaceholder}
+              </RtlText>
+            </RtlTextShell>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -80,50 +82,55 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
       paddingBottom: spacing.xs,
     },
-    actionsRow: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    iconPair: {
-      flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
-      gap: 4,
-      flexGrow: 0,
-      flexShrink: 0,
-    },
     searchRow: {
       paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
     },
-    searchFull: {
+    searchBar: {
       width: '100%',
       height: SEARCH_H,
       alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: spacing.xs,
       backgroundColor: colors.bgElevated,
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    searchPlaceholder: {
-      ...typography.secondary,
-      fontSize: 14,
-      color: colors.textMuted,
+    iconPair: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: 2,
+      flexGrow: 0,
+      flexShrink: 0,
     },
-    iconBtn: {
+    inlineIconBtn: {
       width: TOOL_H,
       height: TOOL_H,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgElevated,
-      borderRadius: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+    },
+    searchDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 22,
+      backgroundColor: colors.borderSoft,
+      marginHorizontal: 4,
+      flexShrink: 0,
+    },
+    searchTap: {
+      flex: 1,
+      minWidth: 0,
+      height: '100%',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: spacing.xs,
+    },
+    searchPlaceholder: {
+      ...typography.secondary,
+      fontSize: 14,
+      color: colors.textMuted,
     },
   });
 }

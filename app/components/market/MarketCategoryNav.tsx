@@ -68,6 +68,7 @@ export function MarketCategoryNav({
         <FilterChipRow contentPaddingHorizontal={spacing.md}>
           <FilterChip
             label="الكل"
+            compact
             selected={!activeSubId}
             selectedCheck
             onPress={() => onSelectSub(null)}
@@ -76,6 +77,7 @@ export function MarketCategoryNav({
             <FilterChip
               key={sub.id}
               label={sub.nameAr}
+              compact
               selected={activeSubId === sub.id}
               leading={
                 sub.emoji ? (
@@ -108,36 +110,41 @@ function createStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'flex-end',
       paddingHorizontal: spacing.md,
-      paddingTop: spacing.sm,
-      gap: spacing.lg,
+      paddingTop: spacing.xs,
+      gap: spacing.md,
     },
     tabHit: {
       alignItems: 'center',
-      paddingBottom: 8,
-      gap: 6,
+      paddingBottom: 6,
+      gap: 4,
     },
     tabText: {
-      ...typography.smallHeading,
+      ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
+      fontSize: 13,
+      lineHeight: 18,
       color: colors.textMuted,
       writingDirection: 'rtl',
       includeFontPadding: false,
     },
     tabTextActive: {
-      ...typography.emphasis,
+      ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '700',
       color: colors.electricBright,
     },
     tabUnderline: {
-      height: 3,
+      height: 2,
       width: '100%',
-      minWidth: 24,
+      minWidth: 20,
       borderRadius: 2,
       backgroundColor: colors.electricBright,
     },
     subEmoji: {
-      fontSize: 14,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 16,
     },
   });
 }

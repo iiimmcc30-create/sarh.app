@@ -4,7 +4,7 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
-import { FilterChip, FilterChipRow, FILTER_CHIP } from '@/components/ui/FilterChip';
+import { FilterChip, FilterChipRow, FILTER_CHIP, MARKET_CHIP } from '@/components/ui/FilterChip';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -44,7 +44,7 @@ export function MarketFilterBar({
         >
           <AppIcon
             name="map-marker-outline"
-            size={15}
+            size={MARKET_CHIP.iconSize}
             color={regionOpen ? colors.electricBright : colors.textPrimary}
           />
           <Text
@@ -55,12 +55,12 @@ export function MarketFilterBar({
           </Text>
           <AppIcon
             name="angle-down"
-            size={13}
+            size={11}
             color={regionOpen ? colors.electricBright : colors.textSecondary}
           />
         </Pressable>
 
-        <FilterChip label="القريب" icon="navigation" onPress={onNearbyPress} />
+        <FilterChip label="القريب" icon="navigation" compact onPress={onNearbyPress} />
       </FilterChipRow>
     </View>
   );
@@ -71,19 +71,19 @@ function createStyles(colors: ThemeColors) {
     wrap: {
       flexGrow: 0,
       flexShrink: 0,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.xs,
     },
     regionBtn: {
-      height: FILTER_CHIP.height,
+      height: MARKET_CHIP.height,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 7,
-      paddingHorizontal: FILTER_CHIP.paddingHorizontal,
-      borderRadius: FILTER_CHIP.radius,
+      gap: MARKET_CHIP.gap,
+      paddingHorizontal: MARKET_CHIP.paddingHorizontal,
+      borderRadius: MARKET_CHIP.radius,
       backgroundColor: colors.bgSurface || FILTER_CHIP.idleSurfaceFallback,
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      maxWidth: 180,
+      maxWidth: 160,
       flexShrink: 0,
     },
     regionBtnActive: {
@@ -93,8 +93,8 @@ function createStyles(colors: ThemeColors) {
     regionText: {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: MARKET_CHIP.fontSize,
+      lineHeight: MARKET_CHIP.lineHeight,
       color: colors.textPrimary,
       writingDirection: 'rtl',
       flexShrink: 1,

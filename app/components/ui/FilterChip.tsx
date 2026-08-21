@@ -13,9 +13,9 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { FILTER_CHIP } from '@/components/ui/filterChipTokens';
+import { FILTER_CHIP, MARKET_CHIP } from '@/components/ui/filterChipTokens';
 
-export { FILTER_CHIP } from '@/components/ui/filterChipTokens';
+export { FILTER_CHIP, MARKET_CHIP } from '@/components/ui/filterChipTokens';
 
 type FilterChipProps = {
   label: string;
@@ -32,6 +32,8 @@ type FilterChipProps = {
   chevron?: boolean;
   /** Optional emoji / custom node before the label (RTL: visual right). */
   leading?: ReactNode;
+  /** Smaller chip for market region / category rows. */
+  compact?: boolean;
 };
 
 export function FilterChip({
@@ -45,13 +47,15 @@ export function FilterChip({
   selectedCheck = false,
   chevron = false,
   leading,
+  compact = false,
 }: FilterChipProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createChipStyles(theme.colors),
+    styles: createChipStyles(theme.colors, compact),
     colors: theme.colors,
   }));
 
   const iconColor = selected ? '#FFFFFF' : colors.textSecondary;
+  const iconSize = compact ? MARKET_CHIP.iconSize : 15;
 
   return (
     <Pressable
@@ -71,12 +75,12 @@ export function FilterChip({
       <View style={[styles.inner, getRtlRow()]}>
         {selected && selectedCheck ? (
           <View style={styles.checkCircle}>
-            <AppIcon name="checkmark" size={11} color={colors.electricBright} />
+            <AppIcon name="checkmark" size={compact ? 9 : 11} color={colors.electricBright} />
           </View>
         ) : leading ? (
           leading
         ) : icon ? (
-          <AppIcon name={icon} size={15} color={iconColor} />
+          <AppIcon name={icon} size={iconSize} color={iconColor} />
         ) : null}
         <Text
           numberOfLines={1}
@@ -85,7 +89,7 @@ export function FilterChip({
           {label}
         </Text>
         {chevron ? (
-          <AppIcon name="angle-down" size={13} color={iconColor} />
+          <AppIcon name="angle-down" size={compact ? 11 : 13} color={iconColor} />
         ) : null}
       </View>
     </Pressable>
@@ -126,12 +130,13 @@ export function FilterChipRow({
   );
 }
 
-function createChipStyles(colors: ThemeColors) {
+function createChipStyles(colors: ThemeColors, compact: boolean) {
+  const tokens = compact ? MARKET_CHIP : FILTER_CHIP;
   return StyleSheet.create({
     chip: {
-      height: FILTER_CHIP.height,
-      paddingHorizontal: FILTER_CHIP.paddingHorizontal,
-      borderRadius: FILTER_CHIP.radius,
+      height: tokens.height,
+      paddingHorizontal: tokens.paddingHorizontal,
+      borderRadius: tokens.radius,
       alignItems: 'center',
       justifyContent: 'center',
       alignSelf: 'flex-start',
@@ -155,13 +160,13 @@ function createChipStyles(colors: ThemeColors) {
     },
     inner: {
       alignItems: 'center',
-      gap: 7,
+      gap: tokens.gap,
       maxWidth: '100%',
     },
     checkCircle: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
+      width: compact ? MARKET_CHIP.checkSize : 18,
+      height: compact ? MARKET_CHIP.checkSize : 18,
+      borderRadius: compact ? MARKET_CHIP.checkSize / 2 : 9,
       backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
@@ -169,8 +174,8 @@ function createChipStyles(colors: ThemeColors) {
     label: {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
-      fontSize: FILTER_CHIP.fontSize,
-      lineHeight: FILTER_CHIP.lineHeight,
+      fontSize: tokens.fontSize,
+      lineHeight: tokens.lineHeight,
       color: colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',
