@@ -110,6 +110,29 @@ export const MARKET_CATEGORIES_FALLBACK: MarketCategory[] = [
   },
 ];
 
+const categoryDisplayBySlug = new Map<
+  string,
+  { emoji?: string | null; icon?: string | null }
+>();
+
+function indexCategoryDisplay(cat: MarketCategory) {
+  categoryDisplayBySlug.set(cat.slug, { emoji: cat.emoji, icon: cat.icon });
+  cat.children?.forEach(indexCategoryDisplay);
+}
+
+MARKET_CATEGORIES_FALLBACK.forEach(indexCategoryDisplay);
+
+/** Emoji/icon for market chips when API rows omit display metadata. */
+export function resolveCategoryChipDisplay(
+  cat: Pick<MarketCategory, 'slug' | 'emoji' | 'icon'>,
+): { emoji: string | null; icon: string | null } {
+  const fallback = categoryDisplayBySlug.get(cat.slug);
+  return {
+    emoji: cat.emoji ?? fallback?.emoji ?? null,
+    icon: cat.icon ?? fallback?.icon ?? null,
+  };
+}
+
 /** Legacy enum values accepted by pre-migration API. */
 const LEGACY_LISTING_CATEGORIES = new Set([
   'camels',

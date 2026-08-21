@@ -16,8 +16,10 @@ describe('FilterChip tokens', () => {
     expect(FILTER_CHIP.idleSurfaceFallback.toLowerCase()).toBe('#101f2c');
   });
 
-  it('keeps the official chip radius near the market reference', () => {
-    expect(FILTER_CHIP.radius).toBeGreaterThanOrEqual(12);
-    expect(FILTER_CHIP.radius).toBeLessThanOrEqual(16);
+  it('keeps compact market chip tokens for region and category rows', () => {
+    const { MARKET_CHIP } = require('../components/ui/filterChipTokens');
+    expect(MARKET_CHIP.height).toBeGreaterThanOrEqual(32);
+    expect(MARKET_CHIP.height).toBeLessThanOrEqual(36);
+    expect(MARKET_CHIP.fontSize).toBeLessThanOrEqual(13);
   });
 });
