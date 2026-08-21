@@ -60,6 +60,30 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
     expect(res.status).toBe(400);
   });
 
+  t('unified search endpoint returns grouped results', async () => {
+    const res = await request(API).get('/api/search').query({ q: 'ابل', type: 'all' });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data.groups)).toBe(true);
+  });
+
+  t('unified search rejects query shorter than 2 chars', async () => {
+    const res = await request(API).get('/api/search').query({ q: 'a' });
+    expect(res.status).toBe(400);
+  });
+
+  t('search suggest returns suggestions array', async () => {
+    const res = await request(API).get('/api/search/suggest').query({ q: 'اب' });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data.suggestions)).toBe(true);
+  });
+
+  t('search trending still works (backward compatible)', async () => {
+    const res = await request(API).get('/api/search/trending');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data.trending)).toBe(true);
+  });
+
   // ── Filters (§3) ────────────────────────────────────────────
   t('filter by category', async () => {
     const res = await request(API).get('/api/listings').query({ category: 'camels' });
