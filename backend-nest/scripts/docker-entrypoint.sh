@@ -23,25 +23,10 @@ then
   exit 1
 fi
 
-echo "Running prisma migrate deploy (best effort)..."
-MIGRATE_LOG=/tmp/prisma-migrate.log
-if ! npx prisma migrate deploy 2>&1 | tee "$MIGRATE_LOG"; then
-  if grep -q "P3009" "$MIGRATE_LOG"; then
-    FAILED=$(sed -n 's/.*The `\([^`]*\)` migration.*/\1/p' "$MIGRATE_LOG" | head -1)
-    if [ -n "$FAILED" ]; then
-      echo "Resolving failed migration: $FAILED"
-      npx prisma migrate resolve --rolled-back "$FAILED" || true
-      npx prisma migrate resolve --applied "$FAILED" || true
-      npx prisma migrate deploy || echo "WARN: migrate deploy still failed after resolve."
-    fi
-  else
-    echo "WARN: migrate deploy failed — continuing with db push."
-  fi
-fi
-
-echo "Syncing schema (db push)..."
-if ! npx prisma db push --accept-data-loss --skip-generate; then
-  echo "WARN: db push failed — starting API anyway (schema may be stale)."
+echo "Running prisma migrate deploy..."
+if ! npx prisma migrate deploy; then
+  echo "ERROR: prisma migrate deploy failed. Refusing to start API (no db push in production)."
+  exit 1
 fi
 
 echo "Starting NestJS API..."
