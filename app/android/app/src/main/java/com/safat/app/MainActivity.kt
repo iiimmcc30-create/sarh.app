@@ -45,6 +45,18 @@ class MainActivity : ReactActivity() {
   }
 
   /**
+   * Workaround for RN 0.81: ReactDelegate can be null if the user backgrounds the app
+   * before React finishes initializing (e.g. pressing Home during splash).
+   */
+  override fun onUserLeaveHint() {
+    try {
+      super.onUserLeaveHint()
+    } catch (_: NullPointerException) {
+      // Safe to ignore — onUserLeaveHint is not critical to app lifecycle.
+    }
+  }
+
+  /**
     * Align the back button behavior with Android S
     * where moving root activities to background instead of finishing activities.
     * @see <a href="https://developer.android.com/reference/android/app/Activity#onBackPressed()">onBackPressed</a>
