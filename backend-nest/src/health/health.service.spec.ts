@@ -19,7 +19,11 @@ describe('HealthService', () => {
         },
         {
           provide: RedisCacheService,
-          useValue: { isEnabled: () => false, ping: jest.fn() },
+          useValue: {
+            isEnabled: () => false,
+            ping: jest.fn(),
+            getClient: jest.fn(),
+          },
         },
         {
           provide: RedisSessionService,

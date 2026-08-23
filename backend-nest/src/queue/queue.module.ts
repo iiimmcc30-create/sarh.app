@@ -20,6 +20,7 @@ import { NotificationRepository } from './repositories/notification.repository';
 import { WorkerCronRepository } from './repositories/worker-cron.repository';
 import { SubscriptionQueueService } from './services/subscription-queue.service';
 import { WorkerCronService } from './services/worker-cron.service';
+import { WorkerHeartbeatService } from './services/worker-heartbeat.service';
 import { SubscriptionProcessor } from './processors/subscription.processor';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
@@ -103,6 +104,7 @@ export class QueueModule {}
     ImageProcessingProcessor,
     SubscriptionProcessor,
     WorkerCronService,
+    WorkerHeartbeatService,
   ],
 })
 export class WorkerModule {}
