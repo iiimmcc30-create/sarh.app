@@ -226,22 +226,21 @@ export default function ListingDetailScreen() {
     } as never);
   };
 
-  const openSellerWhatsApp = async () => {
+  const openSellerCall = async () => {
     if (!listing) return;
-    if (!listing.contactPhone) return;
+    if (!listing.contactPhone) {
+      Alert.alert('لا يوجد رقم', 'لم يُذكر رقم تواصل في هذا الإعلان.');
+      return;
+    }
     const phone = listing.contactPhone.replace(/\D/g, '');
-    if (!phone) return;
-    const title = listing.arabicTitle || listing.title;
-    const message = encodeURIComponent(
-      `مرحباً، أتواصل بخصوص إعلان "${title}" في تطبيق سرح.\nhttps://alsfat.com/l/${listing.id}`,
-    );
-    const appUrl = `whatsapp://send?phone=${phone}&text=${message}`;
-    const webUrl = `https://wa.me/${phone}?text=${message}`;
+    if (!phone) {
+      Alert.alert('رقم غير صالح', 'تعذّر قراءة رقم التواصل.');
+      return;
+    }
     try {
-      const canOpenApp = await Linking.canOpenURL(appUrl);
-      await Linking.openURL(canOpenApp ? appUrl : webUrl);
+      await Linking.openURL(`tel:${phone}`);
     } catch {
-      Alert.alert('تعذّر فتح واتساب', 'تأكد من تثبيت واتساب أو صحة رقم التواصل.');
+      Alert.alert('تعذّر الاتصال', 'تحقق من صحة رقم التواصل.');
     }
   };
 
@@ -675,7 +674,7 @@ export default function ListingDetailScreen() {
           </View>
         ) : null}
 
-          <ListingCommentsSection listingId={listing.id} listingOwnerId={listing.seller.id} />
+          <ListingCommentsSection listingId={listing.id} />
       </ScrollView>
 
       {/* Bottom CTA for buyers */}
@@ -690,11 +689,11 @@ export default function ListingDetailScreen() {
           </Pressable>
           {listing.contactPhone ? (
             <Pressable
-              onPress={openSellerWhatsApp}
-              style={({ pressed }) => [styles.ctaBtnWa, pressed && { opacity: 0.88 }]}
+              onPress={() => void openSellerCall()}
+              style={({ pressed }) => [styles.ctaBtnCall, pressed && { opacity: 0.88 }]}
             >
-              <AppIcon name="whatsapp" size={20} color="#fff" />
-              <Text style={styles.ctaBtnWaText}>واتساب</Text>
+              <AppIcon name="call" size={20} color="#fff" />
+              <Text style={styles.ctaBtnCallText}>اتصل</Text>
             </Pressable>
           ) : (
             <View style={{ flex: 1 }}>
@@ -960,7 +959,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.button,
       color: '#fff',
     },
-    ctaBtnWa: {
+    ctaBtnCall: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
@@ -968,11 +967,13 @@ function createStyles(colors: ThemeColors) {
       gap: 8,
       paddingVertical: 14,
       borderRadius: radius.lg,
-      backgroundColor: '#25D366',
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1,
+      borderColor: colors.electricBright,
     },
-    ctaBtnWaText: {
+    ctaBtnCallText: {
       ...typography.button,
-      color: '#fff',
+      color: colors.electricBright,
     },
   });
 }
