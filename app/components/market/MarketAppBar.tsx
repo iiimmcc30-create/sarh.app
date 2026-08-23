@@ -6,10 +6,10 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-const SEARCH_H = 44;
-const TOOL_H = 32;
-const TOOL_ICON = 16;
-const SEARCH_ICON = 16;
+const SEARCH_H = 50;
+const TOOL_H = 34;
+const TOOL_ICON = 17;
+const SEARCH_ICON = 17;
 
 type Props = {
   onSearch: () => void;
@@ -102,7 +102,7 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       paddingHorizontal: spacing.xs,
       backgroundColor: colors.bgElevated,
-      borderRadius: 16,
+      borderRadius: 8,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
@@ -121,7 +121,7 @@ function createStyles(colors: ThemeColors) {
     },
     searchDivider: {
       width: StyleSheet.hairlineWidth,
-      height: 22,
+      height: 26,
       backgroundColor: colors.borderSoft,
       marginHorizontal: 4,
       flexShrink: 0,
@@ -136,7 +136,7 @@ function createStyles(colors: ThemeColors) {
     },
     searchPlaceholder: {
       ...typography.secondary,
-      fontSize: 14,
+      fontSize: 15,
       color: colors.textMuted,
     },
   });

@@ -136,17 +136,21 @@ describe('HomeAppBar chrome', () => {
     expect(src).not.toContain('NotificationBellButton');
   });
 
-  it('places sort chip beside nearby in the market filter row', () => {
+  it('pairs sort and category actions beside nearby in the market filter row', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/market/MarketFilterBar.tsx'),
       'utf8',
     );
     const nearbyAt = src.indexOf('label="القريب"');
-    const sortIconAt = src.indexOf('icon="sort-alt"', nearbyAt);
+    const sortBarAt = src.indexOf('sortCategoryBar', nearbyAt);
+    const sortIconAt = src.indexOf('name="sort-alt"', sortBarAt);
+    const categoryAt = src.indexOf('التصنيف', sortBarAt);
     expect(nearbyAt).toBeGreaterThan(-1);
-    expect(sortIconAt).toBeGreaterThan(nearbyAt);
-    expect(src).toContain('sort-alt');
-    expect(src).toContain('onSortPress');
+    expect(sortBarAt).toBeGreaterThan(nearbyAt);
+    expect(sortIconAt).toBeGreaterThan(sortBarAt);
+    expect(categoryAt).toBeGreaterThan(sortBarAt);
+    expect(src).toContain('options-outline');
+    expect(src).toContain('onCategoryPress');
   });
 
   it('uses elevated listing-card surface for compact market chips', () => {

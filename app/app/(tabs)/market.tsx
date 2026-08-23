@@ -1,8 +1,10 @@
 // Powered by OnSpace.AI
 // SAFAT — Market Tab (السوق)
 import { MarketAppBar } from '@/components/market/MarketAppBar';
-import { MarketCategoryNav } from '@/components/market/MarketCategoryNav';
 import { MarketFilterBar } from '@/components/market/MarketFilterBar';
+import {
+  MarketCategoryPicker,
+} from '@/components/market/MarketCategoryPicker';
 import { RegionCityPicker } from '@/components/market/RegionCityPicker';
 
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -32,7 +34,6 @@ import { safePush } from '@/lib/safeNavigate';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { useApp } from '@/hooks/useApp';
 import { Listing } from '@/services/types';
-import type { MarketCategory } from '@/services/categories';
 
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 
@@ -44,7 +45,7 @@ export default function MarketScreen() {
     styles: createMarketStyles(colors, scheme, screenStyles),
   }));
   const { listings, fetchListings } = useApp();
-  const { categories, loading: categoriesLoading, reload: reloadCategories } = useMarketCategories();
+  const { categories, reload: reloadCategories } = useMarketCategories();
   const lastListingsFocusAt = useRef(0);
   const listRef = useRef<FlatList<Listing>>(null);
 
@@ -52,6 +53,7 @@ export default function MarketScreen() {
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
   const [regionSelection, setRegionSelection] = useState<RegionSelection>({ type: 'all' });
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('newest');
 
@@ -74,14 +76,12 @@ export default function MarketScreen() {
     return activeParent.children?.find((c) => c.id === activeSubId) ?? null;
   }, [activeParent, activeSubId]);
 
-  const onSelectParent = useCallback((cat: MarketCategory | null) => {
-    setActiveParentId(cat?.id ?? null);
-    setActiveSubId(null);
+  const onApplyCategory = useCallback((sel: { parentId: string | null; subId: string | null }) => {
+    setActiveParentId(sel.parentId);
+    setActiveSubId(sel.subId);
   }, []);
 
-  const onSelectSub = useCallback((sub: MarketCategory | null) => {
-    setActiveSubId(sub?.id ?? null);
-  }, []);
+  const categoryActive = activeParentId !== null;
 
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -111,15 +111,6 @@ export default function MarketScreen() {
 
     return interleavePromotedListings(list);
   }, [listings, showFeaturedOnly, activeParent, activeSub, regionSelection, sortMode]);
-
-  const sortLabel =
-    sortMode === 'newest'
-      ? 'الأحدث'
-      : sortMode === 'oldest'
-        ? 'الأقدم'
-        : sortMode === 'price_asc'
-          ? 'السعر ↑'
-          : 'السعر ↓';
 
   const cycleSort = () => {
     setSortMode((prev) => {
@@ -203,26 +194,14 @@ export default function MarketScreen() {
           featuredActive={showFeaturedOnly}
         />
 
-        {categories.length > 0 ? (
-          <MarketCategoryNav
-            categories={categories}
-            activeParentId={activeParentId}
-            activeSubId={activeSubId}
-            onSelectParent={onSelectParent}
-            onSelectSub={onSelectSub}
-          />
-        ) : categoriesLoading ? (
-          <View style={styles.categoriesLoading}>
-            <Text style={styles.categoriesLoadingText}>جاري تحميل التصنيفات...</Text>
-          </View>
-        ) : null}
-
         <MarketFilterBar
           regionSelection={regionSelection}
           onRegionPress={() => setRegionPickerOpen(true)}
           onNearbyPress={() => void onNearby()}
           onSortPress={cycleSort}
-          sortLabel={sortLabel}
+          onCategoryPress={() => setCategoryPickerOpen(true)}
+          categoryActive={categoryActive}
+          categoryPickerOpen={categoryPickerOpen}
           regionActive={regionPickerOpen}
         />
       </View>
@@ -253,6 +232,14 @@ export default function MarketScreen() {
         selection={regionSelection}
         onClose={() => setRegionPickerOpen(false)}
         onSelect={setRegionSelection}
+      />
+
+      <MarketCategoryPicker
+        visible={categoryPickerOpen}
+        categories={categories}
+        selection={{ parentId: activeParentId, subId: activeSubId }}
+        onClose={() => setCategoryPickerOpen(false)}
+        onSelect={onApplyCategory}
       />
     </SafeAreaView>
   );
