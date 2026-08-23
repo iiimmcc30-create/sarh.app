@@ -19,14 +19,14 @@ type TabDef =
 
 /**
  * Visual RTL order (right→left):
- * الرئيسية · السوق · إضافة عرض · المحادثات · الملف الشخصي
+ * الرئيسية · السوق · إضافة عرض · المحادثات · المزيد
  */
 const TABS: TabDef[] = [
   { kind: 'route', route: 'index', icon: 'home-outline', label: 'الرئيسية' },
   { kind: 'route', route: 'market', icon: 'cart-outline', label: 'السوق' },
   { kind: 'create', label: 'إضافة عرض' },
   { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'المحادثات' },
-  { kind: 'route', route: 'profile', icon: 'person-outline', label: 'الملف الشخصي' },
+  { kind: 'route', route: 'more', icon: 'grid-outline', label: 'المزيد' },
 ];
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    minHeight: 48,
+    minHeight: 52,
     paddingVertical: 2,
     paddingHorizontal: 2,
     gap: 4,
