@@ -6,257 +6,121 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
-import { authFetch } from '@/services/authFetch';
-import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { deleteListingComment } from '@/services/comments';
-import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
-import { canDeleteComment } from '@/lib/currentUser';
-import { showToast } from '@/lib/toast';
-import { useApp } from '@/hooks/useApp';
-import { getRtlRow } from '@/lib/rtl';
-import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import type { PostComment } from '@/services/types';
+import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { ListingCommentsModal } from '@/components/feature/ListingCommentsModal';
+import { fetchListingComments } from '@/components/feature/listingCommentsUtils';
 
 type ListingCommentsSectionProps = {
   listingId: string;
-  listingOwnerId?: string;
 };
 
-function mapComment(c: {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: {
-    id: string;
-    username: string;
-    displayName: string;
-    arabicName: string;
-    avatar?: string | null;
-    verified?: boolean;
-  };
-}): PostComment {
-  return {
-    id: c.id,
-    content: c.content,
-    createdAt: formatRelativeTimeAr(c.createdAt) || new Date(c.createdAt).toLocaleString('ar-SA'),
-    author: {
-      id: c.author.id,
-      username: c.author.username,
-      displayName: c.author.displayName || '',
-      arabicName: c.author.arabicName || '',
-      avatar: c.author.avatar ?? undefined,
-      verified: c.author.verified ?? false,
-      followers: 0,
-      following: 0,
-      rating: null,
-      country: 'SA',
-      bio: '',
-    },
-  };
-}
-
-export function ListingCommentsSection({ listingId, listingOwnerId }: ListingCommentsSectionProps) {
+export function ListingCommentsSection({ listingId }: ListingCommentsSectionProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const { isAuthenticated, user } = useAuth();
-  const { me } = useApp();
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [text, setText] = useState('');
-  const [sending, setSending] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const handleDelete = async (commentId: string) => {
-    const confirmed = await confirmDestructive(
-      'حذف التعليق',
-      'هل تريد حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء.',
-      'حذف التعليق',
-    );
-    if (!confirmed) return;
-
-    setDeletingId(commentId);
-    const result = await deleteListingComment(listingId, commentId);
-    setDeletingId(null);
-    if (!result.ok) {
-      await alertMessage('تعذر حذف التعليق', result.message, 'close-circle-outline');
-      return;
-    }
-    setComments((prev) => prev.filter((c) => c.id !== commentId));
-    void showToast('تم حذف التعليق');
-  };
+  const [modalVisible, setModalVisible] = useState(false);
 
   const loadComments = useCallback(async () => {
     if (!listingId) return;
     setLoading(true);
     setLoadError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/listings/${listingId}/comments`);
-      const json = await res.json().catch(() => ({}));
-      if (res.ok && json.success) {
-        const rows = Array.isArray(json.data?.comments) ? json.data.comments : [];
-        setComments(rows.map(mapComment));
-        return;
-      }
-      setComments([]);
-      setLoadError(json.messageAr ?? json.message ?? 'تعذّر تحميل الردود');
-    } catch (err) {
-      console.warn('[ListingComments] load failed:', err);
-      setComments([]);
-      setLoadError('تعذّر تحميل الردود — تحقق من الاتصال');
-    } finally {
-      setLoading(false);
-    }
+    const result = await fetchListingComments(listingId);
+    setComments(result.comments);
+    setLoadError(result.error);
+    setLoading(false);
   }, [listingId]);
 
   useEffect(() => {
     void loadComments();
   }, [loadComments]);
 
-  const handleSend = async () => {
-    if (!isAuthenticated) {
-      await alertMessage('تسجيل الدخول', 'يجب تسجيل الدخول لإضافة رد على الإعلان', 'log-in-outline');
-      return;
-    }
-    if (!text.trim() || sending) return;
-
-    setSending(true);
-    try {
-      const res = await authFetch(`${API_BASE}/api/listings/${listingId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: text.trim() }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (res.ok && json.success) {
-        setText('');
-        await loadComments();
-        void showToast('تم إرسال الرد');
-      } else {
-        await alertMessage('تعذّر الإرسال', json.messageAr ?? json.message ?? 'حاول مرة أخرى', 'alert-circle-outline');
-      }
-    } catch {
-      await alertMessage('خطأ', 'تعذّر إرسال الرد', 'close-circle-outline');
-    } finally {
-      setSending(false);
-    }
+  const openCommentsModal = () => {
+    setModalVisible(true);
   };
 
   return (
-    <View style={styles.card}>
-      <CoverTrailRow justify="space-between" gap={8} style={styles.header}>
-        <Text style={styles.count}>{comments.length}</Text>
-        <CoverTrailRow justify="flex-end" gap={8} flex style={styles.headerTrail}>
-          <RtlTextShell flex>
-            <RtlText style={styles.title}>الردود على الإعلان</RtlText>
-          </RtlTextShell>
-          <View style={styles.sectionBar} />
-        </CoverTrailRow>
-      </CoverTrailRow>
-
-      <RtlTextShell>
-        <RtlText style={styles.hint}>
-          ردود عامة يراها الجميع — للمحادثة الخاصة استخدم زر المراسلة أسفل الصفحة
-        </RtlText>
-      </RtlTextShell>
-
-      {loading ? (
-        <ActivityIndicator color={colors.electricBright} style={styles.loader} />
-      ) : loadError ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{loadError}</Text>
-          <Pressable onPress={() => void loadComments()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>إعادة المحاولة</Text>
-          </Pressable>
-        </View>
-      ) : comments.length === 0 ? (
+    <>
+      <View style={styles.card}>
         <RtlTextShell>
-          <RtlText style={styles.empty}>لا توجد ردود بعد — كن أول من يسأل أو يعلّق علناً</RtlText>
+          <RtlText style={styles.sectionTitle}>عدد التعليقات ({comments.length})</RtlText>
         </RtlTextShell>
-      ) : (
-        <View style={styles.list}>
-          {comments.map((c) => (
-            <View key={c.id} style={[styles.commentRow, getRtlRow()]}>
-              <UserProfileLink userId={c.author.id}>
-                <Image source={uriSource(c.author.avatar)} style={styles.avatar} contentFit="cover" />
-              </UserProfileLink>
-              <View style={styles.commentBubble}>
-                <View style={[styles.commentHeader, getRtlRow()]}>
-                  <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
-                    <CoverTrailRow justify="flex-end" gap={4} style={styles.nameTimeRow}>
-                      <Text style={styles.commentTime} numberOfLines={1}>
-                        {c.createdAt}
-                      </Text>
-                      <Text style={styles.metaDot}>·</Text>
-                      <VerifiedInlineName
-                        name={c.author.arabicName || c.author.displayName}
-                        verified={c.author.verified}
-                        badgeSize={14}
-                        nameStyle={styles.commentName}
+
+        {loading ? (
+          <ActivityIndicator color={colors.electricBright} style={styles.loader} />
+        ) : loadError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{loadError}</Text>
+            <Pressable onPress={() => void loadComments()} style={styles.retryBtn}>
+              <Text style={styles.retryText}>إعادة المحاولة</Text>
+            </Pressable>
+          </View>
+        ) : comments.length === 0 ? (
+          <RtlTextShell>
+            <RtlText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</RtlText>
+          </RtlTextShell>
+        ) : (
+          <View style={styles.list}>
+            {comments.map((c) => (
+              <View key={c.id} style={styles.commentCard}>
+                <View style={[styles.commentCardHeader, getRtlRow()]}>
+                  <Text style={styles.commentTime}>{c.createdAt}</Text>
+                  <CoverTrailRow justify="flex-end" gap={6} flex style={styles.commentMeta}>
+                    <VerifiedInlineName
+                      name={c.author.arabicName || c.author.displayName}
+                      verified={c.author.verified}
+                      badgeSize={12}
+                      nameStyle={styles.commentName}
+                    />
+                    <UserProfileLink userId={c.author.id}>
+                      <Image
+                        source={uriSource(c.author.avatar)}
+                        style={styles.avatar}
+                        contentFit="cover"
                       />
-                    </CoverTrailRow>
-                  </UserProfileLink>
-                  {canDeleteComment(c.author.id, listingOwnerId, user, me) ? (
-                    <Pressable
-                      onPress={() => void handleDelete(c.id)}
-                      disabled={deletingId === c.id}
-                      hitSlop={8}
-                      style={styles.deleteBtn}
-                    >
-                      {deletingId === c.id ? (
-                        <ActivityIndicator size="small" color={colors.textMuted} />
-                      ) : (
-                        <AppIcon name="trash-outline" size={15} color={colors.textMuted} />
-                      )}
-                    </Pressable>
-                  ) : null}
+                    </UserProfileLink>
+                  </CoverTrailRow>
                 </View>
                 <RtlTextShell>
                   <RtlText style={styles.commentText}>{c.content}</RtlText>
                 </RtlTextShell>
               </View>
-            </View>
-          ))}
-        </View>
-      )}
+            ))}
+          </View>
+        )}
 
-      <View style={[styles.inputRow, getRtlRow()]}>
-        <TextInput
-          style={styles.input}
-          placeholder={isAuthenticated ? 'اكتب رداً عاماً على الإعلان...' : 'سجّل الدخول لإضافة رد'}
-          placeholderTextColor={colors.textSubtle}
-          value={text}
-          onChangeText={setText}
-          editable={isAuthenticated && !sending && !loadError}
-          textAlign="right"
-          multiline
-          maxLength={500}
-        />
         <Pressable
-          style={[styles.sendBtn, (!text.trim() || sending || !isAuthenticated || !!loadError) && styles.sendBtnDisabled]}
-          onPress={handleSend}
-          disabled={!text.trim() || sending || !isAuthenticated || !!loadError}
+          onPress={openCommentsModal}
+          style={[styles.addCommentTrigger, getRtlRow()]}
         >
-          {sending ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <AppIcon name="send" size={18} color="#fff" />
-          )}
+          <View style={[styles.addCommentInput, getRtlRow()]}>
+            <RtlTextShell flex>
+              <RtlText style={styles.addCommentPlaceholder}>أكتب تعليقك هنا...</RtlText>
+            </RtlTextShell>
+            <AppIcon name="send" size={18} color={colors.textSubtle} />
+          </View>
         </Pressable>
       </View>
-    </View>
+
+      <ListingCommentsModal
+        visible={modalVisible}
+        listingId={listingId}
+        onClose={() => setModalVisible(false)}
+        onCommentAdded={() => void loadComments()}
+      />
+    </>
   );
 }
 
@@ -270,36 +134,10 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderSoft,
     },
-    header: {
-      width: '100%',
-    },
-    headerTrail: {
-      minWidth: 0,
-    },
-    sectionBar: {
-      width: 4,
-      height: 16,
-      borderRadius: 2,
-      backgroundColor: colors.electricBright,
-    },
-    /** Accent bar sits on physical right beside the section title. */
-    title: {
+    sectionTitle: {
       ...typography.feedTitle,
-      color: colors.textBrandStrong,
-    },
-    count: {
-      ...typography.feedBody,
-      color: colors.textMuted,
-      backgroundColor: colors.bgElevated,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: radius.pill,
-      overflow: 'hidden',
-    },
-    hint: {
-      ...typography.feedBody,
-      color: colors.textMuted,
-      lineHeight: 20,
+      color: colors.textPrimary,
+      ...getRtlText(),
     },
     errorBox: {
       alignItems: 'center',
@@ -332,57 +170,42 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       lineHeight: 22,
       paddingVertical: spacing.sm,
+      ...getRtlText(),
     },
     list: {
-      gap: spacing.md,
-    },
-    commentRow: {
-      alignItems: 'flex-start',
       gap: spacing.sm,
     },
-    avatar: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
-    },
-    commentBubble: {
-      flex: 1,
-      minWidth: 0,
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+    commentCard: {
+      gap: spacing.xs,
+      padding: spacing.md,
       borderRadius: radius.lg,
       backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.borderSoft,
     },
-    commentHeader: {
+    commentCardHeader: {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.sm,
     },
     commentMeta: {
-      flex: 1,
       minWidth: 0,
     },
-    nameTimeRow: {
-      width: '100%',
-      minWidth: 0,
+    avatar: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgSurface,
     },
     commentName: {
-      ...typography.feedTitle,
+      ...typography.micro,
       color: colors.textPrimary,
-    },
-    metaDot: {
-      ...typography.feedBody,
-      color: colors.textSubtle,
-      flexShrink: 0,
+      fontWeight: '600',
     },
     commentTime: {
-      ...typography.feedBody,
+      ...typography.micro,
       color: colors.textMuted,
       flexShrink: 0,
     },
@@ -390,41 +213,27 @@ function createStyles(colors: ThemeColors) {
       ...typography.feedBody,
       color: colors.textSecondary,
       lineHeight: 22,
+      ...getRtlText(),
     },
-    deleteBtn: {
-      padding: 2,
-      borderRadius: radius.pill,
+    addCommentTrigger: {
+      width: '100%',
     },
-    inputRow: {
-      alignItems: 'flex-end',
-      gap: spacing.sm,
-      paddingTop: spacing.xs,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderHairline,
-    },
-    input: {
+    addCommentInput: {
       flex: 1,
-      minHeight: 44,
-      maxHeight: 100,
-      backgroundColor: colors.bgElevated,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      minHeight: 48,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      borderRadius: radius.lg,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 10,
+      backgroundColor: colors.bgElevated,
+    },
+    addCommentPlaceholder: {
       ...typography.feedBody,
-      color: colors.textPrimary,
-    },
-    sendBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 20,
-      backgroundColor: colors.electric,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    sendBtnDisabled: {
-      opacity: 0.45,
+      color: colors.textSubtle,
+      ...getRtlText(),
     },
   });
 }
