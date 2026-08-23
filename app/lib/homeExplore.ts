@@ -42,8 +42,8 @@ const CATALOG: Record<
     route: '/(tabs)/market',
   },
   services: {
-    titleAr: 'خدمات الوزارة',
-    descriptionAr: 'الخدمات الالكترونية-التراخيص-التصاريح',
+    titleAr: 'خدمات وزارة البيئة والمياه والزراعة',
+    descriptionAr: 'الخدمات الإلكترونية - التراخيص - التصاريح',
     icon: 'briefcase-outline',
     route: '/sarh-services',
   },
@@ -95,6 +95,33 @@ export function splitExploreRows<T>(items: T[]): { top: T[]; bottom: T[] } {
   if (items.length <= 1) return { top: items, bottom: [] };
   const mid = Math.ceil(items.length / 2);
   return { top: items.slice(0, mid), bottom: items.slice(mid) };
+}
+
+/** Visual order for the 2×2 home grid (matches reference layout). */
+export const EXPLORE_GRID_DESTINATION_ORDER: HomeExploreDestinationKey[] = [
+  'listings',
+  'butchers',
+  'community',
+  'news',
+];
+
+/** Ministry/services card spans full width below the 2×2 grid. */
+export function partitionExploreSections(sections: HomeExploreCard[]): {
+  grid: HomeExploreCard[];
+  featured: HomeExploreCard | null;
+} {
+  const featured = sections.find((s) => s.destination === 'services') ?? null;
+  const gridPool = sections.filter((s) => s.destination !== 'services');
+  const byDest = new Map(gridPool.map((s) => [s.destination, s]));
+  const grid = EXPLORE_GRID_DESTINATION_ORDER.map((d) => byDest.get(d)).filter(
+    (s): s is HomeExploreCard => Boolean(s),
+  );
+  for (const item of gridPool) {
+    if (!grid.some((g) => g.destination === item.destination)) {
+      grid.push(item);
+    }
+  }
+  return { grid, featured };
 }
 
 export function resolveExploreCard(

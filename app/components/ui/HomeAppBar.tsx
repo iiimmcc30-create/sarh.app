@@ -11,9 +11,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
 const BAR_H = HOME_APP_BAR_H;
-const ICON_BTN = 40;
-const ICON_SIZE = 22;
-const AVATAR = 36;
+const ICON_BTN = 44;
+const ICON_SIZE = 24;
+const AVATAR = 42;
 
 type HomeAppBarProps = {
   onSearch: () => void;
@@ -49,6 +49,7 @@ export function HomeAppBar({
         <View style={styles.bar}>
           <View style={styles.leftCluster}>
             <NotificationBellButton
+              bare
               size={ICON_BTN}
               iconSize={ICON_SIZE}
               style={styles.iconBtn}
@@ -80,7 +81,7 @@ export function HomeAppBar({
               accessibilityRole="button"
               accessibilityLabel="قائمة الحساب"
             >
-              <AppIcon name="angle-down" size={14} color={colors.textMuted} />
+              <AppIcon name="angle-down" size={16} color={colors.textMuted} />
             </Pressable>
 
             <Pressable
@@ -132,12 +133,13 @@ function createStyles(colors: ThemeColors) {
     },
     bar: {
       width: '100%',
-      height: BAR_H,
+      minHeight: BAR_H,
       flexDirection: 'row',
       direction: 'ltr',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       backgroundColor: colors.bgDeep,
     },
     leftCluster: {
@@ -151,6 +153,7 @@ function createStyles(colors: ThemeColors) {
       height: ICON_BTN,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: 'transparent',
     },
     profileCluster: {
       flex: 1,
@@ -177,7 +180,8 @@ function createStyles(colors: ThemeColors) {
     displayName: {
       ...typography.feedTitle,
       fontFamily: OFFICIAL_APP_FONT,
-      fontSize: 15,
+      fontSize: 17,
+      lineHeight: 24,
       color: colors.textPrimary,
       textAlign: 'right',
       writingDirection: 'rtl',
