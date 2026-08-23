@@ -22,6 +22,7 @@ import { AppScrollView } from '@/components/ui/AppScrollView';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
 import { safePush } from '@/lib/safeNavigate';
+import { confirmSignOut } from '@/lib/confirmSignOut';
 
 const HOME_REFRESH_TTL_MS = 60_000;
 const HOME_POSTS_LIMIT = 5;
@@ -55,7 +56,10 @@ export default function HomeScreen() {
     deletePost,
     fetchPosts,
   } = useApp();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
+  const displayName = isAuthenticated
+    ? me.arabicName || me.displayName || me.username || 'حسابي'
+    : 'ضيف';
   const [editorialStories, setEditorialStories] = useState<EditorialStory[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(false);
   const [exploreSections, setExploreSections] = useState<HomeExploreCard[]>(FALLBACK_HOME_EXPLORE);
@@ -113,8 +117,20 @@ export default function HomeScreen() {
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <HomeAppBar
-          onMore={() => safePush('/(tabs)/more', undefined, router)}
+          displayName={displayName}
+          avatarUri={me.avatar}
+          isAuthenticated={isAuthenticated}
           onSearch={() => safePush('/search', undefined, router)}
+          onProfilePress={() => {
+            if (!isAuthenticated) {
+              safePush('/auth/phone', undefined, router);
+              return;
+            }
+            safePush('/(tabs)/profile', undefined, router);
+          }}
+          onManageProfile={() => safePush('/(tabs)/profile', undefined, router)}
+          onSettingsPrivacy={() => safePush('/profile/settings', undefined, router)}
+          onLogout={() => confirmSignOut(signOut)}
         />
 
         <AppScrollView contentContainerStyle={styles.scrollContent}>

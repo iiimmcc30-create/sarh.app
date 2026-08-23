@@ -74,13 +74,17 @@ export const ds = {
   },
 
   tabBar: {
-    /** Same chrome height as ButchersTabBar (paddingTop 8 + slot 48). */
-    height: 56,
+    /** Tab chrome: paddingTop 8 + slot 52 + small label gap. */
+    height: 64,
     fabSize: 22,
     fabLift: 0,
     marginH: 0,
     /** Minimum safe-area padding — matches ButchersTabBar. */
     marginBottom: sarh.space.sm,
+  },
+
+  homeAppBar: {
+    height: 64,
   },
 
   motion: {

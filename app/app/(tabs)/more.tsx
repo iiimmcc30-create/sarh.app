@@ -85,11 +85,7 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScreenHeader
-        title="المزيد"
-        showBack
-        onBackPress={() => router.navigate('/(tabs)' as never)}
-      />
+      <ScreenHeader title="المزيد" />
       <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>

@@ -91,27 +91,25 @@ describe('Explore Sarh logo mark', () => {
 });
 
 describe('HomeAppBar chrome', () => {
-  it('embeds compact more and notifications inside the full-width search bar', () => {
+  it('uses flat home header with notifications, search icon, and profile identity', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
       'utf8',
     );
-    const moreAt = src.indexOf('accessibilityLabel="المزيد"');
     const bellAt = src.indexOf('<NotificationBellButton');
-    const searchAt = src.indexOf('accessibilityRole="search"');
-    expect(moreAt).toBeGreaterThan(-1);
-    expect(bellAt).toBeGreaterThan(moreAt);
+    const searchAt = src.indexOf('accessibilityLabel="بحث"');
+    const chevronAt = src.indexOf('accessibilityLabel="قائمة الحساب"');
+    const avatarAt = src.indexOf('accessibilityLabel="الملف الشخصي"');
+    expect(bellAt).toBeGreaterThan(-1);
     expect(searchAt).toBeGreaterThan(bellAt);
-    expect(src).toContain('iconPair');
-    expect(src).toContain('styles.searchBar');
-    expect(src).toContain('styles.searchTap');
-    expect(src).toContain('styles.searchDivider');
-    expect(src).toContain('TOOL_ICON');
+    expect(chevronAt).toBeGreaterThan(searchAt);
+    expect(avatarAt).toBeGreaterThan(chevronAt);
+    expect(src).toContain('HomeProfileMenu');
+    expect(src).toContain('angle-down');
     expect(src).toContain("direction: 'ltr'");
-    expect(src).toContain('more-vertical');
-    expect(src).not.toContain('styles.topBar');
-    expect(src).not.toContain('⋮');
-    expect(src).not.toContain("name=\"apps\"");
+    expect(src).not.toContain('styles.searchBar');
+    expect(src).not.toContain('more-vertical');
+    expect(src).not.toContain('accessibilityLabel="المزيد"');
   });
 
   it('embeds filter inside market search bar with featured star on the right', () => {
