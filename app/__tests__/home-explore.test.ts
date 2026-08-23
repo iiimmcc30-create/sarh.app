@@ -90,6 +90,24 @@ describe('Explore Sarh logo mark', () => {
   });
 });
 
+describe('login screen layout', () => {
+  it('uses modern RTL-first login chrome with labeled fields and mode switch', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/auth/phone.tsx'),
+      'utf8',
+    );
+    expect(src).toContain('getRtlRow');
+    expect(src).toContain('getRtlText');
+    expect(src).toContain('getRtlDirection');
+    expect(src).toContain('modeSwitch');
+    expect(src).toContain('placeholder="05xxxxxxxx"');
+    expect(src).toContain('accessibilityLabel="05xxxxxxxx"');
+    expect(src).toContain('BRAND_LOGIN_WELCOME_AR');
+    expect(src).toContain('LinearGradient');
+    expect(src).not.toContain('styles.searchBar');
+  });
+});
+
 describe('HomeAppBar chrome', () => {
   it('uses flat home header with notifications, search icon, and profile identity', () => {
     const src = fs.readFileSync(
