@@ -23,11 +23,16 @@ import { fetchListingComments } from '@/components/feature/listingCommentsUtils'
 
 type ListingCommentsSectionProps = {
   listingId: string;
+  /** Flat full-width section for listing detail edge-to-edge layout */
+  layout?: 'card' | 'edge';
 };
 
-export function ListingCommentsSection({ listingId }: ListingCommentsSectionProps) {
+export function ListingCommentsSection({
+  listingId,
+  layout = 'edge',
+}: ListingCommentsSectionProps) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors, layout));
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -53,7 +58,7 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
 
   return (
     <>
-      <View style={styles.card}>
+      <View style={layout === 'edge' ? styles.section : styles.card}>
         <RtlTextShell>
           <RtlText style={styles.sectionTitle}>عدد التعليقات ({comments.length})</RtlText>
         </RtlTextShell>
@@ -73,8 +78,14 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
           </RtlTextShell>
         ) : (
           <View style={styles.list}>
-            {comments.map((c) => (
-              <View key={c.id} style={styles.commentCard}>
+            {comments.map((c, index) => (
+              <View
+                key={c.id}
+                style={[
+                  layout === 'edge' ? styles.commentRow : styles.commentCard,
+                  layout === 'edge' && index < comments.length - 1 && styles.commentRowDivider,
+                ]}
+              >
                 <View style={[styles.commentCardHeader, getRtlRow()]}>
                   <Text style={styles.commentTime}>{c.createdAt}</Text>
                   <CoverTrailRow justify="flex-end" gap={6} flex style={styles.commentMeta}>
@@ -124,8 +135,18 @@ export function ListingCommentsSection({ listingId }: ListingCommentsSectionProp
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, layout: 'card' | 'edge') {
+  const isEdge = layout === 'edge';
   return StyleSheet.create({
+    section: {
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+      backgroundColor: colors.screenRoot,
+    },
     card: {
       gap: spacing.md,
       padding: spacing.md,
@@ -173,7 +194,15 @@ function createStyles(colors: ThemeColors) {
       ...getRtlText(),
     },
     list: {
-      gap: spacing.sm,
+      gap: isEdge ? 0 : spacing.sm,
+    },
+    commentRow: {
+      gap: spacing.xs,
+      paddingVertical: spacing.md,
+    },
+    commentRowDivider: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
     commentCard: {
       gap: spacing.xs,
@@ -217,6 +246,14 @@ function createStyles(colors: ThemeColors) {
     },
     addCommentTrigger: {
       width: '100%',
+      ...(isEdge
+        ? {
+            marginTop: spacing.xs,
+            paddingTop: spacing.md,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: colors.borderHairline,
+          }
+        : null),
     },
     addCommentInput: {
       flex: 1,
@@ -225,10 +262,10 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       minHeight: 48,
       paddingHorizontal: spacing.md,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      borderRadius: isEdge ? radius.md : radius.lg,
+      borderWidth: isEdge ? 0 : 1,
       borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: isEdge ? colors.bgElevated : colors.bgElevated,
     },
     addCommentPlaceholder: {
       ...typography.feedBody,

@@ -330,7 +330,7 @@ export default function ListingDetailScreen() {
     }
   };
 
-  const galleryImageHeight = Math.min(screenWidth * 0.625, 320);
+  const galleryImageHeight = screenWidth * 0.65;
 
   // Owner management actions — single horizontal row
   const ownerActions = [
@@ -455,9 +455,9 @@ export default function ListingDetailScreen() {
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.sellerInfoCard}>
+        <View style={styles.headerSection}>
           <RtlTextShell>
-            <RtlText style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+            <RtlText style={styles.title} numberOfLines={3} ellipsizeMode="tail">
               {listing.arabicTitle || listing.title}
             </RtlText>
           </RtlTextShell>
@@ -485,10 +485,6 @@ export default function ListingDetailScreen() {
           </View>
 
           {!isOwner ? (
-            /**
-             * Physical LTR row — same shell pattern as SidebarMenuItem:
-             * LEFT: متابعة · RIGHT: name + avatar
-             */
             <View style={styles.sellerRow}>
               <Pressable
                 onPress={handleFollowSeller}
@@ -531,6 +527,15 @@ export default function ListingDetailScreen() {
               </Pressable>
             </View>
           ) : null}
+
+          {listing.contactPhone ? (
+            <View style={[styles.contactPhoneRow, getRtlRow()]}>
+              <Text style={[styles.contactPhoneText, getRtlText()]} numberOfLines={1}>
+                {listing.contactPhone}
+              </Text>
+              <AppIcon name="call-outline" size={14} color={colors.textMuted} />
+            </View>
+          ) : null}
         </View>
 
         <ImageViewerModal
@@ -541,7 +546,7 @@ export default function ListingDetailScreen() {
         />
 
         {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
-          <View style={styles.specsBlock}>
+          <View style={styles.descriptionSection}>
             {categoryLabel || listing.breed || listing.age ? (
               <RtlTextShell>
                 <View style={[styles.specMetaLine, getRtlRow()]}>
@@ -571,27 +576,32 @@ export default function ListingDetailScreen() {
         ) : null}
 
         {videoUri ? (
-          <View style={styles.galleryBlock}>
-            <RtlTextShell>
-              <RtlText style={styles.galleryHeading}>الفيديو</RtlText>
-            </RtlTextShell>
-            <View style={styles.galleryImageWrap}>
+          <View style={styles.mediaSection}>
+            <View style={styles.mediaLabelWrap}>
+              <RtlTextShell>
+                <RtlText style={styles.mediaHeading}>الفيديو</RtlText>
+              </RtlTextShell>
+            </View>
+            <View style={styles.mediaBleed}>
               <ListingVideoPlayer
                 uri={videoUri}
                 posterUri={listing.thumbnailUrl}
                 height={galleryImageHeight}
+                style={styles.mediaPlayer}
               />
             </View>
           </View>
         ) : null}
 
         {images.length > 0 ? (
-          <View style={styles.galleryBlock}>
-            <RtlTextShell>
-              <RtlText style={styles.galleryHeading}>
-                الصور ({images.length.toLocaleString('ar-SA')})
-              </RtlText>
-            </RtlTextShell>
+          <View style={styles.mediaSection}>
+            <View style={styles.mediaLabelWrap}>
+              <RtlTextShell>
+                <RtlText style={styles.mediaHeading}>
+                  الصور ({images.length.toLocaleString('ar-SA')})
+                </RtlText>
+              </RtlTextShell>
+            </View>
             {images.map((uri, index) => (
               <Pressable
                 key={`${uri}-${index}`}
@@ -599,11 +609,11 @@ export default function ListingDetailScreen() {
                   setImageViewerIndex(index);
                   setImageViewerVisible(true);
                 }}
-                style={styles.galleryImageWrap}
+                style={styles.mediaBleed}
               >
                 <Image
                   source={uriSource(uri)}
-                  style={{ width: '100%', height: galleryImageHeight }}
+                  style={{ width: screenWidth, height: galleryImageHeight }}
                   contentFit="cover"
                   transition={250}
                 />
@@ -612,8 +622,7 @@ export default function ListingDetailScreen() {
           </View>
         ) : null}
 
-        {/* Price under listing image — LTR shell (same as title / SidebarMenuItem). */}
-        <View style={styles.priceBlock}>
+        <View style={styles.priceSection}>
           {listing.price > 0 ? (
             <RtlTextShell>
               <RtlText style={styles.price}>
@@ -644,7 +653,7 @@ export default function ListingDetailScreen() {
         </View>
 
         {isOwner ? (
-          <View style={[styles.ownerToolsRow, getRtlRow()]}>
+          <View style={[styles.ownerToolsSection, getRtlRow()]}>
             {ownerActions.map((a) => (
               <Pressable
                 key={a.key}
@@ -674,7 +683,7 @@ export default function ListingDetailScreen() {
           </View>
         ) : null}
 
-          <ListingCommentsSection listingId={listing.id} />
+        <ListingCommentsSection listingId={listing.id} layout="edge" />
       </ScrollView>
 
       {/* Bottom CTA for buyers */}
@@ -721,36 +730,35 @@ function createStyles(colors: ThemeColors) {
     notFound: { ...typography.feedBody, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
     scrollContent: {
       paddingBottom: 140,
-      paddingHorizontal: spacing.lg,
-      gap: spacing.md,
     },
     topSafe: {
       backgroundColor: colors.bgDeep,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSoft,
     },
     topBar: {
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingBottom: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      minHeight: 48,
     },
     topBarActions: {
       alignItems: 'center',
-      gap: 4,
+      gap: 2,
     },
     topBarBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    sellerInfoCard: {
+    headerSection: {
       gap: spacing.sm,
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+      backgroundColor: colors.screenRoot,
     },
     headerMetaRow: {
       alignItems: 'center',
@@ -770,9 +778,13 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       flexShrink: 1,
     },
-    specsBlock: {
+    descriptionSection: {
       gap: spacing.sm,
-      marginTop: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+      backgroundColor: colors.screenRoot,
     },
     specMetaLine: {
       flexWrap: 'wrap',
@@ -783,26 +795,32 @@ function createStyles(colors: ThemeColors) {
       ...typography.caption,
       color: colors.textMuted,
     },
-    galleryBlock: {
-      gap: spacing.xs,
-      marginTop: spacing.sm,
+    mediaSection: {
+      gap: spacing.sm,
+      backgroundColor: colors.screenRoot,
     },
-    galleryHeading: {
+    mediaLabelWrap: {
+      paddingHorizontal: spacing.lg,
+    },
+    mediaHeading: {
       ...typography.smallHeading,
       color: colors.textMuted,
-      marginBottom: spacing.xs,
     },
-    galleryImageWrap: {
+    mediaBleed: {
       width: '100%',
-      borderRadius: radius.md,
       overflow: 'hidden',
       backgroundColor: colors.bgElevated,
     },
-    priceBlock: {
+    mediaPlayer: {
+      borderRadius: 0,
+    },
+    priceSection: {
       gap: spacing.sm,
-      marginTop: spacing.md,
-      paddingHorizontal: spacing.xs,
-      width: '100%',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+      backgroundColor: colors.screenRoot,
     },
     price: {
       ...typography.valueLarge,
@@ -839,7 +857,7 @@ function createStyles(colors: ThemeColors) {
     pinnedText: { ...typography.badge, color: '#fff' },
     title: {
       ...typography.sectionHeading,
-      color: colors.textPrimary,
+      color: colors.textBrandStrong,
     },
     sellerRow: {
       flexDirection: 'row',
@@ -861,7 +879,7 @@ function createStyles(colors: ThemeColors) {
     sellerInlineAvatar: {
       width: 28,
       height: 28,
-      borderRadius: 16,
+      borderRadius: 14,
       backgroundColor: colors.bgElevated,
       borderWidth: 1.5,
       borderColor: colors.electric,
@@ -871,12 +889,24 @@ function createStyles(colors: ThemeColors) {
       ...typography.feedTitle,
       color: colors.textSecondary,
     },
-
-    ownerToolsRow: {
+    contactPhoneRow: {
+      alignItems: 'center',
+      gap: 6,
+      paddingTop: spacing.xs,
+    },
+    contactPhoneText: {
+      ...typography.caption,
+      color: colors.textMuted,
+      flexShrink: 1,
+    },
+    ownerToolsSection: {
       flexWrap: 'wrap',
       gap: spacing.sm,
-      marginTop: spacing.sm,
-      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+      backgroundColor: colors.screenRoot,
       width: '100%',
     },
     ownerToolChip: {
@@ -886,7 +916,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgElevated,
       flexShrink: 0,
     },
     ownerToolChipDanger: {
@@ -902,7 +932,6 @@ function createStyles(colors: ThemeColors) {
     ownerActionTextDanger: {
       color: colors.rose,
     },
-
     followPill: {
       paddingHorizontal: spacing.md,
       paddingVertical: 8,
@@ -920,17 +949,16 @@ function createStyles(colors: ThemeColors) {
       color: '#fff',
     },
     followingPillText: { color: colors.textMuted },
-
     desc: {
       ...typography.body,
       color: colors.textSecondary,
+      lineHeight: 24,
     },
     descArabic: {
       ...typography.body,
       color: colors.textPrimary,
+      lineHeight: 24,
     },
-
-    // Bottom CTA
     ctaBar: {
       position: 'absolute',
       bottom: 0,
@@ -942,7 +970,7 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.md,
       gap: spacing.sm,
       backgroundColor: colors.bgPrimary,
-      borderTopWidth: 1,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.borderSoft,
     },
     ctaBtnApp: {
