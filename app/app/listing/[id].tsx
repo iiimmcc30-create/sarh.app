@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -70,9 +70,12 @@ export default function ListingDetailScreen() {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { listings, me, removeListing } = useApp();
   const { width: screenWidth } = useWindowDimensions();
-  const cached = listings.find((l) => l.id === id);
-  const [listing, setListing] = useState<Listing | null>(cached ?? null);
-  const [loading, setLoading] = useState(!cached);
+  const cachedListing = useMemo(
+    () => listings.find((l) => l.id === id) ?? null,
+    [listings, id],
+  );
+  const [listing, setListing] = useState<Listing | null>(cachedListing);
+  const [loading, setLoading] = useState(!cachedListing);
   const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
   const [followLoading, setFollowLoading] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -158,29 +161,30 @@ export default function ListingDetailScreen() {
   }, [id, accessToken]);
 
   useEffect(() => {
-    if (cached) setListing(cached);
-  }, [cached]);
+    if (!cachedListing) return;
+    setListing((prev) => {
+      if (!prev || prev.id !== cachedListing.id) return cachedListing;
+      return prev;
+    });
+  }, [cachedListing]);
 
   useEffect(() => {
     if (!id) return;
-    if (!cached) setLoading(true);
+    if (!listing) setLoading(true);
     void loadListing();
-  }, [id, cached, loadListing]);
+  }, [id, accessToken, loadListing]);
+
+  const sellerId = listing?.seller.id;
 
   const refreshSellerFollowState = useCallback(async () => {
-    if (
-      !listing ||
-      listing.seller.id === me.id ||
-      !isAuthenticated ||
-      !accessToken
-    ) {
+    if (!sellerId || sellerId === me.id || !isAuthenticated || !accessToken) {
       setIsFollowing(null);
       return null;
     }
-    const profile = await fetchUserProfile(listing.seller.id);
+    const profile = await fetchUserProfile(sellerId);
     setIsFollowing(profile?.isFollowing ?? null);
     return profile;
-  }, [accessToken, isAuthenticated, listing, me.id]);
+  }, [accessToken, isAuthenticated, sellerId, me.id]);
 
   useEffect(() => {
     void refreshSellerFollowState();
