@@ -1,8 +1,8 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const PRODUCTION_API = 'https://sarh-new4.onrender.com';
-const PRODUCTION_SOCKET = 'https://sarh-socket.onrender.com';
+const PRODUCTION_API = 'https://sarhsa.online';
+const PRODUCTION_SOCKET = 'https://sarhsa.online';
 /** @deprecated Railway is decommissioned; kept as alias for imports. */
 const RAILWAY_API = PRODUCTION_API;
 

@@ -1,6 +1,7 @@
 const API_PORT = 3001;
 const SOCKET_PORT = 3002;
-const PRODUCTION_API = 'https://sarh-new4.onrender.com';
+const PRODUCTION_API = 'https://sarhsa.online';
+const PRODUCTION_SOCKET = 'https://sarhsa.online';
 // Back-compat alias — Railway is decommissioned.
 const RAILWAY_API = PRODUCTION_API;
 
@@ -90,7 +91,7 @@ async function resolveDevApiUrlsAsync(lanIp) {
     );
     return {
       apiUrl: PRODUCTION_API,
-      socketUrl: PRODUCTION_API,
+      socketUrl: PRODUCTION_SOCKET,
       mode: 'render-fallback',
     };
   }
@@ -106,7 +107,7 @@ async function resolveDevApiUrlsAsync(lanIp) {
   console.warn('[dev-api] No local backend — using production (Render).');
   return {
     apiUrl: PRODUCTION_API,
-    socketUrl: PRODUCTION_API,
+    socketUrl: PRODUCTION_SOCKET,
     mode: 'render-fallback',
   };
 }

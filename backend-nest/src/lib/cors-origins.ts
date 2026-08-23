@@ -1,6 +1,6 @@
 const PRODUCTION_ORIGINS = [
-  'https://sarh.app',
-  'https://www.sarh.app',
+  'https://sarhsa.online',
+  'https://www.sarhsa.online',
   'https://sarh-new4.onrender.com',
 ];
 
