@@ -29,7 +29,6 @@ import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import type { PostComment } from '@/services/types';
 
 type ListingCommentsModalProps = {
   visible: boolean;
