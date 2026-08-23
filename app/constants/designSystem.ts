@@ -84,7 +84,7 @@ export const ds = {
   },
 
   homeAppBar: {
-    height: 64,
+    height: 76,
   },
 
   motion: {

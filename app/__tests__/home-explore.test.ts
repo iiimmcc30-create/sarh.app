@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   FALLBACK_HOME_EXPLORE,
+  partitionExploreSections,
   resolveExploreCard,
   splitExploreRows,
   usesExploreSarhLogoMark,
@@ -22,8 +23,11 @@ describe('homeExplore catalog', () => {
     expect(resolveExploreCard({ destination: 'butchers' })?.descriptionAr).toBe(
       'تصفح منتجات الملاحم والطلبات',
     );
+    expect(resolveExploreCard({ destination: 'services' })?.titleAr).toBe(
+      'خدمات وزارة البيئة والمياه والزراعة',
+    );
     expect(resolveExploreCard({ destination: 'services' })?.descriptionAr).toBe(
-      'الخدمات الالكترونية-التراخيص-التصاريح',
+      'الخدمات الإلكترونية - التراخيص - التصاريح',
     );
     expect(resolveExploreCard({ destination: 'news' })?.titleAr).toBe('قطاع الأخبار');
     expect(resolveExploreCard({ destination: 'news' })?.descriptionAr).toBe(
@@ -47,14 +51,16 @@ describe('homeExplore catalog', () => {
     ]);
   });
 
-  it('splits cards into two adjacent rows (3+2 for the default five)', () => {
-    expect(splitExploreRows(['a']).bottom).toEqual([]);
-    expect(splitExploreRows([1, 2, 3, 4, 5])).toEqual({
-      top: [1, 2, 3],
-      bottom: [4, 5],
-    });
-    expect(splitExploreRows([1, 2, 3, 4, 5, 6]).top).toHaveLength(3);
-    expect(splitExploreRows([1, 2, 3, 4, 5, 6]).bottom).toHaveLength(3);
+  it('partitions services into a full-width featured card and orders the 2×2 grid', () => {
+    const { grid, featured } = partitionExploreSections(FALLBACK_HOME_EXPLORE);
+    expect(featured?.destination).toBe('services');
+    expect(featured?.titleAr).toBe('خدمات وزارة البيئة والمياه والزراعة');
+    expect(grid.map((item) => item.destination)).toEqual([
+      'listings',
+      'butchers',
+      'community',
+      'news',
+    ]);
   });
 });
 
@@ -69,24 +75,17 @@ describe('Explore Sarh logo mark', () => {
     expect(usesExploreSarhLogoMark('promote')).toBe(false);
   });
 
-  it('wires SarhLogoMark into those cards at top-center', () => {
+  it('uses a 2×2 grid with a full-width ministry card', () => {
     const section = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    const mark = fs.readFileSync(
-      path.join(__dirname, '../components/ui/SarhLogoMark.tsx'),
-      'utf8',
-    );
-    expect(section).toContain('SarhLogoMark');
-    expect(section).toContain('iconRingTopCenter');
-    expect(section).toContain('usesExploreSarhLogoMark');
-    expect(mark).toContain('assets/images/logo.png');
-    expect(mark).toContain('WAVE_BOTTOM');
-    expect(mark).toContain('WAVE_TOP');
-    expect(mark).toContain('DIAMOND');
-    expect(mark).toContain('fill={color}');
-    expect(mark).not.toContain('AppIcon');
+    expect(section).toContain('partitionExploreSections');
+    expect(section).toContain('gridRow');
+    expect(section).toContain('featuredCard');
+    expect(section).toContain('OFFICIAL_APP_FONT');
+    expect(section).not.toContain('ExploreStrip');
+    expect(section).not.toContain('ScrollView');
   });
 });
 
@@ -127,7 +126,10 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain("direction: 'ltr'");
     expect(src).not.toContain('styles.searchBar');
     expect(src).not.toContain('more-vertical');
-    expect(src).not.toContain('accessibilityLabel="المزيد"');
+    expect(src).toContain('bare');
+    expect(src).toContain('backgroundColor: \'transparent\'');
+    expect(src).toContain('minHeight: BAR_H');
+    expect(src).toContain('fontSize: 17');
   });
 
   it('embeds filter inside market search bar with featured star on the right', () => {
@@ -183,8 +185,8 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain('backgroundColor: colors.bgElevated');
-    expect(src).toContain('borderWidth: 0');
-    expect(src).not.toContain('#173445');
+    expect(src).toContain('backgroundColor: colors.bgSurface');
+    expect(src).toContain('borderRadius: CARD_RADIUS');
+    expect(src).not.toContain('borderRadius: 14');
   });
 });

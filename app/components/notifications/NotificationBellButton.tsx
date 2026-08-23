@@ -14,6 +14,8 @@ type NotificationBellButtonProps = {
   style?: object;
   iconColor?: string;
   badgeBorderColor?: string;
+  /** Flat icon only — no elevated background (home header). */
+  bare?: boolean;
 };
 
 export function NotificationBellButton({
@@ -22,6 +24,7 @@ export function NotificationBellButton({
   style,
   iconColor,
   badgeBorderColor,
+  bare = false,
 }: NotificationBellButtonProps) {
   const router = useRouter();
   const { unreadCount } = useUnreadNotificationCount();
@@ -32,7 +35,12 @@ export function NotificationBellButton({
 
   return (
     <Pressable
-      style={[styles.iconBtn, { width: size, height: size }, style]}
+      style={[
+        styles.iconBtn,
+        bare && styles.iconBtnBare,
+        { width: size, height: size },
+        style,
+      ]}
       hitSlop={8}
       onPress={() => router.push('/notifications')}
       accessibilityLabel="الإشعارات"
@@ -58,6 +66,10 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 0,
+    },
+    iconBtnBare: {
+      borderRadius: 0,
+      backgroundColor: 'transparent',
     },
     badge: {
       position: 'absolute',
