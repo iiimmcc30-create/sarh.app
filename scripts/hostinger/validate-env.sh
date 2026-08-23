@@ -80,7 +80,11 @@ for k in JWT_SECRET JWT_REFRESH_SECRET JWT_EXPIRES_IN JWT_REFRESH_EXPIRES_IN SES
   [[ "$k" == JWT_SECRET || "$k" == JWT_REFRESH_SECRET ]] && min=32
   check_required "$k" "$min"
 done
-for k in GOOGLE_CLIENT_ID GOOGLE_WEB_CLIENT_ID GOOGLE_IOS_CLIENT_ID GOOGLE_ANDROID_CLIENT_ID TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_VERIFY_SERVICE_SID; do
+# Google OAuth unused in Sarh currently — optional status only (not Missing Required)
+for k in GOOGLE_CLIENT_ID GOOGLE_WEB_CLIENT_ID GOOGLE_IOS_CLIENT_ID GOOGLE_ANDROID_CLIENT_ID; do
+  mask_status "$k" "$(get "$k")" 1
+done
+for k in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_VERIFY_SERVICE_SID; do
   mask_status "$k" "$(get "$k")" 1
   [[ -z "$(get "$k")" ]] && missing+=("$k")
 done
