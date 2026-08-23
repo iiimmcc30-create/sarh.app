@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -29,20 +29,30 @@ import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { fetchListingComments } from '@/components/feature/listingCommentsUtils';
+import type { PostComment } from '@/services/types';
 
 type ListingCommentsModalProps = {
   visible: boolean;
   listingId: string;
+  comments: PostComment[];
+  loading: boolean;
+  loadError: string | null;
+  rateLimited?: boolean;
   onClose: () => void;
   onCommentAdded?: () => void;
+  onReload?: () => void;
 };
 
 export function ListingCommentsModal({
   visible,
   listingId,
+  comments,
+  loading,
+  loadError,
+  rateLimited = false,
   onClose,
   onCommentAdded,
+  onReload,
 }: ListingCommentsModalProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
@@ -50,29 +60,13 @@ export function ListingCommentsModal({
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
 
-  const [comments, setComments] = useState<PostComment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [followReplies, setFollowReplies] = useState(false);
 
-  const loadComments = useCallback(async () => {
-    if (!listingId) return;
-    setLoading(true);
-    setLoadError(null);
-    const result = await fetchListingComments(listingId);
-    setComments(result.comments);
-    setLoadError(result.error);
-    setLoading(false);
-  }, [listingId]);
-
   useEffect(() => {
-    if (visible && listingId) {
-      setText('');
-      void loadComments();
-    }
-  }, [visible, listingId, loadComments]);
+    if (visible) setText('');
+  }, [visible]);
 
   const handleSend = async () => {
     if (!isAuthenticated) {
@@ -91,7 +85,6 @@ export function ListingCommentsModal({
       const json = await res.json().catch(() => ({}));
       if (res.ok && json.success) {
         setText('');
-        await loadComments();
         onCommentAdded?.();
         void showToast('تم إرسال التعليق');
       } else {
@@ -168,9 +161,11 @@ export function ListingCommentsModal({
           ) : loadError ? (
             <View style={styles.center}>
               <Text style={styles.errorText}>{loadError}</Text>
-              <Pressable onPress={() => void loadComments()} style={styles.retryBtn}>
-                <Text style={styles.retryText}>إعادة المحاولة</Text>
-              </Pressable>
+              {!rateLimited ? (
+                <Pressable onPress={() => onReload?.()} style={styles.retryBtn}>
+                  <Text style={styles.retryText}>إعادة المحاولة</Text>
+                </Pressable>
+              ) : null}
             </View>
           ) : (
             <ScrollView

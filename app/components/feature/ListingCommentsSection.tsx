@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -11,15 +11,14 @@ import {
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { useListingComments } from '@/hooks/useListingComments';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
-import type { PostComment } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { ListingCommentsModal } from '@/components/feature/ListingCommentsModal';
-import { fetchListingComments } from '@/components/feature/listingCommentsUtils';
 
 type ListingCommentsSectionProps = {
   listingId: string;
@@ -33,27 +32,12 @@ export function ListingCommentsSection({
 }: ListingCommentsSectionProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors, layout));
-  const [comments, setComments] = useState<PostComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const { comments, loading, loadError, rateLimited, reload } = useListingComments(listingId);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const loadComments = useCallback(async () => {
-    if (!listingId) return;
-    setLoading(true);
-    setLoadError(null);
-    const result = await fetchListingComments(listingId);
-    setComments(result.comments);
-    setLoadError(result.error);
-    setLoading(false);
-  }, [listingId]);
-
-  useEffect(() => {
-    void loadComments();
-  }, [loadComments]);
-
-  const openCommentsModal = () => {
-    setModalVisible(true);
+  const handleRetry = () => {
+    if (rateLimited) return;
+    void reload(true);
   };
 
   return (
@@ -68,9 +52,11 @@ export function ListingCommentsSection({
         ) : loadError ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{loadError}</Text>
-            <Pressable onPress={() => void loadComments()} style={styles.retryBtn}>
-              <Text style={styles.retryText}>إعادة المحاولة</Text>
-            </Pressable>
+            {!rateLimited ? (
+              <Pressable onPress={handleRetry} style={styles.retryBtn}>
+                <Text style={styles.retryText}>إعادة المحاولة</Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : comments.length === 0 ? (
           <RtlTextShell>
@@ -113,7 +99,7 @@ export function ListingCommentsSection({
         )}
 
         <Pressable
-          onPress={openCommentsModal}
+          onPress={() => setModalVisible(true)}
           style={[styles.addCommentTrigger, getRtlRow()]}
         >
           <View style={[styles.addCommentInput, getRtlRow()]}>
@@ -128,8 +114,13 @@ export function ListingCommentsSection({
       <ListingCommentsModal
         visible={modalVisible}
         listingId={listingId}
+        comments={comments}
+        loading={loading}
+        loadError={loadError}
+        rateLimited={rateLimited}
         onClose={() => setModalVisible(false)}
-        onCommentAdded={() => void loadComments()}
+        onCommentAdded={() => void reload(true)}
+        onReload={() => void reload(true)}
       />
     </>
   );
@@ -265,7 +256,7 @@ function createStyles(colors: ThemeColors, layout: 'card' | 'edge') {
       borderRadius: isEdge ? radius.md : radius.lg,
       borderWidth: isEdge ? 0 : 1,
       borderColor: colors.borderSoft,
-      backgroundColor: isEdge ? colors.bgElevated : colors.bgElevated,
+      backgroundColor: colors.bgElevated,
     },
     addCommentPlaceholder: {
       ...typography.feedBody,
