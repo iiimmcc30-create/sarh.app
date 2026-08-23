@@ -29,6 +29,20 @@ import { isValidSaudiMobileE164, normalizeE164Phone } from '../../lib/phone';
 
 const DEFAULT_SESSION_TTL_DAYS = 3650; // ~10 years — until explicit logout or app uninstall
 
+function isTwilioDevOtpMode(): boolean {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim() ?? '';
+  const authToken = process.env.TWILIO_AUTH_TOKEN?.trim() ?? '';
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim() ?? '';
+  return (
+    process.env.DEV_OTP === 'true' ||
+    !accountSid ||
+    !authToken ||
+    !serviceSid ||
+    accountSid.startsWith('AC...') ||
+    accountSid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  );
+}
+
 function formatUser(user: {
   id: string;
   username: string;
@@ -368,14 +382,7 @@ export class AuthService {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
-    if (
-      process.env.DEV_OTP === 'true' ||
-      !accountSid ||
-      !authToken ||
-      !serviceSid ||
-      accountSid.startsWith('AC...') ||
-      accountSid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-    ) {
+    if (isTwilioDevOtpMode()) {
       this.logger.warn({ phone }, 'Twilio not configured — using dev OTP mode');
       return {
         success: true,
@@ -421,10 +428,7 @@ export class AuthService {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
-    const isDevMode =
-      process.env.DEV_OTP === 'true' ||
-      !accountSid ||
-      accountSid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+    const isDevMode = isTwilioDevOtpMode();
 
     if (isDevMode) {
       if (dto.code !== '123456') {

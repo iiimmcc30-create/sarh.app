@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisCacheService } from '../redis/services/redis-cache.service';
 import { RedisSessionService } from '../redis/services/redis-session.service';
 import { NotificationQueueService } from '../queue/services/notification-queue.service';
+import { readWorkerHeartbeat } from '../queue/services/worker-heartbeat.service';
 
 function readAppVersion(): string {
   try {
@@ -46,6 +47,7 @@ export class HealthService {
       redis_cache: false,
       redis_session: false,
       queue: false,
+      worker: false,
     };
 
     const redisEnabled = this.cache.isEnabled();
@@ -75,6 +77,16 @@ export class HealthService {
           await Promise.race([
             this.notificationQueue.getJobCounts().then(() => {
               checks.queue = true;
+            }),
+            new Promise((resolve) => setTimeout(resolve, 200)),
+          ]);
+        }
+      })(),
+      (async () => {
+        if (this.cache.isEnabled()) {
+          await Promise.race([
+            readWorkerHeartbeat(this.cache).then((ok) => {
+              if (ok) checks.worker = true;
             }),
             new Promise((resolve) => setTimeout(resolve, 200)),
           ]);
