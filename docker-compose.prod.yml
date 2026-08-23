@@ -49,7 +49,6 @@ services:
       - .env.production
     environment:
       NODE_ENV: production
-      SERVICE_MODE: api
       PORT: '3001'
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sarh}
       DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sarh}
@@ -65,7 +64,7 @@ services:
       - '127.0.0.1:3001:3001'
     networks:
       - sarh_internal
-    command: ['api']
+    entrypoint: ['./docker-entrypoint.sh']
 
   worker:
     image: sarh-backend:latest
@@ -74,7 +73,6 @@ services:
       - .env.production
     environment:
       NODE_ENV: production
-      SERVICE_MODE: worker
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sarh}
       DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sarh}
       REDIS_HOST: redis
@@ -89,7 +87,8 @@ services:
         condition: service_started
     networks:
       - sarh_internal
-    command: ['worker']
+    entrypoint: ['node']
+    command: ['dist/queue/worker.main.js']
 
   socket:
     image: sarh-backend:latest
@@ -98,7 +97,6 @@ services:
       - .env.production
     environment:
       NODE_ENV: production
-      SERVICE_MODE: socket
       PORT: '3002'
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sarh}
       DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sarh}
@@ -118,7 +116,8 @@ services:
       - '127.0.0.1:3002:3002'
     networks:
       - sarh_internal
-    command: ['socket']
+    entrypoint: ['node']
+    command: ['dist/gateway/socket.main.js']
 
   nginx:
     image: nginx:1.27-alpine
@@ -130,6 +129,8 @@ services:
       - '80:80'
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl-redirect.conf:/etc/nginx/includes/ssl-redirect.conf:ro
+      - certbot_webroot:/var/www/certbot:ro
     networks:
       - sarh_internal
 
@@ -140,3 +141,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  certbot_webroot:

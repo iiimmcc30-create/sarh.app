@@ -17,15 +17,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sarh-new4.onrender.com",
-        "EXPO_PUBLIC_SOCKET_URL": "https://sarh-socket.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://sarhsa.online",
+        "EXPO_PUBLIC_SOCKET_URL": "https://sarhsa.online"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sarh-new4.onrender.com",
-        "EXPO_PUBLIC_SOCKET_URL": "https://sarh-socket.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://sarhsa.online",
+        "EXPO_PUBLIC_SOCKET_URL": "https://sarhsa.online"
       }
     }
   },
