@@ -13,16 +13,21 @@ type Props = {
   onRegionPress: () => void;
   onNearbyPress: () => void;
   onSortPress: () => void;
-  sortLabel: string;
+  onCategoryPress: () => void;
+  categoryActive?: boolean;
+  categoryPickerOpen?: boolean;
   regionActive?: boolean;
 };
 
+/** Region + nearby chips, then paired sort/category bar (reference layout). */
 export function MarketFilterBar({
   regionSelection,
   onRegionPress,
   onNearbyPress,
   onSortPress,
-  sortLabel,
+  onCategoryPress,
+  categoryActive = false,
+  categoryPickerOpen = false,
   regionActive = false,
 }: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
@@ -32,6 +37,8 @@ export function MarketFilterBar({
 
   const regionOpen = regionActive || regionSelection.type !== 'all';
   const regionLabel = regionSelectionLabel(regionSelection);
+  const categoryOpen = categoryPickerOpen || categoryActive;
+  const accent = colors.electricBright;
 
   return (
     <View style={styles.wrap}>
@@ -49,7 +56,7 @@ export function MarketFilterBar({
           <AppIcon
             name="map-marker-outline"
             size={MARKET_CHIP.iconSize}
-            color={regionOpen ? colors.electricBright : colors.textPrimary}
+            color={regionOpen ? accent : colors.textPrimary}
           />
           <Text
             style={[styles.regionText, regionOpen && styles.regionTextActive]}
@@ -60,18 +67,44 @@ export function MarketFilterBar({
           <AppIcon
             name="angle-down"
             size={11}
-            color={regionOpen ? colors.electricBright : colors.textSecondary}
+            color={regionOpen ? accent : colors.textSecondary}
           />
         </Pressable>
 
         <FilterChip label="القريب" icon="navigation" compact onPress={onNearbyPress} />
-        <FilterChip
-          label={sortLabel}
-          icon="sort-alt"
-          compact
-          onPress={onSortPress}
-          testID="market-sort-chip"
-        />
+
+        <View style={[styles.sortCategoryBar, getRtlRow()]}>
+          <Pressable
+            style={[styles.sortCategoryHalf, getRtlRow()]}
+            onPress={onSortPress}
+            accessibilityRole="button"
+            accessibilityLabel="الترتيب"
+            testID="market-sort-chip"
+          >
+            <AppIcon name="sort-alt" size={16} color={accent} />
+            <Text style={styles.sortCategoryLabel}>الترتيب</Text>
+          </Pressable>
+
+          <View style={styles.sortCategoryDivider} />
+
+          <Pressable
+            style={[styles.sortCategoryHalf, getRtlRow()]}
+            onPress={onCategoryPress}
+            accessibilityRole="button"
+            accessibilityLabel="التصنيف"
+            testID="market-category-chip"
+          >
+            <AppIcon name="options-outline" size={16} color={accent} />
+            <Text
+              style={[
+                styles.sortCategoryLabel,
+                categoryOpen && styles.sortCategoryLabelActive,
+              ]}
+            >
+              التصنيف
+            </Text>
+          </Pressable>
+        </View>
       </FilterChipRow>
     </View>
   );
@@ -113,6 +146,41 @@ function createStyles(colors: ThemeColors) {
     },
     regionTextActive: {
       color: colors.electricBright,
+    },
+    sortCategoryBar: {
+      flex: 1,
+      minWidth: 0,
+      height: MARKET_CHIP.height,
+      alignItems: 'stretch',
+      backgroundColor: colors.bgElevated,
+      borderRadius: MARKET_CHIP.radius,
+      overflow: 'hidden',
+    },
+    sortCategoryHalf: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.sm,
+    },
+    sortCategoryDivider: {
+      width: StyleSheet.hairlineWidth,
+      alignSelf: 'stretch',
+      backgroundColor: colors.borderSoft,
+      marginVertical: 8,
+    },
+    sortCategoryLabel: {
+      ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
+      fontSize: MARKET_CHIP.fontSize,
+      lineHeight: MARKET_CHIP.lineHeight,
+      color: colors.textPrimary,
+      writingDirection: 'rtl',
+      includeFontPadding: false,
+    },
+    sortCategoryLabelActive: {
+      color: colors.electricBright,
+      fontWeight: '600',
     },
   });
 }
