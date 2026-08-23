@@ -25,7 +25,8 @@
     "sync:icons": "python scripts/generate-circular-branding.py",
     "prebuild": "expo prebuild",
     "eas:dev:android": "eas build --profile development --platform android --non-interactive",
-    "eas:dev:ios": "eas build --profile development --platform ios --non-interactive"
+    "eas:dev:ios": "eas build --profile development --platform ios --non-interactive",
+    "eas:preview:android": "eas build --profile preview --platform android --non-interactive"
   },
   "dependencies": {
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
