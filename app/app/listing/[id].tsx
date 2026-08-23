@@ -762,7 +762,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      backgroundColor: colors.screenRoot,
+      backgroundColor: colors.bgElevated,
     },
     headerMetaRow: {
       alignItems: 'center',
