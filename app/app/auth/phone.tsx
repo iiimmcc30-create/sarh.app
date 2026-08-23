@@ -1,4 +1,4 @@
-// SAFAT — Login screen (modern RTL-first layout)
+// SAFAT — Login screen (Sarh identity · reference layout)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -16,7 +16,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, shadow, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
@@ -30,12 +30,14 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import {
   BRAND_LOGIN_SUBTITLE_AR,
-  BRAND_LOGIN_WELCOME_AR,
+  BRAND_NAME_AR,
   BRAND_TERMS_SHORT_AR,
 } from '@/constants/brandCopy';
+import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 
-const COUNTRY_CODES = [{ flag: '🇸🇦', code: '+966', label: 'السعودية' }];
+const SAUDI_DIAL = '+966';
 const CONTROL_H = 52;
+const LOGO_BOX = 88;
 
 export default function PhoneScreen() {
   const { colors, gradients } = useTheme();
@@ -48,8 +50,6 @@ export default function PhoneScreen() {
   const [error, setError] = useState('');
 
   const [phone, setPhone] = useState('');
-  const [countryIdx, setCountryIdx] = useState(0);
-  const [showPicker, setShowPicker] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -57,19 +57,12 @@ export default function PhoneScreen() {
   const [otpChannel, setOtpChannel] = useState<'sms' | 'whatsapp'>('sms');
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
-  const currentCountry = COUNTRY_CODES[countryIdx];
   const cleanPhoneDigits = phone
     .trim()
-    .replace(/^\+/, '')
-    .replace(
-      new RegExp(
-        `^(?:${currentCountry.code.replace('+', '')}|00${currentCountry.code.replace('+', '')})`,
-      ),
-      '',
-    )
+    .replace(/\D/g, '')
     .replace(/^0/, '');
-  const fullPhone = `${currentCountry.code}${cleanPhoneDigits}`;
-  const isPhoneValid = cleanPhoneDigits.replace(/\D/g, '').length >= 9;
+  const fullPhone = `${SAUDI_DIAL}${cleanPhoneDigits}`;
+  const isPhoneValid = cleanPhoneDigits.length >= 9 && cleanPhoneDigits.startsWith('5');
 
   const shake = () => {
     Animated.sequence([
@@ -133,10 +126,14 @@ export default function PhoneScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={[`${colors.electric}18`, 'transparent']}
-        style={styles.heroGlow}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
+        colors={['#0a1620', '#07131C', '#040a10']}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${colors.electric}22`, 'transparent', 'transparent']}
+        style={styles.skyGlow}
+        start={{ x: 0.3, y: 0 }}
+        end={{ x: 0.7, y: 0.45 }}
       />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
@@ -149,104 +146,75 @@ export default function PhoneScreen() {
             contentContainerStyle={styles.scroll}
           >
             <View style={styles.header}>
-              <AppLogo size={80} showRing={false} />
-              <Text style={styles.title}>{BRAND_LOGIN_WELCOME_AR}</Text>
-              <Text style={styles.sub}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
+              <View style={styles.logoBox}>
+                <AppLogo size={LOGO_BOX - 16} showRing={false} />
+              </View>
+              <Text style={styles.brandName}>{BRAND_NAME_AR}</Text>
+              <Text style={styles.brandSub}>{BRAND_LOGIN_SUBTITLE_AR}</Text>
+              <Text style={styles.loginHeading}>تسجيل الدخول</Text>
             </View>
 
             <View style={styles.card}>
-              <View style={styles.modeSwitch}>
+              <View style={styles.tabBar}>
                 <Pressable
                   onPress={() => switchMode(false)}
-                  style={[styles.modeItem, !useOtpFlow && styles.modeItemActive]}
+                  style={[styles.tabItem, !useOtpFlow && styles.tabItemActive]}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: !useOtpFlow }}
                 >
                   <AppIcon
                     name="lock-closed-outline"
-                    size={16}
+                    size={17}
                     color={!useOtpFlow ? colors.electricBright : colors.textMuted}
                   />
-                  <Text style={[styles.modeText, !useOtpFlow && styles.modeTextActive]}>
+                  <Text style={[styles.tabText, !useOtpFlow && styles.tabTextActive]}>
                     كلمة المرور
                   </Text>
+                  {!useOtpFlow ? <View style={styles.tabUnderline} /> : null}
                 </Pressable>
                 <Pressable
                   onPress={() => switchMode(true)}
-                  style={[styles.modeItem, useOtpFlow && styles.modeItemActive]}
+                  style={[styles.tabItem, useOtpFlow && styles.tabItemActive]}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: useOtpFlow }}
                 >
                   <AppIcon
                     name="chatbubble-ellipses-outline"
-                    size={16}
+                    size={17}
                     color={useOtpFlow ? colors.electricBright : colors.textMuted}
                   />
-                  <Text style={[styles.modeText, useOtpFlow && styles.modeTextActive]}>
+                  <Text style={[styles.tabText, useOtpFlow && styles.tabTextActive]}>
                     رمز الجوال
                   </Text>
+                  {useOtpFlow ? <View style={styles.tabUnderline} /> : null}
                 </Pressable>
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.fieldLabel}>رقم الجوال</Text>
                 <Animated.View style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}>
-                  <Pressable
-                    style={styles.countryBtn}
-                    onPress={() => setShowPicker((v) => !v)}
-                    accessibilityRole="button"
-                    accessibilityLabel="اختيار الدولة"
-                  >
-                    <AppIcon
-                      name={showPicker ? 'chevron-up' : 'chevron-down'}
-                      size={14}
-                      color={colors.textMuted}
-                    />
-                    <Text style={styles.countryCode}>{currentCountry.code}</Text>
-                    <Text style={styles.countryFlag}>{currentCountry.flag}</Text>
-                  </Pressable>
-                  <View style={styles.inputDivider} />
+                  <AppIcon
+                    name="call-outline"
+                    size={18}
+                    color={colors.textMuted}
+                    style={styles.inputLeadingIcon}
+                  />
                   <TextInput
                     style={styles.phoneInput}
                     value={phone}
                     onChangeText={(t) => {
-                      setPhone(t);
+                      setPhone(t.replace(/[^\d\s]/g, ''));
                       setError('');
                     }}
                     placeholder="05xxxxxxxx"
                     placeholderTextColor={colors.textSubtle}
                     keyboardType="phone-pad"
                     textAlign="right"
-                    maxLength={12}
+                    maxLength={10}
                     autoComplete="tel"
                     accessibilityLabel="05xxxxxxxx"
                   />
-                  <AppIcon
-                    name="call-outline"
-                    size={18}
-                    color={colors.textMuted}
-                    style={styles.inputIcon}
-                  />
                 </Animated.View>
-
-                {showPicker ? (
-                  <View style={styles.pickerDropdown}>
-                    {COUNTRY_CODES.map((c, i) => (
-                      <Pressable
-                        key={c.code}
-                        style={[styles.pickerItem, i === countryIdx && styles.pickerItemActive]}
-                        onPress={() => {
-                          setCountryIdx(i);
-                          setShowPicker(false);
-                        }}
-                      >
-                        <Text style={styles.pickerFlag}>{c.flag}</Text>
-                        <Text style={styles.pickerLabel}>{c.label}</Text>
-                        <Text style={styles.pickerCode}>{c.code}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : null}
 
                 {useOtpFlow ? (
                   <View style={styles.otpBlock}>
@@ -295,23 +263,14 @@ export default function PhoneScreen() {
                   </View>
                 ) : (
                   <View style={styles.passwordBlock}>
-                    <View style={styles.fieldHeader}>
-                      <Text style={styles.fieldLabel}>كلمة المرور</Text>
-                      <Pressable
-                        onPress={() => router.push('/auth/forgot-password')}
-                        hitSlop={8}
-                      >
-                        <Text style={styles.forgotLink}>نسيت كلمة المرور؟</Text>
-                      </Pressable>
-                    </View>
+                    <Text style={styles.fieldLabel}>كلمة المرور</Text>
                     <View style={styles.inputWrap}>
-                      <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
-                        <AppIcon
-                          name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                          size={18}
-                          color={colors.textMuted}
-                        />
-                      </Pressable>
+                      <AppIcon
+                        name="lock-closed-outline"
+                        size={18}
+                        color={colors.textMuted}
+                        style={styles.inputLeadingIcon}
+                      />
                       <TextInput
                         style={styles.textInput}
                         value={password}
@@ -322,12 +281,13 @@ export default function PhoneScreen() {
                         textAlign="right"
                         autoComplete="password"
                       />
-                      <AppIcon
-                        name="lock-closed-outline"
-                        size={18}
-                        color={colors.textMuted}
-                        style={styles.inputIcon}
-                      />
+                      <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
+                        <AppIcon
+                          name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                          size={18}
+                          color={colors.textMuted}
+                        />
+                      </Pressable>
                     </View>
                   </View>
                 )}
@@ -340,17 +300,24 @@ export default function PhoneScreen() {
                 </View>
               ) : null}
 
-              <Pressable
-                onPress={() => setRememberMe(!rememberMe)}
-                style={styles.rememberRow}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: rememberMe }}
-              >
-                <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                  {rememberMe ? <AppIcon name="checkmark" size={12} color="#fff" /> : null}
+              {!useOtpFlow ? (
+                <View style={styles.rememberRow}>
+                  <Pressable
+                    onPress={() => setRememberMe(!rememberMe)}
+                    style={styles.rememberLeft}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: rememberMe }}
+                  >
+                    <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                      {rememberMe ? <AppIcon name="checkmark" size={12} color="#fff" /> : null}
+                    </View>
+                    <Text style={styles.rememberText}>تذكرني</Text>
+                  </Pressable>
+                  <Pressable onPress={() => router.push('/auth/forgot-password')} hitSlop={8}>
+                    <Text style={styles.forgotLink}>نسيت كلمة المرور؟</Text>
+                  </Pressable>
                 </View>
-                <Text style={styles.rememberText}>البقاء قيد تسجيل الدخول</Text>
-              </Pressable>
+              ) : null}
 
               <Pressable
                 style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
@@ -376,10 +343,8 @@ export default function PhoneScreen() {
 
             <View style={styles.footer}>
               <Pressable onPress={() => router.push('/auth/register')}>
-                <Text style={styles.footerLinkText}>
-                  ليس لديك حساب؟{' '}
-                  <Text style={styles.footerLinkActive}>إنشاء حساب</Text>
-                </Text>
+                <Text style={styles.footerMuted}>ليس لديك حساب؟</Text>
+                <Text style={styles.footerLinkActive}>إنشاء حساب</Text>
               </Pressable>
               <Text style={styles.disclaimerText}>
                 بالمتابعة أنت توافق على{' '}
@@ -399,176 +364,157 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: colors.screenRoot,
+      backgroundColor: colors.bgDeep,
       ...getRtlDirection(),
     },
-    heroGlow: {
+    skyGlow: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
-      height: 280,
+      height: 360,
     },
     safe: { flex: 1 },
     kav: { flex: 1 },
     scroll: {
       flexGrow: 1,
       paddingHorizontal: spacing.xl,
-      paddingTop: spacing.xxl,
+      paddingTop: spacing.lg,
       paddingBottom: spacing.xxxl,
       alignItems: 'center',
     },
     header: {
       alignItems: 'center',
       marginBottom: spacing.xl,
-      gap: spacing.sm,
+      gap: 6,
       width: '100%',
     },
-    title: {
-      ...typography.h1,
-      fontSize: 28,
-      lineHeight: 36,
-      color: colors.textPrimary,
+    logoBox: {
+      width: LOGO_BOX,
+      height: LOGO_BOX,
+      borderRadius: radius.lg,
+      backgroundColor: 'rgba(16, 38, 51, 0.92)',
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.sm,
+      overflow: 'hidden',
+    },
+    brandName: {
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 26,
+      lineHeight: 34,
+      color: colors.electricBright,
       textAlign: 'center',
     },
-    sub: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'center',
-      paddingHorizontal: spacing.lg,
+    brandSub: {
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 14,
       lineHeight: 20,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    loginHeading: {
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 32,
+      lineHeight: 42,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginTop: spacing.sm,
     },
     card: {
       width: '100%',
       maxWidth: 520,
-      borderRadius: radius.xl,
-      padding: spacing.lg,
-      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+      backgroundColor: 'rgba(12, 28, 39, 0.88)',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
       gap: spacing.lg,
-      ...shadow.card,
     },
-    modeSwitch: {
+    tabBar: {
       ...getRtlRow(),
-      backgroundColor: colors.bgDeep,
-      borderRadius: radius.lg,
-      padding: 4,
-      gap: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
-    modeItem: {
+    tabItem: {
       flex: 1,
       ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      minHeight: 42,
-      borderRadius: radius.md,
+      paddingBottom: spacing.sm,
+      paddingTop: spacing.xs,
+      position: 'relative',
     },
-    modeItemActive: {
-      backgroundColor: colors.bgElevated,
-    },
-    modeText: {
-      ...typography.caption,
+    tabItemActive: {},
+    tabText: {
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 14,
       color: colors.textMuted,
-      fontWeight: '600',
     },
-    modeTextActive: {
+    tabTextActive: {
       color: colors.textPrimary,
+    },
+    tabUnderline: {
+      position: 'absolute',
+      bottom: 0,
+      left: spacing.sm,
+      right: spacing.sm,
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: colors.electric,
     },
     formGroup: { gap: spacing.sm, width: '100%' },
-    fieldHeader: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      width: '100%',
-    },
     fieldLabel: {
-      ...typography.smallHeading,
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 14,
       color: colors.textPrimary,
       ...getRtlText(),
+      marginBottom: 2,
     },
     forgotLink: {
-      ...typography.caption,
-      color: colors.textBrandStrong,
-      fontWeight: '600',
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 13,
+      color: colors.electricBright,
+      textDecorationLine: 'underline',
     },
     inputWrap: {
       ...getRtlRow(),
       alignItems: 'center',
-      backgroundColor: colors.bgDeep,
-      borderRadius: radius.lg,
+      backgroundColor: 'rgba(7, 19, 28, 0.72)',
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: colors.borderHairline,
       paddingHorizontal: spacing.md,
       height: CONTROL_H,
       width: '100%',
     },
-    inputIcon: marginStart(8),
+    inputLeadingIcon: marginEnd(10),
     textInput: {
       flex: 1,
       ...typography.body,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       height: '100%',
       ...getRtlText(),
-    },
-    countryBtn: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 4,
-      height: '100%',
-    },
-    countryCode: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-    },
-    countryFlag: { fontSize: 16 },
-    inputDivider: {
-      width: StyleSheet.hairlineWidth,
-      height: 24,
-      backgroundColor: colors.borderHairline,
-      ...marginEnd(8),
-      ...marginStart(4),
     },
     phoneInput: {
       flex: 1,
       ...typography.body,
+      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       height: '100%',
       ...getRtlText(),
-    },
-    pickerDropdown: {
-      backgroundColor: colors.bgDeep,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.borderHairline,
-      overflow: 'hidden',
-      width: '100%',
-    },
-    pickerItem: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: 12,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    pickerItemActive: {
-      backgroundColor: `${colors.electric}14`,
-    },
-    pickerFlag: { fontSize: 16 },
-    pickerLabel: {
-      flex: 1,
-      ...typography.body,
-      color: colors.textPrimary,
-      ...getRtlText(),
-      ...marginEnd(10),
-    },
-    pickerCode: {
-      ...typography.caption,
-      color: colors.textMuted,
     },
     passwordBlock: { gap: spacing.sm },
     otpBlock: { gap: spacing.sm, marginTop: spacing.xs },
@@ -583,8 +529,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       gap: 6,
       minHeight: 44,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgDeep,
+      borderRadius: radius.md,
+      backgroundColor: 'rgba(7, 19, 28, 0.72)',
       borderWidth: 1,
       borderColor: colors.borderHairline,
     },
@@ -593,16 +539,16 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: `${colors.electric}12`,
     },
     channelLabel: {
-      ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 13,
       color: colors.textMuted,
-      fontWeight: '600',
     },
     channelLabelActive: {
       color: colors.electricBright,
     },
     channelLabelWhatsapp: {
       color: '#25D366',
-      fontWeight: '600',
     },
     errorContainer: {
       ...getRtlRow(),
@@ -624,12 +570,18 @@ function createStyles(colors: ThemeColors) {
     rememberRow: {
       ...getRtlRow(),
       alignItems: 'center',
-      justifyContent: 'flex-start',
-      gap: spacing.sm,
+      justifyContent: 'space-between',
       width: '100%',
     },
+    rememberLeft: {
+      ...getRtlRow(),
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     rememberText: {
-      ...typography.caption,
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 13,
       color: colors.textMuted,
       ...getRtlText(),
     },
@@ -639,7 +591,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 6,
       borderWidth: 1.5,
       borderColor: colors.borderHairline,
-      backgroundColor: colors.bgDeep,
+      backgroundColor: 'rgba(7, 19, 28, 0.72)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -649,7 +601,7 @@ function createStyles(colors: ThemeColors) {
     },
     submitBtn: {
       width: '100%',
-      borderRadius: radius.lg,
+      borderRadius: radius.md,
       overflow: 'hidden',
     },
     submitBtnDisabled: { opacity: 0.7 },
@@ -659,7 +611,9 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
     submitText: {
-      ...typography.button,
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 16,
       color: '#fff',
     },
     footer: {
@@ -668,14 +622,20 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
       width: '100%',
     },
-    footerLinkText: {
-      ...typography.body,
+    footerMuted: {
+      fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+      fontSize: 14,
       color: colors.textMuted,
       textAlign: 'center',
     },
     footerLinkActive: {
-      color: colors.textBrandStrong,
+      fontFamily: OFFICIAL_APP_FONT,
       fontWeight: '700',
+      fontSize: 15,
+      color: colors.electricBright,
+      textAlign: 'center',
+      marginTop: 4,
     },
     disclaimerText: {
       ...typography.caption,

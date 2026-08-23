@@ -90,7 +90,7 @@ describe('Explore Sarh logo mark', () => {
 });
 
 describe('login screen layout', () => {
-  it('uses modern RTL-first login chrome with labeled fields and mode switch', () => {
+  it('uses Sarh-branded reference login chrome with tabs, fields, and no +966 picker', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../app/auth/phone.tsx'),
       'utf8',
@@ -98,11 +98,17 @@ describe('login screen layout', () => {
     expect(src).toContain('getRtlRow');
     expect(src).toContain('getRtlText');
     expect(src).toContain('getRtlDirection');
-    expect(src).toContain('modeSwitch');
+    expect(src).toContain('tabBar');
     expect(src).toContain('placeholder="05xxxxxxxx"');
     expect(src).toContain('accessibilityLabel="05xxxxxxxx"');
-    expect(src).toContain('BRAND_LOGIN_WELCOME_AR');
-    expect(src).toContain('LinearGradient');
+    expect(src).toContain('BRAND_NAME_AR');
+    expect(src).toContain('تسجيل الدخول');
+    expect(src).toContain('OFFICIAL_APP_FONT');
+    expect(src).toContain('تذكرني');
+    expect(src).not.toContain('countryBtn');
+    expect(src).not.toContain('countryCode');
+    expect(src).not.toContain('COUNTRY_CODES');
+    expect(src).not.toContain('BRAND_LOGIN_WELCOME_AR');
     expect(src).not.toContain('styles.searchBar');
   });
 });
