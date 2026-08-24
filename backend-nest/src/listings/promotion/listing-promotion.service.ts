@@ -248,7 +248,7 @@ export class ListingPromotionService {
       where: { id: user.userId },
       select: { email: true, displayName: true, arabicName: true },
     });
-    const appUrl = process.env.APP_URL ?? 'https://sarh-app.up.railway.app';
+    const appUrl = process.env.APP_URL ?? 'https://sarhsa.online';
 
     let checkoutUrl: string;
 

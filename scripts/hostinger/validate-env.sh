@@ -55,11 +55,16 @@ check_required() {
 }
 
 echo "=== CRITICAL ==="
-for k in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB DATABASE_URL DIRECT_URL NODE_ENV PORT JWT_SECRET JWT_REFRESH_SECRET; do
+for k in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB DATABASE_URL DIRECT_URL NODE_ENV PORT JWT_SECRET JWT_REFRESH_SECRET APP_URL; do
   min=1
   [[ "$k" == JWT_* ]] && min=32
   check_required "$k" "$min"
 done
+app_url="$(get APP_URL)"
+if [[ -n "$app_url" ]] && echo "$app_url" | grep -qiE 'railway\.app|onrender\.com'; then
+  echo "APP_URL=STALE_HOST (must be https://sarhsa.online)"
+  missing+=("APP_URL_HOSTINGER")
+fi
 
 echo ""
 echo "=== DATABASE ==="

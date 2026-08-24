@@ -61,8 +61,8 @@ async function main() {
       action: 'PURCHASE',
       amount: { currencyCode: 'SAR', value: 100 },
       merchantAttributes: {
-        redirectUrl: 'https://sarh-new4.onrender.com/payment/result',
-        cancelUrl: 'https://sarh-new4.onrender.com/payment/cancel',
+        redirectUrl: 'https://sarhsa.online/payment/result',
+        cancelUrl: 'https://sarhsa.online/payment/cancel',
         merchantOrderReference: merchantRef,
         skipConfirmationPage: true,
       },
