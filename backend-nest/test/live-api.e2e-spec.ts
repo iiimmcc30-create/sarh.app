@@ -26,7 +26,9 @@ describe('LIVE API journeys (real backend)', () => {
   beforeAll(async () => {
     live = await apiReachable();
     if (!live) {
-      console.warn(`[live-e2e] API not reachable at ${API} — skipping live suite`);
+      console.warn(
+        `[live-e2e] API not reachable at ${API} — skipping live suite`,
+      );
     }
   });
 
@@ -43,7 +45,9 @@ describe('LIVE API journeys (real backend)', () => {
   });
 
   itLive('public listings feed returns items', async () => {
-    const res = await request(API).get('/api/listings').query({ page: 1, pageSize: 5 });
+    const res = await request(API)
+      .get('/api/listings')
+      .query({ page: 1, pageSize: 5 });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data?.listings)).toBe(true);
@@ -51,17 +55,22 @@ describe('LIVE API journeys (real backend)', () => {
   });
 
   itLive('public posts feed returns items', async () => {
-    const res = await request(API).get('/api/posts').query({ page: 1, pageSize: 5 });
+    const res = await request(API)
+      .get('/api/posts')
+      .query({ page: 1, pageSize: 5 });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data?.posts)).toBe(true);
   });
 
-  itLive('public plans catalog is available (payment/subscription)', async () => {
-    const res = await request(API).get('/api/plans');
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
+  itLive(
+    'public plans catalog is available (payment/subscription)',
+    async () => {
+      const res = await request(API).get('/api/plans');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    },
+  );
 
   itLive('admin login with e2e credentials', async () => {
     const res = await request(API)
@@ -94,17 +103,29 @@ describe('LIVE API journeys (real backend)', () => {
     expect(adminToken).toBeTruthy();
     const auth = { Authorization: `Bearer ${adminToken}` };
 
-    const users = await request(API).get('/api/admin/users').set(auth).query({ page: 1, pageSize: 10 });
+    const users = await request(API)
+      .get('/api/admin/users')
+      .set(auth)
+      .query({ page: 1, pageSize: 10 });
     expect(users.status).toBe(200);
     expect(users.body.data.items.length).toBeGreaterThan(0);
 
-    const posts = await request(API).get('/api/admin/posts').set(auth).query({ page: 1 });
+    const posts = await request(API)
+      .get('/api/admin/posts')
+      .set(auth)
+      .query({ page: 1 });
     expect(posts.status).toBe(200);
 
-    const listings = await request(API).get('/api/admin/listings').set(auth).query({ page: 1 });
+    const listings = await request(API)
+      .get('/api/admin/listings')
+      .set(auth)
+      .query({ page: 1 });
     expect(listings.status).toBe(200);
 
-    const orders = await request(API).get('/api/admin/orders').set(auth).query({ page: 1 });
+    const orders = await request(API)
+      .get('/api/admin/orders')
+      .set(auth)
+      .query({ page: 1 });
     expect(orders.status).toBe(200);
 
     const plans = await request(API).get('/api/admin/plans').set(auth);
@@ -115,13 +136,20 @@ describe('LIVE API journeys (real backend)', () => {
     expect(adminToken).toBeTruthy();
     const auth = { Authorization: `Bearer ${adminToken}` };
 
-    const tickets = await request(API).get('/api/admin/support/tickets').set(auth);
+    const tickets = await request(API)
+      .get('/api/admin/support/tickets')
+      .set(auth);
     expect(tickets.status).toBe(200);
 
-    const butchers = await request(API).get('/api/admin/butchers').set(auth).query({ page: 1 });
+    const butchers = await request(API)
+      .get('/api/admin/butchers')
+      .set(auth)
+      .query({ page: 1 });
     expect(butchers.status).toBe(200);
 
-    const apps = await request(API).get('/api/admin/butcher-applications').set(auth);
+    const apps = await request(API)
+      .get('/api/admin/butcher-applications')
+      .set(auth);
     expect(apps.status).toBe(200);
   });
 
@@ -129,7 +157,9 @@ describe('LIVE API journeys (real backend)', () => {
     expect(adminToken).toBeTruthy();
     const auth = { Authorization: `Bearer ${adminToken}` };
 
-    const stories = await request(API).get('/api/admin/editorial-stories').set(auth);
+    const stories = await request(API)
+      .get('/api/admin/editorial-stories')
+      .set(auth);
     expect(stories.status).toBe(200);
 
     const services = await request(API).get('/api/admin/services').set(auth);
@@ -143,7 +173,9 @@ describe('LIVE API journeys (real backend)', () => {
     const plans = await request(API).get('/api/listings/promotion/plans');
     expect(plans.status).toBe(200);
     expect(plans.body.success).toBe(true);
-    expect(Array.isArray(plans.body.data?.tiers) || plans.body.data).toBeTruthy();
+    expect(
+      Array.isArray(plans.body.data?.tiers) || plans.body.data,
+    ).toBeTruthy();
 
     const quote = await request(API)
       .get('/api/listings/promote/quote')

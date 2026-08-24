@@ -52,7 +52,8 @@ export const paginationQuerySchema = z.object({
   page: queryInt(1, 1),
   pageSize: queryInt(20, 1, 100),
   search: z.preprocess(
-    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    (value) =>
+      typeof value === 'string' && value.trim() === '' ? undefined : value,
     z.string().optional(),
   ),
   hidden: z.string().optional(),
@@ -80,7 +81,14 @@ export const updateListingSchema = z.object({
 export const updateReportSchema = z
   .object({
     status: z
-      .enum(['OPEN', 'IN_REVIEW', 'IN_PROGRESS', 'AWAITING_USER', 'RESOLVED', 'CLOSED'])
+      .enum([
+        'OPEN',
+        'IN_REVIEW',
+        'IN_PROGRESS',
+        'AWAITING_USER',
+        'RESOLVED',
+        'CLOSED',
+      ])
       .optional(),
     adminNotes: z.string().optional(),
     priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).optional(),
@@ -109,10 +117,9 @@ export const createSectionSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-export const updateSectionSchema = createSectionSchema.partial().refine(
-  (d) => Object.keys(d).length > 0,
-  { message: 'empty_update' },
-);
+export const updateSectionSchema = createSectionSchema
+  .partial()
+  .refine((d) => Object.keys(d).length > 0, { message: 'empty_update' });
 
 export type AdminLoginDto = z.infer<typeof adminLoginSchema>;
 export type PaginationQueryDto = z.infer<typeof paginationQuerySchema>;

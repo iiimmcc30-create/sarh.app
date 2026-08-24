@@ -46,8 +46,12 @@ const LISTING_SELECT = {
       country: true,
     },
   },
-  marketCategory: { select: { id: true, nameAr: true, slug: true, requiresWeight: true } },
-  marketSubcategory: { select: { id: true, nameAr: true, slug: true, requiresWeight: true } },
+  marketCategory: {
+    select: { id: true, nameAr: true, slug: true, requiresWeight: true },
+  },
+  marketSubcategory: {
+    select: { id: true, nameAr: true, slug: true, requiresWeight: true },
+  },
 } satisfies Prisma.ListingSelect;
 
 function listingTokenConditions(tokens: string[]): Prisma.ListingWhereInput[] {
@@ -129,7 +133,11 @@ export class UnifiedSearchRepository {
       select: LISTING_SELECT,
       skip,
       take,
-      orderBy: [{ pinned: 'desc' }, { featured: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [
+        { pinned: 'desc' },
+        { featured: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
   }
 
@@ -228,7 +236,11 @@ export class UnifiedSearchRepository {
       },
       skip,
       take,
-      orderBy: [{ rankingScore: 'desc' }, { rating: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [
+        { rankingScore: 'desc' },
+        { rating: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
   }
 
@@ -262,7 +274,11 @@ export class UnifiedSearchRepository {
       },
       skip,
       take,
-      orderBy: [{ sortOrder: 'asc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [
+        { sortOrder: 'asc' },
+        { publishedAt: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
   }
 

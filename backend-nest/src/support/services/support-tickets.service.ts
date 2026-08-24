@@ -84,10 +84,12 @@ export class SupportTicketsService {
       categories: Object.entries(SUPPORT_TICKET_CATEGORY_LABEL_AR).map(
         ([value, labelAr]) => ({ value, labelAr }),
       ),
-      statuses: Object.entries(TICKET_STATUS_LABEL_AR).map(([value, labelAr]) => ({
-        value,
-        labelAr,
-      })),
+      statuses: Object.entries(TICKET_STATUS_LABEL_AR).map(
+        ([value, labelAr]) => ({
+          value,
+          labelAr,
+        }),
+      ),
     };
   }
 
@@ -141,7 +143,11 @@ export class SupportTicketsService {
     };
   }
 
-  async replyAsUser(user: JwtPayload, ticketId: string, dto: ReplySupportTicketDto) {
+  async replyAsUser(
+    user: JwtPayload,
+    ticketId: string,
+    dto: ReplySupportTicketDto,
+  ) {
     const ticket = await this.repo.findUserTicket(ticketId, user.userId);
     if (!ticket) throwApi(404, 'not_found', 'التذكرة غير موجودة');
     if (ticket.status === 'CLOSED' || ticket.status === 'RESOLVED') {
@@ -200,7 +206,11 @@ export class SupportTicketsService {
 
     const ticket = await this.repo.updateTicket(id, parsed.data);
 
-    if (existing.reporterId && parsed.data.status && parsed.data.status !== existing.status) {
+    if (
+      existing.reporterId &&
+      parsed.data.status &&
+      parsed.data.status !== existing.status
+    ) {
       if (parsed.data.status === 'AWAITING_USER') {
         await this.notifications.notifyTicketAwaitingUser(existing.reporterId, {
           id: ticket.id,
@@ -212,18 +222,25 @@ export class SupportTicketsService {
           ticketNumber: ticket.ticketNumber,
         });
       } else {
-        await this.notifications.notifyTicketStatusChanged(existing.reporterId, {
-          id: ticket.id,
-          ticketNumber: ticket.ticketNumber,
-          status: parsed.data.status,
-        });
+        await this.notifications.notifyTicketStatusChanged(
+          existing.reporterId,
+          {
+            id: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+            status: parsed.data.status,
+          },
+        );
       }
     }
 
     return { ticket };
   }
 
-  async replyAsStaff(staff: JwtPayload, ticketId: string, body: Record<string, unknown>) {
+  async replyAsStaff(
+    staff: JwtPayload,
+    ticketId: string,
+    body: Record<string, unknown>,
+  ) {
     const parsed = adminReplySchema.safeParse(body);
     if (!parsed.success) throwApi(400, 'invalid_body', 'بيانات غير صالحة');
 
@@ -234,7 +251,9 @@ export class SupportTicketsService {
       const mergedNotes = [ticket.adminNotes, parsed.data.body.trim()]
         .filter(Boolean)
         .join('\n\n');
-      const updated = await this.repo.updateTicket(ticketId, { adminNotes: mergedNotes });
+      const updated = await this.repo.updateTicket(ticketId, {
+        adminNotes: mergedNotes,
+      });
       return { ticket: updated, internal: true };
     }
 
@@ -261,7 +280,9 @@ export class SupportTicketsService {
         ? 'IN_PROGRESS'
         : ticket.status;
 
-    const updated = await this.repo.updateTicket(ticketId, { status: newStatus });
+    const updated = await this.repo.updateTicket(ticketId, {
+      status: newStatus,
+    });
 
     if (ticket.reporterId) {
       await this.notifications.notifyStaffReply(ticket.reporterId, {

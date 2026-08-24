@@ -22,10 +22,7 @@ describe('order-line.util', () => {
 
   it('computes fixed line price regardless of weight', () => {
     expect(
-      computeOrderLinePrice(
-        { priceFixed: 120, pricePerKg: null },
-        3,
-      ),
+      computeOrderLinePrice({ priceFixed: 120, pricePerKg: null }, 3),
     ).toBe(120);
   });
 
@@ -52,9 +49,27 @@ describe('order-line.util', () => {
   it('sums line prices with rounding', () => {
     expect(
       sumOrderLinePrices([
-        { productId: 'a', cutType: 'x', weightKg: 1, linePrice: 33.33, reservedQuantity: 1 },
-        { productId: 'b', cutType: 'y', weightKg: 1, linePrice: 33.33, reservedQuantity: 1 },
-        { productId: 'c', cutType: 'z', weightKg: 1, linePrice: 33.34, reservedQuantity: 1 },
+        {
+          productId: 'a',
+          cutType: 'x',
+          weightKg: 1,
+          linePrice: 33.33,
+          reservedQuantity: 1,
+        },
+        {
+          productId: 'b',
+          cutType: 'y',
+          weightKg: 1,
+          linePrice: 33.33,
+          reservedQuantity: 1,
+        },
+        {
+          productId: 'c',
+          cutType: 'z',
+          weightKg: 1,
+          linePrice: 33.34,
+          reservedQuantity: 1,
+        },
       ]),
     ).toBe(100);
   });

@@ -3,7 +3,9 @@ import axios from 'axios';
 import { LoggerService } from '../../common/services/logger.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const Parser = require('rss-parser') as new (options?: Record<string, unknown>) => {
+const Parser = require('rss-parser') as new (
+  options?: Record<string, unknown>,
+) => {
   parseURL: (url: string) => Promise<{ items?: RssItem[] }>;
 };
 

@@ -23,7 +23,11 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     SettingsModule,
     IntegrationsModule,
   ],
-  controllers: [ListingsController, ListingBoostController, ListingPromotionController],
+  controllers: [
+    ListingsController,
+    ListingBoostController,
+    ListingPromotionController,
+  ],
   providers: [
     ListingsService,
     ListingsRepository,

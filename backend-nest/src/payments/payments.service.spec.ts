@@ -176,31 +176,38 @@ describe('PaymentsService', () => {
   });
 
   it('does not call NI sync when only internal merchant ref exists', async () => {
-    repo.findPaymentOwnedByUser.mockResolvedValue({
-      id: 'pay-ftr',
-      status: 'pending',
-      orderId: 'FTR-4916FD-MSPXSTSH',
-      transactionId: null,
-    });
-    repo.findPaymentByIdFull.mockResolvedValue({
-      id: 'pay-ftr',
-      status: 'pending',
-      orderId: 'FTR-4916FD-MSPXSTSH',
-      transactionId: null,
-    });
+    const prevKey = process.env.NI_API_KEY;
+    process.env.NI_API_KEY = 'live_ci_test_key_not_mock';
+    try {
+      repo.findPaymentOwnedByUser.mockResolvedValue({
+        id: 'pay-ftr',
+        status: 'pending',
+        orderId: 'FTR-4916FD-MSPXSTSH',
+        transactionId: null,
+      });
+      repo.findPaymentByIdFull.mockResolvedValue({
+        id: 'pay-ftr',
+        status: 'pending',
+        orderId: 'FTR-4916FD-MSPXSTSH',
+        transactionId: null,
+      });
 
-    const result = await service.syncPayment(
-      { userId: 'u1', role: 'USER' } as never,
-      'pay-ftr',
-    );
+      const result = await service.syncPayment(
+        { userId: 'u1', role: 'USER' } as never,
+        'pay-ftr',
+      );
 
-    expect(result).toMatchObject({
-      paymentId: 'pay-ftr',
-      status: 'pending',
-      synced: false,
-      outcome: 'processing',
-    });
-    expect(result.messageAr).toContain('N-Genius');
+      expect(result).toMatchObject({
+        paymentId: 'pay-ftr',
+        status: 'pending',
+        synced: false,
+        outcome: 'processing',
+      });
+      expect(result.messageAr).toContain('N-Genius');
+    } finally {
+      if (prevKey === undefined) delete process.env.NI_API_KEY;
+      else process.env.NI_API_KEY = prevKey;
+    }
   });
 
   it('recovers a stale pending payment that never received a checkout URL', async () => {
@@ -266,7 +273,10 @@ describe('PaymentsService', () => {
       ),
     ).rejects.toMatchObject({ error: 'order_not_found', status: 404 });
 
-    expect(repo.findUnpaidButcherOrder).toHaveBeenCalledWith('ord-1', 'stranger');
+    expect(repo.findUnpaidButcherOrder).toHaveBeenCalledWith(
+      'ord-1',
+      'stranger',
+    );
     expect(repo.createPendingPaymentOrReturnExisting).not.toHaveBeenCalled();
   });
 

@@ -75,7 +75,12 @@ export class AdminService {
   private parsePagination(query: Record<string, unknown>): PaginationQueryDto {
     const parsed = paginationQuerySchema.safeParse(query);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
     return parsed.data;
   }
@@ -100,7 +105,10 @@ export class AdminService {
 
     const user = await this.repo.findAdminUserForLogin(parsed.data.login);
     const dummyHash = '$2a$12$dummyhashfordummypassword1234567890abcdef';
-    const valid = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? dummyHash);
+    const valid = await bcrypt.compare(
+      parsed.data.password,
+      user?.passwordHash ?? dummyHash,
+    );
 
     if (!user || !valid || !ADMIN_ROLES.has(user.role)) {
       throwApi(401, 'invalid_credentials', 'بيانات الدخول غير صحيحة');
@@ -159,7 +167,12 @@ export class AdminService {
   updateUser(id: string, body: Record<string, unknown>) {
     const parsed = updateUserSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
     return this.repo.updateUser(id, parsed.data).then((user) => ({ user }));
   }
@@ -187,7 +200,12 @@ export class AdminService {
   updatePost(id: string, body: Record<string, unknown>) {
     const parsed = updatePostSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
     return this.repo.updatePost(id, parsed.data).then((post) => ({ post }));
   }
@@ -204,9 +222,16 @@ export class AdminService {
   updateListing(id: string, body: Record<string, unknown>) {
     const parsed = updateListingSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
-    return this.repo.updateListing(id, parsed.data).then((listing) => ({ listing }));
+    return this.repo
+      .updateListing(id, parsed.data)
+      .then((listing) => ({ listing }));
   }
 
   async deleteListing(id: string) {
@@ -227,9 +252,16 @@ export class AdminService {
   updateReport(id: string, body: Record<string, unknown>) {
     const parsed = updateReportSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
-    return this.repo.updateTicket(id, parsed.data).then((ticket) => ({ ticket }));
+    return this.repo
+      .updateTicket(id, parsed.data)
+      .then((ticket) => ({ ticket }));
   }
 
   async deleteReport(id: string) {
@@ -257,9 +289,16 @@ export class AdminService {
   updateButcher(id: string, body: Record<string, unknown>) {
     const parsed = updateButcherSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
-    return this.repo.updateButcher(id, parsed.data).then((butcher) => ({ butcher }));
+    return this.repo
+      .updateButcher(id, parsed.data)
+      .then((butcher) => ({ butcher }));
   }
 
   async getButcher(id: string) {
@@ -273,18 +312,22 @@ export class AdminService {
     return this.repo.listOrders({
       ...parsed,
       status: typeof query.status === 'string' ? query.status : undefined,
-      butcherId: typeof query.butcherId === 'string' ? query.butcherId : undefined,
-      customerId: typeof query.customerId === 'string' ? query.customerId : undefined,
+      butcherId:
+        typeof query.butcherId === 'string' ? query.butcherId : undefined,
+      customerId:
+        typeof query.customerId === 'string' ? query.customerId : undefined,
       dateFrom: typeof query.dateFrom === 'string' ? query.dateFrom : undefined,
       dateTo: typeof query.dateTo === 'string' ? query.dateTo : undefined,
-      orderNumber: typeof query.orderNumber === 'string' ? query.orderNumber : undefined,
+      orderNumber:
+        typeof query.orderNumber === 'string' ? query.orderNumber : undefined,
     });
   }
 
   async getOrder(orderId: string) {
     const order = await this.repo.getOrderById(orderId);
     if (!order) throwApi(404, 'not_found', 'الطلب غير موجود');
-    const payment = await this.repo.findPaymentIntegrationForButcherOrder(orderId);
+    const payment =
+      await this.repo.findPaymentIntegrationForButcherOrder(orderId);
     return {
       order: {
         ...order,
@@ -320,10 +363,20 @@ export class AdminService {
   updateSetting(body: Record<string, unknown>) {
     const parsed = updateSettingSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
     return this.repo
-      .upsertSetting(parsed.data.key, parsed.data.value, parsed.data.labelAr, parsed.data.category)
+      .upsertSetting(
+        parsed.data.key,
+        parsed.data.value,
+        parsed.data.labelAr,
+        parsed.data.category,
+      )
       .then((setting) => ({ setting }));
   }
 
@@ -334,7 +387,12 @@ export class AdminService {
   createSection(body: Record<string, unknown>, actorName?: string) {
     const parsed = createSectionSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
     return this.repo
       .createSection({
@@ -357,10 +415,19 @@ export class AdminService {
       });
   }
 
-  async updateSection(id: string, body: Record<string, unknown>, actorName?: string) {
+  async updateSection(
+    id: string,
+    body: Record<string, unknown>,
+    actorName?: string,
+  ) {
     const parsed = updateSectionSchema.safeParse(body);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
     const current = await this.repo.getSection(id);
     if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
@@ -393,11 +460,18 @@ export class AdminService {
     if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
 
     // Apply latest editor fields before publishing so unsaved form edits are not dropped.
-    const pendingKeys = Object.keys(body ?? {}).filter((k) => body[k] !== undefined);
+    const pendingKeys = Object.keys(body ?? {}).filter(
+      (k) => body[k] !== undefined,
+    );
     if (pendingKeys.length > 0) {
       const parsed = updateSectionSchema.safeParse(body);
       if (!parsed.success) {
-        throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+        throwApi(
+          400,
+          'validation_error',
+          'بيانات غير صحيحة',
+          parsed.error.flatten(),
+        );
       }
       const d = parsed.data;
       const contentChanged =
@@ -464,11 +538,16 @@ export class AdminService {
     return { section: current, versions };
   }
 
-  async restoreSectionVersion(id: string, versionId: string, actorName?: string) {
+  async restoreSectionVersion(
+    id: string,
+    versionId: string,
+    actorName?: string,
+  ) {
     const current = await this.repo.getSection(id);
     if (!current) throwApi(404, 'not_found', 'القسم غير موجود');
     const snap = await this.repo.getSectionVersion(versionId);
-    if (!snap || snap.sectionId !== id) throwApi(404, 'not_found', 'النسخة غير موجودة');
+    if (!snap || snap.sectionId !== id)
+      throwApi(404, 'not_found', 'النسخة غير موجودة');
 
     const version = await this.repo.nextSectionVersion(id);
     await this.repo.createSectionVersion({
@@ -501,7 +580,8 @@ export class AdminService {
   async runCleanup() {
     const now = new Date();
     this.logger.info({}, 'Running scheduled cleanup');
-    const [sessions, notifications, stories, offers] = await this.repo.runCleanup(now);
+    const [sessions, notifications, stories, offers] =
+      await this.repo.runCleanup(now);
     const stats = {
       expiredSessions: sessions.count,
       oldNotifications: notifications.count,
@@ -521,7 +601,9 @@ export class AdminService {
 
     try {
       const payload = this.jwt.verifyAccessToken(token);
-      const blacklisted = await this.sessions.get<boolean>(`blacklist:${token}`);
+      const blacklisted = await this.sessions.get<boolean>(
+        `blacklist:${token}`,
+      );
       if (blacklisted) throwApi(403, 'forbidden', 'غير مسموح');
 
       const user = await this.authRepo.getPasswordVersion(payload.userId);
@@ -532,7 +614,8 @@ export class AdminService {
       const active = await this.authRepo.isUserActive(payload.userId);
       if (!active?.isActive) throwApi(403, 'forbidden', 'غير مسموح');
 
-      if (!ADMIN_ROLES.has(payload.role)) throwApi(403, 'forbidden', 'غير مسموح');
+      if (!ADMIN_ROLES.has(payload.role))
+        throwApi(403, 'forbidden', 'غير مسموح');
     } catch (err) {
       if (err instanceof ApiException) throw err;
       throwApi(403, 'forbidden', 'غير مسموح');
@@ -552,7 +635,12 @@ export class AdminService {
   async listButcherApplications(query: Record<string, unknown>) {
     const parsed = adminListQuerySchema.safeParse(query);
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
 
     const [page, draft] = await Promise.all([
@@ -584,7 +672,12 @@ export class AdminService {
 
     const parsed = approveBodySchema.safeParse(body ?? {});
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
 
     return this.butcherApplications.approveApplication(
@@ -604,7 +697,12 @@ export class AdminService {
 
     const parsed = rejectBodySchema.safeParse(body ?? {});
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
 
     return this.butcherApplications.rejectApplication(
@@ -624,7 +722,12 @@ export class AdminService {
 
     const parsed = commentBodySchema.safeParse(body ?? {});
     if (!parsed.success) {
-      throwApi(400, 'validation_error', 'بيانات غير صحيحة', parsed.error.flatten());
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
     }
 
     const timelineEvent = await this.butcherApplications.addComment(

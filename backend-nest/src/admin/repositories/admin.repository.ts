@@ -48,7 +48,12 @@ const OWNER_USER_SELECT = {
   },
 } satisfies Prisma.UserSelect;
 
-function paginate<T>(items: T[], total: number, page: number, pageSize: number) {
+function paginate<T>(
+  items: T[],
+  total: number,
+  page: number,
+  pageSize: number,
+) {
   return {
     items,
     total,
@@ -58,11 +63,16 @@ function paginate<T>(items: T[], total: number, page: number, pageSize: number) 
   };
 }
 
-function searchOr(fields: string[], search?: string): Prisma.UserWhereInput | undefined {
+function searchOr(
+  fields: string[],
+  search?: string,
+): Prisma.UserWhereInput | undefined {
   if (!search?.trim()) return undefined;
   const q = search.trim();
   return {
-    OR: fields.map((f) => ({ [f]: { contains: q, mode: 'insensitive' as const } })),
+    OR: fields.map((f) => ({
+      [f]: { contains: q, mode: 'insensitive' as const },
+    })),
   };
 }
 
@@ -89,17 +99,33 @@ export class AdminRepository {
         where: { validUntil: { lt: thirtyDaysAgo }, deletedAt: null },
       }),
       // Hard purge soft-deleted content after retention window
-      this.prisma.post.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
-      this.prisma.listing.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
-      this.prisma.liveStream.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
-      this.prisma.supportTicket.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
-      this.prisma.contentSection.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
-      this.prisma.butcherStory.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
-      this.prisma.butcherOffer.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
+      this.prisma.post.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
+      this.prisma.listing.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
+      this.prisma.liveStream.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
+      this.prisma.supportTicket.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
+      this.prisma.contentSection.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
+      this.prisma.butcherStory.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
+      this.prisma.butcherOffer.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
       this.prisma.butcherProduct.deleteMany({
         where: { deletedAt: { lt: archivedBefore }, orderItems: { none: {} } },
       }),
-      this.prisma.story.deleteMany({ where: { deletedAt: { lt: archivedBefore } } }),
+      this.prisma.story.deleteMany({
+        where: { deletedAt: { lt: archivedBefore } },
+      }),
     ]);
   }
 
@@ -176,12 +202,18 @@ export class AdminRepository {
     const { page, pageSize, search, hidden } = query;
     const where: Prisma.PostWhereInput = {
       ...notDeleted,
-      ...(hidden === 'true' ? { isHidden: true } : hidden === 'false' ? { isHidden: false } : {}),
+      ...(hidden === 'true'
+        ? { isHidden: true }
+        : hidden === 'false'
+          ? { isHidden: false }
+          : {}),
       ...(search?.trim()
         ? {
             OR: [
               { content: { contains: search.trim(), mode: 'insensitive' } },
-              { arabicContent: { contains: search.trim(), mode: 'insensitive' } },
+              {
+                arabicContent: { contains: search.trim(), mode: 'insensitive' },
+              },
             ],
           }
         : {}),
@@ -218,7 +250,9 @@ export class AdminRepository {
     const { page, pageSize, search, status } = query;
     const where: Prisma.ListingWhereInput = {
       ...notDeleted,
-      ...(status ? { status: status as Prisma.EnumListingStatusFilter['equals'] } : {}),
+      ...(status
+        ? { status: status as Prisma.EnumListingStatusFilter['equals'] }
+        : {}),
       ...(search?.trim()
         ? {
             OR: [
@@ -267,7 +301,9 @@ export class AdminRepository {
         ? {
             OR: [
               { subject: { contains: search.trim(), mode: 'insensitive' } },
-              { ticketNumber: { contains: search.trim(), mode: 'insensitive' } },
+              {
+                ticketNumber: { contains: search.trim(), mode: 'insensitive' },
+              },
               { description: { contains: search.trim(), mode: 'insensitive' } },
             ],
           }
@@ -304,7 +340,11 @@ export class AdminRepository {
     const { page, pageSize, search, live } = query;
     const where: Prisma.LiveStreamWhereInput = {
       ...notDeleted,
-      ...(live === 'true' ? { isLive: true } : live === 'false' ? { isLive: false } : {}),
+      ...(live === 'true'
+        ? { isLive: true }
+        : live === 'false'
+          ? { isLive: false }
+          : {}),
       ...(search?.trim()
         ? {
             OR: [
@@ -338,7 +378,12 @@ export class AdminRepository {
   softDeleteLiveStream(id: string) {
     return this.prisma.liveStream.update({
       where: { id },
-      data: { ...softDeleteFields(), isLive: false, endedAt: new Date(), viewers: 0 },
+      data: {
+        ...softDeleteFields(),
+        isLive: false,
+        endedAt: new Date(),
+        viewers: 0,
+      },
     });
   }
 
@@ -383,7 +428,12 @@ export class AdminRepository {
       include: {
         user: { select: OWNER_USER_SELECT },
         sourceApplication: {
-          select: { id: true, applicationNumber: true, status: true, submittedAt: true },
+          select: {
+            id: true,
+            applicationNumber: true,
+            status: true,
+            submittedAt: true,
+          },
         },
       },
     });
@@ -393,7 +443,12 @@ export class AdminRepository {
     return this.prisma.appSetting.findMany({ orderBy: { key: 'asc' } });
   }
 
-  upsertSetting(key: string, value: unknown, labelAr?: string, category?: string) {
+  upsertSetting(
+    key: string,
+    value: unknown,
+    labelAr?: string,
+    category?: string,
+  ) {
     return this.prisma.appSetting.upsert({
       where: { key },
       create: { key, value: value as Prisma.InputJsonValue, labelAr, category },
@@ -476,8 +531,14 @@ export class AdminRepository {
 
   async getDashboardStats() {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const sevenDaysAgo = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const sevenDaysAgo = new Date(
+      todayStart.getTime() - 6 * 24 * 60 * 60 * 1000,
+    );
 
     const [
       totalUsers,
@@ -502,12 +563,16 @@ export class AdminRepository {
       this.prisma.user.count({ where: notDeleted }),
       this.prisma.user.count({ where: { ...notDeleted, isActive: true } }),
       this.prisma.user.count({ where: { ...notDeleted, isActive: false } }),
-      this.prisma.user.count({ where: { ...notDeleted, createdAt: { gte: todayStart } } }),
+      this.prisma.user.count({
+        where: { ...notDeleted, createdAt: { gte: todayStart } },
+      }),
       this.prisma.post.count({ where: notDeleted }),
       this.prisma.post.count({ where: { ...notDeleted, isHidden: true } }),
       this.prisma.listing.count({ where: notDeleted }),
       this.prisma.listing.count({ where: { ...notDeleted, status: 'active' } }),
-      this.prisma.listing.count({ where: { ...notDeleted, status: 'suspended' } }),
+      this.prisma.listing.count({
+        where: { ...notDeleted, status: 'suspended' },
+      }),
       this.prisma.liveStream.count({ where: notDeleted }),
       this.prisma.liveStream.count({ where: { ...notDeleted, isLive: true } }),
       this.prisma.supportTicket.count({
@@ -525,7 +590,9 @@ export class AdminRepository {
           status: { not: 'CLOSED' },
         },
       }),
-      this.prisma.supportTicket.count({ where: { ...notDeleted, type: 'REPORT' } }),
+      this.prisma.supportTicket.count({
+        where: { ...notDeleted, type: 'REPORT' },
+      }),
       this.prisma.butcher.count({ where: notDeleted }),
       this.prisma.butcher.count({ where: { ...notDeleted, type: 'verified' } }),
       this.prisma.user.findMany({
@@ -550,14 +617,30 @@ export class AdminRepository {
     }
 
     return {
-      users: { total: totalUsers, active: activeUsers, banned: bannedUsers, newToday },
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        banned: bannedUsers,
+        newToday,
+      },
       posts: { total: totalPosts, hidden: hiddenPosts },
-      listings: { total: totalListings, active: activeListings, suspended: suspendedListings },
+      listings: {
+        total: totalListings,
+        active: activeListings,
+        suspended: suspendedListings,
+      },
       liveStreams: { total: totalStreams, liveNow },
-      tickets: { open: openTickets, urgent: urgentTickets, total: totalTickets },
+      tickets: {
+        open: openTickets,
+        urgent: urgentTickets,
+        total: totalTickets,
+      },
       butchers: { total: totalButchers, verified: verifiedButchers },
       charts: {
-        usersByDay: Array.from(dayMap.entries()).map(([date, count]) => ({ date, count })),
+        usersByDay: Array.from(dayMap.entries()).map(([date, count]) => ({
+          date,
+          count,
+        })),
         ticketsByCategory: ticketsByCategory.map((t) => ({
           category: t.category,
           count: t._count.category,
@@ -582,7 +665,9 @@ export class AdminRepository {
       query.dateFrom || query.dateTo
         ? {
             ...(query.dateFrom ? { gte: new Date(query.dateFrom) } : {}),
-            ...(query.dateTo ? { lte: new Date(`${query.dateTo}T23:59:59.999Z`) } : {}),
+            ...(query.dateTo
+              ? { lte: new Date(`${query.dateTo}T23:59:59.999Z`) }
+              : {}),
           }
         : undefined;
 
@@ -592,7 +677,12 @@ export class AdminRepository {
       ...(query.customerId ? { customerId: query.customerId } : {}),
       ...(createdAt ? { createdAt } : {}),
       ...(query.orderNumber?.trim()
-        ? { orderNumber: { contains: query.orderNumber.trim(), mode: 'insensitive' } }
+        ? {
+            orderNumber: {
+              contains: query.orderNumber.trim(),
+              mode: 'insensitive',
+            },
+          }
         : {}),
       ...(search?.trim()
         ? {
@@ -610,15 +700,36 @@ export class AdminRepository {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          butcher: { select: { id: true, nameAr: true, nameEn: true, userId: true } },
-          customer: { select: { id: true, arabicName: true, displayName: true, phone: true } },
+          butcher: {
+            select: { id: true, nameAr: true, nameEn: true, userId: true },
+          },
+          customer: {
+            select: {
+              id: true,
+              arabicName: true,
+              displayName: true,
+              phone: true,
+            },
+          },
           product: {
-            select: { id: true, nameAr: true, nameEn: true, availableQuantity: true, reservedQuantity: true },
+            select: {
+              id: true,
+              nameAr: true,
+              nameEn: true,
+              availableQuantity: true,
+              reservedQuantity: true,
+            },
           },
           items: {
             include: {
               product: {
-                select: { id: true, nameAr: true, nameEn: true, availableQuantity: true, reservedQuantity: true },
+                select: {
+                  id: true,
+                  nameAr: true,
+                  nameEn: true,
+                  availableQuantity: true,
+                  reservedQuantity: true,
+                },
               },
             },
           },
@@ -634,8 +745,17 @@ export class AdminRepository {
     return this.prisma.butcherOrder.findUnique({
       where: { id: orderId },
       include: {
-        butcher: { select: { id: true, nameAr: true, nameEn: true, userId: true } },
-        customer: { select: { id: true, arabicName: true, displayName: true, phone: true } },
+        butcher: {
+          select: { id: true, nameAr: true, nameEn: true, userId: true },
+        },
+        customer: {
+          select: {
+            id: true,
+            arabicName: true,
+            displayName: true,
+            phone: true,
+          },
+        },
         product: true,
         items: { include: { product: true } },
         timeline: { orderBy: { createdAt: 'asc' } },
@@ -673,10 +793,30 @@ export class AdminRepository {
 
   ensureDefaultSettings() {
     const defaults = [
-      { key: 'maintenanceMode', value: false, labelAr: 'وضع الصيانة', category: 'system' },
-      { key: 'allowRegistration', value: true, labelAr: 'السماح بالتسجيل', category: 'auth' },
-      { key: 'liveStreamsEnabled', value: true, labelAr: 'تفعيل البث المباشر', category: 'features' },
-      { key: 'butcherApplicationsEnabled', value: true, labelAr: 'طلبات الملاحم', category: 'features' },
+      {
+        key: 'maintenanceMode',
+        value: false,
+        labelAr: 'وضع الصيانة',
+        category: 'system',
+      },
+      {
+        key: 'allowRegistration',
+        value: true,
+        labelAr: 'السماح بالتسجيل',
+        category: 'auth',
+      },
+      {
+        key: 'liveStreamsEnabled',
+        value: true,
+        labelAr: 'تفعيل البث المباشر',
+        category: 'features',
+      },
+      {
+        key: 'butcherApplicationsEnabled',
+        value: true,
+        labelAr: 'طلبات الملاحم',
+        category: 'features',
+      },
       // Paid listing services — show/hide independently in the app
       {
         key: 'features.paidPromotionEnabled',
@@ -703,14 +843,49 @@ export class AdminRepository {
         category: 'paid_services',
       },
       // Listing paid-services pricing (SAR)
-      { key: 'pricing.boost.pin.per12h', value: 6, labelAr: 'تثبيت الإعلان — سعر كل 12 ساعة (ر.س)', category: 'pricing' },
-      { key: 'pricing.boost.feature.per12h', value: 5, labelAr: 'تمييز الإعلان — سعر كل 12 ساعة (ر.س)', category: 'pricing' },
-      { key: 'pricing.promotion.per24h', value: 10, labelAr: 'ترويج الظهور — الحد الأدنى للميزانية كل 24 ساعة (ر.س)', category: 'pricing' },
+      {
+        key: 'pricing.boost.pin.per12h',
+        value: 6,
+        labelAr: 'تثبيت الإعلان — سعر كل 12 ساعة (ر.س)',
+        category: 'pricing',
+      },
+      {
+        key: 'pricing.boost.feature.per12h',
+        value: 5,
+        labelAr: 'تمييز الإعلان — سعر كل 12 ساعة (ر.س)',
+        category: 'pricing',
+      },
+      {
+        key: 'pricing.promotion.per24h',
+        value: 10,
+        labelAr: 'ترويج الظهور — الحد الأدنى للميزانية كل 24 ساعة (ر.س)',
+        category: 'pricing',
+      },
       // Reach estimate factors for visibility promotion
-      { key: 'pricing.reach.budgetFactorMin', value: 9, labelAr: 'معامل الوصول الأدنى (الميزانية)', category: 'pricing' },
-      { key: 'pricing.reach.budgetFactorMax', value: 15, labelAr: 'معامل الوصول الأقصى (الميزانية)', category: 'pricing' },
-      { key: 'pricing.reach.hourFactorMin', value: 3, labelAr: 'معامل الوصول الأدنى (الساعات)', category: 'pricing' },
-      { key: 'pricing.reach.hourFactorMax', value: 5, labelAr: 'معامل الوصول الأقصى (الساعات)', category: 'pricing' },
+      {
+        key: 'pricing.reach.budgetFactorMin',
+        value: 9,
+        labelAr: 'معامل الوصول الأدنى (الميزانية)',
+        category: 'pricing',
+      },
+      {
+        key: 'pricing.reach.budgetFactorMax',
+        value: 15,
+        labelAr: 'معامل الوصول الأقصى (الميزانية)',
+        category: 'pricing',
+      },
+      {
+        key: 'pricing.reach.hourFactorMin',
+        value: 3,
+        labelAr: 'معامل الوصول الأدنى (الساعات)',
+        category: 'pricing',
+      },
+      {
+        key: 'pricing.reach.hourFactorMax',
+        value: 5,
+        labelAr: 'معامل الوصول الأقصى (الساعات)',
+        category: 'pricing',
+      },
     ];
     return Promise.all(
       defaults.map((s) =>

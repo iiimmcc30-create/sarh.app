@@ -4,7 +4,10 @@ export const PROMOTE_DURATION_HOURS_MIN = 1;
 export const PROMOTE_DURATION_HOURS_MAX = 168;
 
 export function clampPromoteAmount(value: number): number {
-  return Math.min(PROMOTE_AMOUNT_MAX, Math.max(PROMOTE_AMOUNT_MIN, Math.round(value)));
+  return Math.min(
+    PROMOTE_AMOUNT_MAX,
+    Math.max(PROMOTE_AMOUNT_MIN, Math.round(value)),
+  );
 }
 
 export function clampPromoteDurationHours(value: number): number {

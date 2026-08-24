@@ -1,7 +1,7 @@
 name: Keep-alive
 
-# Render free services sleep after idle traffic, which makes
-# https://www.sarh.app return Cloudflare 522. Ping health every 10 minutes.
+# Ping Hostinger production health endpoints so operators notice outages.
+# (Previously targeted Render free-tier cold starts — no longer applicable.)
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Wake API
-        run: curl -fsS --retry 4 --retry-delay 8 --retry-all-errors --max-time 40 https://sarh-new4.onrender.com/api/health
-      - name: Wake Socket
-        run: curl -fsS --retry 4 --retry-delay 8 --retry-all-errors --max-time 40 https://sarh-socket.onrender.com/health
+      - name: Ping API health
+        run: curl -fsS --retry 4 --retry-delay 8 --retry-all-errors --max-time 40 https://sarhsa.online/api/health
+      - name: Ping nginx /health alias
+        run: curl -fsS --retry 4 --retry-delay 8 --retry-all-errors --max-time 40 https://sarhsa.online/health

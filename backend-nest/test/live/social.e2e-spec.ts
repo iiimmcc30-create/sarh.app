@@ -33,18 +33,24 @@ describe('§6–§16 Social: profile, follow, posts, notifications, ratings, blo
 
   // ── Profile (§6) ────────────────────────────────────────────
   t('own profile is retrievable', async () => {
-    const res = await request(API).get(`/api/users/${a.id}`).set(authHeader(a.accessToken));
+    const res = await request(API)
+      .get(`/api/users/${a.id}`)
+      .set(authHeader(a.accessToken));
     expect(res.status).toBe(200);
     expect(res.body.data.id ?? res.body.data.user?.id).toBeTruthy();
   });
 
   t('another user public profile is retrievable', async () => {
-    const res = await request(API).get(`/api/users/${b.id}`).set(authHeader(a.accessToken));
+    const res = await request(API)
+      .get(`/api/users/${b.id}`)
+      .set(authHeader(a.accessToken));
     expect(res.status).toBe(200);
   });
 
   t('account settings endpoint works', async () => {
-    const res = await request(API).get('/api/users/me/account').set(authHeader(a.accessToken));
+    const res = await request(API)
+      .get('/api/users/me/account')
+      .set(authHeader(a.accessToken));
     expect(res.status).toBe(200);
   });
 
@@ -118,9 +124,13 @@ describe('§6–§16 Social: profile, follow, posts, notifications, ratings, blo
   });
 
   t('like and unlike a post (toggle)', async () => {
-    const like1 = await request(API).post(`/api/posts/${postId}/like`).set(authHeader(b.accessToken));
+    const like1 = await request(API)
+      .post(`/api/posts/${postId}/like`)
+      .set(authHeader(b.accessToken));
     expect(like1.status).toBe(200);
-    const like2 = await request(API).post(`/api/posts/${postId}/like`).set(authHeader(b.accessToken));
+    const like2 = await request(API)
+      .post(`/api/posts/${postId}/like`)
+      .set(authHeader(b.accessToken));
     expect(like2.status).toBe(200);
   });
 
@@ -140,7 +150,9 @@ describe('§6–§16 Social: profile, follow, posts, notifications, ratings, blo
   });
 
   t('cannot delete another user post → 403/404', async () => {
-    const res = await request(API).delete(`/api/posts/${postId}`).set(authHeader(b.accessToken));
+    const res = await request(API)
+      .delete(`/api/posts/${postId}`)
+      .set(authHeader(b.accessToken));
     expect([403, 404]).toContain(res.status);
   });
 
@@ -186,7 +198,9 @@ describe('§6–§16 Social: profile, follow, posts, notifications, ratings, blo
       .send({ blocked: true });
     expect(block.status).toBe(200);
 
-    const blocked = await request(API).get('/api/users/blocked').set(authHeader(a.accessToken));
+    const blocked = await request(API)
+      .get('/api/users/blocked')
+      .set(authHeader(a.accessToken));
     expect(blocked.status).toBe(200);
 
     const unblock = await request(API)
@@ -198,7 +212,9 @@ describe('§6–§16 Social: profile, follow, posts, notifications, ratings, blo
 
   // ── Notifications (§11) ─────────────────────────────────────
   t('notifications list + unread count', async () => {
-    const list = await request(API).get('/api/notifications').set(authHeader(a.accessToken));
+    const list = await request(API)
+      .get('/api/notifications')
+      .set(authHeader(a.accessToken));
     expect(list.status).toBe(200);
 
     const count = await request(API)
@@ -209,7 +225,9 @@ describe('§6–§16 Social: profile, follow, posts, notifications, ratings, blo
 
   // ── Cleanup ─────────────────────────────────────────────────
   t('owner can delete own post', async () => {
-    const res = await request(API).delete(`/api/posts/${postId}`).set(authHeader(a.accessToken));
+    const res = await request(API)
+      .delete(`/api/posts/${postId}`)
+      .set(authHeader(a.accessToken));
     expect([200, 204]).toContain(res.status);
   });
 });

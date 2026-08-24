@@ -44,4 +44,10 @@ describe('HealthService', () => {
     expect(result.status).toBe('ok');
     expect(result.checks.db).toBe(true);
   });
+
+  it('reports ready when redis is disabled and db is up', async () => {
+    const result = await health.ready();
+    expect(result.status).toBe('ready');
+    expect(result.httpStatus).toBe(200);
+  });
 });

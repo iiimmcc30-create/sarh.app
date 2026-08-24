@@ -7,7 +7,9 @@ describe('deriveEditorialStoryTitle', () => {
   });
 
   it('collapses whitespace including newlines into a single title line', () => {
-    expect(deriveEditorialStoryTitle('  مرحبا   بكم\nسطر ثاني  ')).toBe('مرحبا بكم سطر ثاني');
+    expect(deriveEditorialStoryTitle('  مرحبا   بكم\nسطر ثاني  ')).toBe(
+      'مرحبا بكم سطر ثاني',
+    );
   });
 
   it('keeps short titles without ellipsis', () => {

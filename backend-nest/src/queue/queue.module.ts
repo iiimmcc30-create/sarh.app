@@ -61,12 +61,7 @@ const bullImports = isRedisEnabled()
 
 @Global()
 @Module({
-  imports: [
-    CommonModule,
-    PrismaModule,
-    RedisModule,
-    ...bullImports,
-  ],
+  imports: [CommonModule, PrismaModule, RedisModule, ...bullImports],
   providers: [
     NotificationRepository,
     WorkerCronRepository,

@@ -11,7 +11,10 @@ import type {
 } from '../dto/support.dto';
 import { VERIFICATION_STATUS_LABEL_AR } from '../constants/support.constants';
 
-function assertSupportFileKeyOwnedByUser(fileKey: string, userId: string): void {
+function assertSupportFileKeyOwnedByUser(
+  fileKey: string,
+  userId: string,
+): void {
   const normalized = fileKey.replace(/^\/+/, '');
   const expectedPrefix = `support/${userId}/`;
   if (!normalized.startsWith(expectedPrefix)) {
@@ -52,10 +55,12 @@ export class AccountVerificationService {
 
   getMeta() {
     return {
-      statuses: Object.entries(VERIFICATION_STATUS_LABEL_AR).map(([value, labelAr]) => ({
-        value,
-        labelAr,
-      })),
+      statuses: Object.entries(VERIFICATION_STATUS_LABEL_AR).map(
+        ([value, labelAr]) => ({
+          value,
+          labelAr,
+        }),
+      ),
       documentTypes: [
         { value: 'NATIONAL_ID', labelAr: 'الهوية الوطنية' },
         { value: 'COMMERCIAL_REGISTER', labelAr: 'السجل التجاري' },
@@ -73,7 +78,9 @@ export class AccountVerificationService {
   async getUserRequest(user: JwtPayload) {
     let request = await this.repo.getVerificationByUserId(user.userId);
     if (!request) {
-      request = await this.repo.upsertVerification(user.userId, { status: 'DRAFT' });
+      request = await this.repo.upsertVerification(user.userId, {
+        status: 'DRAFT',
+      });
     }
     const userRecord = await this.prisma.user.findUnique({
       where: { id: user.userId },
@@ -97,7 +104,8 @@ export class AccountVerificationService {
       businessName: dto.businessName?.trim(),
       businessType: dto.businessType?.trim(),
       additionalInfo: dto.additionalInfo?.trim(),
-      status: existing?.status === 'NEEDS_AMENDMENTS' ? 'NEEDS_AMENDMENTS' : 'DRAFT',
+      status:
+        existing?.status === 'NEEDS_AMENDMENTS' ? 'NEEDS_AMENDMENTS' : 'DRAFT',
     });
 
     return { request };
@@ -178,7 +186,11 @@ export class AccountVerificationService {
     return { request };
   }
 
-  async updateAdmin(staff: JwtPayload, id: string, body: Record<string, unknown>) {
+  async updateAdmin(
+    staff: JwtPayload,
+    id: string,
+    body: Record<string, unknown>,
+  ) {
     const parsed = adminUpdateSchema.safeParse(body);
     if (!parsed.success) throwApi(400, 'invalid_body', 'بيانات غير صالحة');
 
@@ -211,7 +223,9 @@ export class AccountVerificationService {
       });
 
       if (status === 'UNDER_REVIEW') {
-        await this.notifications.notifyVerificationReviewStarted(existing.userId);
+        await this.notifications.notifyVerificationReviewStarted(
+          existing.userId,
+        );
       } else if (status === 'NEEDS_AMENDMENTS') {
         await this.notifications.notifyVerificationNeedsAmendments(
           existing.userId,

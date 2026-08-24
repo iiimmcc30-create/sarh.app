@@ -39,10 +39,7 @@ export class PaymentsController {
   @RateLimit('payment')
   @Post(':id/dev-complete')
   @HttpCode(200)
-  async devComplete(
-    @CurrentUser() user: JwtPayload,
-    @Param('id') id: string,
-  ) {
+  async devComplete(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return successResponse(await this.payments.simulateDevPayment(user, id));
   }
 
@@ -56,10 +53,7 @@ export class PaymentsController {
   @RateLimit('payment')
   @Post(':id/sync')
   @HttpCode(200)
-  async syncStatus(
-    @CurrentUser() user: JwtPayload,
-    @Param('id') id: string,
-  ) {
+  async syncStatus(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return successResponse(await this.payments.syncPayment(user, id));
   }
 

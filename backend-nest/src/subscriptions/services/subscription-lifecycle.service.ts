@@ -224,7 +224,10 @@ export class SubscriptionLifecycleService {
       data: { reason, previousPlanId },
     });
 
-    this.logger.info({ userId, previousPlanId, reason }, 'Subscription downgraded');
+    this.logger.info(
+      { userId, previousPlanId, reason },
+      'Subscription downgraded',
+    );
   }
 
   shouldBlockPayment(
@@ -232,10 +235,8 @@ export class SubscriptionLifecycleService {
     targetPlanId: string,
     audience: PlanAudience,
   ): boolean {
-    return shouldBlockSubscriptionPayment(
-      sub,
-      targetPlanId,
-      (slug) => this.planResolver.planTier(slug, audience),
+    return shouldBlockSubscriptionPayment(sub, targetPlanId, (slug) =>
+      this.planResolver.planTier(slug, audience),
     );
   }
 

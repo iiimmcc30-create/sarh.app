@@ -119,4 +119,3 @@ export const PLAN_FEATURE_CATALOG: PlanFeatureCatalogItem[] = [
 export const PLAN_FEATURE_LABELS_AR = Object.fromEntries(
   PLAN_FEATURE_CATALOG.map((item) => [item.key, item.labelAr]),
 ) as Record<string, string>;
-

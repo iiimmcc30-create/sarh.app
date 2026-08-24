@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { notDeleted, softDeleteFields } from '../../common/utils/soft-delete.util';
+import {
+  notDeleted,
+  softDeleteFields,
+} from '../../common/utils/soft-delete.util';
 
 const SELLER_SELECT = {
   id: true,
@@ -305,7 +308,9 @@ export class ListingsRepository {
         throw new Error('COMMENT_NOT_FOUND');
       }
 
-      const commentsCount = await tx.listingComment.count({ where: { listingId } });
+      const commentsCount = await tx.listingComment.count({
+        where: { listingId },
+      });
       await tx.listing.update({
         where: { id: listingId },
         data: { commentsCount },

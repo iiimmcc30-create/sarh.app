@@ -8,7 +8,6 @@ import {
   authHeader,
   registerUser,
   sampleListing,
-  type TestUser,
   uniqueId,
 } from './helpers';
 

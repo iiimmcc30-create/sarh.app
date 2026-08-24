@@ -153,9 +153,9 @@ export function scoreSearchMatch(
   return Math.round(score * 100) / 100;
 }
 
-export function rankSearchResults<T extends { relevance: number; createdAt?: string | Date | null }>(
-  items: T[],
-): T[] {
+export function rankSearchResults<
+  T extends { relevance: number; createdAt?: string | Date | null },
+>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     if (b.relevance !== a.relevance) return b.relevance - a.relevance;
     const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;

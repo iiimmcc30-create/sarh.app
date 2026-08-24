@@ -115,8 +115,9 @@ export class KnowledgeCenterService implements OnModuleInit {
       },
     });
 
-    let syncStats: Awaited<ReturnType<KnowledgeCenterService['syncAll']>> | null =
-      null;
+    let syncStats: Awaited<
+      ReturnType<KnowledgeCenterService['syncAll']>
+    > | null = null;
     if (options?.sync !== false) {
       syncStats = await this.syncAll();
     }
@@ -198,7 +199,10 @@ export class KnowledgeCenterService implements OnModuleInit {
       meta: { postId: post.id },
     });
 
-    this.logger.info({ postId: post.id, authorId: user.id }, 'Knowledge direct post created');
+    this.logger.info(
+      { postId: post.id, authorId: user.id },
+      'Knowledge direct post created',
+    );
     return post;
   }
 
@@ -333,9 +337,9 @@ export class KnowledgeCenterService implements OnModuleInit {
     try {
       await this.ensureKnowledgeUser();
       const sources = options?.sourceId
-        ? [
-            await this.repo.findSourceById(options.sourceId),
-          ].filter((s): s is NonNullable<typeof s> => !!s && s.enabled)
+        ? [await this.repo.findSourceById(options.sourceId)].filter(
+            (s): s is NonNullable<typeof s> => !!s && s.enabled,
+          )
         : await this.repo.listEnabledSources();
 
       stats.sources = sources.length;
@@ -424,7 +428,12 @@ export class KnowledgeCenterService implements OnModuleInit {
         ? await this.fetcher.fetchFromApi(source.url)
         : await this.fetcher.fetchFromRss(source.url);
 
-    const result = { fetched: items.length, created: 0, published: 0, skipped: 0 };
+    const result = {
+      fetched: items.length,
+      created: 0,
+      published: 0,
+      skipped: 0,
+    };
     const autoPublish = process.env.KNOWLEDGE_AUTO_PUBLISH !== 'false';
     const maxPerSource = Math.max(
       1,

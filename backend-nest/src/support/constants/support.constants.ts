@@ -12,7 +12,10 @@ export const SUPPORT_TICKET_CATEGORIES = [
 
 export type SupportTicketCategory = (typeof SUPPORT_TICKET_CATEGORIES)[number];
 
-export const SUPPORT_TICKET_CATEGORY_LABEL_AR: Record<SupportTicketCategory, string> = {
+export const SUPPORT_TICKET_CATEGORY_LABEL_AR: Record<
+  SupportTicketCategory,
+  string
+> = {
   ACCOUNT: 'الحساب',
   ADS: 'الإعلانات',
   MARKET: 'السوق',

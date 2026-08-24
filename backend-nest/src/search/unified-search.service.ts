@@ -78,39 +78,44 @@ export class UnifiedSearchService {
           items = await this.mapListings(
             query,
             tokens,
-            await this.repo.searchListings(tokens, filters, groupSkip, fetchTake),
+            await this.repo.searchListings(
+              tokens,
+              filters,
+              groupSkip,
+              fetchTake,
+            ),
           );
           break;
         case 'posts':
-          items = await this.mapPosts(
+          items = this.mapPosts(
             query,
             tokens,
             await this.repo.searchPosts(tokens, groupSkip, fetchTake),
           );
           break;
         case 'butchers':
-          items = await this.mapButchers(
+          items = this.mapButchers(
             query,
             tokens,
             await this.repo.searchButchers(tokens, groupSkip, fetchTake),
           );
           break;
         case 'news':
-          items = await this.mapNews(
+          items = this.mapNews(
             query,
             tokens,
             await this.repo.searchNews(tokens, groupSkip, fetchTake),
           );
           break;
         case 'services':
-          items = await this.mapServices(
+          items = this.mapServices(
             query,
             tokens,
             await this.repo.searchServices(tokens, groupSkip, fetchTake),
           );
           break;
         case 'users':
-          items = await this.mapUsers(
+          items = this.mapUsers(
             query,
             tokens,
             await this.repo.searchUsers(tokens, groupSkip, fetchTake),
@@ -155,9 +160,8 @@ export class UnifiedSearchService {
 
     const cacheKey = `search:suggest:v1:${prefix}:${limit}`;
     if (this.cache.isEnabled()) {
-      const cached = await this.cache.get<Array<{ text: string; kind: string }>>(
-        cacheKey,
-      );
+      const cached =
+        await this.cache.get<Array<{ text: string; kind: string }>>(cacheKey);
       if (cached) return { suggestions: cached };
     }
 
@@ -174,7 +178,9 @@ export class UnifiedSearchService {
     }
 
     if (this.cache.isEnabled()) {
-      await this.cache.set(cacheKey, suggestions, SUGGEST_CACHE_TTL_SEC).catch(() => {});
+      await this.cache
+        .set(cacheKey, suggestions, SUGGEST_CACHE_TTL_SEC)
+        .catch(() => {});
     }
 
     return { suggestions };
@@ -225,7 +231,10 @@ export class UnifiedSearchService {
         type: 'posts' as const,
         id: row.id,
         title: body.slice(0, 140),
-        subtitle: row.author.arabicName || row.author.displayName || row.author.username,
+        subtitle:
+          row.author.arabicName ||
+          row.author.displayName ||
+          row.author.username,
         imageUrl: row.images?.[0] ?? null,
         relevance,
         createdAt: row.createdAt.toISOString(),
@@ -257,7 +266,10 @@ export class UnifiedSearchService {
         type: 'butchers' as const,
         id: row.id,
         title: row.nameAr || row.nameEn,
-        subtitle: [row.cityAr || row.city, row.rating ? `⭐ ${row.rating.toFixed(1)}` : '']
+        subtitle: [
+          row.cityAr || row.city,
+          row.rating ? `⭐ ${row.rating.toFixed(1)}` : '',
+        ]
           .filter(Boolean)
           .join(' · '),
         imageUrl: row.logo ?? row.cover ?? null,

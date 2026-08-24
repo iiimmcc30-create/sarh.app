@@ -74,7 +74,9 @@ function assertWeightForCategory(
 
 describe('assertWeightForCategory', () => {
   it('throws when slaughter listing has no weight', () => {
-    expect(() => assertWeightForCategory('slaughter', null)).toThrow(ApiException);
+    expect(() => assertWeightForCategory('slaughter', null)).toThrow(
+      ApiException,
+    );
     expect(() => assertWeightForCategory('slaughter', undefined)).toThrow(
       ApiException,
     );

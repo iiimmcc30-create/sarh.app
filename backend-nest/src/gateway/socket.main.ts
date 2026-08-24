@@ -2,6 +2,7 @@ import '../load-env';
 import { NestFactory } from '@nestjs/core';
 import { LoggerService } from '../common/services/logger.service';
 import { initialiseSentry } from '../shared/lib/sentry';
+import { validateProductionEnv } from '../config/validate-production-env';
 import { GatewayModule } from './gateway.module';
 
 function printStartupError(err: unknown) {
@@ -12,6 +13,12 @@ function printStartupError(err: unknown) {
 }
 
 async function bootstrap() {
+  try {
+    validateProductionEnv();
+  } catch (err) {
+    printStartupError(err);
+    process.exit(1);
+  }
   initialiseSentry();
   const app = await NestFactory.create(GatewayModule, {
     logger: ['error', 'fatal', 'warn'],
@@ -19,8 +26,7 @@ async function bootstrap() {
   });
   app.enableShutdownHooks();
   const rawPort = process.env.PORT?.trim();
-  const port =
-    rawPort && /^\d+$/.test(rawPort) ? parseInt(rawPort, 10) : 3002;
+  const port = rawPort && /^\d+$/.test(rawPort) ? parseInt(rawPort, 10) : 3002;
   console.log(`Socket.IO binding 0.0.0.0:${port} (PORT=${rawPort ?? ''})`);
   await app.listen(port, '0.0.0.0');
 

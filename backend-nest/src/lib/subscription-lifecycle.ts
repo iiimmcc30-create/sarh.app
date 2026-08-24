@@ -26,7 +26,9 @@ export function isUpgrade(
   toPlanId: string,
   tierOf: (slug: string) => number,
 ): boolean {
-  return tierOf(normalizePlanSlug(toPlanId)) > tierOf(normalizePlanSlug(fromPlanId));
+  return (
+    tierOf(normalizePlanSlug(toPlanId)) > tierOf(normalizePlanSlug(fromPlanId))
+  );
 }
 
 /** Paid access window: active until renewDate (+ grace if autoRenew). */

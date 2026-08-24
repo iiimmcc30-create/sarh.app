@@ -53,7 +53,7 @@ export interface CommissionResult {
 export function calculateCommission(
   category: ListingCat,
   price: number,
-  quantity = 1,
+  _quantity = 1,
   permissions?: PlanPermissions,
   audience: 'USER' | 'BUTCHER' = 'USER',
 ): CommissionResult {
@@ -66,7 +66,10 @@ export function calculateCommission(
 
   // Commission applies only to non-subscribed butchers (store sales).
   if (audience !== 'BUTCHER' || category !== 'store') {
-    return { ...noFee, ruleDescription: 'لا رسوم على إعلانات المواشي والمعدات' };
+    return {
+      ...noFee,
+      ruleDescription: 'لا رسوم على إعلانات المواشي والمعدات',
+    };
   }
 
   const rule = RULES.store;

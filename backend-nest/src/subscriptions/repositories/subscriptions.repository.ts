@@ -35,9 +35,7 @@ export class SubscriptionsRepository {
       select: { role: true, butcherProfile: { select: { id: true } } },
     });
     const audience =
-      role?.role === 'BUTCHER' || role?.butcherProfile
-        ? 'BUTCHER'
-        : 'USER';
+      role?.role === 'BUTCHER' || role?.butcherProfile ? 'BUTCHER' : 'USER';
     const freePlan = await this.prisma.plan.findUnique({
       where: { slug_audience: { slug: 'free', audience } },
     });
@@ -71,7 +69,9 @@ export class SubscriptionsRepository {
     const isButcher = user?.role === 'BUTCHER' || user?.butcherProfile != null;
     if (!isButcher) return false;
 
-    const sub = await this.prisma.subscription.findUnique({ where: { userId } });
+    const sub = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
     if (!sub || sub.planAudience === 'BUTCHER') return false;
 
     const mapPlanSlug = async (slug: string): Promise<string> => {

@@ -4,7 +4,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 const notDeleted = { deletedAt: null };
 
-function paginate<T>(items: T[], total: number, page: number, pageSize: number) {
+function paginate<T>(
+  items: T[],
+  total: number,
+  page: number,
+  pageSize: number,
+) {
   return {
     items,
     total,
@@ -51,7 +56,12 @@ export class SupportRepository {
     });
   }
 
-  async listUserTickets(userId: string, page: number, pageSize: number, status?: string) {
+  async listUserTickets(
+    userId: string,
+    page: number,
+    pageSize: number,
+    status?: string,
+  ) {
     const where: Prisma.SupportTicketWhereInput = {
       ...notDeleted,
       type: 'SUPPORT',
@@ -97,7 +107,9 @@ export class SupportRepository {
         ? {
             OR: [
               { subject: { contains: search.trim(), mode: 'insensitive' } },
-              { ticketNumber: { contains: search.trim(), mode: 'insensitive' } },
+              {
+                ticketNumber: { contains: search.trim(), mode: 'insensitive' },
+              },
               { description: { contains: search.trim(), mode: 'insensitive' } },
             ],
           }
@@ -161,7 +173,10 @@ export class SupportRepository {
   getVerificationByUserId(userId: string) {
     return this.prisma.accountVerificationRequest.findUnique({
       where: { userId },
-      include: { documents: true, timeline: { orderBy: { createdAt: 'desc' } } },
+      include: {
+        documents: true,
+        timeline: { orderBy: { createdAt: 'desc' } },
+      },
     });
   }
 
@@ -191,9 +206,19 @@ export class SupportRepository {
             OR: [
               { fullName: { contains: search.trim(), mode: 'insensitive' } },
               { nationalId: { contains: search.trim(), mode: 'insensitive' } },
-              { businessName: { contains: search.trim(), mode: 'insensitive' } },
-              { user: { username: { contains: search.trim(), mode: 'insensitive' } } },
-              { user: { arabicName: { contains: search.trim(), mode: 'insensitive' } } },
+              {
+                businessName: { contains: search.trim(), mode: 'insensitive' },
+              },
+              {
+                user: {
+                  username: { contains: search.trim(), mode: 'insensitive' },
+                },
+              },
+              {
+                user: {
+                  arabicName: { contains: search.trim(), mode: 'insensitive' },
+                },
+              },
             ],
           }
         : {}),
@@ -213,14 +238,18 @@ export class SupportRepository {
     return paginate(items, total, page, pageSize);
   }
 
-  upsertVerification(userId: string, data: {
-    fullName?: string | null;
-    nationalId?: string | null;
-    businessName?: string | null;
-    businessType?: string | null;
-    additionalInfo?: string | null;
-    status?: 'DRAFT' | 'UNDER_REVIEW' | 'NEEDS_AMENDMENTS' | 'VERIFIED' | 'REJECTED';
-  }) {
+  upsertVerification(
+    userId: string,
+    data: {
+      fullName?: string | null;
+      nationalId?: string | null;
+      businessName?: string | null;
+      businessType?: string | null;
+      additionalInfo?: string | null;
+      status?:
+        'DRAFT' | 'UNDER_REVIEW' | 'NEEDS_AMENDMENTS' | 'VERIFIED' | 'REJECTED';
+    },
+  ) {
     return this.prisma.accountVerificationRequest.upsert({
       where: { userId },
       create: {
@@ -228,11 +257,17 @@ export class SupportRepository {
         ...data,
       },
       update: data,
-      include: { documents: true, timeline: { orderBy: { createdAt: 'desc' } } },
+      include: {
+        documents: true,
+        timeline: { orderBy: { createdAt: 'desc' } },
+      },
     });
   }
 
-  updateVerification(id: string, data: Prisma.AccountVerificationRequestUpdateInput) {
+  updateVerification(
+    id: string,
+    data: Prisma.AccountVerificationRequestUpdateInput,
+  ) {
     return this.prisma.accountVerificationRequest.update({
       where: { id },
       data,
@@ -255,11 +290,17 @@ export class SupportRepository {
     });
   }
 
-  addVerificationTimeline(data: Prisma.AccountVerificationTimelineEventCreateInput) {
+  addVerificationTimeline(
+    data: Prisma.AccountVerificationTimelineEventCreateInput,
+  ) {
     return this.prisma.accountVerificationTimelineEvent.create({ data });
   }
 
-  async listFaqs(query: { search?: string; category?: string; activeOnly?: boolean }) {
+  async listFaqs(query: {
+    search?: string;
+    category?: string;
+    activeOnly?: boolean;
+  }) {
     const { search, category, activeOnly = true } = query;
     const where: Prisma.FaqWhereInput = {
       ...notDeleted,

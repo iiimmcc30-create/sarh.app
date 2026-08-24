@@ -9,7 +9,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { RateLimit, Public } from '../../common/decorators/auth.decorators';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -132,23 +140,38 @@ export class ListingPromotionController {
   @UseGuards(JwtAuthGuard)
   @RateLimit('api')
   @Get(':listingId/promotion/stats')
-  async stats(@Param('listingId') listingId: string, @CurrentUser() user: JwtPayload) {
-    return successResponse(await this.promotions.getPromotionStats(user, listingId));
+  async stats(
+    @Param('listingId') listingId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(
+      await this.promotions.getPromotionStats(user, listingId),
+    );
   }
 
   @Public()
   @RateLimit('api')
   @Post(':listingId/promotion/track')
   @HttpCode(HttpStatus.OK)
-  async track(@Param('listingId') listingId: string, @Body() dto: TrackPromotionEventDto) {
-    return successResponse(await this.promotions.trackPromotionEvent(listingId, dto.event));
+  async track(
+    @Param('listingId') listingId: string,
+    @Body() dto: TrackPromotionEventDto,
+  ) {
+    return successResponse(
+      await this.promotions.trackPromotionEvent(listingId, dto.event),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @RateLimit('api')
   @Post('promotion/:promotionId/dev-complete')
   @HttpCode(HttpStatus.OK)
-  async devComplete(@Param('promotionId') promotionId: string, @CurrentUser() user: JwtPayload) {
-    return successResponse(await this.promotions.devCompletePromotion(user, promotionId));
+  async devComplete(
+    @Param('promotionId') promotionId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(
+      await this.promotions.devCompletePromotion(user, promotionId),
+    );
   }
 }

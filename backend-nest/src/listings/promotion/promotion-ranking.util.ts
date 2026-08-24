@@ -35,8 +35,12 @@ export function interleavePromotedListings<T extends RankableListing>(
   const pinned = listings.filter((l) => l.pinned).sort(byFeaturedThenWeight);
   const rest = listings.filter((l) => !l.pinned);
 
-  const promotedPool = rest.filter((l) => l.promoted).sort(byFeaturedThenWeight);
-  const regularPool = rest.filter((l) => !l.promoted).sort(byFeaturedThenWeight);
+  const promotedPool = rest
+    .filter((l) => l.promoted)
+    .sort(byFeaturedThenWeight);
+  const regularPool = rest
+    .filter((l) => !l.promoted)
+    .sort(byFeaturedThenWeight);
 
   if (promotedPool.length === 0) {
     return [...pinned, ...regularPool];
@@ -46,7 +50,8 @@ export function interleavePromotedListings<T extends RankableListing>(
   let promoIdx = 0;
   let regularIdx = 0;
   let sinceLastPromo = intervalMax;
-  let nextSlot = intervalMin + Math.floor(Math.random() * (intervalMax - intervalMin + 1));
+  let nextSlot =
+    intervalMin + Math.floor(Math.random() * (intervalMax - intervalMin + 1));
 
   while (regularIdx < regularPool.length || promoIdx < promotedPool.length) {
     const shouldInsertPromo =
@@ -56,7 +61,9 @@ export function interleavePromotedListings<T extends RankableListing>(
     if (shouldInsertPromo) {
       merged.push(promotedPool[promoIdx++]);
       sinceLastPromo = 0;
-      nextSlot = intervalMin + Math.floor(Math.random() * (intervalMax - intervalMin + 1));
+      nextSlot =
+        intervalMin +
+        Math.floor(Math.random() * (intervalMax - intervalMin + 1));
       continue;
     }
 
@@ -74,7 +81,9 @@ export function interleavePromotedListings<T extends RankableListing>(
 }
 
 /** Search ranking boost from promotion weight (does not override pin/feature). */
-export function promotionSearchScore(weight: number | undefined | null): number {
+export function promotionSearchScore(
+  weight: number | undefined | null,
+): number {
   if (!weight || weight <= 0) return 0;
   return Math.min(weight / 100, 3);
 }

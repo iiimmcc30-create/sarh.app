@@ -5,7 +5,11 @@ import {
   apiSuccess,
   rateLimitFailure,
 } from '../dto/api-response.dto';
-import { softDeleteFields, notDeleted, retentionCutoff } from './soft-delete.util';
+import {
+  softDeleteFields,
+  notDeleted,
+  retentionCutoff,
+} from './soft-delete.util';
 import { isLivestockCategory } from '../../listings/listing-categories';
 
 describe('API response helpers', () => {
@@ -17,7 +21,9 @@ describe('API response helpers', () => {
   });
 
   it('errorResponse includes Arabic message and optional details', () => {
-    const res = errorResponse('bad_request', 'طلب غير صالح', { field: 'email' });
+    const res = errorResponse('bad_request', 'طلب غير صالح', {
+      field: 'email',
+    });
     expect(res.success).toBe(false);
     expect(res.error).toBe('bad_request');
     expect(res.messageAr).toBe('طلب غير صالح');

@@ -47,8 +47,12 @@ describe('commissions', () => {
   });
 
   it('shouldCreateFee respects audience and category', () => {
-    expect(shouldCreateFee('store', { storeCommission: 5 }, 'BUTCHER')).toBe(true);
-    expect(shouldCreateFee('store', { storeCommission: 0 }, 'BUTCHER')).toBe(false);
+    expect(shouldCreateFee('store', { storeCommission: 5 }, 'BUTCHER')).toBe(
+      true,
+    );
+    expect(shouldCreateFee('store', { storeCommission: 0 }, 'BUTCHER')).toBe(
+      false,
+    );
     expect(shouldCreateFee('sheep', {}, 'USER')).toBe(false);
   });
 });

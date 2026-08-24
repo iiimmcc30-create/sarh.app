@@ -55,7 +55,9 @@ export class ButcherRankingService {
   }
 
   async onFavoriteChanged(butcherId: string): Promise<void> {
-    const count = await this.prisma.butcherFavorite.count({ where: { butcherId } });
+    const count = await this.prisma.butcherFavorite.count({
+      where: { butcherId },
+    });
     await this.prisma.butcher.update({
       where: { id: butcherId },
       data: { favoritesCount: count },
@@ -124,12 +126,10 @@ export class ButcherRankingService {
     return ids.length;
   }
 
-  private normalizeButcher(
-    butcher: ButcherMetrics,
-    bounds: PlatformBounds,
-  ) {
+  private normalizeButcher(butcher: ButcherMetrics, bounds: PlatformBounds) {
     const ratingEligible =
-      butcher.completedOrdersCount >= MIN_ORDERS_FOR_RATING && butcher.reviewCount > 0;
+      butcher.completedOrdersCount >= MIN_ORDERS_FOR_RATING &&
+      butcher.reviewCount > 0;
     const ratingValue = ratingEligible ? butcher.rating : 0;
 
     const speedRaw = speedRawScore(
@@ -169,7 +169,11 @@ export class ButcherRankingService {
         bounds.minDistanceKm,
         bounds.maxDistanceKm,
       ),
-      normalizedSpeed: minMaxNormalize(speedRaw, bounds.minSpeed, bounds.maxSpeed),
+      normalizedSpeed: minMaxNormalize(
+        speedRaw,
+        bounds.minSpeed,
+        bounds.maxSpeed,
+      ),
     };
   }
 
@@ -206,7 +210,12 @@ export class ButcherRankingService {
     const distances = butchers
       .filter((b) => b.lat != null && b.lng != null)
       .map((b) =>
-        distanceKm(b.lat!, b.lng!, PLATFORM_REFERENCE_LAT, PLATFORM_REFERENCE_LNG),
+        distanceKm(
+          b.lat!,
+          b.lng!,
+          PLATFORM_REFERENCE_LAT,
+          PLATFORM_REFERENCE_LNG,
+        ),
       );
 
     const bounds: PlatformBounds = {
@@ -232,8 +241,12 @@ export class ButcherRankingService {
     });
 
     const [deliveredCount, cancelledCount] = await Promise.all([
-      this.prisma.butcherOrder.count({ where: { butcherId, status: 'delivered' } }),
-      this.prisma.butcherOrder.count({ where: { butcherId, status: 'cancelled' } }),
+      this.prisma.butcherOrder.count({
+        where: { butcherId, status: 'delivered' },
+      }),
+      this.prisma.butcherOrder.count({
+        where: { butcherId, status: 'cancelled' },
+      }),
     ]);
     const total = deliveredCount + cancelledCount;
     const orderCompletionRate =
@@ -254,8 +267,12 @@ export class ButcherRankingService {
 
   private async refreshCompletionRate(butcherId: string): Promise<void> {
     const [deliveredCount, cancelledCount] = await Promise.all([
-      this.prisma.butcherOrder.count({ where: { butcherId, status: 'delivered' } }),
-      this.prisma.butcherOrder.count({ where: { butcherId, status: 'cancelled' } }),
+      this.prisma.butcherOrder.count({
+        where: { butcherId, status: 'delivered' },
+      }),
+      this.prisma.butcherOrder.count({
+        where: { butcherId, status: 'cancelled' },
+      }),
     ]);
     const total = deliveredCount + cancelledCount;
     const orderCompletionRate =

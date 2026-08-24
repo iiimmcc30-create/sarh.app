@@ -52,13 +52,10 @@ export class AISummarizerService {
   private fallbackSummarize(input: SummarizeInput): SummarizeResult {
     const snippet = (input.content || input.title).trim().replace(/\s+/g, ' ');
     const summaryBody =
-      snippet.length > 450 ? `${snippet.slice(0, 447)}...` : snippet || input.title;
-    const summary = [
-      summaryBody,
-      '',
-      '🔗 المصدر:',
-      input.sourceUrl,
-    ].join('\n');
+      snippet.length > 450
+        ? `${snippet.slice(0, 447)}...`
+        : snippet || input.title;
+    const summary = [summaryBody, '', '🔗 المصدر:', input.sourceUrl].join('\n');
 
     this.logger.info(
       { sourceUrl: input.sourceUrl },
@@ -113,7 +110,10 @@ export class AISummarizerService {
 
       return { titleAr, summary };
     } catch (err) {
-      this.logger.error({ err, sourceUrl: input.sourceUrl }, 'AI summarize failed — using fallback');
+      this.logger.error(
+        { err, sourceUrl: input.sourceUrl },
+        'AI summarize failed — using fallback',
+      );
       return this.fallbackSummarize(input);
     }
   }

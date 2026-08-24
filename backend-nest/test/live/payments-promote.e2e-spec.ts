@@ -47,36 +47,41 @@ describe('§14–§15 Payments & Promotion', () => {
   });
 
   t('user subscriptions endpoint (auth)', async () => {
-    const res = await request(API).get('/api/subscriptions').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/subscriptions')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(200);
   });
 
   // ── Promotion pricing table (§15) ───────────────────────────
-  t('boost plans expose exact pin/feature/both pricing for 1/3/7 days', async () => {
-    const res = await request(API).get('/api/listings/boost/plans');
-    expect(res.status).toBe(200);
-    const { featured, pinned, both } = res.body.data;
+  t(
+    'boost plans expose exact pin/feature/both pricing for 1/3/7 days',
+    async () => {
+      const res = await request(API).get('/api/listings/boost/plans');
+      expect(res.status).toBe(200);
+      const { featured, pinned, both } = res.body.data;
 
-    const byDays = (arr: { durationDays: number; amount: number }[]) =>
-      Object.fromEntries(arr.map((p) => [p.durationDays, p.amount]));
+      const byDays = (arr: { durationDays: number; amount: number }[]) =>
+        Object.fromEntries(arr.map((p) => [p.durationDays, p.amount]));
 
-    const f = byDays(featured);
-    const p = byDays(pinned);
-    const bth = byDays(both);
+      const f = byDays(featured);
+      const p = byDays(pinned);
+      const bth = byDays(both);
 
-    // Featured (تمييز)
-    expect(f[3]).toBe(30);
-    expect(f[7]).toBe(70);
-    // Pinned (تثبيت)
-    expect(p[3]).toBe(36);
-    expect(p[7]).toBe(84);
-    // Both (تثبيت + تمييز)
-    expect(bth[3]).toBe(66);
-    expect(bth[7]).toBe(154);
-    // both == pinned + featured
-    expect(bth[3]).toBe(p[3] + f[3]);
-    expect(bth[7]).toBe(p[7] + f[7]);
-  });
+      // Featured (تمييز)
+      expect(f[3]).toBe(30);
+      expect(f[7]).toBe(70);
+      // Pinned (تثبيت)
+      expect(p[3]).toBe(36);
+      expect(p[7]).toBe(84);
+      // Both (تثبيت + تمييز)
+      expect(bth[3]).toBe(66);
+      expect(bth[7]).toBe(154);
+      // both == pinned + featured
+      expect(bth[3]).toBe(p[3] + f[3]);
+      expect(bth[7]).toBe(p[7] + f[7]);
+    },
+  );
 
   t('promotion plans (visibility tiers) are public', async () => {
     const res = await request(API).get('/api/listings/promotion/plans');
@@ -115,24 +120,29 @@ describe('§14–§15 Payments & Promotion', () => {
   };
 
   // ── Payment initiation (§14) ────────────────────────────────
-  t('initiate a subscription payment (auth) is handled (checkout or graceful gateway error)', async () => {
-    const plans = await request(API).get('/api/plans');
-    const plan = (plans.body.data.plans ?? []).find(
-      (p: { monthlyPrice?: number }) => (p.monthlyPrice ?? 0) > 0,
-    ) ?? (plans.body.data.plans ?? [])[0];
-    if (!plan) return;
-    const res = await request(API)
-      .post('/api/payments/initiate')
-      .set(authHeader(user.accessToken))
-      .send({
-        amount: plan.monthlyPrice && plan.monthlyPrice > 0 ? plan.monthlyPrice : 25,
-        method: 'visa',
-        type: 'subscription',
-        planId: plan.id,
-        billingCycle: 'monthly',
-      });
-    assertGatewayOrOk(res);
-  });
+  t(
+    'initiate a subscription payment (auth) is handled (checkout or graceful gateway error)',
+    async () => {
+      const plans = await request(API).get('/api/plans');
+      const plan =
+        (plans.body.data.plans ?? []).find(
+          (p: { monthlyPrice?: number }) => (p.monthlyPrice ?? 0) > 0,
+        ) ?? (plans.body.data.plans ?? [])[0];
+      if (!plan) return;
+      const res = await request(API)
+        .post('/api/payments/initiate')
+        .set(authHeader(user.accessToken))
+        .send({
+          amount:
+            plan.monthlyPrice && plan.monthlyPrice > 0 ? plan.monthlyPrice : 25,
+          method: 'visa',
+          type: 'subscription',
+          planId: plan.id,
+          billingCycle: 'monthly',
+        });
+      assertGatewayOrOk(res);
+    },
+  );
 
   t('initiate payment without auth → 401', async () => {
     const res = await request(API)
@@ -142,14 +152,17 @@ describe('§14–§15 Payments & Promotion', () => {
   });
 
   // ── Boost payment via listing (§15) ─────────────────────────
-  t('start a boost on own listing initiates payment (or graceful gateway error)', async () => {
-    if (!listingId) return;
-    const res = await request(API)
-      .post(`/api/listings/${listingId}/boost`)
-      .set(authHeader(user.accessToken))
-      .send({ boostType: 'featured', durationDays: 3, method: 'visa' });
-    assertGatewayOrOk(res);
-  });
+  t(
+    'start a boost on own listing initiates payment (or graceful gateway error)',
+    async () => {
+      if (!listingId) return;
+      const res = await request(API)
+        .post(`/api/listings/${listingId}/boost`)
+        .set(authHeader(user.accessToken))
+        .send({ boostType: 'featured', durationDays: 3, method: 'visa' });
+      assertGatewayOrOk(res);
+    },
+  );
 
   t('boost without auth → 401', async () => {
     if (!listingId) return;
@@ -161,7 +174,9 @@ describe('§14–§15 Payments & Promotion', () => {
 
   afterAll(async () => {
     if (live && listingId) {
-      await request(API).delete(`/api/listings/${listingId}`).set(authHeader(user.accessToken));
+      await request(API)
+        .delete(`/api/listings/${listingId}`)
+        .set(authHeader(user.accessToken));
     }
   });
 });

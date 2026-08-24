@@ -5,8 +5,9 @@ import axios from 'axios';
 jest.mock('axios');
 
 describe('NewsFetcherService', () => {
+  const logError = jest.fn();
   const logger = {
-    error: jest.fn(),
+    error: logError,
     info: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
@@ -38,9 +39,9 @@ describe('NewsFetcherService', () => {
     const err = new Error('network');
     jest.spyOn((service as any).parser, 'parseURL').mockRejectedValue(err);
 
-    await expect(service.fetchFromRss('https://bad.example/rss')).rejects.toThrow(
-      'network',
-    );
-    expect(logger.error).toHaveBeenCalled();
+    await expect(
+      service.fetchFromRss('https://bad.example/rss'),
+    ).rejects.toThrow('network');
+    expect(logError).toHaveBeenCalled();
   });
 });

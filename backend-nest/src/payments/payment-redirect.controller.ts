@@ -8,7 +8,10 @@ const APP_SCHEME = (process.env.APP_DEEP_LINK_SCHEME ?? 'safat').replace(
 );
 const ANDROID_PACKAGE = process.env.APP_ANDROID_PACKAGE ?? 'com.safat.app';
 
-function buildDeepLink(path: string, query: Record<string, string | undefined>) {
+function buildDeepLink(
+  path: string,
+  query: Record<string, string | undefined>,
+) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value) params.set(key, value);

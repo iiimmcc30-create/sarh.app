@@ -19,8 +19,16 @@ import { AppModule } from './app.module';
 import { logger } from './shared/lib/logger';
 import { initialiseSentry } from './shared/lib/sentry';
 import { isAllowedCorsOrigin } from './lib/cors-origins';
+import { validateProductionEnv } from './config/validate-production-env';
 
 async function bootstrap() {
+  try {
+    validateProductionEnv();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(message);
+    process.exit(1);
+  }
   initialiseSentry();
   const app = await NestFactory.create(AppModule, { bodyParser: false });
 
@@ -76,6 +84,15 @@ async function bootstrap() {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (
+      process.env.NODE_ENV === 'production' &&
+      (req.headers['x-forwarded-proto'] === 'https' || req.secure === true)
+    ) {
+      res.setHeader(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains',
+      );
+    }
 
     if (req.method === 'OPTIONS') {
       return res.status(204).end();

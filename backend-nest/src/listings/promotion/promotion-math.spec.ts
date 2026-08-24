@@ -47,7 +47,9 @@ describe('estimatePromotionReach', () => {
   it('applies default factors and clamps duration', () => {
     const reach = estimatePromotionReach(20, 6, DEFAULT_REACH_FACTORS);
     expect(reach.min).toBe(Math.max(50, Math.round(20 * 9 + 6 * 3)));
-    expect(reach.max).toBe(Math.max(reach.min + 30, Math.round(20 * 15 + 6 * 5)));
+    expect(reach.max).toBe(
+      Math.max(reach.min + 30, Math.round(20 * 15 + 6 * 5)),
+    );
     expect(reach.max).toBeGreaterThan(reach.min);
   });
 
@@ -81,7 +83,9 @@ describe('promotion ranking', () => {
     ];
     const out = interleavePromotedListings(input, 6, 6);
     expect(out[0].id).toBe('p1');
-    expect(out.map((x) => x.id).sort()).toEqual(['m1', 'p1', 'r1', 'r2'].sort());
+    expect(out.map((x) => x.id).sort()).toEqual(
+      ['m1', 'p1', 'r1', 'r2'].sort(),
+    );
   });
 
   it('returns input unchanged for empty/single lists', () => {

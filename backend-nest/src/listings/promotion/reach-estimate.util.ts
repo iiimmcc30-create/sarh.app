@@ -28,7 +28,17 @@ export function estimatePromotionReach(
   factors: ReachFactors = DEFAULT_REACH_FACTORS,
 ): ReachEstimate {
   const durationHours = clampPromoteDurationHours(rawDurationHours);
-  const min = Math.max(50, Math.round(amount * factors.budgetFactorMin + durationHours * factors.hourFactorMin));
-  const max = Math.max(min + 30, Math.round(amount * factors.budgetFactorMax + durationHours * factors.hourFactorMax));
+  const min = Math.max(
+    50,
+    Math.round(
+      amount * factors.budgetFactorMin + durationHours * factors.hourFactorMin,
+    ),
+  );
+  const max = Math.max(
+    min + 30,
+    Math.round(
+      amount * factors.budgetFactorMax + durationHours * factors.hourFactorMax,
+    ),
+  );
   return { min, max };
 }

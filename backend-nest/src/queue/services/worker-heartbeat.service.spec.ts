@@ -1,11 +1,16 @@
-import { readWorkerHeartbeat, WORKER_HEARTBEAT_KEY } from './worker-heartbeat.service';
+import {
+  readWorkerHeartbeat,
+  WORKER_HEARTBEAT_KEY,
+} from './worker-heartbeat.service';
 import { RedisCacheService } from '../../redis/services/redis-cache.service';
 
 describe('readWorkerHeartbeat', () => {
   it('returns true when heartbeat key is fresh', async () => {
     const client = {
       status: 'ready',
-      get: jest.fn().mockResolvedValue(JSON.stringify({ ts: Date.now(), pid: 1 })),
+      get: jest
+        .fn()
+        .mockResolvedValue(JSON.stringify({ ts: Date.now(), pid: 1 })),
     };
     const cache = {
       isEnabled: () => true,

@@ -34,6 +34,7 @@ import {
   type NiLogFn,
 } from './ni-client';
 import { IntegrationCheckoutService } from '../integrations/services/integration-checkout.service';
+import { redactSensitive } from '../integrations/utils/redact.util';
 import { PaidServicesService } from '../settings/paid-services.service';
 import { Sentry } from '../shared/lib/sentry';
 
@@ -750,7 +751,14 @@ export class PaymentsService
     try {
       await this.handleNIWebhook(event);
     } catch (err) {
-      this.logger.error({ err, event }, 'NI Webhook processing error');
+      this.logger.error(
+        {
+          err: err instanceof Error ? err.message : String(err),
+          eventName: String(event.eventName ?? event.type ?? ''),
+          payload: redactSensitive(event),
+        },
+        'NI Webhook processing error',
+      );
       Sentry.captureException(err);
       return { status: 500, body: { error: 'webhook_processing_failed' } };
     }

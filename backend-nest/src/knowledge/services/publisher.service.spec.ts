@@ -5,22 +5,32 @@ import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 
 describe('PublisherService', () => {
+  const findArticleById = jest.fn();
+  const findKnowledgeUser = jest.fn();
+  const createPost = jest.fn();
+  const updateArticle = jest.fn();
+  const softHidePost = jest.fn();
+  const findFollowerIds = jest.fn().mockResolvedValue([]);
+  const cacheDel = jest.fn().mockResolvedValue(undefined);
+  const delPattern = jest.fn().mockResolvedValue(0);
+  const notifyUsers = jest.fn().mockResolvedValue(undefined);
+
   const repo = {
-    findArticleById: jest.fn(),
-    findKnowledgeUser: jest.fn(),
-    createPost: jest.fn(),
-    updateArticle: jest.fn(),
-    softHidePost: jest.fn(),
-    findFollowerIds: jest.fn().mockResolvedValue([]),
+    findArticleById,
+    findKnowledgeUser,
+    createPost,
+    updateArticle,
+    softHidePost,
+    findFollowerIds,
   } as unknown as KnowledgeRepository;
 
   const cache = {
-    del: jest.fn().mockResolvedValue(undefined),
-    delPattern: jest.fn().mockResolvedValue(0),
+    del: cacheDel,
+    delPattern,
   } as unknown as RedisCacheService;
 
   const notifications = {
-    notifyUsers: jest.fn().mockResolvedValue(undefined),
+    notifyUsers,
   } as unknown as AppNotificationsService;
 
   const logger = {
@@ -33,7 +43,7 @@ describe('PublisherService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (repo.findFollowerIds as jest.Mock).mockResolvedValue([]);
+    findFollowerIds.mockResolvedValue([]);
   });
 
   it('builds post body with trusted tag and source metadata', () => {
@@ -51,7 +61,7 @@ describe('PublisherService', () => {
   });
 
   it('publishes pending summarized articles as posts', async () => {
-    (repo.findArticleById as jest.Mock).mockResolvedValue({
+    findArticleById.mockResolvedValue({
       id: 'a1',
       status: 'PENDING',
       postId: null,
@@ -60,25 +70,25 @@ describe('PublisherService', () => {
       publishedAt: new Date(),
       source: { name: 'MEWA' },
     });
-    (repo.findKnowledgeUser as jest.Mock).mockResolvedValue({
+    findKnowledgeUser.mockResolvedValue({
       id: 'u-ai',
       arabicName: 'مركز المعرفة',
     });
-    (repo.createPost as jest.Mock).mockResolvedValue({ id: 'p1' });
-    (repo.updateArticle as jest.Mock).mockResolvedValue({
+    createPost.mockResolvedValue({ id: 'p1' });
+    updateArticle.mockResolvedValue({
       id: 'a1',
       status: 'PUBLISHED',
       postId: 'p1',
     });
-    (repo.findFollowerIds as jest.Mock).mockResolvedValue([
+    findFollowerIds.mockResolvedValue([
       { followerId: 'u1' },
       { followerId: 'u2' },
     ]);
 
     const result = await service.publishArticle('a1');
-    expect(repo.createPost).toHaveBeenCalled();
-    expect(repo.updateArticle).toHaveBeenCalled();
-    expect(notifications.notifyUsers).toHaveBeenCalledWith(
+    expect(createPost).toHaveBeenCalled();
+    expect(updateArticle).toHaveBeenCalled();
+    expect(notifyUsers).toHaveBeenCalledWith(
       ['u1', 'u2'],
       expect.objectContaining({
         titleAr: 'منشور جديد من مركز المعرفة',
@@ -86,22 +96,22 @@ describe('PublisherService', () => {
       }),
     );
     expect(result.status).toBe('PUBLISHED');
-    expect(cache.del).toHaveBeenCalledWith('posts:feed:first');
+    expect(cacheDel).toHaveBeenCalledWith('posts:feed:first');
   });
 
   it('rejects articles and hides linked posts', async () => {
-    (repo.findArticleById as jest.Mock).mockResolvedValue({
+    findArticleById.mockResolvedValue({
       id: 'a1',
       status: 'PUBLISHED',
       postId: 'p1',
     });
-    (repo.updateArticle as jest.Mock).mockResolvedValue({
+    updateArticle.mockResolvedValue({
       id: 'a1',
       status: 'REJECTED',
     });
 
     await service.rejectArticle('a1', 'محتوى غير مناسب');
-    expect(repo.softHidePost).toHaveBeenCalledWith('p1');
-    expect(repo.updateArticle).toHaveBeenCalled();
+    expect(softHidePost).toHaveBeenCalledWith('p1');
+    expect(updateArticle).toHaveBeenCalled();
   });
 });

@@ -81,10 +81,14 @@ export const DEFAULT_HOME_EXPLORE_DESTINATIONS: HomeExploreDestinationKey[] = [
   'promote',
 ];
 
-export function getExploreCatalogEntry(key: string): HomeExploreCatalogEntry | undefined {
+export function getExploreCatalogEntry(
+  key: string,
+): HomeExploreCatalogEntry | undefined {
   return HOME_EXPLORE_CATALOG.find((item) => item.key === key);
 }
 
-export function isExploreDestinationKey(key: string): key is HomeExploreDestinationKey {
+export function isExploreDestinationKey(
+  key: string,
+): key is HomeExploreDestinationKey {
   return HOME_EXPLORE_CATALOG.some((item) => item.key === key);
 }

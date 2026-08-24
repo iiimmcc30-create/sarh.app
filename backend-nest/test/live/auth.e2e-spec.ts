@@ -30,13 +30,17 @@ describe('§1 Auth: registration, OTP, login, session, security', () => {
 
   // ── OTP send ────────────────────────────────────────────────
   t('send-otp with a valid phone succeeds', async () => {
-    const res = await request(API).post('/api/auth/send-otp').send({ phone: randomSaudiPhone() });
+    const res = await request(API)
+      .post('/api/auth/send-otp')
+      .send({ phone: randomSaudiPhone() });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
   });
 
   t('send-otp with invalid phone → 400', async () => {
-    const res = await request(API).post('/api/auth/send-otp').send({ phone: 'not-a-phone' });
+    const res = await request(API)
+      .post('/api/auth/send-otp')
+      .send({ phone: 'not-a-phone' });
     expect(res.status).toBe(400);
   });
 
@@ -49,23 +53,32 @@ describe('§1 Auth: registration, OTP, login, session, security', () => {
   t('verify-otp with wrong code → 400', async () => {
     const phone = randomSaudiPhone();
     await request(API).post('/api/auth/send-otp').send({ phone });
-    const res = await request(API).post('/api/auth/verify-otp').send({ phone, code: '000000' });
+    const res = await request(API)
+      .post('/api/auth/verify-otp')
+      .send({ phone, code: '000000' });
     expect(res.status).toBe(400);
   });
 
   t('verify-otp empty code → 400', async () => {
-    const res = await request(API).post('/api/auth/verify-otp').send({ phone: randomSaudiPhone(), code: '' });
+    const res = await request(API)
+      .post('/api/auth/verify-otp')
+      .send({ phone: randomSaudiPhone(), code: '' });
     expect(res.status).toBe(400);
   });
 
-  t('verify-otp valid → phone_token + is_new_user for unused number', async () => {
-    const phone = randomSaudiPhone();
-    await request(API).post('/api/auth/send-otp').send({ phone });
-    const res = await request(API).post('/api/auth/verify-otp').send({ phone, code: DEV_OTP });
-    expect(res.status).toBe(200);
-    expect(res.body.data.phone_token).toBeTruthy();
-    expect(res.body.data.is_new_user).toBe(true);
-  });
+  t(
+    'verify-otp valid → phone_token + is_new_user for unused number',
+    async () => {
+      const phone = randomSaudiPhone();
+      await request(API).post('/api/auth/send-otp').send({ phone });
+      const res = await request(API)
+        .post('/api/auth/verify-otp')
+        .send({ phone, code: DEV_OTP });
+      expect(res.status).toBe(200);
+      expect(res.body.data.phone_token).toBeTruthy();
+      expect(res.body.data.is_new_user).toBe(true);
+    },
+  );
 
   // ── Registration ────────────────────────────────────────────
   t('full registration creates account and returns tokens', async () => {
@@ -78,7 +91,9 @@ describe('§1 Auth: registration, OTP, login, session, security', () => {
   t('registration with duplicate username is rejected', async () => {
     const phone = randomSaudiPhone();
     await request(API).post('/api/auth/send-otp').send({ phone });
-    const verify = await request(API).post('/api/auth/verify-otp').send({ phone, code: DEV_OTP });
+    const verify = await request(API)
+      .post('/api/auth/verify-otp')
+      .send({ phone, code: DEV_OTP });
     const res = await request(API).post('/api/auth/register').send({
       phone,
       phone_token: verify.body.data.phone_token,
@@ -91,7 +106,9 @@ describe('§1 Auth: registration, OTP, login, session, security', () => {
   });
 
   t('registration with missing fields → 400', async () => {
-    const res = await request(API).post('/api/auth/register').send({ phone: randomSaudiPhone() });
+    const res = await request(API)
+      .post('/api/auth/register')
+      .send({ phone: randomSaudiPhone() });
     expect(res.status).toBe(400);
   });
 
@@ -114,27 +131,35 @@ describe('§1 Auth: registration, OTP, login, session, security', () => {
   });
 
   t('login with unknown user → 401', async () => {
-    const res = await request(API).post('/api/auth/login').send({
-      login: `ghost_${uniqueId()}`,
-      password: 'whatever12',
-    });
+    const res = await request(API)
+      .post('/api/auth/login')
+      .send({
+        login: `ghost_${uniqueId()}`,
+        password: 'whatever12',
+      });
     expect(res.status).toBe(401);
   });
 
   // ── Refresh / session ───────────────────────────────────────
   t('refresh token returns a new access token', async () => {
-    const res = await request(API).post('/api/auth/refresh').send({ refreshToken: user.refreshToken });
+    const res = await request(API)
+      .post('/api/auth/refresh')
+      .send({ refreshToken: user.refreshToken });
     expect(res.status).toBe(200);
     expect(res.body.data.accessToken).toBeTruthy();
   });
 
   t('refresh with invalid token → 401', async () => {
-    const res = await request(API).post('/api/auth/refresh').send({ refreshToken: 'invalid.refresh.token' });
+    const res = await request(API)
+      .post('/api/auth/refresh')
+      .send({ refreshToken: 'invalid.refresh.token' });
     expect(res.status).toBe(401);
   });
 
   t('session persists: access token authorizes a protected route', async () => {
-    const res = await request(API).get('/api/notifications/unread-count').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/notifications/unread-count')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(200);
   });
 
@@ -162,7 +187,9 @@ describe('§1 Auth: registration, OTP, login, session, security', () => {
   });
 
   t('protected route with malformed token → 401', async () => {
-    const res = await request(API).get('/api/notifications').set(authHeader('bad.token.value'));
+    const res = await request(API)
+      .get('/api/notifications')
+      .set(authHeader('bad.token.value'));
     expect(res.status).toBe(401);
   });
 

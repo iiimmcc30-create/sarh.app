@@ -111,7 +111,9 @@ export class UsersService {
       myRating,
       isBlocked,
       ...(viewer?.userId === id
-        ? await this.repo.findPrivacySettings(id).then((privacy) => privacy ?? {})
+        ? await this.repo
+            .findPrivacySettings(id)
+            .then((privacy) => privacy ?? {})
         : {}),
     };
   }

@@ -13,10 +13,14 @@ describe('paid service setting defaults', () => {
       'listingFees',
     ]);
     expect(PAID_SERVICE_SETTING_DEFAULTS).toHaveLength(4);
-    expect(PAID_SERVICE_SETTING_DEFAULTS.every((row) => row.category === 'paid_services')).toBe(
-      true,
-    );
-    expect(PAID_SERVICE_SETTING_DEFAULTS.every((row) => row.value === true)).toBe(true);
+    expect(
+      PAID_SERVICE_SETTING_DEFAULTS.every(
+        (row) => row.category === 'paid_services',
+      ),
+    ).toBe(true);
+    expect(
+      PAID_SERVICE_SETTING_DEFAULTS.every((row) => row.value === true),
+    ).toBe(true);
   });
 
   it('defaults all services to enabled', () => {

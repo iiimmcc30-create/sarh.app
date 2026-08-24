@@ -26,7 +26,9 @@ export const LISTING_CATEGORIES = [
 
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number];
 
-export function isLivestockCategory(category: string): category is LivestockCategory {
+export function isLivestockCategory(
+  category: string,
+): category is LivestockCategory {
   return (LIVESTOCK_CATEGORIES as readonly string[]).includes(category);
 }
 

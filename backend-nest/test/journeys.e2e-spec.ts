@@ -17,7 +17,9 @@ describe('E2E user journeys (contract server)', () => {
 
   app.post('/api/auth/register', (req, res) => {
     if (!req.body?.phone || !req.body?.username) {
-      return res.status(400).json({ success: false, error: 'validation_error' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'validation_error' });
     }
     return res.status(201).json({
       success: true,
@@ -27,7 +29,9 @@ describe('E2E user journeys (contract server)', () => {
 
   app.post('/api/auth/login', (req, res) => {
     if (req.body?.password !== 'Secret1!') {
-      return res.status(401).json({ success: false, error: 'invalid_credentials' });
+      return res
+        .status(401)
+        .json({ success: false, error: 'invalid_credentials' });
     }
     sessions.set('access-e2e', { userId: 'u-e2e' });
     return res.status(200).json({
@@ -49,7 +53,11 @@ describe('E2E user journeys (contract server)', () => {
     return res.status(200).json({ success: true, data: { ok: true } });
   });
 
-  const requireAuth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const requireAuth = (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
     const tok = String(req.headers.authorization ?? '').replace('Bearer ', '');
     if (!sessions.has(tok) && tok !== 'access-e2e') {
       return res.status(401).json({ success: false, error: 'unauthorized' });
@@ -73,7 +81,11 @@ describe('E2E user journeys (contract server)', () => {
     paymentId = 'pay-e2e';
     return res.status(201).json({
       success: true,
-      data: { paymentId, checkoutUrl: 'https://pay.example/checkout', status: 'pending' },
+      data: {
+        paymentId,
+        checkoutUrl: 'https://pay.example/checkout',
+        status: 'pending',
+      },
     });
   });
 

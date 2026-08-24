@@ -11,11 +11,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/auth.decorators';
 import { successResponse } from '../common/utils/response.util';
 import { KnowledgeCenterService } from './services/knowledge-center.service';
@@ -144,10 +140,7 @@ export class AdminKnowledgeController {
   @Post('articles/:id/reject')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reject article' })
-  async reject(
-    @Param('id') id: string,
-    @Body() body: { reason?: string },
-  ) {
+  async reject(@Param('id') id: string, @Body() body: { reason?: string }) {
     return successResponse({
       article: await this.knowledge.rejectArticle(id, body?.reason),
     });
@@ -192,6 +185,8 @@ export class AdminKnowledgeController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Publish a direct post as مركز المعرفة' })
   async createPost(@Body() body: CreateKnowledgePostDto) {
-    return successResponse({ post: await this.knowledge.createDirectPost(body) });
+    return successResponse({
+      post: await this.knowledge.createDirectPost(body),
+    });
   }
 }

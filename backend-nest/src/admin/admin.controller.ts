@@ -82,7 +82,10 @@ export class AdminController {
   @RateLimit('api')
   @Patch('users/:id')
   @HttpCode(HttpStatus.OK)
-  async updateUser(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.admin.updateUser(id, body));
   }
 
@@ -108,7 +111,10 @@ export class AdminController {
   @RateLimit('api')
   @Patch('posts/:id')
   @HttpCode(HttpStatus.OK)
-  async updatePost(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updatePost(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.admin.updatePost(id, body));
   }
 
@@ -134,7 +140,10 @@ export class AdminController {
   @RateLimit('api')
   @Patch('listings/:id')
   @HttpCode(HttpStatus.OK)
-  async updateListing(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateListing(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.admin.updateListing(id, body));
   }
 
@@ -168,7 +177,10 @@ export class AdminController {
   @RateLimit('api')
   @Patch('reports/:id')
   @HttpCode(HttpStatus.OK)
-  async updateReport(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateReport(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.admin.updateReport(id, body));
   }
 
@@ -244,7 +256,10 @@ export class AdminController {
   @RateLimit('api')
   @Patch('butchers/:id')
   @HttpCode(HttpStatus.OK)
-  async updateButcher(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateButcher(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.admin.updateButcher(id, body));
   }
 
@@ -280,7 +295,10 @@ export class AdminController {
   @RateLimit('api')
   @Post('sections')
   @HttpCode(HttpStatus.CREATED)
-  async createSection(@Body() body: Record<string, unknown>, @CurrentUser() user: JwtPayload) {
+  async createSection(
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return successResponse(await this.admin.createSection(body, user.username));
   }
 
@@ -293,7 +311,9 @@ export class AdminController {
     @Body() body: Record<string, unknown>,
     @CurrentUser() user: JwtPayload,
   ) {
-    return successResponse(await this.admin.updateSection(id, body, user.username));
+    return successResponse(
+      await this.admin.updateSection(id, body, user.username),
+    );
   }
 
   @Roles(...STAFF)
@@ -314,8 +334,13 @@ export class AdminController {
   @RateLimit('api')
   @Post('sections/:id/unpublish')
   @HttpCode(HttpStatus.OK)
-  async unpublishSection(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    return successResponse(await this.admin.unpublishSection(id, user.username));
+  async unpublishSection(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(
+      await this.admin.unpublishSection(id, user.username),
+    );
   }
 
   @Roles(...STAFF)
@@ -375,7 +400,9 @@ export class AdminController {
     @Param('id') id: string,
     @Body() body: ApproveApplicationBodyDto,
   ) {
-    return successResponse(await this.admin.approveButcherApplication(user, id, body));
+    return successResponse(
+      await this.admin.approveButcherApplication(user, id, body),
+    );
   }
 
   @Roles(...STAFF)
@@ -387,7 +414,9 @@ export class AdminController {
     @Param('id') id: string,
     @Body() body: RejectApplicationBodyDto,
   ) {
-    return successResponse(await this.admin.rejectButcherApplication(user, id, body));
+    return successResponse(
+      await this.admin.rejectButcherApplication(user, id, body),
+    );
   }
 
   @Roles(...STAFF)
@@ -399,7 +428,9 @@ export class AdminController {
     @Param('id') id: string,
     @Body() body: CommentApplicationBodyDto,
   ) {
-    return successResponse(await this.admin.addButcherApplicationComment(user, id, body));
+    return successResponse(
+      await this.admin.addButcherApplicationComment(user, id, body),
+    );
   }
 
   // ─── Maintenance ────────────────────────────────────────────────────────────
@@ -413,7 +444,10 @@ export class AdminController {
     @Headers('x-cron-secret') cronSecret?: string,
   ) {
     return successResponse(
-      await this.admin.runCleanupAuthorized(cronSecret, req.headers.authorization),
+      await this.admin.runCleanupAuthorized(
+        cronSecret,
+        req.headers.authorization,
+      ),
     );
   }
 }
