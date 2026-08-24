@@ -45,8 +45,21 @@ export function validateProductionEnv(): void {
       'NI_OUTLET_ID',
       'NI_API_KEY',
       'NI_WEBHOOK_SECRET',
+      'APP_URL',
     ]),
   );
+
+  const appUrl = process.env.APP_URL?.trim() ?? '';
+  if (appUrl) {
+    if (!/^https:\/\//i.test(appUrl)) {
+      problems.push('APP_URL must be an https:// URL in production');
+    }
+    if (/railway\.app|onrender\.com/i.test(appUrl)) {
+      problems.push(
+        'APP_URL must not point at Railway/Render — use https://sarhsa.online',
+      );
+    }
+  }
 
   const jwtSecret = process.env.JWT_SECRET?.trim() ?? '';
   const jwtRefresh = process.env.JWT_REFRESH_SECRET?.trim() ?? '';

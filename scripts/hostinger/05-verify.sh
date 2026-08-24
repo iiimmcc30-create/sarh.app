@@ -22,6 +22,17 @@ else
   echo "Repair: ./scripts/hostinger/07-repair-ssl.sh"
 fi
 
+echo "=== Payment redirect bridge (N-Genius return URLs) ==="
+for path in /payment/result /payment/cancel; do
+  code=$(curl -sS -o /tmp/pay-bridge.html -w '%{http_code}' --max-time 8 "http://127.0.0.1:3001${path}" || echo 000)
+  echo "api${path} -> ${code}"
+done
+if curl -fsS --max-time 12 "https://sarhsa.online/payment/result" -o /tmp/pay-public.html 2>/dev/null; then
+  echo "public https://sarhsa.online/payment/result OK"
+else
+  echo "WARN: public /payment/result failed — reload nginx after deploying nginx.prod.conf (location /payment/)"
+fi
+
 echo "=== Worker heartbeat (checks.worker in health JSON) ==="
 curl -sS http://127.0.0.1:3001/api/health | python3 -c "import sys,json; d=json.load(sys.stdin); print('worker:', d.get('checks',{}).get('worker'))" 2>/dev/null || true
 
