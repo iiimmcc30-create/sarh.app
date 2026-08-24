@@ -12,6 +12,16 @@ docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" ps
 echo "=== API health ==="
 curl -sS http://127.0.0.1:3001/api/health | python3 -m json.tool 2>/dev/null || curl -sS http://127.0.0.1:3001/api/health
 
+echo "=== Public HTTPS (app depends on this) ==="
+if curl -fsS --max-time 12 "https://sarhsa.online/api/health" >/tmp/sarh-https-health.json 2>/tmp/sarh-https-health.err; then
+  echo "HTTPS OK"
+  python3 -m json.tool /tmp/sarh-https-health.json 2>/dev/null | head -15 || cat /tmp/sarh-https-health.json
+else
+  echo "HTTPS FAILED — mobile app will show empty feeds (API_BASE is https://sarhsa.online)"
+  cat /tmp/sarh-https-health.err 2>/dev/null || true
+  echo "Repair: ./scripts/hostinger/07-repair-ssl.sh"
+fi
+
 echo "=== Worker heartbeat (checks.worker in health JSON) ==="
 curl -sS http://127.0.0.1:3001/api/health | python3 -c "import sys,json; d=json.load(sys.stdin); print('worker:', d.get('checks',{}).get('worker'))" 2>/dev/null || true
 

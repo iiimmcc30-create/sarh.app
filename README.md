@@ -168,6 +168,7 @@ Backups are local custom-format dumps + SHA256 + retention. Configure off-site s
 | Payments stuck | `NI_*` keys, webhook signature, worker running, `/api/health` `checks.worker` |
 | 429 on comments | Client dedupe + rate limits; avoid hammering listing detail |
 | SSL ACME fail | DNS A record → VPS IP; webroot `/var/www/certbot` shared with nginx |
+| **App empty / no listings** | **HTTPS (:443) broken while HTTP works.** App uses `https://sarhsa.online` only. Run `./scripts/hostinger/07-repair-ssl.sh` on the VPS; open firewall TCP 443; confirm `curl -fsS https://sarhsa.online/api/health` |
 | Redis OOM | Compose sets `maxmemory 256mb` + `noeviction` |
 
 ### Common Errors
