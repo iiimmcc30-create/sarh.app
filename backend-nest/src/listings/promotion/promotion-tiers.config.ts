@@ -39,6 +39,8 @@ export function promotionTierWeight(tier: string | null | undefined): number {
   return PROMOTION_TIERS[key]?.weight ?? PROMOTION_TIERS.standard.weight;
 }
 
-export function promotionPlanForDays(durationDays: number): PromotionPlanOption | undefined {
+export function promotionPlanForDays(
+  durationDays: number,
+): PromotionPlanOption | undefined {
   return PROMOTION_PLANS.find((p) => p.durationDays === durationDays);
 }

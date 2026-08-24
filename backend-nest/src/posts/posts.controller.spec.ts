@@ -21,7 +21,9 @@ describe('PostsController comment routes', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({
-        canActivate: (ctx: { switchToHttp: () => { getRequest: () => Record<string, unknown> } }) => {
+        canActivate: (ctx: {
+          switchToHttp: () => { getRequest: () => Record<string, unknown> };
+        }) => {
           const req = ctx.switchToHttp().getRequest();
           req.user = { userId: 'author-1', role: 'USER' };
           return true;
@@ -33,11 +35,19 @@ describe('PostsController comment routes', () => {
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
-    app.use((req: { user?: { userId: string; role: string } }, _res: unknown, next: () => void) => {
-      req.user = { userId: 'author-1', role: 'USER' };
-      next();
-    });
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.use(
+      (
+        req: { user?: { userId: string; role: string } },
+        _res: unknown,
+        next: () => void,
+      ) => {
+        req.user = { userId: 'author-1', role: 'USER' };
+        next();
+      },
+    );
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
   });
 

@@ -12,12 +12,16 @@ import {
 
 describe('NI payment state classification', () => {
   describe('classifyNiOrderState — success', () => {
-    it.each(['CAPTURED', 'PURCHASED', 'PAID', 'SUCCESS', 'captured', 'Purchased'])(
-      'treats %s as success',
-      (state) => {
-        expect(classifyNiOrderState(state)).toBe('success');
-      },
-    );
+    it.each([
+      'CAPTURED',
+      'PURCHASED',
+      'PAID',
+      'SUCCESS',
+      'captured',
+      'Purchased',
+    ])('treats %s as success', (state) => {
+      expect(classifyNiOrderState(state)).toBe('success');
+    });
   });
 
   describe('classifyNiOrderState — failed / cancelled / expired', () => {
@@ -89,9 +93,7 @@ describe('NI payment state classification', () => {
 
   describe('isNiOrderUuid', () => {
     it('accepts lowercase UUID', () => {
-      expect(
-        isNiOrderUuid('a13f81f3-27b4-48b6-88de-22b9ddc1e1dc'),
-      ).toBe(true);
+      expect(isNiOrderUuid('a13f81f3-27b4-48b6-88de-22b9ddc1e1dc')).toBe(true);
     });
 
     it('rejects internal merchant refs', () => {
@@ -110,7 +112,9 @@ describe('NI payment state classification', () => {
 
     it('rejects NI UUIDs', () => {
       expect(
-        isInternalMerchantOrderReference('a13f81f3-27b4-48b6-88de-22b9ddc1e1dc'),
+        isInternalMerchantOrderReference(
+          'a13f81f3-27b4-48b6-88de-22b9ddc1e1dc',
+        ),
       ).toBe(false);
     });
   });
@@ -123,9 +127,9 @@ describe('NI payment state classification', () => {
     });
 
     it('extracts UUID from _id urn:order href', () => {
-      expect(
-        extractNiOrderReference({ _id: `urn:order:${niUuid}` }),
-      ).toBe(niUuid);
+      expect(extractNiOrderReference({ _id: `urn:order:${niUuid}` })).toBe(
+        niUuid,
+      );
     });
 
     it('does not fall back to merchant orderReference', () => {
@@ -164,7 +168,8 @@ describe('NI payment state classification', () => {
  * Cancel / decline / expire / fail must NOT fulfill.
  */
 describe('Payment fulfillment gate contract', () => {
-  const fulfillable = (state: string) => classifyNiOrderState(state) === 'success';
+  const fulfillable = (state: string) =>
+    classifyNiOrderState(state) === 'success';
 
   it('does not fulfill on cancel', () => {
     expect(fulfillable('CANCELLED')).toBe(false);

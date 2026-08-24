@@ -38,15 +38,65 @@ export class NiWebhookService {
 
     const eventName = String(event.eventName ?? event.type ?? '');
     const eventKey = webhookEventKey('ni', eventName, event);
+    const redactedPayload = redactSensitive(event) as Prisma.InputJsonValue;
+
+    let eventId: string | null = null;
+    let isDuplicateAck = false;
 
     try {
       const inserted = await this.repo.tryInsertWebhookEvent({
         provider: IntegrationProvider.ni,
         eventKey,
         eventName,
-        payload: redactSensitive(event) as Prisma.InputJsonValue,
+        payload: redactedPayload,
       });
+      eventId = inserted.id;
+    } catch (err: unknown) {
+      const prismaErr = err as { code?: string };
+      if (prismaErr.code !== 'P2002') {
+        this.logger.error(
+          {
+            err: err instanceof Error ? err.message : String(err),
+            eventName,
+          },
+          'NI integration webhook insert failed',
+        );
+        return { status: 500, body: { error: 'webhook_processing_failed' } };
+      }
 
+      const existing = await this.repo.findWebhookEvent(
+        IntegrationProvider.ni,
+        eventKey,
+      );
+      if (existing?.processed) {
+        this.logger.info(
+          { eventKey, eventName },
+          'Duplicate NI webhook ignored (already processed)',
+        );
+        return {
+          status: 200,
+          body: { received: true, duplicate: true },
+          duplicate: true,
+        };
+      }
+
+      // Prior insert succeeded but processing failed — retry fulfillment.
+      if (!existing) {
+        this.logger.error(
+          { eventKey, eventName },
+          'NI webhook unique conflict without existing row',
+        );
+        return { status: 500, body: { error: 'webhook_processing_failed' } };
+      }
+      eventId = existing.id;
+      isDuplicateAck = false;
+      this.logger.warn(
+        { eventKey, eventName, eventId },
+        'Reprocessing NI webhook that was not marked processed',
+      );
+    }
+
+    try {
       const result = await this.payments.processWebhook(rawBody);
       const order = (event.order ?? event) as Record<string, unknown>;
       const niUuid =
@@ -55,29 +105,18 @@ export class NiWebhookService {
           : null;
       if (niUuid) {
         const integration = await this.repo.findByExternalOrderId(niUuid);
-        await this.repo.markWebhookProcessed(
-          inserted.id,
-          integration?.paymentId,
-        );
+        await this.repo.markWebhookProcessed(eventId!, integration?.paymentId);
       } else {
-        await this.repo.markWebhookProcessed(inserted.id);
+        await this.repo.markWebhookProcessed(eventId!);
       }
-      return { ...result, duplicate: false };
+      return { ...result, duplicate: isDuplicateAck };
     } catch (err: unknown) {
-      const prismaErr = err as { code?: string };
-      if (prismaErr.code === 'P2002') {
-        this.logger.info(
-          { eventKey, eventName },
-          'Duplicate NI webhook ignored',
-        );
-        return {
-          status: 200,
-          body: { received: true, duplicate: true },
-          duplicate: true,
-        };
-      }
+      const message = err instanceof Error ? err.message : String(err);
+      await this.repo
+        .markWebhookError(eventId!, message)
+        .catch(() => undefined);
       this.logger.error(
-        { err: err instanceof Error ? err.message : String(err), eventName },
+        { err: message, eventName, eventId },
         'NI integration webhook failed',
       );
       return { status: 500, body: { error: 'webhook_processing_failed' } };

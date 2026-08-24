@@ -2,7 +2,13 @@
  * §12 Butchers, §18 Support/Help, §19 Sarh services — LIVE E2E.
  */
 import request from 'supertest';
-import { API, apiReachable, authHeader, registerUser, type TestUser } from './helpers';
+import {
+  API,
+  apiReachable,
+  authHeader,
+  registerUser,
+  type TestUser,
+} from './helpers';
 
 describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
   let live = false;
@@ -31,7 +37,9 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
   });
 
   t('butchers search + filter query works', async () => {
-    const res = await request(API).get('/api/butchers').query({ search: 'ملحمة', country: 'SA' });
+    const res = await request(API)
+      .get('/api/butchers')
+      .query({ search: 'ملحمة', country: 'SA' });
     expect(res.status).toBe(200);
   });
 
@@ -52,13 +60,17 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
     // Required query missing → 400; with a real id → 200
     expect([400, 200]).toContain(res.status);
     if (butcherId) {
-      const ok = await request(API).get('/api/butchers/products').query({ butcherId });
+      const ok = await request(API)
+        .get('/api/butchers/products')
+        .query({ butcherId });
       expect(ok.status).toBe(200);
     }
   });
 
   t('my butcher orders list (auth)', async () => {
-    const res = await request(API).get('/api/butchers/orders').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/butchers/orders')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(200);
   });
 
@@ -67,7 +79,9 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
     const unauth = await request(API).get('/api/butcher-applications');
     expect(unauth.status).toBe(401);
 
-    const res = await request(API).get('/api/butcher-applications').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/butcher-applications')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(200);
   });
 
@@ -80,7 +94,9 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
     const faqs = await request(API).get('/api/support/faqs');
     expect(faqs.status).toBe(200);
     expect(faqs.body.success).toBe(true);
-    expect(Array.isArray(faqs.body.data?.faqs ?? faqs.body.data?.items ?? [])).toBe(true);
+    expect(
+      Array.isArray(faqs.body.data?.faqs ?? faqs.body.data?.items ?? []),
+    ).toBe(true);
   });
 
   t('create a support ticket, list it, and reply', async () => {
@@ -97,7 +113,9 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
       expect(create.body.success).toBe(true);
       const ticketId = create.body.data?.ticket?.id ?? create.body.data?.id;
       expect(ticketId).toBeTruthy();
-      const list = await request(API).get('/api/support/tickets').set(authHeader(user.accessToken));
+      const list = await request(API)
+        .get('/api/support/tickets')
+        .set(authHeader(user.accessToken));
       expect(list.status).toBe(200);
       expect(list.body.success).toBe(true);
       expect(Array.isArray(list.body.data?.items)).toBe(true);
@@ -126,7 +144,9 @@ describe('§12/§18/§19 Butchers, Support, Sarh services', () => {
   });
 
   t('verification request endpoint (auth)', async () => {
-    const res = await request(API).get('/api/support/verification').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/support/verification')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data?.request).toBeTruthy();

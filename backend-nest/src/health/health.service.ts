@@ -111,9 +111,9 @@ export class HealthService {
       timestamp: new Date().toISOString(),
       version: readAppVersion(),
       build:
+        process.env.GIT_COMMIT ||
         process.env.RENDER_GIT_COMMIT?.slice(0, 7) ||
         process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ||
-        process.env.GIT_COMMIT ||
         'local',
       apiFeatures: {
         userBlock: true,
@@ -121,6 +121,30 @@ export class HealthService {
         listingCommentDelete: true,
       },
       httpStatus: healthy ? 200 : 503,
+    };
+  }
+
+  /**
+   * Stricter readiness for load balancers / deploy gates.
+   * Requires DB + Redis (+ worker heartbeat when Redis is enabled).
+   * Liveness remains GET /api/health (DB-only).
+   */
+  async ready() {
+    const result = await this.check();
+    const { checks } = result;
+    const redisEnabled = this.cache.isEnabled();
+    const ready =
+      checks.db &&
+      (!redisEnabled ||
+        (checks.redis_cache &&
+          checks.redis_session &&
+          checks.queue &&
+          checks.worker));
+    return {
+      status: ready ? 'ready' : 'not_ready',
+      checks,
+      timestamp: result.timestamp,
+      httpStatus: ready ? 200 : 503,
     };
   }
 }

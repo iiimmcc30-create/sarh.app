@@ -16,7 +16,8 @@ Not used by mobile or admin UI.
 
 | Method | URL | Auth |
 |--------|-----|------|
-| GET | `/api/health` | **Public** (`@Public`) |
+| GET | `/api/health` | **Public** (`@Public`) — liveness (DB required) |
+| GET | `/api/health/ready` | **Public** — readiness (DB + Redis + queue + worker when Redis enabled) |
 
 **Response (200 or 503):**
 ```json
@@ -26,7 +27,8 @@ Not used by mobile or admin UI.
     "db": boolean,
     "redis_cache": boolean,
     "redis_session": boolean,
-    "queue": boolean
+    "queue": boolean,
+    "worker": boolean
   },
   "duration": "12ms",
   "uptime": 3600,

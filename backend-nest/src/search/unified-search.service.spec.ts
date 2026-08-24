@@ -2,14 +2,22 @@ import { UnifiedSearchService } from './unified-search.service';
 import { UnifiedSearchRepository } from './repositories/unified-search.repository';
 
 describe('UnifiedSearchService', () => {
+  const searchListings = jest.fn();
+  const searchPosts = jest.fn();
+  const searchButchers = jest.fn();
+  const searchNews = jest.fn();
+  const searchServices = jest.fn();
+  const searchUsers = jest.fn();
+  const suggestPrefixes = jest.fn();
+
   const repo = {
-    searchListings: jest.fn(),
-    searchPosts: jest.fn(),
-    searchButchers: jest.fn(),
-    searchNews: jest.fn(),
-    searchServices: jest.fn(),
-    searchUsers: jest.fn(),
-    suggestPrefixes: jest.fn(),
+    searchListings,
+    searchPosts,
+    searchButchers,
+    searchNews,
+    searchServices,
+    searchUsers,
+    suggestPrefixes,
   } as unknown as jest.Mocked<UnifiedSearchRepository>;
 
   const cache = {
@@ -28,7 +36,7 @@ describe('UnifiedSearchService', () => {
   });
 
   it('returns grouped results for type=all', async () => {
-    repo.searchListings.mockResolvedValue([
+    searchListings.mockResolvedValue([
       {
         id: 'l1',
         title: 'Sheep',
@@ -64,17 +72,17 @@ describe('UnifiedSearchService', () => {
         marketSubcategory: null,
       },
     ]);
-    repo.searchPosts.mockResolvedValue([]);
-    repo.searchButchers.mockResolvedValue([]);
-    repo.searchNews.mockResolvedValue([]);
-    repo.searchServices.mockResolvedValue([]);
+    searchPosts.mockResolvedValue([]);
+    searchButchers.mockResolvedValue([]);
+    searchNews.mockResolvedValue([]);
+    searchServices.mockResolvedValue([]);
 
     const result = await service.search({ q: 'غنم حري', type: 'all' });
 
     expect(result.groups).toHaveLength(5);
     expect(result.groups[0].type).toBe('listings');
     expect(result.groups[0].items[0].title).toContain('غنم');
-    expect(repo.searchListings).toHaveBeenCalled();
+    expect(searchListings).toHaveBeenCalled();
   });
 
   it('uses redis cache for suggestions when enabled', async () => {
@@ -83,6 +91,6 @@ describe('UnifiedSearchService', () => {
 
     const result = await service.suggest('مل', 5);
     expect(result.suggestions).toEqual([{ text: 'ملاحم', kind: 'listing' }]);
-    expect(repo.suggestPrefixes).not.toHaveBeenCalled();
+    expect(suggestPrefixes).not.toHaveBeenCalled();
   });
 });

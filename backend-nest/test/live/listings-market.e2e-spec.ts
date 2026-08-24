@@ -50,7 +50,9 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
 
   // ── Search (§3) ─────────────────────────────────────────────
   t('search with a term returns 200', async () => {
-    const res = await request(API).get('/api/listings').query({ search: 'ابل' });
+    const res = await request(API)
+      .get('/api/listings')
+      .query({ search: 'ابل' });
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.data.listings)).toBe(true);
   });
@@ -61,7 +63,9 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
   });
 
   t('unified search endpoint returns grouped results', async () => {
-    const res = await request(API).get('/api/search').query({ q: 'ابل', type: 'all' });
+    const res = await request(API)
+      .get('/api/search')
+      .query({ q: 'ابل', type: 'all' });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data.groups)).toBe(true);
@@ -73,7 +77,9 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
   });
 
   t('search suggest returns suggestions array', async () => {
-    const res = await request(API).get('/api/search/suggest').query({ q: 'اب' });
+    const res = await request(API)
+      .get('/api/search/suggest')
+      .query({ q: 'اب' });
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.data.suggestions)).toBe(true);
   });
@@ -86,7 +92,9 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
 
   // ── Filters (§3) ────────────────────────────────────────────
   t('filter by category', async () => {
-    const res = await request(API).get('/api/listings').query({ category: 'camels' });
+    const res = await request(API)
+      .get('/api/listings')
+      .query({ category: 'camels' });
     expect(res.status).toBe(200);
   });
 
@@ -98,7 +106,9 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
   });
 
   t('invalid category enum → 400', async () => {
-    const res = await request(API).get('/api/listings').query({ category: 'dragons' });
+    const res = await request(API)
+      .get('/api/listings')
+      .query({ category: 'dragons' });
     expect(res.status).toBe(400);
   });
 
@@ -151,17 +161,26 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
   });
 
   t('non-existent listing id → 404', async () => {
-    const res = await request(API).get('/api/listings/00000000-0000-0000-0000-000000000000');
+    const res = await request(API).get(
+      '/api/listings/00000000-0000-0000-0000-000000000000',
+    );
     expect(res.status).toBe(404);
   });
 
   // ── My listings (§5) ────────────────────────────────────────
-  t('my listings via sellerId filter includes the created listing', async () => {
-    const res = await request(API).get('/api/listings').query({ sellerId: owner.id });
-    expect(res.status).toBe(200);
-    const ids = (res.body.data.listings ?? []).map((l: { id: string }) => l.id);
-    expect(ids).toContain(listingId);
-  });
+  t(
+    'my listings via sellerId filter includes the created listing',
+    async () => {
+      const res = await request(API)
+        .get('/api/listings')
+        .query({ sellerId: owner.id });
+      expect(res.status).toBe(200);
+      const ids = (res.body.data.listings ?? []).map(
+        (l: { id: string }) => l.id,
+      );
+      expect(ids).toContain(listingId);
+    },
+  );
 
   // ── Comments (§3) ───────────────────────────────────────────
   t('add and list a comment on a listing', async () => {
@@ -180,7 +199,10 @@ describe('§2–§5 Listings: feed, search, filters, create, manage', () => {
     const res = await request(API)
       .put(`/api/listings/${listingId}`)
       .set(authHeader(owner.accessToken))
-      .send({ price: 6000, description: 'Updated E2E description for the listing test.' });
+      .send({
+        price: 6000,
+        description: 'Updated E2E description for the listing test.',
+      });
     expect(res.status).toBe(200);
   });
 

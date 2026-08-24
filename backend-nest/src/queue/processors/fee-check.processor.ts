@@ -50,7 +50,10 @@ export class FeeCheckProcessor extends WorkerHost {
       }
     });
 
-    this.logger.info({ jobId: job.id, listingFeeId }, 'Fee check job processed');
+    this.logger.info(
+      { jobId: job.id, listingFeeId },
+      'Fee check job processed',
+    );
 
     if (overdueListingId) {
       await this.notifications.notifyUser({

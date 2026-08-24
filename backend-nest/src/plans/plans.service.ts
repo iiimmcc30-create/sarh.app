@@ -58,7 +58,9 @@ export class PlansService implements OnModuleInit {
     return plan;
   }
 
-  async getPlans(audience?: PlanAudience): Promise<{ plans: PlanApiResponse[] }> {
+  async getPlans(
+    audience?: PlanAudience,
+  ): Promise<{ plans: PlanApiResponse[] }> {
     await this.resolver.refreshCache();
     const plans = audience
       ? this.resolver.getActiveByAudience(audience)
@@ -93,9 +95,16 @@ export class PlansService implements OnModuleInit {
   }) {
     const slug = data.slug.trim().toLowerCase().replace(/\s+/g, '-');
     if (slug === FREE_PLAN_SLUG) {
-      const existing = await this.repo.findBySlug(FREE_PLAN_SLUG, data.audience);
+      const existing = await this.repo.findBySlug(
+        FREE_PLAN_SLUG,
+        data.audience,
+      );
       if (existing) {
-        throwApi(400, 'free_plan_exists', 'الباقة المجانية موجودة مسبقاً لهذا الجمهور');
+        throwApi(
+          400,
+          'free_plan_exists',
+          'الباقة المجانية موجودة مسبقاً لهذا الجمهور',
+        );
       }
     }
     const plan = await this.repo.create({
@@ -183,11 +192,17 @@ export class PlansService implements OnModuleInit {
       isActive: false,
       sortOrder: source.sortOrder + 1,
       features: {
-        create: source.features.map((f: { key: string; value: string; valueType: 'BOOLEAN' | 'NUMBER' | 'STRING' | 'JSON' }) => ({
-          key: f.key,
-          value: f.value,
-          valueType: f.valueType,
-        })),
+        create: source.features.map(
+          (f: {
+            key: string;
+            value: string;
+            valueType: 'BOOLEAN' | 'NUMBER' | 'STRING' | 'JSON';
+          }) => ({
+            key: f.key,
+            value: f.value,
+            valueType: f.valueType,
+          }),
+        ),
       },
     });
     await this.resolver.refreshCache();
@@ -209,7 +224,11 @@ export class PlansService implements OnModuleInit {
     return this.resolver.getUpgradableSlugs(audience);
   }
 
-  getPlanPrice(slug: string, audience: PlanAudience, cycle: 'monthly' | 'yearly') {
+  getPlanPrice(
+    slug: string,
+    audience: PlanAudience,
+    cycle: 'monthly' | 'yearly',
+  ) {
     return this.resolver.getPlanPrice(slug, audience, cycle);
   }
 }

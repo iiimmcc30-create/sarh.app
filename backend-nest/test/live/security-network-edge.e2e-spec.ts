@@ -43,12 +43,16 @@ describe('§21/§23/§25 Error codes, permissions, and edge cases', () => {
   });
 
   t('403 when a normal user hits an admin-only route', async () => {
-    const res = await request(API).get('/api/admin/users').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/admin/users')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(403);
   });
 
   t('404 for unknown resource', async () => {
-    const res = await request(API).get('/api/listings/00000000-0000-0000-0000-000000000000');
+    const res = await request(API).get(
+      '/api/listings/00000000-0000-0000-0000-000000000000',
+    );
     expect(res.status).toBe(404);
   });
 
@@ -64,12 +68,16 @@ describe('§21/§23/§25 Error codes, permissions, and edge cases', () => {
 
   // ── §23 Permissions / security ──────────────────────────────
   t('normal user cannot list admin dashboard stats → 403', async () => {
-    const res = await request(API).get('/api/admin/dashboard/stats').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/admin/dashboard/stats')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(403);
   });
 
   t('normal user cannot access admin listings → 403', async () => {
-    const res = await request(API).get('/api/admin/listings').set(authHeader(user.accessToken));
+    const res = await request(API)
+      .get('/api/admin/listings')
+      .set(authHeader(user.accessToken));
     expect(res.status).toBe(403);
   });
 
@@ -80,11 +88,14 @@ describe('§21/§23/§25 Error codes, permissions, and edge cases', () => {
     expect(res.status).toBeGreaterThanOrEqual(400);
   });
 
-  t('cannot access another users blocked list without being them (own only)', async () => {
-    // blocked list is self-scoped; unauth → 401
-    const res = await request(API).get('/api/users/blocked');
-    expect(res.status).toBe(401);
-  });
+  t(
+    'cannot access another users blocked list without being them (own only)',
+    async () => {
+      // blocked list is self-scoped; unauth → 401
+      const res = await request(API).get('/api/users/blocked');
+      expect(res.status).toBe(401);
+    },
+  );
 
   // ── §25 Edge cases in create listing ────────────────────────
   t('empty strings rejected', async () => {
@@ -111,27 +122,36 @@ describe('§21/§23/§25 Error codes, permissions, and edge cases', () => {
     expect(res.status).toBe(400);
   });
 
-  t('emoji + mixed Arabic/English content accepted in valid listing', async () => {
-    const res = await request(API)
-      .post('/api/listings')
-      .set(authHeader(user.accessToken))
-      .send(
-        sampleListing({
-          title: 'Camel 🐪 Premium',
-          arabicTitle: 'جمل ممتاز 🐪 Premium',
-          description: 'Mixed عربي and English content 123 for the E2E edge test.',
-          arabicDescription: 'محتوى مختلط عربي English وأرقام ١٢٣ لاختبار الحواف.',
-        }),
-      );
-    expect([200, 201]).toContain(res.status);
-    const id = res.body?.data?.id ?? res.body?.data?.listing?.id;
-    if (id) {
-      await request(API).delete(`/api/listings/${id}`).set(authHeader(user.accessToken));
-    }
-  });
+  t(
+    'emoji + mixed Arabic/English content accepted in valid listing',
+    async () => {
+      const res = await request(API)
+        .post('/api/listings')
+        .set(authHeader(user.accessToken))
+        .send(
+          sampleListing({
+            title: 'Camel 🐪 Premium',
+            arabicTitle: 'جمل ممتاز 🐪 Premium',
+            description:
+              'Mixed عربي and English content 123 for the E2E edge test.',
+            arabicDescription:
+              'محتوى مختلط عربي English وأرقام ١٢٣ لاختبار الحواف.',
+          }),
+        );
+      expect([200, 201]).toContain(res.status);
+      const id = res.body?.data?.id ?? res.body?.data?.listing?.id;
+      if (id) {
+        await request(API)
+          .delete(`/api/listings/${id}`)
+          .set(authHeader(user.accessToken));
+      }
+    },
+  );
 
   t('special characters in search do not crash the API', async () => {
-    const res = await request(API).get('/api/listings').query({ search: "'; DROP TABLE users;--" });
+    const res = await request(API)
+      .get('/api/listings')
+      .query({ search: "'; DROP TABLE users;--" });
     expect(res.status).toBeLessThan(500);
   });
 
@@ -144,7 +164,10 @@ describe('§21/§23/§25 Error codes, permissions, and edge cases', () => {
   });
 
   t('too many images rejected (> 8)', async () => {
-    const many = Array.from({ length: 12 }, (_, i) => `https://cdn.sarh.app/e2e/${i}.jpg`);
+    const many = Array.from(
+      { length: 12 },
+      (_, i) => `https://cdn.sarh.app/e2e/${i}.jpg`,
+    );
     const res = await request(API)
       .post('/api/listings')
       .set(authHeader(user.accessToken))

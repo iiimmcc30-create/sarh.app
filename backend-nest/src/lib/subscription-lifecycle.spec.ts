@@ -10,7 +10,7 @@ import {
 describe('subscription-lifecycle', () => {
   const now = new Date('2026-01-15T12:00:00Z');
   const tierOf = (slug: string) =>
-    ({ free: 0, 'sarh-pro': 1, growth: 1 }[slug] ?? 0);
+    ({ free: 0, 'sarh-pro': 1, growth: 1 })[slug] ?? 0;
 
   it('free plan is not paid', () => {
     expect(isPaidPlan('free')).toBe(false);
@@ -42,9 +42,9 @@ describe('subscription-lifecycle', () => {
       renewDate: new Date('2026-02-01T00:00:00Z'),
       autoRenew: true,
     };
-    expect(
-      shouldBlockSubscriptionPayment(sub, 'sarh-pro', tierOf, now),
-    ).toBe(true);
+    expect(shouldBlockSubscriptionPayment(sub, 'sarh-pro', tierOf, now)).toBe(
+      true,
+    );
     expect(hasPaidAccess(sub, now)).toBe(true);
   });
 
@@ -54,9 +54,9 @@ describe('subscription-lifecycle', () => {
       renewDate: new Date('2026-02-01T00:00:00Z'),
       autoRenew: true,
     };
-    expect(
-      shouldBlockSubscriptionPayment(sub, 'sarh-pro', tierOf, now),
-    ).toBe(false);
+    expect(shouldBlockSubscriptionPayment(sub, 'sarh-pro', tierOf, now)).toBe(
+      false,
+    );
   });
 
   it('daysUntilRenewDate', () => {

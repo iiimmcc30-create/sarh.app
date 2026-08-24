@@ -56,14 +56,21 @@ export function distanceKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function invertDistanceScore(km: number, minKm: number, maxKm: number): number {
+export function invertDistanceScore(
+  km: number,
+  minKm: number,
+  maxKm: number,
+): number {
   if (!Number.isFinite(km)) return 50;
   if (maxKm <= minKm) return 50;
   const closeness = 1 - (km - minKm) / (maxKm - minKm);
   return Math.max(0, Math.min(100, closeness * 100));
 }
 
-export function computeNewButcherBoost(createdAt: Date, now = new Date()): number {
+export function computeNewButcherBoost(
+  createdAt: Date,
+  now = new Date(),
+): number {
   const ageMs = now.getTime() - createdAt.getTime();
   const ageDays = ageMs / (1000 * 60 * 60 * 24);
   if (ageDays >= NEW_BUTCHER_BOOST_DAYS) return 0;

@@ -21,7 +21,7 @@ export class JwtTokenService implements OnModuleInit {
     this.jwtRefreshSecret = this.requireSecret('JWT_REFRESH_SECRET', 32);
     this.accessExpires = this.config.get<string>('JWT_EXPIRES_IN') || '15m';
     this.refreshExpires =
-      this.config.get<string>('JWT_REFRESH_EXPIRES_IN') || '3650d';
+      this.config.get<string>('JWT_REFRESH_EXPIRES_IN') || '30d';
   }
 
   private requireSecret(name: string, min: number): string {

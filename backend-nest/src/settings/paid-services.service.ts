@@ -106,7 +106,11 @@ export class PaidServicesService {
   async assertListingFeesEnabled() {
     const flags = await this.getFlags();
     if (!flags.listingFeesEnabled) {
-      throwApi(403, 'service_disabled', 'خدمة سداد رسوم الإعلان غير مفعّلة حالياً');
+      throwApi(
+        403,
+        'service_disabled',
+        'خدمة سداد رسوم الإعلان غير مفعّلة حالياً',
+      );
     }
   }
 }

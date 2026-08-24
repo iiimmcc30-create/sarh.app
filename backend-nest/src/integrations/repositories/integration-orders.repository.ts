@@ -146,10 +146,16 @@ export class IntegrationOrdersRepository {
     return this.prisma.integrationWebhookEvent.create({ data });
   }
 
+  findWebhookEvent(provider: IntegrationProvider, eventKey: string) {
+    return this.prisma.integrationWebhookEvent.findUnique({
+      where: { provider_eventKey: { provider, eventKey } },
+    });
+  }
+
   markWebhookProcessed(id: string, paymentId?: string) {
     return this.prisma.integrationWebhookEvent.update({
       where: { id },
-      data: { processed: true, paymentId },
+      data: { processed: true, paymentId, lastError: null },
     });
   }
 

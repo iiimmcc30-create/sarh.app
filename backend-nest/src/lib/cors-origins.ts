@@ -1,7 +1,6 @@
 const PRODUCTION_ORIGINS = [
   'https://sarhsa.online',
   'https://www.sarhsa.online',
-  'https://sarh-new4.onrender.com',
 ];
 
 const STALE_ORIGIN_MARKERS = ['railway.app'];

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MessageThreadType, Prisma } from '@prisma/client';
+import { MessageThreadType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const PARTICIPANT_SELECT = {

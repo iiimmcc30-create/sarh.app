@@ -192,13 +192,15 @@ export class WorkerCronService implements OnModuleDestroy {
     ].filter((url): url is string => Boolean(url?.trim()));
     if (fromEnv.length) return fromEnv;
     if (process.env.NODE_ENV !== 'production') return [];
-    return [
-      'https://sarh-new4.onrender.com/api/health',
-      'https://sarh-socket.onrender.com/health',
-    ];
+    // Hostinger production defaults (never Render cold-start keep-alive).
+    const appUrl = (process.env.APP_URL || 'https://sarhsa.online').replace(
+      /\/$/,
+      '',
+    );
+    return [`${appUrl}/api/health`, `${appUrl}/health`];
   }
 
-  /** Wake Render-hosted API/socket before Cloudflare 522 on cold start. */
+  /** Ping public health endpoints (Hostinger / APP_URL). */
   private async pingPublicHealth(): Promise<void> {
     const targets = this.healthPingTargets();
     await Promise.allSettled(

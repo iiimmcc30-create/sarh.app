@@ -55,6 +55,16 @@ echo "Verifying dump..."
 docker run --rm -v "$(dirname "$DUMP_FILE"):/backup" "$PG_IMAGE" \
   pg_restore --list "/backup/$(basename "$DUMP_FILE")" >/dev/null
 
+if [[ -f "${DUMP_FILE}.sha256" ]]; then
+  echo "Verifying SHA256..."
+  (
+    cd "$(dirname "$DUMP_FILE")"
+    sha256sum -c "$(basename "$DUMP_FILE").sha256"
+  )
+else
+  echo "WARNING: No ${DUMP_FILE}.sha256 sidecar — integrity not verified."
+fi
+
 echo "Stopping API/worker/socket to release connections..."
 $COMPOSE stop api worker socket 2>/dev/null || true
 

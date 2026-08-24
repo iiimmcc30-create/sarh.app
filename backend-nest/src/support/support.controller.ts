@@ -124,7 +124,9 @@ export class SupportController {
     @CurrentUser() user: JwtPayload,
     @Param('documentId') documentId: string,
   ) {
-    return successResponse(await this.verification.removeDocument(user, documentId));
+    return successResponse(
+      await this.verification.removeDocument(user, documentId),
+    );
   }
 
   @RateLimit('api')

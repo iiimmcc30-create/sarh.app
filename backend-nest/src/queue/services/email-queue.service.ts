@@ -9,7 +9,9 @@ import type { EmailJob } from '../types/queue.types';
 @Injectable()
 export class EmailQueueService {
   constructor(
-    @Optional() @InjectQueue(QUEUE_NAMES.EMAILS) private readonly queue: Queue | null,
+    @Optional()
+    @InjectQueue(QUEUE_NAMES.EMAILS)
+    private readonly queue: Queue | null,
     private readonly cache: RedisCacheService,
     private readonly logger: LoggerService,
   ) {}

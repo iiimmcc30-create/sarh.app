@@ -27,10 +27,9 @@ const createFaqSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-const updateFaqSchema = createFaqSchema.partial().refine(
-  (d) => Object.keys(d).length > 0,
-  { message: 'empty_update' },
-);
+const updateFaqSchema = createFaqSchema
+  .partial()
+  .refine((d) => Object.keys(d).length > 0, { message: 'empty_update' });
 
 const reorderSchema = z.object({
   items: z.array(
@@ -47,10 +46,12 @@ export class FaqService {
 
   getMeta() {
     return {
-      categories: Object.entries(FAQ_CATEGORY_LABEL_AR).map(([value, labelAr]) => ({
-        value,
-        labelAr,
-      })),
+      categories: Object.entries(FAQ_CATEGORY_LABEL_AR).map(
+        ([value, labelAr]) => ({
+          value,
+          labelAr,
+        }),
+      ),
     };
   }
 

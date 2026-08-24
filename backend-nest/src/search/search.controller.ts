@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { Public, RateLimit } from '../common/decorators/auth.decorators';
 import { successResponse } from '../common/utils/response.util';
 import { SearchSuggestQueryDto, UnifiedSearchQueryDto } from './dto/search.dto';

@@ -23,9 +23,11 @@ describe('HomeExploreService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    prisma.appSetting.upsert.mockImplementation(async ({ create, update }: any) => ({
-      value: update?.value ?? create.value,
-    }));
+    prisma.appSetting.upsert.mockImplementation(
+      async ({ create, update }: any) => ({
+        value: update?.value ?? create.value,
+      }),
+    );
     const moduleRef = await Test.createTestingModule({
       providers: [
         HomeExploreService,
@@ -79,13 +81,18 @@ describe('HomeExploreService', () => {
         { id: 'b', destination: 'butchers', sortOrder: 1, isActive: true },
       ],
     };
-    prisma.appSetting.findUnique.mockImplementation(async () => ({ value: stored }));
+    prisma.appSetting.findUnique.mockImplementation(async () => ({
+      value: stored,
+    }));
     prisma.appSetting.upsert.mockImplementation(async ({ update }: any) => {
       stored = update.value;
       return { value: stored };
     });
     const reordered = await service.reorder(['b', 'a']);
-    expect(reordered.map((s) => s!.destination)).toEqual(['butchers', 'community']);
+    expect(reordered.map((s) => s!.destination)).toEqual([
+      'butchers',
+      'community',
+    ]);
     const toggled = await service.update('b', { isActive: false });
     expect(toggled.find((s) => s!.id === 'b')?.isActive).toBe(false);
     const publicList = await service.listPublic();

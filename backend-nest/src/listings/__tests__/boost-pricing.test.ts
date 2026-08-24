@@ -1,4 +1,8 @@
-import { boostPriceForHours, promotionPriceForHours, BOOST_RATE_PER_12H } from '../../listings/boost/boost-pricing.util';
+import {
+  boostPriceForHours,
+  promotionPriceForHours,
+  BOOST_RATE_PER_12H,
+} from '../../listings/boost/boost-pricing.util';
 
 describe('boost-pricing.util — slab formula', () => {
   describe('boostPriceForHours (PIN, rate=6)', () => {
@@ -92,9 +96,9 @@ describe('boost-pricing.util — slab formula', () => {
 
   describe('promotionPriceForHours with custom base', () => {
     it('uses provided base rate', () => {
-      expect(promotionPriceForHours(24, 15)).toBe(15);   // ceil(24/24)*15 = 15
-      expect(promotionPriceForHours(25, 15)).toBe(30);   // ceil(25/24)*15 = 2*15 = 30
-      expect(promotionPriceForHours(48, 15)).toBe(30);   // ceil(48/24)*15 = 2*15 = 30
+      expect(promotionPriceForHours(24, 15)).toBe(15); // ceil(24/24)*15 = 15
+      expect(promotionPriceForHours(25, 15)).toBe(30); // ceil(25/24)*15 = 2*15 = 30
+      expect(promotionPriceForHours(48, 15)).toBe(30); // ceil(48/24)*15 = 2*15 = 30
     });
   });
 

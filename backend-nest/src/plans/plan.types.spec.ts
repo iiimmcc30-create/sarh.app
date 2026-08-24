@@ -43,11 +43,19 @@ describe('plan.types', () => {
   });
 
   it('permissionNumber / permissionBoolean with fallbacks', () => {
-    expect(permissionNumber({ maxAdsPer24Hours: 3 }, 'maxAdsPer24Hours')).toBe(3);
-    expect(permissionNumber({ maxAdsPer24Hours: '2' }, 'maxAdsPer24Hours')).toBe(2);
+    expect(permissionNumber({ maxAdsPer24Hours: 3 }, 'maxAdsPer24Hours')).toBe(
+      3,
+    );
+    expect(
+      permissionNumber({ maxAdsPer24Hours: '2' }, 'maxAdsPer24Hours'),
+    ).toBe(2);
     expect(permissionNumber({}, 'missing', 9)).toBe(9);
-    expect(permissionBoolean({ verifiedBadge: true }, 'verifiedBadge')).toBe(true);
-    expect(permissionBoolean({ verifiedBadge: 'true' }, 'verifiedBadge')).toBe(true);
+    expect(permissionBoolean({ verifiedBadge: true }, 'verifiedBadge')).toBe(
+      true,
+    );
+    expect(permissionBoolean({ verifiedBadge: 'true' }, 'verifiedBadge')).toBe(
+      true,
+    );
     expect(permissionBoolean({}, 'missing', false)).toBe(false);
   });
 });

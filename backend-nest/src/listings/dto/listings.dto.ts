@@ -120,9 +120,7 @@ export class CreateListingDto {
   currency?: string;
 
   /** Legacy enum — optional when categoryId and/or subcategoryId are provided. */
-  @ValidateIf(
-    (o: CreateListingDto) => !o.categoryId && !o.subcategoryId,
-  )
+  @ValidateIf((o: CreateListingDto) => !o.categoryId && !o.subcategoryId)
   @IsEnum(LISTING_CATEGORIES)
   category?: (typeof LISTING_CATEGORIES)[number];
 

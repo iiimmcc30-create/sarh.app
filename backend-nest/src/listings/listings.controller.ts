@@ -93,7 +93,9 @@ export class ListingsController {
     @Param('id') id: string,
     @Body() dto: ApplyPlanPromoteDto,
   ) {
-    return successResponse(await this.listings.applyPlanPromotion(user, id, dto));
+    return successResponse(
+      await this.listings.applyPlanPromotion(user, id, dto),
+    );
   }
 
   @RateLimit('api')

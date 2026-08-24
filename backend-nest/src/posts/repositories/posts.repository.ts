@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { notDeleted, softDeleteFields } from '../../common/utils/soft-delete.util';
+import {
+  notDeleted,
+  softDeleteFields,
+} from '../../common/utils/soft-delete.util';
 
 export const POST_AUTHOR_SELECT = {
   id: true,

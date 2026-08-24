@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 import { SupportRepository } from '../repositories/support.repository';
-import { TICKET_STATUS_LABEL_AR, VERIFICATION_STATUS_LABEL_AR } from '../constants/support.constants';
+import {
+  TICKET_STATUS_LABEL_AR,
+  VERIFICATION_STATUS_LABEL_AR,
+} from '../constants/support.constants';
 
 const SYSTEM_TYPE = 'system';
 
@@ -30,7 +33,10 @@ export class SupportNotificationsService {
     );
   }
 
-  async notifyTicketCreated(userId: string, ticket: { id: string; ticketNumber: string; subject: string }) {
+  async notifyTicketCreated(
+    userId: string,
+    ticket: { id: string; ticketNumber: string; subject: string },
+  ) {
     await Promise.allSettled([
       this.notifications.notifyUser({
         userId,
@@ -55,7 +61,10 @@ export class SupportNotificationsService {
     ]);
   }
 
-  async notifyStaffReply(userId: string, ticket: { id: string; ticketNumber: string }) {
+  async notifyStaffReply(
+    userId: string,
+    ticket: { id: string; ticketNumber: string },
+  ) {
     await this.notifications.notifyUser({
       userId,
       type: SYSTEM_TYPE,
@@ -69,7 +78,11 @@ export class SupportNotificationsService {
     });
   }
 
-  async notifyUserReply(ticket: { id: string; ticketNumber: string; subject: string }) {
+  async notifyUserReply(ticket: {
+    id: string;
+    ticketNumber: string;
+    subject: string;
+  }) {
     await this.notifyStaff({
       titleAr: 'رد مستخدم على تذكرة',
       bodyAr: `${ticket.ticketNumber} — ${ticket.subject}`,
@@ -100,7 +113,10 @@ export class SupportNotificationsService {
     });
   }
 
-  async notifyTicketAwaitingUser(userId: string, ticket: { id: string; ticketNumber: string }) {
+  async notifyTicketAwaitingUser(
+    userId: string,
+    ticket: { id: string; ticketNumber: string },
+  ) {
     await this.notifications.notifyUser({
       userId,
       type: SYSTEM_TYPE,
@@ -114,7 +130,10 @@ export class SupportNotificationsService {
     });
   }
 
-  async notifyTicketClosed(userId: string, ticket: { id: string; ticketNumber: string }) {
+  async notifyTicketClosed(
+    userId: string,
+    ticket: { id: string; ticketNumber: string },
+  ) {
     await this.notifications.notifyUser({
       userId,
       type: SYSTEM_TYPE,

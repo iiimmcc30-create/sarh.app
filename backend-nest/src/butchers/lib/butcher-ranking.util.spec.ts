@@ -50,9 +50,13 @@ describe('butcher-ranking.util', () => {
     it('is full at creation and zero after window', () => {
       const now = new Date('2026-08-12T00:00:00.000Z');
       expect(computeNewButcherBoost(now, now)).toBe(100);
-      const old = new Date(now.getTime() - (NEW_BUTCHER_BOOST_DAYS + 1) * 864e5);
+      const old = new Date(
+        now.getTime() - (NEW_BUTCHER_BOOST_DAYS + 1) * 864e5,
+      );
       expect(computeNewButcherBoost(old, now)).toBe(0);
-      const mid = new Date(now.getTime() - (NEW_BUTCHER_BOOST_DAYS / 2) * 864e5);
+      const mid = new Date(
+        now.getTime() - (NEW_BUTCHER_BOOST_DAYS / 2) * 864e5,
+      );
       expect(computeNewButcherBoost(mid, now)).toBeCloseTo(50, 5);
     });
   });

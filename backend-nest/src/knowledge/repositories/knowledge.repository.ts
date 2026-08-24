@@ -18,10 +18,7 @@ export class KnowledgeRepository {
     });
   }
 
-  createKnowledgeUser(data: {
-    passwordHash: string;
-    avatar?: string | null;
-  }) {
+  createKnowledgeUser(data: { passwordHash: string; avatar?: string | null }) {
     return this.prisma.user.create({
       data: {
         username: KNOWLEDGE_AUTHOR_USERNAME,
@@ -140,10 +137,7 @@ export class KnowledgeRepository {
     });
   }
 
-  updateSource(
-    id: string,
-    data: Prisma.KnowledgeSourceUpdateInput,
-  ) {
+  updateSource(id: string, data: Prisma.KnowledgeSourceUpdateInput) {
     return this.prisma.knowledgeSource.update({ where: { id }, data });
   }
 
@@ -176,10 +170,7 @@ export class KnowledgeRepository {
     });
   }
 
-  updateArticle(
-    id: string,
-    data: Prisma.KnowledgeArticleUpdateInput,
-  ) {
+  updateArticle(id: string, data: Prisma.KnowledgeArticleUpdateInput) {
     return this.prisma.knowledgeArticle.update({
       where: { id },
       data,

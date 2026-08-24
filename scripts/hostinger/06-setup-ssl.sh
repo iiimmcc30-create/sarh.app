@@ -8,6 +8,7 @@ DOMAIN="${DOMAIN:-sarhsa.online}"
 EMAIL="${SSL_EMAIL:-admin@sarhsa.online}"
 
 COMPOSE=(docker compose -f docker-compose.prod.yml --env-file .env.production)
+COMPOSE_SSL=(docker compose -f docker-compose.prod.yml -f docker-compose.prod.ssl.yml --env-file .env.production)
 
 VPS_IP=$(curl -4 -s ifconfig.me)
 DNS_IP=$(dig +short "$DOMAIN" A | head -1)
@@ -31,25 +32,20 @@ docker run --rm \
   --email "$EMAIL" \
   --agree-tos --non-interactive
 
+# Enable HTTP→HTTPS redirect include
 cp -f nginx/ssl-redirect.conf.disabled nginx/ssl-redirect.conf
 
-# Patch compose to expose 443 + mount SSL server + certs
-python3 - <<'PY'
-from pathlib import Path
-p = Path("docker-compose.prod.yml")
-text = p.read_text()
-if "'443:443'" not in text:
-    text = text.replace("      - '80:80'\n", "      - '80:80'\n      - '443:443'\n", 1)
-if "nginx.ssl.server.conf" not in text:
-    needle = "      - ./nginx/ssl-redirect.conf:/etc/nginx/conf.d/ssl-redirect.conf:ro\n"
-    insert = needle + (
-        "      - ./nginx/nginx.ssl.server.conf:/etc/nginx/conf.d/ssl-server.conf:ro\n"
-        "      - /etc/letsencrypt:/etc/letsencrypt:ro\n"
-    )
-    text = text.replace(needle, insert, 1)
-p.write_text(text)
-print("docker-compose.prod.yml patched for HTTPS")
-PY
+# Bring nginx up with SSL overlay (443 + cert mounts)
+"${COMPOSE_SSL[@]}" up -d nginx
 
-"${COMPOSE[@]}" up -d nginx
+# Renew twice daily via host cron if missing
+CRON_LINE='0 3,15 * * * root certbot renew --quiet --deploy-hook "cd /opt/sarh && docker compose -f docker-compose.prod.yml -f docker-compose.prod.ssl.yml --env-file .env.production exec -T nginx nginx -s reload"'
+if [[ -d /etc/cron.d ]] && [[ ! -f /etc/cron.d/sarh-certbot-renew ]]; then
+  echo "$CRON_LINE" > /etc/cron.d/sarh-certbot-renew
+  chmod 644 /etc/cron.d/sarh-certbot-renew
+  echo "Installed /etc/cron.d/sarh-certbot-renew"
+fi
+
 echo "HTTPS enabled. Test: curl -sI https://${DOMAIN}/api/health"
+echo "Remember to use both compose files for future nginx restarts:"
+echo "  docker compose -f docker-compose.prod.yml -f docker-compose.prod.ssl.yml --env-file .env.production up -d nginx"

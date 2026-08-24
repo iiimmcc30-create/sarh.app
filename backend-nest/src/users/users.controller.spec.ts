@@ -20,7 +20,9 @@ describe('UsersController routes', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({
-        canActivate: (ctx: { switchToHttp: () => { getRequest: () => Record<string, unknown> } }) => {
+        canActivate: (ctx: {
+          switchToHttp: () => { getRequest: () => Record<string, unknown> };
+        }) => {
           const req = ctx.switchToHttp().getRequest();
           req.user = { userId: 'viewer-1', role: 'USER' };
           return true;
@@ -32,11 +34,19 @@ describe('UsersController routes', () => {
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
-    app.use((req: { user?: { userId: string; role: string } }, _res: unknown, next: () => void) => {
-      req.user = { userId: 'viewer-1', role: 'USER' };
-      next();
-    });
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.use(
+      (
+        req: { user?: { userId: string; role: string } },
+        _res: unknown,
+        next: () => void,
+      ) => {
+        req.user = { userId: 'viewer-1', role: 'USER' };
+        next();
+      },
+    );
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
   });
 
@@ -52,7 +62,11 @@ describe('UsersController routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.blocked).toBe(true);
-    expect(usersService.setBlock).toHaveBeenCalledWith('target-1', 'viewer-1', true);
+    expect(usersService.setBlock).toHaveBeenCalledWith(
+      'target-1',
+      'viewer-1',
+      true,
+    );
   });
 
   it('GET /api/users/blocked → 200', async () => {

@@ -55,7 +55,10 @@ export async function readWorkerHeartbeat(
     const raw = await client.get(WORKER_HEARTBEAT_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw) as { ts?: number };
-    return typeof parsed.ts === 'number' && Date.now() - parsed.ts < HEARTBEAT_TTL_SEC * 1000;
+    return (
+      typeof parsed.ts === 'number' &&
+      Date.now() - parsed.ts < HEARTBEAT_TTL_SEC * 1000
+    );
   } catch {
     return false;
   }

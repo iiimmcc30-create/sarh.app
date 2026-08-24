@@ -16,4 +16,14 @@ export class HealthController {
     const { httpStatus: _, ...body } = result;
     return body;
   }
+
+  @Public()
+  @Get('ready')
+  @HttpCode(200)
+  async ready(@Res({ passthrough: true }) res: Response) {
+    const result = await this.health.ready();
+    res.status(result.httpStatus);
+    const { httpStatus: _, ...body } = result;
+    return body;
+  }
 }

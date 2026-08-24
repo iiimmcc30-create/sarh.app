@@ -9,7 +9,9 @@ import type { PushJob } from '../types/queue.types';
 @Injectable()
 export class PushQueueService {
   constructor(
-    @Optional() @InjectQueue(QUEUE_NAMES.PUSH) private readonly queue: Queue | null,
+    @Optional()
+    @InjectQueue(QUEUE_NAMES.PUSH)
+    private readonly queue: Queue | null,
     private readonly cache: RedisCacheService,
     private readonly logger: LoggerService,
   ) {}

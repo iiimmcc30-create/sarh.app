@@ -9,10 +9,7 @@ type ParsedRedisUrl = {
 };
 
 export type SharedRedisKind =
-  | 'default'
-  | 'bullmq'
-  | 'subscriber'
-  | 'listener-sub';
+  'default' | 'bullmq' | 'subscriber' | 'listener-sub';
 
 const sharedClients = new Map<string, IORedis>();
 let bullmqSubscriber: IORedis | null = null;

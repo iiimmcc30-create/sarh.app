@@ -9,7 +9,10 @@ import {
   hasPaidAccess,
 } from '../../lib/subscription-lifecycle';
 import { throwApi } from '../../common/exceptions/api.exception';
-import { LISTING_DAILY_LIMIT_MESSAGE_AR, resolveListingCreateDailyLimit } from '../../listings/listing-policy';
+import {
+  LISTING_DAILY_LIMIT_MESSAGE_AR,
+  resolveListingCreateDailyLimit,
+} from '../../listings/listing-policy';
 import { SubscriptionLifecycleRepository } from '../repositories/subscription-lifecycle.repository';
 import { SubscriptionsRepository } from '../repositories/subscriptions.repository';
 import { SubscriptionLifecycleService } from './subscription-lifecycle.service';
@@ -60,7 +63,9 @@ export class SubscriptionEntitlementService {
 
   private async resetDailyAdsIfNeeded(
     userId: string,
-    row: NonNullable<Awaited<ReturnType<SubscriptionLifecycleRepository['findByUserId']>>>,
+    row: NonNullable<
+      Awaited<ReturnType<SubscriptionLifecycleRepository['findByUserId']>>
+    >,
   ) {
     const now = new Date();
     const windowStart = row.dailyAdsWindowStart;
@@ -218,8 +223,7 @@ export class SubscriptionEntitlementService {
       return {
         allowed: false as const,
         code: 'plan_required' as const,
-        messageAr:
-          'البث المباشر غير متاح في باقتك. قم بالترقية لبدء البث.',
+        messageAr: 'البث المباشر غير متاح في باقتك. قم بالترقية لبدء البث.',
         planId: ctx.planSlug,
       };
     }
@@ -256,7 +260,9 @@ export class SubscriptionEntitlementService {
   }
 
   async enrichSubscriptionView(
-    row: NonNullable<Awaited<ReturnType<SubscriptionLifecycleRepository['findByUserId']>>>,
+    row: NonNullable<
+      Awaited<ReturnType<SubscriptionLifecycleRepository['findByUserId']>>
+    >,
   ) {
     const status = getSubscriptionStatus(row);
     const effectivePlanSlug = getEffectivePlanSlug(row);

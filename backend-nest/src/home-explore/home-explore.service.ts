@@ -49,7 +49,8 @@ export class HomeExploreService {
     if (!row) {
       return this.seedDefaults();
     }
-    const value = row.value as { items?: HomeExploreStoredItem[] } | HomeExploreStoredItem[];
+    const value = row.value as
+      { items?: HomeExploreStoredItem[] } | HomeExploreStoredItem[];
     const items = Array.isArray(value) ? value : value?.items;
     if (!Array.isArray(items) || items.length === 0) {
       return this.seedDefaults();
@@ -60,7 +61,10 @@ export class HomeExploreService {
   }
 
   private async writeStore(items: HomeExploreStoredItem[]) {
-    const normalized = items.map((item, index) => ({ ...item, sortOrder: index }));
+    const normalized = items.map((item, index) => ({
+      ...item,
+      sortOrder: index,
+    }));
     await this.prisma.appSetting.upsert({
       where: { key: HOME_EXPLORE_SETTING_KEY },
       create: {
@@ -79,12 +83,14 @@ export class HomeExploreService {
   }
 
   private async seedDefaults(): Promise<HomeExploreStoredItem[]> {
-    const items = DEFAULT_HOME_EXPLORE_DESTINATIONS.map((destination, index) => ({
-      id: randomUUID(),
-      destination,
-      sortOrder: index,
-      isActive: destination !== 'promote',
-    }));
+    const items = DEFAULT_HOME_EXPLORE_DESTINATIONS.map(
+      (destination, index) => ({
+        id: randomUUID(),
+        destination,
+        sortOrder: index,
+        isActive: destination !== 'promote',
+      }),
+    );
     return this.writeStore(items);
   }
 
@@ -140,20 +146,23 @@ export class HomeExploreService {
     return stored.map((item) => this.hydrate(item)).filter(Boolean);
   }
 
-  async update(
-    id: string,
-    patch: { isActive?: boolean; sortOrder?: number },
-  ) {
+  async update(id: string, patch: { isActive?: boolean; sortOrder?: number }) {
     const items = await this.readStore();
     const index = items.findIndex((item) => item.id === id);
     if (index < 0) throwApi(404, 'not_found', 'القسم غير موجود');
     if (typeof patch.isActive === 'boolean') {
       items[index].isActive = patch.isActive;
     }
-    if (typeof patch.sortOrder === 'number' && Number.isFinite(patch.sortOrder)) {
+    if (
+      typeof patch.sortOrder === 'number' &&
+      Number.isFinite(patch.sortOrder)
+    ) {
       const next = items[index];
       items.splice(index, 1);
-      const target = Math.max(0, Math.min(items.length, Math.round(patch.sortOrder)));
+      const target = Math.max(
+        0,
+        Math.min(items.length, Math.round(patch.sortOrder)),
+      );
       items.splice(target, 0, next);
     }
     const stored = await this.writeStore(items);

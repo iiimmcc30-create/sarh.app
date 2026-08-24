@@ -27,20 +27,28 @@ import {
 } from '../dto/auth.dto';
 import { isValidSaudiMobileE164, normalizeE164Phone } from '../../lib/phone';
 
-const DEFAULT_SESSION_TTL_DAYS = 3650; // ~10 years — until explicit logout or app uninstall
+const DEFAULT_SESSION_TTL_DAYS = 30;
 
 function isTwilioDevOtpMode(): boolean {
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim() ?? '';
   const authToken = process.env.TWILIO_AUTH_TOKEN?.trim() ?? '';
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim() ?? '';
-  return (
+  const enabled =
     process.env.DEV_OTP === 'true' ||
     !accountSid ||
     !authToken ||
     !serviceSid ||
     accountSid.startsWith('AC...') ||
-    accountSid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-  );
+    accountSid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  // Never allow fixed OTP path in production — even if Twilio env is missing.
+  if (enabled && process.env.NODE_ENV === 'production') {
+    throwApi(
+      503,
+      'otp_misconfigured',
+      'خدمة التحقق غير مهيأة. تواصل مع الدعم.',
+    );
+  }
+  return enabled;
 }
 
 function formatUser(user: {
@@ -391,6 +399,14 @@ export class AuthService {
       };
     }
 
+    if (!accountSid || !authToken || !serviceSid) {
+      throwApi(
+        503,
+        'otp_misconfigured',
+        'خدمة التحقق غير مهيأة. تواصل مع الدعم.',
+      );
+    }
+
     try {
       const client = twilio(accountSid, authToken);
       const to = dto.channel === 'whatsapp' ? `whatsapp:${phone}` : phone;
@@ -537,7 +553,11 @@ export class AuthService {
     if (!res.ok) return null;
     const data = (await res.json()) as Record<string, string>;
     const allowed = this.getAllowedGoogleClientIds();
-    if (allowed.length > 0 && !allowed.includes(data.aud)) return null;
+    if (process.env.NODE_ENV === 'production') {
+      if (!allowed.length || !allowed.includes(data.aud)) return null;
+    } else if (allowed.length > 0 && !allowed.includes(data.aud)) {
+      return null;
+    }
     return {
       googleId: data.sub,
       email: data.email,

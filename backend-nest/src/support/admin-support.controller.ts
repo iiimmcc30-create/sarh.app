@@ -57,7 +57,10 @@ export class AdminSupportController {
   @RateLimit('api')
   @Patch('tickets/:id')
   @HttpCode(HttpStatus.OK)
-  async updateTicket(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateTicket(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.tickets.updateAdminTicket(id, body));
   }
 
@@ -98,7 +101,9 @@ export class AdminSupportController {
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
   ) {
-    return successResponse(await this.verification.updateAdmin(staff, id, body));
+    return successResponse(
+      await this.verification.updateAdmin(staff, id, body),
+    );
   }
 
   @Roles(...STAFF)
@@ -121,7 +126,10 @@ export class AdminSupportController {
   @RateLimit('api')
   @Patch('faqs/:id')
   @HttpCode(HttpStatus.OK)
-  async updateFaq(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateFaq(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return successResponse(await this.faq.update(id, body));
   }
 

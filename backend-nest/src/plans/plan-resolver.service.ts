@@ -63,7 +63,10 @@ export class PlanResolverService implements OnModuleInit {
     return this.cache.get(this.cacheKey(normalized, audience)) ?? null;
   }
 
-  async resolve(slug: string, audience: PlanAudience): Promise<ResolvedPlan | null> {
+  async resolve(
+    slug: string,
+    audience: PlanAudience,
+  ): Promise<ResolvedPlan | null> {
     const cached = this.resolveSync(slug, audience);
     if (cached) return cached;
 

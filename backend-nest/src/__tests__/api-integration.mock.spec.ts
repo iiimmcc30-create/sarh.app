@@ -3,7 +3,12 @@
  * Validates status codes and response envelopes without booting full AppModule.
  */
 import request from 'supertest';
-import express, { type Express, type Request, type Response, type NextFunction } from 'express';
+import express, {
+  type Express,
+  type Request,
+  type Response,
+  type NextFunction,
+} from 'express';
 
 function createMockApi(): Express {
   const app = express();
@@ -85,20 +90,28 @@ function createMockApi(): Express {
     }
     return res.status(201).json({
       success: true,
-      data: { id: 'l1', featured: !!req.body.featured, pinned: !!req.body.pinned },
+      data: {
+        id: 'l1',
+        featured: !!req.body.featured,
+        pinned: !!req.body.pinned,
+      },
     });
   });
 
   app.put('/api/listings/:id', authed, (req, res) => {
     if (req.headers.authorization === 'Bearer forbidden') {
-      return res.status(403).json({ success: false, error: 'forbidden', messageAr: 'ممنوع' });
+      return res
+        .status(403)
+        .json({ success: false, error: 'forbidden', messageAr: 'ممنوع' });
     }
     return res.status(200).json({ success: true, data: { id: req.params.id } });
   });
 
   app.delete('/api/listings/:id', authed, (req, res) => {
     if (req.params.id === 'missing') {
-      return res.status(404).json({ success: false, error: 'not_found', messageAr: 'غير موجود' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'not_found', messageAr: 'غير موجود' });
     }
     return res.status(200).json({ success: true, data: { deleted: true } });
   });
@@ -139,7 +152,11 @@ function createMockApi(): Express {
 
   app.post('/api/butchers/orders/:id/status', authed, (req, res) => {
     const next = req.body?.status;
-    if (!['confirmed', 'cancelled', 'delivered', 'preparing', 'ready'].includes(next)) {
+    if (
+      !['confirmed', 'cancelled', 'delivered', 'preparing', 'ready'].includes(
+        next,
+      )
+    ) {
       return res.status(400).json({
         success: false,
         error: 'invalid_transition',

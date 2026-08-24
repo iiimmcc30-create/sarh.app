@@ -43,7 +43,8 @@ export class EditorialStoriesService {
 
     const titleAr =
       dto.titleAr !== undefined
-        ? dto.titleAr.trim() || deriveEditorialStoryTitle(dto.bodyAr ?? existing.bodyAr)
+        ? dto.titleAr.trim() ||
+          deriveEditorialStoryTitle(dto.bodyAr ?? existing.bodyAr)
         : dto.bodyAr !== undefined
           ? deriveEditorialStoryTitle(dto.bodyAr)
           : undefined;

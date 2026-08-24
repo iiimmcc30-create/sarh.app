@@ -45,7 +45,11 @@ export class MarketCategoriesService {
       const parent = await this.repo.findById(dto.parentId);
       if (!parent) throwApi(404, 'not_found', 'التصنيف الأب غير موجود');
       if (parent.parentId) {
-        throwApi(400, 'invalid_parent', 'لا يمكن إنشاء أكثر من مستويين للتصنيفات');
+        throwApi(
+          400,
+          'invalid_parent',
+          'لا يمكن إنشاء أكثر من مستويين للتصنيفات',
+        );
       }
     }
 
@@ -56,9 +60,7 @@ export class MarketCategoriesService {
         slug,
         icon: dto.icon?.trim() || null,
         emoji: dto.emoji?.trim() || null,
-        parent: dto.parentId
-          ? { connect: { id: dto.parentId } }
-          : undefined,
+        parent: dto.parentId ? { connect: { id: dto.parentId } } : undefined,
         sortOrder: dto.sortOrder ?? 0,
         isActive: dto.isActive ?? true,
         requiresWeight: dto.requiresWeight ?? false,
@@ -89,7 +91,11 @@ export class MarketCategoriesService {
       const parent = await this.repo.findById(dto.parentId);
       if (!parent) throwApi(404, 'not_found', 'التصنيف الأب غير موجود');
       if (parent.parentId) {
-        throwApi(400, 'invalid_parent', 'لا يمكن إنشاء أكثر من مستويين للتصنيفات');
+        throwApi(
+          400,
+          'invalid_parent',
+          'لا يمكن إنشاء أكثر من مستويين للتصنيفات',
+        );
       }
     }
 
@@ -101,7 +107,8 @@ export class MarketCategoriesService {
     if (dto.emoji !== undefined) data.emoji = dto.emoji?.trim() || null;
     if (dto.sortOrder !== undefined) data.sortOrder = dto.sortOrder;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
-    if (dto.requiresWeight !== undefined) data.requiresWeight = dto.requiresWeight;
+    if (dto.requiresWeight !== undefined)
+      data.requiresWeight = dto.requiresWeight;
     if (dto.legacyCategory !== undefined) {
       data.legacyCategory = dto.legacyCategory?.trim() || null;
     }

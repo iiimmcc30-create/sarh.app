@@ -47,7 +47,10 @@ export type TestUser = {
 /** Full REAL registration: send-otp → verify-otp (dev code) → register. */
 export async function registerUser(prefix = 'e2e'): Promise<TestUser> {
   const phone = randomSaudiPhone();
-  const username = `${prefix}_${uniqueId()}`.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 28);
+  const username = `${prefix}_${uniqueId()}`
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, 28);
   const password = 'Passw0rd!23';
 
   await request(API).post('/api/auth/send-otp').send({ phone });
@@ -56,7 +59,9 @@ export async function registerUser(prefix = 'e2e'): Promise<TestUser> {
     .send({ phone, code: DEV_OTP });
   const phoneToken = verify.body?.data?.phone_token;
   if (!phoneToken) {
-    throw new Error(`verify-otp did not return phone_token: ${JSON.stringify(verify.body)}`);
+    throw new Error(
+      `verify-otp did not return phone_token: ${JSON.stringify(verify.body)}`,
+    );
   }
 
   const reg = await request(API).post('/api/auth/register').send({
@@ -68,7 +73,9 @@ export async function registerUser(prefix = 'e2e'): Promise<TestUser> {
     password,
   });
   if (reg.status !== 201 && reg.status !== 200) {
-    throw new Error(`register failed (${reg.status}): ${JSON.stringify(reg.body)}`);
+    throw new Error(
+      `register failed (${reg.status}): ${JSON.stringify(reg.body)}`,
+    );
   }
   const data = reg.body.data;
   return {
@@ -82,7 +89,9 @@ export async function registerUser(prefix = 'e2e'): Promise<TestUser> {
 }
 
 export async function loginUser(login: string, password: string) {
-  const res = await request(API).post('/api/auth/login').send({ login, password });
+  const res = await request(API)
+    .post('/api/auth/login')
+    .send({ login, password });
   return res;
 }
 
@@ -91,7 +100,9 @@ export async function adminToken(): Promise<string> {
     .post('/api/admin/auth/login')
     .send({ login: ADMIN_LOGIN, password: ADMIN_PASSWORD });
   if (res.status !== 200) {
-    throw new Error(`admin login failed (${res.status}): ${JSON.stringify(res.body)}`);
+    throw new Error(
+      `admin login failed (${res.status}): ${JSON.stringify(res.body)}`,
+    );
   }
   return res.body.data.accessToken;
 }

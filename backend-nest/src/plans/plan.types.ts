@@ -2,7 +2,10 @@ import type { FeatureValueType, PlanAudience } from '@prisma/client';
 
 export type BillingCycle = 'monthly' | 'yearly';
 
-export type PlanPermissions = Record<string, boolean | number | string | unknown>;
+export type PlanPermissions = Record<
+  string,
+  boolean | number | string | unknown
+>;
 
 export type ResolvedPlan = {
   id: string;
@@ -48,7 +51,10 @@ export const LEGACY_PLAN_SLUG_MAP: Record<string, string> = {
 export const FREE_PLAN_SLUG = 'free';
 
 export function normalizePlanSlug(slug: string): string {
-  const canonical = slug.trim().toLowerCase().replace(/[\s_]+/g, '-');
+  const canonical = slug
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-');
   return LEGACY_PLAN_SLUG_MAP[canonical] ?? canonical;
 }
 
