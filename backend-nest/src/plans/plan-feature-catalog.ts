@@ -109,10 +109,11 @@ export const PLAN_FEATURE_CATALOG: PlanFeatureCatalogItem[] = [
   {
     key: 'storeCommission',
     labelAr: 'عمولة المتجر',
-    descriptionAr: 'نسبة العمولة على الطلبات (مثال: 5 أو 0)',
+    descriptionAr:
+      'علم إعفاء عمولات الملحمة (إعلان + طلبات مكتملة). 0 = معفى بالاشتراك، أي قيمة > 0 = تُحسب عمولة المنصة (النسبة ثابتة في الكود وليست قيمة هذا الحقل)',
     valueType: 'NUMBER',
     audiences: ['BUTCHER'],
-    suggestedValue: '5',
+    suggestedValue: '1',
   },
 ];
 

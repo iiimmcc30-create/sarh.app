@@ -5,11 +5,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AppNotificationsService } from '../../queue/services/app-notifications.service';
 import { SocketEmitService } from '../../gateway/services/socket-emit.service';
 import { ButcherRankingService } from './butcher-ranking.service';
+import { SubscriptionEntitlementService } from '../../subscriptions/services/subscription-entitlement.service';
 import { ApiException } from '../../common/exceptions/api.exception';
+import { butcherOrderCommissionPaymentRef } from '../../lib/commissions';
 
 describe('OrderLifecycleService', () => {
   let service: OrderLifecycleService;
-  const prisma = {
+  const prisma: {
+    $transaction: jest.Mock;
+    user: { findMany: jest.Mock };
+    $queryRaw?: jest.Mock;
+  } = {
     $transaction: jest.fn(),
     user: { findMany: jest.fn().mockResolvedValue([{ id: 'admin-1' }]) },
   };
@@ -25,21 +31,41 @@ describe('OrderLifecycleService', () => {
     onOrderCancelled: jest.fn().mockResolvedValue(undefined),
     onOrderDelivered: jest.fn().mockResolvedValue(undefined),
   };
+  const entitlements = {
+    getPermissionsForUser: jest.fn().mockResolvedValue({ storeCommission: 1 }),
+  };
 
-  const lockedRow = {
+  const lockedRow: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    paymentStatus: string;
+    productId: string;
+    customerId: string;
+    reservedQuantity: number;
+    butcherId: string;
+    butcherUserId: string;
+    totalPrice: number;
+    currency: string;
+  } = {
     id: 'order-1',
     orderNumber: 'ORD-2026-000001',
-    status: 'pending' as const,
-    paymentStatus: 'paid' as const,
+    status: 'pending',
+    paymentStatus: 'paid',
     productId: 'p1',
     customerId: 'c1',
     reservedQuantity: 2,
     butcherId: 'b1',
     butcherUserId: 'butcher-1',
+    totalPrice: 100,
+    currency: 'SAR',
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    entitlements.getPermissionsForUser.mockResolvedValue({
+      storeCommission: 1,
+    });
     const moduleRef = await Test.createTestingModule({
       providers: [
         OrderLifecycleService,
@@ -48,6 +74,7 @@ describe('OrderLifecycleService', () => {
         { provide: AppNotificationsService, useValue: notifications },
         { provide: SocketEmitService, useValue: sockets },
         { provide: ButcherRankingService, useValue: ranking },
+        { provide: SubscriptionEntitlementService, useValue: entitlements },
       ],
     }).compile();
 
@@ -58,8 +85,11 @@ describe('OrderLifecycleService', () => {
     overrides: {
       inventoryItems?: Array<{ productId: string; reservedQuantity: number }>;
       nextStatus?: string;
+      locked?: Partial<typeof lockedRow>;
+      existingCommission?: { id: string } | null;
     } = {},
   ) {
+    const locked = { ...lockedRow, ...overrides.locked };
     const executeRaw = jest.fn().mockResolvedValue(1);
     const orderUpdate = jest.fn().mockResolvedValue({
       id: 'order-1',
@@ -72,9 +102,13 @@ describe('OrderLifecycleService', () => {
       note: 'المنتج غير متوفر',
       createdAt: new Date(),
     });
+    const paymentCreate = jest.fn().mockResolvedValue({ id: 'pay-comm-1' });
+    const paymentFindFirst = jest
+      .fn()
+      .mockResolvedValue(overrides.existingCommission ?? null);
 
     return {
-      $queryRaw: jest.fn().mockResolvedValue([lockedRow]),
+      $queryRaw: jest.fn().mockResolvedValue([locked]),
       butcherOrderItem: {
         findMany: jest.fn().mockResolvedValue(overrides.inventoryItems ?? []),
       },
@@ -88,7 +122,13 @@ describe('OrderLifecycleService', () => {
       executeRaw,
       orderUpdate,
       timelineCreate,
-      payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+      paymentCreate,
+      paymentFindFirst,
+      payment: {
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        findFirst: paymentFindFirst,
+        create: paymentCreate,
+      },
     };
   }
 
@@ -348,5 +388,181 @@ describe('OrderLifecycleService', () => {
     );
 
     expect(result).toEqual({ scanned: 2, expired: 1, skipped: 1 });
+  });
+
+  it('records 10% order commission once when order is delivered', async () => {
+    const tx = transitionTx({
+      nextStatus: 'delivered',
+      locked: { status: 'ready', paymentStatus: 'paid', totalPrice: 100 },
+      inventoryItems: [{ productId: 'p1', reservedQuantity: 1 }],
+    });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'delivered',
+    });
+
+    expect(tx.paymentCreate).toHaveBeenCalledTimes(1);
+    expect(tx.paymentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          amount: 10,
+          currency: 'SAR',
+          status: 'paid',
+          referenceType: 'commission',
+          referenceId: 'order-1',
+          orderId: butcherOrderCommissionPaymentRef('order-1'),
+          metadata: expect.objectContaining({
+            kind: 'butcher_order_commission',
+            ratePercent: 10,
+            isExempt: false,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('does not create a second commission when ledger already exists', async () => {
+    const tx = transitionTx({
+      nextStatus: 'delivered',
+      locked: { status: 'ready', paymentStatus: 'paid', totalPrice: 100 },
+      inventoryItems: [{ productId: 'p1', reservedQuantity: 1 }],
+      existingCommission: { id: 'pay-existing' },
+    });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'delivered',
+    });
+
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+  });
+
+  it('skips order commission when payment is not paid', async () => {
+    // ready→delivered still allowed by state machine; unpaid should not accrue.
+    const tx = transitionTx({
+      nextStatus: 'delivered',
+      locked: { status: 'ready', paymentStatus: 'unpaid', totalPrice: 100 },
+      inventoryItems: [{ productId: 'p1', reservedQuantity: 1 }],
+    });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'delivered',
+    });
+
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+  });
+
+  it('records zero order commission when butcher is subscription-exempt', async () => {
+    entitlements.getPermissionsForUser.mockResolvedValue({
+      storeCommission: 0,
+    });
+    const tx = transitionTx({
+      nextStatus: 'delivered',
+      locked: { status: 'ready', paymentStatus: 'paid', totalPrice: 100 },
+      inventoryItems: [{ productId: 'p1', reservedQuantity: 1 }],
+    });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'delivered',
+    });
+
+    expect(tx.paymentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          amount: 0,
+          metadata: expect.objectContaining({ isExempt: true }),
+        }),
+      }),
+    );
+  });
+
+  it('does not accrue commission on cancel', async () => {
+    const tx = transitionTx({ nextStatus: 'cancelled' });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'cancelled',
+    });
+
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+  });
+
+  it('does not accrue commission on confirmed (non-delivered)', async () => {
+    const tx = transitionTx({
+      nextStatus: 'confirmed',
+      locked: { status: 'pending', paymentStatus: 'paid', totalPrice: 100 },
+    });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'confirmed',
+    });
+
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+  });
+
+  it('idempotent: re-processing already delivered is a noop without new commission', async () => {
+    const existingOrder = {
+      id: 'order-1',
+      orderNumber: 'ORD-2026-000001',
+      status: 'delivered',
+      butcher: { id: 'b1', userId: 'butcher-1' },
+    };
+    const tx = transitionTx({
+      locked: {
+        status: 'delivered',
+        paymentStatus: 'paid',
+        totalPrice: 100,
+      },
+    });
+    tx.butcherOrder.findUnique = jest.fn().mockResolvedValue(existingOrder);
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    const result = await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'delivered',
+    });
+
+    expect(result).toEqual(existingOrder);
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+    expect(tx.paymentFindFirst).not.toHaveBeenCalled();
+    expect(tx.orderUpdate).not.toHaveBeenCalled();
   });
 });

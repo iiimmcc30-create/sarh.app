@@ -672,6 +672,38 @@ export class PaymentsRepository {
     });
   }
 
+  /**
+   * Reverse butcher order commission ledger (referenceType=commission)
+   * when the underlying butcher_order payment is refunded. Idempotent.
+   */
+  async markOrderCommissionRefunded(
+    butcherOrderId: string,
+    extraMetadata: Record<string, unknown>,
+  ) {
+    const existing = await this.prisma.payment.findFirst({
+      where: {
+        referenceType: 'commission',
+        referenceId: butcherOrderId,
+        status: 'paid',
+      },
+      select: { id: true, metadata: true },
+    });
+    if (!existing) return null;
+
+    const prevMeta = (existing.metadata ?? {}) as Record<string, unknown>;
+    return this.prisma.payment.update({
+      where: { id: existing.id },
+      data: {
+        status: 'refunded',
+        metadata: {
+          ...prevMeta,
+          ...extraMetadata,
+          commissionReversed: true,
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
+
   markPaymentFailedById(paymentId: string) {
     return this.prisma.payment.update({
       where: { id: paymentId },

@@ -1,4 +1,8 @@
-// Commission calculation — store exemption driven by plan permissions (storeCommission = 0)
+// Commission calculation — two independent butcher paths:
+//   Listing Commission (store publish / ListingFee) = 1%
+//   Order Commission (completed butcher orders)     = 10%
+// Plan permission `storeCommission` is an exemption flag for butcher platform
+// commissions (<= 0 = exempt). It does not set the numeric rate.
 import type { PlanPermissions } from '../plans/plan.types';
 import { permissionNumber } from '../plans/plan.types';
 
@@ -13,35 +17,56 @@ export type ListingCat =
   | 'equipment'
   | 'store';
 
+/**
+ * Listing / store-publish fee rate (percent of listing price).
+ * Creates ListingFee.commission — never used for order totals.
+ * Do not expose this constant on butcher-facing or public fee rule copy.
+ */
+export const BUTCHER_LISTING_COMMISSION_PERCENT = 1;
+
+/**
+ * @deprecated Alias for listing rate — prefer BUTCHER_LISTING_COMMISSION_PERCENT.
+ * Kept so existing imports keep compiling during the listing/order split.
+ */
+export const BUTCHER_STORE_COMMISSION_PERCENT =
+  BUTCHER_LISTING_COMMISSION_PERCENT;
+
+/**
+ * Order commission rate on completed (delivered) butcher orders.
+ * Independent of ListingFee. Internal / admin only — never show to butchers.
+ */
+export const BUTCHER_ORDER_COMMISSION_PERCENT = 10;
+
+/** Merchant payment.orderId for an order-commission ledger row (unique). */
+export function butcherOrderCommissionPaymentRef(
+  butcherOrderId: string,
+): string {
+  return `BOC-${butcherOrderId}`;
+}
+
 /** @deprecated Use isStoreExemptFromPermissions */
 export function isStoreExempt(planId: string): boolean {
   void planId;
   return false;
 }
 
+/**
+ * Butcher commission exemption from plan permission `storeCommission`.
+ * Designed as a general butcher platform-commission exemption flag
+ * (label: عمولة المتجر) — applies to listing fees and order commissions.
+ */
 export function isStoreExemptFromPermissions(
   permissions?: PlanPermissions,
 ): boolean {
   if (!permissions) return false;
-  return permissionNumber(permissions, 'storeCommission', 5) <= 0;
+  return (
+    permissionNumber(
+      permissions,
+      'storeCommission',
+      BUTCHER_LISTING_COMMISSION_PERCENT,
+    ) <= 0
+  );
 }
-
-type RuleEntry =
-  | { type: 'fixed'; value: number; unit: 'per_head' }
-  | { type: 'percent'; value: number; unit: 'percent_of_price' }
-  | { type: 'by_plan'; value: number; unit: 'by_plan' };
-
-const RULES: Record<ListingCat, RuleEntry> = {
-  sheep: { type: 'fixed', value: 20, unit: 'per_head' },
-  goats: { type: 'fixed', value: 20, unit: 'per_head' },
-  camels: { type: 'fixed', value: 60, unit: 'per_head' },
-  horses: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  cows: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  birds: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  feed: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  equipment: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  store: { type: 'by_plan', value: 5, unit: 'by_plan' },
-};
 
 export interface CommissionResult {
   commission: number;
@@ -50,6 +75,23 @@ export interface CommissionResult {
   ruleDescription: string;
 }
 
+export interface OrderCommissionResult {
+  commission: number;
+  isExempt: boolean;
+  /** Rate used for the accrual (admin/audit). Never expose to butchers. */
+  ratePercent: number;
+  orderAmount: number;
+}
+
+/** SAR-style money rounding to 2 decimal places. */
+export function roundMoney(amount: number): number {
+  return Math.round((amount + Number.EPSILON) * 100) / 100;
+}
+
+/**
+ * ListingFee path only — butcher store publish fee.
+ * Livestock / equipment listings stay fee-free.
+ */
 export function calculateCommission(
   category: ListingCat,
   price: number,
@@ -64,7 +106,6 @@ export function calculateCommission(
     ruleDescription: 'لا رسوم',
   };
 
-  // Commission applies only to non-subscribed butchers (store sales).
   if (audience !== 'BUTCHER' || category !== 'store') {
     return {
       ...noFee,
@@ -72,7 +113,6 @@ export function calculateCommission(
     };
   }
 
-  const rule = RULES.store;
   const isExempt = isStoreExemptFromPermissions(permissions);
 
   let commission = 0;
@@ -81,11 +121,10 @@ export function calculateCommission(
   if (isExempt) {
     ruleDescription = 'صفر عمولة — ملحمة باشتراك مدفوع';
   } else {
-    const rate = permissions
-      ? permissionNumber(permissions, 'storeCommission', rule.value)
-      : rule.value;
+    const rate = BUTCHER_LISTING_COMMISSION_PERCENT;
     commission = Math.ceil((price * rate) / 100);
-    ruleDescription = `${rate}% × ${price.toLocaleString('ar-SA')} ريال = ${commission} ريال`;
+    // Internal description — avoid leaking the rate into butcher-facing fee rules.
+    ruleDescription = `عمولة المنصة على إعلان المتجر`;
   }
 
   return {
@@ -93,6 +132,34 @@ export function calculateCommission(
     isExempt,
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     ruleDescription,
+  };
+}
+
+/**
+ * Order commission on a completed butcher order amount.
+ * Independent of ListingFee / calculateCommission.
+ */
+export function calculateOrderCommission(
+  orderAmount: number,
+  permissions?: PlanPermissions,
+): OrderCommissionResult {
+  const amount = Number.isFinite(orderAmount) ? Math.max(0, orderAmount) : 0;
+  const ratePercent = BUTCHER_ORDER_COMMISSION_PERCENT;
+
+  if (isStoreExemptFromPermissions(permissions)) {
+    return {
+      commission: 0,
+      isExempt: true,
+      ratePercent,
+      orderAmount: amount,
+    };
+  }
+
+  return {
+    commission: roundMoney(amount * (ratePercent / 100)),
+    isExempt: false,
+    ratePercent,
+    orderAmount: amount,
   };
 }
 
@@ -107,13 +174,14 @@ export function shouldCreateFee(
   return true;
 }
 
+/** Public fee rules — butcher/store rows must not reveal the numeric rate. */
 export const COMMISSION_TABLE = [
   {
     icon: '🏪',
     nameAr: 'ملحمة (بدون اشتراك)',
     nameEn: 'Butcher (no subscription)',
-    ruleAr: '٥٪ من سعر البيع',
-    ruleEn: '5% of sale',
+    ruleAr: 'عمولة المنصة حسب الباقة',
+    ruleEn: 'Platform fee per plan',
     color: '#A855F7',
   },
   {

@@ -864,6 +864,14 @@ export class PaymentsService
           );
         }
       }
+      // Reverse accrued butcher order commission ledger if the order payment refunds.
+      if (type === 'butcher_order' && referenceId) {
+        await this.repo.markOrderCommissionRefunded(referenceId, {
+          refundedAt: new Date().toISOString(),
+          refundEvent: eventType,
+          sourcePaymentId: payment.id,
+        });
+      }
       await this.subscriptionCache.invalidate(userId);
       await this.notifications.notifyUser({
         userId,

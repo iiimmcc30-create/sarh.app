@@ -58,7 +58,7 @@ export const DEFAULT_FREE_PLANS: DefaultFreePlan[] = [
       { key: 'storeEnabled', value: 'true', valueType: 'BOOLEAN' },
       { key: 'receiveOrders', value: 'true', valueType: 'BOOLEAN' },
       { key: 'analyticsDashboard', value: 'true', valueType: 'BOOLEAN' },
-      { key: 'storeCommission', value: '5', valueType: 'NUMBER' },
+      { key: 'storeCommission', value: '1', valueType: 'NUMBER' },
       { key: 'monthlyLiveHours', value: '0', valueType: 'NUMBER' },
       { key: 'verifiedBadge', value: 'false', valueType: 'BOOLEAN' },
       { key: 'prioritySupport', value: 'false', valueType: 'BOOLEAN' },

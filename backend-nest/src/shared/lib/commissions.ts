@@ -42,7 +42,7 @@ const RULES: Record<ListingCat, RuleEntry> = {
   birds: { type: 'percent', value: 2, unit: 'percent_of_price' },
   feed: { type: 'percent', value: 2, unit: 'percent_of_price' },
   equipment: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  store: { type: 'by_plan', value: 5, unit: 'by_plan' },
+  store: { type: 'by_plan', value: 10, unit: 'by_plan' },
 };
 
 export interface CommissionResult {
@@ -167,8 +167,8 @@ export const COMMISSION_TABLE = [
     icon: '🏪',
     nameAr: 'متجر / ملحمة (بدون اشتراك)',
     nameEn: 'Store / Butcher (no sub)',
-    ruleAr: '٥٪ من سعر البيع',
-    ruleEn: '5% of sale',
+    ruleAr: 'عمولة المنصة حسب الباقة',
+    ruleEn: 'Platform fee per plan',
     color: '#A855F7',
   },
   {

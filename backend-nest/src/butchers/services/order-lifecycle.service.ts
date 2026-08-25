@@ -4,6 +4,12 @@ import { AppNotificationsService } from '../../queue/services/app-notifications.
 import { SocketEmitService } from '../../gateway/services/socket-emit.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { throwApi } from '../../common/exceptions/api.exception';
+import { SubscriptionEntitlementService } from '../../subscriptions/services/subscription-entitlement.service';
+import {
+  BUTCHER_ORDER_COMMISSION_PERCENT,
+  butcherOrderCommissionPaymentRef,
+  calculateOrderCommission,
+} from '../../lib/commissions';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { ButcherRankingService } from './butcher-ranking.service';
 import type { ValidatedOrderLine } from '../lib/order-line.util';
@@ -29,6 +35,8 @@ type LockedOrderRow = {
   reservedQuantity: number;
   butcherId: string;
   butcherUserId: string;
+  totalPrice: number;
+  currency: string;
 };
 
 type OrderInventoryLine = {
@@ -48,6 +56,7 @@ export class OrderLifecycleService {
     private readonly notifications: AppNotificationsService,
     private readonly sockets: SocketEmitService,
     private readonly ranking: ButcherRankingService,
+    private readonly entitlements: SubscriptionEntitlementService,
   ) {}
 
   private async nextOrderNumber(tx: Prisma.TransactionClient): Promise<string> {
@@ -180,13 +189,83 @@ export class OrderLifecycleService {
         o."customerId" AS "customerId",
         o."reservedQuantity" AS "reservedQuantity",
         o."butcherId" AS "butcherId",
-        b."userId" AS "butcherUserId"
+        b."userId" AS "butcherUserId",
+        o."totalPrice" AS "totalPrice",
+        o.currency AS currency
       FROM "ButcherOrder" o
       INNER JOIN "Butcher" b ON b.id = o."butcherId"
       WHERE o.id = ${orderId}
       FOR UPDATE OF o
     `;
     return rows[0] ?? null;
+  }
+
+  /**
+   * Accrue order commission once when a butcher order reaches `delivered`.
+   * Idempotent via Payment(referenceType=commission, referenceId=orderId)
+   * and unique merchant orderId BOC-{orderId}. Does not use ListingFee.
+   */
+  private async recordOrderCommissionIfNeeded(
+    tx: Prisma.TransactionClient,
+    locked: LockedOrderRow,
+  ): Promise<void> {
+    // Only paid completed orders — never pending / failed / unpaid.
+    if (locked.paymentStatus !== 'paid') return;
+
+    const existing = await tx.payment.findFirst({
+      where: {
+        referenceType: 'commission',
+        referenceId: locked.id,
+      },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    const permissions = await this.entitlements.getPermissionsForUser(
+      locked.butcherUserId,
+    );
+    const calc = calculateOrderCommission(
+      Number(locked.totalPrice),
+      permissions,
+    );
+    const paymentOrderId = butcherOrderCommissionPaymentRef(locked.id);
+
+    try {
+      await tx.payment.create({
+        data: {
+          userId: locked.butcherUserId,
+          orderId: paymentOrderId,
+          amount: calc.commission,
+          currency: locked.currency || 'SAR',
+          // Ledger accrual — not a customer gateway charge.
+          method: 'mada',
+          status: 'paid',
+          paidAt: new Date(),
+          referenceType: 'commission',
+          referenceId: locked.id,
+          description: 'Butcher order commission',
+          descriptionAr: 'عمولة طلب ملحمة',
+          metadata: {
+            kind: 'butcher_order_commission',
+            ledgerOnly: true,
+            butcherOrderId: locked.id,
+            orderNumber: locked.orderNumber,
+            orderTotal: Number(locked.totalPrice),
+            // Admin/audit only — butcher-facing APIs must not surface this rate.
+            ratePercent: BUTCHER_ORDER_COMMISSION_PERCENT,
+            isExempt: calc.isExempt,
+          },
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        return;
+      }
+      throw err;
+    }
   }
 
   private async loadInventoryLines(
@@ -454,6 +533,7 @@ export class OrderLifecycleService {
 
         if (params.nextStatus === 'delivered') {
           await this.finalizeDeliveredInventory(tx, inventoryLines);
+          await this.recordOrderCommissionIfNeeded(tx, locked);
         }
 
         const order = await tx.butcherOrder.update({
