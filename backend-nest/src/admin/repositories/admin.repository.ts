@@ -537,9 +537,7 @@ export class AdminRepository {
       now.getMonth(),
       now.getDate(),
     );
-    const yesterdayStart = new Date(
-      todayStart.getTime() - 24 * 60 * 60 * 1000,
-    );
+    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(
       todayStart.getTime() - 6 * 24 * 60 * 60 * 1000,
     );

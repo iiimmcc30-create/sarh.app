@@ -39,27 +39,6 @@ export function isStoreExemptFromPermissions(
   );
 }
 
-type RuleEntry =
-  | { type: 'fixed'; value: number; unit: 'per_head' }
-  | { type: 'percent'; value: number; unit: 'percent_of_price' }
-  | { type: 'by_plan'; value: number; unit: 'by_plan' };
-
-const RULES: Record<ListingCat, RuleEntry> = {
-  sheep: { type: 'fixed', value: 20, unit: 'per_head' },
-  goats: { type: 'fixed', value: 20, unit: 'per_head' },
-  camels: { type: 'fixed', value: 60, unit: 'per_head' },
-  horses: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  cows: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  birds: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  feed: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  equipment: { type: 'percent', value: 2, unit: 'percent_of_price' },
-  store: {
-    type: 'by_plan',
-    value: BUTCHER_STORE_COMMISSION_PERCENT,
-    unit: 'by_plan',
-  },
-};
-
 export interface CommissionResult {
   commission: number;
   isExempt: boolean;
