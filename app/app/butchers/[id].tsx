@@ -33,9 +33,11 @@ import {
   ButcherStory,
   gccCurrencies,
   ChatMessage,
+  CATEGORY_LABELS,
   type CutType,
+  type MeatCategory,
 } from '@/services/butcherData';
-import { ButcherCategoryBar } from '@/components/butcher/ButcherCategoryBar';
+import { ButcherStoreNavBar, type ButcherStoreNavItem } from '@/components/butcher/ButcherCategoryBar';
 import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
 import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
@@ -54,18 +56,8 @@ import {
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
-type Tab = 'products' | 'offers' | 'stories' | 'about' | 'chat';
-
-const TABS: { id: Tab; labelAr: string }[] = [
-  { id: 'products', labelAr: 'المنتجات' },
-  { id: 'offers',   labelAr: 'العروض' },
-  { id: 'stories',  labelAr: 'القصص' },
-  { id: 'about',    labelAr: 'عن الملحمة' },
-  { id: 'chat',     labelAr: 'المحادثة' },
-];
-
-// ─── Tab: Products (store grid) ───────────────────────────────────────────────
-function StoreProductsTab({
+// ─── Products list (filter owned by parent unified nav) ───────────────────────
+function StoreProductsList({
   products,
   currencySymbol,
   onOpenOptions,
@@ -74,19 +66,7 @@ function StoreProductsTab({
   currencySymbol: string;
   onOpenOptions: (p: ButcherProduct) => void;
 }) {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [menuQuery, setMenuQuery] = useState('');
   const colors = useTheme().colors;
-  const categories = ['all', ...new Set(products.map((p) => p.category))];
-  const q = menuQuery.trim();
-
-  const filtered = products.filter((p) => {
-    const catOk = activeCategory === 'all' || p.category === activeCategory;
-    if (!catOk) return false;
-    if (!q) return true;
-    return p.nameAr.includes(q) || p.name.toLowerCase().includes(q.toLowerCase());
-  });
-
   const emptyStyles = useThemedStyles(({ colors }) => createEmptyStyles(colors));
 
   if (!products.length) {
@@ -102,40 +82,7 @@ function StoreProductsTab({
 
   return (
     <View>
-      <ButcherCategoryBar
-        categories={categories}
-        active={activeCategory}
-        onChange={setActiveCategory}
-      />
-      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xs }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            direction: 'ltr',
-            alignItems: 'center',
-            gap: 8,
-            minHeight: 44,
-            paddingHorizontal: spacing.md,
-            backgroundColor: colors.bgElevated,
-            borderRadius: 14,
-          }}
-        >
-          <AppIcon name="search" size={16} color={colors.textMuted} />
-          <TextInput
-            value={menuQuery}
-            onChangeText={setMenuQuery}
-            placeholder="البحث في القائمة..."
-            placeholderTextColor={colors.textMuted}
-            style={{
-              flex: 1,
-              ...butcherTypography.secondary,
-              color: colors.textPrimary,
-              paddingVertical: 8,
-            }}
-          />
-        </View>
-      </View>
-      {filtered.map((product) => (
+      {products.map((product) => (
         <ButcherStoreProductCard
           key={product.id}
           product={product}
@@ -504,7 +451,7 @@ export default function ButcherProfileScreen() {
     subtotal,
     addLine,
   } = useButcherCart();
-  const [activeTab, setActiveTab] = useState<Tab>('products');
+  const [activeNavId, setActiveNavId] = useState<string>('');
   const [optionsProduct, setOptionsProduct] = useState<ButcherProduct | null>(null);
 
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
@@ -519,13 +466,52 @@ export default function ButcherProfileScreen() {
   const [storiesList, setStoriesList] = useState<ButcherStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatAccess, setChatAccess] = useState<ButcherChatAccess | null>(null);
-  const prevChatAllowed = useRef<boolean | null>(null);
-  const tabsScroller = useRef<ScrollView>(null);
 
-  const visibleTabs = useMemo(
-    () => TABS.filter((tab) => tab.id !== 'chat' || chatAccess?.allowed),
-    [chatAccess?.allowed],
+  const stories = useMemo(
+    () => storiesList.filter((s) => (butcher ? s.butcherId === butcher.id : false)),
+    [storiesList, butcher],
   );
+
+  /** Unified bar: offers + dynamic product categories + stories + about (about is not a category). */
+  const navItems = useMemo((): ButcherStoreNavItem[] => {
+    const items: ButcherStoreNavItem[] = [];
+    items.push({ id: 'offers', label: 'عروضنا', kind: 'offers' });
+    const seen = new Set<string>();
+    for (const p of products) {
+      if (!p.category || seen.has(p.category)) continue;
+      seen.add(p.category);
+      const label =
+        CATEGORY_LABELS[p.category as MeatCategory]?.ar ?? p.category;
+      items.push({ id: p.category, label, kind: 'category' });
+    }
+    if (stories.length > 0) {
+      items.push({ id: 'stories', label: 'القصص', kind: 'stories' });
+    }
+    items.push({ id: 'about', label: 'عن الملحمة', kind: 'about' });
+    return items;
+  }, [products, stories.length]);
+
+  const activeNav = useMemo(() => {
+    return (
+      navItems.find((i) => i.id === activeNavId) ??
+      navItems.find((i) => i.kind === 'category') ??
+      navItems[0] ??
+      null
+    );
+  }, [navItems, activeNavId]);
+
+  useEffect(() => {
+    if (!navItems.length) return;
+    if (!navItems.some((i) => i.id === activeNavId)) {
+      const firstCat = navItems.find((i) => i.kind === 'category');
+      setActiveNavId(firstCat?.id ?? navItems[0].id);
+    }
+  }, [navItems, activeNavId]);
+
+  const categoryProducts = useMemo(() => {
+    if (!activeNav || activeNav.kind !== 'category') return [];
+    return products.filter((p) => p.category === activeNav.id);
+  }, [products, activeNav]);
 
   const loadChatAccess = useCallback(async () => {
     if (!id) return;
@@ -550,22 +536,6 @@ export default function ButcherProfileScreen() {
       void loadChatAccess();
     }, [loadChatAccess]),
   );
-
-  useEffect(() => {
-    if (activeTab === 'chat' && !chatAccess?.allowed) {
-      setActiveTab('products');
-    }
-  }, [activeTab, chatAccess?.allowed]);
-
-  useEffect(() => {
-    const wasAllowed = prevChatAllowed.current;
-    if (chatAccess?.allowed && wasAllowed === false) {
-      setActiveTab('chat');
-    }
-    if (chatAccess != null) {
-      prevChatAllowed.current = chatAccess.allowed;
-    }
-  }, [chatAccess]);
 
   useEffect(() => {
     const fetchButcherDetails = async () => {
@@ -783,7 +753,6 @@ export default function ButcherProfileScreen() {
     );
   }
 
-  const stories = storiesList.filter((s) => s.butcherId === butcher.id);
   const currency = gccCurrencies[butcher.country as Country] || gccCurrencies['SA'];
 
   const handleOpenOptions = (product: ButcherProduct) => {
@@ -886,45 +855,27 @@ export default function ButcherProfileScreen() {
           </View>
         ) : null}
 
-        {/* ── Tabs ── */}
-        <ScrollView
-          ref={tabsScroller}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          onContentSizeChange={() => tabsScroller.current?.scrollToEnd({ animated: false })}
-          contentContainerStyle={styles.tabsRow}
-        >
-          {[...visibleTabs].reverse().map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <Pressable key={tab.id} onPress={() => setActiveTab(tab.id)} style={styles.tabBtn}>
-                <View style={styles.tabCoverTrail}>
-                  <View style={styles.tabTextShell}>
-                    <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                      {tab.labelAr}
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {/* ── Unified store nav (categories + offers + about) ── */}
+        <ButcherStoreNavBar
+          items={navItems}
+          activeId={activeNav?.id ?? ''}
+          onChange={(item) => setActiveNavId(item.id)}
+        />
 
-        {/* ── Tab Content ── */}
+        {/* ── Content ── */}
         <View style={styles.tabContent}>
-          {activeTab === 'products' && (
-            <StoreProductsTab
-              products={products}
+          {activeNav?.kind === 'category' && (
+            <StoreProductsList
+              products={categoryProducts}
               currencySymbol={currency.symbol}
               onOpenOptions={handleOpenOptions}
             />
           )}
-          {activeTab === 'offers' && (
+          {activeNav?.kind === 'offers' && (
             <OffersTab offers={offers} currencySymbol={currency.symbol} />
           )}
-          {activeTab === 'stories' && <StoriesTab stories={stories} />}
-          {activeTab === 'about' && (
+          {activeNav?.kind === 'stories' && <StoriesTab stories={stories} />}
+          {activeNav?.kind === 'about' && (
             <>
               <AboutTab butcher={butcher} />
               <View style={{ marginTop: spacing.xl }}>
@@ -986,13 +937,6 @@ export default function ButcherProfileScreen() {
                 {reviews.length > 0 ? <ReviewsStrip reviews={reviews} /> : null}
               </View>
             </>
-          )}
-          {activeTab === 'chat' && chatAccess?.allowed && (
-            <ChatTab
-              butcherName={butcher.nameAr}
-              chatAccess={chatAccess}
-              onOpenChat={onOpenChat}
-            />
           )}
         </View>
 
@@ -1100,6 +1044,10 @@ function createMainStyles(colors: ThemeColors) {
   name: {
     ...butcherTypography.titleLarge,
     color: colors.textPrimary,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    width: '100%',
+    marginBottom: 6,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -1107,7 +1055,6 @@ function createMainStyles(colors: ThemeColors) {
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
   },
   ratingScore: { ...butcherTypography.primary, color: colors.textPrimary },
   ratingCount: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },

@@ -1,51 +1,97 @@
-import { CATEGORY_LABELS, type MeatCategory } from '@/services/butcherData';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-type ButcherCategoryBarProps = {
-  categories: string[];
-  active: string;
-  onChange: (cat: string) => void;
+export type ButcherStoreNavItem = {
+  /** Stable key — category slug, or "offers" / "about" / "stories". */
+  id: string;
+  label: string;
+  /** Product categories vs store sections (about is never a product category). */
+  kind: 'category' | 'offers' | 'about' | 'stories';
 };
 
-export function ButcherCategoryBar({
-  categories,
-  active,
+type ButcherStoreNavBarProps = {
+  items: ButcherStoreNavItem[];
+  activeId: string;
+  onChange: (item: ButcherStoreNavItem) => void;
+};
+
+/**
+ * Single unified horizontal bar for the butcher store:
+ * dynamic product categories + offers + about (+ stories when present).
+ */
+export function ButcherStoreNavBar({
+  items,
+  activeId,
   onChange,
-}: ButcherCategoryBarProps) {
+}: ButcherStoreNavBarProps) {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const scroller = useRef<ScrollView>(null);
+
+  if (!items.length) return null;
 
   return (
     <ScrollView
       ref={scroller}
       horizontal
       showsHorizontalScrollIndicator={false}
-      onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}
+      onContentSizeChange={() =>
+        scroller.current?.scrollToEnd({ animated: false })
+      }
       contentContainerStyle={styles.row}
     >
-      {[...categories].reverse().map((cat) => {
-        const meta =
-          cat === 'all'
-            ? { ar: 'الكل' }
-            : CATEGORY_LABELS[cat as MeatCategory];
-        const isActive = active === cat;
+      {[...items].reverse().map((item) => {
+        const isActive = activeId === item.id;
         return (
-          <Pressable key={cat} onPress={() => onChange(cat)} style={styles.tabBtn}>
+          <Pressable
+            key={`${item.kind}:${item.id}`}
+            onPress={() => onChange(item)}
+            style={styles.tabBtn}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
+          >
             <View style={styles.tabCoverTrail}>
               <View style={styles.tabTextShell}>
-                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                  {cat === 'all' ? 'الكل' : meta?.ar ?? cat}
+                <Text
+                  style={[styles.tabLabel, isActive && styles.tabLabelActive]}
+                  numberOfLines={1}
+                >
+                  {item.label}
                 </Text>
               </View>
             </View>
-            <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
+            <View
+              style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]}
+            />
           </Pressable>
         );
       })}
     </ScrollView>
+  );
+}
+
+/** @deprecated Prefer ButcherStoreNavBar — kept for any residual imports. */
+export function ButcherCategoryBar({
+  categories,
+  active,
+  onChange,
+}: {
+  categories: string[];
+  active: string;
+  onChange: (cat: string) => void;
+}) {
+  const items: ButcherStoreNavItem[] = categories.map((id) => ({
+    id,
+    label: id === 'all' ? 'الكل' : id,
+    kind: 'category',
+  }));
+  return (
+    <ButcherStoreNavBar
+      items={items}
+      activeId={active}
+      onChange={(item) => onChange(item.id)}
+    />
   );
 }
 
@@ -56,13 +102,14 @@ function createStyles(colors: ThemeColors) {
       direction: 'ltr',
       justifyContent: 'flex-end',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl,
+      paddingTop: spacing.md,
       paddingBottom: spacing.sm,
       gap: spacing.lg,
     },
     tabBtn: {
       alignItems: 'stretch',
       paddingBottom: 2,
+      maxWidth: 140,
     },
     tabCoverTrail: {
       flexDirection: 'row',
@@ -79,7 +126,7 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     tabLabelActive: {
-      color: colors.electricBright,
+      color: colors.textPrimary,
     },
     tabUnderline: {
       marginTop: 6,
@@ -89,7 +136,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: 'transparent',
     },
     tabUnderlineActive: {
-      backgroundColor: colors.electric,
+      backgroundColor: colors.textPrimary,
     },
   });
 }

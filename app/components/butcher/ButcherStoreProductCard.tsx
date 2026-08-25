@@ -1,16 +1,18 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { resolveMediaUrl } from '@/services/media';
-import type { ButcherProduct, MeatCategory } from '@/services/butcherData';
-import { CATEGORY_LABELS } from '@/services/butcherData';
+import type { ButcherProduct } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
+
+/** Reference menu card: ~104px square image, text on the right, + under image. */
+const IMAGE_SIZE = 104;
+const ADD_SIZE = 36;
 
 type ButcherStoreProductCardProps = {
   product: ButcherProduct;
@@ -27,68 +29,81 @@ export function ButcherStoreProductCard({
 }: ButcherStoreProductCardProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const cat = CATEGORY_LABELS[product.category as MeatCategory];
-  const qtyLabel = product.pricePerKg
-    ? product.weightRange
-      ? `${product.weightRange.min}–${product.weightRange.max} كغ`
-      : '1 كيلو غرام'
-    : '1 قطعة';
   const currentPrice = product.pricePerKg ?? product.priceFixed ?? 0;
   const comparePrice =
     product.pricePerKg && product.priceFixed && product.priceFixed > product.pricePerKg
       ? product.priceFixed
       : null;
+  const description =
+    product.descriptionAr?.trim() ||
+    product.pricingNoteAr?.trim() ||
+    product.description?.trim() ||
+    '';
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.96 }]}
     >
-      <View style={styles.coverTrail}>
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation?.();
-            onAdd();
-          }}
-          style={styles.addBtn}
-          hitSlop={6}
-          accessibilityLabel="إضافة للسلة"
-        >
-          <AppIcon name="add" size={16} color="#fff" />
-          <AppIcon name="cart-outline" size={14} color="#fff" />
-        </Pressable>
+      {/* Physical LTR: image column (left) · details (right) — matches reference */}
+      <View style={styles.row}>
+        <View style={styles.mediaCol}>
+          <Image
+            source={{ uri: resolveMediaUrl(product.images[0]) ?? PLACEHOLDER }}
+            style={styles.image}
+            contentFit="cover"
+          />
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onAdd();
+            }}
+            style={styles.addBtn}
+            hitSlop={6}
+            accessibilityLabel="إضافة للسلة"
+          >
+            <AppIcon name="add" size={20} color={colors.textPrimary} />
+          </Pressable>
+        </View>
 
         <View style={styles.body}>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.name} numberOfLines={2}>
-              {product.nameAr}
+          <Text style={styles.name} numberOfLines={2}>
+            {product.nameAr}
+          </Text>
+          {description ? (
+            <Text style={styles.desc} numberOfLines={2}>
+              {description}
             </Text>
-          </View>
-          <View style={styles.rtlTextShell}>
-            <Text style={styles.qty}>{qtyLabel}</Text>
-          </View>
-          {cat ? (
-            <View style={styles.rtlTextShell}>
-              <Text style={styles.cat}>{cat.ar}</Text>
-            </View>
           ) : null}
+          <View style={styles.metaRow}>
+            {product.freshness ? (
+              <View style={styles.metaItem}>
+                <AppIcon name="information-circle-outline" size={13} color={colors.textMuted} />
+                <Text style={styles.metaText} numberOfLines={1}>
+                  {product.freshness === 'frozen' ? 'مجمّد' : 'طازج'}
+                </Text>
+              </View>
+            ) : null}
+            {product.weightRange ? (
+              <View style={styles.metaItem}>
+                <AppIcon name="scale" size={13} color={colors.textMuted} />
+                <Text style={styles.metaText} numberOfLines={1}>
+                  {product.weightRange.min}–{product.weightRange.max} كغ
+                </Text>
+              </View>
+            ) : null}
+          </View>
           <View style={styles.priceRow}>
             <Text style={styles.price}>
-              {currentPrice.toLocaleString('en-US')} {currencySymbol}
+              {currencySymbol} {currentPrice.toLocaleString('en-US')}
             </Text>
             {comparePrice ? (
               <Text style={styles.compare}>
-                {comparePrice.toLocaleString('en-US')} {currencySymbol}
+                {currencySymbol} {comparePrice.toLocaleString('en-US')}
               </Text>
             ) : null}
           </View>
         </View>
-
-        <Image
-          source={{ uri: resolveMediaUrl(product.images[0]) ?? PLACEHOLDER }}
-          style={styles.image}
-          contentFit="cover"
-        />
       </View>
     </Pressable>
   );
@@ -98,58 +113,79 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
       paddingHorizontal: spacing.lg,
-      paddingVertical: 12,
+      paddingVertical: 14,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
       backgroundColor: colors.screenRoot,
     },
-    coverTrail: {
+    row: {
       flexDirection: 'row',
       direction: 'ltr',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 12,
+      alignItems: 'flex-start',
+      gap: 14,
+    },
+    mediaCol: {
+      width: IMAGE_SIZE,
+      flexShrink: 0,
+      alignItems: 'flex-start',
+      gap: 8,
+    },
+    image: {
+      width: IMAGE_SIZE,
+      height: IMAGE_SIZE,
+      borderRadius: 14,
+      backgroundColor: colors.bgElevated,
     },
     addBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: colors.electric,
+      width: ADD_SIZE,
+      height: ADD_SIZE,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderMid,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      flexDirection: 'row',
-      gap: 1,
-      flexShrink: 0,
     },
     body: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-      gap: 3,
-    },
-    rtlTextShell: {
-      width: '100%',
-      direction: 'ltr',
+      minHeight: IMAGE_SIZE,
+      justifyContent: 'space-between',
+      gap: 6,
+      paddingTop: 2,
     },
     name: {
       ...typography.cardHeading,
       color: colors.textPrimary,
-      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
+      width: '100%',
     },
-    qty: {
+    desc: {
       ...butcherTypography.secondary,
       color: colors.textMuted,
-      width: '100%',
       textAlign: 'right',
       writingDirection: 'rtl',
-    },
-    cat: {
-      ...butcherTypography.meta,
-      color: colors.textSecondary,
       width: '100%',
-      textAlign: 'right',
+      lineHeight: 20,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      justifyContent: 'flex-end',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginTop: 2,
+    },
+    metaItem: {
+      flexDirection: 'row',
+      direction: 'ltr',
+      alignItems: 'center',
+      gap: 4,
+    },
+    metaText: {
+      ...butcherTypography.meta,
+      color: colors.textMuted,
       writingDirection: 'rtl',
     },
     priceRow: {
@@ -158,23 +194,16 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'flex-end',
       alignItems: 'baseline',
       gap: 8,
-      marginTop: 4,
+      paddingTop: 4,
     },
     price: {
       ...typography.value,
-      color: colors.electricBright,
+      color: colors.textPrimary,
     },
     compare: {
       ...butcherTypography.secondary,
       color: colors.textMuted,
       textDecorationLine: 'line-through',
-    },
-    image: {
-      width: 88,
-      height: 88,
-      borderRadius: 12,
-      backgroundColor: colors.bgElevated,
-      flexShrink: 0,
     },
   });
 }
