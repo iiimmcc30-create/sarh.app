@@ -90,7 +90,8 @@ export class PlanPermissionService {
   }
 
   storeCommission(permissions: PlanPermissions): number {
-    return permissionNumber(permissions, 'storeCommission', 10);
+    // Default > 0 means not exempt; numeric rate lives in lib/commissions.ts
+    return permissionNumber(permissions, 'storeCommission', 1);
   }
 
   isStoreEnabled(permissions: PlanPermissions): boolean {

@@ -221,22 +221,32 @@ export default function DashboardPage() {
       </div>
 
       {isAdmin && stats.commission ? (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="عمولة الملاحم (داخلية)"
-            value={`${stats.commission.butcherStoreRatePercent}%`}
-            subtitle="رسوم إعلانات المتجر — ADMIN فقط"
+            title="Listing Fees"
+            value={money(stats.commission.listingFeesPaidTotal)}
+            subtitle={`${stats.commission.listingCommissionRatePercent ?? stats.commission.butcherStoreRatePercent}% · ${stats.commission.listingFeesPaidCount} سجل`}
             icon={Percent}
             accent="violet"
           />
           <StatCard
-            title="عمولات إعلانات مدفوعة"
-            value={money(stats.commission.listingFeesPaidTotal)}
-            subtitle={`${stats.commission.listingFeesPaidCount} سجل`}
+            title="Order Commissions"
+            value={money(stats.commission.orderCommissionsTotal ?? 0)}
+            subtitle={`${stats.commission.orderCommissionRatePercent ?? 10}% · ${stats.commission.orderCommissionsCount ?? 0} طلب`}
+            icon={Percent}
+            accent="blue"
+          />
+          <StatCard
+            title="Total Commission"
+            value={money(
+              stats.commission.totalCommission ??
+                stats.commission.listingFeesPaidTotal,
+            )}
+            subtitle="مدفوع / مُستحق من المصدر"
             icon={Percent}
           />
           <StatCard
-            title="عمولات مستحقة"
+            title="عمولات إعلان مستحقة"
             value={money(stats.commission.listingFeesOutstandingTotal)}
             subtitle={`${stats.commission.listingFeesOutstandingCount} سجل`}
             icon={Percent}

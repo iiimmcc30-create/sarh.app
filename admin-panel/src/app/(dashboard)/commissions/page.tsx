@@ -36,6 +36,8 @@ export default function CommissionsPage() {
   }
 
   const c = stats.commission;
+  const listingRate = c.listingCommissionRatePercent ?? c.butcherStoreRatePercent;
+  const orderRate = c.orderCommissionRatePercent ?? 10;
 
   return (
     <div>
@@ -50,24 +52,41 @@ export default function CommissionsPage() {
         description="عرض فقط — لا تعديل للنسب من هذه الشاشة"
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <StatCard
-          title="عمولة الملاحم (فعّالة)"
-          value={`${c.butcherStoreRatePercent}%`}
-          subtitle="داخلي — لا يُعرض للملاحم أو الموبايل"
+          title="Listing Commission"
+          value={`${listingRate}%`}
+          subtitle="عمولة إعلان الملحمة — ListingFee"
           icon={Percent}
           accent="violet"
         />
         <StatCard
-          title="إجمالي عمولات مدفوعة"
+          title="Order Commission"
+          value={`${orderRate}%`}
+          subtitle="عمولة الطلب المكتمل — delivered"
+          icon={Percent}
+          accent="blue"
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatCard
+          title="Listing Fees"
           value={`${c.listingFeesPaidTotal.toLocaleString('ar-SA')} ر.س`}
-          subtitle={`${c.listingFeesPaidCount} رسوم إعلان متجر`}
+          subtitle={`${c.listingFeesPaidCount} رسوم إعلان متجر مدفوعة`}
           icon={Wallet}
         />
         <StatCard
-          title="عمولات مستحقة"
-          value={`${c.listingFeesOutstandingTotal.toLocaleString('ar-SA')} ر.س`}
-          subtitle={`${c.listingFeesOutstandingCount} سجل`}
+          title="Order Commissions"
+          value={`${(c.orderCommissionsTotal ?? 0).toLocaleString('ar-SA')} ر.س`}
+          subtitle={`${c.orderCommissionsCount ?? 0} طلب مكتمل`}
+          icon={Wallet}
+          accent="blue"
+        />
+        <StatCard
+          title="Total Commission"
+          value={`${(c.totalCommission ?? c.listingFeesPaidTotal).toLocaleString('ar-SA')} ر.س`}
+          subtitle={`مستحق إعلانات: ${c.listingFeesOutstandingTotal.toLocaleString('ar-SA')} ر.س`}
           icon={Wallet}
           accent="amber"
         />
@@ -81,10 +100,13 @@ export default function CommissionsPage() {
             الحساب في <code className="text-emerald-300">backend-nest/src/lib/commissions.ts</code>
           </li>
           <li>
-            الإعفاء عندما تكون صلاحية الباقة <code>storeCommission &lt;= 0</code>
+            اكتمال الطلب = حالة <code>delivered</code> في OrderLifecycleService
           </li>
-          <li>عمولة إعلانات المواشي/المعدات لم تُغيَّر في هذه المرحلة</li>
-          <li>لا تُعرض النسبة الرقمية في لوحة الملحمة أو تطبيق الموبايل</li>
+          <li>
+            الإعفاء عندما تكون صلاحية الباقة <code>storeCommission &lt;= 0</code> (إعلان + طلب)
+          </li>
+          <li>عمولة إعلانات المواشي/المعدات لم تُغيَّر</li>
+          <li>النسبة الرقمية للطلب لا تُعرض في لوحة الملحمة أو تطبيق الموبايل</li>
         </ul>
       </div>
     </div>

@@ -52,11 +52,17 @@ export type DashboardStats = {
     refunded: number;
   };
   commission?: {
+    listingCommissionRatePercent?: number;
+    orderCommissionRatePercent?: number;
+    /** @deprecated Use listingCommissionRatePercent */
     butcherStoreRatePercent: number;
     listingFeesPaidTotal: number;
     listingFeesPaidCount: number;
     listingFeesOutstandingTotal: number;
     listingFeesOutstandingCount: number;
+    orderCommissionsTotal?: number;
+    orderCommissionsCount?: number;
+    totalCommission?: number;
     noteAr: string;
   };
   charts: {

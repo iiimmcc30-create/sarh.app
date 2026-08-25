@@ -110,10 +110,10 @@ export const PLAN_FEATURE_CATALOG: PlanFeatureCatalogItem[] = [
     key: 'storeCommission',
     labelAr: 'عمولة المتجر',
     descriptionAr:
-      'علم إعفاء العمولة للملاحم (0 = معفى بالاشتراك، أي قيمة > 0 = تُحسب عمولة المنصة)',
+      'علم إعفاء عمولات الملحمة (إعلان + طلبات مكتملة). 0 = معفى بالاشتراك، أي قيمة > 0 = تُحسب عمولة المنصة (النسبة ثابتة في الكود وليست قيمة هذا الحقل)',
     valueType: 'NUMBER',
     audiences: ['BUTCHER'],
-    suggestedValue: '10',
+    suggestedValue: '1',
   },
 ];
 

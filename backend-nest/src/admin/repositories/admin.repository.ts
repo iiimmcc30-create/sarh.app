@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Role, TicketStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { BUTCHER_STORE_COMMISSION_PERCENT } from '../../lib/commissions';
+import {
+  BUTCHER_LISTING_COMMISSION_PERCENT,
+  BUTCHER_ORDER_COMMISSION_PERCENT,
+} from '../../lib/commissions';
 import {
   notDeleted,
   retentionCutoff,
@@ -584,6 +587,7 @@ export class AdminRepository {
       paymentsRefunded,
       listingFeesPaidAgg,
       listingFeesPendingAgg,
+      orderCommissionsAgg,
       usersRaw,
       ordersRaw,
       paymentsByDayRaw,
@@ -704,10 +708,42 @@ export class AdminRepository {
         },
         _sum: { totalPrice: true },
       }),
-      this.prisma.payment.count({ where: { status: 'paid' } }),
-      this.prisma.payment.count({ where: { status: 'failed' } }),
-      this.prisma.payment.count({ where: { status: 'pending' } }),
-      this.prisma.payment.count({ where: { status: 'refunded' } }),
+      this.prisma.payment.count({
+        where: {
+          status: 'paid',
+          OR: [
+            { referenceType: null },
+            { referenceType: { not: 'commission' } },
+          ],
+        },
+      }),
+      this.prisma.payment.count({
+        where: {
+          status: 'failed',
+          OR: [
+            { referenceType: null },
+            { referenceType: { not: 'commission' } },
+          ],
+        },
+      }),
+      this.prisma.payment.count({
+        where: {
+          status: 'pending',
+          OR: [
+            { referenceType: null },
+            { referenceType: { not: 'commission' } },
+          ],
+        },
+      }),
+      this.prisma.payment.count({
+        where: {
+          status: 'refunded',
+          OR: [
+            { referenceType: null },
+            { referenceType: { not: 'commission' } },
+          ],
+        },
+      }),
       this.prisma.listingFee.aggregate({
         where: { status: 'paid' },
         _sum: { commission: true },
@@ -716,6 +752,14 @@ export class AdminRepository {
       this.prisma.listingFee.aggregate({
         where: { status: { in: ['pending', 'overdue'] } },
         _sum: { commission: true },
+        _count: { _all: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: {
+          referenceType: 'commission',
+          status: 'paid',
+        },
+        _sum: { amount: true },
         _count: { _all: true },
       }),
       this.prisma.user.findMany({
@@ -727,7 +771,13 @@ export class AdminRepository {
         select: { createdAt: true, totalPrice: true },
       }),
       this.prisma.payment.findMany({
-        where: { createdAt: { gte: thirtyDaysAgo } },
+        where: {
+          createdAt: { gte: thirtyDaysAgo },
+          OR: [
+            { referenceType: null },
+            { referenceType: { not: 'commission' } },
+          ],
+        },
         select: { createdAt: true, status: true },
       }),
       this.prisma.supportTicket.findMany({
@@ -761,6 +811,12 @@ export class AdminRepository {
         },
       }),
       this.prisma.payment.findMany({
+        where: {
+          OR: [
+            { referenceType: null },
+            { referenceType: { not: 'commission' } },
+          ],
+        },
         orderBy: { createdAt: 'desc' },
         take: 8,
         select: {
@@ -898,15 +954,24 @@ export class AdminRepository {
         refunded: paymentsRefunded,
       },
       commission: {
-        butcherStoreRatePercent: BUTCHER_STORE_COMMISSION_PERCENT,
+        listingCommissionRatePercent: BUTCHER_LISTING_COMMISSION_PERCENT,
+        orderCommissionRatePercent: BUTCHER_ORDER_COMMISSION_PERCENT,
+        /** @deprecated Use listingCommissionRatePercent */
+        butcherStoreRatePercent: BUTCHER_LISTING_COMMISSION_PERCENT,
         listingFeesPaidTotal: money(listingFeesPaidAgg._sum.commission),
         listingFeesPaidCount: listingFeesPaidAgg._count._all,
         listingFeesOutstandingTotal: money(
           listingFeesPendingAgg._sum.commission,
         ),
         listingFeesOutstandingCount: listingFeesPendingAgg._count._all,
+        orderCommissionsTotal: money(orderCommissionsAgg._sum.amount),
+        orderCommissionsCount: orderCommissionsAgg._count._all,
+        totalCommission: money(
+          (listingFeesPaidAgg._sum.commission ?? 0) +
+            (orderCommissionsAgg._sum.amount ?? 0),
+        ),
         noteAr:
-          'عمولة الملاحم تُحسب على رسوم إعلانات المتجر (وليس خصمًا من إجمالي كل طلب). إعفاء الاشتراك يبقى كما هو.',
+          'عمولتان منفصلتان: (1) عمولة إعلان الملحمة 1% عبر ListingFee — (2) عمولة الطلب المكتمل 10% عند delivered عبر Payment(referenceType=commission). إعفاء الاشتراك (storeCommission<=0) ينطبق على الاثنين.',
       },
       charts: {
         usersByDay: Array.from(users7.entries()).map(([date, count]) => ({
