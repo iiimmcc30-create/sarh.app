@@ -99,7 +99,8 @@ describe('request storm coordination', () => {
 
   it('uses exponential backoff for feed retries and respects 429 window', () => {
     noteRateLimitFromResponse({ status: 429, headers: { get: () => '30' } });
-    expect(feedRetryDelayMs(0, 3_000)).toBeGreaterThanOrEqual(30_000);
+    // Allow 1–2ms clock skew between note and read (CI flake: 29999 vs 30000).
+    expect(feedRetryDelayMs(0, 3_000)).toBeGreaterThanOrEqual(29_990);
     resetRequestCoordination();
     expect(feedRetryDelayMs(0, 3_000)).toBe(3_000);
     expect(feedRetryDelayMs(2, 3_000)).toBe(12_000);
