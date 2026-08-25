@@ -1,4 +1,4 @@
-// SAFAT — Butchers market bottom navigation (الرئيسية · الطلبات · العروض · الخريطة · المزيد)
+// SAFAT — Butchers market bottom navigation (الرئيسية · الطلبات · العروض · المزيد)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow } from '@/constants/designSystem';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -11,21 +11,21 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/** Map remains a valid route/screen; it is no longer a bottom-nav tab. */
 export type ButchersTab = 'home' | 'orders' | 'offers' | 'map' | 'more';
 
 type TabDef = {
-  key: ButchersTab;
+  key: Exclude<ButchersTab, 'map'>;
   label: string;
   icon: string;
   route: string;
 };
 
-/** Visual RTL order (right → left): الرئيسية · الطلبات · العروض · الخريطة · المزيد */
+/** Visual RTL order (right → left): الرئيسية · الطلبات · العروض · المزيد */
 const TABS: TabDef[] = [
   { key: 'home', label: 'الرئيسية', icon: 'home-outline', route: '/butchers' },
   { key: 'orders', label: 'الطلبات', icon: 'bag-outline', route: '/butchers/my-orders' },
   { key: 'offers', label: 'العروض', icon: 'pricetag-outline', route: '/butchers/offers' },
-  { key: 'map', label: 'الخريطة', icon: 'map-outline', route: '/butchers/map' },
   { key: 'more', label: 'المزيد', icon: 'grid-outline', route: '/butchers/more' },
 ];
 
