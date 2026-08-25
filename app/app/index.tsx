@@ -23,5 +23,5 @@ export default function Index() {
     return <Redirect href="/(tabs)" />;
   }
 
-  return <Redirect href="/auth/phone" />;
+  return <Redirect href="/auth/welcome" />;
 }

@@ -58,7 +58,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (onboardingComplete && inOnboarding) {
-      router.replace(isAuthenticated ? '/(tabs)' : '/auth/phone');
+      router.replace(isAuthenticated ? '/(tabs)' : '/auth/welcome');
       return;
     }
 
@@ -68,7 +68,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (!isAuthenticated && !inAuthGroup && !inPublicInfo && !inOnboarding) {
-      router.replace('/auth/phone' as any);
+      router.replace('/auth/welcome' as any);
     }
   }, [isAuthenticated, isLoading, onboardingComplete, onboardingLoading, segments, router]);
 
@@ -138,9 +138,10 @@ function RootNavigator() {
         <Stack.Screen name="support/tickets/create" />
         <Stack.Screen name="support/tickets/[id]" />
         <Stack.Screen name="onboarding/index" options={{ animation: 'fade', gestureEnabled: false }} />
+        <Stack.Screen name="auth/welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="auth/phone" options={{ animation: 'fade' }} />
         <Stack.Screen name="auth/otp" options={{ animation: stackSlideAnimation() }} />
-        <Stack.Screen name="auth/register" options={{ animation: stackSlideAnimation() }} />
+        <Stack.Screen name="auth/register" options={{ animation: 'fade' }} />
         <Stack.Screen name="auth/forgot-password" options={{ animation: stackSlideAnimation() }} />
         <Stack.Screen name="expo-auth-session" options={{ animation: 'none', headerShown: false }} />
         <Stack.Screen name="live/create" />
