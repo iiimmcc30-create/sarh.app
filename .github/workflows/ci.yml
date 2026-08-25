@@ -74,6 +74,8 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
       - run: npm ci
+      - name: TypeScript check
+        run: npm run typecheck
       - name: Install test runner
         run: npm install --no-save jest@29.7.0 ts-jest@29.2.5 @types/jest@29.5.14
       - name: Frontend unit tests

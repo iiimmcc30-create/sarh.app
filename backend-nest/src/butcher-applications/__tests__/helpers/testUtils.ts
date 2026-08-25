@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { JwtPayload } from '../../common/types/jwt-payload.interface';
+import type { JwtPayload } from '../../../common/types/jwt-payload.interface';
 
 export const TEST_USER_ID = '11111111-1111-1111-1111-111111111111';
 export const TEST_ADMIN_ID = '22222222-2222-2222-2222-222222222222';

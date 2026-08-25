@@ -19,6 +19,7 @@
     "web:railway": "node scripts/start-web-railway.js",
     "export:web": "expo export --platform web",
     "lint": "expo lint",
+    "typecheck": "tsc --noEmit -p .",
     "test": "jest --config jest.config.js --forceExit",
     "test:cov": "jest --config jest.config.js --coverage --forceExit",
     "test:e2e": "playwright test",

@@ -36,17 +36,34 @@ export class RateLimitService {
     const isTrustedProxy =
       TRUSTED_PROXIES.has(directIp) ||
       directIp.startsWith('172.') ||
-      directIp.startsWith('10.');
+      directIp.startsWith('10.') ||
+      directIp === '::ffff:127.0.0.1';
 
-    if (isTrustedProxy) {
-      const forwarded = req.headers['x-forwarded-for'] as string | undefined;
-      if (forwarded) {
-        const ips = forwarded.split(',').map((s) => s.trim());
-        return ips[ips.length - 1] || directIp;
-      }
-      const realIp = req.headers['x-real-ip'] as string | undefined;
-      if (realIp) return realIp;
+    if (!isTrustedProxy) {
+      return directIp;
     }
+
+    // Prefer X-Real-IP: nginx sets this to $remote_addr (the socket peer of nginx).
+    // This resists client-spoofed X-Forwarded-For prefixes on the Hostinger path.
+    const realIpHeader = req.headers['x-real-ip'];
+    const realIp = Array.isArray(realIpHeader) ? realIpHeader[0] : realIpHeader;
+    if (typeof realIp === 'string' && realIp.trim()) {
+      return realIp.trim();
+    }
+
+    // Fallback: rightmost XFF hop (appended by the immediate reverse proxy).
+    const forwarded = req.headers['x-forwarded-for'];
+    const forwardedRaw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+    if (typeof forwardedRaw === 'string' && forwardedRaw.trim()) {
+      const ips = forwardedRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (ips.length > 0) {
+        return ips[ips.length - 1];
+      }
+    }
+
     return directIp;
   }
 

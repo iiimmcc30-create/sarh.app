@@ -67,6 +67,17 @@ services:
     networks:
       - sarh_internal
     entrypoint: ['./docker-entrypoint.sh']
+    healthcheck:
+      # Existing GET /api/health (DB liveness) — no new health logic.
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(\"http://127.0.0.1:3001/api/health\").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   worker:
     image: sarh-backend:latest
@@ -92,6 +103,17 @@ services:
       - sarh_internal
     entrypoint: ['node']
     command: ['dist/queue/worker.main.js']
+    healthcheck:
+      # Worker writes Redis key sarh:worker:heartbeat (WorkerHeartbeatService).
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "const Redis=require(\"ioredis\"); const r=new Redis({host:process.env.REDIS_HOST||\"redis\",port:Number(process.env.REDIS_PORT||6379),maxRetriesPerRequest:1,lazyConnect:true,connectTimeout:3000}); r.connect().then(()=>r.get(\"sarh:worker:heartbeat\")).then(v=>{r.disconnect(); process.exit(v?0:1);}).catch(()=>{try{r.disconnect()}catch(_){} process.exit(1);})"',
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
 
   socket:
     image: sarh-backend:latest
@@ -122,6 +144,17 @@ services:
       - sarh_internal
     entrypoint: ['node']
     command: ['dist/gateway/socket.main.js']
+    healthcheck:
+      # Existing SocketHealthController GET /health (no global api prefix).
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(\"http://127.0.0.1:3002/health\").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
     image: nginx:1.27-alpine
