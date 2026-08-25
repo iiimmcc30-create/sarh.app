@@ -2,6 +2,7 @@
 
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
+import { dedupeInflight } from '@/services/requestCoordination';
 
 type ApiEnvelope<T> = {
   success?: boolean;
@@ -101,9 +102,11 @@ export async function markNotificationsRead(ids?: string[]): Promise<void> {
 }
 
 export async function fetchUnreadNotificationCount(): Promise<number> {
-  const res = await authFetch(`${API_BASE}/api/notifications/unread-count`);
-  const data = await parseEnvelope<{ unreadCount: number }>(res);
-  return data.unreadCount ?? 0;
+  return dedupeInflight('GET:/api/notifications/unread-count', async () => {
+    const res = await authFetch(`${API_BASE}/api/notifications/unread-count`);
+    const data = await parseEnvelope<{ unreadCount: number }>(res);
+    return data.unreadCount ?? 0;
+  });
 }
 
 export function toNotificationApiError(err: unknown): NotificationApiError | null {

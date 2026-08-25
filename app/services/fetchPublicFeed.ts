@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
+import { dedupeGetResponse } from '@/services/requestCoordination';
 
 /** Feed GETs should fail fast so the UI can retry; uploads/login keep the longer default. */
 export const FEED_TIMEOUT_MS = 12_000;
@@ -10,14 +11,20 @@ export async function fetchPublicFeed(
   init: RequestInit = {},
   timeoutMs = FEED_TIMEOUT_MS,
 ): Promise<Response> {
-  const headers = new Headers(init.headers);
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
-  }
+  const method = (init.method ?? 'GET').toUpperCase();
+  const authTag = accessToken ? 'auth' : 'guest';
+  const dedupeKey = `${method}:${url}:${authTag}`;
 
-  let res = await fetchWithTimeout(url, { ...init, headers }, timeoutMs);
-  if (res.status === 401 && accessToken) {
-    res = await fetchWithTimeout(url, init, timeoutMs);
-  }
-  return res;
+  return dedupeGetResponse(dedupeKey, async () => {
+    const headers = new Headers(init.headers);
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
+    }
+
+    let res = await fetchWithTimeout(url, { ...init, headers }, timeoutMs);
+    if (res.status === 401 && accessToken) {
+      res = await fetchWithTimeout(url, init, timeoutMs);
+    }
+    return res;
+  });
 }

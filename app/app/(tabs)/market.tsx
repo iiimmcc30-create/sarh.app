@@ -36,6 +36,7 @@ import { useApp } from '@/hooks/useApp';
 import { Listing } from '@/services/types';
 
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
+const MARKET_FOCUS_TTL_MS = 60_000;
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
@@ -47,6 +48,7 @@ export default function MarketScreen() {
   const { listings, fetchListings } = useApp();
   const { categories, reload: reloadCategories } = useMarketCategories();
   const lastListingsFocusAt = useRef(0);
+  const lastCategoriesFocusAt = useRef(0);
   const listRef = useRef<FlatList<Listing>>(null);
 
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
@@ -59,9 +61,12 @@ export default function MarketScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void reloadCategories();
       const now = Date.now();
-      if (now - lastListingsFocusAt.current < 60_000) return;
+      if (now - lastCategoriesFocusAt.current >= MARKET_FOCUS_TTL_MS) {
+        lastCategoriesFocusAt.current = now;
+        void reloadCategories();
+      }
+      if (now - lastListingsFocusAt.current < MARKET_FOCUS_TTL_MS) return;
       lastListingsFocusAt.current = now;
       void fetchListings();
     }, [fetchListings, reloadCategories]),

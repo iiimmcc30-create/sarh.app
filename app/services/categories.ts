@@ -1,5 +1,6 @@
 import { MARKET_CATEGORIES_FALLBACK } from '@/lib/marketCategoriesFallback';
 import { ensureApiReachable } from './api';
+import { dedupeInflight } from './requestCoordination';
 
 export type MarketCategory = {
   id: string;
@@ -17,6 +18,8 @@ export type MarketCategory = {
 };
 
 let categoriesApiAvailable: boolean | null = null;
+const CATEGORIES_TTL_MS = 60_000;
+let categoriesCache: { at: number; data: MarketCategory[] } | null = null;
 
 /** Whether the last fetch hit a live /api/categories endpoint. */
 export function isCategoriesApiAvailable(): boolean {
@@ -37,33 +40,45 @@ function cloneFallback(): MarketCategory[] {
   }));
 }
 
-export async function fetchMarketCategories(): Promise<MarketCategory[]> {
-  const base = await ensureApiReachable();
-  try {
-    const res = await fetch(`${base.replace(/\/$/, '')}/api/categories`, {
-      cache: 'no-store',
-    });
-    const data = await readJson<{ categories: MarketCategory[] }>(res);
-    if (data?.categories?.length) {
-      categoriesApiAvailable = true;
-      return data.categories;
-    }
-    if (res.status === 404) {
-      categoriesApiAvailable = false;
-    }
-  } catch (err) {
-    if (__DEV__) {
-      console.warn('[categories] fetchMarketCategories failed:', err);
-    }
+export async function fetchMarketCategories(
+  options?: { force?: boolean },
+): Promise<MarketCategory[]> {
+  const force = options?.force === true;
+  const now = Date.now();
+  if (!force && categoriesCache && now - categoriesCache.at < CATEGORIES_TTL_MS) {
+    return categoriesCache.data;
   }
 
-  categoriesApiAvailable = false;
-  if (__DEV__) {
-    console.warn(
-      '[categories] /api/categories unavailable — using bundled taxonomy. Deploy backend + migration for live data.',
-    );
-  }
-  return cloneFallback();
+  return dedupeInflight('GET:/api/categories', async () => {
+    const base = await ensureApiReachable();
+    try {
+      const res = await fetch(`${base.replace(/\/$/, '')}/api/categories`, {
+        cache: 'no-store',
+      });
+      const data = await readJson<{ categories: MarketCategory[] }>(res);
+      if (data?.categories?.length) {
+        categoriesApiAvailable = true;
+        categoriesCache = { at: Date.now(), data: data.categories };
+        return data.categories;
+      }
+      if (res.status === 404) {
+        categoriesApiAvailable = false;
+      }
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[categories] fetchMarketCategories failed:', err);
+      }
+    }
+
+    categoriesApiAvailable = false;
+    if (__DEV__) {
+      console.warn(
+        '[categories] /api/categories unavailable — using bundled taxonomy. Deploy backend + migration for live data.',
+      );
+    }
+    if (categoriesCache?.data?.length) return categoriesCache.data;
+    return cloneFallback();
+  });
 }
 
 export async function fetchMarketCategory(id: string): Promise<MarketCategory | null> {
