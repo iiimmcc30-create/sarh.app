@@ -1,5 +1,13 @@
 import { Component, createElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { getExpoVideoModule, isExpoVideoNativeAvailable } from '@/lib/expoVideo';
@@ -10,20 +18,7 @@ type Props = {
   posterUri?: string | null;
   height?: number;
   aspectRatio?: number;
-  style?: ViewStyle;
-};
-
-type NativePlayer = {
-  loop: boolean;
-  muted: boolean;
-  status: string;
-  keepScreenOnWhilePlaying: boolean;
-  play: () => void;
-  pause: () => void;
-  addListener: (
-    event: string,
-    cb: (payload: { status?: string; isPlaying?: boolean }) => void,
-  ) => { remove: () => void };
+  style?: StyleProp<ViewStyle>;
 };
 
 const MEDIA_SURFACE = '#102633';
@@ -85,18 +80,17 @@ function NativeListingVideo({
 }: {
   uri: string;
   posterUri?: string;
-  containerStyle: Array<ViewStyle | false | undefined>;
+  containerStyle: StyleProp<ViewStyle>;
 }) {
   const { useVideoPlayer, VideoView } = getExpoVideoModule()!;
   const [showPoster, setShowPoster] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
 
   const player = useVideoPlayer({ uri }, (p) => {
-    const native = p as NativePlayer;
-    native.loop = false;
-    native.muted = false;
-    native.keepScreenOnWhilePlaying = false;
-  }) as NativePlayer;
+    p.loop = false;
+    p.muted = false;
+    p.keepScreenOnWhilePlaying = false;
+  });
 
   const hidePoster = useCallback(() => setShowPoster(false), []);
 

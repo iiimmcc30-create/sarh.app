@@ -17,7 +17,7 @@ export async function ensureLivePermissions(): Promise<boolean> {
 
   const result = await PermissionsAndroid.requestMultiple(needed);
   return (
-    result[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.PERMISSIONS.GRANTED
-    && result[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.PERMISSIONS.GRANTED
+    result[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED
+    && result[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED
   );
 }

@@ -7,6 +7,7 @@ import { DocumentRepository } from '../../repositories/document.repository';
 import { TransactionService } from '../../services/transaction.service';
 import { ButcherApplicationNotificationsService } from '../../services/butcher-application-notifications.service';
 import { LoggerService } from '../../../common/services/logger.service';
+import { ButcherRankingService } from '../../../butchers/services/butcher-ranking.service';
 import { TEST_APP_ID, TEST_USER_ID } from '../helpers/testUtils';
 
 jest.mock('../../helpers/timeline', () => ({
@@ -98,12 +99,17 @@ describe('ButcherApplicationAdminService', () => {
     error: jest.fn(),
   } as unknown as LoggerService;
 
+  const ranking = {
+    onButcherCreated: jest.fn().mockResolvedValue(undefined),
+  } as unknown as ButcherRankingService;
+
   const service = new ButcherApplicationAdminService(
     applications,
     documents,
     transactions,
     applicationNotifications,
     logger,
+    ranking,
   );
 
   beforeEach(() => {

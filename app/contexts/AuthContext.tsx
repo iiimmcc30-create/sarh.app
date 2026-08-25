@@ -25,6 +25,13 @@ export interface AuthUser {
   subscription?: { plan: string; expiresAt: string } | null;
 }
 
+interface GoogleSignInData {
+  googleId?: string;
+  email?: string;
+  displayName?: string;
+  avatar?: string;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   accessToken: string | null;
@@ -37,7 +44,7 @@ interface AuthContextValue {
   sendOtp:   (phone: string, channel?: 'sms' | 'whatsapp') => Promise<{ success: boolean; devMode?: boolean; error?: string }>;
   verifyOtp: (phone: string, code: string, purpose?: 'login' | 'reset_password') => Promise<{ success: boolean; isNew?: boolean; phone?: string; phoneToken?: string; error?: string }>;
   // Google flow
-  signInWithGoogle: (idToken: string) => Promise<{ success: boolean; isNew?: boolean; googleData?: any; error?: string }>;
+  signInWithGoogle: (idToken: string) => Promise<{ success: boolean; isNew?: boolean; googleData?: GoogleSignInData; error?: string }>;
   // Password flow
   signInWithPassword: (login: string, password: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (phone: string, phoneToken: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
@@ -182,7 +189,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const refresh  = storedRefresh[1];
         if (token && userJson) {
           setAccessToken(token);
-          const parsedUser = normalizeAuthUser(JSON.parse(userJson)) as AuthUser;
+          const storedUserData = JSON.parse(userJson) as Record<string, unknown>;
+          const parsedUser = normalizeAuthUser(storedUserData) as unknown as AuthUser;
           setUser(parsedUser);
           if (mode === 'USER' || mode === 'BUTCHER') {
             setActiveMode('USER');
@@ -224,7 +232,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Helper: حفظ الجلسة ────────────────────────────────────────────────────
   const saveSession = useCallback(async (userData: AuthUser, access: string, refresh: string) => {
-    const normalized = normalizeAuthUser(userData) as AuthUser;
+    const normalized = normalizeAuthUser({ ...userData }) as unknown as AuthUser;
     await AsyncStorage.multiSet([
       [STORAGE_KEYS.ACCESS_TOKEN,  access],
       [STORAGE_KEYS.REFRESH_TOKEN, refresh],
@@ -345,8 +353,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       await saveSession(data.user, access, refresh);
       return { success: true };
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
         return {
           success: false,
           error: __DEV__

@@ -3,11 +3,11 @@ import { sarh } from '@/constants/sarhTokens';
 import { type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 interface GlassCardProps {
   children: ReactNode;
-  style?: ViewStyle | ViewStyle[];
+  style?: StyleProp<ViewStyle>;
   glow?: boolean;
   elevated?: boolean;
   padding?: number;

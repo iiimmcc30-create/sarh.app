@@ -72,7 +72,7 @@ function TrimmerPreview({
 
   useEffect(() => {
     const sub = player.addListener('timeUpdate', ({ currentTime }) => {
-      if (currentTime >= endSec - 0.05) {
+      if (typeof currentTime === 'number' && currentTime >= endSec - 0.05) {
         player.currentTime = startSec;
         player.play();
       }

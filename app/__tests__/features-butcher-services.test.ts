@@ -93,19 +93,24 @@ describe('butcherOrderPricing', () => {
     nameAr: 'لحم',
     priceFixed: 120,
     pricePerKg: null,
-  } as ButcherProduct;
+  } as unknown as ButcherProduct;
 
   const byKg: ButcherProduct = {
     id: 'p2',
     nameAr: 'لحم كيلو',
     priceFixed: null,
     pricePerKg: 40,
-  } as ButcherProduct;
+  } as unknown as ButcherProduct;
 
   it('computes fixed and per-kg totals', () => {
     expect(computeProductLineTotal(fixed, 3)).toBe(120);
     expect(computeProductLineTotal(byKg, 2.5)).toBe(100);
-    expect(computeProductLineTotal({ ...fixed, priceFixed: null, pricePerKg: null } as any, 1)).toBe(0);
+    expect(
+      computeProductLineTotal(
+        { ...fixed, priceFixed: null, pricePerKg: null } as unknown as ButcherProduct,
+        1,
+      ),
+    ).toBe(0);
   });
 
   it('formats weight labels and resolves weight', () => {

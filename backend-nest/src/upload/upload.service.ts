@@ -20,6 +20,7 @@ import { LoggerService } from '../common/services/logger.service';
 import { RedisSessionService } from '../redis/services/redis-session.service';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import { PresignUploadDto } from './dto/upload.dto';
+import { mimeMatchesMagic } from './file-magic';
 
 const IMAGE_MIME_TYPES = [
   'image/jpeg',
@@ -223,6 +224,8 @@ export class UploadService {
         throwApi(400, 'no_file', 'لم يُرسل أي ملف');
       }
 
+      this.assertUploadedFileMagic(file);
+
       const host = req.headers.host;
       const proto = (req.headers['x-forwarded-proto'] as string) || 'http';
       const base = host
@@ -241,6 +244,44 @@ export class UploadService {
       if (err instanceof ApiException) throw err;
       this.logger.error({ err }, 'Local upload failed');
       throwApi(500, 'upload_failed', 'فشل رفع الملف');
+    }
+  }
+
+  /**
+   * Defense-in-depth for local/direct uploads: reject files whose magic bytes
+   * do not match the declared MIME (MIME spoofing). Cloudinary/S3 presign
+   * paths rely on the provider; production uses STORAGE_PROVIDER=cloudinary.
+   */
+  private assertUploadedFileMagic(file: Express.Multer.File): void {
+    const pathOnDisk = file.path;
+    if (!pathOnDisk) return;
+    let header: Buffer;
+    try {
+      const fd = fs.openSync(pathOnDisk, 'r');
+      try {
+        header = Buffer.alloc(32);
+        const bytesRead = fs.readSync(fd, header, 0, 32, 0);
+        header = header.subarray(0, bytesRead);
+      } finally {
+        fs.closeSync(fd);
+      }
+    } catch {
+      try {
+        fs.unlinkSync(pathOnDisk);
+      } catch {
+        /* ignore */
+      }
+      throwApi(400, 'validation_error', 'تعذر قراءة الملف المرفوع');
+      return;
+    }
+
+    if (!mimeMatchesMagic(file.mimetype, header)) {
+      try {
+        fs.unlinkSync(pathOnDisk);
+      } catch {
+        /* ignore */
+      }
+      throwApi(400, 'validation_error', 'محتوى الملف لا يطابق نوعه المعلن');
     }
   }
 

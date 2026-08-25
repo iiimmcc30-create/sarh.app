@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  type ImageStyle,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -8,7 +15,7 @@ type UserAvatarProps = {
   uri?: string | null;
   name?: string;
   size?: number;
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle & ImageStyle>;
 };
 
 function pickInitial(name?: string): string {

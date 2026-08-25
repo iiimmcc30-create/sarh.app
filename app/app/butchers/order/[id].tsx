@@ -25,7 +25,11 @@ import { rtlBackIcon } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
 import { ORDER_STATUS_COLORS } from '@/services/butcherData';
-import { completeButcherOrderPayment, formatCurrency } from '@/services/butcherOrders';
+import {
+  completeButcherOrderPayment,
+  formatCurrency,
+  type ButcherOrderRecord,
+} from '@/services/butcherOrders';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -45,7 +49,7 @@ export default function OrderDetailsScreen() {
   const { accessToken } = useAuth();
   const { colors } = useTheme();
   const s = useThemedStyles(({ colors }) => createStyles(colors));
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<ButcherOrderRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
 
@@ -58,8 +62,11 @@ export default function OrderDetailsScreen() {
       const res = await fetch(`${API_BASE}/api/butchers/orders/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      const json = await res.json();
-      if (res.ok && json.success) setOrder(json.data);
+      const json = (await res.json()) as {
+        success?: boolean;
+        data?: ButcherOrderRecord;
+      };
+      if (res.ok && json.success && json.data) setOrder(json.data);
     } catch (err) {
       console.warn('[OrderDetails] load failed', err);
     } finally {

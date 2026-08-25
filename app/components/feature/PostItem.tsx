@@ -417,7 +417,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       color: colors.textSubtle,
       flexShrink: 0,
     },
-    metaDot: {
+    menuBtn: {
       width: 30,
       height: 30,
       borderRadius: 16,

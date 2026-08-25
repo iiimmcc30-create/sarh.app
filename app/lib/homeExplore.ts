@@ -125,7 +125,7 @@ export function partitionExploreSections(sections: HomeExploreCard[]): {
 }
 
 export function resolveExploreCard(
-  raw: Partial<HomeExploreCard> & { destination?: string },
+  raw: Omit<Partial<HomeExploreCard>, 'destination'> & { destination?: string },
 ): HomeExploreCard | null {
   const key = raw.destination as HomeExploreDestinationKey;
   const meta = CATALOG[key];

@@ -136,10 +136,10 @@ function parseAccountSettings(data: unknown): AccountSettings | null {
   if (!data || typeof data !== 'object') return null;
   const row = data as Record<string, unknown>;
   return {
-    phone: typeof row.phone === 'string' ? row.phone : row.phone ?? null,
-    email: typeof row.email === 'string' ? row.email : row.email ?? null,
+    phone: typeof row.phone === 'string' ? row.phone : null,
+    email: typeof row.email === 'string' ? row.email : null,
     birthDate:
-      typeof row.birthDate === 'string' ? row.birthDate : row.birthDate ?? null,
+      typeof row.birthDate === 'string' ? row.birthDate : null,
   };
 }
 

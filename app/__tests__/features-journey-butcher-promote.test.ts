@@ -45,10 +45,11 @@ const product = {
 };
 
 function butcher(partial: Partial<ButcherProfile> & { id: string }): ButcherProfile {
+  const { id, ...overrides } = partial;
   return {
-    id: partial.id,
+    id,
     name: 'Shop',
-    nameAr: partial.nameAr ?? 'ملحمة',
+    nameAr: overrides.nameAr ?? 'ملحمة',
     type: 'verified',
     country: 'SA',
     city: 'Riyadh',
@@ -58,7 +59,7 @@ function butcher(partial: Partial<ButcherProfile> & { id: string }): ButcherProf
     lat: 24.7,
     lng: 46.7,
     phone: '+966500000000',
-    rating: partial.rating ?? 4,
+    rating: overrides.rating ?? 4,
     reviewCount: 0,
     orderCompletionRate: 90,
     workingHours: { open: '08:00', close: '22:00', isOpen: true },
@@ -66,13 +67,13 @@ function butcher(partial: Partial<ButcherProfile> & { id: string }): ButcherProf
     bioAr: '',
     specialties: [],
     subscriptionActive: true,
-    activityScore: partial.activityScore ?? 50,
-    rankingScore: partial.rankingScore ?? 0,
-    favoritesCount: partial.favoritesCount ?? 0,
-    completedOrdersCount: partial.completedOrdersCount ?? 0,
-    totalOrders: partial.totalOrders ?? 0,
+    activityScore: overrides.activityScore ?? 50,
+    rankingScore: overrides.rankingScore ?? 0,
+    favoritesCount: overrides.favoritesCount ?? 0,
+    completedOrdersCount: overrides.completedOrdersCount ?? 0,
+    totalOrders: overrides.totalOrders ?? 0,
     joinedAt: '2026-01-01T00:00:00Z',
-    ...partial,
+    ...overrides,
   };
 }
 
