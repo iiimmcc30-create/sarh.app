@@ -24,7 +24,7 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
   {
     id: 'auth-login',
     titleAr: 'تسجيل الدخول / الهاتف / OAuth',
-    routes: ['/auth/phone', '/auth/otp', '/auth/register', '/expo-auth-session'],
+    routes: ['/auth/welcome', '/auth/phone', '/auth/otp', '/auth/register', '/expo-auth-session'],
     coveredByTests: ['features-auth-login.test.ts'],
     modules: ['services/twilio.ts', 'lib/googleOAuthCallback.ts'],
   },

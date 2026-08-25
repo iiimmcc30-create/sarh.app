@@ -158,7 +158,7 @@ export default function ForgotPasswordScreen() {
 
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <AppLogo size={90} />
+              <AppLogo size={90} showRing={false} shape="square" />
               <Text style={styles.title}>استعادة كلمة المرور</Text>
               <Text style={styles.sub}>
                 {step === 'phone' && 'أدخل رقم جوالك المسجّل لإرسال رمز التحقق'}

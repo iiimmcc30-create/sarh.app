@@ -1,462 +1,545 @@
-// Powered by OnSpace.AI
-// SAFAT — Registration Screen (شاشة التسجيل المطابقة للتصميم الجديد بالكامل)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, marginEnd, marginStart, rtlForwardIcon } from '@/lib/rtl';
-
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { AppLogo } from '@/components/ui/AppLogo';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAuthCopy } from '@/hooks/useAuthCopy';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { updateAccountSettings } from '@/services/users';
+import { getRtlText, marginStart, rtlForwardIcon, isAppRtl } from '@/lib/rtl';
+import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
+  LayoutAnimation,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  UIManager,
   View,
-  ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
-import { AppLogo } from '@/components/ui/AppLogo';
-import { useAuth } from '@/contexts/AuthContext';
-import {
-  BRAND_MARKET_TERMS_AR,
-  BRAND_REGISTER_SUBTITLE_AR,
-} from '@/constants/brandCopy';
 
-const COUNTRY_CODES = [
-  { flag: '🇸🇦', code: '+966', label: 'السعودية', dbCode: 'SA' },
-];
+const SAUDI_DIAL = '+966';
+type Step = 'phone' | 'name' | 'identity' | 'password' | 'otp';
+
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const DOB_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+function animateStepChange() {
+  LayoutAnimation.configureNext(
+    LayoutAnimation.create(220, 'easeInEaseOut', 'opacity'),
+  );
+}
 
 export default function RegisterScreen() {
-  const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    phone?: string;
-    token?: string;
-  }>();
-
+  const params = useLocalSearchParams<{ phone?: string; token?: string }>();
   const { sendOtp, verifyOtp, register } = useAuth();
+  const { copy } = useAuthCopy();
 
-  // ── States ─────────────────────────────────────────────────────────────────
+  const initialStep: Step =
+    params.phone && params.token ? 'name' : 'phone';
+
+  const [step, setStep] = useState<Step>(initialStep);
+  const [phone, setPhone] = useState(
+    params.phone?.replace(/^\+\d{3}/, '') || '',
+  );
   const [displayName, setDisplayName] = useState('');
-  const [username, setUsername]       = useState('');
-  const [countryIdx, setCountryIdx]   = useState(0);
-  const [showPicker, setShowPicker]   = useState(false);
-  const [agreed, setAgreed]           = useState(false);
-  const [loading, setLoading]         = useState(false);
-  const [usernameError, setUsernameError] = useState('');
-
-  // Password fields
-  const [password, setPassword]             = useState('');
+  const [username, setUsername] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword]       = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Phone states
-  const [phone, setPhone]                 = useState(params.phone?.replace(/^\+\d{3}/, '') || '');
-  const [emailInput, setEmailInput]       = useState('');
-
-  // OTP Verification states (within registration)
-  const [otpSent, setOtpSent]         = useState(false);
-  const [otpCode, setOtpCode]         = useState('');
-  const [otpLoading, setOtpLoading]   = useState(false);
-  const [otpError, setOtpError]       = useState('');
-  const [phoneToken, setPhoneToken]   = useState(params.token || '');
-  const [phoneVerified, setPhoneVerified] = useState(!!params.phone && !!params.token);
-
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-  const currentCountry = COUNTRY_CODES[countryIdx];
-  const cleanPhoneDigits = phone.trim()
-    .replace(/^\+/, '')
-    .replace(new RegExp(`^(?:${currentCountry.code.replace('+', '')}|00${currentCountry.code.replace('+', '')})`), '')
+  const cleanPhoneDigits = phone
+    .trim()
+    .replace(/\D/g, '')
     .replace(/^0/, '');
-  const fullPhone = `${currentCountry.code}${cleanPhoneDigits}`;
-  const isPhoneValid = cleanPhoneDigits.replace(/\D/g, '').length >= 9;
+  const fullPhone = `${SAUDI_DIAL}${cleanPhoneDigits}`;
+  const isPhoneValid =
+    cleanPhoneDigits.length >= 9 && cleanPhoneDigits.startsWith('5');
+  const usernameOk = USERNAME_RE.test(username.trim().toLowerCase());
+  const dobOk = !birthDate.trim() || DOB_RE.test(birthDate.trim());
 
-  const shake = () => {
-    Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
-    ]).start();
+  const stepIndex = useMemo(() => {
+    const order: Step[] = ['phone', 'name', 'identity', 'password', 'otp'];
+    return order.indexOf(step);
+  }, [step]);
+
+  const goTo = (next: Step) => {
+    animateStepChange();
+    setError('');
+    setStep(next);
   };
 
-  const validateUsername = (v: string) => {
-    setUsername(v);
-    if (!v) { setUsernameError(''); return; }
-    if (!/^[a-z0-9_]{3,20}$/.test(v)) {
-      setUsernameError('3-20 حرف: أرقام، حروف إنجليزية صغيرة، أو _');
-    } else {
-      setUsernameError('');
+  const goBack = () => {
+    if (step === 'otp') {
+      goTo('password');
+      return;
     }
+    if (step === 'password') {
+      goTo('identity');
+      return;
+    }
+    if (step === 'identity') {
+      goTo('name');
+      return;
+    }
+    if (step === 'name') {
+      goTo('phone');
+      return;
+    }
+    if (router.canGoBack()) router.back();
+    else router.replace('/auth/welcome');
   };
 
-  // ── التحقق من شروط الإرسال ────────────────────────────────────────────────
-  const canSendOtp = displayName.trim().length >= 2
-    && username.trim().length >= 3
-    && !usernameError
-    && isPhoneValid
-    && password.length >= 6
-    && password === confirmPassword
-    && agreed
-    && !loading;
+  const advanceFromPhone = () => {
+    if (!isPhoneValid) {
+      setError(copy.errPhone);
+      return;
+    }
+    goTo('name');
+  };
 
-  // ── إرسال كود OTP ────────────────────────────────────────────────────────
-  const handleSendOtp = async () => {
-    if (!canSendOtp) {
-      if (password !== confirmPassword) {
-        Alert.alert('خطأ', 'كلمة المرور وتأكيد كلمة المرور غير متطابقين');
-      } else {
-        Alert.alert('تنبيه', 'يرجى ملء جميع الحقول الإلزامية والموافقة على الشروط أولاً');
-      }
-      shake();
+  const advanceFromName = () => {
+    if (displayName.trim().length < 2) {
+      setError(copy.errName);
+      return;
+    }
+    goTo('identity');
+  };
+
+  const advanceFromIdentity = () => {
+    if (!usernameOk) {
+      setError(copy.errUsername);
+      return;
+    }
+    if (!dobOk) {
+      setError(copy.errDob);
+      return;
+    }
+    goTo('password');
+  };
+
+  const startRegister = async () => {
+    setError('');
+    if (password.length < 6) {
+      setError(copy.errPassword);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(copy.errPasswordMatch);
+      return;
+    }
+    if (!agreed) {
+      setError(copy.errTerms);
       return;
     }
 
-    setOtpError('');
     setLoading(true);
     const result = await sendOtp(fullPhone, 'sms');
     setLoading(false);
-
     if (!result.success) {
-      setOtpError(result.error ?? 'فشل إرسال رمز التحقق');
-      shake();
+      setError(result.error ?? copy.errGeneric);
       return;
     }
-    setOtpSent(true);
+    goTo('otp');
   };
 
-  // ── التحقق من الـ OTP وإنشاء الحساب ────────────────────────────────────────
-  const handleVerifyAndRegister = async () => {
-    setOtpError('');
-    if (otpCode.length !== 6) { setOtpError('أدخل رمز الـ OTP المكون من 6 أرقام'); return; }
-
-    setOtpLoading(true);
-    const result = await verifyOtp(fullPhone, otpCode);
-
-    if (!result.success) {
-      setOtpLoading(false);
-      setOtpError(result.error ?? 'رمز التحقق غير صحيح');
-      shake();
+  const verifyAndCreate = async () => {
+    setError('');
+    if (otpCode.length !== 6) {
+      setError(copy.errOtp);
+      return;
+    }
+    setLoading(true);
+    const verified = await verifyOtp(fullPhone, otpCode);
+    if (!verified.success || !verified.phoneToken) {
+      setLoading(false);
+      setError(verified.error ?? copy.errOtp);
       return;
     }
 
-    if (!result.phoneToken) {
-      setOtpLoading(false);
-      setOtpError('فشل الحصول على رمز توثيق الجوال');
-      return;
-    }
+    const regResult = await register({
+      phone: fullPhone,
+      phone_token: verified.phoneToken,
+      displayName: displayName.trim(),
+      arabicName: displayName.trim(),
+      username: username.trim().toLowerCase(),
+      country: 'SA',
+      password,
+    });
 
-    // تم التحقق من الجوال بنجاح! الآن ننشئ الحساب
-    try {
-      const regResult = await register({
-        phone:        fullPhone,
-        phone_token:  result.phoneToken,
-        displayName:  displayName.trim(),
-        arabicName:   displayName.trim(),
-        username:     username.trim().toLowerCase(),
-        country:      currentCountry.dbCode,
-        email:       emailInput.trim().toLowerCase() || undefined,
-        password,
-      });
-
-      setOtpLoading(false);
-
-      if (!regResult.success) {
-        if (regResult.error?.includes('username_taken')) {
-          setUsernameError('اسم المستخدم مأخوذ، جرّب آخر');
-          setOtpSent(false); // تعديل البيانات
-        } else {
-          setOtpError(regResult.error ?? 'فشل إنشاء الحساب. حاول مجدداً.');
-        }
+    if (!regResult.success) {
+      setLoading(false);
+      if (regResult.error?.includes('مستخدم') || regResult.error?.includes('username')) {
+        setError(regResult.error);
+        goTo('identity');
         return;
       }
-
-      router.replace('/(tabs)');
-    } catch {
-      setOtpLoading(false);
-      setOtpError('خطأ في الشبكة أثناء إنشاء الحساب.');
+      setError(regResult.error ?? copy.errGeneric);
+      return;
     }
+
+    const dob = birthDate.trim();
+    if (dob && DOB_RE.test(dob)) {
+      void updateAccountSettings({ birthDate: dob });
+    }
+
+    setLoading(false);
+    router.replace('/(tabs)');
   };
+
+  const titleForStep =
+    step === 'phone'
+      ? copy.stepPhoneTitle
+      : step === 'name'
+        ? copy.stepNameTitle
+        : step === 'identity'
+          ? copy.stepUsernameTitle
+          : step === 'password'
+            ? copy.stepPasswordTitle
+            : copy.otpTitle;
 
   return (
     <View style={styles.root}>
+      <LinearGradient
+        colors={[colors.bgDeep, colors.bgPrimary, colors.bgDeep]}
+        style={StyleSheet.absoluteFill}
+      />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          
-          {/* Back button top right */}
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+        <KeyboardAvoidingView
+          style={styles.kav}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.topBar}>
+            <Pressable onPress={goBack} hitSlop={12} style={styles.backBtn}>
+              <AppIcon
+                name={rtlForwardIcon()}
+                size={22}
+                color={colors.textPrimary}
+              />
+            </Pressable>
+            <View style={styles.dots}>
+              {(['phone', 'name', 'identity', 'password'] as Step[]).map(
+                (s, i) => (
+                  <View
+                    key={s}
+                    style={[
+                      styles.dot,
+                      i <= Math.min(stepIndex, 3) && styles.dotActive,
+                    ]}
+                  />
+                ),
+              )}
+            </View>
+            <View style={styles.backBtn} />
+          </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scroll}
+          >
             <View style={styles.header}>
-              <AppLogo size={56} showRing={false} />
-              <Text style={styles.title}>إنشاء حساب</Text>
-              <Text style={styles.sub}>{BRAND_REGISTER_SUBTITLE_AR}</Text>
+              <AppLogo size={56} showRing={false} shape="square" />
             </View>
 
-            {/* Main Form Card */}
-            <View style={styles.card}>
+            <View>
+              <Text style={styles.stepTitle}>{titleForStep}</Text>
+              {step === 'otp' ? (
+                <Text style={styles.stepSub}>{copy.otpSubtitle}</Text>
+              ) : null}
 
-              {/* الاسم الكامل */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الاسم الكامل *</Text>
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={displayName}
-                    onChangeText={setDisplayName}
-                    placeholder="اسمك الكامل"
-                    placeholderTextColor={colors.textSubtle}
-                    style={styles.input}
-                    textAlign="right"
-                    maxLength={45}
-                  />
-                  <AppIcon name="person-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                </View>
-              </View>
-
-              {/* اسم المستخدم */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>اسم المستخدم *</Text>
-                <View style={[styles.inputWrap, usernameError ? styles.inputWrapError : null]}>
-                  <TextInput
-                    value={username}
-                    onChangeText={validateUsername}
-                    placeholder="khalid_otaibi"
-                    placeholderTextColor={colors.textSubtle}
-                    style={styles.input}
-                    textAlign="left"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    maxLength={25}
-                  />
-                  <Text style={styles.atSign}>@</Text>
-                </View>
-                {usernameError ? (
-                  <Text style={styles.fieldError}>{usernameError}</Text>
-                ) : (
-                  <Text style={styles.fieldHint}>
-                    يظهر في رابط ملفك <Text style={styles.fieldHintLink}>alsafat.sa/profile/{username || 'اسم_المستخدم'}</Text>
-                  </Text>
-                )}
-              </View>
-
-              {/* الدولة */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الدولة</Text>
-                <Pressable style={styles.inputWrap} onPress={() => setShowPicker(v => !v)}>
-                  <AppIcon name={showPicker ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
-                  <Text style={styles.pickerValueText}>{currentCountry.label} {currentCountry.code}</Text>
-                  <Text style={styles.pickerValueFlag}>{currentCountry.flag}</Text>
-                </Pressable>
-
-                {showPicker && (
-                  <View style={styles.pickerDropdown}>
-                    {COUNTRY_CODES.map((c, i) => (
-                      <Pressable
-                        key={c.code}
-                        style={[
-                          styles.pickerItem,
-                          i === countryIdx && styles.pickerItemActive,
-                        ]}
-                        onPress={() => { setCountryIdx(i); setShowPicker(false); }}
-                      >
-                        <Text style={styles.pickerFlag}>{c.flag}</Text>
-                        <Text style={styles.pickerLabel}>{c.label}</Text>
-                        <Text style={styles.pickerCode}>{c.code}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* رقم الجوال */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>رقم الجوال *</Text>
-                <Animated.View style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}>
-                  <TextInput
-                    value={phone}
-                    onChangeText={(t) => { setPhone(t); setOtpError(''); }}
-                    placeholder="05xxxxxxxx"
-                    placeholderTextColor={colors.textSubtle}
-                    keyboardType="phone-pad"
-                    textAlign="right"
-                    style={styles.input}
-                    maxLength={12}
-                    editable={!otpSent}
-                  />
-                  <AppIcon name="call-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                </Animated.View>
-                <Text style={styles.fieldHint}>
-                  الصفر في البداية للصيغة المحلية (05...) - تحول تلقائياً إلى {currentCountry.code} عند الارسال
-                </Text>
-              </View>
-
-              {/* البريد الإلكتروني (اختياري) */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>البريد الإلكتروني (اختياري)</Text>
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={emailInput}
-                    onChangeText={setEmailInput}
-                    placeholder="name@example.com"
-                    placeholderTextColor={colors.textSubtle}
-                    style={styles.input}
-                    textAlign="right"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                  <AppIcon name="mail-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                </View>
-              </View>
-
-              {/* كلمة المرور */}
-              <>
-                  {/* كلمة المرور */}
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.fieldLabel}>كلمة المرور *</Text>
-                    <View style={styles.inputWrap}>
-                      <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
-                        <AppIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
-                      </Pressable>
-                      <TextInput
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="........"
-                        placeholderTextColor={colors.textSubtle}
-                        secureTextEntry={!showPassword}
-                        style={styles.input}
-                        textAlign="right"
-                      />
-                      <AppIcon name="lock-closed-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                    </View>
-                  </View>
-
-                  {/* تأكيد كلمة المرور */}
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.fieldLabel}>التأكيد *</Text>
-                    <View style={styles.inputWrap}>
-                      <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={10}>
-                        <AppIcon name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
-                      </Pressable>
-                      <TextInput
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        placeholder="........"
-                        placeholderTextColor={colors.textSubtle}
-                        secureTextEntry={!showConfirmPassword}
-                        style={styles.input}
-                        textAlign="right"
-                      />
-                      <AppIcon name="lock-closed-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-                    </View>
-                  </View>
-                </>
-
-              {/* Checkbox: الموافقة على الشروط والأحكام */}
-              <Pressable
-                onPress={() => setAgreed((v) => !v)}
-                style={styles.agreeRow}
-              >
-                <Text style={styles.agreeText}>
-                  أوافق على <Text style={styles.agreeLink}>{BRAND_MARKET_TERMS_AR}</Text>
-                </Text>
-                <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-                  {agreed && <AppIcon name="checkmark" size={12} color="#fff" />}
-                </View>
-              </Pressable>
-
-              {/* OTP Verification Section (Inline) */}
-              {otpSent && (
-                <View style={styles.otpVerifyContainer}>
-                  <Text style={styles.fieldLabel}>رمز التحقق المرسل بجوالك *</Text>
+              {step === 'phone' ? (
+                <View style={styles.block}>
                   <View style={styles.inputWrap}>
                     <TextInput
-                      value={otpCode}
-                      onChangeText={setOtpCode}
-                      placeholder="أدخل الكود (6 أرقام)"
+                      style={styles.input}
+                      value={phone}
+                      onChangeText={(t) => {
+                        setPhone(t.replace(/[^\d\s]/g, ''));
+                        setError('');
+                      }}
+                      placeholder={copy.phonePlaceholder}
                       placeholderTextColor={colors.textSubtle}
-                      keyboardType="number-pad"
-                      textAlign="center"
-                      style={styles.otpInput}
-                      maxLength={6}
+                      keyboardType="phone-pad"
+                      textAlign={isAppRtl() ? "right" : "left"}
+                      maxLength={10}
+                      autoFocus
                     />
                   </View>
-                  <View style={styles.otpActionsRow}>
-                    <Pressable style={styles.otpVerifyBtn} onPress={handleVerifyAndRegister} disabled={otpLoading}>
-                      {otpLoading ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Text style={styles.otpVerifyText}>تأكيد الرمز وإنشاء الحساب ←</Text>
-                      )}
-                    </Pressable>
-                    <Pressable style={styles.otpEditBtn} onPress={() => setOtpSent(false)}>
-                      <Text style={styles.otpEditText}>تعديل البيانات</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              )}
-
-              {/* Error messages */}
-              {otpError ? (
-                <View style={styles.errorContainer}>
-                  <AppIcon name="alert-circle-outline" size={15} color={colors.danger} />
-                  <Text style={styles.errorText}>{otpError}</Text>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      !isPhoneValid && styles.btnDisabled,
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={advanceFromPhone}
+                  >
+                    <Text style={styles.primaryText}>{copy.continueCta}</Text>
+                  </Pressable>
                 </View>
               ) : null}
 
-              {/* Send Verification Code / Create Account Button */}
-              {!otpSent && (
-                <Pressable
-                  style={styles.submitBtn}
-                  onPress={handleSendOtp}
-                  disabled={loading}
-                >
-                  <LinearGradient
-                    colors={[colors.electric, colors.electricBright]}
-                    style={styles.submitGrad}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              {step === 'name' ? (
+                <View style={styles.block}>
+                  <View style={styles.inputWrap}>
+                    <TextInput
+                      style={styles.input}
+                      value={displayName}
+                      onChangeText={(t) => {
+                        setDisplayName(t);
+                        setError('');
+                      }}
+                      placeholder={copy.namePlaceholder}
+                      placeholderTextColor={colors.textSubtle}
+                      textAlign={isAppRtl() ? "right" : "left"}
+                      maxLength={45}
+                      autoFocus
+                    />
+                  </View>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      displayName.trim().length < 2 && styles.btnDisabled,
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={advanceFromName}
+                  >
+                    <Text style={styles.primaryText}>{copy.continueCta}</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
+              {step === 'identity' ? (
+                <View style={styles.block}>
+                  <View style={styles.inputWrap}>
+                    <Text style={styles.at}>@</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={username}
+                      onChangeText={(t) => {
+                        setUsername(t.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+                        setError('');
+                      }}
+                      placeholder={copy.usernamePlaceholder}
+                      placeholderTextColor={colors.textSubtle}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={20}
+                      autoFocus
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.hint,
+                      username.length > 0 &&
+                        (usernameOk ? styles.hintOk : styles.hintBad),
+                    ]}
+                  >
+                    {username.length === 0
+                      ? copy.usernameHint
+                      : usernameOk
+                        ? copy.usernameFormatOk
+                        : copy.usernameFormatBad}
+                  </Text>
+
+                  <Text style={[styles.label, styles.labelSpaced]}>
+                    {copy.stepDobTitle}
+                  </Text>
+                  <View style={styles.inputWrap}>
+                    <TextInput
+                      style={styles.input}
+                      value={birthDate}
+                      onChangeText={(t) => {
+                        setBirthDate(t.replace(/[^\d-]/g, ''));
+                        setError('');
+                      }}
+                      placeholder={copy.dobPlaceholder}
+                      placeholderTextColor={colors.textSubtle}
+                      keyboardType="numbers-and-punctuation"
+                      maxLength={10}
+                    />
+                  </View>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      (!usernameOk || !dobOk) && styles.btnDisabled,
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={advanceFromIdentity}
+                  >
+                    <Text style={styles.primaryText}>{copy.continueCta}</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
+              {step === 'password' ? (
+                <View style={styles.block}>
+                  <View style={styles.inputWrap}>
+                    <Pressable
+                      onPress={() => setShowPassword((v) => !v)}
+                      hitSlop={8}
+                      style={styles.eye}
+                    >
+                      <AppIcon
+                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                        size={18}
+                        color={colors.textMuted}
+                      />
+                    </Pressable>
+                    <TextInput
+                      style={styles.input}
+                      value={password}
+                      onChangeText={(t) => {
+                        setPassword(t);
+                        setError('');
+                      }}
+                      placeholder={copy.passwordPlaceholder}
+                      placeholderTextColor={colors.textSubtle}
+                      secureTextEntry={!showPassword}
+                      textAlign={isAppRtl() ? "right" : "left"}
+                      autoFocus
+                    />
+                  </View>
+
+                  <Text style={[styles.label, styles.labelSpaced]}>
+                    {copy.stepConfirmPasswordTitle}
+                  </Text>
+                  <View style={styles.inputWrap}>
+                    <Pressable
+                      onPress={() => setShowConfirm((v) => !v)}
+                      hitSlop={8}
+                      style={styles.eye}
+                    >
+                      <AppIcon
+                        name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
+                        size={18}
+                        color={colors.textMuted}
+                      />
+                    </Pressable>
+                    <TextInput
+                      style={styles.input}
+                      value={confirmPassword}
+                      onChangeText={(t) => {
+                        setConfirmPassword(t);
+                        setError('');
+                      }}
+                      placeholder={copy.confirmPasswordPlaceholder}
+                      placeholderTextColor={colors.textSubtle}
+                      secureTextEntry={!showConfirm}
+                      textAlign={isAppRtl() ? "right" : "left"}
+                    />
+                  </View>
+
+                  <Pressable
+                    onPress={() => setAgreed((v) => !v)}
+                    style={styles.termsRow}
+                  >
+                    <View
+                      style={[styles.check, agreed && styles.checkOn]}
+                    >
+                      {agreed ? (
+                        <AppIcon name="checkmark" size={14} color="#fff" />
+                      ) : null}
+                    </View>
+                    <Text style={styles.termsText}>
+                      {copy.termsAgree}
+                      {' · '}
+                      {BRAND_TERMS_SHORT_AR}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      (loading ||
+                        password.length < 6 ||
+                        password !== confirmPassword ||
+                        !agreed) &&
+                        styles.btnDisabled,
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={startRegister}
+                    disabled={loading}
                   >
                     {loading ? (
-                      <ActivityIndicator size="small" color="#fff" />
+                      <ActivityIndicator color="#fff" />
                     ) : (
-                      <Text style={styles.submitText}>إرسال رمز التحقق</Text>
+                      <Text style={styles.primaryText}>{copy.registerCta}</Text>
                     )}
-                  </LinearGradient>
-                </Pressable>
-              )}
+                  </Pressable>
+                </View>
+              ) : null}
 
+              {step === 'otp' ? (
+                <View style={styles.block}>
+                  <View style={styles.inputWrap}>
+                    <TextInput
+                      style={[styles.input, styles.otpInput]}
+                      value={otpCode}
+                      onChangeText={(t) => {
+                        setOtpCode(t.replace(/\D/g, '').slice(0, 6));
+                        setError('');
+                      }}
+                      placeholder="••••••"
+                      placeholderTextColor={colors.textSubtle}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      textAlign="center"
+                      autoFocus
+                    />
+                  </View>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      (loading || otpCode.length !== 6) && styles.btnDisabled,
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={verifyAndCreate}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.primaryText}>{copy.otpConfirm}</Text>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={() => goTo('password')}
+                    style={styles.editLink}
+                  >
+                    <Text style={styles.editText}>{copy.otpEdit}</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
+              {error ? <Text style={styles.error}>{error}</Text> : null}
             </View>
-
-            {/* Footer Registration links */}
-            <View style={styles.footer}>
-              <Pressable onPress={() => router.push('/auth/phone')}>
-                <Text style={styles.footerLinkText}>
-                  لديك حساب بالفعل؟ <Text style={styles.footerLinkActive}>تسجيل الدخول</Text>
-                </Text>
-              </Pressable>
-
-              <Text style={[styles.footerLinkText, { marginTop: spacing.sm, textAlign: 'center' }]}>
-                لإدارة ملحمة، أنشئ حساباً أولاً ثم سجّل الدخول من داخل التطبيق.
-              </Text>
-              
-              <Text style={styles.disclaimerText}>
-                بتسجيل الدخول أو إنشاء حساب فإنك توافق على <Text style={styles.disclaimerLink} onPress={() => router.push('/info/terms')}>{BRAND_MARKET_TERMS_AR}</Text>
-              </Text>
-            </View>
-
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -466,113 +549,135 @@ export default function RegisterScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.screenRoot },
-  safe: { flex: 1 },
-  kav: { flex: 1 },
-  scroll: { paddingHorizontal: spacing.xl, paddingTop: 40, paddingBottom: 30, alignItems: 'center' },
-
-  backBtn: {
-    position: 'absolute', top: 16, ...inlineEnd(spacing.xl),
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
-    alignItems: 'center', justifyContent: 'center', zIndex: 10,
-  },
-
-  header: { alignItems: 'center', marginBottom: 22, gap: 8, width: '100%' },
-  title: { ...typography.h1, fontSize: 32, lineHeight: 40, color: colors.textPrimary, textAlign: 'center' },
-  sub: { ...typography.caption, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20 },
-
-  card: {
-    width: '100%',
-    borderRadius: 14,
-    padding: spacing.lg,
-    backgroundColor: colors.bgSurface,
-    gap: spacing.md,
-  },
-
-  fieldGroup: { gap: 6, width: '100%' },
-  fieldLabel: { ...typography.smallHeading, color: colors.textPrimary, textAlign: 'right' },
-  
-  inputWrap: {
-    ...getRtlRow(), alignItems: 'center',
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1.2, borderColor: colors.borderHairline,
-    paddingHorizontal: spacing.md, height: 50, width: '100%',
-  },
-  inputWrapError: { borderColor: colors.danger },
-  inputIcon: marginStart(8),
-  input: { flex: 1, ...typography.secondary, color: colors.textPrimary, height: '100%', ...getRtlText() },
-  atSign: { ...typography.smallHeading, color: colors.textMuted, ...marginStart(8) },
-  
-  fieldError: { ...typography.caption, color: colors.danger, ...getRtlText(), marginTop: 2 },
-  fieldHint: { ...typography.caption, color: colors.textMuted, ...getRtlText(), marginTop: 2 },
-  fieldHintLink: { color: colors.textBrandStrong, fontWeight: '500' },
-
-  pickerValueText: { flex: 1, ...typography.secondary, color: colors.textPrimary, ...getRtlText(), ...marginEnd(8) },
-  pickerValueFlag: { fontSize: 16 },
-
-  pickerDropdown: {
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.borderHairline,
-    marginTop: 4, overflow: 'hidden', width: '100%',
-  },
-  pickerItem: {
-    ...getRtlRow(), alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.md, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)',
-  },
-  pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
-  pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, ...typography.secondary, color: colors.textPrimary, ...getRtlText(), ...marginEnd(10) },
-  pickerCode: { ...typography.secondary, color: colors.textMuted },
-
-  agreeRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    gap: 8, width: '100%', marginVertical: 4,
-  },
-  agreeText: { ...typography.secondary, color: colors.textMuted, textAlign: 'right' },
-  agreeLink: { color: colors.textBrandStrong, fontWeight: '600' },
-  checkbox: {
-    width: 20, height: 20, borderRadius: 5,
-    borderWidth: 1.5, borderColor: colors.borderHairline,
-    backgroundColor: colors.bgDeep, alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxChecked: { backgroundColor: colors.electric, borderColor: colors.electric },
-
-  submitBtn: { width: '100%', borderRadius: 14, overflow: 'hidden', marginTop: 5 },
-  submitGrad: { height: 52, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.electric },
-  submitText: { ...typography.button, color: '#fff' },
-
-  otpVerifyContainer: {
-    backgroundColor: 'rgba(30,111,241,0.05)', borderRadius: 12,
-    borderWidth: 1, borderColor: 'rgba(30,111,241,0.15)',
-    padding: spacing.md, gap: spacing.sm, width: '100%',
-  },
-  otpInput: { flex: 1, ...typography.valueLarge, color: colors.textPrimary, height: '100%', letterSpacing: 8, textAlign: 'center' },
-  otpActionsRow: { ...getRtlRow(), gap: spacing.md, width: '100%' },
-  otpVerifyBtn: {
-    backgroundColor: colors.electric, borderRadius: 12,
-    height: 44, alignItems: 'center', justifyContent: 'center', flex: 2,
-  },
-  otpVerifyText: { ...typography.button, color: colors.textPrimary },
-  otpEditBtn: {
-    borderWidth: 1, borderColor: colors.borderHairline, borderRadius: 12,
-    height: 44, alignItems: 'center', justifyContent: 'center', flex: 1,
-  },
-  otpEditText: { ...typography.caption, color: colors.textMuted },
-
-  errorContainer: {
-    ...getRtlRow(), alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
-    borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
-    width: '100%',
-  },
-  errorText: { ...typography.caption, color: colors.danger, ...getRtlText(), flex: 1 },
-
-  footer: { alignItems: 'center', marginTop: 25, gap: 15, width: '100%' },
-  footerLinkText: { ...typography.secondary, color: colors.textMuted, textAlign: 'center' },
-  footerLinkActive: { color: colors.textBrandStrong, fontWeight: '600' },
-  disclaimerText: { ...typography.caption, color: '#6b7280', textAlign: 'center', paddingHorizontal: 20 },
-  disclaimerLink: { color: colors.textBrandStrong, textDecorationLine: 'underline' },
+    root: { flex: 1, backgroundColor: colors.bgDeep },
+    safe: { flex: 1 },
+    kav: { flex: 1 },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xs,
+    },
+    backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+    dots: { flexDirection: 'row', gap: 6 },
+    dot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: colors.borderMid,
+    },
+    dotActive: { backgroundColor: colors.electric, width: 18 },
+    scroll: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xxl,
+      flexGrow: 1,
+    },
+    header: { alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.md },
+    stepTitle: {
+      ...typography.sectionHeading,
+      fontFamily: OFFICIAL_APP_FONT,
+      color: colors.textPrimary,
+      marginBottom: spacing.lg,
+      ...getRtlText(),
+    },
+    stepSub: {
+      ...typography.body,
+      color: colors.textMuted,
+      marginTop: -spacing.md,
+      marginBottom: spacing.lg,
+      ...getRtlText(),
+    },
+    block: { gap: spacing.sm },
+    label: {
+      ...typography.smallHeading,
+      color: colors.textSecondary,
+      ...getRtlText(),
+    },
+    labelSpaced: { marginTop: spacing.lg, marginBottom: spacing.xs },
+    inputWrap: {
+      height: 54,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      backgroundColor: colors.bgElevated,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+    },
+    input: {
+      flex: 1,
+      ...typography.body,
+      fontFamily: OFFICIAL_APP_FONT,
+      color: colors.textPrimary,
+      paddingVertical: 0,
+    },
+    otpInput: { letterSpacing: 8, textAlign: 'center' },
+    at: {
+      ...typography.body,
+      color: colors.textMuted,
+      ...marginStart(4),
+    },
+    eye: { padding: 4 },
+    hint: {
+      ...typography.caption,
+      color: colors.textSubtle,
+      marginTop: spacing.xs,
+      ...getRtlText(),
+    },
+    hintOk: { color: colors.success },
+    hintBad: { color: colors.danger },
+    termsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.lg,
+    },
+    check: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkOn: {
+      backgroundColor: colors.electric,
+      borderColor: colors.electric,
+    },
+    termsText: {
+      flex: 1,
+      ...typography.caption,
+      color: colors.textSecondary,
+      ...getRtlText(),
+    },
+    primaryBtn: {
+      height: 54,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.electric,
+      marginTop: spacing.xl,
+    },
+    btnDisabled: { opacity: 0.45 },
+    pressed: { opacity: 0.88 },
+    primaryText: {
+      ...typography.button,
+      fontFamily: OFFICIAL_APP_FONT,
+      color: '#fff',
+    },
+    editLink: { alignItems: 'center', marginTop: spacing.md, padding: spacing.sm },
+    editText: {
+      ...typography.smallHeading,
+      color: colors.textMuted,
+      ...getRtlText(),
+    },
+    error: {
+      ...typography.caption,
+      color: colors.danger,
+      marginTop: spacing.md,
+      ...getRtlText(),
+    },
   });
 }

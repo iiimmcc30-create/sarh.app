@@ -1,21 +1,39 @@
-import { Image } from 'expo-image';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { Image, type ImageStyle } from 'expo-image';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { APP_LOGO } from '@/constants/branding';
-import { type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 type AppLogoProps = {
   size?: number;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  /** @deprecated Prefer shape="square". Ring no longer forces a circle. */
   showRing?: boolean;
+  /**
+   * Sarh mark is square. Default is square — never crop to a circle.
+   * `circle` kept only for rare legacy call sites that explicitly need it.
+   */
+  shape?: 'square' | 'circle';
 };
 
-export function AppLogo({ size = 88, style, showRing = true }: AppLogoProps) {
+export function AppLogo({
+  size = 88,
+  style,
+  showRing = true,
+  shape = 'square',
+}: AppLogoProps) {
   const { styles, shadow } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
     shadow: theme.shadow,
   }));
+
+  const corner =
+    shape === 'circle' ? size / 2 : Math.min(radius.lg, Math.round(size * 0.18));
   const inner = Math.round(size * (showRing ? 0.82 : 1));
+  const innerCorner =
+    shape === 'circle'
+      ? inner / 2
+      : Math.min(radius.md, Math.round(inner * 0.16));
 
   if (!showRing) {
     return (
@@ -26,11 +44,11 @@ export function AppLogo({ size = 88, style, showRing = true }: AppLogoProps) {
           {
             width: size,
             height: size,
-            borderRadius: size / 2,
-          },
-          style,
+            borderRadius: corner,
+          } as ImageStyle,
+          style as StyleProp<ImageStyle>,
         ]}
-        contentFit="cover"
+        contentFit="contain"
       />
     );
   }
@@ -43,7 +61,7 @@ export function AppLogo({ size = 88, style, showRing = true }: AppLogoProps) {
         {
           width: size,
           height: size,
-          borderRadius: size / 2,
+          borderRadius: corner,
         },
         style,
       ]}
@@ -53,9 +71,9 @@ export function AppLogo({ size = 88, style, showRing = true }: AppLogoProps) {
         style={{
           width: inner,
           height: inner,
-          borderRadius: inner / 2,
+          borderRadius: innerCorner,
         }}
-        contentFit="cover"
+        contentFit="contain"
       />
     </View>
   );
@@ -67,12 +85,13 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.bgElevated,
-      borderWidth: 1.5,
-      borderColor: colors.borderMid,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
       overflow: 'hidden',
     },
     logo: {
       overflow: 'hidden',
+      backgroundColor: 'transparent',
     },
   });
 }

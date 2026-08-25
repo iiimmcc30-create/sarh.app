@@ -90,26 +90,54 @@ describe('Explore Sarh logo mark', () => {
 });
 
 describe('login screen layout', () => {
-  it('uses Sarh-branded reference login chrome with tabs, fields, and no +966 picker', () => {
+  it('uses minimal Sarh login: phone + password, square logo, locale copy, no country picker', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../app/auth/phone.tsx'),
       'utf8',
     );
-    expect(src).toContain('getRtlRow');
     expect(src).toContain('getRtlText');
-    expect(src).toContain('getRtlDirection');
-    expect(src).toContain('tabBar');
-    expect(src).toContain('placeholder="05xxxxxxxx"');
-    expect(src).toContain('accessibilityLabel="05xxxxxxxx"');
-    expect(src).toContain('BRAND_NAME_AR');
-    expect(src).toContain('تسجيل الدخول');
+    expect(src).toContain('isAppRtl');
+    expect(src).toContain('useAuthCopy');
+    expect(src).toContain('shape="square"');
+    expect(src).toContain('signInWithPassword');
+    expect(src).toContain('forgot-password');
     expect(src).toContain('OFFICIAL_APP_FONT');
-    expect(src).toContain('تذكرني');
     expect(src).not.toContain('countryBtn');
-    expect(src).not.toContain('countryCode');
     expect(src).not.toContain('COUNTRY_CODES');
-    expect(src).not.toContain('BRAND_LOGIN_WELCOME_AR');
+    expect(src).not.toContain('tabBar');
     expect(src).not.toContain('styles.searchBar');
+  });
+});
+
+describe('auth welcome screen', () => {
+  it('shows square brand mark and start / have-account actions', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/auth/welcome.tsx'),
+      'utf8',
+    );
+    expect(src).toContain('shape="square"');
+    expect(src).toContain('/auth/register');
+    expect(src).toContain('/auth/phone');
+    expect(src).toContain('useAuthCopy');
+  });
+});
+
+describe('progressive register screen', () => {
+  it('steps phone → name → identity → password → otp without auth API changes', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/auth/register.tsx'),
+      'utf8',
+    );
+    expect(src).toContain("step === 'phone'");
+    expect(src).toContain("step === 'name'");
+    expect(src).toContain("step === 'identity'");
+    expect(src).toContain("step === 'password'");
+    expect(src).toContain("step === 'otp'");
+    expect(src).toContain('sendOtp');
+    expect(src).toContain('verifyOtp');
+    expect(src).toContain('register(');
+    expect(src).toContain('shape="square"');
+    expect(src).toContain('updateAccountSettings');
   });
 });
 

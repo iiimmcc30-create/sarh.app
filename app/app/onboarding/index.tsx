@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
 
   const finishOnboarding = useCallback(async () => {
     await completeOnboarding();
-    router.replace(isAuthenticated ? '/(tabs)' : '/auth/phone');
+    router.replace(isAuthenticated ? '/(tabs)' : '/auth/welcome');
   }, [completeOnboarding, isAuthenticated, router]);
 
   const handleSkip = useCallback(() => {
