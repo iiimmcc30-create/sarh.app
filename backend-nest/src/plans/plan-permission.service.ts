@@ -90,7 +90,7 @@ export class PlanPermissionService {
   }
 
   storeCommission(permissions: PlanPermissions): number {
-    return permissionNumber(permissions, 'storeCommission', 5);
+    return permissionNumber(permissions, 'storeCommission', 10);
   }
 
   isStoreEnabled(permissions: PlanPermissions): boolean {

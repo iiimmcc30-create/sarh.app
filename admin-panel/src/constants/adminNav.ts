@@ -10,6 +10,9 @@ export type AdminNavItem = {
 /** Top-level sidebar sections (detail routes live under these prefixes). */
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/', label: 'لوحة التحكم' },
+  { href: '/health', label: 'صحة النظام' },
+  { href: '/payments', label: 'المدفوعات' },
+  { href: '/commissions', label: 'العمولات' },
   { href: '/users', label: 'المستخدمون' },
   { href: '/posts', label: 'المنشورات' },
   { href: '/editorial-stories', label: 'ستوريات' },
@@ -34,6 +37,9 @@ export const ADMIN_NAV: AdminNavItem[] = [
 export const ADMIN_FEATURE_ROUTES = [
   '/login',
   '/',
+  '/health',
+  '/payments',
+  '/commissions',
   '/users',
   '/users/[id]',
   '/posts',

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Role, TicketStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BUTCHER_STORE_COMMISSION_PERCENT } from '../../lib/commissions';
 import {
   notDeleted,
   retentionCutoff,
@@ -536,8 +537,14 @@ export class AdminRepository {
       now.getMonth(),
       now.getDate(),
     );
+    const yesterdayStart = new Date(
+      todayStart.getTime() - 24 * 60 * 60 * 1000,
+    );
     const sevenDaysAgo = new Date(
       todayStart.getTime() - 6 * 24 * 60 * 60 * 1000,
+    );
+    const thirtyDaysAgo = new Date(
+      todayStart.getTime() - 29 * 24 * 60 * 60 * 1000,
     );
 
     const [
@@ -545,20 +552,48 @@ export class AdminRepository {
       activeUsers,
       bannedUsers,
       newToday,
+      newYesterday,
+      newUsers7d,
       totalPosts,
       hiddenPosts,
       totalListings,
       activeListings,
       suspendedListings,
+      listingsToday,
+      listingsYesterday,
+      listings7d,
       totalStreams,
       liveNow,
       openTickets,
       urgentTickets,
       totalTickets,
+      reportsToday,
+      reportsYesterday,
       totalButchers,
       verifiedButchers,
+      ordersTotal,
+      ordersToday,
+      ordersYesterday,
+      ordersPending,
+      ordersCompleted,
+      salesTodayAgg,
+      salesYesterdayAgg,
+      sales7dAgg,
+      sales30dAgg,
+      paymentsPaid,
+      paymentsFailed,
+      paymentsPending,
+      paymentsRefunded,
+      listingFeesPaidAgg,
+      listingFeesPendingAgg,
       usersRaw,
+      ordersRaw,
+      paymentsByDayRaw,
+      reportsRaw,
       ticketsByCategory,
+      recentOrders,
+      recentPayments,
+      recentReports,
     ] = await Promise.all([
       this.prisma.user.count({ where: notDeleted }),
       this.prisma.user.count({ where: { ...notDeleted, isActive: true } }),
@@ -566,12 +601,33 @@ export class AdminRepository {
       this.prisma.user.count({
         where: { ...notDeleted, createdAt: { gte: todayStart } },
       }),
+      this.prisma.user.count({
+        where: {
+          ...notDeleted,
+          createdAt: { gte: yesterdayStart, lt: todayStart },
+        },
+      }),
+      this.prisma.user.count({
+        where: { ...notDeleted, createdAt: { gte: sevenDaysAgo } },
+      }),
       this.prisma.post.count({ where: notDeleted }),
       this.prisma.post.count({ where: { ...notDeleted, isHidden: true } }),
       this.prisma.listing.count({ where: notDeleted }),
       this.prisma.listing.count({ where: { ...notDeleted, status: 'active' } }),
       this.prisma.listing.count({
         where: { ...notDeleted, status: 'suspended' },
+      }),
+      this.prisma.listing.count({
+        where: { ...notDeleted, createdAt: { gte: todayStart } },
+      }),
+      this.prisma.listing.count({
+        where: {
+          ...notDeleted,
+          createdAt: { gte: yesterdayStart, lt: todayStart },
+        },
+      }),
+      this.prisma.listing.count({
+        where: { ...notDeleted, createdAt: { gte: sevenDaysAgo } },
       }),
       this.prisma.liveStream.count({ where: notDeleted }),
       this.prisma.liveStream.count({ where: { ...notDeleted, isLive: true } }),
@@ -593,10 +649,95 @@ export class AdminRepository {
       this.prisma.supportTicket.count({
         where: { ...notDeleted, type: 'REPORT' },
       }),
+      this.prisma.supportTicket.count({
+        where: {
+          ...notDeleted,
+          type: 'REPORT',
+          createdAt: { gte: todayStart },
+        },
+      }),
+      this.prisma.supportTicket.count({
+        where: {
+          ...notDeleted,
+          type: 'REPORT',
+          createdAt: { gte: yesterdayStart, lt: todayStart },
+        },
+      }),
       this.prisma.butcher.count({ where: notDeleted }),
       this.prisma.butcher.count({ where: { ...notDeleted, type: 'verified' } }),
+      this.prisma.butcherOrder.count(),
+      this.prisma.butcherOrder.count({
+        where: { createdAt: { gte: todayStart } },
+      }),
+      this.prisma.butcherOrder.count({
+        where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
+      }),
+      this.prisma.butcherOrder.count({
+        where: {
+          status: { in: ['pending', 'confirmed', 'preparing', 'ready'] },
+        },
+      }),
+      this.prisma.butcherOrder.count({ where: { status: 'delivered' } }),
+      this.prisma.butcherOrder.aggregate({
+        where: {
+          status: 'delivered',
+          createdAt: { gte: todayStart },
+        },
+        _sum: { totalPrice: true },
+      }),
+      this.prisma.butcherOrder.aggregate({
+        where: {
+          status: 'delivered',
+          createdAt: { gte: yesterdayStart, lt: todayStart },
+        },
+        _sum: { totalPrice: true },
+      }),
+      this.prisma.butcherOrder.aggregate({
+        where: {
+          status: 'delivered',
+          createdAt: { gte: sevenDaysAgo },
+        },
+        _sum: { totalPrice: true },
+      }),
+      this.prisma.butcherOrder.aggregate({
+        where: {
+          status: 'delivered',
+          createdAt: { gte: thirtyDaysAgo },
+        },
+        _sum: { totalPrice: true },
+      }),
+      this.prisma.payment.count({ where: { status: 'paid' } }),
+      this.prisma.payment.count({ where: { status: 'failed' } }),
+      this.prisma.payment.count({ where: { status: 'pending' } }),
+      this.prisma.payment.count({ where: { status: 'refunded' } }),
+      this.prisma.listingFee.aggregate({
+        where: { status: 'paid' },
+        _sum: { commission: true },
+        _count: { _all: true },
+      }),
+      this.prisma.listingFee.aggregate({
+        where: { status: { in: ['pending', 'overdue'] } },
+        _sum: { commission: true },
+        _count: { _all: true },
+      }),
       this.prisma.user.findMany({
-        where: { ...notDeleted, createdAt: { gte: sevenDaysAgo } },
+        where: { ...notDeleted, createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true },
+      }),
+      this.prisma.butcherOrder.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo }, status: 'delivered' },
+        select: { createdAt: true, totalPrice: true },
+      }),
+      this.prisma.payment.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true, status: true },
+      }),
+      this.prisma.supportTicket.findMany({
+        where: {
+          ...notDeleted,
+          type: 'REPORT',
+          createdAt: { gte: thirtyDaysAgo },
+        },
         select: { createdAt: true },
       }),
       this.prisma.supportTicket.groupBy({
@@ -604,17 +745,113 @@ export class AdminRepository {
         where: { ...notDeleted, type: 'REPORT' },
         _count: { category: true },
       }),
+      this.prisma.butcherOrder.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        select: {
+          id: true,
+          orderNumber: true,
+          totalPrice: true,
+          currency: true,
+          status: true,
+          paymentStatus: true,
+          createdAt: true,
+          customer: {
+            select: { id: true, arabicName: true, displayName: true },
+          },
+          butcher: { select: { id: true, nameAr: true } },
+        },
+      }),
+      this.prisma.payment.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        select: {
+          id: true,
+          orderId: true,
+          amount: true,
+          currency: true,
+          status: true,
+          referenceType: true,
+          transactionId: true,
+          createdAt: true,
+          user: {
+            select: { id: true, arabicName: true, displayName: true },
+          },
+          integrationOrder: {
+            select: {
+              provider: true,
+              merchantOrderReference: true,
+              externalOrderId: true,
+              status: true,
+            },
+          },
+        },
+      }),
+      this.prisma.supportTicket.findMany({
+        where: { ...notDeleted, type: 'REPORT' },
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        select: {
+          id: true,
+          subject: true,
+          status: true,
+          category: true,
+          createdAt: true,
+          reporter: {
+            select: { id: true, arabicName: true, displayName: true },
+          },
+        },
+      }),
     ]);
 
-    const dayMap = new Map<string, number>();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(sevenDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-      dayMap.set(d.toISOString().slice(0, 10), 0);
-    }
+    const fillDays = (from: Date, days: number) => {
+      const map = new Map<string, number>();
+      for (let i = 0; i < days; i++) {
+        const d = new Date(from.getTime() + i * 24 * 60 * 60 * 1000);
+        map.set(d.toISOString().slice(0, 10), 0);
+      }
+      return map;
+    };
+
+    const users7 = fillDays(sevenDaysAgo, 7);
+    const users30 = fillDays(thirtyDaysAgo, 30);
     for (const u of usersRaw) {
       const key = u.createdAt.toISOString().slice(0, 10);
-      if (dayMap.has(key)) dayMap.set(key, (dayMap.get(key) ?? 0) + 1);
+      if (users7.has(key)) users7.set(key, (users7.get(key) ?? 0) + 1);
+      if (users30.has(key)) users30.set(key, (users30.get(key) ?? 0) + 1);
     }
+
+    const sales7 = fillDays(sevenDaysAgo, 7);
+    const sales30 = fillDays(thirtyDaysAgo, 30);
+    const orders7 = fillDays(sevenDaysAgo, 7);
+    for (const o of ordersRaw) {
+      const key = o.createdAt.toISOString().slice(0, 10);
+      const amt = o.totalPrice ?? 0;
+      if (sales7.has(key)) sales7.set(key, (sales7.get(key) ?? 0) + amt);
+      if (sales30.has(key)) sales30.set(key, (sales30.get(key) ?? 0) + amt);
+      if (orders7.has(key)) orders7.set(key, (orders7.get(key) ?? 0) + 1);
+    }
+
+    const payments7Paid = fillDays(sevenDaysAgo, 7);
+    const payments7Failed = fillDays(sevenDaysAgo, 7);
+    for (const p of paymentsByDayRaw) {
+      const key = p.createdAt.toISOString().slice(0, 10);
+      if (p.status === 'paid' && payments7Paid.has(key)) {
+        payments7Paid.set(key, (payments7Paid.get(key) ?? 0) + 1);
+      }
+      if (p.status === 'failed' && payments7Failed.has(key)) {
+        payments7Failed.set(key, (payments7Failed.get(key) ?? 0) + 1);
+      }
+    }
+
+    const reports7 = fillDays(sevenDaysAgo, 7);
+    for (const r of reportsRaw) {
+      const key = r.createdAt.toISOString().slice(0, 10);
+      if (reports7.has(key)) reports7.set(key, (reports7.get(key) ?? 0) + 1);
+    }
+
+    const money = (n: number | null | undefined) =>
+      Math.round((n ?? 0) * 100) / 100;
 
     return {
       users: {
@@ -622,22 +859,86 @@ export class AdminRepository {
         active: activeUsers,
         banned: bannedUsers,
         newToday,
+        newYesterday,
+        newLast7Days: newUsers7d,
       },
       posts: { total: totalPosts, hidden: hiddenPosts },
       listings: {
         total: totalListings,
         active: activeListings,
         suspended: suspendedListings,
+        newToday: listingsToday,
+        newYesterday: listingsYesterday,
+        newLast7Days: listings7d,
       },
       liveStreams: { total: totalStreams, liveNow },
       tickets: {
         open: openTickets,
         urgent: urgentTickets,
         total: totalTickets,
+        today: reportsToday,
+        yesterday: reportsYesterday,
       },
       butchers: { total: totalButchers, verified: verifiedButchers },
+      orders: {
+        total: ordersTotal,
+        today: ordersToday,
+        yesterday: ordersYesterday,
+        pending: ordersPending,
+        completed: ordersCompleted,
+      },
+      sales: {
+        today: money(salesTodayAgg._sum.totalPrice),
+        yesterday: money(salesYesterdayAgg._sum.totalPrice),
+        last7Days: money(sales7dAgg._sum.totalPrice),
+        last30Days: money(sales30dAgg._sum.totalPrice),
+      },
+      payments: {
+        successful: paymentsPaid,
+        failed: paymentsFailed,
+        pending: paymentsPending,
+        refunded: paymentsRefunded,
+      },
+      commission: {
+        butcherStoreRatePercent: BUTCHER_STORE_COMMISSION_PERCENT,
+        listingFeesPaidTotal: money(listingFeesPaidAgg._sum.commission),
+        listingFeesPaidCount: listingFeesPaidAgg._count._all,
+        listingFeesOutstandingTotal: money(
+          listingFeesPendingAgg._sum.commission,
+        ),
+        listingFeesOutstandingCount: listingFeesPendingAgg._count._all,
+        noteAr:
+          'عمولة الملاحم تُحسب على رسوم إعلانات المتجر (وليس خصمًا من إجمالي كل طلب). إعفاء الاشتراك يبقى كما هو.',
+      },
       charts: {
-        usersByDay: Array.from(dayMap.entries()).map(([date, count]) => ({
+        usersByDay: Array.from(users7.entries()).map(([date, count]) => ({
+          date,
+          count,
+        })),
+        usersByDay30: Array.from(users30.entries()).map(([date, count]) => ({
+          date,
+          count,
+        })),
+        salesByDay: Array.from(sales7.entries()).map(([date, amount]) => ({
+          date,
+          amount: money(amount),
+        })),
+        salesByDay30: Array.from(sales30.entries()).map(([date, amount]) => ({
+          date,
+          amount: money(amount),
+        })),
+        ordersByDay: Array.from(orders7.entries()).map(([date, count]) => ({
+          date,
+          count,
+        })),
+        paymentsByDay: Array.from(payments7Paid.entries()).map(
+          ([date, paid]) => ({
+            date,
+            paid,
+            failed: payments7Failed.get(date) ?? 0,
+          }),
+        ),
+        reportsByDay: Array.from(reports7.entries()).map(([date, count]) => ({
           date,
           count,
         })),
@@ -645,6 +946,11 @@ export class AdminRepository {
           category: t.category,
           count: t._count.category,
         })),
+      },
+      recent: {
+        orders: recentOrders,
+        payments: recentPayments,
+        reports: recentReports,
       },
     };
   }

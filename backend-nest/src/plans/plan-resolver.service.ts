@@ -150,12 +150,15 @@ export class PlanResolverService implements OnModuleInit {
       ...plan,
       legacyId: plan.slug,
       price: plan.monthlyPrice,
-      displayFeatures: plan.features.map((f) => ({
-        key: f.key,
-        label: PLAN_FEATURE_LABELS_AR[f.key] ?? f.key,
-        value: buildPermissions([f])[f.key] as string | number | boolean,
-        valueType: f.valueType,
-      })),
+      // Never expose storeCommission rate to plan/catalog clients (butcher/mobile).
+      displayFeatures: plan.features
+        .filter((f) => f.key !== 'storeCommission')
+        .map((f) => ({
+          key: f.key,
+          label: PLAN_FEATURE_LABELS_AR[f.key] ?? f.key,
+          value: buildPermissions([f])[f.key] as string | number | boolean,
+          valueType: f.valueType,
+        })),
     };
   }
 
@@ -165,7 +168,9 @@ export class PlanResolverService implements OnModuleInit {
       return 'غير محدود';
     }
     if (key === 'storeCommission' && typeof value === 'number') {
-      return `${value}%`;
+      // Admin-facing helper only — public plan API omits this feature.
+      if (value <= 0) return 'معفى';
+      return 'حسب سياسة المنصة';
     }
     return String(value ?? '');
   }

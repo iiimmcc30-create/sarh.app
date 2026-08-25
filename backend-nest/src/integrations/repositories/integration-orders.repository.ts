@@ -53,7 +53,25 @@ export class IntegrationOrdersRepository {
         take: params.take,
         include: {
           payment: {
-            select: { id: true, orderId: true, status: true, amount: true },
+            select: {
+              id: true,
+              orderId: true,
+              status: true,
+              amount: true,
+              currency: true,
+              method: true,
+              referenceType: true,
+              transactionId: true,
+              createdAt: true,
+              user: {
+                select: {
+                  id: true,
+                  arabicName: true,
+                  displayName: true,
+                  phone: true,
+                },
+              },
+            },
           },
         },
       }),

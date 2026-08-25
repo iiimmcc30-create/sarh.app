@@ -24,6 +24,9 @@ import {
   PanelsTopLeft,
   FolderTree,
   Compass,
+  Activity,
+  Wallet,
+  Percent,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
@@ -31,6 +34,9 @@ import { ADMIN_NAV, isAdminNavActive } from '@/constants/adminNav';
 
 const NAV_ICONS = {
   '/': LayoutDashboard,
+  '/health': Activity,
+  '/payments': Wallet,
+  '/commissions': Percent,
   '/users': Users,
   '/posts': FileText,
   '/editorial-stories': Images,
@@ -59,6 +65,10 @@ const nav = ADMIN_NAV.map((item) => ({
 export function Sidebar() {
   const pathname = usePathname();
   const user = getStoredUser();
+  const visibleNav = nav.filter((item) => {
+    if (item.href === '/commissions') return user?.role === 'ADMIN';
+    return true;
+  });
 
   return (
     <aside className="flex h-screen w-64 flex-col border-l border-slate-800 bg-slate-950">
@@ -68,7 +78,7 @@ export function Sidebar() {
         <p className="mt-1 text-xs text-slate-500">{BRAND_ADMIN_SUBTITLE_AR}</p>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {nav.map(({ href, label, icon: Icon }) => {
+        {visibleNav.map(({ href, label, icon: Icon }) => {
           const active = isAdminNavActive(pathname ?? '', href);
           return (
             <Link

@@ -23,6 +23,9 @@ describe('admin navigation & feature routes inventory', () => {
   it('exposes every primary sidebar section', () => {
     expect(ADMIN_NAV.map((n) => n.href)).toEqual([
       '/',
+      '/health',
+      '/payments',
+      '/commissions',
       '/users',
       '/posts',
       '/editorial-stories',
