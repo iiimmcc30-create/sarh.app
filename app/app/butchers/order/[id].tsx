@@ -66,7 +66,7 @@ export default function OrderDetailsScreen() {
         success?: boolean;
         data?: ButcherOrderRecord;
       };
-      if (res.ok && json.success) setOrder(json.data);
+      if (res.ok && json.success && json.data) setOrder(json.data);
     } catch (err) {
       console.warn('[OrderDetails] load failed', err);
     } finally {
