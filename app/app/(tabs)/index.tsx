@@ -65,6 +65,8 @@ export default function HomeScreen() {
   const [exploreSections, setExploreSections] = useState<HomeExploreCard[]>(FALLBACK_HOME_EXPLORE);
   const lastStoriesAt = useRef(0);
   const hasStoriesData = useRef(false);
+  const lastExploreAt = useRef(0);
+  const hasExploreData = useRef(false);
 
   const lastPostsFocusAt = useRef(0);
 
@@ -95,11 +97,26 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const fetchExplore = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastExploreAt.current < HOME_REFRESH_TTL_MS && hasExploreData.current) {
+      return;
+    }
+    try {
+      const data = await fetchHomeExploreSections({ force });
+      setExploreSections(data);
+      hasExploreData.current = data.length > 0;
+      lastExploreAt.current = Date.now();
+    } catch (err) {
+      console.warn('[HomeScreen] Failed to fetch explore sections:', err);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       void fetchStories();
-      void fetchHomeExploreSections().then(setExploreSections);
-    }, [fetchStories]),
+      void fetchExplore();
+    }, [fetchStories, fetchExplore]),
   );
 
   const recentPosts = useMemo(() => {

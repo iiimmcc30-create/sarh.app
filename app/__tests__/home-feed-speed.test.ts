@@ -1,6 +1,7 @@
 import { FEED_TIMEOUT_MS, fetchPublicFeed } from '../services/fetchPublicFeed';
-import { fetchEditorialStories } from '../services/editorialStories';
+import { fetchEditorialStories, resetEditorialStoriesCache } from '../services/editorialStories';
 import { loadButcherCatalog, resetButcherCatalogCache } from '../hooks/useButcher';
+import { resetRequestCoordination } from '../services/requestCoordination';
 
 jest.mock('../services/api', () => ({
   API_BASE: 'https://sarh-new4.onrender.com',
@@ -12,17 +13,24 @@ jest.mock('../services/fetchWithTimeout', () => ({
 }));
 
 function jsonResponse(body: unknown, status = 200): Response {
+  const text = JSON.stringify(body);
+  const buffer = new TextEncoder().encode(text).buffer;
   return {
     ok: status >= 200 && status < 300,
     status,
+    statusText: 'OK',
+    headers: { get: () => null },
     json: async () => body,
-  } as Response;
+    arrayBuffer: async () => buffer.slice(0),
+  } as unknown as Response;
 }
 
 describe('home feed speed', () => {
   beforeEach(() => {
     fetchWithTimeout.mockReset();
     resetButcherCatalogCache();
+    resetEditorialStoriesCache();
+    resetRequestCoordination();
   });
 
   it('uses a 12s timeout for public feed GETs', async () => {

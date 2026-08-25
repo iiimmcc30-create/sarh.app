@@ -11,6 +11,11 @@ import { sanitizeListingLimitMessage } from '@/lib/listingLimits';
 import { authFetch, getAccessToken } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { fetchPublicFeed } from '@/services/fetchPublicFeed';
+import {
+  feedRetryDelayMs,
+  isRateLimited,
+  noteRateLimitFromResponse,
+} from '@/services/requestCoordination';
 import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
@@ -21,6 +26,7 @@ const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 const FEED_SNAPSHOT_KEY = 'sarouh:feed_snapshot_v1';
 const FEED_SNAPSHOT_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const REFETCH_TTL_MS = 60_000;
+const FEED_RETRY_MAX = 4;
 
 type FeedSnapshot = { posts: Post[]; listings: Listing[]; savedAt: number };
 
@@ -54,8 +60,11 @@ async function patchFeedSnapshot(partial: { posts?: Post[]; listings?: Listing[]
 let userFetchInflight: Promise<void> | null = null;
 let listingsFetchInflight: Promise<void> | null = null;
 let listingsLastFetchOk = false;
+let listingsLastSuccessAt = 0;
 const postsFetchInflight = new Map<string, Promise<void>>();
 const postsLastFetchOk = new Map<string, boolean>();
+const postsLastSuccessAt = new Map<string, number>();
+let bootstrapInflight: Promise<void> | null = null;
 
 export type ActionResult = { ok: boolean; error?: string; listingId?: string };
 
@@ -249,44 +258,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await listingsFetchInflight;
       return listingsLastFetchOk;
     }
+    if (isRateLimited()) {
+      return listingsLastFetchOk;
+    }
     let succeeded = false;
     listingsFetchInflight = (async () => {
       try {
-        const fetchList = async (url: string) => {
-          const res = await fetchPublicFeed(url, accessToken);
-          if (!res.ok) return null;
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data?.listings)) {
-            return json.data.listings
-              .map(mapBackendListing)
-              .filter((listing: Listing | null): listing is Listing =>
-                Boolean(listing && listing.country !== 'EG'),
-              );
-          }
-          return null;
-        };
-
-        const marketPromise = fetchList(`${API_BASE}/api/listings`);
-        const sellerId = accessToken ? resolveCurrentUserId(user, me) : '';
-        const minePromise = sellerId
-          ? fetchList(`${API_BASE}/api/listings?sellerId=${encodeURIComponent(sellerId)}`)
-          : Promise.resolve([] as Listing[]);
-
-        const market = await marketPromise;
-        if (market === null) return;
-
-        const byId = new Map<string, Listing>();
-        for (const l of market) byId.set(l.id, l);
-        setListingsState(Array.from(byId.values()));
-        succeeded = true;
-        void patchFeedSnapshot({ listings: Array.from(byId.values()) });
-
-        const mine = await minePromise;
-        if (mine && mine.length > 0) {
-          for (const l of mine) byId.set(l.id, l);
-          const merged = Array.from(byId.values());
-          setListingsState(merged);
-          void patchFeedSnapshot({ listings: merged });
+        const res = await fetchPublicFeed(`${API_BASE}/api/listings`, accessToken);
+        const json = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          noteRateLimitFromResponse(res, json);
+          // Keep existing listings — never clear on 429.
+          return;
+        }
+        if (!res.ok) return;
+        if (json.success && Array.isArray(json.data?.listings)) {
+          const market = json.data.listings
+            .map(mapBackendListing)
+            .filter((listing: Listing | null): listing is Listing =>
+              Boolean(listing && listing.country !== 'EG'),
+            );
+          setListingsState(market);
+          succeeded = true;
+          listingsLastSuccessAt = Date.now();
+          void patchFeedSnapshot({ listings: market });
         }
       } catch (err) {
         console.warn('[AppContext] Failed to fetch listings:', err);
@@ -297,7 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     await listingsFetchInflight;
     return succeeded;
-  }, [accessToken, user, me, mapBackendListing]);
+  }, [accessToken, mapBackendListing]);
 
   // Keep ownership checks working even before profile fetch finishes
   useEffect(() => {
@@ -318,10 +313,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const fetchPosts = useCallback(async (feed: 'for_you' | 'following' = 'for_you'): Promise<boolean> => {
-    const inflightKey = `${accessToken ?? 'guest'}:${feed}`;
+    // Dedupe by feed type only — token refresh must not open a parallel posts request.
+    const inflightKey = feed;
     const inflight = postsFetchInflight.get(inflightKey);
     if (inflight) {
       await inflight;
+      return postsLastFetchOk.get(inflightKey) ?? false;
+    }
+    if (isRateLimited()) {
       return postsLastFetchOk.get(inflightKey) ?? false;
     }
 
@@ -330,8 +329,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const qs = feed === 'following' ? '?feed=following' : '';
         const res = await fetchPublicFeed(`${API_BASE}/api/posts${qs}`, accessToken);
+        const json = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          noteRateLimitFromResponse(res, json);
+          // Keep existing posts — never clear on 429.
+          return;
+        }
         if (res.ok) {
-          const json = await res.json();
           if (json.success && json.data?.posts) {
             const fetchedPosts = (json.data.posts as unknown[])
               .map(mapBackendPost)
@@ -347,6 +351,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setLikedPosts(liked);
             setRepostedPosts(reposted);
             succeeded = true;
+            postsLastSuccessAt.set(inflightKey, Date.now());
             void patchFeedSnapshot({ posts: fetchedPosts });
           }
         }
@@ -365,6 +370,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const lastRefetchAtRef = useRef(0);
   const refetchInflightRef = useRef<Promise<void> | null>(null);
+  const bootstrapStartedRef = useRef(false);
+  const fetchPostsRef = useRef(fetchPosts);
+  const fetchListingsRef = useRef(fetchListings);
+  fetchPostsRef.current = fetchPosts;
+  fetchListingsRef.current = fetchListings;
 
   const refetchData = useCallback(async (force = false) => {
     const now = Date.now();
@@ -373,6 +383,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     if (refetchInflightRef.current && !force) {
       await refetchInflightRef.current;
+      return;
+    }
+    if (!force && isRateLimited()) {
       return;
     }
     lastRefetchAtRef.current = now;
@@ -387,37 +400,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [fetchUserData, fetchListings, fetchPosts]);
 
-  const feedRetryRef = useRef<{ count: number; timer: ReturnType<typeof setTimeout> | null }>({
+  const feedRetryRef = useRef<{
+    count: number;
+    timer: ReturnType<typeof setTimeout> | null;
+    posts: boolean;
+    listings: boolean;
+  }>({
     count: 0,
     timer: null,
+    posts: false,
+    listings: false,
   });
 
-  const scheduleFeedRetry = useCallback(() => {
+  const scheduleFeedRetry = useCallback((failed?: { posts?: boolean; listings?: boolean }) => {
     const retry = feedRetryRef.current;
-    if (retry.count >= 5 || retry.timer) return;
+    if (failed?.posts) retry.posts = true;
+    if (failed?.listings) retry.listings = true;
+    if (!retry.posts && !retry.listings) return;
+    if (retry.count >= FEED_RETRY_MAX || retry.timer) return;
+
+    const delay = feedRetryDelayMs(retry.count);
     retry.timer = setTimeout(() => {
       retry.timer = null;
       retry.count += 1;
-      void Promise.all([fetchPosts(), fetchListings()]).then(([postsOk, listingsOk]) => {
+      const wantPosts = retry.posts;
+      const wantListings = retry.listings;
+      retry.posts = false;
+      retry.listings = false;
+
+      void (async () => {
+        const [postsOk, listingsOk] = await Promise.all([
+          wantPosts ? fetchPostsRef.current() : Promise.resolve(true),
+          wantListings ? fetchListingsRef.current() : Promise.resolve(true),
+        ]);
         if (postsOk && listingsOk) {
           retry.count = 0;
-        } else {
-          scheduleFeedRetry();
+          return;
         }
-      });
-    }, 4000 + retry.count * 2000);
-  }, [fetchPosts, fetchListings]);
+        scheduleFeedRetry({
+          posts: wantPosts && !postsOk,
+          listings: wantListings && !listingsOk,
+        });
+      })();
+    }, delay);
+  }, []);
 
   const bootstrapFeeds = useCallback(async () => {
-    const [postsOk, listingsOk] = await Promise.all([fetchPosts(), fetchListings()]);
-    if (!postsOk || !listingsOk) {
-      scheduleFeedRetry();
-    } else {
-      feedRetryRef.current.count = 0;
+    if (bootstrapInflight) {
+      await bootstrapInflight;
+      return;
     }
-  }, [fetchPosts, fetchListings, scheduleFeedRetry]);
+    bootstrapInflight = (async () => {
+      const [postsOk, listingsOk] = await Promise.all([
+        fetchPostsRef.current(),
+        fetchListingsRef.current(),
+      ]);
+      if (!postsOk || !listingsOk) {
+        scheduleFeedRetry({ posts: !postsOk, listings: !listingsOk });
+      } else {
+        feedRetryRef.current.count = 0;
+      }
+    })().finally(() => {
+      bootstrapInflight = null;
+    });
+    await bootstrapInflight;
+  }, [scheduleFeedRetry]);
 
-  // Public feed — available to guests and logged-in users
+  // Public feed — available to guests and logged-in users (once per mount)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -427,6 +476,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (snapshot.posts.length > 0) setPosts(snapshot.posts);
         if (snapshot.listings.length > 0) setListingsState(snapshot.listings);
       }
+      if (bootstrapStartedRef.current) return;
+      bootstrapStartedRef.current = true;
       await bootstrapFeeds();
     })();
     return () => {
@@ -437,14 +488,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         retry.timer = null;
       }
     };
-  }, [bootstrapFeeds]);
+    // Mount-only: refs keep fetch functions current without re-bootstrapping.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const lastBootstrapKey = useRef<string | null>(null);
+  const lastAuthUserIdRef = useRef<string | null>(null);
 
   // User profile + authenticated feed metadata (liked/reposted)
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
-      lastBootstrapKey.current = null;
+      lastAuthUserIdRef.current = null;
       if (!isAuthenticated) {
         setMe(DEFAULT_USER);
         setLikedPosts(new Set());
@@ -452,10 +505,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return;
     }
-    const key = `${accessToken}:${user?.id ?? ''}`;
-    if (lastBootstrapKey.current === key) return;
-    lastBootstrapKey.current = key;
-    void Promise.all([fetchUserData(), fetchPosts()]);
+    const userId = String(user?.id ?? '');
+    const identityChanged = lastAuthUserIdRef.current !== userId;
+    lastAuthUserIdRef.current = userId;
+
+    void fetchUserData();
+
+    // After token refresh (same user), skip feed reload when data is still fresh.
+    const postsAge = Date.now() - (postsLastSuccessAt.get('for_you') ?? 0);
+    const postsFresh = postsAge < REFETCH_TTL_MS && (postsLastFetchOk.get('for_you') ?? false);
+    if (identityChanged || !postsFresh) {
+      // Avoid racing a second full bootstrap while mount bootstrap is in flight.
+      if (bootstrapInflight) {
+        void bootstrapInflight.then(() => {
+          if (identityChanged) void fetchPosts();
+        });
+        return;
+      }
+      void fetchPosts();
+    }
   }, [isAuthenticated, accessToken, user?.id, fetchUserData, fetchPosts]);
 
   const updateMe = useCallback(async (updates: Partial<User>): Promise<ActionResult> => {
