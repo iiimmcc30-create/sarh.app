@@ -514,4 +514,55 @@ describe('OrderLifecycleService', () => {
 
     expect(tx.paymentCreate).not.toHaveBeenCalled();
   });
+
+  it('does not accrue commission on confirmed (non-delivered)', async () => {
+    const tx = transitionTx({
+      nextStatus: 'confirmed',
+      locked: { status: 'pending', paymentStatus: 'paid', totalPrice: 100 },
+    });
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'confirmed',
+    });
+
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+  });
+
+  it('idempotent: re-processing already delivered is a noop without new commission', async () => {
+    const existingOrder = {
+      id: 'order-1',
+      orderNumber: 'ORD-2026-000001',
+      status: 'delivered',
+      butcher: { id: 'b1', userId: 'butcher-1' },
+    };
+    const tx = transitionTx({
+      locked: {
+        status: 'delivered',
+        paymentStatus: 'paid',
+        totalPrice: 100,
+      },
+    });
+    tx.butcherOrder.findUnique = jest.fn().mockResolvedValue(existingOrder);
+
+    prisma.$transaction.mockImplementation(
+      async (fn: (txArg: unknown) => Promise<unknown>) => fn(tx),
+    );
+
+    const result = await service.transitionOrder({
+      orderId: 'order-1',
+      actorId: 'butcher-1',
+      nextStatus: 'delivered',
+    });
+
+    expect(result).toEqual(existingOrder);
+    expect(tx.paymentCreate).not.toHaveBeenCalled();
+    expect(tx.paymentFindFirst).not.toHaveBeenCalled();
+    expect(tx.orderUpdate).not.toHaveBeenCalled();
+  });
 });
