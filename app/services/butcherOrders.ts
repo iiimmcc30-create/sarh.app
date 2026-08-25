@@ -15,8 +15,11 @@ export type ButcherOrderRecord = {
   reservedQuantity?: number;
   deliveryType: DeliveryType;
   deliveryAddress?: string | null;
+  deliveryFee?: number | null;
+  deliveryPrice?: number | null;
   status: OrderStatus;
   paymentStatus: OrderPaymentStatus;
+  cancellationReason?: string | null;
   totalPrice: number;
   currency: string;
   notes?: string | null;
@@ -27,6 +30,14 @@ export type ButcherOrderRecord = {
     nameAr?: string;
     logo?: string;
     cityAr?: string;
+    addressAr?: string;
+    phone?: string;
+  };
+  customer?: {
+    id?: string;
+    displayName?: string;
+    arabicName?: string;
+    phone?: string;
   };
   product?: {
     id: string;
@@ -41,6 +52,7 @@ export type ButcherOrderRecord = {
     cutType: string;
     weightKg: number;
     linePrice: number;
+    quantity?: number;
     reservedQuantity?: number;
     product?: {
       id: string;

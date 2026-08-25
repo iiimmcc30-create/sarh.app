@@ -34,6 +34,9 @@ const CATEGORY_ICONS: Record<Listing['category'], string> = {
   birds: '🦅',
   feed: '🌾',
   equipment: '⚙️',
+  livestock: '🐄',
+  transport: '🚚',
+  slaughter: '🥩',
 };
 
 function listingThumb(listing: Listing): string | undefined {

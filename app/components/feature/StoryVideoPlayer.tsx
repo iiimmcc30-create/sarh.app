@@ -1,30 +1,23 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Platform, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { Image } from '@/components/ui/AppImage';
 import { getExpoVideoModule, isExpoVideoNativeAvailable } from '@/lib/expoVideo';
 
 type StoryVideoPlayerProps = {
   uri: string;
   posterUri?: string | null;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   muted?: boolean;
   loop?: boolean;
   autoPlay?: boolean;
   nativeControls?: boolean;
   onReady?: () => void;
-};
-
-type NativePlayer = {
-  loop: boolean;
-  muted: boolean;
-  status: string;
-  keepScreenOnWhilePlaying: boolean;
-  play: () => void;
-  pause: () => void;
-  addListener: (
-    event: string,
-    cb: (payload: { status?: string; isPlaying?: boolean }) => void,
-  ) => { remove: () => void };
 };
 
 function StoryVideoFallback({
@@ -66,11 +59,10 @@ function StoryVideoPlayerNative({
   }, [onReady]);
 
   const player = useVideoPlayer(uri, (p) => {
-    const native = p as NativePlayer;
-    native.loop = loop;
-    native.muted = muted;
-    native.keepScreenOnWhilePlaying = false;
-  }) as NativePlayer;
+    p.loop = loop;
+    p.muted = muted;
+    p.keepScreenOnWhilePlaying = false;
+  });
 
   useEffect(() => {
     readyRef.current = false;

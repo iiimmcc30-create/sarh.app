@@ -24,7 +24,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type PrivacyToggleKey = keyof PrivacySettings;
+type PrivacyToggleKey = {
+  [Key in keyof PrivacySettings]: PrivacySettings[Key] extends boolean ? Key : never;
+}[keyof PrivacySettings];
 
 const TOGGLES: Array<{
   key: PrivacyToggleKey;

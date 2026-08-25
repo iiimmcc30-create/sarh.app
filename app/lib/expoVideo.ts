@@ -1,19 +1,23 @@
+export type ExpoVideoPlayer = {
+  loop: boolean;
+  muted: boolean;
+  play: () => void;
+  pause: () => void;
+  currentTime: number;
+  playing: boolean;
+  status: string;
+  keepScreenOnWhilePlaying: boolean;
+  addListener: (
+    event: string,
+    cb: (payload: { currentTime?: number; status?: string; isPlaying?: boolean }) => void,
+  ) => { remove: () => void };
+};
+
 type ExpoVideoModule = {
   useVideoPlayer: (
     source: string | { uri: string },
-    setup: (player: {
-      loop: boolean;
-      muted: boolean;
-      play: () => void;
-      currentTime: number;
-      playing: boolean;
-      status: string;
-      addListener: (
-        event: string,
-        cb: (payload: { currentTime?: number; status?: string; isPlaying?: boolean }) => void,
-      ) => { remove: () => void };
-    }) => void,
-  ) => unknown;
+    setup: (player: ExpoVideoPlayer) => void,
+  ) => ExpoVideoPlayer;
   VideoView: React.ComponentType<Record<string, unknown>>;
 };
 

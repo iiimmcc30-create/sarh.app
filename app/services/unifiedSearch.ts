@@ -112,7 +112,10 @@ function mapListingFromSearch(data: Record<string, unknown>): Listing | null {
       .map((uri) => resolveMediaUrl(typeof uri === 'string' ? uri : '') ?? uri)
       .filter((uri): uri is string => typeof uri === 'string' && uri.length > 0),
     videoUrl: resolveMediaUrl(
-      listingVideoUrl({ images: l.images, videoUrl: l.videoUrl }) ?? undefined,
+      listingVideoUrl({
+        images: l.images ?? [],
+        videoUrl: l.videoUrl ?? undefined,
+      }) ?? undefined,
     ),
     thumbnailUrl: resolveMediaUrl(l.thumbnailUrl?.trim() || undefined),
     description: l.description,

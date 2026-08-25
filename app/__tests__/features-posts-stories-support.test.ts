@@ -16,8 +16,9 @@ import {
 } from '../services/support';
 
 function post(partial: Partial<Post> & { id: string; createdAt: string }): Post {
+  const { id, createdAt, ...overrides } = partial;
   return {
-    id: partial.id,
+    id,
     author: {
       id: 'a1',
       username: 'u',
@@ -36,10 +37,10 @@ function post(partial: Partial<Post> & { id: string; createdAt: string }): Post 
     reposts: 0,
     comments: 0,
     postedAt: 'اليوم',
-    createdAt: partial.createdAt,
+    createdAt,
     liked: false,
     reposted: false,
-    ...partial,
+    ...overrides,
   };
 }
 

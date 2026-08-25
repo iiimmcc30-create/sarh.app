@@ -37,7 +37,10 @@ export function CurrentPlanSummary({
     colors: theme.colors,
   }));
 
-  const dailyLimit = permissions.maxAdsPer24Hours;
+  const dailyLimit =
+    typeof permissions.maxAdsPer24Hours === 'number'
+      ? permissions.maxAdsPer24Hours
+      : null;
   const dailyUsed = usageCounters.dailyAdsUsed;
   const liveHours = permissions.monthlyLiveHours;
   const liveUsed = usageCounters.liveMinutesUsed;

@@ -1,14 +1,14 @@
 import { Country } from '@/services/types';
 
-export const GCC_MAP_POSITION: Record<Country, { x: number; y: number }> = {
+export const GCC_MAP_POSITION: Partial<Record<Country, { x: number; y: number }>> = {
   SA: { x: 44, y: 48 },
   EG: { x: 38, y: 28 },
 };
 
-export const COUNTRY_MAP_CENTER: Record<Country, { lat: number; lng: number; delta: number }> = {
+export const COUNTRY_MAP_CENTER = {
   SA: { lat: 24.7136, lng: 46.6753, delta: 0.35 },
   EG: { lat: 30.0444, lng: 31.2357, delta: 0.45 },
-};
+} satisfies Partial<Record<Country, { lat: number; lng: number; delta: number }>>;
 
 export function hasValidCoords(lat?: number | null, lng?: number | null): boolean {
   if (lat == null || lng == null) return false;

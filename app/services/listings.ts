@@ -89,7 +89,12 @@ function mapListing(l: BackendListing): Listing {
         return resolveMediaUrl(raw) ?? raw;
       })
       .filter((uri) => uri.length > 0),
-    videoUrl: resolveMediaUrl(listingVideoUrl({ images: l.images, videoUrl: l.videoUrl })),
+    videoUrl: resolveMediaUrl(
+      listingVideoUrl({
+        images: l.images ?? [],
+        videoUrl: l.videoUrl ?? undefined,
+      }),
+    ),
     thumbnailUrl: resolveMediaUrl(l.thumbnailUrl?.trim() || undefined),
     description: l.description,
     arabicDescription: l.arabicDescription,

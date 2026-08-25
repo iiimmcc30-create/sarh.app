@@ -22,7 +22,7 @@ import { getRtlText, alignInlineEnd, getRtlRow, rtlForwardIcon } from '@/lib/rtl
 /** Global host — mount once in root layout so action sheets work on web + native. */
 export function ActionSheetHost() {
   const insets = useSafeAreaInsets();
-  const { gradients } = useTheme();
+  const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [tick, setTick] = useState(0);
 
@@ -91,10 +91,10 @@ export function ActionSheetHost() {
                         size={18}
                         color={
                           item.destructive
-                            ? styles.itemTextDanger.color
+                            ? colors.rose
                             : item.cancel
-                              ? styles.itemTextCancel.color
-                              : styles.itemText.color
+                              ? colors.textMuted
+                              : colors.textPrimary
                         }
                       />
                     </View>
@@ -116,7 +116,7 @@ export function ActionSheetHost() {
                   </View>
 
                   {!item.cancel ? (
-                    <AppIcon name={rtlForwardIcon()} size={16} color={styles.itemChevron.color} />
+                    <AppIcon name={rtlForwardIcon()} size={16} color={colors.textSubtle} />
                   ) : null}
                 </Pressable>
               ))}

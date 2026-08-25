@@ -34,7 +34,7 @@ import { NativeButchersMap } from '@/components/feature/NativeButchersMap';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 
 // ─── Map pin layout coordinates (% of map container) ─────────────────────────────
-const GCC_COORDINATES: Record<Country, { x: number; y: number }> = {
+const GCC_COORDINATES: Partial<Record<Country, { x: number; y: number }>> = {
   SA: { x: 44, y: 48 },
   EG: { x: 38, y: 28 },
 };

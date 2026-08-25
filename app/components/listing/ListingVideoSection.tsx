@@ -17,6 +17,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -48,10 +49,17 @@ export type ListingVideoState =
 type Props = {
   state: ListingVideoState;
   onChange: (next: ListingVideoState) => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   disabled?: boolean;
   /** Compact media tile used on the create-listing first step. */
   variant?: 'default' | 'tile';
+};
+
+type LegacyFileSystem = {
+  getInfoAsync: (uri: string) => Promise<{
+    exists: boolean;
+    size?: number;
+  }>;
 };
 
 function clamp(n: number, lo: number, hi: number) {
@@ -190,9 +198,9 @@ export function ListingVideoSection({
         if (!draft) return;
         let fileSizeBytes = draft.fileSizeBytes;
         try {
-          const FileSystem = await import('expo-file-system');
+          const FileSystem = require('expo-file-system/legacy') as LegacyFileSystem;
           const info = await FileSystem.getInfoAsync(result.uri);
-          if (info.exists && 'size' in info && typeof info.size === 'number') {
+          if (info.exists && typeof info.size === 'number') {
             fileSizeBytes = info.size;
           }
         } catch {
@@ -250,7 +258,7 @@ export function ListingVideoSection({
 
   const meta = (state as { meta: ListingVideoMeta }).meta;
   const uploadProgress =
-    state.status === 'uploading' ? (state as any).progress as number : 0;
+    state.status === 'uploading' ? state.progress : 0;
   const isUploading = state.status === 'uploading';
   const isReady = state.status === 'ready';
   const isFailed = state.status === 'failed';
@@ -393,7 +401,7 @@ function VideoPreview({ localUri, thumbnailUri, aspectRatio, disabled }: VideoPr
 
 type NativeVideoPlayerProps = {
   uri: string;
-  containerStyle: ViewStyle[];
+  containerStyle: StyleProp<ViewStyle>;
   onClose: () => void;
 };
 
@@ -402,7 +410,7 @@ function NativeVideoPlayer({ uri, containerStyle, onClose }: NativeVideoPlayerPr
   const mod = getExpoVideoModule()!;
   const { useVideoPlayer, VideoView } = mod;
 
-  const player = useVideoPlayer(uri, (p: any) => {
+  const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
     p.muted = false;
     p.play();
@@ -414,7 +422,7 @@ function NativeVideoPlayer({ uri, containerStyle, onClose }: NativeVideoPlayerPr
   useEffect(() => {
     return () => {
       try {
-        (playerRef.current as any)?.pause?.();
+        playerRef.current.pause();
       } catch {
         // ignore
       }
