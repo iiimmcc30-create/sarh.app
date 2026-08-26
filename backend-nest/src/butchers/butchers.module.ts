@@ -7,9 +7,10 @@ import { OrderStateMachineService } from './services/order-state-machine.service
 import { ButcherRankingService } from './services/butcher-ranking.service';
 import { UnpaidOrderExpiryService } from './services/unpaid-order-expiry.service';
 import { GatewaySharedModule } from '../gateway/gateway-shared.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
-  imports: [GatewaySharedModule],
+  imports: [GatewaySharedModule, SubscriptionsModule],
   controllers: [ButchersController],
   providers: [
     ButchersService,
