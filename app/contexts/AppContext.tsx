@@ -23,7 +23,8 @@ import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
-const FEED_SNAPSHOT_KEY = 'sarouh:feed_snapshot_v1';
+/** v2: invalidate v1 snapshots that may hold Mojibake from ArrayBuffer feed clones. */
+const FEED_SNAPSHOT_KEY = 'sarouh:feed_snapshot_v2';
 const FEED_SNAPSHOT_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const REFETCH_TTL_MS = 60_000;
 const FEED_RETRY_MAX = 4;
@@ -32,6 +33,8 @@ type FeedSnapshot = { posts: Post[]; listings: Listing[]; savedAt: number };
 
 async function readFeedSnapshot(): Promise<FeedSnapshot | null> {
   try {
+    // Drop pre-fix Mojibake snapshots (ArrayBuffer latin1 clone bug).
+    void AsyncStorage.removeItem('sarouh:feed_snapshot_v1');
     const raw = await AsyncStorage.getItem(FEED_SNAPSHOT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as FeedSnapshot;

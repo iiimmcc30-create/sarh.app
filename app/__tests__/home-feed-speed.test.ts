@@ -21,6 +21,7 @@ function jsonResponse(body: unknown, status = 200): Response {
     statusText: 'OK',
     headers: { get: () => null },
     json: async () => body,
+    text: async () => text,
     arrayBuffer: async () => buffer.slice(0),
   } as unknown as Response;
 }
