@@ -25,13 +25,22 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 declare -A ENV=()
+declare -A KEY_COUNTS=()
 while IFS= read -r line || [[ -n "$line" ]]; do
   [[ "$line" =~ ^[[:space:]]*# ]] && continue
   [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || continue
   key="${line%%=*}"
   val="${line#*=}"
   ENV["$key"]="$val"
+  KEY_COUNTS["$key"]=$(( ${KEY_COUNTS[$key]:-0} + 1 ))
 done < "$ENV_FILE"
+
+duplicate_keys=()
+for k in POSTGRES_PASSWORD POSTGRES_USER POSTGRES_DB DATABASE_URL DIRECT_URL JWT_SECRET JWT_REFRESH_SECRET; do
+  if [[ "${KEY_COUNTS[$k]:-0}" -gt 1 ]]; then
+    duplicate_keys+=("$k (${KEY_COUNTS[$k]} lines — Docker Compose uses the last value)")
+  fi
+done
 
 get() { printf '%s' "${ENV[$1]:-}"; }
 
@@ -159,9 +168,15 @@ if [[ ${#too_short[@]} -gt 0 ]]; then
   mapfile -t too_short < <(printf '%s\n' "${too_short[@]}" | sort -u)
 fi
 
+if [[ ${#duplicate_keys[@]} -gt 0 ]]; then
+  echo ""
+  echo "Duplicate keys (fix before deploy — last value wins in Compose):"
+  printf '%s\n' "${duplicate_keys[@]}"
+fi
+
 echo ""
 echo "ENVIRONMENT STATUS: $(
-  if [[ ${#missing[@]} -eq 0 && ${#too_short[@]} -eq 0 ]]; then
+  if [[ ${#missing[@]} -eq 0 && ${#too_short[@]} -eq 0 && ${#duplicate_keys[@]} -eq 0 ]]; then
     echo READY
   else
     echo MISSING VARIABLES
@@ -182,6 +197,6 @@ if [[ ${#too_short[@]} -gt 0 ]]; then
   printf '%s\n' "${too_short[@]}"
 fi
 
-if [[ ${#missing[@]} -gt 0 || ${#too_short[@]} -gt 0 ]]; then
+if [[ ${#missing[@]} -gt 0 || ${#too_short[@]} -gt 0 || ${#duplicate_keys[@]} -gt 0 ]]; then
   exit 2
 fi
