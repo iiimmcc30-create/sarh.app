@@ -10,11 +10,19 @@ export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 export NODE_OPTIONS="${NODE_OPTIONS_BUILD:---max-old-space-size=3072}"
 
-echo "Building API image (single build, reused by worker/socket)..."
-docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" build api
+COMPOSE_FILES=(-f docker-compose.prod.yml)
+if [[ -f docker-compose.prod.ssl.yml ]]; then
+  COMPOSE_FILES+=(-f docker-compose.prod.ssl.yml)
+fi
 
-echo "Starting full stack..."
-docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" up -d
+echo "Validating production env..."
+"$ROOT/scripts/hostinger/validate-env.sh"
+
+echo "Building API image (single build, reused by worker/socket)..."
+docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build api
+
+echo "Starting full stack (prod compose only — never docker-compose.yml)..."
+docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" up -d
 
 echo "Waiting for API health..."
 for i in $(seq 1 90); do
@@ -28,5 +36,5 @@ for i in $(seq 1 90); do
 done
 
 echo "WARN: API health not ready — check logs:"
-docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" logs --tail=80 api worker socket
+docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" logs --tail=80 api worker socket
 exit 1

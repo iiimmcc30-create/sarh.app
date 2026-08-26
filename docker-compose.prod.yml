@@ -1,5 +1,10 @@
 # Sarh production stack — Hostinger VPS
-# Usage: docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+# Usage:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.prod.ssl.yml \
+#     --env-file .env.production up -d
+#
+# Do NOT deploy with docker-compose.yml — that file is local-dev only and attaches
+# services to the Compose default network (sarh_default), which breaks nginx→socket.
 #
 # Requires .env.production (never commit). See scripts/hostinger/env.production.example
 # Compatible with backend-nest Dockerfile ENTRYPOINT (api|worker|socket roles).
@@ -172,8 +177,12 @@ services:
     networks:
       - sarh_internal
 
+# Single shared bridge for api/worker/socket/nginx/postgres/redis.
+# Explicit `name` keeps the Docker network id stable across compose recreates
+# (avoids project-prefixed drift like sarh_sarh_internal vs sarh_default).
 networks:
   sarh_internal:
+    name: sarh_internal
     driver: bridge
 
 volumes:
