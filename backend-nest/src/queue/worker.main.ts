@@ -5,6 +5,7 @@ import { initialiseSentry } from '../shared/lib/sentry';
 import { validateProductionEnv } from '../config/validate-production-env';
 import { WorkerModule } from './queue.module';
 import { WorkerCronService } from './services/worker-cron.service';
+import { WorkerHeartbeatService } from './services/worker-heartbeat.service';
 import { FeeCheckQueueService } from './services/fee-check-queue.service';
 import { RedisCacheService } from '../redis/services/redis-cache.service';
 
@@ -21,10 +22,11 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log'],
   });
   app.enableShutdownHooks();
-  app.get(WorkerCronService);
+
   const logger = app.get(LoggerService);
   logger.info({}, 'Worker application context started');
 
+  // Connect Redis before starting heartbeat/cron so the first beat can write.
   try {
     const cache = app.get(RedisCacheService);
     const client = cache.getClient();
@@ -41,6 +43,10 @@ async function bootstrap() {
       'Redis INFO clients unavailable',
     );
   }
+
+  // ApplicationContext does not instantiate unused providers — retrieve them.
+  app.get(WorkerCronService);
+  app.get(WorkerHeartbeatService).start();
 
   try {
     const fees = app.get(FeeCheckQueueService);
