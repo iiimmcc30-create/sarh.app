@@ -32,6 +32,7 @@ function jsonResponse(body: unknown, status = 200): Response {
       get: (key: string) => (key.toLowerCase() === 'retry-after' && status === 429 ? '90' : null),
     },
     json: async () => body,
+    text: async () => text,
     arrayBuffer: async () => buffer.slice(0),
     clone() {
       return jsonResponse(body, status);
@@ -84,6 +85,20 @@ describe('request storm coordination', () => {
     expect(calls).toBe(1);
     expect(await a.json()).toEqual({ ok: true });
     expect(await b.json()).toEqual({ ok: true });
+  });
+
+  it('dedupeGetResponse preserves Arabic UTF-8 (no ArrayBuffer latin1 Mojibake)', async () => {
+    const payload = {
+      title: 'إعلان عربي',
+      body: 'مرحبا 🐪',
+      listings: [{ id: '1', title: 'أغنام للبيع' }],
+    };
+    const res = await dedupeGetResponse('ar-feed', async () =>
+      jsonResponse(payload),
+    );
+    const parsed = await res.json();
+    expect(parsed).toEqual(payload);
+    expect(JSON.stringify(parsed)).not.toMatch(/Ø/);
   });
 
   it('parses Retry-After and blocks rapid retry after 429', () => {

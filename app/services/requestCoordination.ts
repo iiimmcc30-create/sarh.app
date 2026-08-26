@@ -74,6 +74,12 @@ export function dedupeInflight<T>(key: string, factory: () => Promise<T>): Promi
 
 /**
  * Deduped GET that materializes the body once so every waiter can read JSON safely.
+ *
+ * IMPORTANT: clone via UTF-8 **text**, never via ArrayBuffer.
+ * React Native's whatwg-fetch polyfill decodes ArrayBuffer bodies with
+ * `String.fromCharCode` (latin1), which turns Arabic UTF-8 into Mojibake (Ø§…).
+ * Detail screens use a fresh fetch().json() and were unaffected; list/feed
+ * paths go through fetchPublicFeed → dedupeGetResponse and were corrupted.
  */
 export async function dedupeGetResponse(
   key: string,
@@ -81,17 +87,17 @@ export async function dedupeGetResponse(
 ): Promise<Response> {
   const shared = await dedupeInflight(key, async () => {
     const res = await factory();
-    const buffer = await res.arrayBuffer();
+    const text = await res.text();
     return {
       status: res.status,
       statusText: res.statusText,
       ok: res.ok,
       headers: res.headers,
-      buffer,
+      text,
     };
   });
 
-  return new Response(shared.buffer.slice(0), {
+  return new Response(shared.text, {
     status: shared.status,
     statusText: shared.statusText,
     headers: shared.headers,
