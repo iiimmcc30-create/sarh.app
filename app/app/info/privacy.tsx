@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { PRIVACY_POLICY_URL } from '@/constants/legal';
 
 const SECTIONS = [
   {

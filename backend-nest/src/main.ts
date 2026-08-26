@@ -114,6 +114,7 @@ async function bootstrap() {
     exclude: [
       { path: 'payment/result', method: RequestMethod.GET },
       { path: 'payment/cancel', method: RequestMethod.GET },
+      { path: 'privacy', method: RequestMethod.GET },
     ],
   });
 
