@@ -8,10 +8,10 @@ RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 COPY . .
 
-# Production web uses same-origin /api via nginx → Railway (see nginx.web.conf).
+# Production web uses same-origin /api via the outer Hostinger nginx.
 ARG EXPO_PUBLIC_WEB_SAME_ORIGIN=true
 ARG EXPO_PUBLIC_API_URL=
-ARG EXPO_PUBLIC_SOCKET_URL=https://sarh-socket.onrender.com
+ARG EXPO_PUBLIC_SOCKET_URL=https://sarhsa.online
 ARG EXPO_PUBLIC_AGORA_ENABLED=false
 
 ENV EXPO_PUBLIC_WEB_SAME_ORIGIN=$EXPO_PUBLIC_WEB_SAME_ORIGIN

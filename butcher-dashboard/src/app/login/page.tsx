@@ -14,6 +14,7 @@ import {
   BRAND_NAME_EN,
   BRAND_TAGLINE_AR,
 } from '@/constants/brand';
+import { withButcherBase } from '@/constants/butcherBasePath';
 
 export default function LoginPage() {
   const [login, setLogin] = useState('');
@@ -30,7 +31,7 @@ export default function LoginPage() {
       const status = await tryRestoreSession();
       if (cancelled) return;
       if (status === 'restored') {
-        window.location.assign('/dashboard');
+        window.location.assign(withButcherBase('/dashboard'));
         return;
       }
       setCheckingSession(false);
@@ -65,7 +66,7 @@ export default function LoginPage() {
       setLogin(loginValue);
       setPassword(passwordValue);
       await loginAndRequireButcher(loginValue, passwordValue);
-      window.location.assign('/dashboard');
+      window.location.assign(withButcherBase('/dashboard'));
     } catch (err: unknown) {
       const message = getApiErrorMessage(err, 'فشل تسجيل الدخول');
       setError(

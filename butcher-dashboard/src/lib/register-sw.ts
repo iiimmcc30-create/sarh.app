@@ -1,7 +1,10 @@
+import { BUTCHER_BASE_PATH, withButcherBase } from '@/constants/butcherBasePath';
+
 export async function registerButcherServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return null;
-  const registration = await navigator.serviceWorker.register('/sw.js', {
-    scope: '/',
+  const scope = BUTCHER_BASE_PATH ? `${BUTCHER_BASE_PATH}/` : '/';
+  const registration = await navigator.serviceWorker.register(withButcherBase('/sw.js'), {
+    scope,
     updateViaCache: 'none',
   });
   return registration;

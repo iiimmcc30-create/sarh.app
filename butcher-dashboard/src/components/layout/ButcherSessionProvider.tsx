@@ -12,6 +12,7 @@ import {
 import { LoadingState } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { persistButcher, getStoredButcher, getStoredUser, tryRestoreSession, type AuthUser, clearSession, NO_BUTCHER_MESSAGE } from '@/services/auth.service';
+import { withButcherBase } from '@/constants/butcherBasePath';
 import { fetchMyButcher, type ButcherProfile } from '@/services/butcher.service';
 
 type SessionValue = {
@@ -40,7 +41,7 @@ export function ButcherSessionProvider({ children }: { children: ReactNode }) {
     setError('');
     const status = await tryRestoreSession();
     if (status === 'none' || status === 'cleared') {
-      window.location.assign('/login');
+      window.location.assign(withButcherBase('/login'));
       return;
     }
     if (status === 'no_butcher') {
@@ -80,7 +81,7 @@ export function ButcherSessionProvider({ children }: { children: ReactNode }) {
           message={error}
           onRetry={() => {
             clearSession();
-            window.location.assign('/login');
+            window.location.assign(withButcherBase('/login'));
           }}
         />
       </div>
