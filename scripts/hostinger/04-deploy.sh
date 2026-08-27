@@ -21,6 +21,9 @@ echo "Validating production env..."
 echo "Building API image (single build, reused by worker/socket)..."
 docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build api
 
+echo "Building admin panel image..."
+docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build admin
+
 echo "Starting full stack (prod compose only — never docker-compose.yml)..."
 docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" up -d
 

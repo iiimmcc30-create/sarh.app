@@ -112,8 +112,8 @@ export class RateLimitService {
   private getApiLimiter() {
     if (!this.limiterInstance) {
       this.limiterInstance = this.getLimiter(
-        parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-        parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10) / 1000,
+        this.apiMax(),
+        this.apiWindowSec(),
         'rl:api',
       );
     }
@@ -122,9 +122,35 @@ export class RateLimitService {
 
   private getAuthLimiter() {
     if (!this.authLimiterInstance) {
-      this.authLimiterInstance = this.getLimiter(5, 900, 'rl:auth', 900);
+      this.authLimiterInstance = this.getLimiter(
+        this.authMax(),
+        this.authWindowSec(),
+        'rl:auth',
+        60,
+      );
     }
     return this.authLimiterInstance;
+  }
+
+  private apiMax() {
+    const n = parseInt(process.env.RATE_LIMIT_MAX || '200', 10);
+    return Number.isFinite(n) && n > 0 ? n : 200;
+  }
+
+  private apiWindowSec() {
+    const ms = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10);
+    const sec = (Number.isFinite(ms) && ms > 0 ? ms : 900000) / 1000;
+    return sec;
+  }
+
+  private authMax() {
+    const n = parseInt(process.env.AUTH_RATE_LIMIT_MAX || '20', 10);
+    return Number.isFinite(n) && n > 0 ? n : 20;
+  }
+
+  private authWindowSec() {
+    const n = parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_SEC || '900', 10);
+    return Number.isFinite(n) && n > 0 ? n : 900;
   }
 
   private getPaymentLimiter() {
@@ -158,8 +184,16 @@ export class RateLimitService {
     }
 
     const ip = this.getClientIp(req);
-    const limits = { api: 100, auth: 5, payment: 10 };
-    const windows = { api: 900, auth: 900, payment: 3600 };
+    const limits = {
+      api: this.apiMax(),
+      auth: this.authMax(),
+      payment: 10,
+    };
+    const windows = {
+      api: this.apiWindowSec(),
+      auth: this.authWindowSec(),
+      payment: 3600,
+    };
 
     const isRedisReady =
       this.isRedisEnabled() && this.getRedisClient().status === 'ready';

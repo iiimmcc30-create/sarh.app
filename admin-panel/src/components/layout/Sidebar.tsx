@@ -31,6 +31,7 @@ import {
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
 import { ADMIN_NAV, isAdminNavActive } from '@/constants/adminNav';
+import { withAdminBase } from '@/constants/adminBasePath';
 
 const NAV_ICONS = {
   '/': LayoutDashboard,
@@ -104,7 +105,7 @@ export function Sidebar() {
           type="button"
           onClick={() => {
             clearSession();
-            window.location.href = '/login';
+            window.location.href = withAdminBase('/login');
           }}
           className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-rose-400 hover:bg-slate-900"
         >
