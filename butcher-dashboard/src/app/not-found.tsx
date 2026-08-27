@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export const dynamic = 'force-dynamic';
 
 export default function NotFound() {
@@ -6,12 +8,12 @@ export default function NotFound() {
       <div className="text-center">
         <p className="text-5xl font-bold text-brand">404</p>
         <p className="mt-3 text-ink-muted">الصفحة غير موجودة</p>
-        <a
+        <Link
           href="/dashboard"
           className="mt-6 inline-block rounded-xl bg-brand px-4 py-2 text-sm text-ink hover:bg-brand-hover"
         >
           العودة للرئيسية
-        </a>
+        </Link>
       </div>
     </div>
   );

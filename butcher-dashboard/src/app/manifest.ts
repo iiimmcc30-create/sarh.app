@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { BUTCHER_BASE_PATH, withButcherBase } from '@/constants/butcherBasePath';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -7,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'لوحة إدارة الملاحم في منصة سرح: الطلبات والمنتجات والمخزون من حسابك المعتمد.',
     lang: 'ar',
     dir: 'rtl',
-    start_url: '/dashboard',
-    scope: '/',
+    start_url: withButcherBase('/dashboard'),
+    scope: BUTCHER_BASE_PATH ? `${BUTCHER_BASE_PATH}/` : '/',
     display: 'standalone',
     orientation: 'any',
     theme_color: '#20B66F',

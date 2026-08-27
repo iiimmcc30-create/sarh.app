@@ -18,6 +18,7 @@ import {
 import { DASHBOARD_NAV, isNavActive, type DashboardHref } from '@/constants/nav';
 import { BRAND_DASHBOARD_TITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brand';
 import { logoutQuietly } from '@/services/auth.service';
+import { withButcherBase } from '@/constants/butcherBasePath';
 import { useButcherSession } from './ButcherSessionProvider';
 
 const NAV_ICONS: Record<DashboardHref, typeof LayoutDashboard> = {
@@ -83,7 +84,7 @@ export function Sidebar() {
           type="button"
           onClick={() => {
             void logoutQuietly().finally(() => {
-              window.location.href = '/login';
+              window.location.href = withButcherBase('/login');
             });
           }}
           className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-rose-400 hover:bg-surface-overlay"

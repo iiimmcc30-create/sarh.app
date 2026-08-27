@@ -44,7 +44,7 @@ describe('service worker source', () => {
 
   it('keeps an offline shell without using it as live dashboard data', () => {
     expect(sw).toContain('/offline.html');
-    expect(sw).toContain('sarh-butcher-static-v2');
+    expect(sw).toMatch(/sarh-butcher-static-v\d+/);
   });
 });
 

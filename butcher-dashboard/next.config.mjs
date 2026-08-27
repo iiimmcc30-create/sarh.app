@@ -29,15 +29,24 @@ function resolveApiOrigin() {
 
 const apiUrl = resolveApiOrigin() ?? (process.env.VERCEL ? 'https://sarh-new4.onrender.com' : null);
 
+const butcherBasePath = (process.env.NEXT_PUBLIC_BUTCHER_BASE_PATH || '').replace(
+  /\/$/,
+  '',
+);
+
 const nextConfig = {
   ...(process.env.VERCEL ? {} : { output: 'standalone' }),
+  ...(butcherBasePath ? { basePath: butcherBasePath } : {}),
   async headers() {
     return [
       {
         source: '/sw.js',
         headers: [
           { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-          { key: 'Service-Worker-Allowed', value: '/' },
+          {
+            key: 'Service-Worker-Allowed',
+            value: butcherBasePath ? `${butcherBasePath}/` : '/',
+          },
         ],
       },
     ];

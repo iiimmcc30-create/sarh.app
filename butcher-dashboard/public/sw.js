@@ -1,12 +1,13 @@
 /* Sarh butcher dashboard SW: static assets only. Never touch /api or App Router data. */
-const STATIC_CACHE = 'sarh-butcher-static-v2';
+const STATIC_CACHE = 'sarh-butcher-static-v3';
+const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '');
 const PRECACHE_URLS = [
-  '/offline.html',
-  '/favicon.ico',
-  '/favicon.png',
-  '/apple-touch-icon.png',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  `${BASE}/offline.html`,
+  `${BASE}/favicon.ico`,
+  `${BASE}/favicon.png`,
+  `${BASE}/apple-touch-icon.png`,
+  `${BASE}/icons/icon-192.png`,
+  `${BASE}/icons/icon-512.png`,
 ];
 
 function shouldBypass(url, request) {
@@ -25,13 +26,14 @@ function shouldBypass(url, request) {
 
 function isStaticAsset(url) {
   return (
-    url.pathname.startsWith('/_next/static/') ||
-    url.pathname.startsWith('/icons/') ||
-    url.pathname === '/favicon.ico' ||
-    url.pathname === '/favicon.png' ||
-    url.pathname === '/apple-touch-icon.png' ||
-    url.pathname === '/offline.html' ||
-    url.pathname === '/manifest.webmanifest'
+    url.pathname.startsWith(`${BASE}/_next/static/`) ||
+    url.pathname.startsWith(`${BASE}/icons/`) ||
+    url.pathname === `${BASE}/favicon.ico` ||
+    url.pathname === `${BASE}/favicon.png` ||
+    url.pathname === `${BASE}/apple-touch-icon.png` ||
+    url.pathname === `${BASE}/offline.html` ||
+    url.pathname === `${BASE}/manifest.webmanifest` ||
+    url.pathname.startsWith('/_next/static/')
   );
 }
 

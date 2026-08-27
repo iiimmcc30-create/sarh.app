@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { withButcherBase } from '@/constants/butcherBasePath';
 
 const SERVER_API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001')
   .trim()
@@ -50,8 +51,9 @@ apiClient.interceptors.response.use(
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(BUTCHER_KEY);
       document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0`;
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login';
+      const loginPath = withButcherBase('/login');
+      if (!window.location.pathname.startsWith(loginPath)) {
+        window.location.href = loginPath;
       }
     }
     return Promise.reject(error);

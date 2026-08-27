@@ -24,6 +24,12 @@ docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build api
 echo "Building admin panel image..."
 docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build admin
 
+echo "Building butcher dashboard image..."
+docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build butcher
+
+echo "Building Expo web image..."
+docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" build web
+
 echo "Starting full stack (prod compose only — never docker-compose.yml)..."
 docker compose "${COMPOSE_FILES[@]}" --env-file "$ENV_FILE" up -d
 
