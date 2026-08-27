@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { adminLogin, persistSession, clearSession, tryRestoreSession } from '@/services/auth.service';
 import { getApiErrorMessage } from '@/services/api.client';
+import { withAdminBase } from '@/constants/adminBasePath';
 import { Button } from '@/components/ui/Button';
 import {
   BRAND_ADMIN_SUBTITLE_AR,
@@ -26,7 +27,7 @@ export default function LoginPage() {
       const status = await tryRestoreSession();
       if (cancelled) return;
       if (status === 'restored') {
-        window.location.assign('/');
+        window.location.assign(withAdminBase('/'));
         return;
       }
       setCheckingSession(false);
@@ -64,7 +65,7 @@ export default function LoginPage() {
       const session = await adminLogin(loginValue, passwordValue);
       persistSession(session);
       // Full navigation so middleware receives the new admin_token cookie.
-      window.location.assign('/');
+      window.location.assign(withAdminBase('/'));
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, 'فشل تسجيل الدخول'));
     } finally {

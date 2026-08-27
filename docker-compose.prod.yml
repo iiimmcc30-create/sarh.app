@@ -161,17 +161,49 @@ services:
       retries: 5
       start_period: 30s
 
+  admin:
+    build:
+      context: ./admin-panel
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://sarhsa.online
+        NEXT_PUBLIC_SOCKET_URL: https://sarhsa.online
+        NEXT_PUBLIC_ADMIN_BASE_PATH: /admin
+    image: sarh-admin:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - sarh_internal
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(\"http://127.0.0.1:3000/admin/login\").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
   nginx:
     image: nginx:1.27-alpine
     restart: unless-stopped
     depends_on:
       - api
       - socket
+      - admin
     ports:
       - '80:80'
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/ssl-redirect.conf:/etc/nginx/includes/ssl-redirect.conf:ro
+      - ./nginx/admin-location.conf:/etc/nginx/includes/admin-location.conf:ro
       # Host path shared with certbot (scripts/hostinger/06-setup-ssl.sh)
       - /var/www/certbot:/var/www/certbot:ro
     networks:

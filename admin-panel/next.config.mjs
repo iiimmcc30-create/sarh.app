@@ -5,8 +5,14 @@ const apiUrl = rawApiUrl.includes(':3000')
   ? 'http://127.0.0.1:3001'
   : rawApiUrl.replace(/\/$/, '').replace('localhost', '127.0.0.1');
 
+const adminBasePath = (process.env.NEXT_PUBLIC_ADMIN_BASE_PATH || '').replace(
+  /\/$/,
+  '',
+);
+
 const nextConfig = {
   output: 'standalone',
+  ...(adminBasePath ? { basePath: adminBasePath } : {}),
   async rewrites() {
     return [
       {

@@ -1,6 +1,7 @@
 import { Controller, Get, HttpCode } from '@nestjs/common';
-import { Public } from '../common/decorators/auth.decorators';
+import { Public, SkipRateLimit } from '../common/decorators/auth.decorators';
 
+@SkipRateLimit()
 @Controller('health')
 export class SocketHealthController {
   @Public()

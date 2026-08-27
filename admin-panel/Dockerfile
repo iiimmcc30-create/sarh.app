@@ -10,10 +10,12 @@ COPY . .
 RUN mkdir -p public
 
 # Baked into the Next.js client bundle at build time
-ARG NEXT_PUBLIC_API_URL=https://sarh-app.up.railway.app
-ARG NEXT_PUBLIC_SOCKET_URL=https://sarh-app.up.railway.app
+ARG NEXT_PUBLIC_API_URL=https://sarhsa.online
+ARG NEXT_PUBLIC_SOCKET_URL=https://sarhsa.online
+ARG NEXT_PUBLIC_ADMIN_BASE_PATH=/admin
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
+ENV NEXT_PUBLIC_ADMIN_BASE_PATH=$NEXT_PUBLIC_ADMIN_BASE_PATH
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
