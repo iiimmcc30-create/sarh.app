@@ -1,4 +1,4 @@
-package com.safat.app
+package com.sarh.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -208,7 +208,7 @@ export default function PaymentCheckoutScreen() {
             sharedCookiesEnabled
             thirdPartyCookiesEnabled
             setSupportMultipleWindows={false}
-            originWhitelist={['https://*', 'http://*', 'safat://*']}
+            originWhitelist={['https://*', 'http://*', 'sarh://*']}
             // iOS: allow NI paypage + 3DS redirects inside the same WebView.
             allowsInlineMediaPlayback
             {...(Platform.OS === 'android'

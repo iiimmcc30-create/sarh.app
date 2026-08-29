@@ -71,8 +71,8 @@ write_kv() {
 
   # Non-secret defaults (preserve user overrides if already set)
   defaults=(
-    APP_DEEP_LINK_SCHEME=safat
-    APP_ANDROID_PACKAGE=com.safat.app
+    APP_DEEP_LINK_SCHEME=sarh
+    APP_ANDROID_PACKAGE=com.sarh.app
     JWT_EXPIRES_IN=15m
     JWT_REFRESH_EXPIRES_IN=3650d
     SESSION_TTL_DAYS=3650

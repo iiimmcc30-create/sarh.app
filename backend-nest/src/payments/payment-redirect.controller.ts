@@ -2,11 +2,11 @@ import { Controller, Get, Header, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Public } from '../common/decorators/auth.decorators';
 
-const APP_SCHEME = (process.env.APP_DEEP_LINK_SCHEME ?? 'safat').replace(
+const APP_SCHEME = (process.env.APP_DEEP_LINK_SCHEME ?? 'sarh').replace(
   /:\/\/$/,
   '',
 );
-const ANDROID_PACKAGE = process.env.APP_ANDROID_PACKAGE ?? 'com.safat.app';
+const ANDROID_PACKAGE = process.env.APP_ANDROID_PACKAGE ?? 'com.sarh.app';
 
 function buildDeepLink(
   path: string,

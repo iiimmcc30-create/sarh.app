@@ -31,7 +31,7 @@ import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 const TAB_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 24;
 const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000';
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.safat.app';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.sarh.app';
 
 function openStoreRating() {
   const url = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
