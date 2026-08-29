@@ -3,6 +3,7 @@
 export const BRAND_NAME_AR = 'سرح';
 export const BRAND_NAME_EN = 'sarh';
 export const BRAND_DISPLAY_NAME = 'سرح | sarh';
+export const FOUNDER_NAME = 'متعب بن شطي';
 
 export const BRAND_TAGLINE_AR =
   'المنصة الوطنية الرائدة في خدمات الثروة الحيوانية';

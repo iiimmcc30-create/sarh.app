@@ -22,7 +22,7 @@
 
 ## 1. High-Level Architecture
 
-SAFAT (mobile app package name: **Sarh**, `com.safat.app`) is a livestock marketplace and social platform with butcher commerce, subscriptions, live streaming, and admin moderation.
+SAFAT (mobile app package name: **Sarh**, `com.sarh.app`) is a livestock marketplace and social platform with butcher commerce, subscriptions, live streaming, and admin moderation.
 
 ### Three client applications
 

@@ -18,6 +18,7 @@ import {
   BRAND_NAME_AR,
   BRAND_TAGLINE_AR,
   BRAND_VISION_AR,
+  FOUNDER_NAME,
 } from '@/constants/brandCopy';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
@@ -109,6 +110,15 @@ export default function AboutScreen() {
             <RtlText style={styles.sectionTitle}>المالك والامتثال</RtlText>
           </RtlTextShell>
           <View style={styles.infoCard}>
+            <View style={[styles.infoRow, getRtlRow()]}>
+              <View style={styles.infoLabelShell}>
+                <Text style={styles.infoLabel}>مؤسس المشروع</Text>
+              </View>
+              <View style={styles.infoValueShell}>
+                <Text style={styles.infoValue}>{FOUNDER_NAME}</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
             <View style={[styles.infoRow, getRtlRow()]}>
               <View style={styles.infoLabelShell}>
                 <Text style={styles.infoLabel}>المالك الرسمي</Text>

@@ -5,20 +5,20 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "safat",
+    "scheme": "sarh",
     "owner": "alsafa00",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.safat.app",
+      "bundleIdentifier": "com.sarh.app",
       "icon": "./assets/images/icon.png",
       "infoPlist": {
         "CFBundleDisplayName": "سرح | Sarh"
       }
     },
     "android": {
-      "package": "com.safat.app",
+      "package": "com.sarh.app",
       "googleServicesFile": "./google-services.json",
       "usesCleartextTraffic": false,
       "blockedPermissions": [

@@ -127,23 +127,23 @@ describe('subscriptionPlans helpers', () => {
 
 describe('paymentCheckout deep link', () => {
   it('builds base and query params', () => {
-    expect(paymentResultDeepLink()).toBe('safat://payment/result');
+    expect(paymentResultDeepLink()).toBe('sarh://payment/result');
     const url = paymentResultDeepLink({
       paymentId: 'p1',
       context: 'boost',
       gatewayReturn: '1',
     });
-    expect(url).toContain('safat://payment/result?');
+    expect(url).toContain('sarh://payment/result?');
     expect(url).toContain('paymentId=p1');
     expect(url).toContain('context=boost');
   });
 
   it('detects NI return and cancel URLs', () => {
-    expect(isPaymentReturnUrl('safat://payment/result?paymentId=1')).toBe('result');
+    expect(isPaymentReturnUrl('sarh://payment/result?paymentId=1')).toBe('result');
     expect(isPaymentReturnUrl('https://sarh-new4.onrender.com/payment/result?paymentId=1')).toBe(
       'result',
     );
-    expect(isPaymentReturnUrl('safat://payment/cancel')).toBe('cancel');
+    expect(isPaymentReturnUrl('sarh://payment/cancel')).toBe('cancel');
     expect(isPaymentReturnUrl('https://sarh-new4.onrender.com/payment/cancel')).toBe('cancel');
     expect(isPaymentReturnUrl('https://paypage.ksa.ngenius-payments.com/?code=abc')).toBe(null);
   });

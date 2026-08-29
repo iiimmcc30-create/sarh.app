@@ -13,7 +13,8 @@ const { resolveDevApiUrlsAsync } = require('./resolve-dev-api-urls');
 const API_PORT = 3001;
 const SOCKET_PORT = 3002;
 const EXPO_PORT = process.env.EXPO_PORT || '8081';
-const APP_SCHEME = 'safat';
+/** Expo project slug (EAS). Dev-client URLs use exp+{slug}, not the store scheme. */
+const EXPO_SLUG = 'safat';
 const ROOT = path.join(__dirname, '..');
 const QR_PATH = path.join(ROOT, 'expo-qr.png');
 
@@ -36,7 +37,7 @@ function getLanIp() {
 
 function buildDevClientUrl(lanIp, port = EXPO_PORT) {
   const metroUrl = `http://${lanIp}:${port}`;
-  return `exp+${APP_SCHEME}://expo-development-client/?url=${encodeURIComponent(metroUrl)}`;
+  return `exp+${EXPO_SLUG}://expo-development-client/?url=${encodeURIComponent(metroUrl)}`;
 }
 
 function buildExpoGoUrl(lanIp, port = EXPO_PORT) {

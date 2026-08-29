@@ -201,7 +201,7 @@ export default function EditProfileScreen() {
                   autoCorrect={false}
                 />
               </View>
-              <Text style={styles.fieldHint}>safat.app/@{username}</Text>
+              <Text style={styles.fieldHint}>sarhsa.online/@{username}</Text>
             </View>
 
             {/* Bio */}
