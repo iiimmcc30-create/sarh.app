@@ -64,7 +64,6 @@ export default function MarketBrowseScreen() {
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [items, setItems] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const nextCursorRef = useRef<string | null>(null);
   const hasMoreRef = useRef(false);
@@ -107,12 +106,10 @@ export default function MarketBrowseScreen() {
 
       nextCursorRef.current = page.nextCursor;
       hasMoreRef.current = page.hasMore;
-      setHasMore(page.hasMore);
       setItems(listings);
     } catch {
       nextCursorRef.current = null;
       hasMoreRef.current = false;
-      setHasMore(false);
       setItems([]);
     } finally {
       setLoading(false);
@@ -149,7 +146,6 @@ export default function MarketBrowseScreen() {
       }
       nextCursorRef.current = page.nextCursor;
       hasMoreRef.current = page.hasMore;
-      setHasMore(page.hasMore);
       setItems((prev) => mergeListingsById(prev, listings));
     } finally {
       loadingMoreRef.current = false;
