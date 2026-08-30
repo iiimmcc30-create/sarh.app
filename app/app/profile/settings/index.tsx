@@ -212,16 +212,7 @@ export default function ProfileSettingsScreen() {
         },
         {
           title: 'الخصوصية',
-          items: [
-            {
-              key: 'privacy',
-              icon: 'shield-outline',
-              label: 'الخصوصية',
-              subtitle: 'الظهور والبحث والرسائل',
-              route: '/profile/settings/privacy',
-            },
-            ...interactionItems,
-          ],
+          items: [...interactionItems],
         },
         {
           title: 'الأمان',
@@ -231,13 +222,6 @@ export default function ProfileSettingsScreen() {
               icon: 'block',
               label: 'المحظورين',
               route: '/settings/blocked',
-            },
-            {
-              key: 'account-security',
-              icon: 'shield-check-outline',
-              label: 'إعدادات الحساب',
-              subtitle: 'التحقق والأمان',
-              route: '/settings/account',
             },
           ],
         },
