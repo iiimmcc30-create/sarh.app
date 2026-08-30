@@ -32,7 +32,12 @@ export class SocketRepository {
   findThreadParticipants(threadId: string) {
     return this.prisma.messageThread.findUnique({
       where: { id: threadId },
-      select: { participant1: true, participant2: true },
+      select: {
+        participant1: true,
+        participant2: true,
+        type: true,
+        butcherId: true,
+      },
     });
   }
 

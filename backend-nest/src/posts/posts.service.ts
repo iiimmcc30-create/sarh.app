@@ -54,55 +54,77 @@ export class PostsService {
         : `posts:feed:${cursor || 'first'}`;
 
     const cached = await this.cache.get<{
-      posts: unknown[];
+      posts: PostWithCount[];
       nextCursor: string | null;
       hasMore: boolean;
     }>(cacheKey);
-    if (cached) return cached;
 
-    let where: Prisma.PostWhereInput = authorId
-      ? { authorId, ...notDeleted, isHidden: false }
-      : { ...notDeleted, isHidden: false };
+    if (!cached) {
+      let where: Prisma.PostWhereInput = authorId
+        ? { authorId, ...notDeleted, isHidden: false }
+        : { ...notDeleted, isHidden: false };
 
-    let blockedIds: string[] = [];
+      if (followingOnly && user?.userId) {
+        const followingIds = await this.repo.findFollowingIds(user.userId);
+        const authorIds = [...followingIds, user.userId];
+        where = {
+          ...where,
+          authorId: { in: authorIds },
+        };
+      }
+
+      const posts = await this.repo.findFeed({
+        where,
+        take: PAGE_SIZE + 1,
+        cursor,
+      });
+
+      const hasMore = posts.length > PAGE_SIZE;
+      const items = hasMore ? posts.slice(0, -1) : posts;
+      const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
+      // Cache raw posts only — never liked/reposted or block-filtered rows.
+      await this.cache.set(
+        cacheKey,
+        { posts: items, nextCursor, hasMore },
+        followingOnly ? 30 : 60,
+      );
+      return this.personalizeFeed(items, nextCursor, hasMore, user, authorId);
+    }
+
+    return this.personalizeFeed(
+      cached.posts,
+      cached.nextCursor,
+      cached.hasMore,
+      user,
+      authorId,
+    );
+  }
+
+  private async personalizeFeed(
+    items: PostWithCount[],
+    nextCursor: string | null,
+    hasMore: boolean,
+    user: JwtPayload | undefined,
+    authorId?: string,
+  ) {
+    let visible = items;
     if (user?.userId) {
-      blockedIds = await this.usersRepo.findBlockedRelationshipIds(user.userId);
+      const blockedIds = await this.usersRepo.findBlockedRelationshipIds(
+        user.userId,
+      );
       if (authorId && blockedIds.includes(authorId)) {
         return { posts: [], nextCursor: null, hasMore: false };
       }
-    }
-
-    if (followingOnly && user?.userId) {
-      const followingIds = await this.repo.findFollowingIds(user.userId);
-      let authorIds = [...followingIds, user.userId];
       if (blockedIds.length > 0) {
-        authorIds = authorIds.filter((id) => !blockedIds.includes(id));
+        const blocked = new Set(blockedIds);
+        visible = items.filter((p) => !blocked.has(p.authorId));
       }
-      where = {
-        ...where,
-        authorId: { in: authorIds },
-      };
-    } else if (blockedIds.length > 0 && !authorId) {
-      where = {
-        ...where,
-        authorId: { notIn: blockedIds },
-      };
     }
-
-    const posts = await this.repo.findFeed({
-      where,
-      take: PAGE_SIZE + 1,
-      cursor,
-    });
-
-    const hasMore = posts.length > PAGE_SIZE;
-    const items = hasMore ? posts.slice(0, -1) : posts;
-    const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
 
     let likedPostIds = new Set<string>();
     let repostedPostIds = new Set<string>();
-    if (user?.userId && items.length > 0) {
-      const postIds = items.map((p) => p.id);
+    if (user?.userId && visible.length > 0) {
+      const postIds = visible.map((p) => p.id);
       const [likes, reposts] = await Promise.all([
         this.repo.findLikesByUser(user.userId, postIds),
         this.repo.findRepostsByUser(user.userId, postIds),
@@ -111,14 +133,13 @@ export class PostsService {
       repostedPostIds = new Set(reposts.map((r) => r.postId));
     }
 
-    const postsWithMeta = items.map((p) =>
-      this.mapPost(p, likedPostIds.has(p.id), repostedPostIds.has(p.id)),
-    );
-
-    const result = { posts: postsWithMeta, nextCursor, hasMore };
-    // Following feed is viewer-specific — short TTL
-    await this.cache.set(cacheKey, result, followingOnly ? 30 : 60);
-    return result;
+    return {
+      posts: visible.map((p) =>
+        this.mapPost(p, likedPostIds.has(p.id), repostedPostIds.has(p.id)),
+      ),
+      nextCursor,
+      hasMore,
+    };
   }
 
   private normalizeImages(image?: string | null, images?: string[]): string[] {
@@ -160,6 +181,15 @@ export class PostsService {
 
     const post = await this.repo.findById(id);
     if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+
+    if (user?.userId && user.userId !== post.authorId) {
+      const blockedIds = await this.usersRepo.findBlockedRelationshipIds(
+        user.userId,
+      );
+      if (blockedIds.includes(post.authorId)) {
+        throwApi(403, 'blocked', 'لا يمكنك عرض هذا المنشور');
+      }
+    }
 
     let liked = false;
     let reposted = false;

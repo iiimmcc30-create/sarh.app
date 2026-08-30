@@ -164,7 +164,11 @@ export class AdminService {
     return { user };
   }
 
-  updateUser(id: string, body: Record<string, unknown>) {
+  async updateUser(
+    id: string,
+    body: Record<string, unknown>,
+    actor: JwtPayload,
+  ) {
     const parsed = updateUserSchema.safeParse(body);
     if (!parsed.success) {
       throwApi(
@@ -174,7 +178,11 @@ export class AdminService {
         parsed.error.flatten(),
       );
     }
-    return this.repo.updateUser(id, parsed.data).then((user) => ({ user }));
+    if (parsed.data.role !== undefined && actor.role !== 'ADMIN') {
+      throwApi(403, 'forbidden', 'تغيير الدور متاح للمسؤول فقط');
+    }
+    const user = await this.repo.updateUser(id, parsed.data);
+    return { user };
   }
 
   async deleteUser(id: string, actor: JwtPayload) {

@@ -10,6 +10,7 @@ import {
   ThreadMessagesQueryDto,
 } from './dto/messages.dto';
 import { MessagesRepository } from './repositories/messages.repository';
+import { MessagingPolicyService } from './services/messaging-policy.service';
 
 const PAGE_SIZE = 40;
 
@@ -19,6 +20,7 @@ export class MessagesService {
     private readonly repo: MessagesRepository,
     private readonly logger: LoggerService,
     private readonly notifications: AppNotificationsService,
+    private readonly policy: MessagingPolicyService,
   ) {}
 
   async getThreads(user: JwtPayload, query: ListThreadsQueryDto = {}) {
@@ -77,78 +79,37 @@ export class MessagesService {
       throwApi(400, 'empty_message', 'يجب إرسال نص أو صورة أو فيديو');
     }
 
-    if (receiverId === senderId) {
-      throwApi(400, 'invalid_action', 'لا يمكنك مراسلة نفسك');
-    }
-
-    const receiver = await this.repo.findUserById(receiverId);
-    if (!receiver) throwApi(404, 'not_found', 'المستخدم غير موجود');
-
     let type: MessageThreadType = dto.type ?? 'DIRECT';
     let resolvedButcherId: string | null = null;
     let resolvedOrderId: string | undefined = orderId;
 
     if (butcherId || type === 'BUTCHER' || orderId) {
       type = 'BUTCHER';
-      if (!butcherId) {
-        throwApi(
-          400,
-          'validation_error',
-          'معرّف الملحمة مطلوب لمحادثات الملاحم',
-        );
-      }
-      const butcher = await this.repo.findButcherById(butcherId);
-      if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
-      if (butcher.userId !== receiverId && butcher.userId !== senderId) {
-        throwApi(
-          400,
-          'invalid_action',
-          'المستلم لا يطابق صاحب الملحمة المحددة',
-        );
-      }
-      resolvedButcherId = butcher.id;
-
-      const customerId =
-        butcher.userId === senderId
-          ? receiverId
-          : butcher.userId === receiverId
-            ? senderId
-            : null;
-      if (!customerId) {
-        throwApi(400, 'invalid_action', 'المشاركون لا يطابقان محادثة الملحمة');
-      }
-      const acceptedOrder = await this.repo.findAcceptedButcherOrderForChat(
-        customerId,
-        butcher.id,
-      );
-      if (!acceptedOrder) {
-        throwApi(
-          403,
-          'chat_not_allowed',
-          'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
-        );
-      }
-      if (!resolvedOrderId) {
-        resolvedOrderId = acceptedOrder.id;
-      }
+      resolvedButcherId = butcherId ?? null;
     }
 
-    if (type === 'DIRECT') {
-      if (receiver.allowPrivateMessages === false) {
-        throwApi(
-          403,
-          'messages_disabled',
-          'هذا المستخدم لا يقبل الرسائل الخاصة',
-        );
-      }
-      if (receiver.privateMessagesAudience === 'following') {
-        const allowed = await this.repo.findFollow(receiverId, senderId);
-        if (!allowed) {
-          throwApi(
-            403,
-            'messages_restricted',
-            'هذا المستخدم يقبل الرسائل من الأشخاص الذين يتابعهم فقط',
+    await this.policy.assertCanSendMessage({
+      senderId,
+      receiverId,
+      type,
+      butcherId: resolvedButcherId,
+    });
+
+    if (type === 'BUTCHER' && resolvedButcherId) {
+      const butcher = await this.repo.findButcherById(resolvedButcherId);
+      if (butcher && !resolvedOrderId) {
+        const customerId =
+          butcher.userId === senderId
+            ? receiverId
+            : butcher.userId === receiverId
+              ? senderId
+              : null;
+        if (customerId) {
+          const acceptedOrder = await this.repo.findAcceptedButcherOrderForChat(
+            customerId,
+            butcher.id,
           );
+          resolvedOrderId = acceptedOrder?.id;
         }
       }
     }
