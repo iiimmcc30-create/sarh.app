@@ -115,7 +115,7 @@ describe('auth welcome screen', () => {
       path.join(__dirname, '../app/auth/welcome.tsx'),
       'utf8',
     );
-    expect(src).toContain('shape="square"');
+    expect(src).toContain('SarhLogoMark');
     expect(src).toContain('/auth/register');
     expect(src).toContain('/auth/phone');
     expect(src).toContain('useAuthCopy');

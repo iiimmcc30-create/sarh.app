@@ -2,23 +2,27 @@ export type OnboardingSlide = {
   id: string;
   title: string;
   description: string;
+  image: number;
 };
 
 export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   {
-    id: 'welcome',
-    title: 'مرحبًا بك في سرح',
-    description: 'كل ما يخص المواشي في مكان واحد.',
+    id: 'livestock',
+    title: 'كل ما يخص الثروة الحيوانية في مكان واحد',
+    description: 'من المواشي إلى الملاحم، ومن الأخبار إلى العروض، كل ما تحتاجه تجده هنا.',
+    image: require('../assets/images/onboarding/slide-1.jpg'),
   },
   {
-    id: 'features',
-    title: 'كل ما تحتاجه في سرح',
-    description: 'مواشي • ملاحم • أعلاف • خدمات\nمنصة موثوقة للبيع والشراء.',
+    id: 'market',
+    title: 'سوق المواشي بكل سهولة',
+    description: 'تصفح الإعلانات، تواصل مع البائعين، وابحث عن ما يناسبك بخطوات بسيطة.',
+    image: require('../assets/images/onboarding/slide-2.jpg'),
   },
   {
-    id: 'explore',
-    title: 'تابع واستكشف',
-    description: 'اكتشف أحدث الإعلانات والمنشورات اليومية في منطقتك.',
+    id: 'community',
+    title: 'مجتمع ومحتوى يلهمك ويثري معرفتك',
+    description: 'تابع آخر الأخبار والمقالات، وشارك خبراتك مع مجتمع يهتم مثلك.',
+    image: require('../assets/images/onboarding/slide-3.jpg'),
   },
 ];
 

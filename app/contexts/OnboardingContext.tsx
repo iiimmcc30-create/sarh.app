@@ -16,9 +16,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     let mounted = true;
-    const timeout = setTimeout(() => {
-      if (mounted) setIsComplete((prev) => (prev === null ? false : prev));
-    }, 2500);
 
     AsyncStorage.getItem(ONBOARDING_STORAGE_KEY)
       .then((value) => {
@@ -26,12 +23,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       })
       .catch(() => {
         if (mounted) setIsComplete(false);
-      })
-      .finally(() => clearTimeout(timeout));
+      });
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
     };
   }, []);
 
