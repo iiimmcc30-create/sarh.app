@@ -240,14 +240,24 @@ export function ProfileScreenLayout({
                     <AppIcon name="settings-outline" size={22} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
-                {mode === 'visitor' && onMenu ? (
-                  <Pressable onPress={onMenu} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name="menu" size={22} color={themeColors.textPrimary} />
+                {onShare && mode === 'visitor' ? (
+                  <Pressable
+                    onPress={onShare}
+                    hitSlop={10}
+                    style={styles.iconBtn}
+                    accessibilityLabel="مشاركة"
+                  >
+                    <AppIcon name="share-arrow" size={22} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
-                {onShare && mode === 'visitor' ? (
-                  <Pressable onPress={onShare} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name="share-social-outline" size={20} color={themeColors.textPrimary} />
+                {mode === 'visitor' && onMenu ? (
+                  <Pressable
+                    onPress={onMenu}
+                    hitSlop={10}
+                    style={styles.iconBtn}
+                    accessibilityLabel="المزيد"
+                  >
+                    <AppIcon name="menu-dots" size={22} color={themeColors.textPrimary} />
                   </Pressable>
                 ) : null}
               </View>
