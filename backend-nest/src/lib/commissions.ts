@@ -5,6 +5,10 @@
 // commissions (<= 0 = exempt). It does not set the numeric rate.
 import type { PlanPermissions } from '../plans/plan.types';
 import { permissionNumber } from '../plans/plan.types';
+import {
+  calculateListingFeeAmount,
+  LISTING_COMMISSION_PERCENT,
+} from '../listings/listing-fee';
 
 export type ListingCat =
   | 'camels'
@@ -22,7 +26,7 @@ export type ListingCat =
  * Creates ListingFee.commission — never used for order totals.
  * Do not expose this constant on butcher-facing or public fee rule copy.
  */
-export const BUTCHER_LISTING_COMMISSION_PERCENT = 1;
+export const BUTCHER_LISTING_COMMISSION_PERCENT = LISTING_COMMISSION_PERCENT;
 
 /**
  * @deprecated Alias for listing rate — prefer BUTCHER_LISTING_COMMISSION_PERCENT.
@@ -71,7 +75,7 @@ export function isStoreExemptFromPermissions(
 export interface CommissionResult {
   commission: number;
   isExempt: boolean;
-  dueDate: Date;
+  dueDate: Date | null;
   ruleDescription: string;
 }
 
@@ -89,49 +93,22 @@ export function roundMoney(amount: number): number {
 }
 
 /**
- * ListingFee path only — butcher store publish fee.
- * Livestock / equipment listings stay fee-free.
+ * ListingFee path — 1% of listing value. dueDate is not a publish countdown.
+ * Creation is gated by listingFeesEnabled + covenant, not by category/audience.
  */
 export function calculateCommission(
   category: ListingCat,
   price: number,
   _quantity = 1,
-  permissions?: PlanPermissions,
-  audience: 'USER' | 'BUTCHER' = 'USER',
+  _permissions?: PlanPermissions,
+  _audience: 'USER' | 'BUTCHER' = 'USER',
 ): CommissionResult {
-  const noFee = {
-    commission: 0,
-    isExempt: true,
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    ruleDescription: 'لا رسوم',
-  };
-
-  if (audience !== 'BUTCHER' || category !== 'store') {
-    return {
-      ...noFee,
-      ruleDescription: 'لا رسوم على إعلانات المواشي والمعدات',
-    };
-  }
-
-  const isExempt = isStoreExemptFromPermissions(permissions);
-
-  let commission = 0;
-  let ruleDescription = '';
-
-  if (isExempt) {
-    ruleDescription = 'صفر عمولة — ملحمة باشتراك مدفوع';
-  } else {
-    const rate = BUTCHER_LISTING_COMMISSION_PERCENT;
-    commission = Math.ceil((price * rate) / 100);
-    // Internal description — avoid leaking the rate into butcher-facing fee rules.
-    ruleDescription = `عمولة المنصة على إعلان المتجر`;
-  }
-
+  void category;
   return {
-    commission,
-    isExempt,
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    ruleDescription,
+    commission: calculateListingFeeAmount(price),
+    isExempt: false,
+    dueDate: null,
+    ruleDescription: 'عمولة الإعلان 1% وفق تعهد البائع',
   };
 }
 
@@ -164,32 +141,22 @@ export function calculateOrderCommission(
 }
 
 export function shouldCreateFee(
-  category: ListingCat,
-  permissions?: PlanPermissions,
-  audience: 'USER' | 'BUTCHER' = 'USER',
+  listingFeesEnabled: boolean,
+  _category?: ListingCat,
+  _permissions?: PlanPermissions,
+  _audience?: 'USER' | 'BUTCHER',
 ): boolean {
-  if (audience !== 'BUTCHER') return false;
-  if (category !== 'store') return false;
-  if (isStoreExemptFromPermissions(permissions)) return false;
-  return true;
+  return listingFeesEnabled === true;
 }
 
 /** Public fee rules — butcher/store rows must not reveal the numeric rate. */
 export const COMMISSION_TABLE = [
   {
-    icon: '🏪',
-    nameAr: 'ملحمة (بدون اشتراك)',
-    nameEn: 'Butcher (no subscription)',
-    ruleAr: 'عمولة المنصة حسب الباقة',
-    ruleEn: 'Platform fee per plan',
+    icon: '📜',
+    nameAr: 'عمولة الإعلان',
+    nameEn: 'Listing commission',
+    ruleAr: '١٪ من قيمة البيع — تُسدد خلال ١٤ يوماً من إتمام البيع خارج المنصة',
+    ruleEn: '1% of sale value — due within 14 days of off-platform sale',
     color: '#A855F7',
-  },
-  {
-    icon: '✅',
-    nameAr: 'ملحمة (باشتراك)',
-    nameEn: 'Butcher (subscribed)',
-    ruleAr: 'صفر عمولة',
-    ruleEn: 'Zero commission',
-    color: '#10B981',
   },
 ];

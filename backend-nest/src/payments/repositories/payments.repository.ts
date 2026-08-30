@@ -23,11 +23,37 @@ export class PaymentsRepository {
   findPendingFee(referenceId: string, userId: string) {
     return this.prisma.listingFee.findFirst({
       where: {
-        id: referenceId,
+        userId,
+        status: { in: ['pending', 'overdue'] },
+        OR: [{ id: referenceId }, { listingId: referenceId }],
+      },
+      select: {
+        id: true,
+        listingId: true,
+        commission: true,
+        saleAmount: true,
+        status: true,
+      },
+    });
+  }
+
+  recordListingFeeSaleAmount(
+    feeId: string,
+    userId: string,
+    saleAmount: number,
+    commission: number,
+  ) {
+    return this.prisma.listingFee.updateMany({
+      where: {
+        id: feeId,
         userId,
         status: { in: ['pending', 'overdue'] },
       },
-      select: { id: true, commission: true },
+      data: {
+        saleAmount,
+        saleDeclaredAt: new Date(),
+        commission,
+      },
     });
   }
 
@@ -455,24 +481,25 @@ export class PaymentsRepository {
       }
 
       if (
-        (params.type === 'fee' || params.type === 'listing_fee') &&
+        (params.type === 'fee' ||
+          params.type === 'listing_fee' ||
+          params.type === 'commission') &&
         params.referenceId
       ) {
-        await tx.listingFee.update({
-          where: { id: params.referenceId },
-          data: {
-            status: 'paid',
-            paidAt: new Date(),
-            transactionId: params.niTransactionId,
+        const feeRow = await tx.listingFee.findFirst({
+          where: {
+            OR: [{ id: params.referenceId }, { listingId: params.referenceId }],
           },
+          select: { id: true },
         });
-        const fee = await tx.listingFee.findUnique({
-          where: { id: params.referenceId },
-        });
-        if (fee) {
-          await tx.listing.update({
-            where: { id: fee.listingId },
-            data: { status: 'active' },
+        if (feeRow) {
+          await tx.listingFee.update({
+            where: { id: feeRow.id },
+            data: {
+              status: 'paid',
+              paidAt: new Date(),
+              transactionId: params.niTransactionId,
+            },
           });
         }
       }
@@ -682,7 +709,7 @@ export class PaymentsRepository {
   ) {
     const existing = await this.prisma.payment.findFirst({
       where: {
-        referenceType: 'commission',
+        referenceType: { in: ['order_commission', 'commission'] },
         referenceId: butcherOrderId,
         status: 'paid',
       },

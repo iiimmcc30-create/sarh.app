@@ -105,7 +105,10 @@ interface AppContextValue {
   toggleRepost: (postId: string) => Promise<void>;
   toggleBookmark: (postId: string) => void;
   addComment: (postId: string, content: string) => Promise<boolean>;
-  removeListing: (listingId: string) => Promise<ActionResult>;
+  removeListing: (
+    listingId: string,
+    options: { sold: boolean; reason: string },
+  ) => Promise<ActionResult>;
   refetchData: (force?: boolean) => Promise<void>;
 }
 
@@ -683,13 +686,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, accessToken, mapBackendListing]);
 
-  const removeListing = useCallback(async (listingId: string): Promise<ActionResult> => {
+  const removeListing = useCallback(async (
+    listingId: string,
+    options: { sold: boolean; reason: string },
+  ): Promise<ActionResult> => {
     if (!isAuthenticated || !accessToken) {
       return { ok: false, error: 'يجب تسجيل الدخول أولاً' };
     }
     try {
       const res = await authFetch(`${API_BASE}/api/listings/${listingId}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sold: Boolean(options?.sold),
+          reason: options?.reason ?? '',
+        }),
       });
       if (res.ok) {
         setListingsState((prev) => prev.filter((l) => l.id !== listingId));

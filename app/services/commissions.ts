@@ -1,4 +1,5 @@
 
+/** Client display only — backend calculateListingFeeAmount is the source of truth. */
 export type ListingCategory =
   | 'camels'
   | 'sheep'
@@ -131,11 +132,10 @@ export const COMMISSION_RULES: CommissionRule[] = [
     nameEn: 'Store',
     icon: '🏪',
     type: 'exempt_if_subscribed',
-    value: 5,
+    value: 1,
     unit: 'by_plan',
-    descriptionAr: '٥٪ من سعر البيع (للمتجر بدون اشتراك)',
-    descriptionEn: '5% of sale price (unsubscribed store)',
-    subscriptionNote: 'المتجر الموثّق بـ اشتراك مدفوع = صفر عمولة',
+    descriptionAr: '١٪ من قيمة البيع وفق تعهد البائع',
+    descriptionEn: '1% of sale value per seller covenant',
   },
 ];
 
@@ -169,40 +169,12 @@ export function calculateCommission(
   quantity: number = 1,
   permissions?: Record<string, unknown>,
 ): CommissionCalcResult {
-  // Regular listings are free — commission applies to store/butcher only.
-  if (category !== 'store') {
-    return {
-      category,
-      ruleNameAr: 'إعلان عادي',
-      type: 'fixed',
-      value: 0,
-      unit: 'per_head',
-      quantity,
-      price,
-      commission: 0,
-      netAfterCommission: price,
-      descriptionAr: 'لا رسوم على إعلانات المواشي والمعدات',
-      isExempt: true,
-    };
-  }
-
-  const rule = COMMISSION_RULES.find((r) => r.category === 'store')!;
-
-  let commission = 0;
-
-  const isExempt = isStoreExempt(permissions);
-
-  if (!isExempt) {
-    const rate =
-      typeof permissions?.storeCommission === 'number'
-        ? (permissions.storeCommission as number)
-        : rule.value;
-    commission = Math.ceil((price * rate) / 100);
-  }
-
-  const displayDesc = isExempt
-    ? 'صفر عمولة — ملحمة باشتراك مدفوع ✅'
-    : `${rule.value}% من سعر البيع`;
+  const rate = 1;
+  const cents = Math.round((price + Number.EPSILON) * 100);
+  const commission = Math.round((cents * rate) / 100) / 100;
+  const rule = COMMISSION_RULES.find((r) => r.category === category) ?? COMMISSION_RULES[0];
+  const displayDesc = 'عمولة الإعلان 1% وفق تعهد البائع';
+  void permissions;
 
   return {
     category,
@@ -215,7 +187,7 @@ export function calculateCommission(
     commission,
     netAfterCommission: price - commission,
     descriptionAr: displayDesc,
-    isExempt,
+    isExempt: false,
   };
 }
 
@@ -232,8 +204,7 @@ export interface CommissionTableRow {
 }
 
 export const COMMISSION_TABLE: CommissionTableRow[] = [
-  { icon: '🏪', nameAr: 'ملحمة (بدون اشتراك)', nameEn: 'Butcher (no sub)', ruleAr: '٥٪ من سعر البيع', ruleEn: '5% of sale', color: '#A855F7' },
-  { icon: '🏪✅', nameAr: 'ملحمة (باشتراك)', nameEn: 'Butcher (subscribed)', ruleAr: 'صفر عمولة', ruleEn: 'Zero commission', color: '#20B66F', note: 'باقة Growth أو أعلى' },
+  { icon: '📜', nameAr: 'عمولة الإعلان', nameEn: 'Listing commission', ruleAr: '١٪ من قيمة البيع', ruleEn: '1% of sale', color: '#A855F7' },
 ];
 
 // ─── نماذج رسوم تجريبية ──────────────────────────────────────────────────────

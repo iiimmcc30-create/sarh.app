@@ -47,6 +47,7 @@ import { categoryRequiresWeight } from '@/lib/listingCategories';
 import { resolveLegacyListingCategory } from '@/lib/marketCategoriesFallback';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { usePaidServices } from '@/hooks/usePaidServices';
+import { LISTING_COVENANT_VERSION } from '@/lib/listingCovenant';
 import type { MarketCategory } from '@/services/categories';
 import {
   classifyListingTitle,
@@ -456,6 +457,12 @@ export default function CreateListingScreen() {
         ...videoFields,
         ...(isEditing && videoState.status === 'idle'
           ? { videoUrl: null, thumbnailUrl: null }
+          : {}),
+        ...(!isEditing
+          ? {
+              acceptedCovenant: true,
+              covenantVersion: LISTING_COVENANT_VERSION,
+            }
           : {}),
       };
 

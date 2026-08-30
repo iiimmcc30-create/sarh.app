@@ -154,6 +154,38 @@ export class AdminService {
     return this.repo.getDashboardStats();
   }
 
+  listListingFeeCompliance() {
+    return this.repo.listListingFeeCompliance();
+  }
+
+  async closeAccountForUnpaidListingFees(
+    userId: string,
+    actor: JwtPayload,
+    reason: string,
+  ) {
+    const trimmed = reason?.trim();
+    if (!trimmed || trimmed.length < 4) {
+      throwApi(400, 'validation_error', 'يجب ذكر سبب إغلاق الحساب');
+    }
+    const target = await this.repo.findUserById(userId);
+    if (!target) throwApi(404, 'not_found', 'المستخدم غير موجود');
+    if (target.id === actor.userId) {
+      throwApi(400, 'cannot_close_self', 'لا يمكنك إغلاق حسابك');
+    }
+    await this.repo.updateUser(userId, { isActive: false });
+    const action = await this.repo.recordAccountAction({
+      userId,
+      actorId: actor.userId,
+      action: 'deactivate_unpaid_listing_fees',
+      reason: trimmed,
+    });
+    this.logger.info(
+      { userId, by: actor.userId },
+      'Admin closed account for unpaid listing fees',
+    );
+    return { userId, isActive: false, action };
+  }
+
   listUsers(query: Record<string, unknown>) {
     return this.repo.listUsers(this.parsePagination(query));
   }

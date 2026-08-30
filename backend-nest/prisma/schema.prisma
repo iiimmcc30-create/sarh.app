@@ -80,6 +80,8 @@ model User {
   supportTicketMessages               SupportTicketMessage[]
   accountVerificationRequest          AccountVerificationRequest?
   reviewedVerificationRequests        AccountVerificationRequest[]      @relation("VerificationReviewer")
+  accountActionsReceived              AdminAccountAction[]              @relation("AccountActionTarget")
+  accountActionsTaken                 AdminAccountAction[]              @relation("AccountActionActor")
 
   @@index([username])
   @@index([email])
@@ -327,6 +329,12 @@ model Listing {
   commentsCount     Int             @default(0)
   editCount         Int             @default(0)
   expiresAt         DateTime?
+  covenantAccepted    Boolean   @default(false)
+  covenantAcceptedAt  DateTime?
+  covenantVersion     String?
+  sellerDeclaredSold  Boolean?
+  sellerDeclaredSoldAt DateTime?
+  deleteReason        String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   deletedAt         DateTime?
@@ -420,7 +428,9 @@ model ListingFee {
   price         Float
   commission    Float
   status        FeeStatus @default(pending)
-  dueDate       DateTime
+  dueDate       DateTime?
+  saleAmount    Float?
+  saleDeclaredAt DateTime?
   paidAt        DateTime?
   transactionId String?
   createdAt     DateTime  @default(now())
@@ -433,6 +443,21 @@ model ListingFee {
   @@index([status])
   @@index([dueDate])
   @@index([status, dueDate])
+}
+
+model AdminAccountAction {
+  id        String   @id @default(uuid())
+  userId    String
+  actorId   String
+  action    String
+  reason    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User     @relation("AccountActionTarget", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User     @relation("AccountActionActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([actorId])
 }
 
 model ListingOffer {
@@ -1146,6 +1171,7 @@ enum PaymentReferenceType {
   pinned_ad
   promoted_ad
   commission
+  order_commission
 }
 
 enum BoostType {

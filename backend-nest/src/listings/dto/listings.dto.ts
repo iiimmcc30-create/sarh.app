@@ -228,6 +228,27 @@ export class CreateListingDto {
   @IsOptional()
   @IsBoolean()
   pinned?: boolean;
+
+  /** Required when listing fees are enabled — backend is the source of truth. */
+  @IsOptional()
+  @IsBoolean()
+  acceptedCovenant?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  covenantVersion?: string;
+}
+
+export class DeleteListingDto {
+  @IsBoolean()
+  sold!: boolean;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(500)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  reason!: string;
 }
 
 export class ApplyPlanPromoteDto {

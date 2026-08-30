@@ -10,7 +10,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlDirection, getRtlText } from '@/lib/rtl';
-import { initiateListingFeePayment } from '@/services/listingFeePayment';
+import {
+  initiateListingFeePayment,
+  quoteListingFee,
+} from '@/services/listingFeePayment';
 import { launchPaymentCheckout } from '@/services/payments';
 import type { NIPaymentMethod } from '@/services/network_international';
 import { useEffect, useRef, useState } from 'react';
@@ -46,6 +49,7 @@ export function ListingFeePaymentSheet({
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const [amount, setAmount] = useState('');
+  const [quotedFee, setQuotedFee] = useState<number | null>(null);
   const [method, setMethod] = useState<NIPaymentMethod>('mada');
   const [processing, setProcessing] = useState(false);
   const [phase, setPhase] = useState<SheetPhase>('form');
@@ -56,6 +60,7 @@ export function ListingFeePaymentSheet({
     if (!visible) return;
     setPhase('form');
     setAmount('');
+    setQuotedFee(null);
     setMethod('mada');
     setErrorMessage('');
     setProcessing(false);
@@ -104,9 +109,19 @@ export function ListingFeePaymentSheet({
     setPhase('form');
     setErrorMessage('');
 
+    const quoted = await quoteListingFee({ listingId, saleAmount: parsed });
+    if (!quoted.ok) {
+      setProcessing(false);
+      setPhase('error');
+      setErrorMessage(quoted.message);
+      return;
+    }
+    setQuotedFee(quoted.data.commission);
+
     const initiated = await initiateListingFeePayment({
       listingId,
-      amount: parsed,
+      saleAmount: parsed,
+      amount: quoted.data.commission,
       method,
       listingTitle,
     });
@@ -172,7 +187,7 @@ export function ListingFeePaymentSheet({
             <View style={styles.headerText}>
               <Text style={[styles.title, getRtlText()]}>سداد رسوم سرح</Text>
               <Text style={[styles.subtitle, getRtlText()]}>
-                يمكنك سداد عمولة سرح المستحقة على هذا الإعلان.
+                أدخل مبلغ البيع لحساب عمولة سرح 1%. السداد اختياري ولا يُفترض البيع بفتح هذه الصفحة.
               </Text>
             </View>
             <View style={styles.headerIcon}>
@@ -217,7 +232,7 @@ export function ListingFeePaymentSheet({
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.fieldBlock}>
-                <Text style={[styles.fieldLabel, getRtlText()]}>المبلغ (اختياري)</Text>
+                <Text style={[styles.fieldLabel, getRtlText()]}>مبلغ البيع</Text>
                 <View style={[styles.amountRow, getRtlRow()]}>
                   <Text style={styles.currencyTag}>ر.س</Text>
                   <TextInput
@@ -230,7 +245,8 @@ export function ListingFeePaymentSheet({
                   />
                 </View>
                 <Text style={[styles.fieldHint, getRtlText()]}>
-                  يمكنك ترك الحقل فارغاً والسداد لاحقاً، أو إدخال أي مبلغ ترغب بسداده الآن.
+                  عمولة سرح: 1%
+                  {quotedFee != null ? ` — الرسوم: ${quotedFee} ر.س` : ''}
                 </Text>
               </View>
 

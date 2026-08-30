@@ -202,7 +202,7 @@ export class OrderLifecycleService {
 
   /**
    * Accrue order commission once when a butcher order reaches `delivered`.
-   * Idempotent via Payment(referenceType=commission, referenceId=orderId)
+   * Idempotent via Payment(referenceType=order_commission, referenceId=orderId)
    * and unique merchant orderId BOC-{orderId}. Does not use ListingFee.
    */
   private async recordOrderCommissionIfNeeded(
@@ -214,7 +214,7 @@ export class OrderLifecycleService {
 
     const existing = await tx.payment.findFirst({
       where: {
-        referenceType: 'commission',
+        referenceType: { in: ['order_commission', 'commission'] },
         referenceId: locked.id,
       },
       select: { id: true },
@@ -241,7 +241,7 @@ export class OrderLifecycleService {
           method: 'mada',
           status: 'paid',
           paidAt: new Date(),
-          referenceType: 'commission',
+          referenceType: 'order_commission',
           referenceId: locked.id,
           description: 'Butcher order commission',
           descriptionAr: 'عمولة طلب ملحمة',

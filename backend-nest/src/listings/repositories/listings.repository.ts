@@ -66,7 +66,15 @@ export class ListingsRepository {
       where: { id, ...notDeleted },
       include: {
         seller: { select: SELLER_DETAIL_SELECT },
-        fee: { select: { status: true, commission: true, dueDate: true } },
+        fee: {
+          select: {
+            id: true,
+            status: true,
+            commission: true,
+            dueDate: true,
+            saleAmount: true,
+          },
+        },
         marketCategory: { select: MARKET_CATEGORY_SELECT },
         marketSubcategory: { select: MARKET_CATEGORY_SELECT },
       },
@@ -117,10 +125,29 @@ export class ListingsRepository {
     });
   }
 
-  softDelete(id: string) {
+  softDelete(
+    id: string,
+    extra?: {
+      sellerDeclaredSold?: boolean;
+      sellerDeclaredSoldAt?: Date | null;
+      deleteReason?: string;
+    },
+  ) {
     return this.prisma.listing.update({
       where: { id },
-      data: { status: 'suspended', ...softDeleteFields() },
+      data: {
+        status: 'suspended',
+        ...softDeleteFields(),
+        ...(extra?.sellerDeclaredSold !== undefined
+          ? { sellerDeclaredSold: extra.sellerDeclaredSold }
+          : {}),
+        ...(extra?.sellerDeclaredSoldAt !== undefined
+          ? { sellerDeclaredSoldAt: extra.sellerDeclaredSoldAt }
+          : {}),
+        ...(extra?.deleteReason !== undefined
+          ? { deleteReason: extra.deleteReason }
+          : {}),
+      },
     });
   }
 
@@ -131,7 +158,7 @@ export class ListingsRepository {
     createFee?: boolean;
     data: Omit<Prisma.ListingUncheckedCreateInput, 'sellerId'>;
     commission: number;
-    dueDate: Date;
+    dueDate?: Date | null;
     category: string;
     quantity: number;
     price: number;
@@ -171,7 +198,7 @@ export class ListingsRepository {
                     quantity: params.quantity,
                     price: params.price,
                     commission: params.commission,
-                    dueDate: params.dueDate,
+                    dueDate: params.dueDate ?? null,
                     status: 'pending',
                   },
                 },
@@ -225,7 +252,15 @@ export class ListingsRepository {
         data: listingUpdate,
         include: {
           seller: { select: SELLER_SELECT },
-          fee: { select: { status: true, commission: true, dueDate: true } },
+          fee: {
+          select: {
+            id: true,
+            status: true,
+            commission: true,
+            dueDate: true,
+            saleAmount: true,
+          },
+        },
         },
       });
 

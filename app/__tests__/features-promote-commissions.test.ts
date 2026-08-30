@@ -20,22 +20,18 @@ import {
 } from '@/services/listingPromote';
 
 describe('commissions', () => {
-  it('treats non-store listings as free/exempt', () => {
+  it('treats all listings as 1% listing commission', () => {
     const result = calculateCommission('sheep', 1000, 3);
-    expect(result.commission).toBe(0);
-    expect(result.isExempt).toBe(true);
-    expect(result.netAfterCommission).toBe(1000);
+    expect(result.commission).toBe(10);
+    expect(result.isExempt).toBe(false);
+    expect(result.netAfterCommission).toBe(990);
   });
 
-  it('charges store commission unless subscription exempts it', () => {
+  it('charges 1% listing commission even if a plan stores a legacy 5', () => {
     const charged = calculateCommission('store', 1000);
     expect(charged.isExempt).toBe(false);
-    expect(charged.commission).toBe(50);
-    expect(charged.netAfterCommission).toBe(950);
-
-    const exempt = calculateCommission('store', 1000, 1, { storeCommission: 0 });
-    expect(exempt.isExempt).toBe(true);
-    expect(exempt.commission).toBe(0);
+    expect(charged.commission).toBe(10);
+    expect(charged.netAfterCommission).toBe(990);
     expect(isStoreExempt({ storeCommission: 0 })).toBe(true);
     expect(isStoreExempt({ storeCommission: 5 })).toBe(false);
   });

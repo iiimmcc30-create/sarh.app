@@ -1,3 +1,5 @@
+export const LISTING_COVENANT_VERSION = 'listing-covenant-v2';
+
 type CovenantRequest = {
   resolve: (accepted: boolean) => void;
 };

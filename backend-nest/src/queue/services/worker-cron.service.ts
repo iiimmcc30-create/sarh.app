@@ -87,24 +87,10 @@ export class WorkerCronService implements OnModuleDestroy {
         return;
       }
 
-      this.logger.info({}, 'Running daily fee check cron');
-      const overdueFees = await this.cronRepo.findOverdueListingFees();
-
-      if (overdueFees.length > 0) {
-        await Promise.all(
-          overdueFees.map((fee) =>
-            this.feeCheckQueue.addFeeCheck({
-              listingFeeId: fee.id,
-              userId: fee.userId,
-              amount: fee.commission,
-            }),
-          ),
-        );
-        this.logger.info(
-          { count: overdueFees.length },
-          'Fee check jobs queued',
-        );
-      }
+      this.logger.info(
+        {},
+        'Listing fee cron: no overdue enforcement (covenant-only 14-day settlement)',
+      );
     } catch (err) {
       this.logger.error({ err }, 'Fee check cron error');
     }
