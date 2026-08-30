@@ -1,8 +1,8 @@
 // Powered by OnSpace.AI
 // SAFAT — Profile Tab (حسابي)
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
@@ -15,20 +15,15 @@ import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
-import { searchListingsPage } from '@/services/listings';
-import { mergeListingsById } from '@/lib/listingsPagination';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
-import type { Listing } from '@/services/types';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { styles, colors } = useThemedStyles(({ colors }) => ({
-    styles: createStyles(colors),
-    colors,
-  }));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const {
     me,
+    listings,
     posts,
     likedPosts,
     bookmarkedPosts,
@@ -44,12 +39,6 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const profileUrl = sarhProfileShareUrl(me.username);
-  const [myListings, setMyListings] = useState<Listing[]>([]);
-  const [myListingsHasMore, setMyListingsHasMore] = useState(false);
-  const [myListingsLoading, setMyListingsLoading] = useState(false);
-  const myListingsCursorRef = useRef<string | null>(null);
-  const myListingsHasMoreRef = useRef(false);
-  const myListingsLoadingRef = useRef(false);
 
   const loadStories = useCallback(async () => {
     try {
@@ -67,40 +56,16 @@ export default function ProfileScreen() {
     }
   }, [accessToken]);
 
-  const loadMyListings = useCallback(
-    async (reset: boolean) => {
-      if (!me.id || myListingsLoadingRef.current) return;
-      if (!reset && !myListingsHasMoreRef.current) return;
-      myListingsLoadingRef.current = true;
-      setMyListingsLoading(true);
-      try {
-        const page = await searchListingsPage(
-          {
-            sellerId: me.id,
-            cursor: reset ? undefined : myListingsCursorRef.current ?? undefined,
-          },
-          accessToken,
-        );
-        myListingsCursorRef.current = page.nextCursor;
-        myListingsHasMoreRef.current = page.hasMore;
-        setMyListingsHasMore(page.hasMore);
-        setMyListings((prev) => (reset ? page.listings : mergeListingsById(prev, page.listings)));
-      } catch {
-        if (reset) setMyListings([]);
-      } finally {
-        myListingsLoadingRef.current = false;
-        setMyListingsLoading(false);
-      }
-    },
-    [accessToken, me.id],
-  );
-
   useFocusEffect(
     useCallback(() => {
       void loadStories();
       void refetchData();
-      void loadMyListings(true);
-    }, [loadMyListings, loadStories, refetchData]),
+    }, [loadStories, refetchData]),
+  );
+
+  const myListings = useMemo(
+    () => listings.filter((l) => l.seller.id === me.id),
+    [listings, me.id],
   );
   const myPosts = useMemo(
     () =>
@@ -151,9 +116,9 @@ export default function ProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadStories(), refetchData(true), loadMyListings(true)]);
+    await Promise.all([loadStories(), refetchData(true)]);
     setRefreshing(false);
-  }, [loadMyListings, loadStories, refetchData]);
+  }, [loadStories, refetchData]);
 
   const renderPosts = () => {
     if (myPosts.length === 0) {
@@ -198,34 +163,17 @@ export default function ProfileScreen() {
       );
     }
 
-    return (
-      <>
-        {myListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            variant="list"
-            listMode="market"
-            onPress={() =>
-              safePush({ pathname: '/listing/[id]', params: { id: listing.id } }, undefined, router)
-            }
-          />
-        ))}
-        {myListingsHasMore ? (
-          <Pressable
-            style={styles.loadMoreBtn}
-            onPress={() => void loadMyListings(false)}
-            disabled={myListingsLoading}
-          >
-            {myListingsLoading ? (
-              <ActivityIndicator color={colors.electric} />
-            ) : (
-              <Text style={styles.loadMoreText}>عرض المزيد</Text>
-            )}
-          </Pressable>
-        ) : null}
-      </>
-    );
+    return myListings.map((listing) => (
+      <ListingCard
+        key={listing.id}
+        listing={listing}
+        variant="list"
+        listMode="market"
+        onPress={() =>
+          safePush({ pathname: '/listing/[id]', params: { id: listing.id } }, undefined, router)
+        }
+      />
+    ));
   };
 
   return (
@@ -282,14 +230,6 @@ function createStyles(colors: ThemeColors) {
     emptyBtnText: {
       ...typography.feedTitle,
       color: colors.textBrandStrong,
-    },
-    loadMoreBtn: {
-      alignItems: 'center',
-      paddingVertical: spacing.md,
-    },
-    loadMoreText: {
-      ...typography.feedBody,
-      color: colors.electric,
     },
   });
 }

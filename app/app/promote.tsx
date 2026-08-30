@@ -11,11 +11,10 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { rtlBackIcon } from '@/lib/rtl';
-import { searchListingsPage } from '@/services/listings';
-import { mergeListingsById } from '@/lib/listingsPagination';
+import { searchListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -55,11 +54,6 @@ export default function PromoteHubScreen() {
   const { user, accessToken } = useAuth();
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
-  const [listingsHasMore, setListingsHasMore] = useState(false);
-  const [listingsLoadingMore, setListingsLoadingMore] = useState(false);
-  const listingsCursorRef = useRef<string | null>(null);
-  const listingsHasMoreRef = useRef(false);
-  const listingsLoadingRef = useRef(false);
   const [statsListingId, setStatsListingId] = useState<string | null>(null);
   const { hasAnyBoostService } = usePaidServices();
 
@@ -73,37 +67,12 @@ export default function PromoteHubScreen() {
     }
     setLoadingListings(true);
     try {
-      const page = await searchListingsPage({ sellerId: userId }, accessToken);
-      listingsCursorRef.current = page.nextCursor;
-      listingsHasMoreRef.current = page.hasMore;
-      setListingsHasMore(page.hasMore);
-      setMyListings(page.listings);
+      const rows = await searchListings({ sellerId: userId }, accessToken);
+      setMyListings(rows.slice(0, 30));
     } catch {
-      listingsCursorRef.current = null;
-      listingsHasMoreRef.current = false;
-      setListingsHasMore(false);
       setMyListings([]);
     } finally {
       setLoadingListings(false);
-    }
-  }, [accessToken, userId]);
-
-  const loadMoreListings = useCallback(async () => {
-    if (!userId || listingsLoadingRef.current || !listingsHasMoreRef.current) return;
-    listingsLoadingRef.current = true;
-    setListingsLoadingMore(true);
-    try {
-      const page = await searchListingsPage(
-        { sellerId: userId, cursor: listingsCursorRef.current ?? undefined },
-        accessToken,
-      );
-      listingsCursorRef.current = page.nextCursor;
-      listingsHasMoreRef.current = page.hasMore;
-      setListingsHasMore(page.hasMore);
-      setMyListings((prev) => mergeListingsById(prev, page.listings));
-    } finally {
-      listingsLoadingRef.current = false;
-      setListingsLoadingMore(false);
     }
   }, [accessToken, userId]);
 
@@ -247,19 +216,6 @@ export default function PromoteHubScreen() {
                       </Pressable>
                     );
                   })}
-                  {listingsHasMore ? (
-                    <Pressable
-                      style={styles.loadMoreBtn}
-                      onPress={() => void loadMoreListings()}
-                      disabled={listingsLoadingMore}
-                    >
-                      {listingsLoadingMore ? (
-                        <ActivityIndicator color={colors.electric} />
-                      ) : (
-                        <Text style={styles.loadMoreText}>عرض المزيد</Text>
-                      )}
-                    </Pressable>
-                  ) : null}
                 </View>
               )}
             </>
@@ -396,14 +352,6 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       backgroundColor: colors.bgElevated,
       overflow: 'hidden',
-    },
-    loadMoreBtn: {
-      alignItems: 'center',
-      paddingVertical: spacing.md,
-    },
-    loadMoreText: {
-      ...typography.body,
-      color: colors.electric,
     },
     listingRow: {
       flexDirection: 'row',

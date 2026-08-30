@@ -1,11 +1,10 @@
 // SAFAT — Public User Profile
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   Share,
   StyleSheet,
   Text,
@@ -19,8 +18,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchUserProfile, rateUser, setFollowUser, setBlockUser, type PublicUserProfile } from '@/services/users';
 import { fetchUserPosts } from '@/services/posts';
-import { searchListingsPage } from '@/services/listings';
-import { mergeListingsById } from '@/lib/listingsPagination';
+import { searchListings } from '@/services/listings';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
 import type { Listing } from '@/services/types';
 import type { Post } from '@/services/types';
@@ -52,11 +50,6 @@ export default function UserProfileScreen() {
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [userListings, setUserListings] = useState<Listing[]>([]);
-  const [userListingsHasMore, setUserListingsHasMore] = useState(false);
-  const [userListingsLoadingMore, setUserListingsLoadingMore] = useState(false);
-  const userListingsCursorRef = useRef<string | null>(null);
-  const userListingsHasMoreRef = useRef(false);
-  const userListingsLoadingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -82,15 +75,12 @@ export default function UserProfileScreen() {
         setUserListings([]);
         return;
       }
-      const [postsData, listingsPage] = await Promise.all([
+      const [postsData, listingsData] = await Promise.all([
         fetchUserPosts(targetId),
-        searchListingsPage({ sellerId: targetId }, accessToken),
+        searchListings({ sellerId: targetId }, accessToken),
       ]);
       setUserPosts(postsData);
-      setUserListings(listingsPage.listings);
-      userListingsCursorRef.current = listingsPage.nextCursor;
-      userListingsHasMoreRef.current = listingsPage.hasMore;
-      setUserListingsHasMore(listingsPage.hasMore);
+      setUserListings(listingsData);
     } finally {
       setLoading(false);
     }
@@ -106,26 +96,6 @@ export default function UserProfileScreen() {
       void loadProfile();
     }, [accessToken, authLoading, isAuthenticated, isOwnProfile, loadProfile, router]),
   );
-
-  const loadMoreUserListings = useCallback(async () => {
-    const targetId = id || me.id;
-    if (!targetId || userListingsLoadingRef.current || !userListingsHasMoreRef.current) return;
-    userListingsLoadingRef.current = true;
-    setUserListingsLoadingMore(true);
-    try {
-      const page = await searchListingsPage(
-        { sellerId: targetId, cursor: userListingsCursorRef.current ?? undefined },
-        accessToken,
-      );
-      userListingsCursorRef.current = page.nextCursor;
-      userListingsHasMoreRef.current = page.hasMore;
-      setUserListingsHasMore(page.hasMore);
-      setUserListings((prev) => mergeListingsById(prev, page.listings));
-    } finally {
-      userListingsLoadingRef.current = false;
-      setUserListingsLoadingMore(false);
-    }
-  }, [accessToken, id, me.id]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -213,32 +183,15 @@ export default function UserProfileScreen() {
       );
     }
 
-    return (
-      <>
-        {userListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            variant="list"
-            listMode="market"
-            onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
-          />
-        ))}
-        {userListingsHasMore ? (
-          <Pressable
-            style={styles.loadMoreBtn}
-            onPress={() => void loadMoreUserListings()}
-            disabled={userListingsLoadingMore}
-          >
-            {userListingsLoadingMore ? (
-              <ActivityIndicator color={themeColors.electric} />
-            ) : (
-              <Text style={styles.loadMoreText}>عرض المزيد</Text>
-            )}
-          </Pressable>
-        ) : null}
-      </>
-    );
+    return userListings.map((listing) => (
+      <ListingCard
+        key={listing.id}
+        listing={listing}
+        variant="list"
+        listMode="market"
+        onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
+      />
+    ));
   };
 
   if (loading || !profile) {
@@ -408,14 +361,6 @@ function createStyles(colors: ThemeColors) {
     emptyTitle: {
       ...typography.body,
       color: colors.textMuted,
-    },
-    loadMoreBtn: {
-      alignItems: 'center',
-      paddingVertical: 16,
-    },
-    loadMoreText: {
-      ...typography.body,
-      color: colors.electric,
     },
   });
 }

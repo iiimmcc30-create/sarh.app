@@ -136,26 +136,11 @@ export type ListingSearchParams = {
   sellerId?: string;
 };
 
-export type ListingsSearchPage = {
-  listings: Listing[];
-  nextCursor: string | null;
-  hasMore: boolean;
-};
-
-export function parseListingsSearchPage(json: unknown): ListingsSearchPage {
-  const empty: ListingsSearchPage = { listings: [], nextCursor: null, hasMore: false };
-  if (!json || typeof json !== 'object') return empty;
-  const root = json as { success?: boolean; data?: { listings?: unknown; nextCursor?: unknown; hasMore?: unknown } };
-  if (root.success === false) return empty;
-  const data = root.data;
-  if (!data || !Array.isArray(data.listings)) return empty;
-  const listings = data.listings.map((row) => mapListing(row as BackendListing));
-  const nextCursor = typeof data.nextCursor === 'string' && data.nextCursor.length > 0 ? data.nextCursor : null;
-  const hasMore = data.hasMore === true && nextCursor != null;
-  return { listings, nextCursor, hasMore };
-}
-
-function listingsQueryString(params: ListingSearchParams): string {
+export async function searchListings(
+  params: ListingSearchParams,
+  accessToken?: string | null,
+): Promise<Listing[]> {
+  const base = await ensureApiReachable();
   const qs = new URLSearchParams();
   if (params.search && params.search.length >= 2) qs.set('search', params.search);
   if (params.category) qs.set('category', params.category);
@@ -166,29 +151,14 @@ function listingsQueryString(params: ListingSearchParams): string {
   if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
   if (params.cursor) qs.set('cursor', params.cursor);
   if (params.sellerId) qs.set('sellerId', params.sellerId);
-  return qs.toString();
-}
 
-export async function searchListingsPage(
-  params: ListingSearchParams,
-  accessToken?: string | null,
-): Promise<ListingsSearchPage> {
-  const base = await ensureApiReachable();
-  const qs = listingsQueryString(params);
   const headers: HeadersInit = accessToken
     ? { Authorization: `Bearer ${accessToken}` }
     : {};
-  const res = await fetch(`${base.replace(/\/$/, '')}/api/listings?${qs}`, { headers });
-  if (!res.ok) return { listings: [], nextCursor: null, hasMore: false };
+  const res = await fetch(`${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`, { headers });
+  if (!res.ok) return [];
 
   const json = await res.json();
-  return parseListingsSearchPage(json);
-}
-
-export async function searchListings(
-  params: ListingSearchParams,
-  accessToken?: string | null,
-): Promise<Listing[]> {
-  const page = await searchListingsPage(params, accessToken);
-  return page.listings;
+  if (!json.success || !Array.isArray(json.data?.listings)) return [];
+  return json.data.listings.map(mapListing);
 }

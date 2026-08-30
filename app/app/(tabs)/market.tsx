@@ -10,7 +10,6 @@ import { RegionCityPicker } from '@/components/market/RegionCityPicker';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   StyleSheet,
@@ -43,13 +42,10 @@ type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
 export default function MarketScreen() {
   const router = useRouter();
-  const { styles, colors } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
+  const { styles } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
     styles: createMarketStyles(colors, scheme, screenStyles),
-    colors,
   }));
-  const { listings, fetchListings, fetchMoreListings, listingsHasMore, listingsLoadingMore } =
-    useApp();
-  const loadingMoreRef = useRef(false);
+  const { listings, fetchListings } = useApp();
   const { categories, reload: reloadCategories } = useMarketCategories();
   const lastListingsFocusAt = useRef(0);
   const lastCategoriesFocusAt = useRef(0);
@@ -162,14 +158,6 @@ export default function MarketScreen() {
     }
   };
 
-  const onEndReached = useCallback(() => {
-    if (!listingsHasMore || listingsLoadingMore || loadingMoreRef.current) return;
-    loadingMoreRef.current = true;
-    void fetchMoreListings().finally(() => {
-      loadingMoreRef.current = false;
-    });
-  }, [fetchMoreListings, listingsHasMore, listingsLoadingMore]);
-
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Listing>) => (
       <ListingCard
@@ -237,13 +225,7 @@ export default function MarketScreen() {
             <Text style={styles.emptyText}>لا توجد إعلانات مطابقة</Text>
           </View>
         }
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.4}
-        ListFooterComponent={
-          <View style={{ height: TAB_BAR_CLEARANCE, alignItems: 'center', paddingTop: 8 }}>
-            {listingsLoadingMore ? <ActivityIndicator color={colors.electric} /> : null}
-          </View>
-        }
+        ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
         removeClippedSubviews={false}
         initialNumToRender={12}
         maxToRenderPerBatch={10}
