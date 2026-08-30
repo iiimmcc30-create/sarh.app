@@ -84,9 +84,10 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   async updateUser(
     @Param('id') id: string,
+    @CurrentUser() actor: JwtPayload,
     @Body() body: Record<string, unknown>,
   ) {
-    return successResponse(await this.admin.updateUser(id, body));
+    return successResponse(await this.admin.updateUser(id, body, actor));
   }
 
   @Roles('ADMIN')

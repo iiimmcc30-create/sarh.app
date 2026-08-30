@@ -101,6 +101,13 @@ export class MessagesRepository {
     });
   }
 
+  findBlock(blockerId: string, blockedId: string) {
+    return this.prisma.userBlock.findUnique({
+      where: { blockerId_blockedId: { blockerId, blockedId } },
+      select: { id: true },
+    });
+  }
+
   findButcherById(id: string) {
     return this.prisma.butcher.findFirst({
       where: { id, deletedAt: null },

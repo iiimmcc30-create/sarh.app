@@ -130,14 +130,18 @@ export class AppGateway
   }
 
   @SubscribeMessage('chat:typing')
-  onChatTyping(
+  async onChatTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() raw: unknown,
   ) {
     const data = this.socketService.validateDto(ChatTypingDto, raw);
     if (!data) return;
 
-    this.socketService.handleChatTyping(client.data.user!, data);
+    const err = await this.socketService.handleChatTyping(
+      client.data.user!,
+      data,
+    );
+    if (err) this.emitErr(client, err.code, err.message);
   }
 
   @SubscribeMessage('chat:read')

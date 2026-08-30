@@ -19,6 +19,8 @@ import {
 import { SocketRepository } from '../repositories/socket.repository';
 import { SocketEmitService } from './socket-emit.service';
 import { OrderLifecycleService } from '../../butchers/services/order-lifecycle.service';
+import { MessagingPolicyService } from '../../messages/services/messaging-policy.service';
+import { ApiException } from '../../common/exceptions/api.exception';
 
 class UuidParamDto {
   @IsUUID()
@@ -39,7 +41,15 @@ export class SocketGatewayService {
     private readonly emitService: SocketEmitService,
     private readonly orderLifecycle: OrderLifecycleService,
     private readonly logger: LoggerService,
+    private readonly messagingPolicy: MessagingPolicyService,
   ) {}
+
+  private policyError(err: unknown): SocketError {
+    if (err instanceof ApiException) {
+      return { code: err.error, message: err.messageAr };
+    }
+    return { code: 'server_error', message: 'Failed to authorize message' };
+  }
 
   async authenticate(client: Socket): Promise<JwtPayload> {
     const authToken = client.handshake.auth?.token;
@@ -174,6 +184,17 @@ export class SocketGatewayService {
     }
 
     try {
+      await this.messagingPolicy.assertCanSendMessage({
+        senderId: user.userId,
+        receiverId: data.receiverId,
+        type: thread.type,
+        butcherId: thread.butcherId,
+      });
+    } catch (err) {
+      return this.policyError(err);
+    }
+
+    try {
       const [message] = await this.repo.createMessageWithThreadUpdate({
         threadId: data.threadId,
         senderId: user.userId,
@@ -227,11 +248,49 @@ export class SocketGatewayService {
     return null;
   }
 
-  handleChatTyping(user: JwtPayload, data: ChatTypingDto): void {
+  async handleChatTyping(
+    user: JwtPayload,
+    data: ChatTypingDto,
+  ): Promise<SocketError | null> {
+    const allowed = await this.assertThreadParticipant(
+      data.threadId,
+      user.userId,
+    );
+    if (!allowed) {
+      return {
+        code: 'unauthorized',
+        message: 'Not a participant in this thread',
+      };
+    }
+
+    const thread = await this.repo.findThreadParticipants(data.threadId);
+    if (!thread) return { code: 'not_found', message: 'Thread not found' };
+
+    const expectedReceiver =
+      thread.participant1 === user.userId
+        ? thread.participant2
+        : thread.participant1;
+    if (data.receiverId !== expectedReceiver) {
+      return {
+        code: 'unauthorized',
+        message: 'Invalid receiverId for this thread',
+      };
+    }
+
+    try {
+      await this.messagingPolicy.assertNotBlocked(
+        user.userId,
+        data.receiverId,
+      );
+    } catch (err) {
+      return this.policyError(err);
+    }
+
     const server = this.emitService.getServer();
     server
       ?.to(`user:${data.receiverId}`)
       .emit('chat:typing', { threadId: data.threadId, userId: user.userId });
+    return null;
   }
 
   async handleChatRead(user: JwtPayload, data: ChatReadDto): Promise<void> {
