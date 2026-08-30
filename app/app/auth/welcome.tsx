@@ -1,5 +1,5 @@
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppLogo } from '@/components/ui/AppLogo';
+import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -9,6 +9,10 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const WELCOME_GREETING = 'أهلاً وسهلاً بك في';
+const WELCOME_TAGLINE =
+  'المنصة الوطنية الرائدة في خدمات الثروة الحيوانية في المملكة';
 
 export default function AuthWelcomeScreen() {
   const router = useRouter();
@@ -31,10 +35,9 @@ export default function AuthWelcomeScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.body}>
           <View style={styles.hero}>
-            <AppLogo size={96} showRing={false} shape="square" />
-            <Text style={styles.brand}>{copy.brandName}</Text>
-            <Text style={styles.title}>{copy.welcomeTitle}</Text>
-            <Text style={styles.subtitle}>{copy.welcomeSubtitle}</Text>
+            <SarhLogoMark size={72} color={colors.textPrimary} />
+            <Text style={styles.brand}>{WELCOME_GREETING}</Text>
+            <Text style={styles.subtitle}>{WELCOME_TAGLINE}</Text>
           </View>
 
           <View style={styles.actions}>
@@ -89,20 +92,14 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       ...getRtlText(),
       marginTop: spacing.sm,
-    },
-    title: {
-      ...typography.sectionHeading,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
       textAlign: 'center',
-      ...getRtlText(),
     },
     subtitle: {
       ...typography.body,
       color: colors.textMuted,
       textAlign: 'center',
       lineHeight: 24,
-      maxWidth: 300,
+      maxWidth: 320,
       ...getRtlText(),
     },
     actions: { gap: spacing.md },
