@@ -18,7 +18,8 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchUserProfile, rateUser, setFollowUser, setBlockUser, type PublicUserProfile } from '@/services/users';
 import { fetchUserPosts } from '@/services/posts';
-import { searchListings } from '@/services/listings';
+import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
+import { searchAllSellerListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import type { Post } from '@/services/types';
 import { promptReport } from '@/services/reports';
@@ -76,7 +77,7 @@ export default function UserProfileScreen() {
       }
       const [postsData, listingsData] = await Promise.all([
         fetchUserPosts(targetId),
-        searchListings({ sellerId: targetId }, accessToken),
+        searchAllSellerListings(targetId, accessToken),
       ]);
       setUserPosts(postsData);
       setUserListings(listingsData);
@@ -229,7 +230,7 @@ export default function UserProfileScreen() {
 
   const handleShareProfile = () => {
     Share.share({
-      message: `تفقّد بروفايل ${profile.arabicName || profile.displayName} في تطبيق سرح 🐪\nhttps://alsfat.com/u/${profile.username}`,
+      message: `تفقّد بروفايل ${profile.arabicName || profile.displayName} في تطبيق سرح 🐪\n${sarhProfileShareUrl(profile.username)}`,
       title: 'سرح — المنصة الوطنية للثروة الحيوانية',
     });
   };

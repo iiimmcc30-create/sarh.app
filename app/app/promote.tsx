@@ -11,7 +11,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { rtlBackIcon } from '@/lib/rtl';
-import { searchListings } from '@/services/listings';
+import { searchAllSellerListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -67,8 +67,8 @@ export default function PromoteHubScreen() {
     }
     setLoadingListings(true);
     try {
-      const rows = await searchListings({ sellerId: userId }, accessToken);
-      setMyListings(rows.slice(0, 30));
+      const rows = await searchAllSellerListings(userId, accessToken);
+      setMyListings(rows);
     } catch {
       setMyListings([]);
     } finally {

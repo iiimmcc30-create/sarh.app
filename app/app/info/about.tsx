@@ -164,20 +164,20 @@ export default function AboutScreen() {
           </Pressable>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
-            onPress={() => Linking.openURL('mailto:info@alsfat.com')}
+            onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}
           >
             <AppIcon name="mail-outline" size={20} color={colors.electricBright} />
             <View style={styles.contactTextShell}>
-              <Text style={styles.contactText}>info@alsfat.com</Text>
+              <Text style={styles.contactText}>sarh@sarhsa.online</Text>
             </View>
           </Pressable>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
-            onPress={() => Linking.openURL('https://alsfat.com')}
+            onPress={() => Linking.openURL('https://sarhsa.online')}
           >
             <AppIcon name="globe-outline" size={20} color={colors.electricBright} />
             <View style={styles.contactTextShell}>
-              <Text style={styles.contactText}>alsfat.com</Text>
+              <Text style={styles.contactText}>sarhsa.online</Text>
             </View>
           </Pressable>
         </View>

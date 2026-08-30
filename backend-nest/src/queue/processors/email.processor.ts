@@ -53,7 +53,7 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
     };
 
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM || 'noreply@safat.app',
+      from: process.env.EMAIL_FROM || 'sarh@sarhsa.online',
       to,
       subject,
       html: `<div dir="rtl" style="font-family:sans-serif;max-width:600px;margin:0 auto">${templates[template] || variables.body || subject}</div>`,

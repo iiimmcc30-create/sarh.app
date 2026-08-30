@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -253,7 +254,7 @@ export function StoryViewer({
   const handleShare = () => {
     if (!group || !story) return;
     Share.share({
-      message: `شاهد قصة ${group.user.arabicName || group.user.displayName} على سرح 🐪\nhttps://alsfat.com/u/${group.user.username}`,
+      message: `شاهد قصة ${group.user.arabicName || group.user.displayName} على سرح 🐪\n${sarhProfileShareUrl(group.user.username)}`,
       title: 'سرح — قصة',
     });
   };
