@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon } from '@/lib/rtl';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SARH_OFFICIAL_EMAIL } from '@/constants/sarhOfficial';
 
 const TERMS = [
   {
@@ -88,9 +89,9 @@ export default function TermsScreen() {
           <RtlTextShell>
             <RtlText style={styles.sectionTitle}>للاستفسار</RtlText>
           </RtlTextShell>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:info@alsfat.com')}>
+          <Pressable style={styles.contactRow} onPress={() => Linking.openURL(`mailto:${SARH_OFFICIAL_EMAIL}`)}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.contactLink}>info@alsfat.com</Text>
+            <Text style={styles.contactLink}>{SARH_OFFICIAL_EMAIL}</Text>
           </Pressable>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('tel:+966591298136')}>
             <AppIcon name="call-outline" size={18} color={colors.electricBright} />

@@ -7,6 +7,7 @@ import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { rtlBackIcon, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { type Listing } from '@/services/types';
+import { sarhListingShareUrl } from '@/constants/sarhOfficial';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchUserProfile, setFollowUser } from '@/services/users';
 import { openUserProfile } from '@/lib/openUserProfile';
@@ -451,7 +452,7 @@ export default function ListingDetailScreen() {
               style={styles.topBarBtn}
               onPress={() =>
                 Share.share({
-                  message: `${listing.arabicTitle} — ${listing.price.toLocaleString()} ${listing.currency}\nhttps://alsfat.com/l/${listing.id}`,
+                  message: `${listing.arabicTitle} — ${listing.price.toLocaleString()} ${listing.currency}\n${sarhListingShareUrl(listing.id)}`,
                 })
               }
             >

@@ -21,6 +21,7 @@ import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
+import { mergeListingsById } from '@/lib/listingsPagination';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 /** v2: invalidate v1 snapshots that may hold Mojibake from ArrayBuffer feed clones. */
@@ -62,6 +63,7 @@ async function patchFeedSnapshot(partial: { posts?: Post[]; listings?: Listing[]
 
 let userFetchInflight: Promise<void> | null = null;
 let listingsFetchInflight: Promise<void> | null = null;
+let listingsMoreInflight: Promise<void> | null = null;
 let listingsLastFetchOk = false;
 let listingsLastSuccessAt = 0;
 const postsFetchInflight = new Map<string, Promise<void>>();
@@ -92,6 +94,9 @@ interface AppContextValue {
   posts: Post[];
   fetchPosts: (feed?: 'for_you' | 'following') => Promise<boolean>;
   fetchListings: () => Promise<boolean>;
+  fetchMoreListings: () => Promise<boolean>;
+  listingsHasMore: boolean;
+  listingsLoadingMore: boolean;
   addPost: (post: Omit<Post, 'id' | 'author' | 'likes' | 'reposts' | 'comments' | 'postedAt' | 'liked' | 'reposted'>) => Promise<boolean>;
   updatePost: (postId: string, data: { content: string; arabicContent: string; image?: string | null; images?: string[] }) => Promise<boolean>;
   deletePost: (postId: string) => Promise<ActionResult>;
@@ -119,6 +124,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<User>(DEFAULT_USER);
   const [posts, setPosts] = useState<Post[]>([]);
   const [listingsState, setListingsState] = useState<Listing[]>([]);
+  const [listingsHasMore, setListingsHasMore] = useState(false);
+  const [listingsLoadingMore, setListingsLoadingMore] = useState(false);
+  const listingsCursorRef = useRef<string | null>(null);
+  const listingsHasMoreRef = useRef(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [repostedPosts, setRepostedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
@@ -284,6 +293,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
             .filter((listing: Listing | null): listing is Listing =>
               Boolean(listing && listing.country !== 'EG'),
             );
+          const nextCursor =
+            typeof json.data?.nextCursor === 'string' && json.data.nextCursor.length > 0
+              ? json.data.nextCursor
+              : null;
+          const hasMore = json.data?.hasMore === true && nextCursor != null;
+          listingsCursorRef.current = nextCursor;
+          listingsHasMoreRef.current = hasMore;
+          setListingsHasMore(hasMore);
           setListingsState(market);
           succeeded = true;
           listingsLastSuccessAt = Date.now();
@@ -298,6 +315,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     await listingsFetchInflight;
     return succeeded;
+  }, [accessToken, mapBackendListing]);
+
+  const fetchMoreListings = useCallback(async (): Promise<boolean> => {
+    if (listingsFetchInflight) {
+      await listingsFetchInflight;
+    }
+    if (!listingsHasMoreRef.current || !listingsCursorRef.current) return false;
+    if (isRateLimited()) return false;
+    if (listingsMoreInflight) {
+      await listingsMoreInflight;
+      return listingsHasMoreRef.current;
+    }
+    let appended = false;
+    listingsMoreInflight = (async () => {
+      setListingsLoadingMore(true);
+      try {
+        const cursor = listingsCursorRef.current;
+        if (!cursor) return;
+        const res = await fetchPublicFeed(
+          `${API_BASE}/api/listings?cursor=${encodeURIComponent(cursor)}`,
+          accessToken,
+        );
+        const json = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          noteRateLimitFromResponse(res, json);
+          return;
+        }
+        if (!res.ok) return;
+        if (json.success && Array.isArray(json.data?.listings)) {
+          const page = json.data.listings
+            .map(mapBackendListing)
+            .filter((listing: Listing | null): listing is Listing =>
+              Boolean(listing && listing.country !== 'EG'),
+            );
+          const nextCursor =
+            typeof json.data?.nextCursor === 'string' && json.data.nextCursor.length > 0
+              ? json.data.nextCursor
+              : null;
+          const hasMore = json.data?.hasMore === true && nextCursor != null;
+          listingsCursorRef.current = nextCursor;
+          listingsHasMoreRef.current = hasMore;
+          setListingsHasMore(hasMore);
+          setListingsState((prev) => {
+            const merged = mergeListingsById(prev, page);
+            void patchFeedSnapshot({ listings: merged });
+            return merged;
+          });
+          appended = true;
+        }
+      } catch (err) {
+        console.warn('[AppContext] Failed to fetch more listings:', err);
+      } finally {
+        setListingsLoadingMore(false);
+      }
+    })().finally(() => {
+      listingsMoreInflight = null;
+    });
+    await listingsMoreInflight;
+    return appended;
   }, [accessToken, mapBackendListing]);
 
   // Keep ownership checks working even before profile fetch finishes
@@ -891,10 +967,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       posts,
       fetchPosts,
       fetchListings,
+      fetchMoreListings,
       addPost,
       updatePost,
       deletePost,
       listings: listingsState,
+      listingsHasMore,
+      listingsLoadingMore,
       addListing,
       updateListing,
       likedPosts,
@@ -913,10 +992,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       posts,
       fetchPosts,
       fetchListings,
+      fetchMoreListings,
       addPost,
       updatePost,
       deletePost,
       listingsState,
+      listingsHasMore,
+      listingsLoadingMore,
       addListing,
       updateListing,
       likedPosts,

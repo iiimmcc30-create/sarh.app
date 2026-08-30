@@ -13,6 +13,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SARH_OFFICIAL_EMAIL, SARH_OFFICIAL_HOST, SARH_OFFICIAL_SITE } from '@/constants/sarhOfficial';
 
 export default function ContactScreen() {
   const { colors, gradients } = useTheme();
@@ -30,7 +31,7 @@ export default function ContactScreen() {
     setSending(true);
     const subject = encodeURIComponent(`رسالة من ${name} - تطبيق سرح`);
     const body = encodeURIComponent(`الاسم: ${name}\n\n${message}`);
-    await Linking.openURL(`mailto:info@alsfat.com?subject=${subject}&body=${body}`);
+    await Linking.openURL(`mailto:${SARH_OFFICIAL_EMAIL}?subject=${subject}&body=${body}`);
     setSending(false);
   };
 
@@ -83,28 +84,28 @@ export default function ContactScreen() {
 
           <Pressable
             style={[styles.channelCard, getRtlRow()]}
-            onPress={() => Linking.openURL('mailto:info@alsfat.com')}
+            onPress={() => Linking.openURL(`mailto:${SARH_OFFICIAL_EMAIL}`)}
           >
             <LinearGradient colors={['#3730a3', '#6366f1']} style={styles.channelIcon}>
               <AppIcon name="mail" size={22} color="#fff" />
             </LinearGradient>
             <View style={styles.channelTextShell}>
               <Text style={styles.channelLabel}>البريد الإلكتروني</Text>
-              <Text style={styles.channelValue}>info@alsfat.com</Text>
+              <Text style={styles.channelValue}>{SARH_OFFICIAL_EMAIL}</Text>
             </View>
             <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
 
           <Pressable
             style={[styles.channelCard, getRtlRow()]}
-            onPress={() => Linking.openURL('https://alsfat.com')}
+            onPress={() => Linking.openURL(SARH_OFFICIAL_SITE)}
           >
             <LinearGradient colors={['#0f4c75', '#1B6CA8']} style={styles.channelIcon}>
               <AppIcon name="globe" size={22} color="#fff" />
             </LinearGradient>
             <View style={styles.channelTextShell}>
               <Text style={styles.channelLabel}>الموقع الإلكتروني</Text>
-              <Text style={styles.channelValue}>alsfat.com</Text>
+              <Text style={styles.channelValue}>{SARH_OFFICIAL_HOST}</Text>
             </View>
             <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
           </Pressable>
