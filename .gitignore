@@ -36,6 +36,9 @@ frontend/ios/Pods/
 # Logs & OS
 *.log
 npm-debug.log*
+eas-*.bin
+eas-build-log.txt
+eas-log*.bin
 .DS_Store
 Thumbs.db
 
