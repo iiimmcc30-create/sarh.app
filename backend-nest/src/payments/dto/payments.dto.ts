@@ -24,6 +24,7 @@ const PAYMENT_TYPES = [
   'listing_fee',
   'butcher_order',
   'commission',
+  'order_commission',
 ] as const;
 const BILLING_CYCLES = ['monthly', 'yearly'] as const;
 
@@ -71,4 +72,12 @@ export class InitiatePaymentDto {
   @IsOptional()
   @IsEnum(BILLING_CYCLES)
   billingCycle?: (typeof BILLING_CYCLES)[number];
+
+  /** Seller-declared sale amount for listing fee (1%). Required for listing_fee. */
+  @IsOptional()
+  @IsNumber()
+  @Min(0.01)
+  @Max(10_000_000)
+  @Type(() => Number)
+  saleAmount?: number;
 }

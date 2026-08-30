@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { shouldCreateFee } from '../lib/commissions';
 import {
-  calculateCommission,
-  shouldCreateFee,
-  type ListingCat,
-} from '../lib/commissions';
+  calculateListingFeeAmount,
+  LISTING_COVENANT_VERSION,
+} from './listing-fee';
 import { ApiException, throwApi } from '../common/exceptions/api.exception';
 import {
   LISTING_DAILY_LIMIT_MESSAGE_AR,
@@ -20,6 +20,7 @@ import {
   ApplyPlanPromoteDto,
   CreateListingDto,
   CreateListingCommentDto,
+  DeleteListingDto,
   ListListingsQueryDto,
   UpdateListingDto,
 } from './dto/listings.dto';
@@ -353,23 +354,18 @@ export class ListingsService {
       { role: user.role },
     );
 
-    const permissions = await this.entitlements.getPermissionsForUser(
-      user.userId,
-    );
-    const audience = await this.entitlements.getAudienceForUser(user.userId);
+    const flags = await this.paidServices.getFlags();
+    const listingFeesEnabled = flags.listingFeesEnabled === true;
+    if (listingFeesEnabled && dto.acceptedCovenant !== true) {
+      throwApi(
+        403,
+        'covenant_required',
+        'يجب الموافقة على تعهد عمولة الإعلان قبل النشر',
+      );
+    }
 
-    const { commission, dueDate } = calculateCommission(
-      legacyCategory as ListingCat,
-      dto.price,
-      quantity,
-      permissions,
-      audience,
-    );
-    const createFee = shouldCreateFee(
-      legacyCategory as ListingCat,
-      permissions,
-      audience,
-    );
+    const createFee = shouldCreateFee(listingFeesEnabled);
+    const commission = createFee ? calculateListingFeeAmount(dto.price) : 0;
 
     this.assertWeightForCategory(
       legacyCategory,
@@ -410,41 +406,26 @@ export class ListingsService {
           videoFileSize: dto.videoFileSize ?? null,
           featured,
           pinned,
+          covenantAccepted: listingFeesEnabled,
+          covenantAcceptedAt: listingFeesEnabled ? new Date() : undefined,
+          covenantVersion: listingFeesEnabled
+            ? (dto.covenantVersion?.trim() || LISTING_COVENANT_VERSION)
+            : undefined,
         },
         commission,
-        dueDate,
+        dueDate: null,
         category: legacyCategory,
         quantity,
         price: dto.price,
       });
 
-      if (createFee && listing.fee) {
-        const delayMs = dueDate.getTime() - Date.now() + 60_000;
-        await this.feeCheckQueue.scheduleFeeCheck(
-          {
-            listingFeeId: listing.fee.id,
-            userId: user.userId,
-            amount: commission,
-          },
-          delayMs,
-        );
-
-        await this.notifications.notifyUser({
-          userId: user.userId,
-          type: 'fee_due',
-          titleAr: '✅ تم نشر إعلانك',
-          bodyAr: `إعلانك "${dto.arabicTitle}" منشور. الرسوم: ${commission} ريال خلال ٧ أيام.`,
-          data: { listingId: listing.id, feeId: listing.fee.id },
-        });
-      } else {
-        await this.notifications.notifyUser({
-          userId: user.userId,
-          type: 'system',
-          titleAr: '✅ تم نشر إعلانك',
-          bodyAr: `إعلانك "${dto.arabicTitle}" منشور بنجاح.`,
-          data: { listingId: listing.id },
-        });
-      }
+      await this.notifications.notifyUser({
+        userId: user.userId,
+        type: 'system',
+        titleAr: '✅ تم نشر إعلانك',
+        bodyAr: `إعلانك "${dto.arabicTitle}" منشور بنجاح.`,
+        data: { listingId: listing.id },
+      });
 
       await this.cache.delPattern('listings:v2:*');
 
@@ -666,19 +647,40 @@ export class ListingsService {
     }
   }
 
-  async remove(user: JwtPayload, id: string) {
+  async remove(user: JwtPayload, id: string, dto: DeleteListingDto) {
     const listing = await this.repo.findSellerId(id);
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
     if (listing.sellerId !== user.userId && user.role !== 'ADMIN') {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
 
-    await this.repo.softDelete(id);
+    const reason = dto.reason?.trim();
+    if (typeof dto.sold !== 'boolean' || !reason) {
+      throwApi(
+        400,
+        'validation_error',
+        'يجب تحديد ما إذا تم البيع وذكر السبب قبل حذف الإعلان',
+      );
+    }
+
+    const now = new Date();
+    await this.repo.softDelete(id, {
+      sellerDeclaredSold: dto.sold,
+      sellerDeclaredSoldAt: dto.sold ? now : null,
+      deleteReason: reason,
+    });
     await this.cache.del(`listing:${id}`);
     await this.cache.delPattern('listings:v2:*');
 
-    this.logger.info({ listingId: id, userId: user.userId }, 'Listing deleted');
-    return { deleted: true };
+    this.logger.info(
+      {
+        listingId: id,
+        userId: user.userId,
+        sellerDeclaredSold: dto.sold,
+      },
+      'Listing deleted',
+    );
+    return { deleted: true, sellerDeclaredSold: dto.sold };
   }
 
   async listComments(listingId: string) {

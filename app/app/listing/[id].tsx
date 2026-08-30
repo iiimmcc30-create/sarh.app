@@ -13,7 +13,7 @@ import { openUserProfile } from '@/lib/openUserProfile';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { promptReport } from '@/services/reports';
-import { alertMessage, confirmDestructive, presentActionSheet } from '@/lib/actionSheet';
+import { alertMessage, presentActionSheet } from '@/lib/actionSheet';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -33,6 +33,7 @@ import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
+import { ListingDeleteDialog } from '@/components/listing/ListingDeleteDialog';
 import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
 import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
@@ -83,6 +84,7 @@ export default function ListingDetailScreen() {
 
   // ─── Boost / promote ────────────────────────────────────────────────────
   const [feeModalVisible, setFeeModalVisible] = useState(false);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const { flags: paidFlags, hasAnyBoostService } = usePaidServices();
 
   const loadListing = useCallback(async () => {
@@ -317,14 +319,15 @@ export default function ListingDetailScreen() {
     void navigateToCreateListing({ editId: listing.id });
   };
 
-  const handleDelete = async () => {
-    const confirmed = await confirmDestructive(
-      'حذف الإعلان',
-      'هل أنت متأكد من حذف هذا الإعلان؟',
-    );
-    if (!confirmed) return;
-    const result = await removeListing(listing.id);
+  const handleDelete = () => {
+    setDeleteDialogVisible(true);
+  };
+
+  const confirmDeleteListing = async (choice: { sold: boolean; reason: string }) => {
+    if (!listing) return;
+    const result = await removeListing(listing.id, choice);
     if (result.ok) {
+      setDeleteDialogVisible(false);
       router.back();
     } else {
       await alertMessage(
@@ -724,6 +727,11 @@ export default function ListingDetailScreen() {
           onClose={() => setFeeModalVisible(false)}
         />
       ) : null}
+      <ListingDeleteDialog
+        visible={deleteDialogVisible}
+        onClose={() => setDeleteDialogVisible(false)}
+        onConfirm={(choice) => void confirmDeleteListing(choice)}
+      />
     </View>
   );
 }

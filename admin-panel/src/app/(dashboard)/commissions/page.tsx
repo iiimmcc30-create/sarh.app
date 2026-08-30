@@ -105,10 +105,82 @@ export default function CommissionsPage() {
           <li>
             الإعفاء عندما تكون صلاحية الباقة <code>storeCommission &lt;= 0</code> (إعلان + طلب)
           </li>
-          <li>عمولة إعلانات المواشي/المعدات لم تُغيَّر</li>
+          <li>عمولة الإعلان 1% منفصلة عن عمولة الطلب 10%</li>
           <li>النسبة الرقمية للطلب لا تُعرض في لوحة الملحمة أو تطبيق الموبايل</li>
         </ul>
       </div>
+
+      <ListingFeeCompliancePanel />
+    </div>
+  );
+}
+
+function ListingFeeCompliancePanel() {
+  const [rows, setRows] = useState<
+    Array<{
+      user: { id: string; username: string; arabicName: string; isActive: boolean };
+      deletedUnpaidCount: number;
+      outstandingTotal: number;
+      previousActions: Array<{ id: string; action: string; reason: string; createdAt: string }>;
+    }>
+  >([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    import('@/services/admin.service')
+      .then((admin) => admin.fetchListingFeeCompliance())
+      .then((data) => setRows(data.users ?? []))
+      .catch((e: Error) => setError(e.message));
+  }, []);
+
+  return (
+    <div className="mt-8 space-y-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 className="font-semibold text-white">التزام رسوم الإعلانات المحذوفة</h2>
+      <p className="text-sm text-slate-400">
+        عرض فقط لنمط الحذف مع رسوم مستحقة. لا يُغلق الحساب تلقائياً — الإغلاق يدوي بسبب موثّق.
+      </p>
+      {error ? <p className="text-sm text-red-400">{error}</p> : null}
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-500">لا توجد حالات حالية.</p>
+      ) : (
+        <ul className="space-y-3 text-sm text-slate-300">
+          {rows.map((row) => (
+            <li key={row.user.id} className="rounded-xl border border-slate-800 p-3">
+              <div className="font-medium text-white">
+                {row.user.arabicName} @{row.user.username}
+              </div>
+              <div>
+                إعلانات محذوفة برسوم مستحقة: {row.deletedUnpaidCount} — الإجمالي:{' '}
+                {row.outstandingTotal.toLocaleString('ar-SA')} ر.س — الحساب:{' '}
+                {row.user.isActive ? 'نشط' : 'مغلق'}
+              </div>
+              {row.previousActions[0] ? (
+                <div className="mt-1 text-slate-500">
+                  آخر إجراء: {row.previousActions[0].action} — {row.previousActions[0].reason}
+                </div>
+              ) : null}
+              {row.user.isActive ? (
+                <button
+                  type="button"
+                  className="mt-2 text-xs text-red-300 underline"
+                  onClick={async () => {
+                    const reason = window.prompt(
+                      'سبب إغلاق الحساب (لن يُنفَّذ تلقائياً بدون هذا السبب)',
+                    );
+                    if (!reason || reason.trim().length < 4) return;
+                    const admin = await import('@/services/admin.service');
+                    await admin.closeAccountForListingFees(row.user.id, reason.trim());
+                    const data = await admin.fetchListingFeeCompliance();
+                    setRows(data.users ?? []);
+                  }}
+                >
+                  إغلاق الحساب يدوياً مع توثيق السبب
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

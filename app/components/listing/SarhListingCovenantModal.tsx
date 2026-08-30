@@ -77,16 +77,20 @@ export function SarhListingCovenantModal({
           >
             <View style={styles.feeBadge}>
               <AppIcon name="receipt-outline" size={18} color={colors.textBrandStrong} />
-              <Text style={[styles.feeBadgeText, getRtlText()]}>الرسوم: 1% من قيمة البيع</Text>
+              <Text style={[styles.feeBadgeText, getRtlText()]}>
+                الرسوم: 1% من قيمة البيع — السداد خلال 14 يوماً من إتمام البيع
+              </Text>
             </View>
 
             <View style={styles.oathCard}>
               <Text style={[styles.oathText, getRtlText()]}>
-                أقسم بالله العظيم أنني إذا تم بيع هذا الإعلان، سواءً عن طريق تطبيق{' '}
-                <Text style={styles.brand}>سرح</Text> أو بسببه، فسألتزم بسداد عمولة{' '}
-                <Text style={styles.brand}>سرح</Text> وقدرها{' '}
-                <Text style={styles.emphasis}>1% من قيمة البيع النهائي</Text>، وأقر بأن هذه
-                العمولة تبقى في ذمتي حتى يتم سدادها.
+                أقسم بالله العظيم أن عمولة الإعلان المستحقة لمنصة{' '}
+                <Text style={styles.brand}>سرح</Text> هي{' '}
+                <Text style={styles.emphasis}>1% من قيمة البيع النهائي</Text>، وأنني عند
+                إتمام بيع هذا الإعلان خارج المنصة سألتزم بسداد العمولة خلال مدة أقصاها{' '}
+                <Text style={styles.emphasis}>14 يوماً من تاريخ إتمام البيع</Text>. البيع
+                يتم خارج سرح ولا تستلم المنصة قيمة البيع. عدم السداد لا يبرئ ذمتي من
+                العمولة، وتبقى في ذمتي حتى يتم سدادها.
               </Text>
             </View>
 

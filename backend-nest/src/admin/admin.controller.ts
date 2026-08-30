@@ -54,6 +54,32 @@ export class AdminController {
 
   @Roles(...STAFF)
   @RateLimit('api')
+  @Get('listing-fee-compliance')
+  @HttpCode(HttpStatus.OK)
+  async listingFeeCompliance() {
+    return successResponse(await this.admin.listListingFeeCompliance());
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Post('users/:id/listing-fee-enforcement')
+  @HttpCode(HttpStatus.OK)
+  async listingFeeEnforcement(
+    @Param('id') id: string,
+    @CurrentUser() actor: JwtPayload,
+    @Body() body: { reason?: string },
+  ) {
+    return successResponse(
+      await this.admin.closeAccountForUnpaidListingFees(
+        id,
+        actor,
+        body.reason ?? '',
+      ),
+    );
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
   @Get('dashboard/stats')
   @HttpCode(HttpStatus.OK)
   async dashboardStats() {

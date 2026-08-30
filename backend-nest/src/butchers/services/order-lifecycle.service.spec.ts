@@ -414,7 +414,7 @@ describe('OrderLifecycleService', () => {
           amount: 10,
           currency: 'SAR',
           status: 'paid',
-          referenceType: 'commission',
+          referenceType: 'order_commission',
           referenceId: 'order-1',
           orderId: butcherOrderCommissionPaymentRef('order-1'),
           metadata: expect.objectContaining({

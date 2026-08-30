@@ -17,6 +17,7 @@ describe('PaymentsService', () => {
   const repo = {
     findSubscriptionForPayment: jest.fn(),
     findPendingFee: jest.fn(),
+    recordListingFeeSaleAmount: jest.fn().mockResolvedValue({ count: 1 }),
     findUnpaidButcherOrder: jest.fn(),
     findOwnedListingForCommission: jest.fn(),
     findUserContact: jest.fn().mockResolvedValue({
@@ -105,32 +106,29 @@ describe('PaymentsService', () => {
     ).rejects.toMatchObject({ error: 'ref_required', status: 400 });
   });
 
-  it('rejects commission payment when the listing is not owned by the caller', async () => {
-    repo.findOwnedListingForCommission.mockResolvedValue(null);
+  it('rejects listing fee payment when the fee is not owned or already paid', async () => {
+    repo.findPendingFee.mockResolvedValue(null);
 
     await expect(
       service.initiate(
         { userId: 'u1', role: 'USER' } as never,
         {
-          amount: 25,
+          amount: 100,
+          saleAmount: 10000,
           method: 'visa',
-          type: 'commission',
+          type: 'listing_fee',
           referenceId: 'listing-b',
         } as never,
       ),
-    ).rejects.toMatchObject({ error: 'listing_not_found', status: 404 });
+    ).rejects.toMatchObject({ error: 'fee_not_found', status: 404 });
   });
 
-  it('allows commission payment for an owned listing without forcing the amount', async () => {
-    repo.findOwnedListingForCommission.mockResolvedValue({
-      id: 'listing-a',
-      status: 'sold',
-      fee: {
-        id: 'fee-a',
-        status: 'pending',
-        commission: 100,
-        dueDate: new Date(),
-      },
+  it('quotes 1% of sale amount 10000 → 100 and stores listing_fee', async () => {
+    repo.findPendingFee.mockResolvedValue({
+      id: 'fee-a',
+      listingId: 'listing-a',
+      status: 'pending',
+      commission: 50,
     });
     repo.createPendingPaymentOrReturnExisting.mockResolvedValue({
       payment: { id: 'pay-1', orderId: 'SFAT-U1-TEST' },
@@ -146,18 +144,57 @@ describe('PaymentsService', () => {
     const result = await service.initiate(
       { userId: 'u1', role: 'USER' } as never,
       {
-        amount: 25,
+        amount: 100,
+        saleAmount: 10000,
         method: 'visa',
-        type: 'commission',
+        type: 'listing_fee',
         referenceId: 'listing-a',
       } as never,
     );
 
-    expect(repo.findOwnedListingForCommission).toHaveBeenCalledWith(
-      'listing-a',
+    expect(repo.recordListingFeeSaleAmount).toHaveBeenCalledWith(
+      'fee-a',
       'u1',
+      10000,
+      100,
     );
     expect(result.paymentId).toBe('pay-1');
+  });
+
+  it('rejects invalid sale amounts', async () => {
+    repo.findPendingFee.mockResolvedValue({
+      id: 'fee-a',
+      listingId: 'listing-a',
+      status: 'pending',
+      commission: 1,
+    });
+
+    await expect(
+      service.initiate(
+        { userId: 'u1', role: 'USER' } as never,
+        {
+          amount: 1,
+          saleAmount: -5,
+          method: 'visa',
+          type: 'listing_fee',
+          referenceId: 'listing-a',
+        } as never,
+      ),
+    ).rejects.toMatchObject({ error: 'invalid_sale_amount', status: 400 });
+  });
+
+  it('rejects order_commission as a customer checkout type', async () => {
+    await expect(
+      service.initiate(
+        { userId: 'u1', role: 'USER' } as never,
+        {
+          amount: 10,
+          method: 'visa',
+          type: 'order_commission',
+          referenceId: 'order-1',
+        } as never,
+      ),
+    ).rejects.toMatchObject({ error: 'invalid_type', status: 400 });
   });
 
   it('returns 500 when a verified webhook fails during processing', async () => {
@@ -211,10 +248,11 @@ describe('PaymentsService', () => {
   });
 
   it('recovers a stale pending payment that never received a checkout URL', async () => {
-    repo.findOwnedListingForCommission.mockResolvedValue({
-      id: 'listing-a',
-      status: 'active',
-      fee: null,
+    repo.findPendingFee.mockResolvedValue({
+      id: 'fee-a',
+      listingId: 'listing-a',
+      status: 'pending',
+      commission: 1,
     });
     repo.createPendingPaymentOrReturnExisting.mockResolvedValue({
       existingPending: {
@@ -241,9 +279,10 @@ describe('PaymentsService', () => {
     const result = await service.initiate(
       { userId: 'u1', role: 'USER' } as never,
       {
-        amount: 25,
+        amount: 100,
+        saleAmount: 10000,
         method: 'visa',
-        type: 'commission',
+        type: 'listing_fee',
         referenceId: 'listing-a',
       } as never,
     );

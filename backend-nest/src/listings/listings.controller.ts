@@ -18,6 +18,7 @@ import {
   ApplyPlanPromoteDto,
   CreateListingDto,
   CreateListingCommentDto,
+  DeleteListingDto,
   ListListingsQueryDto,
   UpdateListingDto,
 } from './dto/listings.dto';
@@ -112,7 +113,11 @@ export class ListingsController {
   @RateLimit('api')
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return successResponse(await this.listings.remove(user, id));
+  async remove(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: DeleteListingDto,
+  ) {
+    return successResponse(await this.listings.remove(user, id, dto));
   }
 }

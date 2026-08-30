@@ -713,7 +713,7 @@ export class AdminRepository {
           status: 'paid',
           OR: [
             { referenceType: null },
-            { referenceType: { not: 'commission' } },
+            { referenceType: { notIn: ['commission', 'order_commission'] } },
           ],
         },
       }),
@@ -722,7 +722,7 @@ export class AdminRepository {
           status: 'failed',
           OR: [
             { referenceType: null },
-            { referenceType: { not: 'commission' } },
+            { referenceType: { notIn: ['commission', 'order_commission'] } },
           ],
         },
       }),
@@ -731,7 +731,7 @@ export class AdminRepository {
           status: 'pending',
           OR: [
             { referenceType: null },
-            { referenceType: { not: 'commission' } },
+            { referenceType: { notIn: ['commission', 'order_commission'] } },
           ],
         },
       }),
@@ -740,7 +740,7 @@ export class AdminRepository {
           status: 'refunded',
           OR: [
             { referenceType: null },
-            { referenceType: { not: 'commission' } },
+            { referenceType: { notIn: ['commission', 'order_commission'] } },
           ],
         },
       }),
@@ -756,8 +756,14 @@ export class AdminRepository {
       }),
       this.prisma.payment.aggregate({
         where: {
-          referenceType: 'commission',
           status: 'paid',
+          OR: [
+            { referenceType: 'order_commission' },
+            {
+              referenceType: 'commission',
+              orderId: { startsWith: 'BOC-' },
+            },
+          ],
         },
         _sum: { amount: true },
         _count: { _all: true },
@@ -775,7 +781,7 @@ export class AdminRepository {
           createdAt: { gte: thirtyDaysAgo },
           OR: [
             { referenceType: null },
-            { referenceType: { not: 'commission' } },
+            { referenceType: { notIn: ['commission', 'order_commission'] } },
           ],
         },
         select: { createdAt: true, status: true },
@@ -814,7 +820,7 @@ export class AdminRepository {
         where: {
           OR: [
             { referenceType: null },
-            { referenceType: { not: 'commission' } },
+            { referenceType: { notIn: ['commission', 'order_commission'] } },
           ],
         },
         orderBy: { createdAt: 'desc' },
@@ -971,7 +977,7 @@ export class AdminRepository {
             (orderCommissionsAgg._sum.amount ?? 0),
         ),
         noteAr:
-          'عمولتان منفصلتان: (1) عمولة إعلان الملحمة 1% عبر ListingFee — (2) عمولة الطلب المكتمل 10% عند delivered عبر Payment(referenceType=commission). إعفاء الاشتراك (storeCommission<=0) ينطبق على الاثنين.',
+          'عمولتان منفصلتان: (1) عمولة الإعلان 1% عبر ListingFee وفق تعهد البائع — (2) عمولة طلب الملحمة 10% عند delivered عبر Payment(referenceType=order_commission).',
       },
       charts: {
         usersByDay: Array.from(users7.entries()).map(([date, count]) => ({
@@ -1265,5 +1271,122 @@ export class AdminRepository {
         }),
       ),
     );
+  }
+
+  async listListingFeeCompliance() {
+    const unpaidOnDeleted = await this.prisma.listingFee.findMany({
+      where: {
+        status: { in: ['pending', 'overdue'] },
+        listing: { deletedAt: { not: null } },
+      },
+      select: {
+        id: true,
+        commission: true,
+        status: true,
+        userId: true,
+        listingId: true,
+        listing: {
+          select: {
+            id: true,
+            arabicTitle: true,
+            deletedAt: true,
+            sellerDeclaredSold: true,
+            deleteReason: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            arabicName: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    const byUser = new Map<
+      string,
+      {
+        user: {
+          id: string;
+          username: string;
+          arabicName: string;
+          isActive: boolean;
+        };
+        deletedUnpaidCount: number;
+        outstandingTotal: number;
+        cases: typeof unpaidOnDeleted;
+      }
+    >();
+
+    for (const row of unpaidOnDeleted) {
+      const current = byUser.get(row.userId);
+      if (current) {
+        current.deletedUnpaidCount += 1;
+        current.outstandingTotal += row.commission;
+        current.cases.push(row);
+      } else {
+        byUser.set(row.userId, {
+          user: row.user,
+          deletedUnpaidCount: 1,
+          outstandingTotal: row.commission,
+          cases: [row],
+        });
+      }
+    }
+
+    const userIds = [...byUser.keys()];
+    const actions = userIds.length
+      ? await this.prisma.adminAccountAction.findMany({
+          where: { userId: { in: userIds } },
+          orderBy: { createdAt: 'desc' },
+          take: 200,
+          select: {
+            id: true,
+            userId: true,
+            actorId: true,
+            action: true,
+            reason: true,
+            createdAt: true,
+          },
+        })
+      : [];
+
+    const actionsByUser = new Map<string, typeof actions>();
+    for (const action of actions) {
+      const list = actionsByUser.get(action.userId) ?? [];
+      list.push(action);
+      actionsByUser.set(action.userId, list);
+    }
+
+    return {
+      users: [...byUser.values()]
+        .sort((a, b) => b.deletedUnpaidCount - a.deletedUnpaidCount)
+        .map((row) => ({
+          ...row,
+          outstandingTotal:
+            Math.round((row.outstandingTotal + Number.EPSILON) * 100) / 100,
+          previousActions: actionsByUser.get(row.user.id) ?? [],
+        })),
+    };
+  }
+
+  async recordAccountAction(params: {
+    userId: string;
+    actorId: string;
+    action: string;
+    reason: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    return this.prisma.adminAccountAction.create({
+      data: {
+        userId: params.userId,
+        actorId: params.actorId,
+        action: params.action,
+        reason: params.reason,
+        metadata: params.metadata as Prisma.InputJsonValue | undefined,
+      },
+    });
   }
 }

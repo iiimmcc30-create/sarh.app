@@ -17,54 +17,25 @@ describe('commissions — listing vs order separation', () => {
     expect(BUTCHER_ORDER_COMMISSION_PERCENT).toBe(10);
   });
 
-  it('charges no listing fee for livestock categories', () => {
-    const r = calculateCommission('sheep', 1000, 2, {}, 'USER');
-    expect(r.isExempt).toBe(true);
-    expect(r.commission).toBe(0);
-  });
-
-  it('charges no store listing fee when audience is not BUTCHER', () => {
-    const r = calculateCommission('store', 5000, 1, {}, 'USER');
-    expect(r.isExempt).toBe(true);
-    expect(r.commission).toBe(0);
+  it('listing 1% applies to livestock and store alike', () => {
+    expect(calculateCommission('sheep', 1000, 2, {}, 'USER').commission).toBe(10);
+    expect(calculateCommission('store', 5000, 1, {}, 'USER').commission).toBe(50);
   });
 
   it('listing value 100 → listing commission 1', () => {
-    const r = calculateCommission(
-      'store',
-      100,
-      1,
-      { storeCommission: BUTCHER_LISTING_COMMISSION_PERCENT },
-      'BUTCHER',
-    );
-    expect(r.isExempt).toBe(false);
+    const r = calculateCommission('store', 100, 1, {}, 'BUTCHER');
     expect(r.commission).toBe(1);
-    expect(r.ruleDescription).not.toMatch(/1\s*%/);
-    expect(r.ruleDescription).not.toMatch(/10\s*%/);
+    expect(r.dueDate).toBeNull();
   });
 
   it('uses platform listing 1% even when plan feature still stores legacy 5', () => {
-    const r = calculateCommission(
-      'store',
-      1000,
-      1,
-      { storeCommission: 5 },
-      'BUTCHER',
-    );
-    expect(r.isExempt).toBe(false);
-    expect(r.commission).toBe(10); // ceil(1000 * 1 / 100)
+    const r = calculateCommission('store', 1000, 1, { storeCommission: 5 }, 'BUTCHER');
+    expect(r.commission).toBe(10);
   });
 
-  it('zero listing commission when storeCommission permission is 0', () => {
-    const r = calculateCommission(
-      'store',
-      1000,
-      1,
-      { storeCommission: 0 },
-      'BUTCHER',
-    );
-    expect(r.isExempt).toBe(true);
-    expect(r.commission).toBe(0);
+  it('listing fee is not waived by storeCommission 0 (order path still is)', () => {
+    const r = calculateCommission('store', 1000, 1, { storeCommission: 0 }, 'BUTCHER');
+    expect(r.commission).toBe(10);
   });
 
   it('order value 100 → order commission 10', () => {
@@ -112,23 +83,14 @@ describe('commissions — listing vs order separation', () => {
     expect(isStoreExemptFromPermissions({ storeCommission: 10 })).toBe(false);
   });
 
-  it('shouldCreateFee only for non-exempt butcher store listings', () => {
-    expect(shouldCreateFee('store', { storeCommission: 1 }, 'BUTCHER')).toBe(
-      true,
-    );
-    expect(shouldCreateFee('store', { storeCommission: 0 }, 'BUTCHER')).toBe(
-      false,
-    );
-    expect(shouldCreateFee('sheep', { storeCommission: 1 }, 'BUTCHER')).toBe(
-      false,
-    );
+  it('shouldCreateFee follows listingFeesEnabled, not butcher/store', () => {
+    expect(shouldCreateFee(true)).toBe(true);
+    expect(shouldCreateFee(false)).toBe(false);
   });
 
-  it('does not change non-store listing commission rules', () => {
-    const sheep = calculateCommission('sheep', 1000, 3, {}, 'USER');
-    expect(sheep.commission).toBe(0);
-    const horses = calculateCommission('horses', 1000, 1, {}, 'USER');
-    expect(horses.commission).toBe(0);
+  it('applies 1% to non-store listing values', () => {
+    expect(calculateCommission('sheep', 1000, 3, {}, 'USER').commission).toBe(10);
+    expect(calculateCommission('horses', 1000, 1, {}, 'USER').commission).toBe(10);
   });
 
   it('builds stable idempotent payment refs per order', () => {

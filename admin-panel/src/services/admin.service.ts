@@ -77,6 +77,23 @@ export async function updateListing(id: string, data: Record<string, unknown>) {
   return unwrap(res);
 }
 
+export async function fetchListingFeeCompliance() {
+  const res = await apiClient.get('/admin/listing-fee-compliance');
+  return unwrap<{
+    users: Array<{
+      user: { id: string; username: string; arabicName: string; isActive: boolean };
+      deletedUnpaidCount: number;
+      outstandingTotal: number;
+      previousActions: Array<{ id: string; action: string; reason: string; createdAt: string }>;
+    }>;
+  }>(res);
+}
+
+export async function closeAccountForListingFees(id: string, reason: string) {
+  const res = await apiClient.post(`/admin/users/${id}/listing-fee-enforcement`, { reason });
+  return unwrap(res);
+}
+
 export async function deleteListing(id: string) {
   const res = await apiClient.delete(`/admin/listings/${id}`);
   return unwrap(res);

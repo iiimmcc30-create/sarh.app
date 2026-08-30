@@ -36,6 +36,10 @@ import {
 import { IntegrationCheckoutService } from '../integrations/services/integration-checkout.service';
 import { redactSensitive } from '../integrations/utils/redact.util';
 import { PaidServicesService } from '../settings/paid-services.service';
+import {
+  calculateListingFeeAmount,
+  parsePositiveMoneyAmount,
+} from '../listings/listing-fee';
 import { Sentry } from '../shared/lib/sentry';
 
 function buildNIOrderReference(userId: string): string {
@@ -134,6 +138,7 @@ export class PaymentsService
     referenceId: string,
     amount: number,
     targetPlanId?: string,
+    saleAmount?: number,
   ): Promise<void> {
     if (type === 'subscription') {
       const sub = await this.repo.findSubscriptionForPayment(
@@ -159,20 +164,33 @@ export class PaymentsService
       return;
     }
 
-    if (type === 'fee' || type === 'listing_fee') {
+    if (type === 'fee' || type === 'listing_fee' || type === 'commission') {
       await this.paidServices.assertListingFeesEnabled();
       const fee = await this.repo.findPendingFee(referenceId, userId);
       if (!fee) {
         throwApi(404, 'fee_not_found', 'الرسوم غير موجودة أو مسددة بالفعل');
       }
-      if (!sameMoneyAmount(fee.commission, amount)) {
+      const declared = parsePositiveMoneyAmount(saleAmount);
+      if (declared == null) {
+        throwApi(400, 'invalid_sale_amount', 'أدخل مبلغ بيع صالحاً أكبر من صفر');
+      }
+      const payable = calculateListingFeeAmount(declared);
+      if (!sameMoneyAmount(payable, amount)) {
         throwApi(
           400,
           'amount_mismatch',
-          `المبلغ غير مطابق. المبلغ الصحيح: ${fee.commission} ريال`,
+          `المبلغ غير مطابق. المبلغ الصحيح: ${payable} ريال`,
         );
       }
       return;
+    }
+
+    if (type === 'order_commission') {
+      throwApi(
+        400,
+        'invalid_type',
+        'عمولة الطلب دفتر داخلي ولا تُبدأ من بوابة الدفع',
+      );
     }
 
     if (type === 'butcher_order') {
@@ -185,22 +203,6 @@ export class PaymentsService
           400,
           'amount_mismatch',
           `المبلغ غير مطابق. المبلغ الصحيح: ${order.totalPrice} ${order.currency}`,
-        );
-      }
-      return;
-    }
-
-    if (type === 'commission') {
-      await this.paidServices.assertListingFeesEnabled();
-      const listing = await this.repo.findOwnedListingForCommission(
-        referenceId,
-        userId,
-      );
-      if (!listing) {
-        throwApi(
-          404,
-          'listing_not_found',
-          'الإعلان غير موجود أو لا تملك صلاحية سداد رسومه',
         );
       }
       return;
@@ -543,6 +545,7 @@ export class PaymentsService
       descriptionAr,
       planId,
       billingCycle,
+      saleAmount,
     } = dto;
 
     if (type === 'subscription') {
@@ -570,21 +573,55 @@ export class PaymentsService
     }
 
     if (!referenceId) throwApi(400, 'ref_required', 'معرّف المرجع مطلوب');
-    await this.checkReference(user.userId, type, referenceId, amount, planId);
+    await this.checkReference(
+      user.userId,
+      type,
+      referenceId,
+      amount,
+      planId,
+      saleAmount,
+    );
+
+    const isListingFeePay =
+      type === 'fee' || type === 'listing_fee' || type === 'commission';
+    let storedReferenceId = referenceId;
+    let storedReferenceType = type as PaymentReferenceType;
+    let feeId: string | undefined;
+
+    if (isListingFeePay) {
+      const fee = await this.repo.findPendingFee(referenceId, user.userId);
+      if (!fee) {
+        throwApi(404, 'fee_not_found', 'الرسوم غير موجودة أو مسددة بالفعل');
+      }
+      const declared = parsePositiveMoneyAmount(saleAmount);
+      if (declared == null) {
+        throwApi(400, 'invalid_sale_amount', 'أدخل مبلغ بيع صالحاً أكبر من صفر');
+      }
+      const payable = calculateListingFeeAmount(declared);
+      await this.repo.recordListingFeeSaleAmount(
+        fee.id,
+        user.userId,
+        declared,
+        payable,
+      );
+      storedReferenceId = fee.id;
+      storedReferenceType = 'listing_fee';
+      feeId = fee.id;
+    }
 
     const orderReference = buildNIOrderReference(user.userId);
     const contact = await this.repo.findUserContact(user.userId);
 
     const paymentMetadata: Record<string, unknown> = {
-      type,
-      ...(referenceId ? { referenceId } : {}),
+      type: storedReferenceType,
+      ...(storedReferenceId ? { referenceId: storedReferenceId } : {}),
       userId: user.userId,
+      ...(saleAmount != null ? { saleAmount } : {}),
       ...(type === 'subscription' && planId && billingCycle
         ? { targetPlanId: planId, billingCycle }
         : {}),
     };
 
-    const referenceType = type as PaymentReferenceType;
     const pendingParams = {
       userId: user.userId,
       orderId: orderReference,
@@ -594,10 +631,10 @@ export class PaymentsService
       description,
       descriptionAr,
       metadata: paymentMetadata,
-      referenceId,
-      referenceType,
+      referenceId: storedReferenceId,
+      referenceType: storedReferenceType,
       subscriptionId: type === 'subscription' ? referenceId : undefined,
-      feeId: type === 'fee' || type === 'listing_fee' ? referenceId : undefined,
+      feeId,
     };
 
     const txResult =
