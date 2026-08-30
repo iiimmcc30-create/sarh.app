@@ -1,9 +1,5 @@
+import { Image } from 'expo-image';
 import { OnboardingDots } from '@/components/onboarding/OnboardingDots';
-import {
-  ExploreSlideVisual,
-  FeaturesSlideVisual,
-  WelcomeSlideVisual,
-} from '@/components/onboarding/OnboardingSlideVisuals';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import {
@@ -12,14 +8,13 @@ import {
   ONBOARDING_SLIDES,
   ONBOARDING_START_LABEL,
 } from '@/constants/onboardingCopy';
-import { layout, motion, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { layout, spacing } from '@/constants/theme';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
-import { paddingStart, getRtlDirection, rtlForwardIcon } from '@/lib/rtl';
+import { paddingStart, rtlForwardIcon } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Animated,
   FlatList,
@@ -34,52 +29,34 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const SLIDE_VISUALS = [WelcomeSlideVisual, FeaturesSlideVisual, ExploreSlideVisual] as const;
+const CREAM = '#F4EFE6';
+const INK = '#163526';
+const MUTED = '#5C6B63';
+const DIVIDER = '#284E39';
 
 export default function OnboardingScreen() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { completeOnboarding } = useOnboarding();
-  const { gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(24)).current;
-  const staticFade = useRef(new Animated.Value(1)).current;
-  const staticSlide = useRef(new Animated.Value(0)).current;
   const listRef = useRef<FlatList<(typeof ONBOARDING_SLIDES)[number]>>(null);
+  const finishingRef = useRef(false);
 
   const isLastSlide = currentIndex === ONBOARDING_SLIDES.length - 1;
-
-  const animateSlideContent = useCallback(() => {
-    fadeAnim.setValue(0);
-    slideAnim.setValue(24);
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: motion.normal,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        damping: motion.spring.damping,
-        stiffness: motion.spring.stiffness,
-        mass: motion.spring.mass,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim, slideAnim]);
-
-  useEffect(() => {
-    animateSlideContent();
-  }, [currentIndex, animateSlideContent]);
+  const compact = height < 720;
 
   const finishOnboarding = useCallback(async () => {
-    await completeOnboarding();
-    router.replace(isAuthenticated ? '/(tabs)' : '/auth/welcome');
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    try {
+      await completeOnboarding();
+      router.replace(isAuthenticated ? '/(tabs)' : '/auth/welcome');
+    } catch {
+      finishingRef.current = false;
+    }
   }, [completeOnboarding, isAuthenticated, router]);
 
   const handleSkip = useCallback(() => {
@@ -101,53 +78,37 @@ export default function OnboardingScreen() {
 
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const index = Math.round(event.nativeEvent.contentOffset.x / width);
-      setCurrentIndex(index);
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / width);
+      setCurrentIndex(Math.max(0, Math.min(ONBOARDING_SLIDES.length - 1, index)));
     },
     [width],
   );
 
   const renderSlide = useCallback(
-    ({ item, index }: ListRenderItemInfo<(typeof ONBOARDING_SLIDES)[number]>) => {
-      const Visual = SLIDE_VISUALS[index];
-      const active = index === currentIndex;
-
+    ({ item }: ListRenderItemInfo<(typeof ONBOARDING_SLIDES)[number]>) => {
       return (
         <View style={[styles.slide, { width }]}>
-          <View style={styles.visualArea}>
-            <Visual
-              fadeAnim={active ? fadeAnim : staticFade}
-              slideAnim={active ? slideAnim : staticSlide}
-            />
-          </View>
-          <View style={styles.textBlock}>
+          <Image source={item.image} style={StyleSheet.absoluteFillObject} contentFit="cover" />
+          <LinearGradient
+            colors={[CREAM, `${CREAM}F2`, `${CREAM}66`, 'transparent']}
+            locations={[0, 0.28, 0.48, 0.72]}
+            style={styles.fade}
+          />
+          <View style={[styles.textBlock, compact && styles.textBlockCompact]}>
             <Text style={styles.title}>{item.title}</Text>
+            <View style={styles.divider} />
             <Text style={styles.description}>{item.description}</Text>
           </View>
         </View>
       );
     },
-    [currentIndex, fadeAnim, slideAnim, staticFade, staticSlide, styles, width],
+    [compact, width],
   );
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFillObject} />
-      <View style={styles.patternTop} />
-      <View style={styles.patternBottom} />
-
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={ONBOARDING_SKIP_LABEL}
-            onPress={handleSkip}
-            style={({ pressed }) => [styles.skipBtn, pressed && styles.skipPressed]}
-          >
-            <Text style={styles.skipText}>{ONBOARDING_SKIP_LABEL}</Text>
-          </Pressable>
-        </View>
-
+      <View style={styles.pagerShell}>
         <Animated.FlatList
           ref={listRef}
           data={ONBOARDING_SLIDES}
@@ -162,8 +123,24 @@ export default function OnboardingScreen() {
           onMomentumScrollEnd={onMomentumScrollEnd}
           getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
           style={styles.list}
-          contentContainerStyle={styles.listContent}
         />
+      </View>
+
+      <SafeAreaView style={styles.overlay} edges={['top', 'bottom']} pointerEvents="box-none">
+        <View style={styles.header} pointerEvents="box-none">
+          {!isLastSlide ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={ONBOARDING_SKIP_LABEL}
+              onPress={handleSkip}
+              style={({ pressed }) => [styles.skipBtn, pressed && styles.skipPressed]}
+            >
+              <Text style={styles.skipText}>{ONBOARDING_SKIP_LABEL}</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.skipBtn} />
+          )}
+        </View>
 
         <View style={styles.footer}>
           <OnboardingDots
@@ -184,83 +161,96 @@ export default function OnboardingScreen() {
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: colors.bgDeep,
-      ...getRtlDirection(),
-    },
-    patternTop: {
-      position: 'absolute',
-      top: -80,
-      right: -60,
-      width: 220,
-      height: 220,
-      borderRadius: 110,
-      backgroundColor: `${colors.electric}10`,
-    },
-    patternBottom: {
-      position: 'absolute',
-      bottom: 120,
-      left: -40,
-      width: 160,
-      height: 160,
-      borderRadius: 80,
-      backgroundColor: `${colors.glow}08`,
-    },
-    safe: {
-      flex: 1,
-    },
-    header: {
-      alignItems: 'flex-start',
-      ...paddingStart(layout.screenPadding),
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    skipBtn: {
-      minHeight: 44,
-      justifyContent: 'center',
-      paddingHorizontal: spacing.md,
-    },
-    skipPressed: { opacity: 0.7 },
-    skipText: {
-      ...typography.bodyStrong,
-      color: colors.textMuted,
-    },
-    list: { flex: 1 },
-    listContent: {
-      alignItems: 'stretch',
-    },
-    slide: {
-      flex: 1,
-      paddingHorizontal: layout.screenPadding,
-      justifyContent: 'space-between',
-    },
-    visualArea: {
-      flex: 1,
-      justifyContent: 'center',
-      maxHeight: '58%',
-    },
-    textBlock: {
-      gap: spacing.md,
-      paddingBottom: spacing.md,
-    },
-    title: {
-      ...typography.display,
-      color: colors.textPrimary,
-    },
-    description: {
-      ...typography.body,
-      color: colors.textSecondary,
-    },
-    footer: {
-      paddingHorizontal: layout.screenPadding,
-      paddingBottom: spacing.lg,
-      gap: spacing.sm,
-      maxWidth: layout.contentMaxWidth,
-      width: '100%',
-      alignSelf: 'center',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: CREAM,
+  },
+  pagerShell: {
+    ...StyleSheet.absoluteFillObject,
+    direction: 'ltr',
+  },
+  list: {
+    flex: 1,
+  },
+  slide: {
+    flex: 1,
+    backgroundColor: CREAM,
+  },
+  fade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '58%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'space-between',
+  },
+  header: {
+    alignItems: 'flex-start',
+    ...paddingStart(layout.screenPadding),
+    paddingTop: spacing.sm,
+  },
+  skipBtn: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  skipPressed: { opacity: 0.7 },
+  skipText: {
+    fontFamily: OFFICIAL_APP_FONT,
+    fontWeight: '700',
+    fontSize: 15,
+    color: MUTED,
+    writingDirection: 'rtl',
+  },
+  textBlock: {
+    position: 'absolute',
+    top: '16%',
+    left: layout.screenPadding,
+    right: layout.screenPadding,
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  textBlockCompact: {
+    top: '12%',
+    gap: spacing.md,
+  },
+  title: {
+    fontFamily: OFFICIAL_APP_FONT,
+    fontWeight: '700',
+    fontSize: 28,
+    lineHeight: 38,
+    color: INK,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    width: '100%',
+  },
+  divider: {
+    width: 42,
+    height: 1.5,
+    backgroundColor: DIVIDER,
+    borderRadius: 1,
+  },
+  description: {
+    fontFamily: OFFICIAL_APP_FONT,
+    fontWeight: '700',
+    fontSize: 16,
+    lineHeight: 26,
+    color: MUTED,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    width: '100%',
+    maxWidth: 340,
+  },
+  footer: {
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: spacing.lg,
+    gap: spacing.sm,
+    maxWidth: layout.contentMaxWidth,
+    width: '100%',
+    alignSelf: 'center',
+  },
+});

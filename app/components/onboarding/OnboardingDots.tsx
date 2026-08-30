@@ -1,7 +1,5 @@
 import { Animated, StyleSheet, View } from 'react-native';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
+import { spacing } from '@/constants/theme';
 
 type OnboardingDotsProps = {
   count: number;
@@ -10,9 +8,10 @@ type OnboardingDotsProps = {
   slideWidth: number;
 };
 
-export function OnboardingDots({ count, activeIndex, scrollX, slideWidth }: OnboardingDotsProps) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+const DOT = '#20B66F';
+const DOT_ACTIVE = '#163526';
 
+export function OnboardingDots({ count, activeIndex, scrollX, slideWidth }: OnboardingDotsProps) {
   return (
     <View style={styles.wrap} accessibilityRole="tablist">
       {Array.from({ length: count }).map((_, index) => {
@@ -50,22 +49,20 @@ export function OnboardingDots({ count, activeIndex, scrollX, slideWidth }: Onbo
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    wrap: {
-      ...getRtlRow(),
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.lg,
-    },
-    dot: {
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.electric,
-    },
-    dotActive: {
-      backgroundColor: colors.glow,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: DOT,
+  },
+  dotActive: {
+    backgroundColor: DOT_ACTIVE,
+  },
+});
