@@ -18,7 +18,7 @@ export class NotificationProcessor extends WorkerHost {
 
   async process(job: Job<NotificationJob>): Promise<void> {
     if (job.name === 'create') {
-      await this.persist.persistNotificationAndEnqueuePush(job.data);
+      await this.persist.persistNotificationAndEnqueuePush(job.data, job.id);
       return;
     }
     this.logger.warn({ jobName: job.name }, 'Unknown notification job name');

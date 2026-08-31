@@ -290,8 +290,8 @@ export class PaymentsRepository {
   }
 
   markPaymentFailed(paymentId: string) {
-    return this.prisma.payment.update({
-      where: { id: paymentId },
+    return this.prisma.payment.updateMany({
+      where: { id: paymentId, status: 'pending' },
       data: { status: 'failed' },
     });
   }
@@ -337,6 +337,7 @@ export class PaymentsRepository {
   }): Promise<{
     processed: boolean;
     subscription?: { targetPlanId: string; newRenewDate: Date };
+    capturedAfterCancel?: boolean;
     butcherOrder?: {
       id: string;
       orderNumber: string;
@@ -367,11 +368,33 @@ export class PaymentsRepository {
           throw new Error('Butcher order not found for payment fulfillment');
         }
         if (existingOrder.status === 'cancelled') {
-          await tx.payment.updateMany({
-            where: { id: params.paymentId, status: 'pending' },
-            data: { status: 'failed' },
+          const current = await tx.payment.findUnique({
+            where: { id: params.paymentId },
+            select: { status: true, metadata: true },
           });
-          return { processed: false };
+          if (current?.status === 'paid' || current?.status === 'refunded') {
+            return { processed: false, capturedAfterCancel: true };
+          }
+          const prevMeta = (current?.metadata ?? {}) as Record<string, unknown>;
+          await tx.payment.updateMany({
+            where: {
+              id: params.paymentId,
+              status: { in: ['pending', 'failed'] },
+            },
+            data: {
+              status: 'paid',
+              transactionId: params.niTransactionId,
+              paidAt: new Date(),
+              metadata: {
+                ...prevMeta,
+                ...params.storedMeta,
+                capturedAfterCancel: true,
+                needsReconciliation: true,
+                capturedAfterCancelAt: new Date().toISOString(),
+              } as Prisma.InputJsonValue,
+            },
+          });
+          return { processed: false, capturedAfterCancel: true };
         }
       }
 
@@ -689,13 +712,53 @@ export class PaymentsRepository {
     });
   }
 
+  /**
+   * Idempotent refund: Payment → refunded, and butcher order paymentStatus → refunded.
+   * Does not change ButcherOrder.status (cancelled/delivered stays as-is).
+   */
   markPaymentRefunded(paymentId: string, metadata: Record<string, unknown>) {
-    return this.prisma.payment.update({
-      where: { id: paymentId },
-      data: {
-        status: 'refunded',
-        metadata: metadata as Prisma.InputJsonValue,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.findUnique({
+        where: { id: paymentId },
+        select: {
+          id: true,
+          status: true,
+          metadata: true,
+          referenceType: true,
+          referenceId: true,
+        },
+      });
+      if (!payment) return null;
+
+      let newlyRefunded = false;
+      if (payment.status !== 'refunded') {
+        const updated = await tx.payment.updateMany({
+          where: {
+            id: paymentId,
+            status: { in: ['paid', 'pending', 'failed'] },
+          },
+          data: {
+            status: 'refunded',
+            metadata: {
+              ...((payment.metadata ?? {}) as Record<string, unknown>),
+              ...metadata,
+            } as Prisma.InputJsonValue,
+          },
+        });
+        newlyRefunded = updated.count > 0;
+      }
+
+      if (payment.referenceType === 'butcher_order' && payment.referenceId) {
+        await tx.butcherOrder.updateMany({
+          where: {
+            id: payment.referenceId,
+            paymentStatus: { not: 'refunded' },
+          },
+          data: { paymentStatus: 'refunded' },
+        });
+      }
+
+      return { id: paymentId, status: 'refunded' as const, newlyRefunded };
     });
   }
 
@@ -732,8 +795,8 @@ export class PaymentsRepository {
   }
 
   markPaymentFailedById(paymentId: string) {
-    return this.prisma.payment.update({
-      where: { id: paymentId },
+    return this.prisma.payment.updateMany({
+      where: { id: paymentId, status: 'pending' },
       data: { status: 'failed' },
     });
   }

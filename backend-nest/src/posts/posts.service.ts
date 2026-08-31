@@ -247,11 +247,21 @@ export class PostsService {
     return { deleted: true };
   }
 
+  private async assertNotBlockedWithAuthor(viewerId: string, authorId: string) {
+    if (viewerId === authorId) return;
+    const blockedIds =
+      await this.usersRepo.findBlockedRelationshipIds(viewerId);
+    if (blockedIds.includes(authorId)) {
+      throwApi(403, 'blocked', 'لا يمكنك التفاعل مع هذا المستخدم');
+    }
+  }
+
   async toggleLike(user: JwtPayload, postId: string) {
     if (!postId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
 
     const post = await this.repo.findOwnerMeta(postId);
     if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+    await this.assertNotBlockedWithAuthor(user.userId, post.authorId);
 
     const existing = await this.repo.findLike(postId, user.userId);
     const liked = await this.repo.toggleLike(postId, user.userId, !!existing);
@@ -277,6 +287,7 @@ export class PostsService {
 
     const post = await this.repo.findOwnerMeta(postId);
     if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+    await this.assertNotBlockedWithAuthor(user.userId, post.authorId);
 
     const existing = await this.repo.findRepost(postId, user.userId);
     const reposted = await this.repo.toggleRepost(
@@ -317,6 +328,7 @@ export class PostsService {
 
     const post = await this.repo.findOwnerMeta(postId);
     if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+    await this.assertNotBlockedWithAuthor(user.userId, post.authorId);
 
     if (post.authorId !== user.userId) {
       const owner = await this.usersRepo.findUserCommentsAudience(

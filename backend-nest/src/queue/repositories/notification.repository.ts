@@ -5,11 +5,20 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class NotificationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findUserFcmToken(userId: string) {
+  findUserPushTargets(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
-      select: { fcmToken: true, notificationsEnabled: true },
+      select: {
+        fcmToken: true,
+        notificationsEnabled: true,
+        deviceTokens: { select: { token: true } },
+      },
     });
+  }
+
+  /** @deprecated use findUserPushTargets — kept for callers that still read one token */
+  findUserFcmToken(userId: string) {
+    return this.findUserPushTargets(userId);
   }
 
   createNotification(data: {

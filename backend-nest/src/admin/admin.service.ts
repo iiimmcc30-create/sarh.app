@@ -9,6 +9,7 @@ import { RedisSessionService } from '../redis/services/redis-session.service';
 import { AuthRepository } from '../auth/repositories/auth.repository';
 import { LoggerService } from '../common/services/logger.service';
 import { throwApi, ApiException } from '../common/exceptions/api.exception';
+import { authorizeCronCleanup } from './lib/cron-auth';
 import { parseApplicationId } from '../butcher-applications/routes/parseRequest';
 import {
   adminListQuerySchema,
@@ -663,9 +664,19 @@ export class AdminService {
   }
 
   async runCleanupAuthorized(cronSecret?: string, authHeader?: string) {
-    const expected = process.env.CRON_SECRET?.trim();
-    const provided = cronSecret?.trim();
-    if (expected && provided && provided === expected) {
+    const decision = authorizeCronCleanup({
+      expectedSecret: process.env.CRON_SECRET,
+      providedSecret: cronSecret,
+      nodeEnv: process.env.NODE_ENV,
+    });
+    if (decision === 'unconfigured') {
+      throwApi(
+        503,
+        'cron_secret_unconfigured',
+        'CRON_SECRET غير مُعدّ في الإنتاج',
+      );
+    }
+    if (decision === 'cron_ok') {
       return this.runCleanup();
     }
     await this.assertAdminBearer(authHeader);

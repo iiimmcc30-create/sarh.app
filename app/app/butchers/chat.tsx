@@ -36,6 +36,8 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchButcherChatAccess } from '@/services/butcherChat';
 import { fetchUserProfile } from '@/services/users';
+import { applyChatSocketEvent, mergeChatMessages } from '@/lib/chatRealtime';
+import { useChatThreadSocket } from '@/hooks/useChatThreadSocket';
 import {
   formatListingPrice,
   getMessageListingContext,
@@ -529,6 +531,11 @@ export default function ButcherChatScreen() {
     chatAccessChecked,
   ]);
 
+  useChatThreadSocket(accessToken, threadId, (payload) => {
+    if (!threadId) return;
+    setMessages((prev) => applyChatSocketEvent(prev, payload, threadId));
+  });
+
   const deliverMessage = async (
     text: string,
     media?: { imageUrl?: string; videoUrl?: string },
@@ -576,8 +583,9 @@ export default function ButcherChatScreen() {
         if (json.success && json.data?.message) {
           const real = json.data.message;
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === optimisticMsg.id ? mapApiMessage(real) : m,
+            mergeChatMessages(
+              prev.filter((m) => m.id !== optimisticMsg.id),
+              mapApiMessage(real),
             ),
           );
           if (!threadId && json.data.threadId) setThreadId(json.data.threadId);

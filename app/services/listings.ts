@@ -146,6 +146,17 @@ export type ListingSearchPage = {
 /** Safety cap: 50 pages × 20 = 1000 listings for a single seller. */
 export const SELLER_LISTINGS_MAX_PAGES = 50;
 
+export function shouldFetchNextListingPage(opts: {
+  hasMore: boolean;
+  nextCursor: string | null | undefined;
+  loading: boolean;
+  loadingMore: boolean;
+}): boolean {
+  return Boolean(
+    opts.hasMore && opts.nextCursor && !opts.loading && !opts.loadingMore,
+  );
+}
+
 export async function searchListingsPage(
   params: ListingSearchParams,
   accessToken?: string | null,

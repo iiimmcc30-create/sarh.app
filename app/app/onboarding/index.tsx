@@ -11,9 +11,7 @@ import {
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { layout, spacing } from '@/constants/theme';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { paddingStart, rtlForwardIcon } from '@/lib/rtl';
-import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   Animated,
@@ -36,8 +34,6 @@ const DIVIDER = '#284E39';
 
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
   const { completeOnboarding } = useOnboarding();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,11 +49,10 @@ export default function OnboardingScreen() {
     finishingRef.current = true;
     try {
       await completeOnboarding();
-      router.replace(isAuthenticated ? '/(tabs)' : '/auth/welcome');
     } catch {
       finishingRef.current = false;
     }
-  }, [completeOnboarding, isAuthenticated, router]);
+  }, [completeOnboarding]);
 
   const handleSkip = useCallback(() => {
     void finishOnboarding();

@@ -102,8 +102,9 @@ export class PaymentsService
       paymentId: string;
       orderId: string | null;
       checkoutUrl: string;
-      status: 'pending';
+      status: 'pending' | 'paid' | 'refunded';
       devMode: boolean;
+      alreadyPaid?: boolean;
     }>
   >();
 
@@ -172,7 +173,11 @@ export class PaymentsService
       }
       const declared = parsePositiveMoneyAmount(saleAmount);
       if (declared == null) {
-        throwApi(400, 'invalid_sale_amount', 'أدخل مبلغ بيع صالحاً أكبر من صفر');
+        throwApi(
+          400,
+          'invalid_sale_amount',
+          'أدخل مبلغ بيع صالحاً أكبر من صفر',
+        );
       }
       const payable = calculateListingFeeAmount(declared);
       if (!sameMoneyAmount(payable, amount)) {
@@ -234,8 +239,9 @@ export class PaymentsService
     paymentId: string;
     orderId: string | null;
     checkoutUrl: string;
-    status: 'pending';
+    status: 'pending' | 'paid' | 'refunded';
     devMode: boolean;
+    alreadyPaid?: boolean;
   } | null> {
     const isDev = isNiSandboxMockMode();
 
@@ -336,6 +342,53 @@ export class PaymentsService
       },
       'NI pending payment verification result',
     );
+
+    if (verification.reason === 'already_paid') {
+      const classified = classifyNiOrderState(verification.state ?? '');
+      this.logger.warn(
+        {
+          paymentId: existing.id,
+          orderReference: niOrderRef,
+          paymentState: verification.state,
+          classified,
+        },
+        'NI reports existing payment already paid — syncing, not archiving',
+      );
+
+      if (classified === 'success') {
+        try {
+          await this.syncPaymentByOrderRef(
+            existing.id,
+            existing.orderId ?? niOrderRef,
+          );
+        } catch (err) {
+          this.logger.error(
+            {
+              err: err instanceof Error ? err.message : String(err),
+              paymentId: existing.id,
+            },
+            'Failed to sync already-paid NI order — not creating a new checkout',
+          );
+        }
+      }
+
+      const latest = await this.repo.findPaymentByIdFull(existing.id);
+      const status =
+        latest?.status === 'paid' || latest?.status === 'refunded'
+          ? latest.status
+          : classified === 'success'
+            ? 'paid'
+            : 'pending';
+
+      return {
+        paymentId: existing.id,
+        orderId: existing.orderId,
+        checkoutUrl: existing.checkoutUrl ?? '',
+        status,
+        devMode: false,
+        alreadyPaid: true,
+      };
+    }
 
     if (!verification.valid) {
       return null;
@@ -595,7 +648,11 @@ export class PaymentsService
       }
       const declared = parsePositiveMoneyAmount(saleAmount);
       if (declared == null) {
-        throwApi(400, 'invalid_sale_amount', 'أدخل مبلغ بيع صالحاً أكبر من صفر');
+        throwApi(
+          400,
+          'invalid_sale_amount',
+          'أدخل مبلغ بيع صالحاً أكبر من صفر',
+        );
       }
       const payable = calculateListingFeeAmount(declared);
       await this.repo.recordListingFeeSaleAmount(
@@ -642,13 +699,7 @@ export class PaymentsService
 
     if ('existingPending' in txResult && txResult.existingPending) {
       const existingPending = txResult.existingPending;
-      // Butcher-order retries must open a new NI session. Reusing a pending
-      // checkout after failed/cancelled card attempts returns the shopper to
-      // the same invalid hosted page.
-      const reused =
-        type === 'butcher_order'
-          ? null
-          : await this.tryReuseExistingPendingPayment(existingPending);
+      const reused = await this.tryReuseExistingPendingPayment(existingPending);
       if (reused) {
         return reused;
       }
@@ -878,11 +929,18 @@ export class PaymentsService
     }
 
     if (payment.status === 'paid' && isRefundEvent) {
-      await this.repo.markPaymentRefunded(payment.id, {
+      const refunded = await this.repo.markPaymentRefunded(payment.id, {
         ...storedMeta,
         refundedAt: new Date().toISOString(),
         refundEvent: eventType,
       });
+      if (!refunded?.newlyRefunded) {
+        this.logger.debug(
+          { paymentId: payment.id, status: payment.status },
+          'NI refund webhook already applied',
+        );
+        return;
+      }
       if (
         type === 'subscription' &&
         referenceId &&
@@ -920,14 +978,6 @@ export class PaymentsService
       return;
     }
 
-    if (payment.status === 'paid' || payment.status === 'failed') {
-      this.logger.debug(
-        { paymentId: payment.id, status: payment.status },
-        'NI Webhook already processed',
-      );
-      return;
-    }
-
     const isSuccess =
       [
         'ORDER.PAID',
@@ -945,6 +995,19 @@ export class PaymentsService
         'ORDER.EXPIRED',
       ].includes(eventType.toUpperCase()) || niStateIsFailure(orderState);
 
+    // Capture after local failure (e.g. cancelled/expired order) must still
+    // reconcile — do not treat failed as a terminal skip when NI reports success.
+    if (
+      (payment.status === 'paid' || payment.status === 'failed') &&
+      !(isSuccess && payment.status === 'failed')
+    ) {
+      this.logger.debug(
+        { paymentId: payment.id, status: payment.status },
+        'NI Webhook already processed',
+      );
+      return;
+    }
+
     if (isSuccess) {
       const fulfillment = await this.repo.processSuccessfulPayment({
         paymentId: payment.id,
@@ -956,6 +1019,19 @@ export class PaymentsService
         billingCycle,
         storedMeta,
       });
+
+      if (fulfillment.capturedAfterCancel) {
+        this.logger.error(
+          {
+            paymentId: payment.id,
+            type,
+            referenceId,
+            niTransactionId,
+          },
+          'NI captured payment for a cancelled butcher order — recorded without fulfillment; NI refund API is not implemented in this codebase (needsReconciliation)',
+        );
+        return;
+      }
 
       if (fulfillment.processed) {
         await this.subscriptionCache.invalidate(userId);
@@ -1052,7 +1128,14 @@ export class PaymentsService
         );
       }
     } else if (isFailure) {
-      await this.repo.markPaymentFailedById(payment.id);
+      const failed = await this.repo.markPaymentFailedById(payment.id);
+      if (!failed.count) {
+        this.logger.warn(
+          { paymentId: payment.id, eventType },
+          'Skipped NI failure transition — payment is not pending',
+        );
+        return;
+      }
 
       if (type === 'subscription' && targetPlanId) {
         await this.subscriptionLifecycle.notifyRenewalFailed(
@@ -1143,19 +1226,10 @@ export class PaymentsService
         messageAr: niOrderStateLabelAr('success'),
       };
     }
-    if (payment.status === 'failed') {
+    if (payment.status === 'refunded') {
       return {
         paymentId: payment.id,
-        status: 'failed',
-        outcome: 'failed',
-        synced: false,
-        messageAr: niOrderStateLabelAr('failed'),
-      };
-    }
-    if (payment.status !== 'pending') {
-      return {
-        paymentId: payment.id,
-        status: payment.status,
+        status: 'refunded',
         outcome: 'processing',
         synced: false,
         messageAr: niOrderStateLabelAr('processing'),
@@ -1226,7 +1300,10 @@ export class PaymentsService
       );
 
       const payment = existing;
-      if (!payment || payment.status !== 'pending') {
+      if (
+        !payment ||
+        (payment.status !== 'pending' && payment.status !== 'failed')
+      ) {
         const terminalStatus = payment?.status ?? 'unknown';
         const terminalOutcome =
           terminalStatus === 'paid'
@@ -1268,6 +1345,22 @@ export class PaymentsService
           billingCycle,
           storedMeta,
         });
+
+        if (fulfillment.capturedAfterCancel) {
+          this.logger.error(
+            { paymentId, orderRef, state, type, referenceId },
+            'NI captured payment for a cancelled butcher order — recorded without fulfillment; NI refund API is not implemented in this codebase (needsReconciliation)',
+          );
+          return {
+            paymentId,
+            status: 'paid',
+            outcome: 'success',
+            synced: false,
+            capturedAfterCancel: true,
+            niState: state,
+            messageAr: niOrderStateLabelAr('success'),
+          };
+        }
 
         if (fulfillment.processed) {
           await this.subscriptionCache.invalidate(userId);
@@ -1334,7 +1427,25 @@ export class PaymentsService
       }
 
       if (outcome === 'failed') {
-        await this.repo.markPaymentFailedById(paymentId);
+        const failed = await this.repo.markPaymentFailedById(paymentId);
+        if (!failed.count) {
+          this.logger.warn(
+            { paymentId, orderRef, state },
+            'Skipped sync failure transition — payment is not pending',
+          );
+          const latest = await this.repo.findPaymentByIdFull(paymentId);
+          const terminalStatus = latest?.status ?? payment.status;
+          return {
+            paymentId,
+            status: terminalStatus,
+            outcome: terminalStatus === 'paid' ? 'success' : 'processing',
+            synced: false,
+            niState: state,
+            messageAr: niOrderStateLabelAr(
+              terminalStatus === 'paid' ? 'success' : 'processing',
+            ),
+          };
+        }
         if (type === 'subscription' && targetPlanId) {
           await this.subscriptionLifecycle.notifyRenewalFailed(
             userId,

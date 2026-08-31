@@ -20,15 +20,22 @@ describe('PostsService feed cache isolation', () => {
     findById: jest.fn(),
     findLike: jest.fn(),
     findRepost: jest.fn(),
+    findOwnerMeta: jest.fn(),
+    toggleLike: jest.fn(),
+    toggleRepost: jest.fn(),
+    createComment: jest.fn(),
   };
   const usersRepo = {
     findBlockedRelationshipIds: jest.fn(),
+    findUserCommentsAudience: jest.fn(),
+    findFollow: jest.fn(),
   };
   const cache = {
     get: jest.fn(),
     set: jest.fn(),
     del: jest.fn(),
     delPattern: jest.fn(),
+    keys: { post: (id: string) => `post:${id}` },
   };
   const notifications = { notifyUsers: jest.fn() };
 
@@ -44,7 +51,7 @@ describe('PostsService feed cache isolation', () => {
     );
   });
 
-  it('does not return another viewer\'s liked flags from a shared cache entry', async () => {
+  it("does not return another viewer's liked flags from a shared cache entry", async () => {
     cache.get.mockResolvedValue({
       posts: [post('p1', 'author-1')],
       nextCursor: null,
@@ -54,11 +61,14 @@ describe('PostsService feed cache isolation', () => {
     repo.findLikesByUser.mockResolvedValue([]);
     repo.findRepostsByUser.mockResolvedValue([]);
 
-    const result = await service.getFeed({}, {
-      userId: 'viewer-b',
-      username: 'b',
-      role: 'USER',
-    });
+    const result = await service.getFeed(
+      {},
+      {
+        userId: 'viewer-b',
+        username: 'b',
+        role: 'USER',
+      },
+    );
 
     expect(result.posts[0].liked).toBe(false);
     expect(repo.findLikesByUser).toHaveBeenCalledWith('viewer-b', ['p1']);
@@ -74,11 +84,14 @@ describe('PostsService feed cache isolation', () => {
     repo.findLikesByUser.mockResolvedValue([]);
     repo.findRepostsByUser.mockResolvedValue([]);
 
-    const result = await service.getFeed({}, {
-      userId: 'viewer-a',
-      username: 'a',
-      role: 'USER',
-    });
+    const result = await service.getFeed(
+      {},
+      {
+        userId: 'viewer-a',
+        username: 'a',
+        role: 'USER',
+      },
+    );
 
     expect(result.posts.map((p) => p.id)).toEqual(['p2']);
   });
@@ -90,11 +103,14 @@ describe('PostsService feed cache isolation', () => {
     repo.findLikesByUser.mockResolvedValue([{ postId: 'p1' }]);
     repo.findRepostsByUser.mockResolvedValue([]);
 
-    await service.getFeed({}, {
-      userId: 'viewer-a',
-      username: 'a',
-      role: 'USER',
-    });
+    await service.getFeed(
+      {},
+      {
+        userId: 'viewer-a',
+        username: 'a',
+        role: 'USER',
+      },
+    );
 
     expect(cache.set).toHaveBeenCalled();
     const stored = cache.set.mock.calls[0][1] as {
@@ -114,5 +130,109 @@ describe('PostsService feed cache isolation', () => {
         role: 'USER',
       }),
     ).rejects.toMatchObject({ status: 403, error: 'blocked' });
+  });
+});
+
+describe('PostsService block enforcement on mutations (H5)', () => {
+  const repo = {
+    findOwnerMeta: jest.fn(),
+    findLike: jest.fn(),
+    findRepost: jest.fn(),
+    toggleLike: jest.fn(),
+    toggleRepost: jest.fn(),
+    createComment: jest.fn(),
+  };
+  const usersRepo = {
+    findBlockedRelationshipIds: jest.fn(),
+    findUserCommentsAudience: jest.fn(),
+    findFollow: jest.fn(),
+  };
+  const cache = {
+    del: jest.fn(),
+    keys: { post: (id: string) => `post:${id}` },
+  };
+  const notifications = { notifyUser: jest.fn().mockResolvedValue(undefined) };
+  const viewer = { userId: 'user-b', username: 'b', role: 'USER' as const };
+
+  let service: PostsService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    repo.findOwnerMeta.mockResolvedValue({ id: 'p1', authorId: 'user-a' });
+    service = new PostsService(
+      repo as never,
+      usersRepo as never,
+      cache as never,
+      notifications as never,
+    );
+  });
+
+  it("rejects like when A blocked B (B cannot like A's post)", async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue(['user-a']);
+    await expect(service.toggleLike(viewer, 'p1')).rejects.toMatchObject({
+      status: 403,
+      error: 'blocked',
+    });
+    expect(repo.toggleLike).not.toHaveBeenCalled();
+    expect(repo.findLike).not.toHaveBeenCalled();
+  });
+
+  it('rejects comment when blocked', async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue(['user-a']);
+    await expect(
+      service.createComment(viewer, 'p1', { content: 'hi' }),
+    ).rejects.toMatchObject({ status: 403, error: 'blocked' });
+    expect(repo.createComment).not.toHaveBeenCalled();
+  });
+
+  it('rejects repost when blocked', async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue(['user-a']);
+    await expect(service.toggleRepost(viewer, 'p1')).rejects.toMatchObject({
+      status: 403,
+      error: 'blocked',
+    });
+    expect(repo.toggleRepost).not.toHaveBeenCalled();
+  });
+
+  it('applies the same bidirectional block set used by getPost', async () => {
+    repo.findOwnerMeta.mockResolvedValue({ id: 'p1', authorId: 'user-b' });
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue(['user-b']);
+    await expect(
+      service.toggleLike(
+        { userId: 'user-a', username: 'a', role: 'USER' },
+        'p1',
+      ),
+    ).rejects.toMatchObject({ status: 403, error: 'blocked' });
+  });
+
+  it('allows a non-blocked user to like, comment, and repost', async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
+    repo.findLike.mockResolvedValue(null);
+    repo.toggleLike.mockResolvedValue(true);
+    repo.findRepost.mockResolvedValue(null);
+    repo.toggleRepost.mockResolvedValue(true);
+    repo.createComment.mockResolvedValue({ id: 'c1' });
+    usersRepo.findUserCommentsAudience.mockResolvedValue({
+      commentsAudience: 'everyone',
+    });
+
+    await expect(service.toggleLike(viewer, 'p1')).resolves.toEqual({
+      liked: true,
+    });
+    await expect(
+      service.createComment(viewer, 'p1', { content: 'nice' }),
+    ).resolves.toMatchObject({ id: 'c1' });
+    await expect(service.toggleRepost(viewer, 'p1')).resolves.toEqual({
+      reposted: true,
+    });
+  });
+
+  it('does not delete existing likes or comments when a later block rejects a mutation', async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue(['user-a']);
+    await expect(service.toggleLike(viewer, 'p1')).rejects.toMatchObject({
+      error: 'blocked',
+    });
+    expect(repo.toggleLike).not.toHaveBeenCalled();
+    expect(repo.createComment).not.toHaveBeenCalled();
   });
 });

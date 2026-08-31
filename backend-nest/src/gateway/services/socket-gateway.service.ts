@@ -21,6 +21,7 @@ import { SocketEmitService } from './socket-emit.service';
 import { OrderLifecycleService } from '../../butchers/services/order-lifecycle.service';
 import { MessagingPolicyService } from '../../messages/services/messaging-policy.service';
 import { ApiException } from '../../common/exceptions/api.exception';
+import { markSocketOffline, markSocketOnline } from './online-presence';
 
 class UuidParamDto {
   @IsUUID()
@@ -78,16 +79,17 @@ export class SocketGatewayService {
   }
 
   async onUserConnected(userId: string, socketId: string): Promise<void> {
-    await this.cache.set(
-      `online:${userId}`,
-      { socketId, since: new Date() },
-      3600,
-    );
+    await markSocketOnline(this.cache, userId, socketId);
   }
 
-  onUserDisconnected(userId: string): void {
+  onUserDisconnected(userId: string, socketId?: string): void {
     const cleanup = async () => {
-      await this.cache.del(`online:${userId}`);
+      if (socketId) {
+        const result = await markSocketOffline(this.cache, userId, socketId);
+        if (result.stillOnline) return;
+      } else {
+        await this.cache.del(`online:${userId}`, `online:sockets:${userId}`);
+      }
       await this.repo.updateUserLastSeen(userId);
     };
 
@@ -278,10 +280,7 @@ export class SocketGatewayService {
     }
 
     try {
-      await this.messagingPolicy.assertNotBlocked(
-        user.userId,
-        data.receiverId,
-      );
+      await this.messagingPolicy.assertNotBlocked(user.userId, data.receiverId);
     } catch (err) {
       return this.policyError(err);
     }
@@ -426,9 +425,7 @@ export class SocketGatewayService {
   }
 
   onPresencePing(userId: string, socketId: string): void {
-    this.cache
-      .set(`online:${userId}`, { socketId, updatedAt: new Date() }, 3600)
-      .catch(() => {});
+    void markSocketOnline(this.cache, userId, socketId).catch(() => {});
   }
 
   async handleNotificationsRead(userId: string, raw: unknown): Promise<void> {

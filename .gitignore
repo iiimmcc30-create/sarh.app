@@ -48,6 +48,12 @@ Thumbs.db
 *.swp
 *.swo
 
+# Android debug signing key (not a production artifact)
+*.keystore
+!*.keystore.example
+app/android/app/debug.keystore
+
+
 # TypeScript
 *.tsbuildinfo
 

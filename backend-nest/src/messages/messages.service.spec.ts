@@ -11,6 +11,7 @@ describe('MessagesService.sendMessage block enforcement', () => {
   };
   const logger = { info: jest.fn() };
   const notifications = { notifyUser: jest.fn() };
+  const sockets = { emitToThread: jest.fn(), emitToUser: jest.fn() };
 
   let service: MessagesService;
 
@@ -21,6 +22,7 @@ describe('MessagesService.sendMessage block enforcement', () => {
       logger as never,
       notifications as never,
       policy as never,
+      sockets as never,
     );
   });
 
@@ -38,5 +40,38 @@ describe('MessagesService.sendMessage block enforcement', () => {
 
     expect(repo.createMessage).not.toHaveBeenCalled();
     expect(repo.upsertThread).not.toHaveBeenCalled();
+  });
+
+  it('emits chat:message after a successful REST send', async () => {
+    policy.assertCanSendMessage.mockResolvedValue(undefined);
+    repo.upsertThread.mockResolvedValue({ id: 't1' });
+    repo.createMessage.mockResolvedValue({
+      id: 'm1',
+      senderId: 'alice',
+      receiverId: 'bob',
+      text: 'hi',
+      sender: {
+        arabicName: 'أ',
+        displayName: 'A',
+        avatar: null,
+        username: 'alice',
+      },
+    });
+
+    await service.sendMessage(
+      { userId: 'alice', username: 'alice', role: 'USER' },
+      { receiverId: 'bob', text: 'hi' },
+    );
+
+    expect(sockets.emitToThread).toHaveBeenCalledWith(
+      't1',
+      'chat:message',
+      expect.objectContaining({ id: 'm1' }),
+    );
+    expect(sockets.emitToUser).toHaveBeenCalledWith(
+      'bob',
+      'chat:notification',
+      expect.objectContaining({ threadId: 't1' }),
+    );
   });
 });

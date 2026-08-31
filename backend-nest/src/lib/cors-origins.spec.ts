@@ -23,7 +23,14 @@ describe('cors origins', () => {
     }
   });
 
-  it('strips railway and localhost in production and keeps sarhsa.online', () => {
+  it('never treats unknown origins as allowed (credentials require exact origin)', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.ALLOWED_ORIGINS = 'https://sarhsa.online';
+    expect(isAllowedCorsOrigin('https://evil.example')).toBe(false);
+    expect(isAllowedCorsOrigin('https://sarhsa.online')).toBe(true);
+  });
+
+  it('strips railway and localhost from production CORS origins', () => {
     process.env.NODE_ENV = 'production';
     process.env.ALLOWED_ORIGINS =
       'http://localhost:8081,https://sarh-app.up.railway.app,https://sarhsa.online';
@@ -82,8 +89,19 @@ describe('cors origins', () => {
     expect(isAllowedCorsOrigin('https://random-app.vercel.app')).toBe(false);
   });
 
-  it('optionally allows any *.vercel.app origin when the flag is on', () => {
+  it('ignores BUTCHER_DASHBOARD_ALLOW_VERCEL in production (explicit hosts still work)', () => {
     process.env.NODE_ENV = 'production';
+    process.env.ALLOWED_ORIGINS = '';
+    process.env.FRONTEND_URL = '';
+    process.env.BUTCHER_DASHBOARD_URL = '';
+    process.env.BUTCHER_DASHBOARD_VERCEL_HOSTS = '';
+    process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL = 'true';
+    expect(isAllowedCorsOrigin('https://any-preview.vercel.app')).toBe(false);
+    expect(isAllowedCorsOrigin('https://sarhsa.online')).toBe(true);
+  });
+
+  it('allows *.vercel.app in non-production when the preview flag is on', () => {
+    process.env.NODE_ENV = 'test';
     process.env.ALLOWED_ORIGINS = '';
     process.env.FRONTEND_URL = '';
     process.env.BUTCHER_DASHBOARD_URL = '';
@@ -91,5 +109,15 @@ describe('cors origins', () => {
     process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL = 'true';
     expect(isAllowedCorsOrigin('https://any-preview.vercel.app')).toBe(true);
     expect(isAllowedCorsOrigin('https://evil.example')).toBe(false);
+  });
+
+  it('denies preview Vercel origins in non-production when the flag is off', () => {
+    process.env.NODE_ENV = 'test';
+    process.env.ALLOWED_ORIGINS = '';
+    process.env.FRONTEND_URL = '';
+    process.env.BUTCHER_DASHBOARD_URL = '';
+    process.env.BUTCHER_DASHBOARD_VERCEL_HOSTS = '';
+    process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL = 'false';
+    expect(isAllowedCorsOrigin('https://any-preview.vercel.app')).toBe(false);
   });
 });

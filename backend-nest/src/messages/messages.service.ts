@@ -11,6 +11,7 @@ import {
 } from './dto/messages.dto';
 import { MessagesRepository } from './repositories/messages.repository';
 import { MessagingPolicyService } from './services/messaging-policy.service';
+import { SocketEmitService } from '../gateway/services/socket-emit.service';
 
 const PAGE_SIZE = 40;
 
@@ -21,6 +22,7 @@ export class MessagesService {
     private readonly logger: LoggerService,
     private readonly notifications: AppNotificationsService,
     private readonly policy: MessagingPolicyService,
+    private readonly sockets: SocketEmitService,
   ) {}
 
   async getThreads(user: JwtPayload, query: ListThreadsQueryDto = {}) {
@@ -142,6 +144,19 @@ export class MessagesService {
       : videoUrl
         ? 'أرسل فيديو'
         : 'أرسل صورة';
+    const preview = bodyText?.slice(0, 60)
+      ? bodyText.slice(0, 60)
+      : videoUrl
+        ? '🎬 فيديو'
+        : '📷 صورة';
+    this.sockets.emitToThread(thread.id, 'chat:message', message);
+    this.sockets.emitToUser(receiverId, 'chat:notification', {
+      threadId: thread.id,
+      senderId,
+      senderName,
+      preview,
+    });
+
     void this.notifications.notifyUser({
       userId: receiverId,
       type: 'new_message',

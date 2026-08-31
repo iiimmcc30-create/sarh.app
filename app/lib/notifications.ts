@@ -130,7 +130,10 @@ export async function syncPushToken(userId: string): Promise<void> {
     const res = await authFetch(`${API_BASE}/api/users/${userId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fcmToken: token }),
+      body: JSON.stringify({
+        fcmToken: token,
+        fcmPlatform: Platform.OS,
+      }),
     });
 
     if (res.ok) {
@@ -345,12 +348,21 @@ export function handleNotificationNavigation(
       if (postId) return navigateToPost(ctx, postId, true);
       break;
 
-    case 'follow':
-      safePush({
-        pathname: '/(tabs)/profile',
-        params: { tab: 'messages' },
-      } as never, undefined, ctx.router);
+    case 'follow': {
+      const actorId =
+        stringField(data, 'actorId') ??
+        stringField(data, 'followerId') ??
+        stringField(data, 'userId');
+      if (actorId) {
+        safePush({
+          pathname: '/users/[id]',
+          params: { id: actorId },
+        } as never, undefined, ctx.router);
+        return true;
+      }
+      safePush('/notifications' as never, undefined, ctx.router);
       return true;
+    }
 
     case 'live_start':
       if (streamId) {
@@ -462,13 +474,18 @@ export async function clearPushTokenOnLogout(
   accessToken: string,
 ): Promise<void> {
   try {
+    const stored = await getStoredPushToken();
     await fetch(`${API_BASE}/api/users/${userId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ fcmToken: null }),
+      body: JSON.stringify(
+        stored
+          ? { fcmToken: stored, unregisterFcm: true, fcmPlatform: Platform.OS }
+          : { fcmToken: null },
+      ),
     });
   } catch {
     // silent — local cleanup still runs

@@ -6,6 +6,7 @@ import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { updateAccountSettings } from '@/services/users';
+import { interpretOtpVerifyResult } from '@/lib/otpVerifyOutcome';
 import { getRtlText, marginStart, rtlForwardIcon, isAppRtl } from '@/lib/rtl';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
@@ -176,15 +177,20 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     const verified = await verifyOtp(fullPhone, otpCode);
-    if (!verified.success || !verified.phoneToken) {
+    const otpFlow = interpretOtpVerifyResult(verified);
+    if (otpFlow.kind === 'invalid' || otpFlow.kind === 'missing_phone_token') {
       setLoading(false);
-      setError(verified.error ?? copy.errOtp);
+      setError(otpFlow.error);
+      return;
+    }
+    if (otpFlow.kind === 'existing_login') {
+      setLoading(false);
       return;
     }
 
     const regResult = await register({
       phone: fullPhone,
-      phone_token: verified.phoneToken,
+      phone_token: otpFlow.phoneToken,
       displayName: displayName.trim(),
       arabicName: displayName.trim(),
       username: username.trim().toLowerCase(),
@@ -209,7 +215,6 @@ export default function RegisterScreen() {
     }
 
     setLoading(false);
-    router.replace('/(tabs)');
   };
 
   const titleForStep =

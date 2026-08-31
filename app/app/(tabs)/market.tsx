@@ -38,6 +38,7 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   mergeListingPages,
   searchListingsPage,
+  shouldFetchNextListingPage,
 } from '@/services/listings';
 import { Listing } from '@/services/types';
 
@@ -57,6 +58,7 @@ export default function MarketScreen() {
   const lastCategoriesFocusAt = useRef(0);
   const listRef = useRef<FlatList<Listing>>(null);
   const loadingMoreRef = useRef(false);
+  const loadGenRef = useRef(0);
 
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -81,28 +83,40 @@ export default function MarketScreen() {
   );
 
   const loadFirstPage = useCallback(async () => {
+    const gen = ++loadGenRef.current;
     setLoading(true);
     try {
       const page = await searchListingsPage(apiFilters, accessToken);
+      if (gen !== loadGenRef.current) return;
       setItems(page.listings);
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
     } catch {
+      if (gen !== loadGenRef.current) return;
       setItems([]);
       setNextCursor(null);
       setHasMore(false);
     } finally {
-      setLoading(false);
+      if (gen === loadGenRef.current) setLoading(false);
     }
   }, [accessToken, apiFilters]);
 
   const loadNextPage = useCallback(async () => {
-    if (!hasMore || !nextCursor || loading || loadingMoreRef.current) return;
+    if (
+      !shouldFetchNextListingPage({
+        hasMore,
+        nextCursor,
+        loading,
+        loadingMore: loadingMoreRef.current,
+      })
+    ) {
+      return;
+    }
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
       const page = await searchListingsPage(
-        { ...apiFilters, cursor: nextCursor },
+        { ...apiFilters, cursor: nextCursor ?? undefined },
         accessToken,
       );
       setItems((prev) => mergeListingPages(prev, page.listings));

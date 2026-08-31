@@ -6,6 +6,7 @@ import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import { FeeCheckQueueService } from './fee-check-queue.service';
 import { SubscriptionQueueService } from './subscription-queue.service';
 import { KnowledgeCenterService } from '../../knowledge/services/knowledge-center.service';
+import { cronCleanupAuthHeader } from '../../admin/lib/cron-auth';
 
 @Injectable()
 export class WorkerCronService implements OnModuleDestroy {
@@ -111,13 +112,21 @@ export class WorkerCronService implements OnModuleDestroy {
       );
     }
     await this.withLock('cron:db_cleanup:lock', 300, async () => {
+      const headers = cronCleanupAuthHeader(process.env.CRON_SECRET);
+      if (!headers) {
+        this.logger.error(
+          {},
+          'Skipping DB cleanup — CRON_SECRET is not configured',
+        );
+        return;
+      }
       this.logger.info({}, 'Running daily database cleanup');
       try {
         const response = await axios.post(
           `${appUrl}/api/admin/cleanup`,
           {},
           {
-            headers: { 'x-cron-secret': process.env.CRON_SECRET || '' },
+            headers,
             timeout: 30000,
           },
         );

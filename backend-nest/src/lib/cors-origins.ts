@@ -92,7 +92,11 @@ export function isAllowedCorsOrigin(origin: string | undefined): boolean {
   const normalized = origin.replace(/\/$/, '');
   if (resolveCorsOrigins().includes(normalized)) return true;
   if (isListedVercelHost(origin)) return true;
-  if (process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL === 'true') {
+  // Wildcard *.vercel.app is preview/dev only — never in production.
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    process.env.BUTCHER_DASHBOARD_ALLOW_VERCEL === 'true'
+  ) {
     return isVercelAppOrigin(origin);
   }
   return false;

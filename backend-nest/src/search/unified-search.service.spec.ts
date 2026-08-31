@@ -85,6 +85,64 @@ describe('UnifiedSearchService', () => {
     expect(searchListings).toHaveBeenCalled();
   });
 
+  it('matches listings when query alef differs from stored title alef', async () => {
+    searchListings.mockResolvedValue([
+      {
+        id: 'l2',
+        title: 'Camels',
+        arabicTitle: 'إبل للبيع',
+        description: '',
+        arabicDescription: 'إبل',
+        price: 2000,
+        currency: 'SAR',
+        category: 'camels',
+        breed: '',
+        age: '',
+        location: 'Riyadh',
+        arabicLocation: 'الرياض',
+        country: 'SA',
+        images: [],
+        videoUrl: null,
+        thumbnailUrl: null,
+        featured: false,
+        pinned: false,
+        promoted: false,
+        promotionWeight: 0,
+        createdAt: new Date('2026-08-01'),
+        seller: {
+          id: 'u1',
+          username: 'seller',
+          displayName: 'Seller',
+          arabicName: 'بائع',
+          avatar: null,
+          verified: false,
+          country: 'SA',
+        },
+        marketCategory: null,
+        marketSubcategory: null,
+      },
+    ]);
+    searchPosts.mockResolvedValue([]);
+    searchButchers.mockResolvedValue([]);
+    searchNews.mockResolvedValue([]);
+    searchServices.mockResolvedValue([]);
+
+    const result = await service.search({ q: 'ابل', type: 'listings' });
+    expect(searchListings).toHaveBeenCalled();
+    const tokens = searchListings.mock.calls[0][0] as string[];
+    expect(tokens).toEqual(['ابل']);
+    expect(result.groups[0].items[0].title).toContain('إبل');
+  });
+
+  it('normalizes suggest prefix so ابل can match folded titles', async () => {
+    suggestPrefixes.mockResolvedValue([
+      { text: 'إبل للبيع', kind: 'listing', weight: 3 },
+    ]);
+    const result = await service.suggest('ابل', 5);
+    expect(suggestPrefixes).toHaveBeenCalledWith('ابل', 5);
+    expect(result.suggestions[0].text).toContain('إبل');
+  });
+
   it('uses redis cache for suggestions when enabled', async () => {
     cache.isEnabled.mockReturnValue(true);
     cache.get.mockResolvedValue([{ text: 'ملاحم', kind: 'listing' }]);
