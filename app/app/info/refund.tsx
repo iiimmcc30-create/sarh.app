@@ -37,7 +37,7 @@ const REFUND_SECTIONS = [
   },
   {
     title: 'التواصل',
-    content: `للاستفسار أو تقديم طلب استرداد:\n📧 support@safat.app\nأو عبر صفحة تواصل معنا داخل التطبيق.`,
+    content: `للاستفسار أو تقديم طلب استرداد:\n📧 sarh@sarhsa.online\nأو عبر صفحة تواصل معنا داخل التطبيق.`,
   },
 ];
 

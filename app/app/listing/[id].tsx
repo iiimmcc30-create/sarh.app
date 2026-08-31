@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { sarhListingShareUrl } from '@/constants/sarhOfficial';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -451,7 +452,7 @@ export default function ListingDetailScreen() {
               style={styles.topBarBtn}
               onPress={() =>
                 Share.share({
-                  message: `${listing.arabicTitle} — ${listing.price.toLocaleString()} ${listing.currency}\nhttps://alsfat.com/l/${listing.id}`,
+                  message: `${listing.arabicTitle} — ${listing.price.toLocaleString()} ${listing.currency}\n${sarhListingShareUrl(listing.id)}`,
                 })
               }
             >

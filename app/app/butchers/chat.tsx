@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import { sarhListingShareUrl } from '@/constants/sarhOfficial';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -732,7 +733,7 @@ export default function ButcherChatScreen() {
       return;
     }
     void sendMessage(
-      `📦 إعلان: ${listingContext.title}\n${formatListingPrice(listingContext.price, listingContext.currency)}\nhttps://alsfat.com/l/${listingContext.listingId}`,
+      `📦 إعلان: ${listingContext.title}\n${formatListingPrice(listingContext.price, listingContext.currency)}\n${sarhListingShareUrl(listingContext.listingId)}`,
     );
   };
 
