@@ -8,6 +8,8 @@ import { permissionNumber } from '../plans/plan.types';
 import {
   calculateListingFeeAmount,
   LISTING_COMMISSION_PERCENT,
+  centsToMoney,
+  moneyToCents,
 } from '../listings/listing-fee';
 
 export type ListingCat =
@@ -133,7 +135,9 @@ export function calculateOrderCommission(
   }
 
   return {
-    commission: roundMoney(amount * (ratePercent / 100)),
+    commission: centsToMoney(
+      Math.round((moneyToCents(amount) * ratePercent) / 100),
+    ),
     isExempt: false,
     ratePercent,
     orderAmount: amount,

@@ -73,4 +73,25 @@ describe('order-line.util', () => {
       ]),
     ).toBe(100);
   });
+
+  it('sums 0.1 + 0.2 without binary float drift', () => {
+    expect(
+      sumOrderLinePrices([
+        {
+          productId: 'a',
+          cutType: 'x',
+          weightKg: 1,
+          linePrice: 0.1,
+          reservedQuantity: 1,
+        },
+        {
+          productId: 'b',
+          cutType: 'y',
+          weightKg: 1,
+          linePrice: 0.2,
+          reservedQuantity: 1,
+        },
+      ]),
+    ).toBe(0.3);
+  });
 });

@@ -82,6 +82,7 @@ model User {
   reviewedVerificationRequests        AccountVerificationRequest[]      @relation("VerificationReviewer")
   accountActionsReceived              AdminAccountAction[]              @relation("AccountActionTarget")
   accountActionsTaken                 AdminAccountAction[]              @relation("AccountActionActor")
+  deviceTokens                        UserDeviceToken[]
 
   @@index([username])
   @@index([email])
@@ -102,6 +103,19 @@ model UserSession {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model UserDeviceToken {
+  id         String   @id @default(uuid())
+  userId     String
+  token      String   @unique
+  platform   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastSeenAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Follow {

@@ -2,6 +2,7 @@ import {
   mergeListingPages,
   searchAllSellerListings,
   searchListingsPage,
+  shouldFetchNextListingPage,
   SELLER_LISTINGS_MAX_PAGES,
 } from '@/services/listings';
 import type { Listing } from '@/services/types';
@@ -39,6 +40,8 @@ function listingStub(id: string): Listing {
       country: 'SA',
       bio: '',
     },
+    featured: false,
+    pinned: false,
     postedAt: '2026-01-01',
     createdAt: '2026-01-01T00:00:00.000Z',
   };
@@ -164,12 +167,15 @@ describe('marketplace listing pagination', () => {
         json: async () => ({
           success: true,
           data: {
-            listings: start === 0 ? listings.concat(
-              Array.from({ length: 15 }, (_, i) => ({
-                ...listings[0],
-                id: `l${i + 6}`,
-              })),
-            ) : listings,
+            listings:
+              start === 0
+                ? listings.concat(
+                    Array.from({ length: 15 }, (_, i) => ({
+                      ...listings[0],
+                      id: `l${i + 6}`,
+                    })),
+                  )
+                : listings,
             nextCursor: start === 0 ? 'l20' : null,
             hasMore: start === 0,
           },
@@ -185,9 +191,67 @@ describe('marketplace listing pagination', () => {
     expect(SELLER_LISTINGS_MAX_PAGES).toBe(50);
   });
 
-  it('merges pages without dropping earlier listings', () => {
+  it('merges pages without dropping earlier listings or duplicating ids', () => {
     const first = [listingStub('a'), listingStub('b')];
     const second = [listingStub('b'), listingStub('c')];
-    expect(mergeListingPages(first, second).map((row) => row.id)).toEqual(['a', 'b', 'c']);
+    expect(mergeListingPages(first, second).map((row) => row.id)).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
+  });
+
+  it('does not request another page when hasMore is false', () => {
+    expect(
+      shouldFetchNextListingPage({
+        hasMore: false,
+        nextCursor: 'x',
+        loading: false,
+        loadingMore: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('blocks concurrent load-more and initial loading', () => {
+    expect(
+      shouldFetchNextListingPage({
+        hasMore: true,
+        nextCursor: 'x',
+        loading: false,
+        loadingMore: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldFetchNextListingPage({
+        hasMore: true,
+        nextCursor: 'x',
+        loading: true,
+        loadingMore: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldFetchNextListingPage({
+        hasMore: true,
+        nextCursor: 'x',
+        loading: false,
+        loadingMore: false,
+      }),
+    ).toBe(true);
+  });
+
+  it('refresh starts from page one (no cursor)', async () => {
+    const fetchMock = jest.fn(async (url: string) => {
+      expect(new URL(url).searchParams.get('cursor')).toBeNull();
+      return {
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: { listings: [], nextCursor: null, hasMore: false },
+        }),
+      } as Response;
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await searchListingsPage({ search: 'ابل' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

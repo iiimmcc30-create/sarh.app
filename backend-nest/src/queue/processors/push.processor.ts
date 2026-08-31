@@ -47,10 +47,15 @@ export class PushProcessor extends WorkerHost {
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === 'messaging/registration-token-not-registered') {
-        await this.prisma.user.updateMany({
-          where: { fcmToken },
-          data: { fcmToken: null },
-        });
+        await this.prisma.$transaction([
+          this.prisma.userDeviceToken.deleteMany({
+            where: { token: fcmToken },
+          }),
+          this.prisma.user.updateMany({
+            where: { fcmToken },
+            data: { fcmToken: null },
+          }),
+        ]);
         return;
       }
       throw err;

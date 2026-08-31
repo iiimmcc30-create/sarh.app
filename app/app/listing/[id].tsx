@@ -37,6 +37,7 @@ import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSh
 import { ListingDeleteDialog } from '@/components/listing/ListingDeleteDialog';
 import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
 import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
+import { listingFavoriteFeedback } from '@/lib/listingFavorite';
 import { resolveMediaUrl } from '@/services/media';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import {
@@ -443,7 +444,10 @@ export default function ListingDetailScreen() {
             <Pressable
               hitSlop={8}
               style={styles.topBarBtn}
-              onPress={() => Alert.alert('تم الحفظ', 'تم حفظ الإعلان في المفضّلة ❤️')}
+              onPress={() => {
+                const feedback = listingFavoriteFeedback();
+                Alert.alert(feedback.title, feedback.message);
+              }}
             >
               <AppIcon name="heart-outline" size={20} color={colors.textPrimary} />
             </Pressable>

@@ -46,6 +46,7 @@ export function validateProductionEnv(): void {
       'NI_API_KEY',
       'NI_WEBHOOK_SECRET',
       'APP_URL',
+      'CRON_SECRET',
     ]),
   );
 
@@ -87,7 +88,11 @@ export function validateProductionEnv(): void {
 
   const redisEnabled = (process.env.REDIS_ENABLED || 'true').toLowerCase();
   if (redisEnabled !== 'false') {
-    missing.push(...collectMissing(['REDIS_HOST']));
+    const hasRedis =
+      !isBlank(process.env.REDIS_URL) || !isBlank(process.env.REDIS_HOST);
+    if (!hasRedis) {
+      missing.push('REDIS_URL or REDIS_HOST');
+    }
   }
 
   const storage = (process.env.STORAGE_PROVIDER || '').toLowerCase();
@@ -101,12 +106,14 @@ export function validateProductionEnv(): void {
     );
   } else if (storage === 's3') {
     missing.push(
-      ...collectMissing([
-        'AWS_ACCESS_KEY_ID',
-        'AWS_SECRET_ACCESS_KEY',
-        'AWS_S3_BUCKET',
-      ]),
+      ...collectMissing(['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']),
     );
+    if (
+      isBlank(process.env.AWS_S3_BUCKET) &&
+      isBlank(process.env.AWS_BUCKET_NAME)
+    ) {
+      missing.push('AWS_S3_BUCKET');
+    }
   } else if (isBlank(process.env.STORAGE_PROVIDER)) {
     missing.push('STORAGE_PROVIDER');
   } else if (storage === 'local') {

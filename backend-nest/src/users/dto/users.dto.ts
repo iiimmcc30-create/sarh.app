@@ -86,6 +86,15 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsBoolean()
+  unregisterFcm?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  fcmPlatform?: string;
+
+  @IsOptional()
+  @IsBoolean()
   showInSearch?: boolean;
 
   @IsOptional()

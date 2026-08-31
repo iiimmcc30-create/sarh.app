@@ -15,6 +15,7 @@ import { fetchMarketCategories } from '@/services/categories';
 import {
   mergeListingPages,
   searchListingsPage,
+  shouldFetchNextListingPage,
 } from '@/services/listings';
 import { type Country, type Listing } from '@/services/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -70,6 +71,7 @@ export default function MarketBrowseScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
+  const loadGenRef = useRef(0);
 
   const searchParams = useMemo(
     () => ({
@@ -106,6 +108,7 @@ export default function MarketBrowseScreen() {
   );
 
   const loadFirstPage = useCallback(async () => {
+    const gen = ++loadGenRef.current;
     if (!categoryId && !subcategoryId) {
       setItems([]);
       setNextCursor(null);
@@ -116,25 +119,36 @@ export default function MarketBrowseScreen() {
     setLoading(true);
     try {
       const page = await searchListingsPage(searchParams, accessToken);
+      if (gen !== loadGenRef.current) return;
       setItems(await applyClientFilters(page.listings));
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
     } catch {
+      if (gen !== loadGenRef.current) return;
       setItems([]);
       setNextCursor(null);
       setHasMore(false);
     } finally {
-      setLoading(false);
+      if (gen === loadGenRef.current) setLoading(false);
     }
   }, [accessToken, applyClientFilters, categoryId, searchParams, subcategoryId]);
 
   const loadNextPage = useCallback(async () => {
-    if (!hasMore || !nextCursor || loading || loadingMoreRef.current) return;
+    if (
+      !shouldFetchNextListingPage({
+        hasMore,
+        nextCursor,
+        loading,
+        loadingMore: loadingMoreRef.current,
+      })
+    ) {
+      return;
+    }
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
       const page = await searchListingsPage(
-        { ...searchParams, cursor: nextCursor },
+        { ...searchParams, cursor: nextCursor ?? undefined },
         accessToken,
       );
       const extra = await applyClientFilters(page.listings);

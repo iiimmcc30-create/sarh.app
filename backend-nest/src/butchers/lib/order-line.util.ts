@@ -31,7 +31,7 @@ export function computeOrderLinePrice(
   } else {
     throwApi(400, 'validation_error', 'المنتج لا يحتوي على سعر');
   }
-  return Math.round(totalPrice * 100) / 100;
+  return Math.round((totalPrice + Number.EPSILON) * 100) / 100;
 }
 
 export function validateAndPriceOrderLine(
@@ -76,6 +76,9 @@ export function validateAndPriceOrderLine(
 }
 
 export function sumOrderLinePrices(lines: ValidatedOrderLine[]): number {
-  const sum = lines.reduce((acc, line) => acc + line.linePrice, 0);
-  return Math.round(sum * 100) / 100;
+  const cents = lines.reduce(
+    (acc, line) => acc + Math.round((line.linePrice + Number.EPSILON) * 100),
+    0,
+  );
+  return cents / 100;
 }

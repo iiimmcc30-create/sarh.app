@@ -81,8 +81,11 @@ export class AppGateway
     const user = client.data.user;
     if (!user) return;
 
-    this.logger.info({ userId: user.userId }, 'Socket disconnected');
-    this.socketService.onUserDisconnected(user.userId);
+    this.logger.info(
+      { userId: user.userId, socketId: client.id },
+      'Socket disconnected',
+    );
+    this.socketService.onUserDisconnected(user.userId, client.id);
   }
 
   @SubscribeMessage('chat:join')
