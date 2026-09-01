@@ -1,5 +1,9 @@
 import OpenAI from 'openai';
-import type { AiProvider, SarhanDecision, SupportAiContext } from './ai-provider';
+import type {
+  AiProvider,
+  SarhanDecision,
+  SupportAiContext,
+} from './ai-provider';
 import { HeuristicAiProvider } from './heuristic-ai.provider';
 import { LoggerService } from '../../common/services/logger.service';
 
@@ -23,7 +27,9 @@ export class OpenAiAiProvider implements AiProvider {
     this.client = new OpenAI({ apiKey });
   }
 
-  async completeSupportTurn(context: SupportAiContext): Promise<SarhanDecision> {
+  async completeSupportTurn(
+    context: SupportAiContext,
+  ): Promise<SarhanDecision> {
     try {
       const completion = await this.client.chat.completions.create({
         model: this.model,

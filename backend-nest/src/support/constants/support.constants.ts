@@ -80,7 +80,13 @@ export const FAQ_CATEGORY_LABEL_AR: Record<string, string> = {
 };
 
 export const ADMIN_TICKET_STATUS_GROUPS = {
-  open: ['OPEN', 'IN_REVIEW', 'AI_ASSISTING', 'WAITING_FOR_CUSTOMER', 'AWAITING_USER'],
+  open: [
+    'OPEN',
+    'IN_REVIEW',
+    'AI_ASSISTING',
+    'WAITING_FOR_CUSTOMER',
+    'AWAITING_USER',
+  ],
   waiting_support: ['WAITING_FOR_SUPPORT'],
   in_progress: ['IN_PROGRESS'],
   resolved: ['RESOLVED'],

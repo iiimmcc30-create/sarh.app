@@ -59,7 +59,11 @@ export class FeesService {
     };
   }
 
-  async quoteForOwner(userId: string, listingId: string, saleAmountRaw: unknown) {
+  async quoteForOwner(
+    userId: string,
+    listingId: string,
+    saleAmountRaw: unknown,
+  ) {
     const saleAmount = parsePositiveMoneyAmount(saleAmountRaw);
     if (saleAmount == null) {
       throwApi(400, 'invalid_sale_amount', 'أدخل مبلغ بيع صالحاً أكبر من صفر');

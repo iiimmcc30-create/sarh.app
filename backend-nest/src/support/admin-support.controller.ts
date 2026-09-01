@@ -62,7 +62,9 @@ export class AdminSupportController {
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
   ) {
-    return successResponse(await this.tickets.updateAdminTicket(staff, id, body));
+    return successResponse(
+      await this.tickets.updateAdminTicket(staff, id, body),
+    );
   }
 
   @Roles(...STAFF)

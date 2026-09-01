@@ -125,7 +125,8 @@ export class SupportRepository {
     category?: string;
     type?: 'SUPPORT' | 'REPORT';
   }) {
-    const { page, pageSize, search, status, statusGroup, category, type } = query;
+    const { page, pageSize, search, status, statusGroup, category, type } =
+      query;
     const groupStatuses =
       statusGroup && statusGroup !== 'all'
         ? ADMIN_TICKET_STATUS_GROUPS[
@@ -136,7 +137,9 @@ export class SupportRepository {
       ...notDeleted,
       ...(type ? { type } : { type: 'SUPPORT' }),
       ...(status ? { status: status as TicketStatus } : {}),
-      ...(groupStatuses ? { status: { in: [...groupStatuses] as TicketStatus[] } } : {}),
+      ...(groupStatuses
+        ? { status: { in: [...groupStatuses] as TicketStatus[] } }
+        : {}),
       ...(category ? { category } : {}),
       ...(search?.trim()
         ? {
@@ -184,7 +187,12 @@ export class SupportRepository {
           reporter: { select: AUTHOR_SELECT },
           assignedTo: { select: AUTHOR_SELECT },
           order: {
-            select: { id: true, orderNumber: true, status: true, paymentStatus: true },
+            select: {
+              id: true,
+              orderNumber: true,
+              status: true,
+              paymentStatus: true,
+            },
           },
         },
       }),

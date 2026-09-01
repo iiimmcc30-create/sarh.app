@@ -1,13 +1,20 @@
-import type { AiProvider, SarhanDecision, SupportAiContext } from './ai-provider';
+import type {
+  AiProvider,
+  SarhanDecision,
+  SupportAiContext,
+} from './ai-provider';
 
 const JAILBREAK =
   /تجاهل تعليمات|ignore (the )?instructions|system prompt|أعطني بيانات مستخدم|refund now|نفذ (refund|استرجاع)|api key|password/i;
 
-const HUMAN_REQUEST = /موظف|خدمة العملاء|تحدث مع إنسان|human|agent|مش عايز بوت|مو بوت/i;
+const HUMAN_REQUEST =
+  /موظف|خدمة العملاء|تحدث مع إنسان|human|agent|مش عايز بوت|مو بوت/i;
 
-const PAYMENT = /استرجاع|تعويض|فلوس|المبلغ|refund|payment|الدفع|البطاقة|مدفوع مرتين/i;
+const PAYMENT =
+  /استرجاع|تعويض|فلوس|المبلغ|refund|payment|الدفع|البطاقة|مدفوع مرتين/i;
 
-const NOT_RECEIVED = /ما وصل|لم يصل|ما استلمت|ما وصلني|متأخر|delay|didn't arrive|not received/i;
+const NOT_RECEIVED =
+  /ما وصل|لم يصل|ما استلمت|ما وصلني|متأخر|delay|didn't arrive|not received/i;
 
 const MISSING = /ناقص|نقص|ما فيه|missing|incomplete/i;
 
@@ -29,14 +36,17 @@ function lastCustomerText(context: SupportAiContext): string {
  * Understand / ask / classify / escalate only — never mutates orders.
  */
 export class HeuristicAiProvider implements AiProvider {
-  async completeSupportTurn(context: SupportAiContext): Promise<SarhanDecision> {
+  async completeSupportTurn(
+    context: SupportAiContext,
+  ): Promise<SarhanDecision> {
     const text = lastCustomerText(context);
 
     if (JAILBREAK.test(text)) {
       return {
         replyAr:
           'ما أقدر أنفذ أوامر إدارية أو أكشف بيانات مستخدمين آخرين. أقدر أساعدك في وصف مشكلتك ضمن بلاغك فقط.',
-        issueType: (context.issueType as SarhanDecision['issueType']) || 'OTHER',
+        issueType:
+          (context.issueType as SarhanDecision['issueType']) || 'OTHER',
         escalate: false,
       };
     }
@@ -72,7 +82,7 @@ export class HeuristicAiProvider implements AiProvider {
       const missing = ['itemName', 'quantity'];
       const haveName = Boolean(
         (context.missingInformation || []).length === 0 &&
-          /اسم|قطعة|كيلو/.test(text),
+        /اسم|قطعة|كيلو/.test(text),
       );
       return {
         replyAr: haveName
@@ -126,17 +136,22 @@ export class HeuristicAiProvider implements AiProvider {
       };
     }
 
-    if (context.recentMessages.filter((m) => m.authorKind === 'CUSTOMER').length >= 4) {
+    if (
+      context.recentMessages.filter((m) => m.authorKind === 'CUSTOMER')
+        .length >= 4
+    ) {
       return {
         replyAr: 'سأرفع حالتك لخدمة العملاء لمراجعتها.',
-        issueType: (context.issueType as SarhanDecision['issueType']) || 'OTHER',
+        issueType:
+          (context.issueType as SarhanDecision['issueType']) || 'OTHER',
         escalate: true,
         summary: context.summary || text.slice(0, 160),
       };
     }
 
     return {
-      replyAr: 'خلني أفهم المشكلة أكثر: هل تتعلق بطلبك، بالدفع، أم باستفسار عام؟',
+      replyAr:
+        'خلني أفهم المشكلة أكثر: هل تتعلق بطلبك، بالدفع، أم باستفسار عام؟',
       issueType: 'OTHER',
       escalate: false,
       missingInformation: ['problem_category'],

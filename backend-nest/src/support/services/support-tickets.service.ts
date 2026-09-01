@@ -45,7 +45,14 @@ const adminListQuerySchema = z.object({
   search: z.string().optional(),
   status: z.string().optional(),
   statusGroup: z
-    .enum(['all', 'open', 'waiting_support', 'in_progress', 'resolved', 'closed'])
+    .enum([
+      'all',
+      'open',
+      'waiting_support',
+      'in_progress',
+      'resolved',
+      'closed',
+    ])
     .optional(),
   category: z.string().optional(),
   type: z.enum(['SUPPORT', 'REPORT']).optional(),
@@ -222,7 +229,10 @@ export class SupportTicketsService {
     };
   }
 
-  private async createHelpTicket(user: JwtPayload, dto: CreateSupportTicketDto) {
+  private async createHelpTicket(
+    user: JwtPayload,
+    dto: CreateSupportTicketDto,
+  ) {
     const helpKind = dto.helpKind!;
     const description = dto.description.trim();
     let orderId: string | null = null;
@@ -231,7 +241,10 @@ export class SupportTicketsService {
       if (!dto.orderId) {
         throwApi(400, 'order_required', 'يجب اختيار طلب');
       }
-      const owned = await this.repo.findOwnedButcherOrder(dto.orderId, user.userId);
+      const owned = await this.repo.findOwnedButcherOrder(
+        dto.orderId,
+        user.userId,
+      );
       if (!owned) {
         const exists = await this.repo.findButcherOrderById(dto.orderId);
         if (exists) {
@@ -396,7 +409,11 @@ export class SupportTicketsService {
     return { ticket };
   }
 
-  async updateAdminTicket(staff: JwtPayload, id: string, body: Record<string, unknown>) {
+  async updateAdminTicket(
+    staff: JwtPayload,
+    id: string,
+    body: Record<string, unknown>,
+  ) {
     const parsed = adminUpdateTicketSchema.safeParse(body);
     if (!parsed.success) throwApi(400, 'invalid_body', 'بيانات غير صالحة');
 
@@ -431,7 +448,10 @@ export class SupportTicketsService {
         : {}),
     });
 
-    if (parsed.data.assignedToId && parsed.data.assignedToId !== existing.assignedToId) {
+    if (
+      parsed.data.assignedToId &&
+      parsed.data.assignedToId !== existing.assignedToId
+    ) {
       this.logger.info(
         {
           event: 'SUPPORT_ASSIGNED',
@@ -459,7 +479,10 @@ export class SupportTicketsService {
       parsed.data.status &&
       parsed.data.status !== existing.status
     ) {
-      if (parsed.data.status === 'AWAITING_USER' || parsed.data.status === 'WAITING_FOR_CUSTOMER') {
+      if (
+        parsed.data.status === 'AWAITING_USER' ||
+        parsed.data.status === 'WAITING_FOR_CUSTOMER'
+      ) {
         await this.notifications.notifyTicketAwaitingUser(existing.reporterId, {
           id: ticket.id,
           ticketNumber: ticket.ticketNumber,

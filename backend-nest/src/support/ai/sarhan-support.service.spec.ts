@@ -20,7 +20,9 @@ function baseContext(over: Partial<SupportAiContext> = {}): SupportAiContext {
       currency: 'SAR',
       createdAt: '2026-09-01T00:00:00.000Z',
       deliveryType: 'delivery',
-      items: [{ cutType: 'whole', weightKg: 2, linePrice: 120, nameAr: 'خروف' }],
+      items: [
+        { cutType: 'whole', weightKg: 2, linePrice: 120, nameAr: 'خروف' },
+      ],
     },
     ...over,
   };

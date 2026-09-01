@@ -20,7 +20,12 @@ describe('ListingsService listing fee + covenant', () => {
     findSellerId: jest.fn(),
     softDelete: jest.fn(),
   };
-  const cache = { del: jest.fn(), delPattern: jest.fn(), get: jest.fn(), set: jest.fn() };
+  const cache = {
+    del: jest.fn(),
+    delPattern: jest.fn(),
+    get: jest.fn(),
+    set: jest.fn(),
+  };
   const logger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() };
   const feeCheckQueue = { scheduleFeeCheck: jest.fn() };
   const notifications = { notifyUser: jest.fn() };
@@ -66,7 +71,11 @@ describe('ListingsService listing fee + covenant', () => {
 
     await service.create(
       { userId: 'u1', username: 'u', role: 'USER' },
-      { ...baseDto, acceptedCovenant: true, covenantVersion: 'listing-covenant-v2' },
+      {
+        ...baseDto,
+        acceptedCovenant: true,
+        covenantVersion: 'listing-covenant-v2',
+      },
     );
 
     expect(repo.createListingWithFee).toHaveBeenCalledWith(
@@ -89,16 +98,14 @@ describe('ListingsService listing fee + covenant', () => {
     repo.findSellerId.mockResolvedValue({ sellerId: 'u1' });
     repo.softDelete.mockResolvedValue({});
 
-    await service.remove(
-      { userId: 'u1', username: 'u', role: 'USER' },
-      'l1',
-      { sold: true, reason: 'تم البيع خارج المنصة' },
-    );
-    await service.remove(
-      { userId: 'u1', username: 'u', role: 'USER' },
-      'l1',
-      { sold: false, reason: 'لم يعد متاحاً' },
-    );
+    await service.remove({ userId: 'u1', username: 'u', role: 'USER' }, 'l1', {
+      sold: true,
+      reason: 'تم البيع خارج المنصة',
+    });
+    await service.remove({ userId: 'u1', username: 'u', role: 'USER' }, 'l1', {
+      sold: false,
+      reason: 'لم يعد متاحاً',
+    });
 
     expect(repo.createListingWithFee).not.toHaveBeenCalled();
     expect(repo.softDelete).toHaveBeenNthCalledWith(

@@ -19,12 +19,18 @@ export type SarhanTurnResult = {
   metadata: Record<string, unknown>;
 };
 
-function sanitizeMeta(input: Record<string, unknown> | undefined): Record<string, unknown> {
+function sanitizeMeta(
+  input: Record<string, unknown> | undefined,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (!input) return out;
   for (const [key, value] of Object.entries(input)) {
     if (SENSITIVE_META.test(key)) continue;
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
       out[key] = typeof value === 'string' ? value.slice(0, 200) : value;
     }
   }
@@ -58,7 +64,7 @@ export class SarhanSupportService {
             paymentStatus: context.order.paymentStatus,
             totalPrice: context.order.totalPrice,
           }
-        : existingMeta.orderContext ?? null,
+        : (existingMeta.orderContext ?? null),
     };
 
     this.logger.info(
@@ -78,7 +84,8 @@ export class SarhanSupportService {
       replyAr,
       escalate: decision.escalate,
       issueType: String(metadata.issueType),
-      summary: typeof metadata.summary === 'string' ? metadata.summary : undefined,
+      summary:
+        typeof metadata.summary === 'string' ? metadata.summary : undefined,
       missingInformation: Array.isArray(metadata.missingInformation)
         ? metadata.missingInformation.map(String)
         : [],

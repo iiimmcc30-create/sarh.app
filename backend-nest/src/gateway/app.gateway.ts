@@ -262,8 +262,7 @@ export class AppGateway
     @MessageBody() raw: unknown,
   ) {
     const data = this.socketService.validateDto(SupportJoinDto, raw);
-    if (!data)
-      return this.emitErr(client, 'invalid_input', 'Invalid ticketId');
+    if (!data) return this.emitErr(client, 'invalid_input', 'Invalid ticketId');
 
     const err = await this.socketService.handleSupportJoin(
       client.data.user!,

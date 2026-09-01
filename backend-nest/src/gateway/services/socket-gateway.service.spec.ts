@@ -24,7 +24,9 @@ describe('SocketGatewayService chat authorization', () => {
   const notifications = { notifyUser: jest.fn() };
   const supportTickets = {
     getTicketForSocket: jest.fn(),
-    isStaffRole: jest.fn((role: string) => role === 'ADMIN' || role === 'MODERATOR'),
+    isStaffRole: jest.fn(
+      (role: string) => role === 'ADMIN' || role === 'MODERATOR',
+    ),
     replyAsStaff: jest.fn(),
     replyAsUser: jest.fn(),
   };

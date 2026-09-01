@@ -20,7 +20,9 @@ describe('SupportTicketsService', () => {
     listCustomerHelpOrders: jest.fn(),
     findUserNames: jest.fn(),
     findLatestSrhTicketNumber: jest.fn(),
-    isUniqueConstraint: jest.fn((err: { code?: string }) => err?.code === 'P2002'),
+    isUniqueConstraint: jest.fn(
+      (err: { code?: string }) => err?.code === 'P2002',
+    ),
     findAllStaffUserIds: jest.fn(),
   };
   const notifications = {
@@ -31,7 +33,10 @@ describe('SupportTicketsService', () => {
     notifyTicketAwaitingUser: jest.fn(),
     notifyTicketClosed: jest.fn(),
   };
-  const prisma = { user: { findMany: jest.fn() }, butcherOrder: { update: jest.fn() } };
+  const prisma = {
+    user: { findMany: jest.fn() },
+    butcherOrder: { update: jest.fn() },
+  };
   const logger = { info: jest.fn(), warn: jest.fn() };
   const sockets = { emitToTicket: jest.fn() };
   const sarhan = { nextTurn: jest.fn() };
@@ -41,14 +46,19 @@ describe('SupportTicketsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    repo.findUserNames.mockResolvedValue({ arabicName: 'متعب العتيبي', displayName: 'Muteb' });
+    repo.findUserNames.mockResolvedValue({
+      arabicName: 'متعب العتيبي',
+      displayName: 'Muteb',
+    });
     repo.findLatestSrhTicketNumber.mockResolvedValue(null);
     repo.createMessage.mockResolvedValue({ id: 'm1', body: 'x' });
-    repo.updateTicket.mockImplementation(async (id: string, data: Record<string, unknown>) => ({
-      id,
-      ticketNumber: 'SRH-2026-000001',
-      ...data,
-    }));
+    repo.updateTicket.mockImplementation(
+      async (id: string, data: Record<string, unknown>) => ({
+        id,
+        ticketNumber: 'SRH-2026-000001',
+        ...data,
+      }),
+    );
     sarhan.nextTurn.mockResolvedValue({
       replyAr: 'هل الطلب لم يصل؟',
       escalate: false,
@@ -76,7 +86,10 @@ describe('SupportTicketsService', () => {
   });
 
   it('creates an ORDER_HELP ticket with a server SRH number and welcome from backend first name', async () => {
-    repo.findOwnedButcherOrder.mockResolvedValue({ id: 'ord-a', customerId: 'cust-a' });
+    repo.findOwnedButcherOrder.mockResolvedValue({
+      id: 'ord-a',
+      customerId: 'cust-a',
+    });
     repo.createTicket.mockResolvedValue({
       id: 't1',
       ticketNumber: 'SRH-2026-000001',
@@ -141,7 +154,10 @@ describe('SupportTicketsService', () => {
       metadata: {},
       messages: [],
     });
-    repo.findUserTicket.mockResolvedValue({ id: 't2', ticketNumber: 'SRH-2026-000002' });
+    repo.findUserTicket.mockResolvedValue({
+      id: 't2',
+      ticketNumber: 'SRH-2026-000002',
+    });
 
     await service.createTicket(user('cust-a'), {
       helpKind: 'OTHER_HELP',
@@ -185,21 +201,26 @@ describe('SupportTicketsService', () => {
 
   it('lets a customer read only their own ticket', async () => {
     repo.findUserTicket.mockResolvedValue({ id: 't-a', reporterId: 'cust-a' });
-    await expect(service.getUserTicket(user('cust-a'), 't-a')).resolves.toEqual({
-      ticket: { id: 't-a', reporterId: 'cust-a' },
-    });
+    await expect(service.getUserTicket(user('cust-a'), 't-a')).resolves.toEqual(
+      {
+        ticket: { id: 't-a', reporterId: 'cust-a' },
+      },
+    );
   });
 
   it('forbids IDOR access to another customer ticket', async () => {
     repo.findUserTicket.mockResolvedValue(null);
-    await expect(service.getUserTicket(user('cust-a'), 't-b')).rejects.toBeInstanceOf(
-      ApiException,
-    );
+    await expect(
+      service.getUserTicket(user('cust-a'), 't-b'),
+    ).rejects.toBeInstanceOf(ApiException);
   });
 
   it('forbids creating ORDER_HELP on another customer order', async () => {
     repo.findOwnedButcherOrder.mockResolvedValue(null);
-    repo.findButcherOrderById.mockResolvedValue({ id: 'ord-b', customerId: 'cust-b' });
+    repo.findButcherOrderById.mockResolvedValue({
+      id: 'ord-b',
+      customerId: 'cust-b',
+    });
     await expect(
       service.createTicket(user('cust-a'), {
         helpKind: 'ORDER_HELP',
@@ -240,10 +261,15 @@ describe('SupportTicketsService', () => {
       reporterId: 'cust-a',
       adminNotes: null,
     });
-    await service.replyAsStaff(user('mod-1', 'MODERATOR'), 't1', { body: 'معك خدمة العملاء' });
+    await service.replyAsStaff(user('mod-1', 'MODERATOR'), 't1', {
+      body: 'معك خدمة العملاء',
+    });
     expect(repo.updateTicket).toHaveBeenCalledWith(
       't1',
-      expect.objectContaining({ handlerMode: 'HUMAN_ACTIVE', status: 'IN_PROGRESS' }),
+      expect.objectContaining({
+        handlerMode: 'HUMAN_ACTIVE',
+        status: 'IN_PROGRESS',
+      }),
     );
     expect(notifications.notifyStaffReply).toHaveBeenCalled();
   });
@@ -263,7 +289,9 @@ describe('SupportTicketsService', () => {
       ticketNumber: 'SRH-2026-000001',
       subject: 'مشكلة في الطلب',
     });
-    await service.replyAsUser(user('cust-a'), 't1', { body: 'ما زالت المشكلة' });
+    await service.replyAsUser(user('cust-a'), 't1', {
+      body: 'ما زالت المشكلة',
+    });
     expect(sarhan.nextTurn).not.toHaveBeenCalled();
   });
 
@@ -283,7 +311,10 @@ describe('SupportTicketsService', () => {
       status: 'AI_ASSISTING',
       metadata: {},
     });
-    repo.findUserTicket.mockResolvedValue({ id: 't4', ticketNumber: 'SRH-2026-000004' });
+    repo.findUserTicket.mockResolvedValue({
+      id: 't4',
+      ticketNumber: 'SRH-2026-000004',
+    });
 
     await service.createTicket(user('cust-a'), {
       helpKind: 'OTHER_HELP',
@@ -319,7 +350,10 @@ describe('SupportTicketsService', () => {
   });
 
   it('allows owned order help and never mutates the order', async () => {
-    repo.findOwnedButcherOrder.mockResolvedValue({ id: 'ord-a', customerId: 'cust-a' });
+    repo.findOwnedButcherOrder.mockResolvedValue({
+      id: 'ord-a',
+      customerId: 'cust-a',
+    });
     repo.createTicket.mockResolvedValue({
       id: 't5',
       ticketNumber: 'SRH-2026-000005',
@@ -369,7 +403,9 @@ describe('SupportTicketsService', () => {
       missingInformation: [],
     });
 
-    await service.replyAsUser(user('cust-a'), 't1', { body: 'أبي استرجع فلوسي' });
+    await service.replyAsUser(user('cust-a'), 't1', {
+      body: 'أبي استرجع فلوسي',
+    });
 
     expect(repo.updateTicket).toHaveBeenCalledWith(
       't1',
@@ -398,7 +434,10 @@ describe('SupportTicketsService', () => {
     });
     expect(repo.updateTicket).toHaveBeenCalledWith(
       't1',
-      expect.objectContaining({ handlerMode: 'HUMAN_ACTIVE', status: 'WAITING_FOR_SUPPORT' }),
+      expect.objectContaining({
+        handlerMode: 'HUMAN_ACTIVE',
+        status: 'WAITING_FOR_SUPPORT',
+      }),
     );
   });
 });

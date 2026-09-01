@@ -11,7 +11,9 @@ describe('support_sarhan_tickets migration review', () => {
   );
 
   it('is additive and keeps legacy tickets on HUMAN_ACTIVE', () => {
-    expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS "handlerMode".*DEFAULT 'HUMAN_ACTIVE'/s);
+    expect(sql).toMatch(
+      /ADD COLUMN IF NOT EXISTS "handlerMode".*DEFAULT 'HUMAN_ACTIVE'/s,
+    );
     expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS "orderId" TEXT/);
     expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS "metadata" JSONB/);
     expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS "closedAt"/);
@@ -20,7 +22,9 @@ describe('support_sarhan_tickets migration review', () => {
     expect(sql).not.toMatch(/\bDROP TABLE\b/i);
     expect(sql).not.toMatch(/\bTRUNCATE\b/i);
     expect(sql).not.toMatch(/DELETE FROM "SupportTicket"/i);
-    expect(sql).not.toMatch(/UPDATE "SupportTicket"\s+SET\s+"handlerMode"\s*=\s*'AI_ACTIVE'/i);
+    expect(sql).not.toMatch(
+      /UPDATE "SupportTicket"\s+SET\s+"handlerMode"\s*=\s*'AI_ACTIVE'/i,
+    );
   });
 
   it('adds required enum values and indexes without reset', () => {

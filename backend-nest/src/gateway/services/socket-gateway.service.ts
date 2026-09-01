@@ -447,7 +447,10 @@ export class SocketGatewayService {
   ): Promise<SocketError | null> {
     const ticket = await this.supportTickets.getTicketForSocket(user, ticketId);
     if (!ticket) {
-      return { code: 'unauthorized', message: 'Not allowed to join this ticket' };
+      return {
+        code: 'unauthorized',
+        message: 'Not allowed to join this ticket',
+      };
     }
     return null;
   }
@@ -461,7 +464,10 @@ export class SocketGatewayService {
       data.ticketId,
     );
     if (!ticket) {
-      return { code: 'unauthorized', message: 'Not allowed to send on this ticket' };
+      return {
+        code: 'unauthorized',
+        message: 'Not allowed to send on this ticket',
+      };
     }
     try {
       if (this.supportTickets.isStaffRole(user.role)) {
