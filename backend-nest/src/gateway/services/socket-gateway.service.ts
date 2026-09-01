@@ -15,11 +15,13 @@ import {
   ChatTypingDto,
   LiveCommentDto,
   OrderStatusDto,
+  SupportSendDto,
 } from '../dto/socket-events.dto';
 import { SocketRepository } from '../repositories/socket.repository';
 import { SocketEmitService } from './socket-emit.service';
 import { OrderLifecycleService } from '../../butchers/services/order-lifecycle.service';
 import { MessagingPolicyService } from '../../messages/services/messaging-policy.service';
+import { SupportTicketsService } from '../../support/services/support-tickets.service';
 import { ApiException } from '../../common/exceptions/api.exception';
 import { markSocketOffline, markSocketOnline } from './online-presence';
 
@@ -43,6 +45,7 @@ export class SocketGatewayService {
     private readonly orderLifecycle: OrderLifecycleService,
     private readonly logger: LoggerService,
     private readonly messagingPolicy: MessagingPolicyService,
+    private readonly supportTickets: SupportTicketsService,
   ) {}
 
   private policyError(err: unknown): SocketError {
@@ -436,5 +439,49 @@ export class SocketGatewayService {
     if (ids.length === 0) return;
 
     await this.repo.markNotificationsRead(ids, userId).catch(() => {});
+  }
+
+  async handleSupportJoin(
+    user: JwtPayload,
+    ticketId: string,
+  ): Promise<SocketError | null> {
+    const ticket = await this.supportTickets.getTicketForSocket(user, ticketId);
+    if (!ticket) {
+      return {
+        code: 'unauthorized',
+        message: 'Not allowed to join this ticket',
+      };
+    }
+    return null;
+  }
+
+  async handleSupportSend(
+    user: JwtPayload,
+    data: SupportSendDto,
+  ): Promise<SocketError | null> {
+    const ticket = await this.supportTickets.getTicketForSocket(
+      user,
+      data.ticketId,
+    );
+    if (!ticket) {
+      return {
+        code: 'unauthorized',
+        message: 'Not allowed to send on this ticket',
+      };
+    }
+    try {
+      if (this.supportTickets.isStaffRole(user.role)) {
+        await this.supportTickets.replyAsStaff(user, data.ticketId, {
+          body: data.body,
+        });
+      } else {
+        await this.supportTickets.replyAsUser(user, data.ticketId, {
+          body: data.body,
+        });
+      }
+    } catch (err) {
+      return this.policyError(err);
+    }
+    return null;
   }
 }

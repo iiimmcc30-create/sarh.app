@@ -22,6 +22,14 @@ describe('SocketGatewayService chat authorization', () => {
     getServer: jest.fn().mockReturnValue({ to: () => ({ emit: jest.fn() }) }),
   };
   const notifications = { notifyUser: jest.fn() };
+  const supportTickets = {
+    getTicketForSocket: jest.fn(),
+    isStaffRole: jest.fn(
+      (role: string) => role === 'ADMIN' || role === 'MODERATOR',
+    ),
+    replyAsStaff: jest.fn(),
+    replyAsUser: jest.fn(),
+  };
 
   let service: SocketGatewayService;
 
@@ -38,6 +46,7 @@ describe('SocketGatewayService chat authorization', () => {
       {} as never,
       { error: jest.fn() } as never,
       messagingPolicy as never,
+      supportTickets as never,
     );
   });
 
@@ -147,5 +156,36 @@ describe('SocketGatewayService chat authorization', () => {
       receiverId: 'stranger',
     });
     expect(err?.code).toBe('unauthorized');
+  });
+
+  it('rejects support:join when the customer does not own the ticket', async () => {
+    supportTickets.getTicketForSocket.mockResolvedValue(null);
+    const err = await service.handleSupportJoin(
+      user('eve'),
+      '22222222-2222-2222-2222-222222222222',
+    );
+    expect(err?.code).toBe('unauthorized');
+  });
+
+  it('rejects support:send when the customer does not own the ticket', async () => {
+    supportTickets.getTicketForSocket.mockResolvedValue(null);
+    const err = await service.handleSupportSend(user('eve'), {
+      ticketId: '22222222-2222-2222-2222-222222222222',
+      body: 'hi',
+    });
+    expect(err?.code).toBe('unauthorized');
+    expect(supportTickets.replyAsUser).not.toHaveBeenCalled();
+  });
+
+  it('allows support:send for the ticket owner without opening butcher chat', async () => {
+    supportTickets.getTicketForSocket.mockResolvedValue({ id: 't1' });
+    supportTickets.replyAsUser.mockResolvedValue({});
+    const err = await service.handleSupportSend(user('alice'), {
+      ticketId: '22222222-2222-2222-2222-222222222222',
+      body: 'تحديث',
+    });
+    expect(err).toBeNull();
+    expect(supportTickets.replyAsUser).toHaveBeenCalled();
+    expect(repo.createMessageWithThreadUpdate).not.toHaveBeenCalled();
   });
 });

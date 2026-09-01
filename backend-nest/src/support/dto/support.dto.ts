@@ -4,13 +4,18 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { IsOurUploadUrl } from '../../users/validators/is-our-upload-url.validator';
-import { SUPPORT_TICKET_CATEGORIES } from '../constants/support.constants';
+import {
+  HELP_KINDS,
+  SUPPORT_TICKET_CATEGORIES,
+} from '../constants/support.constants';
 
 export class TicketAttachmentDto {
   @IsOurUploadUrl()
@@ -31,16 +36,26 @@ export class TicketAttachmentDto {
 }
 
 export class CreateSupportTicketDto {
-  @IsEnum(SUPPORT_TICKET_CATEGORIES)
-  category!: (typeof SUPPORT_TICKET_CATEGORIES)[number];
+  @IsOptional()
+  @IsEnum(HELP_KINDS)
+  helpKind?: (typeof HELP_KINDS)[number];
 
+  @ValidateIf((o: CreateSupportTicketDto) => !o.helpKind)
+  @IsEnum(SUPPORT_TICKET_CATEGORIES)
+  category?: (typeof SUPPORT_TICKET_CATEGORIES)[number];
+
+  @ValidateIf((o: CreateSupportTicketDto) => !o.helpKind)
   @IsString()
   @MinLength(3)
   @MaxLength(200)
-  subject!: string;
+  subject?: string;
+
+  @ValidateIf((o: CreateSupportTicketDto) => o.helpKind === 'ORDER_HELP')
+  @IsUUID()
+  orderId?: string;
 
   @IsString()
-  @MinLength(10)
+  @MinLength(3)
   @MaxLength(5000)
   description!: string;
 

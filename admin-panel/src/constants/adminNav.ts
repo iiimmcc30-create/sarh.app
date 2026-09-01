@@ -21,7 +21,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/listings', label: 'الإعلانات' },
   { href: '/categories', label: 'تصنيفات السوق' },
   { href: '/reports', label: 'البلاغات' },
-  { href: '/support', label: 'الدعم والمساعدة' },
+  { href: '/support', label: 'خدمة العملاء' },
   { href: '/live', label: 'البث المباشر' },
   { href: '/butchers', label: 'الملاحم' },
   { href: '/butcher-banners', label: 'بنرات الملاحم' },

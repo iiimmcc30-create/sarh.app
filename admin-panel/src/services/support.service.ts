@@ -13,6 +13,7 @@ export type ListParams = {
   pageSize?: number;
   search?: string;
   status?: string;
+  statusGroup?: string;
   category?: string;
   type?: 'SUPPORT' | 'REPORT';
 };

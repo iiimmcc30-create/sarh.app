@@ -339,11 +339,18 @@ export default function OrderDetailsScreen() {
         <CoverTrailRow justify="space-between" gap={spacing.sm} style={s.footerRow}>
           <Pressable
             style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
-            onPress={() => router.push('/support' as never)}
+            onPress={() =>
+              router.push(
+                {
+                  pathname: '/support/help',
+                  params: order.paymentStatus === 'paid' ? { orderId: order.id } : {},
+                } as never,
+              )
+            }
           >
             <AppIcon name="headset" size={20} color={colors.electricBright} />
             <Text style={s.footerTitle}>المساعدة</Text>
-            <Text style={s.footerSub}>خدمة العملاء — بدون تواصل مع الملحمة</Text>
+            <Text style={s.footerSub}>سرحان وخدمة العملاء — بدون تواصل مع الملحمة</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}

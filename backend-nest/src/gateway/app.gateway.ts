@@ -18,6 +18,8 @@ import {
   ChatTypingDto,
   LiveCommentDto,
   OrderStatusDto,
+  SupportJoinDto,
+  SupportSendDto,
 } from './dto/socket-events.dto';
 import { SocketEmitService } from './services/socket-emit.service';
 import { SocketGatewayService } from './services/socket-gateway.service';
@@ -252,6 +254,48 @@ export class AppGateway
       client.data.user!.userId,
       raw,
     );
+  }
+
+  @SubscribeMessage('support:join')
+  async onSupportJoin(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() raw: unknown,
+  ) {
+    const data = this.socketService.validateDto(SupportJoinDto, raw);
+    if (!data) return this.emitErr(client, 'invalid_input', 'Invalid ticketId');
+
+    const err = await this.socketService.handleSupportJoin(
+      client.data.user!,
+      data.ticketId,
+    );
+    if (err) return this.emitErr(client, err.code, err.message);
+    void client.join(`support:${data.ticketId}`);
+  }
+
+  @SubscribeMessage('support:leave')
+  onSupportLeave(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() raw: unknown,
+  ) {
+    const data = this.socketService.validateDto(SupportJoinDto, raw);
+    if (!data) return;
+    void client.leave(`support:${data.ticketId}`);
+  }
+
+  @SubscribeMessage('support:send')
+  async onSupportSend(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() raw: unknown,
+  ) {
+    const data = this.socketService.validateDto(SupportSendDto, raw);
+    if (!data)
+      return this.emitErr(client, 'invalid_input', 'Invalid support message');
+
+    const err = await this.socketService.handleSupportSend(
+      client.data.user!,
+      data,
+    );
+    if (err) this.emitErr(client, err.code, err.message);
   }
 
   private emitErr(client: Socket, code: string, message: string) {

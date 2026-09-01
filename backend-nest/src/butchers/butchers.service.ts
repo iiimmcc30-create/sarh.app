@@ -1092,6 +1092,20 @@ export class ButchersService {
       );
     }
 
+    if (
+      isCustomer &&
+      !isButcher &&
+      !isAdmin &&
+      statusInput.status === 'cancelled' &&
+      order.paymentStatus === 'paid'
+    ) {
+      throwApi(
+        403,
+        'forbidden_status_change',
+        'لا يمكن إلغاء الطلب بعد إتمام الدفع',
+      );
+    }
+
     const updated = await this.orderLifecycle.transitionOrder({
       orderId: id,
       actorId: user.userId,

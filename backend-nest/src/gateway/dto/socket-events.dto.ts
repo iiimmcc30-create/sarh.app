@@ -124,3 +124,18 @@ export class NotificationsReadDto {
   @ArrayMaxSize(50)
   ids!: string[];
 }
+
+export class SupportJoinDto {
+  @IsUUID()
+  ticketId!: string;
+}
+
+export class SupportSendDto {
+  @IsUUID()
+  ticketId!: string;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(5000)
+  body!: string;
+}
