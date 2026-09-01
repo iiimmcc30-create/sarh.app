@@ -123,7 +123,7 @@ export default function UserProfileScreen() {
 
   const handleChat = () => {
     if (!profile) return;
-    if (profile.accountType === 'BUTCHER' || profile.role === 'BUTCHER') {
+    if (profile.accountType === 'BUTCHER') {
       Alert.alert('المحادثة', 'التواصل المباشر مع الملحمة غير متاح');
       return;
     }
@@ -142,10 +142,7 @@ export default function UserProfileScreen() {
         receiverName: profile.arabicName,
         receiverAvatar: profile.avatar ?? '',
         accountType: profile.accountType ?? 'USER',
-        threadType:
-          profile.accountType === 'BUTCHER' || profile.role === 'BUTCHER'
-            ? 'BUTCHER'
-            : 'DIRECT',
+        threadType: 'DIRECT',
       },
     } as never);
   };
