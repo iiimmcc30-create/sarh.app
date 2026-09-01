@@ -299,12 +299,12 @@ function ChatTab({
         <View style={chatStyles.lockedCard}>
           <AppIcon name="chatbubble-outline" size={28} color={colors.textMuted} />
           <RtlTextShell>
-            <RtlText style={chatStyles.lockedTitle}>المحادثة غير متاحة بعد</RtlText>
+            <RtlText style={chatStyles.lockedTitle}>المحادثة غير متاحة</RtlText>
           </RtlTextShell>
           <RtlTextShell>
             <RtlText style={chatStyles.lockedSub}>
               {chatAccess?.messageAr ??
-                'يمكنك مراسلة الملحمة بعد تقديم الطلب وقبوله من قبلها.'}
+                'التواصل المباشر مع الملحمة غير متاح'}
             </RtlText>
           </RtlTextShell>
           <Pressable

@@ -11,6 +11,8 @@ function jwt(userId: string, role: JwtPayload['role'] = 'BUTCHER'): JwtPayload {
 describe('Butcher order isolation', () => {
   const repo = {
     findButcherIdByUser: jest.fn(),
+    findButcherById: jest.fn(),
+    findAcceptedOrderForChat: jest.fn(),
     findOrdersForButcher: jest.fn(),
     findOrdersForCustomer: jest.fn(),
     findOrdersPage: jest.fn(),
@@ -48,6 +50,17 @@ describe('Butcher order isolation', () => {
       new OrderStateMachineService(),
       ranking as never,
     );
+  });
+
+  it('closes shop chat-access for customers and owners', async () => {
+    repo.findButcherById.mockResolvedValue({
+      id: 'shop-1',
+      userId: 'butcher-user',
+    });
+    const result = await service.getChatAccess('shop-1', jwt('cust-1', 'USER'));
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('direct_chat_disabled');
+    expect(repo.findAcceptedOrderForChat).not.toHaveBeenCalled();
   });
 
   it('refuses butcher A reading butcher B order details', async () => {
