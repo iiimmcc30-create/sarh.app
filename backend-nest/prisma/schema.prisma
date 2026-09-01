@@ -910,6 +910,7 @@ model ButcherOrder {
   items              ButcherOrderItem[]
   timeline           OrderTimeline[]
   audits             OrderStatusAudit[]
+  supportTickets     SupportTicket[]
 
   @@index([butcherId])
   @@index([customerId])
@@ -1300,22 +1301,27 @@ enum ButcherApplicationTimelineAction {
 }
 
 model SupportTicket {
-  id           String                  @id @default(uuid())
-  ticketNumber String                  @unique
-  type         SupportTicketType       @default(SUPPORT)
+  id           String                    @id @default(uuid())
+  ticketNumber String                    @unique
+  type         SupportTicketType         @default(SUPPORT)
   category     String
-  priority     TicketPriority          @default(NORMAL)
-  status       TicketStatus            @default(OPEN)
+  priority     TicketPriority            @default(NORMAL)
+  status       TicketStatus              @default(OPEN)
+  handlerMode  SupportHandlerMode        @default(HUMAN_ACTIVE)
   subject      String
   description  String
   adminNotes   String?
   reporterId   String?
   assignedToId String?
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
+  orderId      String?
+  metadata     Json?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  closedAt     DateTime?
   deletedAt    DateTime?
-  reporter     User?                   @relation(fields: [reporterId], references: [id], onDelete: SetNull)
-  assignedTo   User?                   @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  reporter     User?                     @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  assignedTo   User?                     @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  order        ButcherOrder?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
   messages     SupportTicketMessage[]
   attachments  SupportTicketAttachment[]
 
@@ -1327,17 +1333,20 @@ model SupportTicket {
   @@index([deletedAt])
   @@index([reporterId])
   @@index([assignedToId])
+  @@index([orderId])
+  @@index([handlerMode])
 }
 
 model SupportTicketMessage {
   id           String                    @id @default(uuid())
   ticketId     String
-  authorId     String
+  authorId     String?
+  authorKind   SupportMessageAuthor      @default(CUSTOMER)
   body         String
   isStaffReply Boolean                   @default(false)
   createdAt    DateTime                  @default(now())
   ticket       SupportTicket             @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  author       User                      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author       User?                     @relation(fields: [authorId], references: [id], onDelete: SetNull)
   attachments  SupportTicketAttachment[]
 
   @@index([ticketId])
@@ -1505,10 +1514,24 @@ enum TicketPriority {
 enum TicketStatus {
   OPEN
   IN_REVIEW
+  AI_ASSISTING
+  WAITING_FOR_CUSTOMER
+  WAITING_FOR_SUPPORT
   IN_PROGRESS
   AWAITING_USER
   RESOLVED
   CLOSED
+}
+
+enum SupportHandlerMode {
+  AI_ACTIVE
+  HUMAN_ACTIVE
+}
+
+enum SupportMessageAuthor {
+  CUSTOMER
+  SARHAN
+  STAFF
 }
 
 enum SupportTicketType {

@@ -16,8 +16,11 @@ import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useSupportTicketSocket } from '@/hooks/useSupportTicketSocket';
+import { useAuth } from '@/contexts/AuthContext';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection } from '@/lib/rtl';
+import { messageAuthorLabel } from '@/lib/supportRealtime';
 import {
   fetchTicket,
   replyToTicket,
@@ -27,6 +30,7 @@ import {
 
 export default function SupportTicketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { accessToken } = useAuth();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [ticket, setTicket] = useState<SupportTicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +50,10 @@ export default function SupportTicketDetailScreen() {
       void load();
     }, [load]),
   );
+
+  useSupportTicketSocket(accessToken, ticket?.id ?? (id ? String(id) : null), () => {
+    void load();
+  });
 
   const handleReply = async () => {
     if (!ticket || !reply.trim()) return;
@@ -79,6 +87,10 @@ export default function SupportTicketDetailScreen() {
   }
 
   const closed = ticket.status === 'CLOSED' || ticket.status === 'RESOLVED';
+  const humanActive =
+    ticket.handlerMode === 'HUMAN_ACTIVE' ||
+    ticket.status === 'WAITING_FOR_SUPPORT' ||
+    ticket.status === 'IN_PROGRESS';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -87,9 +99,15 @@ export default function SupportTicketDetailScreen() {
         <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
           <GlassCard style={styles.headerCard}>
             <Text style={styles.subject}>{ticket.subject}</Text>
+            <Text style={styles.ticketNumber}>رقم البلاغ: {ticket.ticketNumber}</Text>
             <Text style={styles.status}>
               {TICKET_STATUS_LABEL_AR[ticket.status] ?? ticket.status}
             </Text>
+            {humanActive ? (
+              <Text style={styles.handoff}>
+                تم تحويلك إلى خدمة العملاء. سرحان لن يرد تلقائيًا على هذه المحادثة.
+              </Text>
+            ) : null}
             <Text style={styles.description}>{ticket.description}</Text>
           </GlassCard>
 
@@ -99,7 +117,7 @@ export default function SupportTicketDetailScreen() {
               style={[styles.message, msg.isStaffReply && styles.staffMessage]}
             >
               <Text style={styles.messageAuthor}>
-                {msg.isStaffReply ? 'فريق الدعم' : 'أنت'}
+                {messageAuthorLabel(msg)}
               </Text>
               <Text style={styles.messageBody}>{msg.body}</Text>
               <Text style={styles.messageTime}>
@@ -143,7 +161,9 @@ function createStyles(colors: ThemeColors) {
     notFound: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xxl },
     headerCard: { gap: spacing.sm },
     subject: { ...typography.h3, color: colors.textPrimary },
+    ticketNumber: { ...typography.caption, color: colors.textBrandStrong },
     status: { ...typography.caption, color: colors.electric },
+    handoff: { ...typography.caption, color: colors.warning, lineHeight: 20 },
     description: { ...typography.body, color: colors.textSecondary, lineHeight: 22 },
     message: { gap: spacing.xs },
     staffMessage: { borderColor: colors.electric, borderWidth: StyleSheet.hairlineWidth },

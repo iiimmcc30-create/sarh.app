@@ -83,7 +83,7 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
   {
     id: 'support-help',
     titleAr: 'الدعم والمساعدة / التوثيق',
-    routes: ['/support', '/support/tickets', '/settings/support'],
+    routes: ['/support', '/support/tickets', '/support/help', '/settings/support'],
     coveredByTests: ['features-posts-stories-support.test.ts'],
     modules: ['services/support.ts'],
   },

@@ -23,7 +23,6 @@ import {
 } from '@/lib/customerOrders';
 import { rtlBackIcon } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
-import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
 import { ORDER_STATUS_COLORS } from '@/services/butcherData';
 import {
   completeButcherOrderPayment,
@@ -120,18 +119,7 @@ export default function OrderDetailsScreen() {
   const lines = orderLineItems(order);
   const money = orderMoneySummary(order);
   const reached = flowReached(order);
-  const canChat = isOrderChatEligible(order.status) && order.butcherId;
   const delivered = order.status === 'delivered';
-
-  const openChat = () =>
-    router.push(
-      butcherChatRouteParams({
-        butcherId: order.butcherId,
-        orderId: order.id,
-        receiverName: order.butcher?.nameAr,
-        receiverAvatar: order.butcher?.logo,
-      }),
-    );
 
   const handleCompletePayment = async () => {
     if (!accessToken || paying) return;
@@ -262,26 +250,6 @@ export default function OrderDetailsScreen() {
           )}
         </View>
 
-        {canChat ? (
-          <Pressable
-            style={({ pressed }) => [s.card, s.chatCard, pressed && { opacity: 0.92 }]}
-            onPress={openChat}
-          >
-            <CoverTrailRow justify="space-between" gap={spacing.md}>
-              <AppIcon name="chevron-back" size={18} color={colors.textMuted} />
-              <CoverTrailRow flex justify="flex-end" gap={spacing.sm}>
-                <RtlTextShell flex>
-                  <RtlText style={s.chatTitle}>محادثة الملحمة</RtlText>
-                  <RtlText style={s.chatSub}>تواصل مباشرة مع الملحمة</RtlText>
-                </RtlTextShell>
-                <View style={s.chatIconWrap}>
-                  <AppIcon name="chatbubbles-outline" size={18} color={colors.electricBright} />
-                </View>
-              </CoverTrailRow>
-            </CoverTrailRow>
-          </Pressable>
-        ) : null}
-
         <View style={s.card}>
           <SectionHead icon="person-outline" title="العميل والاستلام" colors={colors} styles={s} />
           <InfoRow styles={s} label="العميل" value={customerName} />
@@ -371,11 +339,18 @@ export default function OrderDetailsScreen() {
         <CoverTrailRow justify="space-between" gap={spacing.sm} style={s.footerRow}>
           <Pressable
             style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
-            onPress={() => router.push('/support' as never)}
+            onPress={() =>
+              router.push(
+                {
+                  pathname: '/support/help',
+                  params: order.paymentStatus === 'paid' ? { orderId: order.id } : {},
+                } as never,
+              )
+            }
           >
             <AppIcon name="headset" size={20} color={colors.electricBright} />
-            <Text style={s.footerTitle}>الدعم والمساعدة</Text>
-            <Text style={s.footerSub}>مساعدة سريعة لأي استفسار</Text>
+            <Text style={s.footerTitle}>المساعدة</Text>
+            <Text style={s.footerSub}>سرحان وخدمة العملاء — بدون تواصل مع الملحمة</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
