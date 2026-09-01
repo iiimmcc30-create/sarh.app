@@ -21,3 +21,14 @@ export type TestDaftraInput = {
   sendInvite?: boolean;
   invitePassword?: string;
 };
+
+export type DaftraConnectionPayload = {
+  connected: boolean;
+  reason?: string;
+  messageAr: string;
+};
+
+export type LinkDaftraProductInput = {
+  daftraProductId: number;
+  sarhProductId?: string | null;
+};

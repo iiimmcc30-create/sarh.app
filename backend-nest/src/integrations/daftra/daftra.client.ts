@@ -1,14 +1,22 @@
+import { DaftraClient } from './daftra.http-client';
+import { DAFTRA_PATHS } from './daftra.constants';
+import { DaftraRequestError, isDaftraRequestError } from './daftra.errors';
+
 export type DaftraAccountConfig = {
   accountIdentifier: string;
   apiKey: string;
 };
 
 export type DaftraConnectionResult =
-  | { ok: true; httpStatus: number }
-  | { ok: false; httpStatus: number | null; safeReason: string };
+  | { connected: true; httpStatus: number }
+  | {
+      connected: false;
+      reason: 'INVALID_API_KEY' | 'CONNECTION_FAILED';
+      httpStatus: number | null;
+      safeReason: string;
+    };
 
 const ACCOUNT_ID_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i;
-const REQUEST_TIMEOUT_MS = 12_000;
 
 export function normalizeDaftraAccountIdentifier(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
@@ -33,124 +41,73 @@ export function assertValidDaftraAccountIdentifier(value: string): string {
   return normalized;
 }
 
-export function daftraApiOrigin(accountIdentifier: string): string {
+export function resolveDaftraOrigin(accountIdentifier: string): string {
   const id = assertValidDaftraAccountIdentifier(accountIdentifier);
+  const template = process.env.DAFTRA_API_BASE_URL?.trim();
+  if (
+    template &&
+    (template.includes('{account}') || template.includes('{subdomain}'))
+  ) {
+    return template
+      .replaceAll('{account}', id)
+      .replaceAll('{subdomain}', id)
+      .replace(/\/$/, '');
+  }
   return `https://${id}.daftra.com`;
 }
 
-/** Test-only endpoint: API key info. Does not sync products or inventory. */
+export function daftraApiOrigin(accountIdentifier: string): string {
+  return resolveDaftraOrigin(accountIdentifier);
+}
+
 export function daftraApiKeyInfoUrl(accountIdentifier: string): string {
-  return `${daftraApiOrigin(accountIdentifier)}/api2/api_key_info.json`;
+  return `${resolveDaftraOrigin(accountIdentifier)}/api2${DAFTRA_PATHS.apiKeyInfo}`;
 }
 
-function safeFailureReason(httpStatus: number | null): string {
-  if (httpStatus === 401 || httpStatus === 403) {
-    return 'بيانات اعتماد دفترة غير صحيحة';
+export function createDaftraClient(
+  config: DaftraAccountConfig,
+  fetchImpl?: typeof fetch,
+): DaftraClient {
+  if (!config.apiKey?.trim()) {
+    throw new DaftraRequestError(
+      'INVALID_API_KEY',
+      'بيانات اعتماد دفترة غير صحيحة',
+      null,
+    );
   }
-  if (httpStatus === 404) {
-    return 'تعذر الوصول لحساب دفترة';
-  }
-  if (httpStatus === 429) {
-    return 'حساب دفترة رفض الطلب بسبب كثرة المحاولات';
-  }
-  if (httpStatus && httpStatus >= 500) {
-    return 'خدمة دفترة غير متاحة حالياً';
-  }
-  if (httpStatus === null) {
-    return 'تعذر الاتصال بحساب دفترة';
-  }
-  return 'تعذر الاتصال بحساب دفترة';
-}
-
-function stripSecretsFromUnknown(value: unknown): unknown {
-  if (value == null) return value;
-  if (Array.isArray(value)) return value.map(stripSecretsFromUnknown);
-  if (typeof value === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [key, nested] of Object.entries(
-      value as Record<string, unknown>,
-    )) {
-      const lower = key.toLowerCase();
-      if (
-        lower.includes('key') ||
-        lower.includes('secret') ||
-        lower.includes('token') ||
-        lower.includes('authorization') ||
-        lower.includes('apikey')
-      ) {
-        out[key] = '[redacted]';
-      } else {
-        out[key] = stripSecretsFromUnknown(nested);
-      }
-    }
-    return out;
-  }
-  return value;
+  return new DaftraClient({
+    origin: resolveDaftraOrigin(config.accountIdentifier),
+    apiKey: config.apiKey,
+    fetchImpl,
+  });
 }
 
 export async function testDaftraConnection(
   config: DaftraAccountConfig,
   fetchImpl: typeof fetch = fetch,
 ): Promise<DaftraConnectionResult> {
-  const url = daftraApiKeyInfoUrl(config.accountIdentifier);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
   try {
-    const response = await fetchImpl(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        APIKEY: config.apiKey,
-      },
-      signal: controller.signal,
-    });
-
-    const httpStatus = response.status;
-    let body: unknown;
-    try {
-      body = await response.json();
-    } catch {
-      return { ok: false, httpStatus, safeReason: 'استجابة دفترة غير صالحة' };
-    }
-
-    void stripSecretsFromUnknown(body);
-
-    if (httpStatus < 200 || httpStatus >= 300) {
-      return {
-        ok: false,
-        httpStatus,
-        safeReason: safeFailureReason(httpStatus),
-      };
-    }
-
-    const record = body as { result?: unknown; code?: unknown };
-    if (record.result === 'failed' || Number(record.code) === 401) {
-      return {
-        ok: false,
-        httpStatus,
-        safeReason: 'بيانات اعتماد دفترة غير صحيحة',
-      };
-    }
-    if (record.result && record.result !== 'success') {
-      return {
-        ok: false,
-        httpStatus,
-        safeReason: 'تعذر التحقق من حساب دفترة',
-      };
-    }
-
-    return { ok: true, httpStatus };
+    const client = createDaftraClient(config, fetchImpl);
+    const res = await client.get(DAFTRA_PATHS.apiKeyInfo);
+    return { connected: true, httpStatus: res.httpStatus };
   } catch (err) {
-    if (err instanceof Error && err.name === 'AbortError') {
+    if (isDaftraRequestError(err)) {
+      const reason =
+        err.reason === 'INVALID_API_KEY'
+          ? 'INVALID_API_KEY'
+          : 'CONNECTION_FAILED';
       return {
-        ok: false,
-        httpStatus: null,
-        safeReason: 'انتهت مهلة الاتصال بدفترة',
+        connected: false,
+        reason,
+        httpStatus: err.httpStatus,
+        safeReason: err.safeMessage,
       };
     }
-    return { ok: false, httpStatus: null, safeReason: safeFailureReason(null) };
-  } finally {
-    clearTimeout(timer);
+    return {
+      connected: false,
+      reason: 'CONNECTION_FAILED',
+      httpStatus: null,
+      safeReason: 'تعذر الاتصال بحساب دفترة',
+    };
   }
 }

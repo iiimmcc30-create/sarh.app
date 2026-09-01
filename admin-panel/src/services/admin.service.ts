@@ -368,10 +368,40 @@ export async function testDaftraConnection(
   data: { sendInvite?: boolean; invitePassword?: string } = {},
 ) {
   const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/test`, data);
-  return unwrap<{ status: DaftraStatus; messageAr: string }>(res);
+  return unwrap<{
+    status: DaftraStatus;
+    messageAr: string;
+    connected: boolean;
+    reason?: string;
+  }>(res);
 }
 
 export async function disableDaftra(butcherId: string) {
   const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/disable`);
   return unwrap<DaftraStatus>(res);
+}
+
+export type DaftraCatalogProduct = {
+  id: number;
+  name: string;
+  sku: string | null;
+  price: number | null;
+  quantity: number | null;
+};
+
+export async function fetchDaftraProducts(butcherId: string) {
+  const res = await apiClient.get(`/admin/butchers/${butcherId}/daftra/products`, {
+    params: { page: 1, limit: 20 },
+  });
+  return unwrap<{ items: DaftraCatalogProduct[]; page: number; totalResults: number }>(res);
+}
+
+export async function fetchDaftraInventory(butcherId: string) {
+  const res = await apiClient.get(`/admin/butchers/${butcherId}/daftra/inventory`, {
+    params: { page: 1, limit: 20 },
+  });
+  return unwrap<{
+    items: Array<{ productId: number; name: string | null; quantity: number | null }>;
+    totalResults: number;
+  }>(res);
 }

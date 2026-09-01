@@ -789,6 +789,7 @@ model Butcher {
   user                User                @relation(fields: [userId], references: [id])
   sourceApplication   ButcherApplication? @relation("ButcherSourceApplication", fields: [sourceApplicationId], references: [id])
   daftraIntegration   ButcherDaftraIntegration?
+  daftraProductLinks  ButcherDaftraProduct[]
   offers              ButcherOffer[]
   orders              ButcherOrder[]
   products            ButcherProduct[]
@@ -835,6 +836,7 @@ model ButcherProduct {
   orderItems        ButcherOrder[]
   lineItems         ButcherOrderItem[]
   butcher           Butcher        @relation(fields: [butcherId], references: [id])
+  daftraLink        ButcherDaftraProduct?
 
   @@index([butcherId])
   @@index([inStock])
@@ -1327,6 +1329,23 @@ model ButcherDaftraIntegration {
   butcher              Butcher                  @relation(fields: [butcherId], references: [id], onDelete: Cascade)
 
   @@index([status])
+}
+
+model ButcherDaftraProduct {
+  id                String   @id @default(uuid())
+  butcherId         String
+  sarhProductId     String?  @unique
+  daftraProductId   Int
+  daftraProductCode String?
+  lastKnownQuantity Float?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  butcher           Butcher         @relation(fields: [butcherId], references: [id], onDelete: Cascade)
+  sarhProduct       ButcherProduct? @relation(fields: [sarhProductId], references: [id], onDelete: SetNull)
+
+  @@unique([butcherId, daftraProductId])
+  @@index([butcherId])
 }
 
 model SupportTicket {
