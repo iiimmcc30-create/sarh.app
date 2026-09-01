@@ -253,14 +253,14 @@ export class ListingsRepository {
         include: {
           seller: { select: SELLER_SELECT },
           fee: {
-          select: {
-            id: true,
-            status: true,
-            commission: true,
-            dueDate: true,
-            saleAmount: true,
+            select: {
+              id: true,
+              status: true,
+              commission: true,
+              dueDate: true,
+              saleAmount: true,
+            },
           },
-        },
         },
       });
 

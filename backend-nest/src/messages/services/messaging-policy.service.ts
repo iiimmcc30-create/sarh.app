@@ -88,7 +88,11 @@ export class MessagingPolicyService {
 
     if (type === 'BUTCHER') {
       if (!butcherId) {
-        throwApi(400, 'validation_error', 'معرّف الملحمة مطلوب لمحادثات الملاحم');
+        throwApi(
+          400,
+          'validation_error',
+          'معرّف الملحمة مطلوب لمحادثات الملاحم',
+        );
       }
       await this.assertButcherChatAllowed(senderId, receiverId, butcherId);
       return;
