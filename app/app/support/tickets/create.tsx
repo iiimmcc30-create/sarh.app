@@ -28,7 +28,9 @@ import {
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
 
-const CATEGORIES = Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[];
+const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[]).filter(
+  (c) => c !== 'ORDER_HELP' && c !== 'OTHER_HELP',
+);
 
 export default function CreateSupportTicketScreen() {
   const router = useRouter();

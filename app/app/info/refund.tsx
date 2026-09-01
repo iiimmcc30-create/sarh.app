@@ -9,7 +9,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { SARH_OFFICIAL_EMAIL } from '@/constants/sarhOfficial';
 
 const REFUND_SECTIONS = [
   {
@@ -38,7 +37,7 @@ const REFUND_SECTIONS = [
   },
   {
     title: 'التواصل',
-    content: `للاستفسار أو تقديم طلب استرداد:\n📧 ${SARH_OFFICIAL_EMAIL}\nأو عبر صفحة تواصل معنا داخل التطبيق.`,
+    content: `للاستفسار أو تقديم طلب استرداد:\n📧 sarh@sarhsa.online\nأو عبر صفحة تواصل معنا داخل التطبيق.`,
   },
 ];
 

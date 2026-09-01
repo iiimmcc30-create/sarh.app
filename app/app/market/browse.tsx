@@ -12,10 +12,14 @@ import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
 import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchMarketCategories } from '@/services/categories';
-import { searchListings } from '@/services/listings';
+import {
+  mergeListingPages,
+  searchListingsPage,
+  shouldFetchNextListingPage,
+} from '@/services/listings';
 import { type Country, type Listing } from '@/services/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ListRenderItemInfo,
@@ -62,32 +66,32 @@ export default function MarketBrowseScreen() {
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [items, setItems] = useState<Listing[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
+  const loadGenRef = useRef(0);
+
+  const searchParams = useMemo(
+    () => ({
+      categoryId,
+      subcategoryId,
+      search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
+      country: activeCountry === 'ALL' ? undefined : activeCountry,
+      featured: showFeaturedOnly || undefined,
+    }),
+    [activeCountry, categoryId, debouncedSearch, showFeaturedOnly, subcategoryId],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  const load = useCallback(async () => {
-    if (!categoryId && !subcategoryId) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      let listings = await searchListings(
-        {
-          categoryId,
-          subcategoryId,
-          search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
-          country: activeCountry === 'ALL' ? undefined : activeCountry,
-        },
-        accessToken,
-      );
-      listings = listings.filter((l) => l.country !== 'EG');
-
+  const applyClientFilters = useCallback(
+    async (listings: Listing[]) => {
+      let next = listings.filter((l) => l.country !== 'EG');
       if (categoryId) {
         const tree = await fetchMarketCategories();
         const parent = tree.find((c) => c.id === categoryId);
@@ -95,23 +99,71 @@ export default function MarketBrowseScreen() {
           parent?.children?.find((c) => c.id === subcategoryId) ??
           tree.flatMap((p) => p.children ?? []).find((c) => c.id === subcategoryId);
         if (parent) {
-          listings = listings.filter((l) =>
-            listingMatchesMarketSelection(l, parent, sub ?? null),
-          );
+          next = next.filter((l) => listingMatchesMarketSelection(l, parent, sub ?? null));
         }
       }
+      return next;
+    },
+    [categoryId, subcategoryId],
+  );
 
-      setItems(listings);
-    } catch {
+  const loadFirstPage = useCallback(async () => {
+    const gen = ++loadGenRef.current;
+    if (!categoryId && !subcategoryId) {
       setItems([]);
-    } finally {
+      setNextCursor(null);
+      setHasMore(false);
       setLoading(false);
+      return;
     }
-  }, [categoryId, subcategoryId, debouncedSearch, activeCountry, accessToken]);
+    setLoading(true);
+    try {
+      const page = await searchListingsPage(searchParams, accessToken);
+      if (gen !== loadGenRef.current) return;
+      setItems(await applyClientFilters(page.listings));
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+    } catch {
+      if (gen !== loadGenRef.current) return;
+      setItems([]);
+      setNextCursor(null);
+      setHasMore(false);
+    } finally {
+      if (gen === loadGenRef.current) setLoading(false);
+    }
+  }, [accessToken, applyClientFilters, categoryId, searchParams, subcategoryId]);
+
+  const loadNextPage = useCallback(async () => {
+    if (
+      !shouldFetchNextListingPage({
+        hasMore,
+        nextCursor,
+        loading,
+        loadingMore: loadingMoreRef.current,
+      })
+    ) {
+      return;
+    }
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const page = await searchListingsPage(
+        { ...searchParams, cursor: nextCursor ?? undefined },
+        accessToken,
+      );
+      const extra = await applyClientFilters(page.listings);
+      setItems((prev) => mergeListingPages(prev, extra));
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [accessToken, applyClientFilters, hasMore, loading, nextCursor, searchParams]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadFirstPage();
+  }, [loadFirstPage]);
 
   const filtered = useMemo(() => {
     let list = items.filter((l) => {
@@ -220,7 +272,7 @@ export default function MarketBrowseScreen() {
 
       <View style={[styles.countRow, getRtlRow()]}>
         <Text style={styles.count}>
-          {loading ? 'جاري التحميل...' : `${filtered.length} إعلان`}
+          {loading ? 'جاري التحميل...' : `${filtered.length} إعلان${hasMore ? '+' : ''}`}
         </Text>
       </View>
     </View>
@@ -249,7 +301,15 @@ export default function MarketBrowseScreen() {
               <Text style={styles.emptyText}>لا توجد إعلانات في هذا التصنيف</Text>
             </View>
           }
-          ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
+          ListFooterComponent={
+            <View style={{ height: TAB_BAR_CLEARANCE, alignItems: 'center', paddingTop: spacing.sm }}>
+              {loadingMore ? <ActivityIndicator color={colors.electric} /> : null}
+            </View>
+          }
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            void loadNextPage();
+          }}
           initialNumToRender={12}
           maxToRenderPerBatch={10}
           windowSize={8}

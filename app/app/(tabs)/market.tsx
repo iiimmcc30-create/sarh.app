@@ -10,6 +10,7 @@ import { RegionCityPicker } from '@/components/market/RegionCityPicker';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   StyleSheet,
@@ -32,7 +33,13 @@ import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
 import { safePush } from '@/lib/safeNavigate';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
-import { useApp } from '@/hooks/useApp';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/hooks/useTheme';
+import {
+  mergeListingPages,
+  searchListingsPage,
+  shouldFetchNextListingPage,
+} from '@/services/listings';
 import { Listing } from '@/services/types';
 
 const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
@@ -45,11 +52,13 @@ export default function MarketScreen() {
   const { styles } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
     styles: createMarketStyles(colors, scheme, screenStyles),
   }));
-  const { listings, fetchListings } = useApp();
+  const { accessToken } = useAuth();
+  const { colors } = useTheme();
   const { categories, reload: reloadCategories } = useMarketCategories();
-  const lastListingsFocusAt = useRef(0);
   const lastCategoriesFocusAt = useRef(0);
   const listRef = useRef<FlatList<Listing>>(null);
+  const loadingMoreRef = useRef(false);
+  const loadGenRef = useRef(0);
 
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -58,6 +67,70 @@ export default function MarketScreen() {
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('newest');
+  const [items, setItems] = useState<Listing[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const apiFilters = useMemo(
+    () => ({
+      featured: showFeaturedOnly || undefined,
+      categoryId: activeSubId ?? activeParentId ?? undefined,
+      subcategoryId: activeSubId ?? undefined,
+    }),
+    [showFeaturedOnly, activeParentId, activeSubId],
+  );
+
+  const loadFirstPage = useCallback(async () => {
+    const gen = ++loadGenRef.current;
+    setLoading(true);
+    try {
+      const page = await searchListingsPage(apiFilters, accessToken);
+      if (gen !== loadGenRef.current) return;
+      setItems(page.listings);
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+    } catch {
+      if (gen !== loadGenRef.current) return;
+      setItems([]);
+      setNextCursor(null);
+      setHasMore(false);
+    } finally {
+      if (gen === loadGenRef.current) setLoading(false);
+    }
+  }, [accessToken, apiFilters]);
+
+  const loadNextPage = useCallback(async () => {
+    if (
+      !shouldFetchNextListingPage({
+        hasMore,
+        nextCursor,
+        loading,
+        loadingMore: loadingMoreRef.current,
+      })
+    ) {
+      return;
+    }
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const page = await searchListingsPage(
+        { ...apiFilters, cursor: nextCursor ?? undefined },
+        accessToken,
+      );
+      setItems((prev) => mergeListingPages(prev, page.listings));
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [accessToken, apiFilters, hasMore, loading, nextCursor]);
+
+  useEffect(() => {
+    void loadFirstPage();
+  }, [loadFirstPage]);
 
   useFocusEffect(
     useCallback(() => {
@@ -66,10 +139,7 @@ export default function MarketScreen() {
         lastCategoriesFocusAt.current = now;
         void reloadCategories();
       }
-      if (now - lastListingsFocusAt.current < MARKET_FOCUS_TTL_MS) return;
-      lastListingsFocusAt.current = now;
-      void fetchListings();
-    }, [fetchListings, reloadCategories]),
+    }, [reloadCategories]),
   );
 
   const activeParent = useMemo(
@@ -93,7 +163,7 @@ export default function MarketScreen() {
   }, [activeParentId, activeSubId]);
 
   const filtered = useMemo(() => {
-    let list = listings.filter((l) => {
+    let list = items.filter((l) => {
       if (l.country === 'EG') return false;
       if (showFeaturedOnly && !l.featured) return false;
       if (activeParent && !listingMatchesMarketSelection(l, activeParent, activeSub)) {
@@ -115,7 +185,14 @@ export default function MarketScreen() {
     });
 
     return interleavePromotedListings(list);
-  }, [listings, showFeaturedOnly, activeParent, activeSub, regionSelection, sortMode]);
+  }, [items, showFeaturedOnly, activeParent, activeSub, regionSelection, sortMode]);
+
+  useEffect(() => {
+    if (regionSelection.type === 'all') return;
+    if (!hasMore || loading || loadingMore) return;
+    if (filtered.length >= 8) return;
+    void loadNextPage();
+  }, [filtered.length, hasMore, loadNextPage, loading, loadingMore, regionSelection.type]);
 
   const cycleSort = () => {
     setSortMode((prev) => {
@@ -225,7 +302,15 @@ export default function MarketScreen() {
             <Text style={styles.emptyText}>لا توجد إعلانات مطابقة</Text>
           </View>
         }
-        ListFooterComponent={<View style={{ height: TAB_BAR_CLEARANCE }} />}
+        ListFooterComponent={
+          <View style={{ height: TAB_BAR_CLEARANCE, alignItems: 'center', paddingTop: spacing.sm }}>
+            {loadingMore ? <ActivityIndicator color={colors.electric} /> : null}
+          </View>
+        }
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          void loadNextPage();
+        }}
         removeClippedSubviews={false}
         initialNumToRender={12}
         maxToRenderPerBatch={10}

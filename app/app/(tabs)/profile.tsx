@@ -7,6 +7,9 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
+import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
+import { searchAllSellerListings } from '@/services/listings';
+import type { Listing } from '@/services/types';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/feature/ProfileScreenLayout';
@@ -15,7 +18,6 @@ import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
-import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -23,7 +25,6 @@ export default function ProfileScreen() {
 
   const {
     me,
-    listings,
     posts,
     likedPosts,
     bookmarkedPosts,
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
   const [hasStories, setHasStories] = useState(false);
   const [myStoryGroup, setMyStoryGroup] = useState<StoryGroup | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [myListings, setMyListings] = useState<Listing[]>([]);
 
   const profileUrl = sarhProfileShareUrl(me.username);
 
@@ -56,16 +58,24 @@ export default function ProfileScreen() {
     }
   }, [accessToken]);
 
+  const loadMyListings = useCallback(async () => {
+    if (!me.id) {
+      setMyListings([]);
+      return;
+    }
+    try {
+      setMyListings(await searchAllSellerListings(me.id, accessToken));
+    } catch {
+      setMyListings([]);
+    }
+  }, [accessToken, me.id]);
+
   useFocusEffect(
     useCallback(() => {
       void loadStories();
       void refetchData();
-    }, [loadStories, refetchData]),
-  );
-
-  const myListings = useMemo(
-    () => listings.filter((l) => l.seller.id === me.id),
-    [listings, me.id],
+      void loadMyListings();
+    }, [loadMyListings, loadStories, refetchData]),
   );
   const myPosts = useMemo(
     () =>
@@ -116,9 +126,9 @@ export default function ProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadStories(), refetchData(true)]);
+    await Promise.all([loadStories(), refetchData(true), loadMyListings()]);
     setRefreshing(false);
-  }, [loadStories, refetchData]);
+  }, [loadMyListings, loadStories, refetchData]);
 
   const renderPosts = () => {
     if (myPosts.length === 0) {

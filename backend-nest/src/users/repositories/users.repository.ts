@@ -155,6 +155,36 @@ export class UsersRepository {
     });
   }
 
+  upsertDeviceToken(userId: string, token: string, platform?: string | null) {
+    return this.prisma.userDeviceToken.upsert({
+      where: { token },
+      create: {
+        userId,
+        token,
+        platform: platform ?? null,
+        lastSeenAt: new Date(),
+      },
+      update: {
+        userId,
+        platform: platform ?? undefined,
+        lastSeenAt: new Date(),
+      },
+    });
+  }
+
+  deleteDeviceToken(userId: string, token: string) {
+    return this.prisma.userDeviceToken.deleteMany({
+      where: { userId, token },
+    });
+  }
+
+  listDeviceTokens(userId: string) {
+    return this.prisma.userDeviceToken.findMany({
+      where: { userId },
+      select: { token: true },
+    });
+  }
+
   deactivateUser(id: string) {
     return this.prisma.$transaction([
       this.prisma.user.update({
@@ -166,6 +196,7 @@ export class UsersRepository {
           fcmToken: null,
         },
       }),
+      this.prisma.userDeviceToken.deleteMany({ where: { userId: id } }),
       this.prisma.userSession.deleteMany({ where: { userId: id } }),
     ]);
   }

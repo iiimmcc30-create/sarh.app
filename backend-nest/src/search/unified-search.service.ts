@@ -158,7 +158,7 @@ export class UnifiedSearchService {
       return { suggestions: [] as Array<{ text: string; kind: string }> };
     }
 
-    const cacheKey = `search:suggest:v1:${prefix}:${limit}`;
+    const cacheKey = `search:suggest:v2:${prefix}:${limit}`;
     if (this.cache.isEnabled()) {
       const cached =
         await this.cache.get<Array<{ text: string; kind: string }>>(cacheKey);

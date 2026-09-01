@@ -12,6 +12,7 @@ const DEFAULT_TTL = 300;
 @Injectable()
 export class RedisCacheService {
   private unavailableLogged = false;
+  private readonly memorySets = new Map<string, Set<string>>();
 
   constructor(private readonly logger: LoggerService) {}
 
@@ -62,11 +63,56 @@ export class RedisCacheService {
   }
 
   async del(...keys: string[]): Promise<void> {
-    if (!keys.length || !this.isEnabled()) return;
+    if (!keys.length) return;
+    for (const key of keys) this.memorySets.delete(key);
+    if (!this.isEnabled()) return;
     try {
       await this.getClient().del(...keys);
     } catch (err) {
       this.markUnavailable(err);
+    }
+  }
+
+  async sadd(key: string, member: string, ttl = DEFAULT_TTL): Promise<void> {
+    const local = this.memorySets.get(key) ?? new Set<string>();
+    local.add(member);
+    this.memorySets.set(key, local);
+    if (!this.isEnabled()) return;
+    try {
+      const client = this.getClient();
+      if (client.status !== 'ready') return;
+      await client.sadd(key, member);
+      await client.expire(key, ttl);
+    } catch (err) {
+      this.markUnavailable(err);
+    }
+  }
+
+  async srem(key: string, member: string): Promise<void> {
+    this.memorySets.get(key)?.delete(member);
+    if (!this.isEnabled()) return;
+    try {
+      const client = this.getClient();
+      if (client.status !== 'ready') return;
+      await client.srem(key, member);
+    } catch (err) {
+      this.markUnavailable(err);
+    }
+  }
+
+  async scard(key: string): Promise<number> {
+    if (!this.isEnabled()) {
+      return this.memorySets.get(key)?.size ?? 0;
+    }
+    try {
+      const client = this.getClient();
+      if (client.status !== 'ready') {
+        return this.memorySets.get(key)?.size ?? 0;
+      }
+      return await client.scard(key);
+    } catch (err) {
+      this.markUnavailable(err);
+      return this.memorySets.get(key)?.size ?? 0;
     }
   }
 

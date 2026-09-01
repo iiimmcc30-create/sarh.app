@@ -7,8 +7,8 @@ import { LifeBuoy, Ticket, BadgeCheck, HelpCircle } from 'lucide-react';
 const sections = [
   {
     href: '/support/tickets',
-    title: 'تذاكر الدعم',
-    description: 'إدارة تذاكر الدعم والرد على المستخدمين',
+    title: 'البلاغات',
+    description: 'بلاغات العملاء ومحادثة سرحان وخدمة العملاء',
     icon: Ticket,
   },
   {
@@ -29,8 +29,8 @@ export default function SupportHubPage() {
   return (
     <div>
       <PageHeader
-        title="الدعم والمساعدة"
-        description="إدارة تذاكر الدعم وطلبات التوثيق والأسئلة الشائعة"
+        title="خدمة العملاء"
+        description="البلاغات والتوثيق والأسئلة الشائعة — بدون تواصل مباشر مع الملحمة"
       />
       <div className="grid gap-4 md:grid-cols-3">
         {sections.map((section) => (

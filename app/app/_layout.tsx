@@ -2,7 +2,7 @@
 // SAFAT — Root Layout
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -23,13 +23,14 @@ import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
 import { NavigationPathTracker } from '@/components/navigation/NavigationPathTracker';
 import { sarh } from '@/constants/sarhTokens';
 import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
+import { resolveBootNavigation } from '@/lib/bootRouting';
 
 import { bootstrapTheme } from '@/constants/themeBootstrap';
 
 bootstrapTheme().catch(() => {});
 setupRtl();
 
-void SplashScreen.hideAsync().catch(() => {});
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -42,34 +43,26 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isComplete: onboardingComplete, isLoading: onboardingLoading } = useOnboarding();
   const router = useRouter();
   const segments = useSegments();
+  const lastHrefRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isLoading || onboardingLoading) return;
 
-    if (segments[0] === 'expo-auth-session') return;
+    const action = resolveBootNavigation({
+      authLoading: isLoading,
+      onboardingLoading,
+      onboardingComplete,
+      isAuthenticated,
+      firstSegment: segments[0] as string | undefined,
+    });
 
-    const inOnboarding = (segments[0] as string) === 'onboarding';
-    const inAuthGroup = segments[0] === 'auth';
-    const inPublicInfo = segments[0] === 'info';
-
-    if (!onboardingComplete && !inOnboarding) {
-      router.replace('/onboarding' as any);
+    if (action.type === 'replace') {
+      if (lastHrefRef.current === action.href) return;
+      lastHrefRef.current = action.href;
+      router.replace(action.href as any);
       return;
     }
-
-    if (onboardingComplete && inOnboarding) {
-      router.replace(isAuthenticated ? '/(tabs)' : '/auth/welcome');
-      return;
-    }
-
-    if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)' as any);
-      return;
-    }
-
-    if (!isAuthenticated && !inAuthGroup && !inPublicInfo && !inOnboarding) {
-      router.replace('/auth/welcome' as any);
-    }
+    lastHrefRef.current = null;
   }, [isAuthenticated, isLoading, onboardingComplete, onboardingLoading, segments, router]);
 
   return <>{children}</>;
@@ -137,6 +130,7 @@ function RootNavigator() {
         <Stack.Screen name="support/tickets/index" />
         <Stack.Screen name="support/tickets/create" />
         <Stack.Screen name="support/tickets/[id]" />
+        <Stack.Screen name="support/help" />
         <Stack.Screen name="onboarding/index" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="auth/welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="auth/phone" options={{ animation: 'fade' }} />
@@ -161,10 +155,6 @@ function RootNavigator() {
 function RootLayoutBody() {
   useEffect(() => {
     void setupRtlFromStorage(AsyncStorage.getItem);
-  }, []);
-
-  useEffect(() => {
-    SplashScreen.hideAsync().catch(() => {});
   }, []);
 
   return (

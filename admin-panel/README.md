@@ -1,6 +1,6 @@
 # سرح — لوحة الإدارة (Admin Panel)
 
-منصة إدارة ويب مستقلة عن تطبيق الموبايل. تُنشر على **alsfat.com/admin** أو **admin.alsfat.com** وترتبط بـ Backend API.
+منصة إدارة ويب مستقلة عن تطبيق الموبايل. تُنشر على **https://sarhsa.online/admin** وترتبط بـ Backend API.
 
 ## التقنيات
 
@@ -95,7 +95,7 @@ npm.cmd run dev            # http://localhost:3000
    DATABASE_URL=postgresql://...
    JWT_SECRET=<32+ chars>
    JWT_REFRESH_SECRET=<32+ chars>
-   ALLOWED_ORIGINS=https://admin.alsfat.com,https://alsfat.com
+   ALLOWED_ORIGINS=https://sarhsa.online,https://www.sarhsa.online
    NODE_ENV=production
    ASSISTANT_ENABLED=true
    REDIS_ENABLED=true
@@ -111,24 +111,24 @@ npm.cmd run dev            # http://localhost:3000
 2. Root Directory: `admin-panel`
 3. **Variables:**
    ```
-   NEXT_PUBLIC_API_URL=https://api.alsfat.com
+   NEXT_PUBLIC_API_URL=https://sarhsa.online
    ```
 4. **Build Command:** `npm run build`
 5. **Start Command:** `npm run start`
-6. **Domain:** `admin.alsfat.com` → CNAME إلى Railway
+6. **Domain:** `sarhsa.online/admin` على المضيف الحالي (Hostinger)
 
-### C) ربط alsfat.com
+### C) ربط sarhsa.online
 
 1. في DNS:
-   - `api.alsfat.com` → Backend Railway
-   - `admin.alsfat.com` → Admin Panel Railway
+   - `sarhsa.online` → الخادم الإنتاجي
+   - لوحة الإدارة: `https://sarhsa.online/admin`
 2. في Backend `.env`:
    ```
-   ALLOWED_ORIGINS=https://admin.alsfat.com,https://alsfat.com
+   ALLOWED_ORIGINS=https://sarhsa.online,https://www.sarhsa.online
    ```
 3. تأكد أن Admin Panel يستخدم:
    ```
-   NEXT_PUBLIC_API_URL=https://api.alsfat.com
+   NEXT_PUBLIC_API_URL=https://sarhsa.online
    ```
 
 ### D) إنشاء أول Admin
@@ -143,7 +143,7 @@ npm run create-admin
 
 ## الأمان (Production)
 
-- HTTPS إلزامي على alsfat.com
+- HTTPS إلزامي على sarhsa.online
 - JWT قصير (15m) + Refresh Token
 - Rate limiting على `/api/admin/auth/login`
 - Cookie `admin_token` + localStorage للـ Bearer

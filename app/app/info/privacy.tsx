@@ -12,12 +12,11 @@ import { rtlBackIcon } from '@/lib/rtl';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { PRIVACY_POLICY_URL } from '@/constants/legal';
-import { SARH_OFFICIAL_EMAIL, SARH_OFFICIAL_HOST } from '@/constants/sarhOfficial';
 
 const SECTIONS = [
   {
     title: 'مقدمة',
-    content: `تلتزم منصة سرح (${SARH_OFFICIAL_HOST})، المملوكة لمؤسسة ماد يونيت للتجارة، بحماية خصوصية مستخدميها. توضّح هذه السياسة كيفية جمع بياناتك الشخصية واستخدامها وحفظها والحفاظ عليها وفق أحكام نظام حماية البيانات الشخصية في المملكة العربية السعودية.`,
+    content: `تلتزم منصة سرح (sarhsa.online)، المملوكة لمؤسسة ماد يونيت للتجارة، بحماية خصوصية مستخدميها. توضّح هذه السياسة كيفية جمع بياناتك الشخصية واستخدامها وحفظها والحفاظ عليها وفق أحكام نظام حماية البيانات الشخصية في المملكة العربية السعودية.`,
   },
   {
     title: 'البيانات التي نجمعها',
@@ -33,7 +32,7 @@ const SECTIONS = [
   },
   {
     title: 'حقوقك',
-    content: `يحق لك في أي وقت:\n• الاطلاع على بياناتك الشخصية المحفوظة لدينا.\n• تصحيح أي بيانات غير دقيقة.\n• طلب حذف بياناتك.\n• الاعتراض على معالجة بياناتك لأغراض التسويق.\n\nللتواصل بشأن هذه الحقوق: ${SARH_OFFICIAL_EMAIL}`,
+    content: `يحق لك في أي وقت:\n• الاطلاع على بياناتك الشخصية المحفوظة لدينا.\n• تصحيح أي بيانات غير دقيقة.\n• طلب حذف بياناتك.\n• الاعتراض على معالجة بياناتك لأغراض التسويق.\n\nللتواصل بشأن هذه الحقوق: sarh@sarhsa.online`,
   },
   {
     title: 'حفظ البيانات وأمانها',
@@ -85,9 +84,9 @@ export default function PrivacyScreen() {
           <RtlTextShell>
             <RtlText style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</RtlText>
           </RtlTextShell>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL(`mailto:${SARH_OFFICIAL_EMAIL}`)}>
+          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.contactLink}>{SARH_OFFICIAL_EMAIL}</Text>
+            <Text style={styles.contactLink}>sarh@sarhsa.online</Text>
           </Pressable>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('tel:+966591298136')}>
             <AppIcon name="call-outline" size={18} color={colors.electricBright} />

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, TicketStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ADMIN_TICKET_STATUS_GROUPS } from '../constants/support.constants';
 
 const notDeleted = { deletedAt: null };
 
@@ -28,10 +29,34 @@ const AUTHOR_SELECT = {
   role: true,
 } as const;
 
+const ORDER_SELECT = {
+  id: true,
+  orderNumber: true,
+  status: true,
+  paymentStatus: true,
+  totalPrice: true,
+  currency: true,
+  createdAt: true,
+  deliveryType: true,
+  deliveryAddress: true,
+  customerId: true,
+  items: {
+    select: {
+      id: true,
+      cutType: true,
+      weightKg: true,
+      linePrice: true,
+      product: { select: { id: true, nameAr: true, nameEn: true } },
+    },
+  },
+  butcher: { select: { id: true, nameAr: true, nameEn: true } },
+} as const;
+
 const TICKET_INCLUDE = {
   reporter: { select: AUTHOR_SELECT },
   assignedTo: { select: AUTHOR_SELECT },
   attachments: true,
+  order: { select: ORDER_SELECT },
   messages: {
     orderBy: { createdAt: 'asc' as const },
     include: {
@@ -79,7 +104,9 @@ export class SupportRepository {
           ticketNumber: true,
           category: true,
           status: true,
+          handlerMode: true,
           subject: true,
+          orderId: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -94,14 +121,25 @@ export class SupportRepository {
     pageSize: number;
     search?: string;
     status?: string;
+    statusGroup?: string;
     category?: string;
     type?: 'SUPPORT' | 'REPORT';
   }) {
-    const { page, pageSize, search, status, category, type } = query;
+    const { page, pageSize, search, status, statusGroup, category, type } =
+      query;
+    const groupStatuses =
+      statusGroup && statusGroup !== 'all'
+        ? ADMIN_TICKET_STATUS_GROUPS[
+            statusGroup as keyof typeof ADMIN_TICKET_STATUS_GROUPS
+          ]
+        : undefined;
     const where: Prisma.SupportTicketWhereInput = {
       ...notDeleted,
       ...(type ? { type } : { type: 'SUPPORT' }),
       ...(status ? { status: status as TicketStatus } : {}),
+      ...(groupStatuses
+        ? { status: { in: [...groupStatuses] as TicketStatus[] } }
+        : {}),
       ...(category ? { category } : {}),
       ...(search?.trim()
         ? {
@@ -111,6 +149,30 @@ export class SupportRepository {
                 ticketNumber: { contains: search.trim(), mode: 'insensitive' },
               },
               { description: { contains: search.trim(), mode: 'insensitive' } },
+              {
+                reporter: {
+                  OR: [
+                    {
+                      arabicName: {
+                        contains: search.trim(),
+                        mode: 'insensitive',
+                      },
+                    },
+                    {
+                      displayName: {
+                        contains: search.trim(),
+                        mode: 'insensitive',
+                      },
+                    },
+                    {
+                      username: {
+                        contains: search.trim(),
+                        mode: 'insensitive',
+                      },
+                    },
+                  ],
+                },
+              },
             ],
           }
         : {}),
@@ -124,6 +186,14 @@ export class SupportRepository {
         include: {
           reporter: { select: AUTHOR_SELECT },
           assignedTo: { select: AUTHOR_SELECT },
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              status: true,
+              paymentStatus: true,
+            },
+          },
         },
       }),
       this.prisma.supportTicket.count({ where }),
@@ -168,6 +238,63 @@ export class SupportRepository {
         attachments: true,
       },
     });
+  }
+
+  findOwnedButcherOrder(orderId: string, customerId: string) {
+    return this.prisma.butcherOrder.findFirst({
+      where: { id: orderId, customerId },
+      select: ORDER_SELECT,
+    });
+  }
+
+  findButcherOrderById(orderId: string) {
+    return this.prisma.butcherOrder.findFirst({
+      where: { id: orderId },
+      select: { id: true, customerId: true },
+    });
+  }
+
+  listCustomerHelpOrders(customerId: string) {
+    return this.prisma.butcherOrder.findMany({
+      where: { customerId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentStatus: true,
+        totalPrice: true,
+        currency: true,
+        createdAt: true,
+        butcher: { select: { nameAr: true } },
+      },
+    });
+  }
+
+  findUserNames(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { arabicName: true, displayName: true },
+    });
+  }
+
+  findLatestSrhTicketNumber(year: number) {
+    const prefix = `SRH-${year}-`;
+    return this.prisma.supportTicket.findFirst({
+      where: { ticketNumber: { startsWith: prefix } },
+      orderBy: { ticketNumber: 'desc' },
+      select: { ticketNumber: true },
+    });
+  }
+
+  isUniqueConstraint(err: unknown): boolean {
+    return (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as { code?: string }).code === 'P2002'
+    );
   }
 
   getVerificationByUserId(userId: string) {

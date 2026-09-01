@@ -9,6 +9,12 @@ import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { API_BASE } from '@/services/api';
 import { clearPushTokenOnLogout } from '@/lib/notifications';
 import { normalizeAuthUser } from '@/lib/currentUser';
+import { parseActiveMode } from '@/lib/activeMode';
+import {
+  evaluatePersistedTokens,
+  evaluateRefreshResult,
+  isSessionStillTrusted,
+} from '@/lib/sessionRefresh';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface AuthUser {
@@ -73,6 +79,7 @@ const STORAGE_KEYS = {
   ACCESS_TOKEN:  'safat_access_token',
   REFRESH_TOKEN: 'safat_refresh_token',
   USER:          'safat_user',
+  LAST_AUTH_OK:  'safat_last_auth_ok',
 } as const;
 
 /** Proactive refresh — keeps long-lived session alive while app is installed. */
@@ -97,6 +104,7 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]               = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [lastAuthOkAt, setLastAuthOkAt] = useState<number | null>(null);
   const [isLoading, setIsLoading]     = useState(true);
   const [activeMode, setActiveMode]   = useState<'USER' | 'BUTCHER'>('USER');
   const accessTokenRef = useRef<string | null>(null);
@@ -109,7 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.multiRemove([...Object.values(STORAGE_KEYS), 'safat_active_mode']);
     setUser(null);
     setAccessToken(null);
+    setLastAuthOkAt(null);
     setActiveMode('USER');
+  }, []);
+
+  const markAuthOk = useCallback(async () => {
+    const ts = Date.now();
+    setLastAuthOkAt(ts);
+    lastRefreshAtRef.current = ts;
+    await AsyncStorage.setItem(STORAGE_KEYS.LAST_AUTH_OK, String(ts));
   }, []);
 
   const persistTokens = useCallback(async (access: string, refresh?: string) => {
@@ -117,7 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (refresh) pairs.push([STORAGE_KEYS.REFRESH_TOKEN, refresh]);
     await AsyncStorage.multiSet(pairs);
     setAccessToken(access);
-  }, []);
+    await markAuthOk();
+  }, [markAuthOk]);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
     if (refreshInFlightRef.current) {
@@ -127,7 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const task = (async (): Promise<boolean> => {
       try {
         const refresh = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-        if (!refresh) return false;
+        if (!refresh) {
+          await clearSession();
+          return false;
+        }
 
         const res = await fetchWithTimeout(`${API_BASE}/api/auth/refresh`, {
           method:  'POST',
@@ -135,24 +155,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body:    JSON.stringify({ refresh_token: refresh, refreshToken: refresh }),
         }, 12_000);
 
-        if (res.status === 401) {
+        const responseJson = await res.json().catch(() => ({}));
+        const outcome = evaluateRefreshResult({
+          status: res.status,
+          body: responseJson,
+        });
+        if (outcome.kind === 'definitive_failure') {
           await clearSession();
           return false;
         }
-        if (!res.ok) return false;
+        if (outcome.kind === 'transient_failure') {
+          return false;
+        }
 
-        const responseJson = await res.json().catch(() => ({}));
-        const data = (responseJson && responseJson.success && responseJson.data !== undefined)
-          ? responseJson.data
-          : responseJson;
-        const access = data.access_token ?? data.accessToken;
-        const newRefresh = data.refresh_token ?? data.refreshToken;
-        if (!access) return false;
-
-        await persistTokens(access, newRefresh);
-        lastRefreshAtRef.current = Date.now();
+        await persistTokens(outcome.accessToken, outcome.refreshToken);
         return true;
       } catch {
+        // Network / timeout — keep stored credentials (transient).
         return false;
       } finally {
         refreshInFlightRef.current = null;
@@ -177,29 +196,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [storedToken, storedUser, storedMode, storedRefresh] = await AsyncStorage.multiGet([
+        const [storedToken, storedUser, storedMode, storedRefresh, storedAuthOk] =
+          await AsyncStorage.multiGet([
           STORAGE_KEYS.ACCESS_TOKEN,
           STORAGE_KEYS.USER,
           'safat_active_mode',
           STORAGE_KEYS.REFRESH_TOKEN,
+          STORAGE_KEYS.LAST_AUTH_OK,
         ]);
         const token    = storedToken[1];
         const userJson = storedUser[1];
         const mode     = storedMode[1];
         const refresh  = storedRefresh[1];
-        if (token && userJson) {
+        const persisted = evaluatePersistedTokens({
+          accessToken: token,
+          refreshToken: refresh,
+        });
+        if (persisted === 'missing_refresh') {
+          await clearSession();
+        } else if (token && userJson) {
           setAccessToken(token);
           const storedUserData = JSON.parse(userJson) as Record<string, unknown>;
           const parsedUser = normalizeAuthUser(storedUserData) as unknown as AuthUser;
           setUser(parsedUser);
-          if (mode === 'USER' || mode === 'BUTCHER') {
-            setActiveMode('USER');
-          } else if (parsedUser.role === 'BUTCHER') {
-            setActiveMode('USER');
-          }
-          if (refresh) {
-            await refreshSessionRef.current();
-          }
+          const parsedOk = storedAuthOk[1] ? Number(storedAuthOk[1]) : Date.now();
+          setLastAuthOkAt(Number.isFinite(parsedOk) ? parsedOk : Date.now());
+          setActiveMode(parseActiveMode(mode));
+          await refreshSessionRef.current();
         }
       } catch {
         // Storage read failed — start fresh
@@ -240,10 +263,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setAccessToken(access);
     setUser(normalized);
-
-    setActiveMode('USER');
-    await AsyncStorage.setItem('safat_active_mode', 'USER');
-  }, []);
+    await markAuthOk();
+  }, [markAuthOk]);
 
   // ── تبديل الوضع ────────────────────────────────────────────────────────────
   const switchMode = useCallback(async (mode: 'USER' | 'BUTCHER') => {
@@ -437,7 +458,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       accessToken,
       isLoading,
-      isAuthenticated: !!user && !!accessToken,
+      isAuthenticated:
+        !!user && !!accessToken && isSessionStillTrusted(lastAuthOkAt),
       activeMode,
       switchMode,
       sendOtp,
@@ -452,6 +474,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [
       user,
       accessToken,
+      lastAuthOkAt,
       isLoading,
       activeMode,
       switchMode,

@@ -46,8 +46,40 @@ import {
 } from './listing-categories';
 import { MarketCategoriesService } from '../market-categories/services/market-categories.service';
 import { PaidServicesService } from '../settings/paid-services.service';
+import {
+  searchTextVariants,
+  tokenizeSearchQuery,
+} from '../search/lib/arabic-search.util';
 
 const PAGE_SIZE = 20;
+
+const LISTING_PAGE_ORDER: Prisma.ListingOrderByWithRelationInput[] = [
+  { pinned: 'desc' },
+  { featured: 'desc' },
+  { createdAt: 'desc' },
+  { id: 'desc' },
+];
+
+function listingSearchTokenConditions(
+  tokens: string[],
+): Prisma.ListingWhereInput[] {
+  return tokens.map((token) => {
+    const variants = searchTextVariants(token);
+    const ors: Prisma.ListingWhereInput[] = [];
+    for (const v of variants) {
+      ors.push(
+        { arabicTitle: { contains: v } },
+        { title: { contains: v, mode: 'insensitive' } },
+        { arabicLocation: { contains: v } },
+        { location: { contains: v, mode: 'insensitive' } },
+        { breed: { contains: v, mode: 'insensitive' } },
+        { arabicDescription: { contains: v } },
+        { description: { contains: v, mode: 'insensitive' } },
+      );
+    }
+    return { OR: ors };
+  });
+}
 
 @Injectable()
 export class ListingsService {
@@ -142,7 +174,7 @@ export class ListingsService {
       categoryId ||
       subcategoryId
         ? null
-        : `listings:v2:${JSON.stringify({ cursor, category, country, featured, sellerId })}`;
+        : `listings:v3:${JSON.stringify({ cursor, category, country, featured, sellerId })}`;
 
     if (cacheKey) {
       const cached = await this.cache.get<{
@@ -187,16 +219,12 @@ export class ListingsService {
       }
     }
 
-    if (search && search.length >= 2) {
-      andFilters.push({
-        OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { arabicTitle: { contains: search } },
-          { arabicLocation: { contains: search } },
-          { location: { contains: search, mode: 'insensitive' } },
-          { breed: { contains: search, mode: 'insensitive' } },
-        ],
-      });
+    if (search && search.trim().length >= 2) {
+      const tokens = tokenizeSearchQuery(search);
+      if (tokens.length === 0) {
+        return { listings: [], nextCursor: null, hasMore: false };
+      }
+      andFilters.push({ AND: listingSearchTokenConditions(tokens) });
     }
 
     if (andFilters.length > 0) {
@@ -213,15 +241,12 @@ export class ListingsService {
       where,
       take: PAGE_SIZE + 1,
       cursor,
-      orderBy: [
-        { pinned: 'desc' },
-        { featured: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: LISTING_PAGE_ORDER,
     });
 
     const hasMore = listings.length > PAGE_SIZE;
-    const items = hasMore ? listings.slice(0, -1) : listings;
+    const items = hasMore ? listings.slice(0, PAGE_SIZE) : listings;
+    const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
 
     const sorted = [...items].sort((a, b) => {
       const pinnedDiff = Number(b.pinned) - Number(a.pinned);
@@ -256,16 +281,15 @@ export class ListingsService {
       if (priorityDiff !== 0) return priorityDiff;
       const weightDiff = (b.promotionWeight ?? 0) - (a.promotionWeight ?? 0);
       if (weightDiff !== 0) return weightDiff;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      const createdDiff =
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (createdDiff !== 0) return createdDiff;
+      return String(b.id).localeCompare(String(a.id));
     });
 
     const ranked =
       suggested || promoted ? sorted : interleavePromotedListings(sorted);
     const publicListings = ranked.map((item) => sanitizeListingMedia(item));
-
-    const nextCursor = hasMore
-      ? (publicListings[publicListings.length - 1]?.id ?? null)
-      : null;
 
     const result = { listings: publicListings, nextCursor, hasMore };
 
@@ -409,7 +433,7 @@ export class ListingsService {
           covenantAccepted: listingFeesEnabled,
           covenantAcceptedAt: listingFeesEnabled ? new Date() : undefined,
           covenantVersion: listingFeesEnabled
-            ? (dto.covenantVersion?.trim() || LISTING_COVENANT_VERSION)
+            ? dto.covenantVersion?.trim() || LISTING_COVENANT_VERSION
             : undefined,
         },
         commission,

@@ -137,6 +137,7 @@ export class UnifiedSearchRepository {
         { pinned: 'desc' },
         { featured: 'desc' },
         { createdAt: 'desc' },
+        { id: 'desc' },
       ],
     });
   }
@@ -363,14 +364,28 @@ export class UnifiedSearchRepository {
         SELECT DISTINCT "arabicTitle" AS text, 'listing'::text AS kind, 3::float AS weight
         FROM "Listing"
         WHERE status = 'active' AND "deletedAt" IS NULL
-          AND ("arabicTitle" ILIKE ${like} OR title ILIKE ${like})
+          AND (
+            regexp_replace(
+              translate("arabicTitle", 'أإآٱةى', 'ااااهي'),
+              '[\u0610-\u061A\u064B-\u065F\u0670\u0640]',
+              '',
+              'g'
+            ) ILIKE ${like}
+            OR lower(title) LIKE lower(${like})
+          )
         LIMIT ${Math.ceil(limit / 2)}
       )
       UNION ALL
       (
         SELECT DISTINCT "nameAr" AS text, 'butcher'::text AS kind, 2::float AS weight
         FROM "Butcher"
-        WHERE "deletedAt" IS NULL AND "nameAr" ILIKE ${like}
+        WHERE "deletedAt" IS NULL
+          AND regexp_replace(
+            translate("nameAr", 'أإآٱةى', 'ااااهي'),
+            '[\u0610-\u061A\u064B-\u065F\u0670\u0640]',
+            '',
+            'g'
+          ) ILIKE ${like}
         LIMIT ${Math.ceil(limit / 3)}
       )
       UNION ALL

@@ -18,8 +18,12 @@ describe('commissions — listing vs order separation', () => {
   });
 
   it('listing 1% applies to livestock and store alike', () => {
-    expect(calculateCommission('sheep', 1000, 2, {}, 'USER').commission).toBe(10);
-    expect(calculateCommission('store', 5000, 1, {}, 'USER').commission).toBe(50);
+    expect(calculateCommission('sheep', 1000, 2, {}, 'USER').commission).toBe(
+      10,
+    );
+    expect(calculateCommission('store', 5000, 1, {}, 'USER').commission).toBe(
+      50,
+    );
   });
 
   it('listing value 100 → listing commission 1', () => {
@@ -29,12 +33,24 @@ describe('commissions — listing vs order separation', () => {
   });
 
   it('uses platform listing 1% even when plan feature still stores legacy 5', () => {
-    const r = calculateCommission('store', 1000, 1, { storeCommission: 5 }, 'BUTCHER');
+    const r = calculateCommission(
+      'store',
+      1000,
+      1,
+      { storeCommission: 5 },
+      'BUTCHER',
+    );
     expect(r.commission).toBe(10);
   });
 
   it('listing fee is not waived by storeCommission 0 (order path still is)', () => {
-    const r = calculateCommission('store', 1000, 1, { storeCommission: 0 }, 'BUTCHER');
+    const r = calculateCommission(
+      'store',
+      1000,
+      1,
+      { storeCommission: 0 },
+      'BUTCHER',
+    );
     expect(r.commission).toBe(10);
   });
 
@@ -70,11 +86,11 @@ describe('commissions — listing vs order separation', () => {
     expect(r.commission).toBe(0);
   });
 
-  it('rounds order commission to 2 decimal places', () => {
-    expect(roundMoney(9.999)).toBe(10);
+  it('rounds 0.1 + 0.2 using cents, not binary float', () => {
+    expect(roundMoney(0.1 + 0.2)).toBe(0.3);
     expect(
-      calculateOrderCommission(99.99, { storeCommission: 1 }).commission,
-    ).toBe(10);
+      calculateOrderCommission(0.3, { storeCommission: 1 }).commission,
+    ).toBe(0.03);
   });
 
   it('exemption helpers respect subscription zero-rate', () => {
@@ -89,8 +105,12 @@ describe('commissions — listing vs order separation', () => {
   });
 
   it('applies 1% to non-store listing values', () => {
-    expect(calculateCommission('sheep', 1000, 3, {}, 'USER').commission).toBe(10);
-    expect(calculateCommission('horses', 1000, 1, {}, 'USER').commission).toBe(10);
+    expect(calculateCommission('sheep', 1000, 3, {}, 'USER').commission).toBe(
+      10,
+    );
+    expect(calculateCommission('horses', 1000, 1, {}, 'USER').commission).toBe(
+      10,
+    );
   });
 
   it('builds stable idempotent payment refs per order', () => {

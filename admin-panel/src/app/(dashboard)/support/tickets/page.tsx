@@ -13,80 +13,125 @@ type TicketRow = {
   priority: string;
   status: string;
   subject: string;
-  createdAt: string;
+  updatedAt?: string;
+  assignedTo?: { arabicName?: string; displayName?: string; username?: string } | null;
+  reporter?: { arabicName?: string; displayName?: string; username?: string } | null;
+  order?: { orderNumber?: string } | null;
 };
 
 const statusTone = (s: string) => {
-  if (s === 'OPEN') return 'danger';
-  if (s === 'AWAITING_USER') return 'warning';
+  if (s === 'OPEN' || s === 'WAITING_FOR_SUPPORT' || s === 'AI_ASSISTING') return 'danger';
+  if (s === 'AWAITING_USER' || s === 'WAITING_FOR_CUSTOMER') return 'warning';
   if (s === 'CLOSED' || s === 'RESOLVED') return 'success';
   return 'default';
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  OPEN: 'جديدة',
+  OPEN: 'مفتوحة',
   IN_REVIEW: 'قيد المراجعة',
+  AI_ASSISTING: 'سرحان يساعد',
+  WAITING_FOR_CUSTOMER: 'بانتظار العميل',
+  WAITING_FOR_SUPPORT: 'بانتظار خدمة العملاء',
   IN_PROGRESS: 'قيد المعالجة',
   AWAITING_USER: 'بانتظار المستخدم',
   RESOLVED: 'تم الحل',
   CLOSED: 'مغلقة',
 };
 
-const FILTER_STATUSES = ['', 'OPEN', 'IN_PROGRESS', 'AWAITING_USER', 'RESOLVED', 'CLOSED'] as const;
+const CATEGORY_LABEL: Record<string, string> = {
+  ORDER_HELP: 'مشكلة في الطلب',
+  OTHER_HELP: 'مساعدة في شيء آخر',
+};
+
+const FILTERS = [
+  { value: 'all', label: 'الكل' },
+  { value: 'open', label: 'مفتوحة' },
+  { value: 'waiting_support', label: 'بانتظار خدمة العملاء' },
+  { value: 'in_progress', label: 'قيد المعالجة' },
+  { value: 'resolved', label: 'تم الحل' },
+  { value: 'closed', label: 'مغلقة' },
+] as const;
+
+function personName(p?: TicketRow['reporter']) {
+  if (!p) return '—';
+  return p.arabicName || p.displayName || p.username || '—';
+}
 
 export default function SupportTicketsPage() {
-  const [status, setStatus] = useState('');
+  const [statusGroup, setStatusGroup] = useState<(typeof FILTERS)[number]['value']>('all');
 
   const fetchPage = useCallback(
-    ({ page, search, category }: { page: number; search: string; category?: string }) =>
+    ({ page, search }: { page: number; search: string }) =>
       fetchSupportTickets({
         page,
         search,
-        category,
-        status: status || undefined,
+        statusGroup: statusGroup === 'all' ? undefined : statusGroup,
         type: 'SUPPORT',
       }),
-    [status],
+    [statusGroup],
   );
 
   return (
     <ResourcePage<TicketRow>
-      title="تذاكر الدعم"
-      description="تذاكر الدعم من المستخدمين"
+      title="البلاغات"
+      description="بلاغات العملاء عبر سرحان وخدمة العملاء — بدون تواصل مع الملحمة"
       fetchPage={fetchPage}
-      status={status || undefined}
       filters={
         <div className="flex flex-wrap gap-2 text-sm">
-          {FILTER_STATUSES.map((s) => {
-            const active = status === s;
-            const label = s ? STATUS_LABEL[s] : 'الكل';
+          {FILTERS.map((s) => {
+            const active = statusGroup === s.value;
             return (
               <button
-                key={s || 'all'}
+                key={s.value}
                 type="button"
-                onClick={() => setStatus(s)}
+                onClick={() => setStatusGroup(s.value)}
                 className={`rounded-full px-3 py-1 transition-colors ${
                   active
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                     : 'text-slate-400 border border-slate-700 hover:border-slate-500'
                 }`}
               >
-                {label}
+                {s.label}
               </button>
             );
           })}
         </div>
       }
       columns={[
-        { key: 'ticketNumber', label: 'الرقم' },
-        { key: 'subject', label: 'الموضوع' },
-        { key: 'category', label: 'التصنيف' },
+        { key: 'ticketNumber', label: 'رقم البلاغ' },
+        {
+          key: 'reporter',
+          label: 'العميل',
+          render: (r) => personName(r.reporter),
+        },
+        {
+          key: 'category',
+          label: 'نوع المساعدة',
+          render: (r) => CATEGORY_LABEL[r.category] ?? r.category,
+        },
+        {
+          key: 'order',
+          label: 'الطلب',
+          render: (r) => r.order?.orderNumber ?? '—',
+        },
         {
           key: 'status',
           label: 'الحالة',
           render: (r) => (
             <Badge tone={statusTone(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
           ),
+        },
+        { key: 'priority', label: 'الأولوية' },
+        {
+          key: 'assignedTo',
+          label: 'الموظف المسؤول',
+          render: (r) => personName(r.assignedTo),
+        },
+        {
+          key: 'updatedAt',
+          label: 'آخر تحديث',
+          render: (r) =>
+            r.updatedAt ? new Date(r.updatedAt).toLocaleString('ar-SA') : '—',
         },
       ]}
       actions={(row, reload) => (

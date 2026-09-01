@@ -134,12 +134,34 @@ export type ListingSearchParams = {
   maxPrice?: number;
   cursor?: string;
   sellerId?: string;
+  featured?: boolean;
 };
 
-export async function searchListings(
+export type ListingSearchPage = {
+  listings: Listing[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+/** Safety cap: 50 pages × 20 = 1000 listings for a single seller. */
+export const SELLER_LISTINGS_MAX_PAGES = 50;
+
+export function shouldFetchNextListingPage(opts: {
+  hasMore: boolean;
+  nextCursor: string | null | undefined;
+  loading: boolean;
+  loadingMore: boolean;
+}): boolean {
+  return Boolean(
+    opts.hasMore && opts.nextCursor && !opts.loading && !opts.loadingMore,
+  );
+}
+
+export async function searchListingsPage(
   params: ListingSearchParams,
   accessToken?: string | null,
-): Promise<Listing[]> {
+): Promise<ListingSearchPage> {
+  const empty: ListingSearchPage = { listings: [], nextCursor: null, hasMore: false };
   const base = await ensureApiReachable();
   const qs = new URLSearchParams();
   if (params.search && params.search.length >= 2) qs.set('search', params.search);
@@ -151,14 +173,50 @@ export async function searchListings(
   if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
   if (params.cursor) qs.set('cursor', params.cursor);
   if (params.sellerId) qs.set('sellerId', params.sellerId);
+  if (params.featured) qs.set('featured', 'true');
 
   const headers: HeadersInit = accessToken
     ? { Authorization: `Bearer ${accessToken}` }
     : {};
   const res = await fetch(`${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`, { headers });
-  if (!res.ok) return [];
+  if (!res.ok) return empty;
 
   const json = await res.json();
-  if (!json.success || !Array.isArray(json.data?.listings)) return [];
-  return json.data.listings.map(mapListing);
+  if (!json.success || !Array.isArray(json.data?.listings)) return empty;
+  return {
+    listings: json.data.listings.map(mapListing),
+    nextCursor: typeof json.data.nextCursor === 'string' ? json.data.nextCursor : null,
+    hasMore: json.data.hasMore === true,
+  };
+}
+
+export async function searchListings(
+  params: ListingSearchParams,
+  accessToken?: string | null,
+): Promise<Listing[]> {
+  const page = await searchListingsPage(params, accessToken);
+  return page.listings;
+}
+
+export function mergeListingPages(existing: Listing[], incoming: Listing[]): Listing[] {
+  if (existing.length === 0) return incoming;
+  const seen = new Set(existing.map((l) => l.id));
+  const extra = incoming.filter((l) => !seen.has(l.id));
+  return extra.length === 0 ? existing : [...existing, ...extra];
+}
+
+export async function searchAllSellerListings(
+  sellerId: string,
+  accessToken?: string | null,
+  maxPages: number = SELLER_LISTINGS_MAX_PAGES,
+): Promise<Listing[]> {
+  const collected: Listing[] = [];
+  let cursor: string | undefined;
+  for (let page = 0; page < maxPages; page += 1) {
+    const result = await searchListingsPage({ sellerId, cursor }, accessToken);
+    collected.push(...result.listings);
+    if (!result.hasMore || !result.nextCursor) break;
+    cursor = result.nextCursor;
+  }
+  return collected;
 }

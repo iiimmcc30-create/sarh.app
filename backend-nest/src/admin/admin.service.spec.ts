@@ -28,11 +28,7 @@ describe('AdminService.updateUser role authorization', () => {
 
   it('rejects MODERATOR changing role to ADMIN', async () => {
     await expect(
-      service.updateUser(
-        'user-1',
-        { role: 'ADMIN' },
-        actor('MODERATOR'),
-      ),
+      service.updateUser('user-1', { role: 'ADMIN' }, actor('MODERATOR')),
     ).rejects.toMatchObject({
       status: 403,
       error: 'forbidden',

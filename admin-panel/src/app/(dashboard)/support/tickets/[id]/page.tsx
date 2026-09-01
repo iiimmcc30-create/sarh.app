@@ -12,10 +12,14 @@ import {
   replySupportTicket,
   updateSupportTicket,
 } from '@/services/support.service';
+import { useAdminSupportTicketSocket } from '@/hooks/useAdminSupportTicketSocket';
 
 const STATUS_LABEL: Record<string, string> = {
   OPEN: 'جديدة',
   IN_REVIEW: 'قيد المراجعة',
+  AI_ASSISTING: 'سرحان يساعد',
+  WAITING_FOR_CUSTOMER: 'بانتظار العميل',
+  WAITING_FOR_SUPPORT: 'بانتظار خدمة العملاء',
   IN_PROGRESS: 'قيد المعالجة',
   AWAITING_USER: 'بانتظار المستخدم',
   RESOLVED: 'تم الحل',
@@ -56,6 +60,10 @@ export default function SupportTicketDetailPage() {
     void load();
   }, [id]);
 
+  useAdminSupportTicketSocket(id, () => {
+    void load();
+  });
+
   if (!ticket && !error) return <p className="text-slate-400">جارٍ التحميل...</p>;
   if (!ticket) {
     return (
@@ -67,6 +75,16 @@ export default function SupportTicketDetailPage() {
   }
 
   const messages = (ticket.messages as Record<string, unknown>[] | undefined) ?? [];
+  const order = ticket.order as Record<string, unknown> | null | undefined;
+  const metadata = (ticket.metadata as Record<string, unknown> | null | undefined) ?? {};
+  const reporter = ticket.reporter as Record<string, unknown> | undefined;
+  const orderItems = (order?.items as Record<string, unknown>[] | undefined) ?? [];
+
+  const authorLabel = (msg: Record<string, unknown>) => {
+    if (msg.authorKind === 'SARHAN') return 'سرحان';
+    if (msg.authorKind === 'STAFF' || msg.isStaffReply) return 'خدمة العملاء';
+    return 'العميل';
+  };
 
   return (
     <div>
@@ -79,6 +97,15 @@ export default function SupportTicketDetailPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
           <p><Badge>{String(ticket.category)}</Badge></p>
+          <p className="text-sm text-slate-400">
+            العميل: {String(reporter?.arabicName || reporter?.displayName || reporter?.username || '—')}
+          </p>
+          {typeof metadata.issueType === 'string' ? (
+            <p className="text-sm text-slate-300">تصنيف سرحان: {String(metadata.issueType)}</p>
+          ) : null}
+          {typeof metadata.summary === 'string' ? (
+            <p className="text-sm text-slate-300 whitespace-pre-wrap">ملخص: {String(metadata.summary)}</p>
+          ) : null}
           <p className="text-slate-300 whitespace-pre-wrap">{String(ticket.description)}</p>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {messages.map((msg) => (
@@ -86,7 +113,7 @@ export default function SupportTicketDetailPage() {
                 key={String(msg.id)}
                 className={`rounded-xl p-3 ${msg.isStaffReply ? 'bg-emerald-950/40 border border-emerald-900/40' : 'bg-slate-950/60'}`}
               >
-                <p className="text-xs text-slate-500 mb-1">{msg.isStaffReply ? 'فريق الدعم' : 'المستخدم'}</p>
+                <p className="text-xs text-slate-500 mb-1">{authorLabel(msg)}</p>
                 <p className="text-sm text-slate-200 whitespace-pre-wrap">{String(msg.body)}</p>
               </div>
             ))}
@@ -120,6 +147,25 @@ export default function SupportTicketDetailPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 space-y-4">
+          {order ? (
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2 text-sm text-slate-300">
+              <p className="font-semibold text-white">تفاصيل الطلب (للعرض فقط — لا يمكن التعديل من هنا)</p>
+              <p>رقم الطلب: {String(order.orderNumber)}</p>
+              <p>حالة الطلب: {String(order.status)}</p>
+              <p>حالة الدفع: {String(order.paymentStatus)}</p>
+              <p>الإجمالي: {String(order.totalPrice)} {String(order.currency ?? 'SAR')}</p>
+              <ul className="list-disc pr-5">
+                {orderItems.map((item) => {
+                  const product = item.product as Record<string, unknown> | undefined;
+                  return (
+                    <li key={String(item.id)}>
+                      {String(product?.nameAr ?? item.cutType)} — {String(item.weightKg)} كغ
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
           <label className="text-sm text-slate-400">الحالة</label>
           <select
             value={status}

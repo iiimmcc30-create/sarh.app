@@ -22,8 +22,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { storyPlaybackVideoUrl } from '@/constants/stories';

@@ -151,7 +151,14 @@ export class UsersService {
     }
 
     try {
-      const { fcmToken, birthDate: _bd, email, ...profileData } = dto;
+      const {
+        fcmToken,
+        unregisterFcm,
+        fcmPlatform,
+        birthDate: _bd,
+        email,
+        ...profileData
+      } = dto;
       const updated = await this.repo.updateUser(id, {
         ...profileData,
         ...(email !== undefined ? { email } : {}),
@@ -159,8 +166,18 @@ export class UsersService {
         ...(dto.privateMessagesAudience !== undefined
           ? { allowPrivateMessages: true }
           : {}),
-        ...(fcmToken !== undefined ? { fcmToken } : {}),
+        ...(fcmToken !== undefined && !unregisterFcm ? { fcmToken } : {}),
       });
+
+      if (unregisterFcm && typeof fcmToken === 'string' && fcmToken.trim()) {
+        await this.repo.deleteDeviceToken(id, fcmToken.trim());
+        const current = await this.repo.findUserById(id, { fcmToken: true });
+        if (current?.fcmToken === fcmToken.trim()) {
+          await this.repo.updateUser(id, { fcmToken: null });
+        }
+      } else if (typeof fcmToken === 'string' && fcmToken.trim()) {
+        await this.repo.upsertDeviceToken(id, fcmToken.trim(), fcmPlatform);
+      }
 
       await this.redis.cacheDel(`user:${id}`, `user:${id}:base`);
       this.logger.info({ userId: id }, 'User profile updated');

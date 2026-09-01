@@ -53,6 +53,13 @@ export class SupportController {
   }
 
   @RateLimit('api')
+  @Get('help-orders')
+  @HttpCode(HttpStatus.OK)
+  async listHelpOrders(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.tickets.listHelpOrders(user));
+  }
+
+  @RateLimit('api')
   @Get('tickets')
   @HttpCode(HttpStatus.OK)
   async listTickets(

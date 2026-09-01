@@ -15,12 +15,15 @@ import {
   ChatTypingDto,
   LiveCommentDto,
   OrderStatusDto,
+  SupportSendDto,
 } from '../dto/socket-events.dto';
 import { SocketRepository } from '../repositories/socket.repository';
 import { SocketEmitService } from './socket-emit.service';
 import { OrderLifecycleService } from '../../butchers/services/order-lifecycle.service';
 import { MessagingPolicyService } from '../../messages/services/messaging-policy.service';
+import { SupportTicketsService } from '../../support/services/support-tickets.service';
 import { ApiException } from '../../common/exceptions/api.exception';
+import { markSocketOffline, markSocketOnline } from './online-presence';
 
 class UuidParamDto {
   @IsUUID()
@@ -42,6 +45,7 @@ export class SocketGatewayService {
     private readonly orderLifecycle: OrderLifecycleService,
     private readonly logger: LoggerService,
     private readonly messagingPolicy: MessagingPolicyService,
+    private readonly supportTickets: SupportTicketsService,
   ) {}
 
   private policyError(err: unknown): SocketError {
@@ -78,16 +82,17 @@ export class SocketGatewayService {
   }
 
   async onUserConnected(userId: string, socketId: string): Promise<void> {
-    await this.cache.set(
-      `online:${userId}`,
-      { socketId, since: new Date() },
-      3600,
-    );
+    await markSocketOnline(this.cache, userId, socketId);
   }
 
-  onUserDisconnected(userId: string): void {
+  onUserDisconnected(userId: string, socketId?: string): void {
     const cleanup = async () => {
-      await this.cache.del(`online:${userId}`);
+      if (socketId) {
+        const result = await markSocketOffline(this.cache, userId, socketId);
+        if (result.stillOnline) return;
+      } else {
+        await this.cache.del(`online:${userId}`, `online:sockets:${userId}`);
+      }
       await this.repo.updateUserLastSeen(userId);
     };
 
@@ -278,10 +283,7 @@ export class SocketGatewayService {
     }
 
     try {
-      await this.messagingPolicy.assertNotBlocked(
-        user.userId,
-        data.receiverId,
-      );
+      await this.messagingPolicy.assertNotBlocked(user.userId, data.receiverId);
     } catch (err) {
       return this.policyError(err);
     }
@@ -426,9 +428,7 @@ export class SocketGatewayService {
   }
 
   onPresencePing(userId: string, socketId: string): void {
-    this.cache
-      .set(`online:${userId}`, { socketId, updatedAt: new Date() }, 3600)
-      .catch(() => {});
+    void markSocketOnline(this.cache, userId, socketId).catch(() => {});
   }
 
   async handleNotificationsRead(userId: string, raw: unknown): Promise<void> {
@@ -439,5 +439,49 @@ export class SocketGatewayService {
     if (ids.length === 0) return;
 
     await this.repo.markNotificationsRead(ids, userId).catch(() => {});
+  }
+
+  async handleSupportJoin(
+    user: JwtPayload,
+    ticketId: string,
+  ): Promise<SocketError | null> {
+    const ticket = await this.supportTickets.getTicketForSocket(user, ticketId);
+    if (!ticket) {
+      return {
+        code: 'unauthorized',
+        message: 'Not allowed to join this ticket',
+      };
+    }
+    return null;
+  }
+
+  async handleSupportSend(
+    user: JwtPayload,
+    data: SupportSendDto,
+  ): Promise<SocketError | null> {
+    const ticket = await this.supportTickets.getTicketForSocket(
+      user,
+      data.ticketId,
+    );
+    if (!ticket) {
+      return {
+        code: 'unauthorized',
+        message: 'Not allowed to send on this ticket',
+      };
+    }
+    try {
+      if (this.supportTickets.isStaffRole(user.role)) {
+        await this.supportTickets.replyAsStaff(user, data.ticketId, {
+          body: data.body,
+        });
+      } else {
+        await this.supportTickets.replyAsUser(user, data.ticketId, {
+          body: data.body,
+        });
+      }
+    } catch (err) {
+      return this.policyError(err);
+    }
+    return null;
   }
 }

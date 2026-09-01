@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { SARH_OFFICIAL_EMAIL, SARH_OFFICIAL_HOST, SARH_OFFICIAL_SITE } from '@/constants/sarhOfficial';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
@@ -165,20 +164,20 @@ export default function AboutScreen() {
           </Pressable>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
-            onPress={() => Linking.openURL(`mailto:${SARH_OFFICIAL_EMAIL}`)}
+            onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}
           >
             <AppIcon name="mail-outline" size={20} color={colors.electricBright} />
             <View style={styles.contactTextShell}>
-              <Text style={styles.contactText}>{SARH_OFFICIAL_EMAIL}</Text>
+              <Text style={styles.contactText}>sarh@sarhsa.online</Text>
             </View>
           </Pressable>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
-            onPress={() => Linking.openURL(SARH_OFFICIAL_SITE)}
+            onPress={() => Linking.openURL('https://sarhsa.online')}
           >
             <AppIcon name="globe-outline" size={20} color={colors.electricBright} />
             <View style={styles.contactTextShell}>
-              <Text style={styles.contactText}>{SARH_OFFICIAL_HOST}</Text>
+              <Text style={styles.contactText}>sarhsa.online</Text>
             </View>
           </Pressable>
         </View>
