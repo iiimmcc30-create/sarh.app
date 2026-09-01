@@ -3,8 +3,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { QueueModule } from '../queue/queue.module';
 import { CommonModule } from '../common/common.module';
 import { ButchersModule } from '../butchers/butchers.module';
+import { AuthModule } from '../auth/auth.module';
 import { ButcherApplicationsController } from './butcher-applications.controller';
 import { ButcherApplicationUserService } from './services/application.service';
+import { PublicButcherJoinService } from './services/public-join.service';
 import { ButcherApplicationDocumentService } from './services/document.service';
 import { ButcherApplicationAdminService } from './services/admin.service';
 import { ButcherApplicationNotificationsService } from './services/butcher-application-notifications.service';
@@ -13,13 +15,20 @@ import { ApplicationRepository } from './repositories/application.repository';
 import { DocumentRepository } from './repositories/document.repository';
 
 @Module({
-  imports: [PrismaModule, QueueModule, CommonModule, ButchersModule],
+  imports: [
+    PrismaModule,
+    QueueModule,
+    CommonModule,
+    ButchersModule,
+    AuthModule,
+  ],
   controllers: [ButcherApplicationsController],
   providers: [
     ApplicationRepository,
     DocumentRepository,
     TransactionService,
     ButcherApplicationUserService,
+    PublicButcherJoinService,
     ButcherApplicationDocumentService,
     ButcherApplicationAdminService,
     ButcherApplicationNotificationsService,

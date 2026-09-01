@@ -788,6 +788,7 @@ model Butcher {
   deletedAt           DateTime?
   user                User                @relation(fields: [userId], references: [id])
   sourceApplication   ButcherApplication? @relation("ButcherSourceApplication", fields: [sourceApplicationId], references: [id])
+  daftraIntegration   ButcherDaftraIntegration?
   offers              ButcherOffer[]
   orders              ButcherOrder[]
   products            ButcherProduct[]
@@ -1298,6 +1299,34 @@ enum ButcherApplicationTimelineAction {
   REJECT
   WITHDRAW
   COMMENT
+}
+
+enum DaftraIntegrationStatus {
+  NOT_CONFIGURED
+  CONNECTED
+  CONNECTION_FAILED
+  DISABLED
+}
+
+model ButcherDaftraIntegration {
+  id                   String                   @id @default(uuid())
+  butcherId            String                   @unique
+  /// Daftra account/subdomain identifier used to build https://{account}.daftra.com
+  accountIdentifier    String
+  apiKeyCiphertext     String
+  apiKeyIv             String
+  apiKeyTag            String
+  apiKeyLast4          String
+  status               DaftraIntegrationStatus  @default(NOT_CONFIGURED)
+  lastConnectionTestAt DateTime?
+  lastConnectionError  String?
+  daftraLoginEmail     String?
+  daftraLoginUrl       String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  butcher              Butcher                  @relation(fields: [butcherId], references: [id], onDelete: Cascade)
+
+  @@index([status])
 }
 
 model SupportTicket {

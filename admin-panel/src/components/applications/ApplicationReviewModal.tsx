@@ -9,6 +9,7 @@ import {
   fetchApplication,
   rejectApplication,
 } from '@/services/admin.service';
+import { DaftraIntegrationPanel } from '@/components/butchers/DaftraIntegrationPanel';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'مسودة',
@@ -229,7 +230,9 @@ export function ApplicationReviewModal({ applicationId, open, onClose, onUpdated
               <h3 className="mb-3 font-semibold text-white">صاحب الطلب</h3>
               <dl className="grid gap-3 sm:grid-cols-2">
                 <Field label="اسم المستخدم" value={user?.username} />
+                <Field label="الاسم" value={user?.arabicName ?? user?.displayName} />
                 <Field label="الهاتف" value={user?.phone} />
+                <Field label="البريد" value={user?.email} />
                 <Field label="معرّف المستخدم" value={user?.id} />
               </dl>
             </section>
@@ -272,6 +275,10 @@ export function ApplicationReviewModal({ applicationId, open, onClose, onUpdated
                 <h3 className="mb-2 font-semibold text-rose-300">سبب الرفض</h3>
                 <p className="text-sm text-slate-300">{String(app.rejectionReason)}</p>
               </section>
+            ) : null}
+
+            {status === 'APPROVED' && app.provisionedButcherId ? (
+              <DaftraIntegrationPanel butcherId={String(app.provisionedButcherId)} />
             ) : null}
 
             {canReview && (

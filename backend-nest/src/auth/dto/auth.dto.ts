@@ -137,8 +137,8 @@ export class VerifyOtpDto {
   code!: string;
 
   @IsOptional()
-  @IsEnum(['login', 'reset_password'])
-  purpose: 'login' | 'reset_password' = 'login';
+  @IsEnum(['login', 'reset_password', 'join'])
+  purpose: 'login' | 'reset_password' | 'join' = 'login';
 }
 
 export class GoogleAuthDto {

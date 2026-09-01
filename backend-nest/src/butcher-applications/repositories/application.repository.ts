@@ -26,7 +26,15 @@ export const applicationInclude = {
   timelineEvents: timelineInclude,
   sourcedButcher: { select: { id: true } },
   user: {
-    select: { id: true, username: true, phone: true, avatar: true },
+    select: {
+      id: true,
+      username: true,
+      phone: true,
+      avatar: true,
+      email: true,
+      displayName: true,
+      arabicName: true,
+    },
   },
 };
 

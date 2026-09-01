@@ -112,6 +112,8 @@ function RootNavigator() {
         <Stack.Screen name="create/post" />
         <Stack.Screen name="create/story" options={{ animation: stackSlideAnimation() }} />
         <Stack.Screen name="stories/view" options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="join/index" />
+        <Stack.Screen name="join/success" options={{ animation: 'fade' }} />
         <Stack.Screen name="info/about" />
         <Stack.Screen name="info/privacy" />
         <Stack.Screen name="info/terms" />

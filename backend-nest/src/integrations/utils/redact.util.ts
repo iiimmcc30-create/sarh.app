@@ -11,6 +11,9 @@ const SECRET_KEYS = [
   'NI_API_KEY',
   'NI_BASIC_AUTH',
   'NI_WEBHOOK_SECRET',
+  'APIKEY',
+  'apikey',
+  'ciphertext',
 ];
 
 function maskValue(value: string): string {

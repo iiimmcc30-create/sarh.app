@@ -24,6 +24,7 @@ export function resolveBootNavigation(state: BootNavState): BootNavAction {
   const inOnboarding = seg === 'onboarding';
   const inAuth = seg === 'auth';
   const inInfo = seg === 'info';
+  const inJoin = seg === 'join';
   const onRootIndex = !seg || seg === 'index';
 
   if (!state.onboardingComplete && !inOnboarding) {
@@ -49,7 +50,8 @@ export function resolveBootNavigation(state: BootNavState): BootNavAction {
     !state.isAuthenticated &&
     !inAuth &&
     !inInfo &&
-    !inOnboarding
+    !inOnboarding &&
+    !inJoin
   ) {
     return { type: 'replace', href: '/auth/welcome' };
   }
