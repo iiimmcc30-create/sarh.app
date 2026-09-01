@@ -53,6 +53,29 @@ Success: `{ connected: true }`. Auth failure: `{ connected: false, reason: "INVA
 3. Map the JSON in `daftra.mappers.ts` — do not leak raw Daftra payloads (especially `data.key`).
 4. Expose it from `DaftraService` after `clientForButcher`.
 
+## Sarh HTTP routes
+
+Admin (ADMIN only):
+
+- `GET/PUT /api/admin/butchers/:id/daftra`
+- `POST /api/admin/butchers/:id/daftra/test`
+- `POST /api/admin/butchers/:id/daftra/disable`
+- `GET /api/admin/butchers/:id/daftra/products`
+- `GET /api/admin/butchers/:id/daftra/products/:productId`
+- `GET /api/admin/butchers/:id/daftra/inventory`
+
+Butcher (JWT owner shop only):
+
+- `GET /api/butchers/daftra/status`
+- `POST /api/butchers/daftra/test-connection`
+- `GET /api/butchers/daftra/products`
+- `GET /api/butchers/daftra/products/:id`
+- `GET /api/butchers/daftra/inventory`
+- `GET /api/butchers/daftra/inventory/:id`
+- `GET/POST /api/butchers/daftra/product-links`
+
+`POST/PUT` Daftra product helpers exist on `DaftraService` for a later catalog flow and are **not** wired to Sarh `ButcherProduct` CRUD.
+
 ## Inventory note
 
 No dedicated Daftra “list inventory” API2 path was found in the available docs. List inventory uses documented `Product.stock_balance` on `GET /products.json`. Per-product warehouse splits use `StockLevels` on `GET /products/{id}.json` when present.
