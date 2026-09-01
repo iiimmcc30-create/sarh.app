@@ -130,6 +130,120 @@ describe('Butcher order isolation', () => {
     ).rejects.toMatchObject({ status: 409 } satisfies Partial<ApiException>);
   });
 
+  it('refuses a customer cancelling a pending order after payment succeeded', async () => {
+    repo.findOrderWithButcher.mockResolvedValue({
+      id: 'order-paid',
+      customerId: 'cust-1',
+      butcher: { userId: 'butcher-user', id: 'butcher-1' },
+      status: 'pending',
+      paymentStatus: 'paid',
+    });
+
+    await expect(
+      service.updateOrder('order-paid', jwt('cust-1', 'USER'), {
+        status: 'cancelled',
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      error: 'forbidden_status_change',
+    } satisfies Partial<ApiException>);
+    expect(orderLifecycle.transitionOrder).not.toHaveBeenCalled();
+  });
+
+  it('refuses a customer cancelling a confirmed paid order', async () => {
+    repo.findOrderWithButcher.mockResolvedValue({
+      id: 'order-paid-confirmed',
+      customerId: 'cust-1',
+      butcher: { userId: 'butcher-user', id: 'butcher-1' },
+      status: 'confirmed',
+      paymentStatus: 'paid',
+    });
+
+    await expect(
+      service.updateOrder('order-paid-confirmed', jwt('cust-1', 'USER'), {
+        status: 'cancelled',
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      error: 'forbidden_status_change',
+    } satisfies Partial<ApiException>);
+    expect(orderLifecycle.transitionOrder).not.toHaveBeenCalled();
+  });
+
+  it('allows a customer to cancel an unpaid pending order', async () => {
+    repo.findOrderWithButcher.mockResolvedValue({
+      id: 'order-unpaid',
+      customerId: 'cust-1',
+      butcher: { userId: 'butcher-user', id: 'butcher-1' },
+      status: 'pending',
+      paymentStatus: 'unpaid',
+    });
+    orderLifecycle.transitionOrder.mockResolvedValue({
+      id: 'order-unpaid',
+      status: 'cancelled',
+    });
+
+    const result = await service.updateOrder(
+      'order-unpaid',
+      jwt('cust-1', 'USER'),
+      {
+        status: 'cancelled',
+      },
+    );
+    expect(result.status).toBe('cancelled');
+    expect(orderLifecycle.transitionOrder).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderId: 'order-unpaid',
+        actorId: 'cust-1',
+        nextStatus: 'cancelled',
+      }),
+    );
+  });
+
+  it('still lets a butcher cancel a paid pending order', async () => {
+    repo.findOrderWithButcher.mockResolvedValue({
+      id: 'order-paid',
+      customerId: 'cust-1',
+      butcher: { userId: 'butcher-user', id: 'butcher-1' },
+      status: 'pending',
+      paymentStatus: 'paid',
+    });
+    orderLifecycle.transitionOrder.mockResolvedValue({
+      id: 'order-paid',
+      status: 'cancelled',
+    });
+
+    const result = await service.updateOrder(
+      'order-paid',
+      jwt('butcher-user'),
+      { status: 'cancelled' },
+    );
+    expect(result.status).toBe('cancelled');
+    expect(orderLifecycle.transitionOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it('still lets an admin cancel a paid pending order', async () => {
+    repo.findOrderWithButcher.mockResolvedValue({
+      id: 'order-paid',
+      customerId: 'cust-1',
+      butcher: { userId: 'butcher-user', id: 'butcher-1' },
+      status: 'pending',
+      paymentStatus: 'paid',
+    });
+    orderLifecycle.transitionOrder.mockResolvedValue({
+      id: 'order-paid',
+      status: 'cancelled',
+    });
+
+    const result = await service.updateOrder(
+      'order-paid',
+      jwt('admin-1', 'ADMIN'),
+      { status: 'cancelled' },
+    );
+    expect(result.status).toBe('cancelled');
+    expect(orderLifecycle.transitionOrder).toHaveBeenCalledTimes(1);
+  });
+
   it('treats a duplicate same-status request as a lifecycle no-op', async () => {
     repo.findOrderWithButcher.mockResolvedValue({
       id: 'order-a',
