@@ -11,11 +11,16 @@ export type SupportTicketCategory =
   | 'VERIFICATION'
   | 'BUTCHERS'
   | 'TECHNICAL'
-  | 'OTHER';
+  | 'OTHER'
+  | 'ORDER_HELP'
+  | 'OTHER_HELP';
 
 export type SupportTicketStatus =
   | 'OPEN'
   | 'IN_REVIEW'
+  | 'AI_ASSISTING'
+  | 'WAITING_FOR_CUSTOMER'
+  | 'WAITING_FOR_SUPPORT'
   | 'IN_PROGRESS'
   | 'AWAITING_USER'
   | 'RESOLVED'
@@ -53,6 +58,7 @@ export type SupportTicketMessage = {
   id: string;
   body: string;
   isStaffReply: boolean;
+  authorKind?: 'CUSTOMER' | 'SARHAN' | 'STAFF';
   createdAt: string;
   author?: {
     id: string;
@@ -65,8 +71,29 @@ export type SupportTicketMessage = {
 
 export type SupportTicketDetail = SupportTicketSummary & {
   description: string;
+  handlerMode?: 'AI_ACTIVE' | 'HUMAN_ACTIVE';
+  metadata?: Record<string, unknown> | null;
+  order?: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    paymentStatus: string;
+    totalPrice: number;
+    currency?: string;
+  } | null;
   attachments?: SupportTicketAttachment[];
   messages?: SupportTicketMessage[];
+};
+
+export type HelpOrderSummary = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  totalPrice: number;
+  currency: string;
+  createdAt: string;
+  butcher?: { nameAr?: string | null } | null;
 };
 
 export type FaqItem = {
@@ -151,10 +178,19 @@ export async function fetchTicket(id: string): Promise<SupportTicketDetail | nul
   return json.success ? json.data.ticket : null;
 }
 
+export async function fetchMyHelpOrders(): Promise<{ orders: HelpOrderSummary[] } | null> {
+  const res = await authFetch(`${API_BASE}/api/support/help-orders`);
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.success ? json.data : null;
+}
+
 export async function createTicket(payload: {
-  category: SupportTicketCategory;
-  subject: string;
+  category?: SupportTicketCategory;
+  subject?: string;
   description: string;
+  helpKind?: 'ORDER_HELP' | 'OTHER_HELP';
+  orderId?: string;
   attachments?: { fileUrl: string; fileName?: string; mimeType?: string; fileSizeBytes?: number }[];
 }): Promise<{ ok: boolean; ticket?: { id: string; ticketNumber: string }; error?: string }> {
   const res = await authFetch(`${API_BASE}/api/support/tickets`, {
@@ -243,6 +279,9 @@ export async function submitVerificationRequest(): Promise<{ ok: boolean; error?
 export const TICKET_STATUS_LABEL_AR: Record<SupportTicketStatus, string> = {
   OPEN: 'جديدة',
   IN_REVIEW: 'قيد المراجعة',
+  AI_ASSISTING: 'سرحان يساعد',
+  WAITING_FOR_CUSTOMER: 'بانتظار ردك',
+  WAITING_FOR_SUPPORT: 'بانتظار خدمة العملاء',
   IN_PROGRESS: 'قيد المعالجة',
   AWAITING_USER: 'بانتظار ردك',
   RESOLVED: 'تم الحل',
@@ -279,4 +318,6 @@ export const TICKET_CATEGORY_LABEL_AR: Record<SupportTicketCategory, string> = {
   BUTCHERS: 'الملاحم',
   TECHNICAL: 'المشاكل التقنية',
   OTHER: 'أخرى',
+  ORDER_HELP: 'مشكلة في الطلب',
+  OTHER_HELP: 'مساعدة في شيء آخر',
 };

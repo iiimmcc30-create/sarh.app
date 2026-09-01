@@ -5,19 +5,16 @@ export type ButcherChatAccess = {
   allowed: boolean;
   orderId?: string | null;
   receiverId?: string | null;
-  reason?: 'login_required' | 'order_not_accepted' | null;
+  reason?:
+    | 'login_required'
+    | 'order_not_accepted'
+    | 'direct_chat_disabled'
+    | null;
   messageAr?: string | null;
 };
 
-const CHAT_ELIGIBLE_STATUSES: OrderStatus[] = [
-  'confirmed',
-  'preparing',
-  'ready',
-  'delivered',
-];
-
-export function isOrderChatEligible(status: OrderStatus): boolean {
-  return CHAT_ELIGIBLE_STATUSES.includes(status);
+export function isOrderChatEligible(_status: OrderStatus): boolean {
+  return false;
 }
 
 export async function fetchButcherChatAccess(

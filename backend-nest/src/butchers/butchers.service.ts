@@ -366,39 +366,15 @@ export class ButchersService {
       return {
         allowed: false,
         reason: 'login_required',
-        messageAr: 'سجّل دخولك للمحادثة مع الملحمة بعد قبول طلبك',
-      };
-    }
-
-    if (butcher.userId === user.userId) {
-      return {
-        allowed: true,
-        orderId: null,
-        receiverId: null,
-        reason: null,
-        messageAr: null,
-      };
-    }
-
-    const order = await this.repo.findAcceptedOrderForChat(
-      user.userId,
-      butcherId,
-    );
-    if (!order) {
-      return {
-        allowed: false,
-        reason: 'order_not_accepted',
-        messageAr: 'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
-        receiverId: butcher.userId,
+        messageAr: 'التواصل المباشر مع الملحمة غير متاح',
       };
     }
 
     return {
-      allowed: true,
-      orderId: order.id,
+      allowed: false,
+      reason: 'direct_chat_disabled',
+      messageAr: 'التواصل المباشر مع الملحمة غير متاح',
       receiverId: butcher.userId,
-      reason: null,
-      messageAr: null,
     };
   }
 
@@ -1113,6 +1089,20 @@ export class ButchersService {
         403,
         'forbidden_status_change',
         'لا يمكنك تغيير حالة الطلب لغير ملغى',
+      );
+    }
+
+    if (
+      isCustomer &&
+      !isButcher &&
+      !isAdmin &&
+      statusInput.status === 'cancelled' &&
+      order.paymentStatus === 'paid'
+    ) {
+      throwApi(
+        403,
+        'forbidden_status_change',
+        'لا يمكن إلغاء الطلب بعد إتمام الدفع',
       );
     }
 

@@ -6,6 +6,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -114,6 +115,10 @@ export function MessagesPanel({
     const p = chat.participant;
     if (!p) return;
     const isButcher = chat.type === 'BUTCHER';
+    if (isButcher) {
+      Alert.alert('المحادثة', 'التواصل المباشر مع الملحمة غير متاح');
+      return;
+    }
     const listing = listingByPeer[p.id];
     router.push({
       pathname: '/butchers/chat',

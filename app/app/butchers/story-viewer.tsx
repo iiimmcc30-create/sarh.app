@@ -244,14 +244,6 @@ export default function ButcherStoryViewerScreen() {
             />
           </Pressable>
 
-          {/* Chat */}
-          <Pressable
-            onPress={() => router.push({ pathname: '/butchers/chat', params: { butcherId: story.butcherId } })}
-            style={s.actionBtn}
-          >
-            <AppIcon name="chatbubble-outline" size={24} color="#fff" />
-          </Pressable>
-
           {/* Share */}
           <Pressable style={s.actionBtn}>
             <AppIcon name="share-outline" size={24} color="#fff" />
@@ -268,16 +260,11 @@ export default function ButcherStoryViewerScreen() {
             onChangeText={setReplyText}
             textAlign="right"
           />
-          {replyText.length > 0 && (
-            <Pressable
-              onPress={() => {
-                router.push({ pathname: '/butchers/chat', params: { butcherId: story.butcherId } });
-                setReplyText('');
-              }}
-            >
-              <AppIcon name="paper-plane" size={20} color={colors.electricBright} />
-            </Pressable>
-          )}
+          {replyText.length > 0 ? (
+            <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>
+              التواصل المباشر مع الملحمة غير متاح
+            </Text>
+          ) : null}
         </View>
       </View>
     </View>

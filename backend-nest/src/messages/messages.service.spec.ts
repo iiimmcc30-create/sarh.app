@@ -26,6 +26,27 @@ describe('MessagesService.sendMessage block enforcement', () => {
     );
   });
 
+  it('does not persist a REST butcher-shop message when policy forbids', async () => {
+    policy.assertCanSendMessage.mockRejectedValue(
+      new ApiException(403, 'forbidden', 'التواصل المباشر مع الملحمة غير متاح'),
+    );
+
+    await expect(
+      service.sendMessage(
+        { userId: 'customer', username: 'c', role: 'USER' },
+        {
+          receiverId: 'butcher-user',
+          text: 'hello shop',
+          type: 'BUTCHER',
+          butcherId: 'shop-1',
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, error: 'forbidden' });
+
+    expect(repo.createMessage).not.toHaveBeenCalled();
+    expect(repo.upsertThread).not.toHaveBeenCalled();
+  });
+
   it('does not persist a REST message when the policy rejects a block', async () => {
     policy.assertCanSendMessage.mockRejectedValue(
       new ApiException(403, 'blocked', 'لا يمكنك مراسلة هذا المستخدم'),
@@ -73,5 +94,25 @@ describe('MessagesService.sendMessage block enforcement', () => {
       'chat:notification',
       expect.objectContaining({ threadId: 't1' }),
     );
+  });
+
+  it('does not convert an order-linked send into butcher chat', async () => {
+    policy.assertCanSendMessage.mockRejectedValue(
+      new ApiException(403, 'forbidden', 'التواصل المباشر مع الملحمة غير متاح'),
+    );
+
+    await expect(
+      service.sendMessage(
+        { userId: 'customer', username: 'c', role: 'USER' },
+        {
+          receiverId: 'butcher-user',
+          text: 'from support ticket',
+          orderId: 'ord-1',
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, error: 'forbidden' });
+
+    expect(repo.createMessage).not.toHaveBeenCalled();
+    expect(repo.upsertThread).not.toHaveBeenCalled();
   });
 });
