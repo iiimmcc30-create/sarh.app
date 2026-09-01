@@ -123,6 +123,10 @@ export default function UserProfileScreen() {
 
   const handleChat = () => {
     if (!profile) return;
+    if (profile.accountType === 'BUTCHER' || profile.role === 'BUTCHER') {
+      Alert.alert('المحادثة', 'التواصل المباشر مع الملحمة غير متاح');
+      return;
+    }
     if (profile.allowPrivateMessages === false) {
       Alert.alert('الرسائل الخاصة', 'هذا المستخدم لا يقبل الرسائل الخاصة');
       return;

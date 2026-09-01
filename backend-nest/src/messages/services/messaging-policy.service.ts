@@ -3,6 +3,9 @@ import { MessageThreadType } from '@prisma/client';
 import { throwApi } from '../../common/exceptions/api.exception';
 import { MessagesRepository } from '../repositories/messages.repository';
 
+export const BUTCHER_DIRECT_CHAT_CLOSED_AR =
+  'التواصل المباشر مع الملحمة غير متاح';
+
 @Injectable()
 export class MessagingPolicyService {
   constructor(private readonly repo: MessagesRepository) {}
@@ -39,37 +42,28 @@ export class MessagingPolicyService {
     }
   }
 
-  async assertButcherChatAllowed(
+  /**
+   * Shop / customer↔butcher DMs are closed. Detects a butcher *shop owner*
+   * via Butcher.userId, not JWT role alone.
+   */
+  async assertCustomerButcherChatClosed(
     senderId: string,
     receiverId: string,
-    butcherId: string,
+    type: MessageThreadType,
+    butcherId?: string | null,
   ): Promise<void> {
-    const butcher = await this.repo.findButcherById(butcherId);
-    if (!butcher) throwApi(404, 'not_found', 'الملحمة غير موجودة');
-    if (butcher.userId !== receiverId && butcher.userId !== senderId) {
-      throwApi(400, 'invalid_action', 'المستلم لا يطابق صاحب الملحمة المحددة');
+    if (type === 'BUTCHER' || butcherId) {
+      throwApi(403, 'forbidden', BUTCHER_DIRECT_CHAT_CLOSED_AR);
     }
 
-    const customerId =
-      butcher.userId === senderId
-        ? receiverId
-        : butcher.userId === receiverId
-          ? senderId
-          : null;
-    if (!customerId) {
-      throwApi(400, 'invalid_action', 'المشاركون لا يطابقان محادثة الملحمة');
-    }
-
-    const acceptedOrder = await this.repo.findAcceptedButcherOrderForChat(
-      customerId,
-      butcher.id,
-    );
-    if (!acceptedOrder) {
-      throwApi(
-        403,
-        'chat_not_allowed',
-        'المحادثة متاحة بعد تقديم الطلب وقبوله من الملحمة',
-      );
+    const [senderShop, receiverShop] = await Promise.all([
+      this.repo.findButcherByUserId(senderId),
+      this.repo.findButcherByUserId(receiverId),
+    ]);
+    const senderIsShop = !!senderShop;
+    const receiverIsShop = !!receiverShop;
+    if (senderIsShop !== receiverIsShop) {
+      throwApi(403, 'forbidden', BUTCHER_DIRECT_CHAT_CLOSED_AR);
     }
   }
 
@@ -85,14 +79,12 @@ export class MessagingPolicyService {
     }
 
     await this.assertNotBlocked(senderId, receiverId);
-
-    if (type === 'BUTCHER') {
-      if (!butcherId) {
-        throwApi(400, 'validation_error', 'معرّف الملحمة مطلوب لمحادثات الملاحم');
-      }
-      await this.assertButcherChatAllowed(senderId, receiverId, butcherId);
-      return;
-    }
+    await this.assertCustomerButcherChatClosed(
+      senderId,
+      receiverId,
+      type,
+      butcherId,
+    );
 
     await this.assertDirectPrivacy(senderId, receiverId);
   }

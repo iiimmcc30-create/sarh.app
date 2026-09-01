@@ -115,6 +115,13 @@ export class MessagesRepository {
     });
   }
 
+  findButcherByUserId(userId: string) {
+    return this.prisma.butcher.findFirst({
+      where: { userId, deletedAt: null },
+      select: { id: true, userId: true },
+    });
+  }
+
   /** Latest accepted+ order linking a customer to a butcher (enables shop chat). */
   findAcceptedButcherOrderForChat(customerId: string, butcherId: string) {
     return this.prisma.butcherOrder.findFirst({

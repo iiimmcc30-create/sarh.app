@@ -608,6 +608,10 @@ export default function ButcherChatScreen() {
     text: string,
     media?: { imageUrl?: string; videoUrl?: string },
   ) => {
+    if (chatUiKind === 'butcher') {
+      Alert.alert('المحادثة', 'التواصل المباشر مع الملحمة غير متاح');
+      return;
+    }
     if (sending) return;
     setSending(true);
     try {
@@ -932,7 +936,7 @@ export default function ButcherChatScreen() {
           <View style={styles.orderStrip}>
             <AppIcon name="clipboard-list-outline" size={16} color={colors.glow} />
             <Text style={styles.orderStripText}>
-              المحادثة متاحة بعد قبول طلبك — ناقش التفاصيل مع الملحمة هنا
+              التواصل المباشر مع الملحمة غير متاح
             </Text>
           </View>
         ) : null}
@@ -954,7 +958,7 @@ export default function ButcherChatScreen() {
           }
         />
 
-        {quickReplies.length > 0 && !attachOpen ? (
+        {chatUiKind !== 'butcher' && quickReplies.length > 0 && !attachOpen ? (
           <View style={styles.quickRepliesWrap}>
             <FlatList
               horizontal
@@ -974,7 +978,7 @@ export default function ButcherChatScreen() {
           </View>
         ) : null}
 
-        {attachOpen ? (
+        {chatUiKind !== 'butcher' && attachOpen ? (
           <View style={styles.attachSheet}>
             {(
               [
@@ -995,6 +999,18 @@ export default function ButcherChatScreen() {
           </View>
         ) : null}
 
+        {chatUiKind === 'butcher' ? (
+          <View
+            style={[
+              styles.inputBar,
+              { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
+            ]}
+          >
+            <Text style={{ flex: 1, textAlign: 'right', color: colors.textMuted }}>
+              التواصل المباشر مع الملحمة غير متاح
+            </Text>
+          </View>
+        ) : (
         <View
           style={[
             styles.inputBar,
@@ -1046,6 +1062,7 @@ export default function ButcherChatScreen() {
             )}
           </Pressable>
         </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

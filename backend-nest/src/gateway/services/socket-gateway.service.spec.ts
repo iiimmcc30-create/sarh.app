@@ -52,6 +52,30 @@ describe('SocketGatewayService chat authorization', () => {
     expect(messagingPolicy.assertCanSendMessage).not.toHaveBeenCalled();
   });
 
+  it('rejects chat:send on an existing Customer↔Butcher thread', async () => {
+    repo.isThreadParticipant.mockResolvedValue({ id: 't-shop' });
+    repo.findThreadParticipants.mockResolvedValue({
+      participant1: 'customer',
+      participant2: 'butcher-user',
+      type: 'BUTCHER',
+      butcherId: 'shop-1',
+    });
+    messagingPolicy.assertCanSendMessage.mockRejectedValue(
+      new ApiException(403, 'forbidden', 'التواصل المباشر مع الملحمة غير متاح'),
+    );
+
+    const err = await service.handleChatSend(user('customer'), {
+      threadId: '11111111-1111-1111-1111-111111111111',
+      receiverId: 'butcher-user',
+      text: 'still open?',
+    });
+    expect(err).toEqual({
+      code: 'forbidden',
+      message: 'التواصل المباشر مع الملحمة غير متاح',
+    });
+    expect(repo.createMessageWithThreadUpdate).not.toHaveBeenCalled();
+  });
+
   it('rejects chat:send when messaging policy forbids (block/privacy)', async () => {
     repo.isThreadParticipant.mockResolvedValue({ id: 't1' });
     repo.findThreadParticipants.mockResolvedValue({

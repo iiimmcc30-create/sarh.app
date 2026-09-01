@@ -120,12 +120,10 @@ function MapPin({
 function BottomCard({
   butcher,
   onProfile,
-  onChat,
   onOrder,
 }: {
   butcher: ButcherProfile;
   onProfile: () => void;
-  onChat: () => void;
   onOrder: () => void;
 }) {
   const currency = gccCurrencies[butcher.country];
@@ -199,10 +197,6 @@ function BottomCard({
 
       {/* Actions */}
       <View style={bc.actions}>
-        <Pressable style={bc.chatBtn} onPress={onChat}>
-          <AppIcon name="chatbubble-outline" size={16} color={colors.electricBright} />
-          <Text style={bc.chatBtnText}>محادثة</Text>
-        </Pressable>
         <Pressable style={bc.orderBtn} onPress={onOrder}>
           <LinearGradient
             colors={[colors.electric, colors.cyan]}
@@ -408,9 +402,6 @@ export default function ButchersMapScreen() {
           butcher={selectedButcher}
           onProfile={() =>
             router.push({ pathname: '/butchers/[id]', params: { id: selectedButcher.id } })
-          }
-          onChat={() =>
-            router.push({ pathname: '/butchers/chat', params: { butcherId: selectedButcher.id } })
           }
           onOrder={() =>
             router.push({ pathname: '/butchers/order', params: { butcherId: selectedButcher.id } })
