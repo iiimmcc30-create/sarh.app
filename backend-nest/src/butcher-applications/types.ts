@@ -99,6 +99,9 @@ export type ApplicationWithRelations = ButcherApplication & {
     username: string;
     phone: string | null;
     avatar: string | null;
+    email?: string | null;
+    displayName?: string | null;
+    arabicName?: string | null;
   };
 };
 
@@ -141,6 +144,9 @@ export type ApplicationDetailDto = ApplicationSummaryDto & {
     username: string;
     phone: string | null;
     avatar?: string | null;
+    email?: string | null;
+    displayName?: string | null;
+    arabicName?: string | null;
   };
 };
 
@@ -175,6 +181,9 @@ export type AdminApplicationSummaryDto = ApplicationSummaryDto & {
     username: string;
     phone: string | null;
     avatar: string | null;
+    email?: string | null;
+    displayName?: string | null;
+    arabicName?: string | null;
   };
   documentCount: number;
   pendingDocumentCount: number;

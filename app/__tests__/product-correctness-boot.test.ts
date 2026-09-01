@@ -131,6 +131,15 @@ describe('M1 single boot navigation source', () => {
     ).toEqual({ type: 'stay' });
   });
 
+  it('keeps the public butcher join page without forcing welcome', () => {
+    expect(
+      resolveBootNavigation({
+        ...base,
+        firstSegment: 'join',
+      }),
+    ).toEqual({ type: 'stay' });
+  });
+
   it('restored session on auth screens goes to the app', () => {
     expect(
       resolveBootNavigation({

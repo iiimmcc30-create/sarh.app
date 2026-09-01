@@ -15,8 +15,9 @@ import {
 import { Response } from 'express';
 import { ButcherApplicationUserService } from './services/application.service';
 import { ButcherApplicationDocumentService } from './services/document.service';
+import { PublicButcherJoinService } from './services/public-join.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { RateLimit } from '../common/decorators/auth.decorators';
+import { Public, RateLimit } from '../common/decorators/auth.decorators';
 import { successResponse } from '../common/utils/response.util';
 import { throwApi } from '../common/exceptions/api.exception';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
@@ -42,13 +43,33 @@ import {
   submitBodySchema,
   withdrawBodySchema,
 } from './routes/schemas';
+import { publicJoinBodySchema } from './routes/publicJoin.schema';
 
 @Controller('butcher-applications')
 export class ButcherApplicationsController {
   constructor(
     private readonly applications: ButcherApplicationUserService,
     private readonly documents: ButcherApplicationDocumentService,
+    private readonly publicJoin: PublicButcherJoinService,
   ) {}
+
+  @Public()
+  @RateLimit('auth')
+  @Post('join')
+  @HttpCode(HttpStatus.CREATED)
+  async submitPublicJoin(@Body() body: unknown) {
+    const parsed = publicJoinBodySchema.safeParse(body ?? {});
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+    const application = await this.publicJoin.submitJoin(parsed.data);
+    return successResponse(application);
+  }
 
   @RateLimit('api')
   @Get()

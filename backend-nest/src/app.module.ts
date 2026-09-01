@@ -34,6 +34,7 @@ import { ButcherBannersModule } from './butcher-banners/butcher-banners.module';
 import { MarketCategoriesModule } from './market-categories/market-categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { HomeExploreModule } from './home-explore/home-explore.module';
+import { DaftraModule } from './integrations/daftra/daftra.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { HomeExploreModule } from './home-explore/home-explore.module';
     NotificationsModule,
     PaymentsModule,
     IntegrationsModule,
+    DaftraModule,
     SubscriptionsModule,
     PlansModule,
     ButchersModule,

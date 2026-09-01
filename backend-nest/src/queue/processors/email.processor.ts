@@ -50,6 +50,7 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
       order_update: `تحديث طلبك: ${variables.status}`,
       subscription_renew: `تجديد اشتراكك: ${variables.plan} - ${variables.amount} ريال`,
       email_verification: `رمز التحقق: <strong>${variables.code}</strong> (صالح 10 دقائق)`,
+      butcher_daftra_ready: `مرحباً، تم تجهيز حساب دفترة الخاص بملحمتك على منصة سرح.<br/><br/>رابط الدخول: <a href="${variables.loginUrl}">${variables.loginUrl}</a><br/>البريد: ${variables.loginEmail}${variables.passwordLine ? `<br/>${variables.passwordLine}` : ''}<br/><br/>لا يحتوي هذا البريد على مفاتيح التكامل. أدِر المنتجات والمخزون من دفترة.`,
     };
 
     await transporter.sendMail({

@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { fetchButcher } from '@/services/admin.service';
+import { DaftraIntegrationPanel } from '@/components/butchers/DaftraIntegrationPanel';
 
 function fmtDate(v: unknown) {
   if (!v) return '—';
@@ -156,6 +157,8 @@ export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }
               <Field label="البث المباشر" value={counts.liveStreams} />
             </Section>
           )}
+
+          {butcherId ? <DaftraIntegrationPanel butcherId={butcherId} /> : null}
 
           <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4">
             <Link href={`/users/${String(user.id)}`}>

@@ -332,3 +332,46 @@ export async function deletePlan(id: string) {
   const res = await apiClient.delete(`/admin/plans/${id}`);
   return unwrap(res);
 }
+
+export type DaftraStatus = {
+  butcherId: string;
+  status: 'NOT_CONFIGURED' | 'CONNECTED' | 'CONNECTION_FAILED' | 'DISABLED';
+  accountIdentifier: string | null;
+  apiKeyMasked: string | null;
+  lastConnectionTestAt: string | null;
+  lastConnectionError: string | null;
+  daftraLoginEmail: string | null;
+  daftraLoginUrl: string | null;
+  configured: boolean;
+};
+
+export async function fetchDaftraStatus(butcherId: string) {
+  const res = await apiClient.get(`/admin/butchers/${butcherId}/daftra`);
+  return unwrap<DaftraStatus>(res);
+}
+
+export async function saveDaftraConfig(
+  butcherId: string,
+  data: {
+    accountIdentifier: string;
+    apiKey?: string;
+    daftraLoginEmail?: string | null;
+    daftraLoginUrl?: string | null;
+  },
+) {
+  const res = await apiClient.put(`/admin/butchers/${butcherId}/daftra`, data);
+  return unwrap<DaftraStatus>(res);
+}
+
+export async function testDaftraConnection(
+  butcherId: string,
+  data: { sendInvite?: boolean; invitePassword?: string } = {},
+) {
+  const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/test`, data);
+  return unwrap<{ status: DaftraStatus; messageAr: string }>(res);
+}
+
+export async function disableDaftra(butcherId: string) {
+  const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/disable`);
+  return unwrap<DaftraStatus>(res);
+}
