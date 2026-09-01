@@ -141,6 +141,7 @@ describe('profile timeline + support labels', () => {
 
   it('exposes Arabic labels for support/help screens', () => {
     expect(TICKET_STATUS_LABEL_AR.OPEN).toBeTruthy();
+    expect(TICKET_STATUS_LABEL_AR.WAITING_FOR_SUPPORT).toBeTruthy();
     expect(VERIFICATION_STATUS_LABEL_AR.UNDER_REVIEW).toBeTruthy();
     expect(FAQ_CATEGORY_LABEL_AR.GENERAL).toBeTruthy();
   });

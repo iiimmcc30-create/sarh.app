@@ -8,6 +8,12 @@ export default function SupportHubScreen() {
       heroIcon="lifebuoy"
       items={[
         {
+          icon: 'headset',
+          label: 'المساعدة',
+          subtitle: 'بلاغ ومساعدة سرحان دون تواصل مع الملحمة',
+          route: '/support/help',
+        },
+        {
           icon: 'ticket-outline',
           label: 'تذاكر الدعم',
           subtitle: 'إنشاء ومتابعة تذاكر الدعم',
