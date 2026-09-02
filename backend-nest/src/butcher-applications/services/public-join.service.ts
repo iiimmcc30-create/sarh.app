@@ -8,7 +8,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { throwApi, ApiException } from '../../common/exceptions/api.exception';
 import { LoggerService } from '../../common/services/logger.service';
 import { normalizeE164Phone } from '../../lib/phone';
+import { UploadService } from '../../upload/upload.service';
 import { ApplicationRepository } from '../repositories/application.repository';
+import { DocumentRepository } from '../repositories/document.repository';
 import { TransactionService } from './transaction.service';
 import { appendTimelineEvent } from '../helpers/timeline';
 import { assertUserHasNoButcher } from '../helpers/transaction';
@@ -16,8 +18,19 @@ import {
   assertTransition,
   timelineActionForTransition,
 } from '../helpers/stateTransitions';
-import { validateSubmitSnapshot } from '../helpers/validation';
+import {
+  validateRequiredDocuments,
+  validateSubmitSnapshot,
+  validateDocumentUploadInput,
+  assertFileKeyOwnedByUser,
+  isUniqueRequiredDocumentType,
+} from '../helpers/validation';
 import { validateSnapshotFormat } from '../helpers/snapshotValidation';
+import {
+  assertJoinFileAcceptable,
+  assertRequiredJoinFiles,
+  type JoinFilePart,
+} from '../helpers/joinFiles';
 import { toApplicationDetail } from '../mappers';
 import {
   ButcherApplicationError,
@@ -26,7 +39,7 @@ import {
 } from '../errors';
 import { ButcherApplicationNotificationsService } from './butcher-application-notifications.service';
 import type { PublicJoinBody } from '../routes/publicJoin.schema';
-import type { ApplicationSnapshotInput } from '../types';
+import type { ApplicationSnapshotInput, DocumentUploadInput } from '../types';
 
 function snapshotFromJoin(body: PublicJoinBody): ApplicationSnapshotInput {
   return {
@@ -53,18 +66,22 @@ function snapshotFromJoin(body: PublicJoinBody): ApplicationSnapshotInput {
 export class PublicButcherJoinService {
   constructor(
     private readonly applications: ApplicationRepository,
+    private readonly documents: DocumentRepository,
     private readonly transactions: TransactionService,
     private readonly authRepo: AuthRepository,
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly applicationNotifications: ButcherApplicationNotificationsService,
+    private readonly uploads: UploadService,
     private readonly logger: LoggerService,
   ) {}
 
-  async submitJoin(body: PublicJoinBody) {
+  async submitJoin(body: PublicJoinBody, files: JoinFilePart[] = []) {
     const phone = normalizeE164Phone(body.phone);
     this.assertPhoneToken(body.phone_token, phone);
     validateSnapshotFormat(snapshotFromJoin(body));
+    assertRequiredJoinFiles(files);
+    for (const part of files) assertJoinFileAcceptable(part);
 
     const existingUser = await this.prisma.user.findFirst({
       where: { phone, deletedAt: null },
@@ -87,6 +104,21 @@ export class PublicButcherJoinService {
     let userId = existingUser?.id;
     if (!userId) {
       userId = await this.createJoinUser(body, phone);
+    }
+
+    const uploadedDocs: DocumentUploadInput[] = [];
+    for (const part of files) {
+      const stored = await this.uploads.uploadOwnedButcherApplicationFile(
+        userId,
+        part,
+      );
+      uploadedDocs.push({
+        type: part.type,
+        fileKey: stored.fileKey,
+        mimeType: stored.mimeType,
+        fileSizeBytes: stored.fileSizeBytes,
+        originalFileName: stored.originalFileName,
+      });
     }
 
     try {
@@ -137,12 +169,36 @@ export class PublicButcherJoinService {
           });
         }
 
+        for (const input of uploadedDocs) {
+          validateDocumentUploadInput(input);
+          assertFileKeyOwnedByUser(input.fileKey, userId!);
+          if (isUniqueRequiredDocumentType(input.type)) {
+            const existingDoc =
+              await this.documents.findDocumentByApplicationAndType(
+                applicationId,
+                input.type,
+                tx,
+              );
+            if (existingDoc) {
+              await this.documents.replaceDocument(tx, existingDoc.id, {
+                fileKey: input.fileKey,
+                mimeType: input.mimeType,
+                fileSizeBytes: input.fileSizeBytes,
+                originalFileName: input.originalFileName,
+              });
+              continue;
+            }
+          }
+          await this.documents.createDocument(tx, applicationId, input);
+        }
+
         const existing = await this.applications.getApplicationByIdOrThrow(
           applicationId,
           tx,
         );
         assertTransition(existing.status, 'SUBMITTED');
         validateSubmitSnapshot(existing);
+        validateRequiredDocuments(existing);
 
         const now = new Date();
         const updated = await this.applications.updateApplicationStatus(
@@ -161,7 +217,6 @@ export class PublicButcherJoinService {
           createdBy: userId!,
           metadata: {
             source: 'public_join',
-            documentsDeferred: true,
             reusedDraft: !created,
           },
         });

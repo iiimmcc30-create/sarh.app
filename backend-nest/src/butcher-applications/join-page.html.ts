@@ -71,7 +71,36 @@ function shell(title: string, body: string): string {
       padding: 12px 14px;
       font-size: 1rem;
     }
-    input:focus { outline: 2px solid rgba(32,182,111,.45); border-color: var(--action); }
+    textarea, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--raised);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { outline: 2px solid rgba(32,182,111,.45); border-color: var(--action); }
+    .hint { color: var(--dim); font-size: .78rem; margin: 4px 0 0; }
+    .file {
+      border: 1px dashed var(--border);
+      background: var(--raised);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .file input { border: 0; padding: 0; background: transparent; }
+    .fname { color: var(--action); font-size: .85rem; margin-top: 6px; }
+    .map { height: 220px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); margin-top: 8px; }
+    .steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .step {
+      font-size: .72rem;
+      color: var(--dim);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
     .phone { display: flex; flex-direction: row-reverse; gap: 8px; align-items: center; }
     .dial { color: var(--muted); padding: 0 6px; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -122,11 +151,20 @@ export function renderButcherJoinPage(): string {
       ${MARK}
       <p class="kicker">سرح للمنشآت</p>
       <h1>انضمام الملاحم</h1>
-      <p class="lead">قدّم طلب انضمام رسمي إلى منصة سرح. يراجع الفريق الطلب ثم يجهّز حساب الإدارة الخاص بالملحمة.</p>
+      <p class="lead">قدّم طلب انضمام رسمي إلى منصة سرح بنفس متطلبات نموذج الملاحم داخل التطبيق. يراجع الفريق الطلب ثم يجهّز حساب الإدارة الخاص بالملحمة.</p>
     </section>
+    <div class="steps">
+      <span class="step">1. الجوال</span>
+      <span class="step">2. صاحب الطلب</span>
+      <span class="step">3. الملحمة</span>
+      <span class="step">4. الموقع</span>
+      <span class="step">5. النشاط</span>
+      <span class="step">6. المستندات</span>
+      <span class="step">7. الإقرار</span>
+    </div>
     <form id="join-form" novalidate>
       <section class="card">
-        <h2>صاحب الطلب</h2>
+        <h2>1. التحقق من الجوال</h2>
         <label for="phone">رقم الجوال</label>
         <div class="phone">
           <span class="dial">+966</span>
@@ -139,19 +177,23 @@ export function renderButcherJoinPage(): string {
         </div>
         <button type="button" class="btn-ghost" id="send-otp">إرسال رمز التحقق</button>
         <p id="phone-ok" class="ok hidden">تم التحقق من الجوال</p>
+      </section>
+      <section class="card">
+        <h2>2. بيانات صاحب الطلب</h2>
         <label for="displayName">الاسم</label>
         <input id="displayName" name="displayName" required />
-        <label for="email">البريد الإلكتروني</label>
+        <label for="email">البريد الإلكتروني (اختياري)</label>
         <input id="email" name="email" type="email" dir="ltr" />
         <div id="new-user">
           <label for="username">اسم المستخدم</label>
           <input id="username" name="username" dir="ltr" placeholder="latin_username" />
+          <p class="hint">مطلوب عند إنشاء حساب جديد. أحرف إنجليزية صغيرة وأرقام وشرطة سفلية.</p>
           <label for="password">كلمة المرور (اختياري)</label>
           <input id="password" name="password" type="password" />
         </div>
       </section>
       <section class="card">
-        <h2>بيانات الملحمة</h2>
+        <h2>3. بيانات الملحمة</h2>
         <label for="nameAr">اسم الملحمة (عربي)</label>
         <input id="nameAr" name="nameAr" required />
         <label for="nameEn">اسم الملحمة (إنجليزي)</label>
@@ -160,39 +202,111 @@ export function renderButcherJoinPage(): string {
         <input id="shopPhone" name="shopPhone" inputmode="tel" />
         <label for="commercialReg">السجل التجاري</label>
         <input id="commercialReg" name="commercialReg" required />
+        <label for="country">الدولة</label>
+        <select id="country" name="country">
+          <option value="SA" selected>السعودية</option>
+        </select>
         <label for="cityAr">المدينة</label>
-        <input id="cityAr" name="cityAr" value="الرياض" required />
+        <input id="cityAr" name="cityAr" required />
         <label for="city">المدينة (إنجليزي)</label>
-        <input id="city" name="city" value="Riyadh" dir="ltr" required />
+        <input id="city" name="city" dir="ltr" required />
         <label for="addressAr">العنوان</label>
         <input id="addressAr" name="addressAr" placeholder="الحي، الشارع" required />
         <label for="address">العنوان (إنجليزي)</label>
         <input id="address" name="address" dir="ltr" required />
+      </section>
+      <section class="card">
+        <h2>4. بيانات الموقع</h2>
+        <p class="hint">حدد موقع المحل على الخريطة. لا يمكن الإرسال بإحداثيات فارغة أو 0,0.</p>
+        <div id="map" class="map" role="application" aria-label="خريطة موقع المحل"></div>
         <div class="row">
           <div>
-            <label for="openTime">الفتح</label>
+            <label for="lat">خط العرض</label>
+            <input id="lat" name="lat" dir="ltr" inputmode="decimal" required />
+          </div>
+          <div>
+            <label for="lng">خط الطول</label>
+            <input id="lng" name="lng" dir="ltr" inputmode="decimal" required />
+          </div>
+        </div>
+      </section>
+      <section class="card">
+        <h2>5. النشاط وأوقات العمل</h2>
+        <label for="bioAr">نبذة عربية (اختياري)</label>
+        <textarea id="bioAr" name="bioAr" maxlength="1000"></textarea>
+        <label for="bioEn">نبذة إنجليزية (اختياري)</label>
+        <textarea id="bioEn" name="bioEn" maxlength="1000" dir="ltr"></textarea>
+        <label for="specialties">التخصصات (اختياري، مفصولة بفاصلة)</label>
+        <input id="specialties" name="specialties" placeholder="لحم بقري، غنم" />
+        <div class="row">
+          <div>
+            <label for="openTime">وقت الفتح</label>
             <input id="openTime" name="openTime" value="06:00" required />
           </div>
           <div>
-            <label for="closeTime">الإغلاق</label>
+            <label for="closeTime">وقت الإغلاق</label>
             <input id="closeTime" name="closeTime" value="22:00" required />
           </div>
         </div>
       </section>
-      <label class="check">
-        <input type="checkbox" id="accepted" />
-        أؤكد أن البيانات صحيحة وأوافق على مراجعة الطلب من فريق سرح.
-      </label>
+      <section class="card">
+        <h2>6. المستندات المطلوبة</h2>
+        <p class="hint">المسموح: PDF أو JPG أو PNG أو WEBP. الحد 10 م.ب، وصورة المحل 15 م.ب.</p>
+        <label for="commercial_license">السجل التجاري</label>
+        <div class="file">
+          <input id="commercial_license" name="commercial_license" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required />
+          <p class="fname" id="name-commercial_license"></p>
+        </div>
+        <label for="national_id">الهوية الوطنية</label>
+        <div class="file">
+          <input id="national_id" name="national_id" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required />
+          <p class="fname" id="name-national_id"></p>
+        </div>
+        <label for="municipal_permit">تصريح البلدية</label>
+        <div class="file">
+          <input id="municipal_permit" name="municipal_permit" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required />
+          <p class="fname" id="name-municipal_permit"></p>
+        </div>
+        <label for="shop_photo">صورة المحل</label>
+        <div class="file">
+          <input id="shop_photo" name="shop_photo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required />
+          <p class="fname" id="name-shop_photo"></p>
+        </div>
+        <label for="other">مستند آخر (اختياري)</label>
+        <div class="file">
+          <input id="other" name="other" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" />
+          <p class="fname" id="name-other"></p>
+        </div>
+        <p id="upload-status" class="hint"></p>
+      </section>
+      <section class="card">
+        <h2>7. الإقرار والموافقة</h2>
+        <label class="check">
+          <input type="checkbox" id="acceptedTerms" />
+          أوافق على الشروط ومراجعة الطلب من فريق سرح.
+        </label>
+        <label class="check">
+          <input type="checkbox" id="confirmAccuracy" />
+          أؤكد أن البيانات والمستندات صحيحة.
+        </label>
+      </section>
       <p class="err" id="error"></p>
       <button class="btn" type="submit" id="submit">إرسال طلب الانضمام</button>
     </form>
     <a class="login" href="https://sarhsa.online/butcher/login">لديك حساب ملحمة؟ تسجيل الدخول</a>
     <p class="foot">لن يتم إنشاء حساب دفترة في هذه المرحلة.</p>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
       (function () {
         var token = '';
         var isNew = true;
+        var picked = { lat: null, lng: null };
         var err = document.getElementById('error');
+        var ALLOWED = { 'application/pdf': 1, 'image/jpeg': 1, 'image/png': 1, 'image/webp': 1 };
+        var REQUIRED_DOCS = ['commercial_license', 'national_id', 'municipal_permit', 'shop_photo'];
+        var MAX_DOC = 10 * 1024 * 1024;
+        var MAX_PHOTO = 15 * 1024 * 1024;
         function show(id, on) { document.getElementById(id).classList.toggle('hidden', !on); }
         function msg(t) { err.textContent = t || ''; }
         function fullPhone() {
@@ -203,6 +317,52 @@ export function renderButcherJoinPage(): string {
           if (json && json.success && json.data && typeof json.data === 'object') return json.data;
           return json || {};
         }
+        function maxFor(type) { return type === 'shop_photo' ? MAX_PHOTO : MAX_DOC; }
+        function validateFile(type, file) {
+          if (!file) return 'مستند مطلوب غير مرفوع';
+          var mime = file.type || '';
+          if (!ALLOWED[mime]) return 'نوع الملف غير مدعوم. المسموح: PDF، JPG، PNG، WEBP';
+          if (file.size > maxFor(type)) return type === 'shop_photo' ? 'حجم الملف يتجاوز الحد المسموح (15 م.ب)' : 'حجم الملف يتجاوز الحد المسموح (10 م.ب)';
+          return '';
+        }
+        REQUIRED_DOCS.concat(['other']).forEach(function (type) {
+          var input = document.getElementById(type);
+          input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            var label = document.getElementById('name-' + type);
+            if (!file) { label.textContent = ''; return; }
+            var issue = validateFile(type, file);
+            label.textContent = issue ? issue : file.name;
+            label.style.color = issue ? '#E85D5D' : '#20B66F';
+            if (issue) input.value = '';
+          });
+        });
+        function initMap() {
+          if (!window.L) return;
+          var map = L.map('map').setView([24.7136, 46.6753], 11);
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+          var marker = null;
+          function setPoint(lat, lng) {
+            picked.lat = lat;
+            picked.lng = lng;
+            document.getElementById('lat').value = String(lat);
+            document.getElementById('lng').value = String(lng);
+            if (marker) marker.setLatLng([lat, lng]);
+            else marker = L.marker([lat, lng]).addTo(map);
+          }
+          map.on('click', function (e) { setPoint(e.latlng.lat, e.latlng.lng); });
+          function syncFromInputs() {
+            var lat = Number(document.getElementById('lat').value);
+            var lng = Number(document.getElementById('lng').value);
+            if (!isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0)) return;
+            setPoint(lat, lng);
+            map.setView([lat, lng], 14);
+          }
+          document.getElementById('lat').addEventListener('change', syncFromInputs);
+          document.getElementById('lng').addEventListener('change', syncFromInputs);
+        }
+        if (document.readyState === 'complete') initMap();
+        else window.addEventListener('load', initMap);
         document.getElementById('send-otp').onclick = function () {
           msg('');
           fetch('/api/auth/send-otp', {
@@ -236,50 +396,81 @@ export function renderButcherJoinPage(): string {
         document.getElementById('join-form').onsubmit = function (e) {
           e.preventDefault();
           msg('');
+          document.getElementById('upload-status').textContent = '';
           if (!token) { msg('تحقق من رقم الجوال أولاً'); return; }
-          if (!document.getElementById('accepted').checked) { msg('يجب الموافقة على صحة البيانات'); return; }
-          var shop = document.getElementById('shopPhone').value.trim() || fullPhone();
-          var body = {
-            phone: fullPhone(),
-            phone_token: token,
-            displayName: document.getElementById('displayName').value.trim(),
-            arabicName: document.getElementById('displayName').value.trim(),
-            email: document.getElementById('email').value.trim() || undefined,
-            username: isNew ? document.getElementById('username').value.trim().toLowerCase() : undefined,
-            password: isNew && document.getElementById('password').value ? document.getElementById('password').value : undefined,
-            nameAr: document.getElementById('nameAr').value.trim(),
-            nameEn: document.getElementById('nameEn').value.trim(),
-            shopPhone: shop,
-            commercialReg: document.getElementById('commercialReg').value.trim(),
-            country: 'SA',
-            city: document.getElementById('city').value.trim(),
-            cityAr: document.getElementById('cityAr').value.trim(),
-            address: document.getElementById('address').value.trim() || document.getElementById('addressAr').value.trim(),
-            addressAr: document.getElementById('addressAr').value.trim(),
-            lat: 24.7136,
-            lng: 46.6753,
-            openTime: document.getElementById('openTime').value,
-            closeTime: document.getElementById('closeTime').value,
-            acceptedTerms: true,
-            confirmAccuracy: true
-          };
+          if (!document.getElementById('acceptedTerms').checked) { msg('يجب الموافقة على الشروط'); return; }
+          if (!document.getElementById('confirmAccuracy').checked) { msg('يجب تأكيد صحة البيانات'); return; }
+          var lat = Number(document.getElementById('lat').value);
+          var lng = Number(document.getElementById('lng').value);
+          if (!isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0)) {
+            msg('يجب تحديد موقع المحل على الخريطة');
+            return;
+          }
+          var i;
+          for (i = 0; i < REQUIRED_DOCS.length; i++) {
+            var type = REQUIRED_DOCS[i];
+            var input = document.getElementById(type);
+            var file = input.files && input.files[0];
+            var issue = validateFile(type, file);
+            if (issue) { msg(issue); return; }
+          }
+          var other = document.getElementById('other').files && document.getElementById('other').files[0];
+          if (other) {
+            var otherIssue = validateFile('other', other);
+            if (otherIssue) { msg(otherIssue); return; }
+          }
+          var form = new FormData();
+          form.append('phone', fullPhone());
+          form.append('phone_token', token);
+          form.append('displayName', document.getElementById('displayName').value.trim());
+          form.append('arabicName', document.getElementById('displayName').value.trim());
+          var email = document.getElementById('email').value.trim();
+          if (email) form.append('email', email);
+          if (isNew) form.append('username', document.getElementById('username').value.trim().toLowerCase());
+          var password = document.getElementById('password').value;
+          if (isNew && password) form.append('password', password);
+          form.append('nameAr', document.getElementById('nameAr').value.trim());
+          form.append('nameEn', document.getElementById('nameEn').value.trim());
+          form.append('shopPhone', document.getElementById('shopPhone').value.trim() || fullPhone());
+          form.append('commercialReg', document.getElementById('commercialReg').value.trim());
+          form.append('country', document.getElementById('country').value || 'SA');
+          form.append('city', document.getElementById('city').value.trim());
+          form.append('cityAr', document.getElementById('cityAr').value.trim());
+          form.append('address', document.getElementById('address').value.trim() || document.getElementById('addressAr').value.trim());
+          form.append('addressAr', document.getElementById('addressAr').value.trim());
+          form.append('lat', String(lat));
+          form.append('lng', String(lng));
+          var bioAr = document.getElementById('bioAr').value.trim();
+          var bioEn = document.getElementById('bioEn').value.trim();
+          if (bioAr) form.append('bioAr', bioAr);
+          if (bioEn) form.append('bioEn', bioEn);
+          var specialties = document.getElementById('specialties').value.trim();
+          if (specialties) form.append('specialties', specialties);
+          form.append('openTime', document.getElementById('openTime').value);
+          form.append('closeTime', document.getElementById('closeTime').value);
+          form.append('acceptedTerms', 'true');
+          form.append('confirmAccuracy', 'true');
+          REQUIRED_DOCS.forEach(function (type) {
+            form.append(type, document.getElementById(type).files[0]);
+          });
+          if (other) form.append('other', other);
           document.getElementById('submit').disabled = true;
-          fetch('/api/butcher-applications/join', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-          }).then(function (r) { return r.json().then(function (j) { return { r: r, j: j }; }); })
+          document.getElementById('upload-status').textContent = 'جاري رفع المستندات وإرسال الطلب...';
+          fetch('/api/butcher-applications/join', { method: 'POST', body: form })
+            .then(function (r) { return r.json().then(function (j) { return { r: r, j: j }; }); })
             .then(function (x) {
               document.getElementById('submit').disabled = false;
+              document.getElementById('upload-status').textContent = '';
               if (!x.r.ok) { msg(x.j.messageAr || x.j.message_ar || 'تعذّر إرسال الطلب'); return; }
               var data = envelope(x.j);
               var q = new URLSearchParams({
                 n: String(data.applicationNumber || ''),
-                name: String(data.nameAr || body.nameAr)
+                name: String(data.nameAr || document.getElementById('nameAr').value.trim())
               });
               window.location.href = '/join/success?' + q.toString();
             }).catch(function () {
               document.getElementById('submit').disabled = false;
+              document.getElementById('upload-status').textContent = '';
               msg('تعذّر الاتصال بالخادم');
             });
         };

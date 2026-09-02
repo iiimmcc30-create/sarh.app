@@ -37,6 +37,12 @@ describe('snapshotValidation', () => {
         validateSnapshotFormat({ openTime: '08:00', closeTime: '22:00' }),
       ).not.toThrow();
     });
+
+    it('rejects unset 0,0 map coordinates', () => {
+      expect(() => validateSnapshotFormat({ lat: 0, lng: 0 })).toThrow(
+        ButcherApplicationError,
+      );
+    });
   });
 
   describe('validatePersistedSnapshotTimes', () => {
@@ -71,6 +77,17 @@ describe('snapshotValidation', () => {
       );
       expect(issues).toHaveLength(1);
       expect(issues[0]?.path).toEqual(['closeTime']);
+    });
+
+    it('adds zod issue when coordinates are 0,0', () => {
+      const issues: z.ZodIssue[] = [];
+      const ctx = {
+        addIssue: (issue: z.ZodIssue) => issues.push(issue),
+        path: [],
+      } as unknown as z.RefinementCtx;
+
+      addSnapshotCrossFieldIssues({ lat: 0, lng: 0 }, ctx);
+      expect(issues[0]?.path).toEqual(['lat']);
     });
   });
 });

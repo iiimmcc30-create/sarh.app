@@ -1,5 +1,6 @@
 import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
 import { API_BASE } from '@/services/api';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -8,8 +9,22 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { SARH_BUTCHER_LOGIN_URL } from '@/constants/sarhOfficial';
 import {
+  DOCUMENT_TYPE_LABELS,
+} from '@/lib/butcherApplicationLabels';
+import {
+  maxBytesLabelForDocumentType,
+  validatePickedDocumentFile,
+} from '@/lib/butcherApplicationValidation';
+import {
+  pickApplicationDocument,
+  type PickedApplicationFile,
+} from '@/lib/pickApplicationDocument';
+import { hasValidCoords } from '@/lib/butcherLocation';
+import type { ButcherApplicationDocumentType } from '@/services/butcherApplicationTypes';
+import {
   ActivityIndicator,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,13 +35,37 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SAUDI_DIAL = '+966';
-const RIYADH = { lat: 24.7136, lng: 46.6753 };
+
+const REQUIRED_DOCS: ButcherApplicationDocumentType[] = [
+  'commercial_license',
+  'national_id',
+  'municipal_permit',
+  'shop_photo',
+];
 
 function envelopeData(json: Record<string, unknown>) {
   if (json && json.success && json.data && typeof json.data === 'object') {
     return json.data as Record<string, unknown>;
   }
   return json;
+}
+
+async function appendJoinFile(
+  form: FormData,
+  field: string,
+  file: PickedApplicationFile,
+) {
+  if (Platform.OS === 'web') {
+    const res = await fetch(file.localUri);
+    const blob = await res.blob();
+    form.append(field, blob, file.originalFileName);
+    return;
+  }
+  form.append(field, {
+    uri: file.localUri,
+    name: file.originalFileName,
+    type: file.mimeType,
+  } as never);
 }
 
 export default function ButcherJoinScreen() {
@@ -49,16 +88,24 @@ export default function ButcherJoinScreen() {
   const [nameEn, setNameEn] = useState('');
   const [shopPhone, setShopPhone] = useState('');
   const [commercialReg, setCommercialReg] = useState('');
-  const [cityAr, setCityAr] = useState('الرياض');
-  const [city, setCity] = useState('Riyadh');
+  const [cityAr, setCityAr] = useState('');
+  const [city, setCity] = useState('');
   const [addressAr, setAddressAr] = useState('');
   const [address, setAddress] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [bioAr, setBioAr] = useState('');
+  const [bioEn, setBioEn] = useState('');
+  const [specialties, setSpecialties] = useState('');
   const [openTime, setOpenTime] = useState('06:00');
   const [closeTime, setCloseTime] = useState('22:00');
-  const [accepted, setAccepted] = useState(false);
+  const [docs, setDocs] = useState<Partial<Record<ButcherApplicationDocumentType, PickedApplicationFile>>>({});
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmAccuracy, setConfirmAccuracy] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
 
   const fullPhone = useMemo(() => {
     const digits = phoneDigits.replace(/\D/g, '').replace(/^0/, '');
@@ -129,45 +176,93 @@ export default function ButcherJoinScreen() {
     }
   }
 
+  async function pickDoc(type: ButcherApplicationDocumentType) {
+    setError('');
+    const picked = await pickApplicationDocument();
+    if (!picked) return;
+    const issue = validatePickedDocumentFile(
+      type,
+      picked.mimeType ?? 'application/octet-stream',
+      picked.fileSizeBytes,
+    );
+    if (issue) {
+      setError(issue.message);
+      return;
+    }
+    setDocs((prev) => ({ ...prev, [type]: picked }));
+  }
+
   async function submit() {
     setError('');
+    setUploadStatus('');
     if (!phoneToken) {
       setError('تحقق من رقم الجوال أولاً');
       return;
     }
-    if (!accepted) {
-      setError('يجب الموافقة على صحة البيانات');
+    if (!acceptedTerms) {
+      setError('يجب الموافقة على الشروط');
       return;
+    }
+    if (!confirmAccuracy) {
+      setError('يجب تأكيد صحة البيانات');
+      return;
+    }
+    if (!hasValidCoords(lat, lng)) {
+      setError('يجب تحديد موقع المحل على الخريطة');
+      return;
+    }
+    for (const type of REQUIRED_DOCS) {
+      const file = docs[type];
+      if (!file) {
+        setError('مستند مطلوب غير مرفوع');
+        return;
+      }
+      const issue = validatePickedDocumentFile(
+        type,
+        file.mimeType ?? 'application/octet-stream',
+        file.fileSizeBytes,
+      );
+      if (issue) {
+        setError(issue.message);
+        return;
+      }
     }
     setLoading(true);
     try {
+      const form = new FormData();
+      form.append('phone', fullPhone);
+      form.append('phone_token', phoneToken);
+      form.append('displayName', displayName.trim());
+      form.append('arabicName', displayName.trim());
+      if (email.trim()) form.append('email', email.trim());
+      if (isNewUser) form.append('username', username.trim().toLowerCase());
+      if (isNewUser && password) form.append('password', password);
+      form.append('nameAr', nameAr.trim());
+      form.append('nameEn', nameEn.trim());
+      form.append('shopPhone', shopPhone.trim() || fullPhone);
+      form.append('commercialReg', commercialReg.trim());
+      form.append('country', 'SA');
+      form.append('city', city.trim());
+      form.append('cityAr', cityAr.trim());
+      form.append('address', address.trim() || addressAr.trim());
+      form.append('addressAr', addressAr.trim());
+      form.append('lat', String(lat));
+      form.append('lng', String(lng));
+      if (bioAr.trim()) form.append('bioAr', bioAr.trim());
+      if (bioEn.trim()) form.append('bioEn', bioEn.trim());
+      if (specialties.trim()) form.append('specialties', specialties.trim());
+      form.append('openTime', openTime);
+      form.append('closeTime', closeTime);
+      form.append('acceptedTerms', 'true');
+      form.append('confirmAccuracy', 'true');
+      for (const type of REQUIRED_DOCS) {
+        await appendJoinFile(form, type, docs[type]!);
+      }
+      if (docs.other) await appendJoinFile(form, 'other', docs.other);
+      setUploadStatus('جاري رفع المستندات وإرسال الطلب...');
       const res = await fetch(`${API_BASE}/api/butcher-applications/join`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: fullPhone,
-          phone_token: phoneToken,
-          displayName: displayName.trim(),
-          arabicName: displayName.trim(),
-          email: email.trim() || undefined,
-          username: isNewUser ? username.trim().toLowerCase() : undefined,
-          password: isNewUser && password ? password : undefined,
-          nameAr: nameAr.trim(),
-          nameEn: nameEn.trim(),
-          shopPhone: shopPhone.trim() || fullPhone,
-          commercialReg: commercialReg.trim(),
-          country: 'SA',
-          city: city.trim(),
-          cityAr: cityAr.trim(),
-          address: address.trim() || addressAr.trim(),
-          addressAr: addressAr.trim(),
-          lat: RIYADH.lat,
-          lng: RIYADH.lng,
-          openTime,
-          closeTime,
-          acceptedTerms: true,
-          confirmAccuracy: true,
-        }),
+        body: form,
       });
       const json = await res.json().catch(() => ({}));
       const data = envelopeData(json);
@@ -185,6 +280,7 @@ export default function ButcherJoinScreen() {
     } catch {
       setError('تعذّر الاتصال بالخادم');
     } finally {
+      setUploadStatus('');
       setLoading(false);
     }
   }
@@ -207,13 +303,12 @@ export default function ButcherJoinScreen() {
           <Text style={styles.kicker}>سرح للمنشآت</Text>
           <Text style={styles.title}>انضمام الملاحم</Text>
           <Text style={styles.lead}>
-            قدّم طلب انضمام رسمي إلى منصة سرح. يراجع الفريق الطلب ثم يجهّز حساب الإدارة
-            الخاص بالملحمة.
+            قدّم طلب انضمام رسمي إلى منصة سرح بنفس متطلبات نموذج الملاحم داخل التطبيق.
           </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.section}>صاحب الطلب</Text>
+          <Text style={styles.section}>1. التحقق من الجوال</Text>
           <Text style={styles.label}>رقم الجوال</Text>
           <View style={styles.phoneRow}>
             <Text style={styles.dial}>{SAUDI_DIAL}</Text>
@@ -250,7 +345,10 @@ export default function ButcherJoinScreen() {
             </Pressable>
           )}
           {phoneToken ? <Text style={styles.ok}>تم التحقق من الجوال</Text> : null}
+        </View>
 
+        <View style={styles.card}>
+          <Text style={styles.section}>2. بيانات صاحب الطلب</Text>
           <Text style={styles.label}>الاسم</Text>
           <TextInput
             style={styles.input}
@@ -260,7 +358,7 @@ export default function ButcherJoinScreen() {
             placeholderTextColor={colors.textMuted}
             textAlign="right"
           />
-          <Text style={styles.label}>البريد الإلكتروني</Text>
+          <Text style={styles.label}>البريد الإلكتروني (اختياري)</Text>
           <TextInput
             style={styles.input}
             value={email}
@@ -298,7 +396,7 @@ export default function ButcherJoinScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.section}>بيانات الملحمة</Text>
+          <Text style={styles.section}>3. بيانات الملحمة</Text>
           <Text style={styles.label}>اسم الملحمة (عربي)</Text>
           <TextInput style={styles.input} value={nameAr} onChangeText={setNameAr} textAlign="right" />
           <Text style={styles.label}>اسم الملحمة (إنجليزي)</Text>
@@ -333,6 +431,47 @@ export default function ButcherJoinScreen() {
           />
           <Text style={styles.label}>العنوان (إنجليزي)</Text>
           <TextInput style={styles.input} value={address} onChangeText={setAddress} textAlign="left" />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.section}>4. بيانات الموقع</Text>
+          <ButcherLocationPicker
+            lat={hasValidCoords(lat, lng) ? lat : null}
+            lng={hasValidCoords(lat, lng) ? lng : null}
+            onChange={({ lat: nextLat, lng: nextLng }) => {
+              setLat(nextLat);
+              setLng(nextLng);
+            }}
+          />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.section}>5. النشاط وأوقات العمل</Text>
+          <Text style={styles.label}>نبذة عربية (اختياري)</Text>
+          <TextInput
+            style={[styles.input, styles.multiline]}
+            value={bioAr}
+            onChangeText={setBioAr}
+            multiline
+            textAlign="right"
+          />
+          <Text style={styles.label}>نبذة إنجليزية (اختياري)</Text>
+          <TextInput
+            style={[styles.input, styles.multiline]}
+            value={bioEn}
+            onChangeText={setBioEn}
+            multiline
+            textAlign="left"
+          />
+          <Text style={styles.label}>التخصصات (اختياري)</Text>
+          <TextInput
+            style={styles.input}
+            value={specialties}
+            onChangeText={setSpecialties}
+            placeholder="لحم بقري، غنم"
+            placeholderTextColor={colors.textMuted}
+            textAlign="right"
+          />
           <View style={styles.row}>
             <View style={styles.col}>
               <Text style={styles.label}>الفتح</Text>
@@ -345,18 +484,42 @@ export default function ButcherJoinScreen() {
           </View>
         </View>
 
-        <Pressable style={styles.checkRow} onPress={() => setAccepted((v) => !v)}>
-          <View style={[styles.checkbox, accepted && styles.checkboxOn]} />
-          <Text style={styles.checkText}>
-            أؤكد أن البيانات صحيحة وأوافق على مراجعة الطلب من فريق سرح.
-          </Text>
+        <View style={styles.card}>
+          <Text style={styles.section}>6. المستندات المطلوبة</Text>
+          <Text style={styles.hint}>المسموح: PDF أو JPG أو PNG أو WEBP.</Text>
+          {[...REQUIRED_DOCS, 'other' as const].map((type) => {
+            const picked = docs[type];
+            const required = type !== 'other';
+            return (
+              <Pressable key={type} style={styles.fileBtn} onPress={() => void pickDoc(type)}>
+                <Text style={styles.fileTitle}>
+                  {DOCUMENT_TYPE_LABELS[type]}
+                  {required ? ' *' : ' (اختياري)'}
+                </Text>
+                <Text style={styles.hint}>حتى {maxBytesLabelForDocumentType(type)}</Text>
+                <Text style={picked ? styles.ok : styles.hint}>
+                  {picked ? picked.originalFileName : 'اختيار ملف'}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Pressable style={styles.checkRow} onPress={() => setAcceptedTerms((v) => !v)}>
+          <View style={[styles.checkbox, acceptedTerms && styles.checkboxOn]} />
+          <Text style={styles.checkText}>أوافق على الشروط ومراجعة الطلب من فريق سرح.</Text>
+        </Pressable>
+        <Pressable style={styles.checkRow} onPress={() => setConfirmAccuracy((v) => !v)}>
+          <View style={[styles.checkbox, confirmAccuracy && styles.checkboxOn]} />
+          <Text style={styles.checkText}>أؤكد أن البيانات والمستندات صحيحة.</Text>
         </Pressable>
 
+        {uploadStatus ? <Text style={styles.ok}>{uploadStatus}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Pressable
           style={[styles.submit, loading && { opacity: 0.7 }]}
-          onPress={submit}
+          onPress={() => void submit()}
           disabled={loading}
         >
           {loading ? (
@@ -402,6 +565,7 @@ function createStyles(colors: ThemeColors) {
     },
     section: { ...typography.cardHeading, color: colors.textPrimary, marginBottom: 8, textAlign: 'right' },
     label: { ...typography.caption, color: colors.textMuted, textAlign: 'right', marginTop: 8 },
+    hint: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },
     input: {
       borderWidth: 1,
       borderColor: colors.borderMid,
@@ -411,6 +575,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       backgroundColor: colors.bgElevated,
     },
+    multiline: { minHeight: 84, textAlignVertical: 'top' },
     inputFlex: {
       flex: 1,
       borderWidth: 1,
@@ -425,6 +590,15 @@ function createStyles(colors: ThemeColors) {
     dial: { color: colors.textSecondary, paddingHorizontal: 8 },
     row: { flexDirection: 'row-reverse', gap: 12 },
     col: { flex: 1 },
+    fileBtn: {
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: colors.borderMid,
+      borderRadius: radius.lg,
+      padding: 12,
+      gap: 4,
+    },
+    fileTitle: { color: colors.textPrimary, textAlign: 'right', fontWeight: '600' },
     secondaryBtn: {
       marginTop: 8,
       borderWidth: 1,

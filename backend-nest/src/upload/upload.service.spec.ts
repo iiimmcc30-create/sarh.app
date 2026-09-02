@@ -69,6 +69,53 @@ describe('UploadService presign (existing storage)', () => {
     expect(JSON.stringify(result)).not.toMatch(/api_secret|API_SECRET/i);
   });
 
+  it('rejects join documents with unsupported mime or oversized files', async () => {
+    await expect(
+      service.uploadOwnedButcherApplicationFile('user-a', {
+        type: 'commercial_license',
+        file: {
+          mimetype: 'text/plain',
+          size: 10,
+          buffer: Buffer.from('hello'),
+          originalname: 'a.txt',
+        } as Express.Multer.File,
+      }),
+    ).rejects.toMatchObject({ code: 'UNSUPPORTED_MIME_TYPE' });
+
+    await expect(
+      service.uploadOwnedButcherApplicationFile('user-a', {
+        type: 'national_id',
+        file: {
+          mimetype: 'application/pdf',
+          size: 11 * 1024 * 1024,
+          buffer: Buffer.from('%PDF-1.4'),
+          originalname: 'id.pdf',
+        } as Express.Multer.File,
+      }),
+    ).rejects.toMatchObject({ code: 'FILE_TOO_LARGE' });
+  });
+
+  it('stores a join document with a user-owned butcher-applications key', async () => {
+    (getStorageProvider as jest.Mock).mockReturnValue('local');
+    (getPresignedUploadUrl as jest.Mock).mockResolvedValue({
+      provider: 'local',
+      uploadUrl: '/api/upload/direct',
+      folder: 'butcher-applications',
+    });
+    const result = await service.uploadOwnedButcherApplicationFile('user-a', {
+      type: 'shop_photo',
+      file: {
+        mimetype: 'image/jpeg',
+        size: 12,
+        buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5, 6, 7, 8]),
+        originalname: 'shop.jpg',
+      } as Express.Multer.File,
+    });
+    expect(result.fileKey).toMatch(/^butcher-applications\/user-a\//);
+    expect(result.mimeType).toBe('image/jpeg');
+    expect(JSON.stringify(result)).not.toMatch(/api_secret|APIKEY/i);
+  });
+
   it('returns 503 when storage signing fails', async () => {
     (getPresignedUploadUrl as jest.Mock).mockRejectedValue(
       new Error('Cloudinary is not configured'),

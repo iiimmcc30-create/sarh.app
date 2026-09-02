@@ -70,6 +70,7 @@ export function validateSnapshotFormat(input: ApplicationSnapshotInput): void {
     invalid.push('lat');
   if (input.lng !== undefined && (input.lng < -180 || input.lng > 180))
     invalid.push('lng');
+  if (input.lat === 0 && input.lng === 0) invalid.push('lat');
 
   if (invalid.length > 0) {
     throw new ButcherApplicationError('APPLICATION_INCOMPLETE', { invalid });
@@ -109,6 +110,14 @@ export function addSnapshotCrossFieldIssues(
       code: z.ZodIssueCode.custom,
       message: 'وقت الإغلاق يجب أن يختلف عن وقت الفتح',
       path: ['closeTime'],
+    });
+  }
+
+  if (data.lat === 0 && data.lng === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'يجب تحديد موقع المحل على الخريطة',
+      path: ['lat'],
     });
   }
 }
