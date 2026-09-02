@@ -115,6 +115,8 @@ async function bootstrap() {
       { path: 'payment/result', method: RequestMethod.GET },
       { path: 'payment/cancel', method: RequestMethod.GET },
       { path: 'privacy', method: RequestMethod.GET },
+      { path: 'join', method: RequestMethod.GET },
+      { path: 'join/success', method: RequestMethod.GET },
     ],
   });
 

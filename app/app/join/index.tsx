@@ -1,4 +1,4 @@
-import { AppLogo } from '@/components/ui/AppLogo';
+import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { API_BASE } from '@/services/api';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -195,9 +195,15 @@ export default function ButcherJoinScreen() {
         colors={['#07131C', '#0C1C27', '#07131C']}
         style={StyleSheet.absoluteFill}
       />
+      <LinearGradient
+        colors={['rgba(32,182,111,0.18)', 'transparent']}
+        style={styles.glow}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 0.5 }}
+      />
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
-          <AppLogo size={72} />
+          <SarhLogoMark size={64} color="#F4F7F9" />
           <Text style={styles.kicker}>سرح للمنشآت</Text>
           <Text style={styles.title}>انضمام الملاحم</Text>
           <Text style={styles.lead}>
@@ -373,7 +379,8 @@ export default function ButcherJoinScreen() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bgDeep },
+    screen: { flex: 1, backgroundColor: '#07131C' },
+    glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 280 },
     scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: 48 },
     hero: { alignItems: 'center', gap: 10, paddingTop: spacing.md },
     kicker: { ...typography.caption, color: colors.gold, letterSpacing: 1 },
