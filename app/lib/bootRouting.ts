@@ -27,7 +27,7 @@ export function resolveBootNavigation(state: BootNavState): BootNavAction {
   const inJoin = seg === 'join';
   const onRootIndex = !seg || seg === 'index';
 
-  if (!state.onboardingComplete && !inOnboarding) {
+  if (!state.onboardingComplete && !inOnboarding && !inJoin) {
     return { type: 'replace', href: '/onboarding' };
   }
 

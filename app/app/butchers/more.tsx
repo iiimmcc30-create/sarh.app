@@ -30,17 +30,13 @@ export default function ButchersMoreScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { me } = useApp();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const displayName = me.arabicName || me.displayName || me.username || 'مستخدم سرح';
   const phone = user?.phone;
 
   const goRegister = () => {
-    if (!isAuthenticated) {
-      safePush('/auth/phone', undefined, router);
-      return;
-    }
-    safePush('/butchers/apply', undefined, router);
+    safePush('/join', undefined, router);
   };
 
   return (

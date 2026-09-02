@@ -59,7 +59,7 @@ export const BUTCHERS_MARKET_MENU: ButchersMarketMenuItem[] = [
     key: 'register',
     icon: 'document-text-outline',
     label: 'سجل ملحمتك',
-    route: '/butchers/apply',
+    route: '/join',
   },
   {
     key: 'support',
