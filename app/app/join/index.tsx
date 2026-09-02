@@ -6,8 +6,10 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { SARH_BUTCHER_LOGIN_URL } from '@/constants/sarhOfficial';
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -357,6 +359,12 @@ export default function ButcherJoinScreen() {
             <Text style={styles.submitText}>إرسال طلب الانضمام</Text>
           )}
         </Pressable>
+        <Pressable
+          onPress={() => void Linking.openURL(SARH_BUTCHER_LOGIN_URL)}
+          accessibilityRole="link"
+        >
+          <Text style={styles.loginLink}>لديك حساب ملحمة؟ تسجيل الدخول</Text>
+        </Pressable>
         <Text style={styles.footnote}>لن يتم إنشاء حساب دفترة في هذه المرحلة.</Text>
       </ScrollView>
     </SafeAreaView>
@@ -439,6 +447,12 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     submitText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+    loginLink: {
+      color: colors.gold,
+      textAlign: 'center',
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
     footnote: { color: colors.textMuted, textAlign: 'center' },
   });
 }

@@ -140,6 +140,16 @@ describe('M1 single boot navigation source', () => {
     ).toEqual({ type: 'stay' });
   });
 
+  it('keeps /join open before onboarding so the public entry URL works', () => {
+    expect(
+      resolveBootNavigation({
+        ...base,
+        onboardingComplete: false,
+        firstSegment: 'join',
+      }),
+    ).toEqual({ type: 'stay' });
+  });
+
   it('restored session on auth screens goes to the app', () => {
     expect(
       resolveBootNavigation({
