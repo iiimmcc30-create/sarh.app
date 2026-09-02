@@ -6,6 +6,7 @@ describe('public butcher join journey', () => {
   const success = readFileSync(pathJoin(__dirname, '../app/join/success.tsx'), 'utf8');
 
   it('submits to the existing butcher-applications join API', () => {
+    expect(joinPage).toContain('SarhLogoMark');
     expect(joinPage).toContain('/api/butcher-applications/join');
     expect(joinPage).toContain("purpose: 'join'");
     expect(joinPage).not.toMatch(/جمل|ماعز|goat|camel/i);

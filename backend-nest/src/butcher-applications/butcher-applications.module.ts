@@ -5,6 +5,7 @@ import { CommonModule } from '../common/common.module';
 import { ButchersModule } from '../butchers/butchers.module';
 import { AuthModule } from '../auth/auth.module';
 import { ButcherApplicationsController } from './butcher-applications.controller';
+import { JoinPageController } from './join-page.controller';
 import { ButcherApplicationUserService } from './services/application.service';
 import { PublicButcherJoinService } from './services/public-join.service';
 import { ButcherApplicationDocumentService } from './services/document.service';
@@ -22,7 +23,7 @@ import { DocumentRepository } from './repositories/document.repository';
     ButchersModule,
     AuthModule,
   ],
-  controllers: [ButcherApplicationsController],
+  controllers: [ButcherApplicationsController, JoinPageController],
   providers: [
     ApplicationRepository,
     DocumentRepository,
