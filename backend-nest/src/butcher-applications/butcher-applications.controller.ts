@@ -11,7 +11,11 @@ import {
   Post,
   Query,
   Res,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { Response } from 'express';
 import { ButcherApplicationUserService } from './services/application.service';
 import { ButcherApplicationDocumentService } from './services/document.service';
@@ -44,6 +48,8 @@ import {
   withdrawBodySchema,
 } from './routes/schemas';
 import { publicJoinBodySchema } from './routes/publicJoin.schema';
+import { flattenJoinFiles, type JoinUploadedFiles } from './helpers/joinFiles';
+import { MAX_SHOP_PHOTO_FILE_BYTES } from './constants';
 
 @Controller('butcher-applications')
 export class ButcherApplicationsController {
@@ -57,7 +63,25 @@ export class ButcherApplicationsController {
   @RateLimit('auth')
   @Post('join')
   @HttpCode(HttpStatus.CREATED)
-  async submitPublicJoin(@Body() body: unknown) {
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'commercial_license', maxCount: 1 },
+        { name: 'national_id', maxCount: 1 },
+        { name: 'municipal_permit', maxCount: 1 },
+        { name: 'shop_photo', maxCount: 1 },
+        { name: 'other', maxCount: 1 },
+      ],
+      {
+        storage: memoryStorage(),
+        limits: { fileSize: MAX_SHOP_PHOTO_FILE_BYTES },
+      },
+    ),
+  )
+  async submitPublicJoin(
+    @Body() body: unknown,
+    @UploadedFiles() files?: JoinUploadedFiles,
+  ) {
     const parsed = publicJoinBodySchema.safeParse(body ?? {});
     if (!parsed.success) {
       throwApi(
@@ -67,7 +91,10 @@ export class ButcherApplicationsController {
         parsed.error.flatten(),
       );
     }
-    const application = await this.publicJoin.submitJoin(parsed.data);
+    const application = await this.publicJoin.submitJoin(
+      parsed.data,
+      flattenJoinFiles(files),
+    );
     return successResponse(application);
   }
 

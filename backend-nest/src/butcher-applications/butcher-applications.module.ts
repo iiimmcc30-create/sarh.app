@@ -4,6 +4,7 @@ import { QueueModule } from '../queue/queue.module';
 import { CommonModule } from '../common/common.module';
 import { ButchersModule } from '../butchers/butchers.module';
 import { AuthModule } from '../auth/auth.module';
+import { UploadModule } from '../upload/upload.module';
 import { ButcherApplicationsController } from './butcher-applications.controller';
 import { JoinPageController } from './join-page.controller';
 import { ButcherApplicationUserService } from './services/application.service';
@@ -22,6 +23,7 @@ import { DocumentRepository } from './repositories/document.repository';
     CommonModule,
     ButchersModule,
     AuthModule,
+    UploadModule,
   ],
   controllers: [ButcherApplicationsController, JoinPageController],
   providers: [
