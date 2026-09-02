@@ -83,6 +83,20 @@ describe('admin middleware auth gate', () => {
       request('/users', `admin_token=${encodeURIComponent(token)}`),
     );
     expect(res.status).toBe(307);
+    // Production bug without compose JWT_SECRET: every section hit login, then
+    // login restored localStorage and sent the user back to `/` (home).
+    expect(res.headers.get('location')).toContain('/login');
+  });
+
+  it('allows section routes with a valid cookie when JWT_SECRET is set', async () => {
+    const token = await signAdminAccessToken({ secret, role: 'ADMIN' });
+    for (const path of ['/users', '/listings', '/orders', '/payments']) {
+      const res = await middleware(
+        request(path, `admin_token=${encodeURIComponent(token)}`),
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get('location')).toBeNull();
+    }
   });
 });
 

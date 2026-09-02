@@ -11,7 +11,9 @@ describe('admin nginx route', () => {
     expect(conf).toContain('location = /admin');
     expect(conf).toContain('location /admin/');
     expect(conf).toContain('proxy_pass http://$admin_upstream');
-    expect(conf).not.toMatch(/location\s*=\s*\/admin\s*\{[^}]*return\s+302\s+\/admin\//s);
+    expect(conf).not.toMatch(
+      /location\s*=\s*\/admin\s*\{[\s\S]*?return\s+302\s+\/admin\//,
+    );
   });
 
   it('keeps Next basePath /admin as the canonical entry (no slash redirect war)', () => {

@@ -46,6 +46,17 @@ else
   echo "WARN: unexpected /admin status ${admin_code}"
 fi
 
+echo "=== Admin JWT_SECRET (required for section navigation) ==="
+if docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" exec -T admin \
+  sh -c 'if [ -n "${JWT_SECRET:-}" ]; then echo JWT_SECRET=set; else echo JWT_SECRET=MISSING; exit 1; fi' \
+  2>/tmp/sarh-admin-jwt.err; then
+  echo "admin middleware secret OK"
+else
+  echo "WARN: admin container missing JWT_SECRET — /admin/users will bounce via /admin/login back to /admin"
+  cat /tmp/sarh-admin-jwt.err 2>/dev/null || true
+  echo "Fix: ensure docker-compose.prod.yml passes JWT_SECRET, then recreate admin"
+fi
+
 echo "=== Payment redirect bridge (N-Genius return URLs) ==="
 for path in /payment/result /payment/cancel; do
   code=$(curl -sS -o /tmp/pay-bridge.html -w '%{http_code}' --max-time 8 "http://127.0.0.1:3001${path}" || echo 000)
