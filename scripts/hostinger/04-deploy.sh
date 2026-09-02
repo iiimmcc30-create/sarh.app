@@ -39,6 +39,16 @@ for i in $(seq 1 90); do
     echo "API health OK"
     curl -s http://127.0.0.1:3001/api/health | head -c 500
     echo
+    if curl -sf http://127.0.0.1:3001/join | grep -q 'انضمام الملاحم'; then
+      echo "GET /join OK (dark butcher registration page)"
+    else
+      echo "WARN: API /join did not return the butcher registration page"
+    fi
+    if curl -sf https://sarhsa.online/join | grep -q 'انضمام الملاحم'; then
+      echo "https://sarhsa.online/join OK"
+    else
+      echo "WARN: public /join still hits Expo — recreate nginx: docker compose ... up -d --force-recreate nginx"
+    fi
     exit 0
   fi
   sleep 3
