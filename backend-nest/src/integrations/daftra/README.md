@@ -38,9 +38,13 @@ Callers never pass `apiKey` or `subdomain` from the client for data requests.
 
 ## Connection test
 
-`GET /api2/api_key_info.json` with header `APIKEY` (no `Authorization`).
+`GET /api2/api_key_info.json` with header `APIKEY` (no `Authorization`, no body `Content-Type`).
 
-Success: `{ connected: true }`. Auth failure: `{ connected: false, reason: "INVALID_API_KEY" }`. Network/timeout: `CONNECTION_FAILED`.
+- Host: `https://{accountIdentifier}.daftra.com` — use the **subdomain** (e.g. `sarh-app`), not the numeric Account ID.
+- Success: `{ connected: true }`.
+- Auth failure: `{ connected: false, reason: "INVALID_API_KEY", httpStatus: 401 }`.
+- Network/timeout: `CONNECTION_FAILED` (`httpStatus: null`).
+- Logs include `reason`, `httpStatus`, and `host` — never the API key.
 
 ## Caching
 

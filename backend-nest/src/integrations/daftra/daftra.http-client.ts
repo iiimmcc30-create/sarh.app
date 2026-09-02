@@ -99,14 +99,19 @@ export class DaftraClient {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
+      const headers: Record<string, string> = {
+        Accept: 'application/json',
+        APIKEY: this.apiKey,
+      };
+      const hasBody = init.body !== undefined;
+      if (hasBody) {
+        headers['Content-Type'] = 'application/json';
+      }
+
       const response = await this.fetchImpl(url, {
         method,
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          APIKEY: this.apiKey,
-        },
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        headers,
+        body: hasBody ? JSON.stringify(init.body) : undefined,
         signal: controller.signal,
       });
 
@@ -124,6 +129,8 @@ export class DaftraClient {
       void redactSensitive(parsed);
 
       const record = parsed as { result?: unknown; code?: unknown };
+      const resultText =
+        typeof record.result === 'string' ? record.result.toLowerCase() : '';
       const authRejected =
         response.status === 401 ||
         response.status === 403 ||
@@ -146,7 +153,7 @@ export class DaftraClient {
         );
       }
 
-      if (record.result && record.result !== 'success') {
+      if (resultText && resultText !== 'success') {
         throw new DaftraRequestError(
           'UPSTREAM_ERROR',
           safeMessage('UPSTREAM_ERROR'),

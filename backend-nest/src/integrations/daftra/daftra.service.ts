@@ -14,6 +14,7 @@ import { appendTimelineEvent } from '../../butcher-applications/helpers/timeline
 import {
   assertValidDaftraAccountIdentifier,
   createDaftraClient,
+  daftraConnectionLogFields,
   testDaftraConnection,
 } from './daftra.client';
 import type {
@@ -200,7 +201,7 @@ export class DaftraService {
         ciphertext: row.apiKeyCiphertext,
         iv: row.apiKeyIv,
         tag: row.apiKeyTag,
-      });
+      }).trim();
     } catch {
       this.logger.warn({ butcherId }, 'Daftra API key decrypt failed');
       throwApi(500, 'decrypt_failed', 'تعذر قراءة إعدادات التكامل');
@@ -215,12 +216,18 @@ export class DaftraService {
       ? 'CONNECTED'
       : 'CONNECTION_FAILED';
 
+    const failureDetail = result.connected
+      ? null
+      : `${result.reason}${
+          result.httpStatus != null ? ` HTTP ${result.httpStatus}` : ''
+        }: ${result.safeReason}`;
+
     const updated = await this.prisma.butcherDaftraIntegration.update({
       where: { butcherId },
       data: {
         status: nextStatus,
         lastConnectionTestAt: new Date(),
-        lastConnectionError: result.connected ? null : result.safeReason,
+        lastConnectionError: failureDetail,
       },
     });
 
@@ -228,10 +235,16 @@ export class DaftraService {
       ok: result.connected,
       reason: result.connected ? 'CONNECTED' : result.reason,
       httpStatus: result.httpStatus,
+      host: result.host,
     });
 
     this.logger.info(
-      { butcherId, adminUserId, connected: result.connected },
+      {
+        butcherId,
+        adminUserId,
+        accountIdentifier: row.accountIdentifier,
+        ...daftraConnectionLogFields(result),
+      },
       'Daftra connection tested',
     );
 
@@ -482,7 +495,7 @@ export class DaftraService {
         ciphertext: row.apiKeyCiphertext,
         iv: row.apiKeyIv,
         tag: row.apiKeyTag,
-      });
+      }).trim();
     } catch {
       this.logger.warn({ butcherId }, 'Daftra API key decrypt failed');
       throwApi(500, 'decrypt_failed', 'تعذر قراءة إعدادات التكامل');

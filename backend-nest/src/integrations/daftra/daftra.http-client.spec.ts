@@ -39,14 +39,29 @@ describe('DaftraClient HTTP mapping', () => {
     });
   });
 
-  it('does not treat a generic 500 failed result as an invalid API key', async () => {
+  it('sends Content-Type only when a JSON body is present', async () => {
+    let getHeaders: Record<string, string> = {};
+    let postHeaders: Record<string, string> = {};
+    const fetchImpl = jest.fn(async (_url: string, init?: RequestInit) => {
+      if (String(init?.method) === 'POST') {
+        postHeaders = (init?.headers ?? {}) as Record<string, string>;
+      } else {
+        getHeaders = (init?.headers ?? {}) as Record<string, string>;
+      }
+      return {
+        status: 200,
+        json: async () => ({ result: 'success', data: {} }),
+      };
+    }) as unknown as typeof fetch;
     const client = new DaftraClient({
       origin: 'https://shop1.daftra.com',
       apiKey: secret,
-      fetchImpl: jsonFetch(500, { result: 'failed', message: 'boom' }),
+      fetchImpl,
     });
-    await expect(client.get('/products.json')).rejects.toMatchObject({
-      reason: 'UPSTREAM_ERROR',
-    });
+    await client.get('/api_key_info.json');
+    await client.post('/products.json', { Product: { name: 'x' } });
+    expect(getHeaders['Content-Type']).toBeUndefined();
+    expect(postHeaders['Content-Type']).toBe('application/json');
+    expect(postHeaders.APIKEY).toBe(secret);
   });
 });

@@ -8,15 +8,24 @@ export type DaftraAccountConfig = {
 };
 
 export type DaftraConnectionResult =
-  | { connected: true; httpStatus: number }
+  | { connected: true; httpStatus: number; host: string; path: string }
   | {
       connected: false;
-      reason: 'INVALID_API_KEY' | 'CONNECTION_FAILED';
+      reason:
+        | 'INVALID_API_KEY'
+        | 'CONNECTION_FAILED'
+        | 'NOT_FOUND'
+        | 'RATE_LIMITED'
+        | 'UPSTREAM_ERROR'
+        | 'INVALID_RESPONSE';
       httpStatus: number | null;
       safeReason: string;
+      host: string;
+      path: string;
     };
 
 const ACCOUNT_ID_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i;
+const CONNECTION_PATH = DAFTRA_PATHS.apiKeyInfo;
 
 export function normalizeDaftraAccountIdentifier(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
@@ -68,7 +77,8 @@ export function createDaftraClient(
   config: DaftraAccountConfig,
   fetchImpl?: typeof fetch,
 ): DaftraClient {
-  if (!config.apiKey?.trim()) {
+  const apiKey = config.apiKey?.trim() ?? '';
+  if (!apiKey) {
     throw new DaftraRequestError(
       'INVALID_API_KEY',
       'بيانات اعتماد دفترة غير صحيحة',
@@ -77,30 +87,64 @@ export function createDaftraClient(
   }
   return new DaftraClient({
     origin: resolveDaftraOrigin(config.accountIdentifier),
-    apiKey: config.apiKey,
+    apiKey,
     fetchImpl,
   });
+}
+
+/** Safe fields for logs/UI — never includes the API key. */
+export function daftraConnectionLogFields(
+  result: DaftraConnectionResult,
+): Record<string, string | number | boolean | null> {
+  return {
+    connected: result.connected,
+    httpStatus: result.httpStatus,
+    host: result.host,
+    path: result.path,
+    ...(result.connected
+      ? {}
+      : { reason: result.reason, safeReason: result.safeReason }),
+  };
 }
 
 export async function testDaftraConnection(
   config: DaftraAccountConfig,
   fetchImpl: typeof fetch = fetch,
 ): Promise<DaftraConnectionResult> {
+  let host = '';
+  try {
+    host = new URL(resolveDaftraOrigin(config.accountIdentifier)).host;
+  } catch {
+    host = 'invalid-account';
+  }
+
   try {
     const client = createDaftraClient(config, fetchImpl);
-    const res = await client.get(DAFTRA_PATHS.apiKeyInfo);
-    return { connected: true, httpStatus: res.httpStatus };
+    const res = await client.get(CONNECTION_PATH);
+    return {
+      connected: true,
+      httpStatus: res.httpStatus,
+      host,
+      path: CONNECTION_PATH,
+    };
   } catch (err) {
     if (isDaftraRequestError(err)) {
       const reason =
-        err.reason === 'INVALID_API_KEY'
-          ? 'INVALID_API_KEY'
+        err.reason === 'INVALID_API_KEY' ||
+        err.reason === 'NOT_FOUND' ||
+        err.reason === 'RATE_LIMITED' ||
+        err.reason === 'UPSTREAM_ERROR' ||
+        err.reason === 'INVALID_RESPONSE' ||
+        err.reason === 'CONNECTION_FAILED'
+          ? err.reason
           : 'CONNECTION_FAILED';
       return {
         connected: false,
         reason,
         httpStatus: err.httpStatus,
         safeReason: err.safeMessage,
+        host,
+        path: CONNECTION_PATH,
       };
     }
     return {
@@ -108,6 +152,8 @@ export async function testDaftraConnection(
       reason: 'CONNECTION_FAILED',
       httpStatus: null,
       safeReason: 'تعذر الاتصال بحساب دفترة',
+      host,
+      path: CONNECTION_PATH,
     };
   }
 }
