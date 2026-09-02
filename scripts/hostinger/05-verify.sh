@@ -30,6 +30,22 @@ else
   echo "Fix: git pull && ./scripts/hostinger/04-deploy.sh && docker compose -f docker-compose.prod.yml -f docker-compose.prod.ssl.yml --env-file .env.production up -d --force-recreate nginx"
 fi
 
+echo "=== Admin panel trailing-slash (must not loop) ==="
+admin_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-redirs 0 --max-time 12 "https://sarhsa.online/admin" || echo 000)
+admin_slash_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-redirs 0 --max-time 12 "https://sarhsa.online/admin/" || echo 000)
+admin_loc=$(curl -sSI --max-redirs 0 --max-time 12 "https://sarhsa.online/admin" 2>/dev/null | tr -d '\r' | awk 'tolower($1)=="location:"{print $2; exit}')
+admin_slash_loc=$(curl -sSI --max-redirs 0 --max-time 12 "https://sarhsa.online/admin/" 2>/dev/null | tr -d '\r' | awk 'tolower($1)=="location:"{print $2; exit}')
+echo "/admin -> ${admin_code} Location=${admin_loc:-none}"
+echo "/admin/ -> ${admin_slash_code} Location=${admin_slash_loc:-none}"
+if [[ "$admin_code" == "302" && "$admin_loc" == *"/admin/"* && "$admin_slash_code" == "308" && "$admin_slash_loc" == *"/admin"* && "$admin_slash_loc" != *"/admin/"* ]]; then
+  echo "WARN: /admin redirect loop (nginx 302 /admin→/admin/ vs Next 308 /admin/→/admin)"
+  echo "Fix: update nginx/admin-location.conf then: docker compose -f docker-compose.prod.yml -f docker-compose.prod.ssl.yml --env-file .env.production up -d --force-recreate nginx"
+elif [[ "$admin_code" =~ ^(200|302|303|307)$ ]]; then
+  echo "admin entry OK (no slash war)"
+else
+  echo "WARN: unexpected /admin status ${admin_code}"
+fi
+
 echo "=== Payment redirect bridge (N-Genius return URLs) ==="
 for path in /payment/result /payment/cancel; do
   code=$(curl -sS -o /tmp/pay-bridge.html -w '%{http_code}' --max-time 8 "http://127.0.0.1:3001${path}" || echo 000)
