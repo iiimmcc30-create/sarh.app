@@ -13,9 +13,10 @@ describe('admin middleware auth gate', () => {
 
   beforeEach(() => {
     process.env.JWT_SECRET = secret;
+    delete process.env.NEXT_PUBLIC_ADMIN_BASE_PATH;
   });
 
-  it('redirects protected pages to /login when cookie missing', async () => {
+  it('redirects protected pages to /login when cookie missing (local, no basePath)', async () => {
     const res = await middleware(request('/users'));
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe('http://localhost:3000/login');
@@ -82,5 +83,48 @@ describe('admin middleware auth gate', () => {
       request('/users', `admin_token=${encodeURIComponent(token)}`),
     );
     expect(res.status).toBe(307);
+  });
+});
+
+describe('admin middleware basePath login redirect', () => {
+  const secret = 'test-admin-jwt-secret-minimum-32-chars!!';
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env.JWT_SECRET = secret;
+    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH = '/admin';
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_ADMIN_BASE_PATH;
+  });
+
+  it('redirects unauthenticated users to /admin/login, never root /login', async () => {
+    const { middleware: mw } = await import('@/middleware');
+    const headers = new Headers();
+    const req = new NextRequest(
+      new URL('/users', 'https://sarhsa.online/admin/users'),
+      { headers },
+    );
+    // Simulate production request URL as seen behind nginx path prefix.
+    const prodReq = new NextRequest('https://sarhsa.online/admin/users', {
+      headers,
+    });
+    const res = await mw(prodReq);
+    expect(res.status).toBe(307);
+    const location = res.headers.get('location') ?? '';
+    expect(location).toBe('https://sarhsa.online/admin/login');
+    expect(location).not.toMatch(/https:\/\/sarhsa\.online\/login$/);
+    expect(new URL(location).pathname).toBe('/admin/login');
+    void req;
+  });
+
+  it('adminLoginPath helper never returns root /login under basePath', async () => {
+    const { adminLoginPath, withAdminBase } = await import(
+      '@/constants/adminBasePath'
+    );
+    expect(adminLoginPath()).toBe('/admin/login');
+    expect(withAdminBase('/login')).toBe('/admin/login');
+    expect(adminLoginPath()).not.toBe('/login');
   });
 });
