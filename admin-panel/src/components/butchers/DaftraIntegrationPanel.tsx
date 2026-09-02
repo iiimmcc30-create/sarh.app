@@ -6,9 +6,12 @@ import { Badge } from '@/components/ui/Badge';
 import { getStoredUser } from '@/services/auth.service';
 import {
   disableDaftra,
+  fetchDaftraInventory,
+  fetchDaftraProducts,
   fetchDaftraStatus,
   saveDaftraConfig,
   testDaftraConnection,
+  type DaftraCatalogProduct,
   type DaftraStatus,
 } from '@/services/admin.service';
 
@@ -35,6 +38,8 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
   const [loginUrl, setLoginUrl] = useState('');
   const [invitePassword, setInvitePassword] = useState('');
   const [sendInvite, setSendInvite] = useState(false);
+  const [products, setProducts] = useState<DaftraCatalogProduct[]>([]);
+  const [inventoryCount, setInventoryCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -52,9 +57,27 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
     }
   }, [butcherId]);
 
+  const loadCatalog = useCallback(async () => {
+    try {
+      const [catalog, inventory] = await Promise.all([
+        fetchDaftraProducts(butcherId),
+        fetchDaftraInventory(butcherId),
+      ]);
+      setProducts(catalog.items ?? []);
+      setInventoryCount(inventory.totalResults ?? inventory.items?.length ?? 0);
+    } catch {
+      setProducts([]);
+      setInventoryCount(null);
+    }
+  }, [butcherId]);
+
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (status?.status === 'CONNECTED') void loadCatalog();
+  }, [status?.status, loadCatalog]);
 
   if (!isAdmin) {
     return (
@@ -100,6 +123,7 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
       setStatus(data.status);
       setInvitePassword('');
       setMessage(data.messageAr);
+      if (data.connected) void loadCatalog();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'تعذّر اختبار الاتصال');
     } finally {
@@ -127,9 +151,29 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold text-white">تكامل دفترة</h3>
         <Badge tone={STATUS_TONE[status?.status ?? 'NOT_CONFIGURED']}>
-          {STATUS_LABELS[status?.status ?? 'NOT_CONFIGURED']}
+          {status?.status === 'CONNECTED' ? 'Connected' : 'Not Connected'}
         </Badge>
       </div>
+      <dl className="mb-4 grid gap-2 text-sm text-slate-400 sm:grid-cols-3">
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-slate-500">Status</dt>
+          <dd className="text-slate-200">
+            {STATUS_LABELS[status?.status ?? 'NOT_CONFIGURED']}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-slate-500">Account</dt>
+          <dd className="font-mono text-slate-200" dir="ltr">
+            {status?.accountIdentifier ?? '—'}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-slate-500">API Key</dt>
+          <dd className="font-mono text-slate-200" dir="ltr">
+            {status?.apiKeyMasked ?? '••••'}
+          </dd>
+        </div>
+      </dl>
       <p className="mb-4 text-sm text-slate-500">
         جهّز حساب دفترة يدوياً ثم أدخل معرّف الحساب ومفتاح API. لا تُخزَّن كلمة مرور دفترة في سرح.
       </p>
@@ -209,12 +253,35 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
           حفظ الإعدادات
         </Button>
         <Button variant="secondary" disabled={loading} onClick={onTest}>
-          اختبار اتصال دفترة
+          Test Connection
         </Button>
         <Button variant="danger" disabled={loading || !status?.configured} onClick={onDisable}>
           تعطيل
         </Button>
       </div>
+      {status?.status === 'CONNECTED' ? (
+        <div className="mt-5 border-t border-slate-800 pt-4">
+          <p className="mb-2 text-sm text-slate-300">
+            منتجات دفترة
+            {inventoryCount != null ? ` · عناصر المخزون: ${inventoryCount}` : ''}
+          </p>
+          {products.length === 0 ? (
+            <p className="text-sm text-slate-500">لا توجد منتجات في حساب دفترة، أو تعذر جلبها.</p>
+          ) : (
+            <ul className="space-y-1 text-sm text-slate-300">
+              {products.slice(0, 10).map((item) => (
+                <li key={item.id} className="flex justify-between gap-3">
+                  <span>{item.name}</span>
+                  <span className="text-slate-500">
+                    {item.sku ?? `#${item.id}`}
+                    {item.quantity != null ? ` · ${item.quantity}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }

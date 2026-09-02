@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { RateLimit, Roles } from '../../common/decorators/auth.decorators';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -26,6 +27,16 @@ const configureSchema = z
     daftraLoginUrl: z.string().url().max(500).optional().nullable(),
   })
   .strict();
+
+const pageQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+    search: z.string().max(100).optional(),
+  })
+  .strict();
+
+const productIdSchema = z.coerce.number().int().positive();
 
 const testSchema = z
   .object({
@@ -111,6 +122,72 @@ export class AdminDaftraController {
     if (!butcherId.success) throwApi(400, 'invalid_id', 'معرّف غير صالح');
     return successResponse(
       await this.daftra.disable(user.userId, butcherId.data),
+    );
+  }
+
+  @Roles('ADMIN')
+  @RateLimit('api')
+  @Get(':id/daftra/products')
+  @HttpCode(HttpStatus.OK)
+  async products(
+    @Param('id') id: string,
+    @Query() query: Record<string, unknown>,
+  ) {
+    const butcherId = butcherIdSchema.safeParse(id);
+    if (!butcherId.success) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+    const parsed = pageQuerySchema.safeParse(query ?? {});
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+    return successResponse(
+      await this.daftra.listProducts(butcherId.data, parsed.data),
+    );
+  }
+
+  @Roles('ADMIN')
+  @RateLimit('api')
+  @Get(':id/daftra/products/:productId')
+  @HttpCode(HttpStatus.OK)
+  async product(
+    @Param('id') id: string,
+    @Param('productId') productIdParam: string,
+  ) {
+    const butcherId = butcherIdSchema.safeParse(id);
+    const productId = productIdSchema.safeParse(productIdParam);
+    if (!butcherId.success || !productId.success) {
+      throwApi(400, 'invalid_id', 'معرّف غير صالح');
+    }
+    return successResponse(
+      await this.daftra.getProduct(butcherId.data, productId.data),
+    );
+  }
+
+  @Roles('ADMIN')
+  @RateLimit('api')
+  @Get(':id/daftra/inventory')
+  @HttpCode(HttpStatus.OK)
+  async inventory(
+    @Param('id') id: string,
+    @Query() query: Record<string, unknown>,
+  ) {
+    const butcherId = butcherIdSchema.safeParse(id);
+    if (!butcherId.success) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+    const parsed = pageQuerySchema.safeParse(query ?? {});
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+    return successResponse(
+      await this.daftra.listInventory(butcherId.data, parsed.data),
     );
   }
 }

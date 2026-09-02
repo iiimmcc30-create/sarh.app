@@ -13,13 +13,31 @@ import {
 import { appendTimelineEvent } from '../../butcher-applications/helpers/timeline';
 import {
   assertValidDaftraAccountIdentifier,
+  createDaftraClient,
   testDaftraConnection,
 } from './daftra.client';
 import type {
   ConfigureDaftraInput,
   DaftraPublicStatus,
+  LinkDaftraProductInput,
   TestDaftraInput,
 } from './daftra.types';
+import { DaftraClient } from './daftra.http-client';
+import {
+  DAFTRA_PATHS,
+  DAFTRA_PRODUCT_PAGE_DEFAULT,
+  DAFTRA_PRODUCT_PAGE_MAX,
+} from './daftra.constants';
+import { isDaftraRequestError } from './daftra.errors';
+import {
+  mapDaftraProduct,
+  mapDaftraProductPage,
+  mapDaftraProductStock,
+  type DaftraProduct,
+  type DaftraProductPage,
+  type DaftraProductStock,
+} from './daftra.mappers';
+import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 
 const LOGIN_URL_RE = /^https:\/\/[^\s]+$/i;
 
@@ -162,7 +180,12 @@ export class DaftraService {
     adminUserId: string,
     butcherId: string,
     input: TestDaftraInput = {},
-  ): Promise<{ status: DaftraPublicStatus; messageAr: string }> {
+  ): Promise<{
+    status: DaftraPublicStatus;
+    connected: boolean;
+    reason?: string;
+    messageAr: string;
+  }> {
     await this.assertButcherExists(butcherId);
     const row = await this.prisma.butcherDaftraIntegration.findUnique({
       where: { butcherId },
@@ -188,7 +211,7 @@ export class DaftraService {
       apiKey,
     });
 
-    const nextStatus: DaftraIntegrationStatus = result.ok
+    const nextStatus: DaftraIntegrationStatus = result.connected
       ? 'CONNECTED'
       : 'CONNECTION_FAILED';
 
@@ -197,27 +220,30 @@ export class DaftraService {
       data: {
         status: nextStatus,
         lastConnectionTestAt: new Date(),
-        lastConnectionError: result.ok ? null : result.safeReason,
+        lastConnectionError: result.connected ? null : result.safeReason,
       },
     });
 
     await this.appendApplicationComment(adminUserId, butcherId, 'TEST', {
-      ok: result.ok,
-      httpStatus: result.ok ? result.httpStatus : result.httpStatus,
+      ok: result.connected,
+      reason: result.connected ? 'CONNECTED' : result.reason,
+      httpStatus: result.httpStatus,
     });
 
     this.logger.info(
-      { butcherId, adminUserId, ok: result.ok },
+      { butcherId, adminUserId, connected: result.connected },
       'Daftra connection tested',
     );
 
-    if (result.ok && input.sendInvite) {
+    if (result.connected && input.sendInvite) {
       await this.sendInviteEmail(updated, input.invitePassword);
     }
 
     return {
       status: toPublicStatus(butcherId, updated),
-      messageAr: result.ok
+      connected: result.connected,
+      reason: result.connected ? undefined : result.reason,
+      messageAr: result.connected
         ? 'تم الاتصال بحساب دفترة بنجاح.'
         : `تعذر الاتصال بحساب دفترة. ${result.safeReason}`,
     };
@@ -243,6 +269,243 @@ export class DaftraService {
     await this.appendApplicationComment(adminUserId, butcherId, 'DISABLE', {});
     this.logger.info({ butcherId, adminUserId }, 'Daftra integration disabled');
     return toPublicStatus(butcherId, updated);
+  }
+
+  async statusForOwner(user: JwtPayload) {
+    const butcherId = await this.requireOwnedButcherId(user);
+    return this.getStatus(butcherId);
+  }
+
+  async testConnectionForOwner(user: JwtPayload) {
+    const butcherId = await this.requireOwnedButcherId(user);
+    return this.testConnection(user.userId, butcherId);
+  }
+
+  async listProducts(
+    butcherId: string,
+    query: { page?: number; limit?: number; search?: string } = {},
+  ): Promise<DaftraProductPage> {
+    const client = await this.clientForButcher(butcherId);
+    const page = Math.max(1, query.page ?? 1);
+    const limit = Math.min(
+      DAFTRA_PRODUCT_PAGE_MAX,
+      Math.max(1, query.limit ?? DAFTRA_PRODUCT_PAGE_DEFAULT),
+    );
+    try {
+      const res = await client.get(DAFTRA_PATHS.products, {
+        page,
+        limit,
+        search: query.search,
+      });
+      return mapDaftraProductPage(res.body);
+    } catch (err) {
+      this.rethrowDaftra(err);
+    }
+  }
+
+  async getProduct(
+    butcherId: string,
+    daftraProductId: number,
+  ): Promise<DaftraProduct> {
+    const client = await this.clientForButcher(butcherId);
+    try {
+      const res = await client.get(DAFTRA_PATHS.product(daftraProductId));
+      const mapped = mapDaftraProduct(
+        (res.body as { data?: unknown }).data ?? res.body,
+      );
+      if (!mapped) {
+        throwApi(404, 'not_found', 'المنتج غير موجود في حساب دفترة');
+      }
+      return mapped;
+    } catch (err) {
+      this.rethrowDaftra(err);
+    }
+  }
+
+  async listInventory(
+    butcherId: string,
+    query: { page?: number; limit?: number } = {},
+  ): Promise<{
+    items: DaftraProductStock[];
+    page: number;
+    pageCount: number;
+    totalResults: number;
+  }> {
+    const page = await this.listProducts(butcherId, query);
+    return {
+      page: page.page,
+      pageCount: page.pageCount,
+      totalResults: page.totalResults,
+      items: page.items.map((product) => ({
+        productId: product.id,
+        name: product.name,
+        sku: product.sku,
+        quantity: product.quantity,
+        trackStock: product.trackStock,
+        source: 'stock_balance' as const,
+        levels: [],
+      })),
+    };
+  }
+
+  async getProductStock(
+    butcherId: string,
+    daftraProductId: number,
+  ): Promise<DaftraProductStock> {
+    const client = await this.clientForButcher(butcherId);
+    try {
+      const res = await client.get(DAFTRA_PATHS.product(daftraProductId));
+      const mapped = mapDaftraProductStock(res.body);
+      if (!mapped) {
+        throwApi(404, 'not_found', 'المخزون غير متاح لهذا المنتج');
+      }
+      return mapped;
+    } catch (err) {
+      this.rethrowDaftra(err);
+    }
+  }
+
+  /**
+   * Write helpers for a later butcher-dashboard catalog flow.
+   * Not wired to Sarh ButcherProduct CRUD.
+   */
+  async createRemoteProduct(
+    butcherId: string,
+    product: Record<string, unknown>,
+  ): Promise<DaftraProduct> {
+    const client = await this.clientForButcher(butcherId);
+    try {
+      const res = await client.post(DAFTRA_PATHS.products, {
+        Product: product,
+      });
+      const mapped = mapDaftraProduct(
+        (res.body as { data?: unknown }).data ?? res.body,
+      );
+      if (!mapped) throwApi(502, 'invalid_response', 'استجابة دفترة غير صالحة');
+      return mapped;
+    } catch (err) {
+      this.rethrowDaftra(err);
+    }
+  }
+
+  async updateRemoteProduct(
+    butcherId: string,
+    daftraProductId: number,
+    product: Record<string, unknown>,
+  ): Promise<DaftraProduct> {
+    const client = await this.clientForButcher(butcherId);
+    try {
+      const res = await client.put(DAFTRA_PATHS.product(daftraProductId), {
+        Product: product,
+      });
+      const mapped = mapDaftraProduct(
+        (res.body as { data?: unknown }).data ?? res.body,
+      );
+      if (!mapped) throwApi(502, 'invalid_response', 'استجابة دفترة غير صالحة');
+      return mapped;
+    } catch (err) {
+      this.rethrowDaftra(err);
+    }
+  }
+
+  async listProductLinks(butcherId: string) {
+    await this.assertButcherExists(butcherId);
+    return this.prisma.butcherDaftraProduct.findMany({
+      where: { butcherId },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async linkProduct(butcherId: string, input: LinkDaftraProductInput) {
+    const remote = await this.getProduct(butcherId, input.daftraProductId);
+    if (input.sarhProductId) {
+      const local = await this.prisma.butcherProduct.findFirst({
+        where: {
+          id: input.sarhProductId,
+          butcherId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!local) {
+        throwApi(404, 'product_not_found', 'منتج سرح غير موجود لهذه الملحمة');
+      }
+    }
+
+    return this.prisma.butcherDaftraProduct.upsert({
+      where: {
+        butcherId_daftraProductId: {
+          butcherId,
+          daftraProductId: input.daftraProductId,
+        },
+      },
+      create: {
+        butcherId,
+        daftraProductId: input.daftraProductId,
+        sarhProductId: input.sarhProductId ?? null,
+        daftraProductCode: remote.sku,
+        lastKnownQuantity: remote.quantity,
+        lastSyncedAt: new Date(),
+      },
+      update: {
+        sarhProductId: input.sarhProductId ?? null,
+        daftraProductCode: remote.sku,
+        lastKnownQuantity: remote.quantity,
+        lastSyncedAt: new Date(),
+      },
+    });
+  }
+
+  async requireOwnedButcherId(user: JwtPayload): Promise<string> {
+    const butcher = await this.prisma.butcher.findUnique({
+      where: { userId: user.userId },
+      select: { id: true },
+    });
+    if (!butcher) throwApi(403, 'not_butcher', 'هذا الحساب ليس ملحمة');
+    return butcher.id;
+  }
+
+  private async clientForButcher(butcherId: string): Promise<DaftraClient> {
+    await this.assertButcherExists(butcherId);
+    const row = await this.prisma.butcherDaftraIntegration.findUnique({
+      where: { butcherId },
+    });
+    if (!row) {
+      throwApi(400, 'not_configured', 'تكامل دفترة غير معدّ لهذه الملحمة');
+    }
+    if (row.status === 'DISABLED') {
+      throwApi(409, 'disabled', 'تكامل دفترة معطّل لهذه الملحمة');
+    }
+    let apiKey: string;
+    try {
+      apiKey = decryptSecret({
+        ciphertext: row.apiKeyCiphertext,
+        iv: row.apiKeyIv,
+        tag: row.apiKeyTag,
+      });
+    } catch {
+      this.logger.warn({ butcherId }, 'Daftra API key decrypt failed');
+      throwApi(500, 'decrypt_failed', 'تعذر قراءة إعدادات التكامل');
+    }
+    return createDaftraClient({
+      accountIdentifier: row.accountIdentifier,
+      apiKey,
+    });
+  }
+
+  private rethrowDaftra(err: unknown): never {
+    if (isDaftraRequestError(err)) {
+      const status =
+        err.reason === 'INVALID_API_KEY'
+          ? 401
+          : err.reason === 'NOT_FOUND'
+            ? 404
+            : err.reason === 'RATE_LIMITED'
+              ? 429
+              : 502;
+      throwApi(status, err.reason.toLowerCase(), err.safeMessage);
+    }
+    throw err;
   }
 
   private async assertButcherExists(butcherId: string): Promise<void> {

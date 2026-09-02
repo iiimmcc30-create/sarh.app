@@ -7,7 +7,7 @@ describe('admin daftra integration UI', () => {
       path.join(__dirname, '../src/components/butchers/DaftraIntegrationPanel.tsx'),
       'utf8',
     );
-    expect(panel).toContain('اختبار اتصال دفترة');
+    expect(panel).toContain('Test Connection');
     expect(panel).toContain('saveDaftraConfig');
     expect(panel).toContain('testDaftraConnection');
     expect(panel).not.toContain('product sync');

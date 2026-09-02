@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useToast } from '@/components/ui/Toast';
 import { ProductForm } from '@/components/products/ProductForm';
+import { DaftraCatalogPanel } from '@/components/products/DaftraCatalogPanel';
 import { subscribeLiveRefresh, notifyAllLiveRefresh } from '@/lib/live-refresh';
 import { getApiErrorMessage } from '@/services/api.client';
 import {
@@ -124,6 +125,8 @@ export default function ProductsPage() {
           إضافة منتج
         </Button>
       </div>
+
+      <DaftraCatalogPanel />
 
       <div className="flex flex-col gap-3 md:flex-row">
         <input
