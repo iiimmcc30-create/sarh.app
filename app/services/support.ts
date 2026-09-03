@@ -172,7 +172,10 @@ export async function fetchMyTickets(page = 1): Promise<Paginated<SupportTicketS
 }
 
 export async function fetchTicket(id: string): Promise<SupportTicketDetail | null> {
-  const res = await authFetch(`${API_BASE}/api/support/tickets/${id}`);
+  const res = await authFetch(`${API_BASE}/api/support/tickets/${id}`, {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' },
+  });
   if (!res.ok) return null;
   const json = await res.json();
   return json.success ? json.data.ticket : null;

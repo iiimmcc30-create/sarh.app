@@ -218,6 +218,38 @@ function resolveNavigationInput(
   return { type, data };
 }
 
+function routeId(value: string): string {
+  return String(value ?? '').trim();
+}
+
+/** Live order details — never the checkout success snapshot. */
+function openOrderDetails(ctx: NotificationRouteContext, orderId: string): boolean {
+  const id = routeId(orderId);
+  if (!id) return false;
+  return safePush(
+    {
+      pathname: '/butchers/order/[id]',
+      params: { id, fresh: String(Date.now()) },
+    } as never,
+    { force: true },
+    ctx.router,
+  );
+}
+
+/** Live support ticket — refetch by ticket id, ignore payload snapshot. */
+function openSupportTicket(ctx: NotificationRouteContext, ticketId: string): boolean {
+  const id = routeId(ticketId);
+  if (!id) return false;
+  return safePush(
+    {
+      pathname: '/support/tickets/[id]',
+      params: { id, fresh: String(Date.now()) },
+    } as never,
+    { force: true },
+    ctx.router,
+  );
+}
+
 function navigateToPost(
   ctx: NotificationRouteContext,
   postId: string,
@@ -304,17 +336,13 @@ export function handleNotificationNavigation(
 
       case 'support_ticket_created':
       case 'support_ticket_staff_reply':
+      case 'support_ticket_staff_new':
+      case 'support_ticket_user_reply':
       case 'support_ticket_status_changed':
       case 'support_ticket_awaiting_user':
       case 'support_ticket_closed': {
         const ticketId = stringField(data, 'ticketId');
-        if (ticketId) {
-          safePush({
-            pathname: '/support/tickets/[id]',
-            params: { id: ticketId },
-          } as never, undefined, ctx.router);
-          return true;
-        }
+        if (ticketId && openSupportTicket(ctx, ticketId)) return true;
         safePush('/support/tickets' as never, undefined, ctx.router);
         return true;
       }
@@ -375,17 +403,7 @@ export function handleNotificationNavigation(
       break;
 
     case 'order_update':
-      if (orderId && butcherId) {
-        safePush({
-          pathname: '/butchers/order-success',
-          params: { orderId, butcherId },
-        } as never, undefined, ctx.router);
-        return true;
-      }
-      if (orderId) {
-        safePush('/notifications' as never, undefined, ctx.router);
-        return true;
-      }
+      if (orderId && openOrderDetails(ctx, orderId)) return true;
       break;
 
     case 'fee_due':
@@ -441,7 +459,10 @@ export function handleNotificationNavigation(
       }
       break;
 
-    case 'system':
+    case 'system': {
+      const ticketId = stringField(data, 'ticketId');
+      if (ticketId && openSupportTicket(ctx, ticketId)) return true;
+      if (orderId && openOrderDetails(ctx, orderId)) return true;
       if (postId) return navigateToPost(ctx, postId);
       if (paymentId) {
         safePush('/subscription' as never, undefined, ctx.router);
@@ -462,6 +483,7 @@ export function handleNotificationNavigation(
         return true;
       }
       break;
+    }
   }
 
   if (options?.stayOnUnknown) return false;

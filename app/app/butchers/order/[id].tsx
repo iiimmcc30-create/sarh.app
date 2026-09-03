@@ -29,7 +29,7 @@ import {
   formatCurrency,
   type ButcherOrderRecord,
 } from '@/services/butcherOrders';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -43,7 +43,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OrderDetailsScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string | string[]; fresh?: string | string[] }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const fresh = Array.isArray(params.fresh) ? params.fresh[0] : params.fresh;
   const router = useRouter();
   const { accessToken } = useAuth();
   const { colors } = useTheme();
@@ -59,7 +61,11 @@ export default function OrderDetailsScreen() {
     }
     try {
       const res = await fetch(`${API_BASE}/api/butchers/orders/${id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Cache-Control': 'no-cache',
+        },
+        cache: 'no-store',
       });
       const json = (await res.json()) as {
         success?: boolean;
@@ -74,8 +80,15 @@ export default function OrderDetailsScreen() {
   }, [id, accessToken]);
 
   useEffect(() => {
-    loadOrder();
-  }, [loadOrder]);
+    setOrder(null);
+    setLoading(true);
+  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadOrder();
+    }, [loadOrder, fresh]),
+  );
 
   useOrderSocket(accessToken, id, () => {
     loadOrder();
