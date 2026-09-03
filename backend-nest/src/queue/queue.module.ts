@@ -4,11 +4,6 @@ import { CommonModule } from '../common/common.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
 import { bullRootConfig, isRedisEnabled, QUEUE_NAMES } from './constants';
-import { NotificationProcessor } from './processors/notification.processor';
-import { PushProcessor } from './processors/push.processor';
-import { EmailProcessor } from './processors/email.processor';
-import { FeeCheckProcessor } from './processors/fee-check.processor';
-import { ImageProcessingProcessor } from './processors/image-processing.processor';
 import { AppNotificationsService } from './services/app-notifications.service';
 import { EmailQueueService } from './services/email-queue.service';
 import { FeeCheckQueueService } from './services/fee-check-queue.service';
@@ -19,12 +14,6 @@ import { PushQueueService } from './services/push-queue.service';
 import { NotificationRepository } from './repositories/notification.repository';
 import { WorkerCronRepository } from './repositories/worker-cron.repository';
 import { SubscriptionQueueService } from './services/subscription-queue.service';
-import { WorkerCronService } from './services/worker-cron.service';
-import { WorkerHeartbeatService } from './services/worker-heartbeat.service';
-import { SubscriptionProcessor } from './processors/subscription.processor';
-import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { KnowledgeModule } from '../knowledge/knowledge.module';
-import { DaftraModule } from '../integrations/daftra/daftra.module';
 
 const bullImports = isRedisEnabled()
   ? [
@@ -89,18 +78,3 @@ const bullImports = isRedisEnabled()
   ],
 })
 export class QueueModule {}
-
-@Module({
-  imports: [QueueModule, SubscriptionsModule, KnowledgeModule, DaftraModule],
-  providers: [
-    NotificationProcessor,
-    PushProcessor,
-    EmailProcessor,
-    FeeCheckProcessor,
-    ImageProcessingProcessor,
-    SubscriptionProcessor,
-    WorkerCronService,
-    WorkerHeartbeatService,
-  ],
-})
-export class WorkerModule {}

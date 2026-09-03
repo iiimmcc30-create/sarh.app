@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { LoggerService } from '../common/services/logger.service';
 import { initialiseSentry } from '../shared/lib/sentry';
 import { validateProductionEnv } from '../config/validate-production-env';
-import { WorkerModule } from './queue.module';
+import { WorkerModule } from './worker.module';
 import { WorkerCronService } from './services/worker-cron.service';
 import { WorkerHeartbeatService } from './services/worker-heartbeat.service';
 import { FeeCheckQueueService } from './services/fee-check-queue.service';
