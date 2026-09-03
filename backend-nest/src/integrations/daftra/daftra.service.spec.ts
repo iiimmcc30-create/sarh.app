@@ -77,6 +77,7 @@ describe('DaftraService', () => {
       },
       butcherDaftraIntegration: {
         findUnique: jest.fn().mockResolvedValue(null),
+        findMany: jest.fn().mockResolvedValue([]),
         upsert: jest.fn(),
         update: jest.fn(),
       },
@@ -403,5 +404,18 @@ describe('DaftraService', () => {
     expect(
       (prisma.butcherProduct as { deleteMany?: unknown }).deleteMany,
     ).toBeUndefined();
+  });
+
+  it('lists only CONNECTED butcher ids for the product poll', async () => {
+    const { service, prisma } = setup();
+    prisma.butcherDaftraIntegration.findMany.mockResolvedValue([
+      { butcherId: 'butcher-connected' },
+    ]);
+    const ids = await service.listConnectedButcherIds();
+    expect(ids).toEqual(['butcher-connected']);
+    expect(prisma.butcherDaftraIntegration.findMany).toHaveBeenCalledWith({
+      where: { status: 'CONNECTED' },
+      select: { butcherId: true },
+    });
   });
 });

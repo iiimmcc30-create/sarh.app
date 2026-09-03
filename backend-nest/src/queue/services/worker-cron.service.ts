@@ -6,12 +6,22 @@ import { RedisCacheService } from '../../redis/services/redis-cache.service';
 import { FeeCheckQueueService } from './fee-check-queue.service';
 import { SubscriptionQueueService } from './subscription-queue.service';
 import { KnowledgeCenterService } from '../../knowledge/services/knowledge-center.service';
+import { DaftraService } from '../../integrations/daftra/daftra.service';
 import { cronCleanupAuthHeader } from '../../admin/lib/cron-auth';
+
+/** Synthetic actor for timeline comments from the worker poll (not a real admin login). */
+export const DAFTRA_PRODUCT_SYNC_CRON_ACTOR =
+  '00000000-0000-4000-8000-daftra00c001';
+
+export const DAFTRA_PRODUCT_SYNC_INTERVAL_MS = 10 * 60 * 1000;
+export const DAFTRA_PRODUCT_SYNC_LOCK_TTL_SEC = 9 * 60;
 
 @Injectable()
 export class WorkerCronService implements OnModuleDestroy {
   private interval: ReturnType<typeof setInterval> | null = null;
   private keepAliveInterval: ReturnType<typeof setInterval> | null = null;
+  private daftraProductSyncInterval: ReturnType<typeof setInterval> | null =
+    null;
   private readonly lastRun: Record<string, string> = {};
 
   constructor(
@@ -20,6 +30,7 @@ export class WorkerCronService implements OnModuleDestroy {
     private readonly feeCheckQueue: FeeCheckQueueService,
     private readonly subscriptionQueue: SubscriptionQueueService,
     private readonly knowledge: KnowledgeCenterService,
+    private readonly daftra: DaftraService,
     private readonly logger: LoggerService,
   ) {
     this.interval = setInterval(() => void this.tick(), 60 * 60 * 1000);
@@ -27,15 +38,24 @@ export class WorkerCronService implements OnModuleDestroy {
       () => void this.pingPublicHealth(),
       8 * 60 * 1000,
     );
+    this.daftraProductSyncInterval = setInterval(
+      () => void this.runDaftraProductSyncCron(),
+      DAFTRA_PRODUCT_SYNC_INTERVAL_MS,
+    );
     this.logger.info({}, '🔧 Workers started');
     // Kick an initial delayed sync so knowledge starts without waiting a full hour
     setTimeout(() => void this.runKnowledgeSyncCron(), 20_000);
     setTimeout(() => void this.pingPublicHealth(), 15_000);
+    // First Daftra product poll shortly after boot (then every 10 minutes)
+    setTimeout(() => void this.runDaftraProductSyncCron(), 45_000);
   }
 
   onModuleDestroy() {
     if (this.interval) clearInterval(this.interval);
     if (this.keepAliveInterval) clearInterval(this.keepAliveInterval);
+    if (this.daftraProductSyncInterval) {
+      clearInterval(this.daftraProductSyncInterval);
+    }
   }
 
   private shouldRun(key: string, hour: number): boolean {
@@ -178,6 +198,111 @@ export class WorkerCronService implements OnModuleDestroy {
     }
 
     await this.withLock('cron:knowledge_sync:lock', 50 * 60, run);
+  }
+
+  /**
+   * Poll Daftra → Sarh products for every CONNECTED butcher.
+   * Reuses DaftraService.syncProductsFromDaftra; one failure does not stop others.
+   */
+  async runDaftraProductSyncCron(): Promise<{
+    attempted: number;
+    synced: number;
+    skippedLocked: number;
+    failed: number;
+  }> {
+    const summary = {
+      attempted: 0,
+      synced: 0,
+      skippedLocked: 0,
+      failed: 0,
+    };
+
+    let butcherIds: string[] = [];
+    try {
+      butcherIds = await this.daftra.listConnectedButcherIds();
+    } catch (err) {
+      this.logger.error(
+        {
+          err: err instanceof Error ? err.message : 'list_connected_failed',
+        },
+        'Daftra product poll: failed to list connected butchers',
+      );
+      return summary;
+    }
+
+    this.logger.info(
+      { connectedCount: butcherIds.length },
+      'Daftra product poll: starting',
+    );
+
+    for (const butcherId of butcherIds) {
+      summary.attempted += 1;
+      try {
+        const outcome = await this.syncConnectedButcherProducts(butcherId);
+        if (outcome === 'synced') summary.synced += 1;
+        else if (outcome === 'locked') summary.skippedLocked += 1;
+      } catch (err) {
+        summary.failed += 1;
+        this.logger.warn(
+          {
+            butcherId,
+            err: err instanceof Error ? err.message : 'sync_failed',
+          },
+          'Daftra product poll failed for butcher — continuing',
+        );
+      }
+    }
+
+    this.logger.info(summary, 'Daftra product poll: finished');
+    return summary;
+  }
+
+  private async syncConnectedButcherProducts(
+    butcherId: string,
+  ): Promise<'synced' | 'locked'> {
+    const run = async () => {
+      const result = await this.daftra.syncProductsFromDaftra(
+        DAFTRA_PRODUCT_SYNC_CRON_ACTOR,
+        butcherId,
+      );
+      this.logger.info(
+        {
+          butcherId,
+          fetched: result.fetched,
+          created: result.created,
+          updated: result.updated,
+          skipped: result.skipped,
+          pages: result.pages,
+          errorCount: result.errors.length,
+        },
+        'Daftra product poll synced butcher',
+      );
+    };
+
+    if (!this.cache.isEnabled()) {
+      await run();
+      return 'synced';
+    }
+
+    const lockKey = `cron:daftra_products:${butcherId}`;
+    const redis = this.cache.getClient();
+    const acquired = await redis.set(
+      lockKey,
+      '1',
+      'EX',
+      DAFTRA_PRODUCT_SYNC_LOCK_TTL_SEC,
+      'NX',
+    );
+    if (!acquired) {
+      this.logger.debug(
+        { butcherId, lockKey },
+        'Daftra product poll: lock not acquired',
+      );
+      return 'locked';
+    }
+
+    await run();
+    return 'synced';
   }
 
   private healthPingTargets(): string[] {
