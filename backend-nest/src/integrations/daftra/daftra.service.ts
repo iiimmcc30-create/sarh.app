@@ -662,14 +662,19 @@ export class DaftraService {
       if (page > 500) break; // hard safety against pagination loops
     }
 
-    await this.appendApplicationComment(adminUserId, butcherId, 'PRODUCT_SYNC', {
-      fetched: result.fetched,
-      created: result.created,
-      updated: result.updated,
-      skipped: result.skipped,
-      pages: result.pages,
-      errorCount: result.errors.length,
-    });
+    await this.appendApplicationComment(
+      adminUserId,
+      butcherId,
+      'PRODUCT_SYNC',
+      {
+        fetched: result.fetched,
+        created: result.created,
+        updated: result.updated,
+        skipped: result.skipped,
+        pages: result.pages,
+        errorCount: result.errors.length,
+      },
+    );
 
     this.logger.info(
       {

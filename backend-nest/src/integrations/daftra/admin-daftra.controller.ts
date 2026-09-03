@@ -153,10 +153,7 @@ export class AdminDaftraController {
   @RateLimit('api')
   @Post(':id/daftra/products/sync')
   @HttpCode(HttpStatus.OK)
-  async syncProducts(
-    @CurrentUser() user: JwtPayload,
-    @Param('id') id: string,
-  ) {
+  async syncProducts(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     const butcherId = butcherIdSchema.safeParse(id);
     if (!butcherId.success) throwApi(400, 'invalid_id', 'معرّف غير صالح');
     return successResponse(

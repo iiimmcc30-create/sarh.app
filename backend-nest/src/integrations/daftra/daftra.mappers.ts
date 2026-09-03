@@ -105,7 +105,10 @@ function clampName(value: string): string {
   return trimmed.slice(0, 100);
 }
 
-function ensureDescription(primary: string | null, fallbackName: string): string {
+function ensureDescription(
+  primary: string | null,
+  fallbackName: string,
+): string {
   const raw = (primary?.trim() || fallbackName).trim();
   if (raw.length >= 5) return raw.slice(0, 1000);
   return `${raw} — مستورد من دفترة`.slice(0, 1000);
