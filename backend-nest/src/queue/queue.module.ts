@@ -24,6 +24,7 @@ import { WorkerHeartbeatService } from './services/worker-heartbeat.service';
 import { SubscriptionProcessor } from './processors/subscription.processor';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
+import { DaftraModule } from '../integrations/daftra/daftra.module';
 
 const bullImports = isRedisEnabled()
   ? [
@@ -90,7 +91,7 @@ const bullImports = isRedisEnabled()
 export class QueueModule {}
 
 @Module({
-  imports: [QueueModule, SubscriptionsModule, KnowledgeModule],
+  imports: [QueueModule, SubscriptionsModule, KnowledgeModule, DaftraModule],
   providers: [
     NotificationProcessor,
     PushProcessor,

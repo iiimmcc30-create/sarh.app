@@ -100,6 +100,16 @@ Butcher (JWT owner shop only):
 4. Create or update the linked `ButcherProduct` — **never** delete Sarh products missing from Daftra.
 5. Logs only counts/ids — never API keys.
 
+### Automatic poll (worker)
+
+`WorkerCronService.runDaftraProductSyncCron` every **10 minutes**:
+
+- Loads all `ButcherDaftraIntegration` rows with `status = CONNECTED`.
+- Acquires Redis lock `cron:daftra_products:{butcherId}` (TTL 9m) per butcher.
+- Calls the same `syncProductsFromDaftra` engine (no second sync implementation).
+- One butcher failure does not stop the rest.
+- Admin manual `POST .../products/sync` remains as fallback.
+
 `POST/PUT` Daftra product helpers exist on `DaftraService` for a later catalog flow and are **not** wired to Sarh `ButcherProduct` CRUD.
 
 ## Inventory note

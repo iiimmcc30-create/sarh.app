@@ -564,6 +564,15 @@ export class DaftraService {
     });
   }
 
+  /** Butchers with a live Daftra link — used by the worker product poll. */
+  async listConnectedButcherIds(): Promise<string[]> {
+    const rows = await this.prisma.butcherDaftraIntegration.findMany({
+      where: { status: 'CONNECTED' },
+      select: { butcherId: true },
+    });
+    return rows.map((row) => row.butcherId);
+  }
+
   /**
    * Pull Daftra products into Sarh (create/update only).
    * Never auto-deletes Sarh products. External key: (butcherId, daftraProductId).
