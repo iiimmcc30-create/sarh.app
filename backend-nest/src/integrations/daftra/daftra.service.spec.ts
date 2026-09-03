@@ -48,6 +48,17 @@ describe('DaftraService', () => {
       apiKeyIv: enc.iv,
       apiKeyTag: enc.tag,
       apiKeyLast4: apiKey.slice(-4),
+      authMethod: 'API_KEY' as const,
+      oauthProvider: null,
+      accessTokenCiphertext: null,
+      accessTokenIv: null,
+      accessTokenTag: null,
+      refreshTokenCiphertext: null,
+      refreshTokenIv: null,
+      refreshTokenTag: null,
+      accessTokenExpiresAt: null,
+      oauthScopes: null,
+      oauthConnectedAt: null,
       status: 'CONNECTED' as const,
       lastConnectionTestAt: null,
       lastConnectionError: null,
@@ -71,14 +82,24 @@ describe('DaftraService', () => {
       },
       butcherDaftraProduct: {
         findMany: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue(null),
         upsert: jest.fn(),
+        update: jest.fn(),
       },
       butcherProduct: {
         findFirst: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
       },
-      $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({}),
-      ),
+      $transaction: jest.fn(async (arg: unknown) => {
+        if (typeof arg === 'function') {
+          return (arg as (tx: unknown) => Promise<unknown>)({});
+        }
+        if (Array.isArray(arg)) {
+          return Promise.all(arg);
+        }
+        return arg;
+      }),
     };
     const emailQueue = { addEmail: jest.fn() };
     const logger = { info: jest.fn(), warn: jest.fn() };
@@ -274,5 +295,113 @@ describe('DaftraService', () => {
         passwordVersion: 1,
       }),
     ).resolves.toBe('butcher-a');
+  });
+
+  it('syncs Daftra products into Sarh without creating duplicates on second run', async () => {
+    const { service, prisma } = setup();
+    const row = encryptedRow('butcher-1', apiKeyA, 'shop-a');
+    prisma.butcher.findUnique.mockResolvedValue({
+      id: 'butcher-1',
+      country: 'SA',
+      sourceApplicationId: null,
+    });
+    prisma.butcherDaftraIntegration.findUnique.mockResolvedValue(row);
+
+    const remoteProduct = {
+      id: 42,
+      name: 'لحم تجريبي',
+      product_code: 'SARH-TEST-1',
+      unit_price: 55,
+      stock_balance: 3,
+      track_stock: 1,
+    };
+
+    mockedCreateClient.mockReturnValue({
+      get: jest.fn().mockResolvedValue({
+        httpStatus: 200,
+        body: {
+          result: 'successful',
+          data: [{ Product: remoteProduct }],
+          pagination: { page: 1, page_count: 1, total_results: 1 },
+        },
+      }),
+    } as never);
+
+    prisma.butcherProduct.create.mockResolvedValue({ id: 'sarh-p-1' });
+    prisma.butcherDaftraProduct.upsert.mockResolvedValue({
+      id: 'link-1',
+      butcherId: 'butcher-1',
+      daftraProductId: 42,
+      sarhProductId: 'sarh-p-1',
+    });
+
+    const first = await service.syncProductsFromDaftra('admin-1', 'butcher-1');
+    expect(first).toMatchObject({
+      fetched: 1,
+      created: 1,
+      updated: 0,
+      skipped: 0,
+      pages: 1,
+    });
+    expect(prisma.butcherProduct.create).toHaveBeenCalledTimes(1);
+    expect(prisma.butcherDaftraProduct.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          butcherId_daftraProductId: {
+            butcherId: 'butcher-1',
+            daftraProductId: 42,
+          },
+        },
+      }),
+    );
+
+    prisma.butcherDaftraProduct.findUnique.mockResolvedValue({
+      id: 'link-1',
+      butcherId: 'butcher-1',
+      daftraProductId: 42,
+      sarhProductId: 'sarh-p-1',
+    });
+    prisma.butcherProduct.findFirst.mockResolvedValue({ id: 'sarh-p-1' });
+    prisma.butcherProduct.update.mockResolvedValue({ id: 'sarh-p-1' });
+    prisma.butcherDaftraProduct.update.mockResolvedValue({ id: 'link-1' });
+
+    const second = await service.syncProductsFromDaftra('admin-1', 'butcher-1');
+    expect(second).toMatchObject({
+      fetched: 1,
+      created: 0,
+      updated: 1,
+      skipped: 0,
+    });
+    expect(prisma.butcherProduct.create).toHaveBeenCalledTimes(1);
+    expect(prisma.butcherProduct.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('never auto-deletes Sarh products during sync when Daftra list is empty', async () => {
+    const { service, prisma } = setup();
+    prisma.butcher.findUnique.mockResolvedValue({
+      id: 'butcher-1',
+      country: 'SA',
+      sourceApplicationId: null,
+    });
+    prisma.butcherDaftraIntegration.findUnique.mockResolvedValue(
+      encryptedRow('butcher-1', apiKeyA, 'shop-a'),
+    );
+    mockedCreateClient.mockReturnValue({
+      get: jest.fn().mockResolvedValue({
+        httpStatus: 200,
+        body: {
+          result: 'successful',
+          data: [],
+          pagination: { page: 1, page_count: 1, total_results: 0 },
+        },
+      }),
+    } as never);
+
+    const result = await service.syncProductsFromDaftra('admin-1', 'butcher-1');
+    expect(result.fetched).toBe(0);
+    expect(prisma.butcherProduct.create).not.toHaveBeenCalled();
+    expect(
+      (prisma.butcherProduct as { deleteMany?: unknown }).deleteMany,
+    ).toBeUndefined();
   });
 });

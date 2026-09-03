@@ -1310,15 +1310,36 @@ enum DaftraIntegrationStatus {
   DISABLED
 }
 
+/// How Sarh authenticates to Daftra for this butcher.
+enum DaftraAuthMethod {
+  API_KEY
+  OAUTH
+  BOTH
+}
+
 model ButcherDaftraIntegration {
   id                   String                   @id @default(uuid())
   butcherId            String                   @unique
   /// Daftra account/subdomain identifier used to build https://{account}.daftra.com
   accountIdentifier    String
-  apiKeyCiphertext     String
-  apiKeyIv             String
-  apiKeyTag            String
-  apiKeyLast4          String
+  /// API key fields — required for API_KEY / BOTH; null when OAuth-only.
+  apiKeyCiphertext     String?
+  apiKeyIv             String?
+  apiKeyTag            String?
+  apiKeyLast4          String?
+  authMethod           DaftraAuthMethod         @default(API_KEY)
+  /// OAuth provider label (currently only "daftra").
+  oauthProvider        String?
+  accessTokenCiphertext String?
+  accessTokenIv         String?
+  accessTokenTag        String?
+  refreshTokenCiphertext String?
+  refreshTokenIv         String?
+  refreshTokenTag        String?
+  accessTokenExpiresAt   DateTime?
+  /// Space-separated scopes as returned/stored; never invent scopes.
+  oauthScopes            String?
+  oauthConnectedAt       DateTime?
   status               DaftraIntegrationStatus  @default(NOT_CONFIGURED)
   lastConnectionTestAt DateTime?
   lastConnectionError  String?
@@ -1329,6 +1350,7 @@ model ButcherDaftraIntegration {
   butcher              Butcher                  @relation(fields: [butcherId], references: [id], onDelete: Cascade)
 
   @@index([status])
+  @@index([oauthProvider])
 }
 
 model ButcherDaftraProduct {

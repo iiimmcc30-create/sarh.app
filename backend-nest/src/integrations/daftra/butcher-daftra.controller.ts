@@ -7,8 +7,10 @@ import {
   Param,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
-import { RateLimit } from '../../common/decorators/auth.decorators';
+import type { Response } from 'express';
+import { Public, RateLimit } from '../../common/decorators/auth.decorators';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { successResponse } from '../../common/utils/response.util';
 import { throwApi } from '../../common/exceptions/api.exception';
@@ -33,6 +35,12 @@ const linkSchema = z
 
 const productIdSchema = z.coerce.number().int().positive();
 
+const oauthStartQuerySchema = z
+  .object({
+    accountIdentifier: z.string().min(2).max(80).optional(),
+  })
+  .strict();
+
 @Controller('butchers/daftra')
 export class ButcherDaftraController {
   constructor(private readonly daftra: DaftraService) {}
@@ -49,6 +57,62 @@ export class ButcherDaftraController {
   @HttpCode(HttpStatus.OK)
   async testConnection(@CurrentUser() user: JwtPayload) {
     return successResponse(await this.daftra.testConnectionForOwner(user));
+  }
+
+  @RateLimit('api')
+  @Get('oauth/start')
+  @HttpCode(HttpStatus.OK)
+  async oauthStart(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: Record<string, unknown>,
+  ) {
+    const parsed = oauthStartQuerySchema.safeParse(query ?? {});
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+    return successResponse(
+      await this.daftra.startOAuthForOwner(user, parsed.data.accountIdentifier),
+    );
+  }
+
+  /**
+   * Browser redirect target for Daftra OAuth. Must stay Public.
+   * Production URI: https://sarhsa.online/api/butchers/daftra/oauth/callback
+   */
+  @Public()
+  @RateLimit('api')
+  @Get('oauth/callback')
+  async oauthCallback(
+    @Query('code') code: string | undefined,
+    @Query('state') state: string | undefined,
+    @Query('error') error: string | undefined,
+    @Res() res: Response,
+  ) {
+    const { redirectUrl } = await this.daftra.handleOAuthCallback({
+      code,
+      state,
+      error,
+    });
+    return res.redirect(HttpStatus.FOUND, redirectUrl);
+  }
+
+  @RateLimit('api')
+  @Get('oauth/status')
+  @HttpCode(HttpStatus.OK)
+  async oauthStatus(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.daftra.oauthStatusForOwner(user));
+  }
+
+  @RateLimit('api')
+  @Post('oauth/disconnect')
+  @HttpCode(HttpStatus.OK)
+  async oauthDisconnect(@CurrentUser() user: JwtPayload) {
+    return successResponse(await this.daftra.disconnectOAuthForOwner(user));
   }
 
   @RateLimit('api')

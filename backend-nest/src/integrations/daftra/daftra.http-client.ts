@@ -10,7 +10,15 @@ export type DaftraHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export type DaftraClientOptions = {
   origin: string;
-  apiKey: string;
+  /** API Key auth (header APIKEY). Mutually exclusive with accessToken at call time. */
+  apiKey?: string;
+  /** OAuth Bearer access token. */
+  accessToken?: string;
+  /**
+   * Invoked at most once per request chain when Bearer auth receives 401/403.
+   * Return a fresh access token to retry, or null to fail.
+   */
+  refreshAccessToken?: () => Promise<string | null>;
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
 };
@@ -52,15 +60,26 @@ function isAbortError(err: unknown): boolean {
 
 export class DaftraClient {
   private readonly origin: string;
-  private readonly apiKey: string;
+  private apiKey: string | undefined;
+  private accessToken: string | undefined;
+  private readonly refreshAccessToken?: () => Promise<string | null>;
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
 
   constructor(options: DaftraClientOptions) {
     this.origin = options.origin.replace(/\/$/, '');
-    this.apiKey = options.apiKey;
+    this.apiKey = options.apiKey?.trim() || undefined;
+    this.accessToken = options.accessToken?.trim() || undefined;
+    this.refreshAccessToken = options.refreshAccessToken;
     this.timeoutMs = options.timeoutMs ?? DAFTRA_DEFAULT_TIMEOUT_MS;
     this.fetchImpl = options.fetchImpl ?? fetch;
+    if (!this.apiKey && !this.accessToken) {
+      throw new DaftraRequestError(
+        'INVALID_API_KEY',
+        'بيانات اعتماد دفترة غير صحيحة',
+        null,
+      );
+    }
   }
 
   get<T = unknown>(
@@ -93,6 +112,7 @@ export class DaftraClient {
       query?: Record<string, string | number | undefined>;
       body?: unknown;
     } = {},
+    alreadyRetried = false,
   ): Promise<DaftraHttpResponse<T>> {
     const url = this.buildUrl(path, init.query);
     const controller = new AbortController();
@@ -101,8 +121,13 @@ export class DaftraClient {
     try {
       const headers: Record<string, string> = {
         Accept: 'application/json',
-        APIKEY: this.apiKey,
       };
+      // Daftra docs: do not send Authorization together with APIKEY.
+      if (this.accessToken) {
+        headers.Authorization = `Bearer ${this.accessToken}`;
+      } else if (this.apiKey) {
+        headers.APIKEY = this.apiKey;
+      }
       const hasBody = init.body !== undefined;
       if (hasBody) {
         headers['Content-Type'] = 'application/json';
@@ -136,6 +161,19 @@ export class DaftraClient {
         response.status === 403 ||
         Number(record.code) === 401;
 
+      if (
+        authRejected &&
+        this.accessToken &&
+        this.refreshAccessToken &&
+        !alreadyRetried
+      ) {
+        const next = await this.refreshAccessToken();
+        if (next?.trim()) {
+          this.accessToken = next.trim();
+          return this.request<T>(method, path, init, true);
+        }
+      }
+
       if (authRejected) {
         throw new DaftraRequestError(
           'INVALID_API_KEY',
@@ -153,7 +191,12 @@ export class DaftraClient {
         );
       }
 
-      if (resultText && resultText !== 'success') {
+      // Daftra returns both "success" and "successful" depending on endpoint/tenant.
+      if (
+        resultText &&
+        resultText !== 'success' &&
+        resultText !== 'successful'
+      ) {
         throw new DaftraRequestError(
           'UPSTREAM_ERROR',
           safeMessage('UPSTREAM_ERROR'),

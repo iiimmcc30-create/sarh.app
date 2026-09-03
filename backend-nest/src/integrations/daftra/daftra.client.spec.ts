@@ -91,6 +91,54 @@ describe('daftra.client + DaftraClient', () => {
     expect(result.connected).toBe(true);
   });
 
+  it('accepts result=successful from products-style Daftra responses', async () => {
+    const client = new DaftraClient({
+      origin: 'https://shop1.daftra.com',
+      apiKey: 'SUPER_SECRET_KEY',
+      fetchImpl: jsonFetch(200, {
+        result: 'successful',
+        code: 200,
+        data: [],
+        pagination: {},
+      }),
+    });
+    const res = await client.get('/products.json', { page: 1, limit: 1 });
+    expect(res.httpStatus).toBe(200);
+  });
+
+  it('falls back to products.json when api_key_info returns 404', async () => {
+    const fetchImpl = jest.fn(async (url: string) => {
+      if (String(url).includes('api_key_info')) {
+        return {
+          status: 404,
+          json: async () => ({
+            result: 'failed',
+            code: 404,
+            message: 'Invalid Endpoint',
+          }),
+        };
+      }
+      return {
+        status: 200,
+        json: async () => ({
+          result: 'successful',
+          code: 200,
+          data: [],
+        }),
+      };
+    }) as unknown as typeof fetch;
+
+    const result = await testDaftraConnection(
+      { accountIdentifier: 'malhmah', apiKey: 'SUPER_SECRET_KEY' },
+      fetchImpl,
+    );
+    expect(result.connected).toBe(true);
+    if (result.connected) {
+      expect(result.path).toBe('/products.json');
+      expect(result.host).toBe('malhmah.daftra.com');
+    }
+  });
+
   it('preserves INVALID_API_KEY with httpStatus for diagnostics', async () => {
     const result = await testDaftraConnection(
       { accountIdentifier: 'shop1', apiKey: 'SUPER_SECRET_KEY' },

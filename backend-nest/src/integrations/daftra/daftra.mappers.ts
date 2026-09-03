@@ -6,6 +6,23 @@ export type DaftraProduct = {
   quantity: number | null;
   trackStock: boolean;
   barcode: string | null;
+  description: string | null;
+};
+
+/** Fields used to create/update a Sarh ButcherProduct from a Daftra product. */
+export type SarhProductSyncFields = {
+  nameAr: string;
+  nameEn: string;
+  category: 'special_orders';
+  images: string[];
+  priceFixed: number | null;
+  pricePerKg: null;
+  availableCuts: string[];
+  availableQuantity: number;
+  inStock: boolean;
+  freshness: string;
+  descriptionAr: string;
+  descriptionEn: string;
 };
 
 export type DaftraStockLevel = {
@@ -78,6 +95,56 @@ export function mapDaftraProduct(raw: unknown): DaftraProduct | null {
     quantity: asNumber(product.stock_balance),
     trackStock: track === 1,
     barcode: asString(product.barcode),
+    description: asString(product.description),
+  };
+}
+
+function clampName(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return 'منتج دفترة';
+  return trimmed.slice(0, 100);
+}
+
+function ensureDescription(
+  primary: string | null,
+  fallbackName: string,
+): string {
+  const raw = (primary?.trim() || fallbackName).trim();
+  if (raw.length >= 5) return raw.slice(0, 1000);
+  return `${raw} — مستورد من دفترة`.slice(0, 1000);
+}
+
+/**
+ * Maps a Daftra catalog product into Sarh ButcherProduct create/update fields.
+ * Does not invent meat categories — defaults to special_orders.
+ */
+export function mapDaftraProductToSarhFields(
+  product: DaftraProduct,
+): SarhProductSyncFields | null {
+  if (!product.id || !product.name?.trim()) return null;
+  const name = clampName(product.name);
+  const qty =
+    product.quantity != null && Number.isFinite(product.quantity)
+      ? Math.max(0, product.quantity)
+      : 0;
+  const price =
+    product.price != null && Number.isFinite(product.price) && product.price > 0
+      ? product.price
+      : null;
+  const description = ensureDescription(product.description, name);
+  return {
+    nameAr: name,
+    nameEn: name,
+    category: 'special_orders',
+    images: [],
+    priceFixed: price,
+    pricePerKg: null,
+    availableCuts: ['عام'],
+    availableQuantity: qty,
+    inStock: product.trackStock ? qty > 0 : true,
+    freshness: 'fresh',
+    descriptionAr: description,
+    descriptionEn: description,
   };
 }
 

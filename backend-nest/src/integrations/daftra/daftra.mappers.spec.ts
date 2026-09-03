@@ -1,4 +1,8 @@
-import { mapDaftraProductPage, mapDaftraProductStock } from './daftra.mappers';
+import {
+  mapDaftraProductPage,
+  mapDaftraProductStock,
+  mapDaftraProductToSarhFields,
+} from './daftra.mappers';
 
 describe('daftra.mappers', () => {
   it('maps a paginated product list', () => {
@@ -27,9 +31,47 @@ describe('daftra.mappers', () => {
         quantity: 12,
         trackStock: true,
         barcode: null,
+        description: null,
       },
     ]);
     expect(page.pageCount).toBe(3);
+  });
+
+  it('maps Daftra product into Sarh sync fields', () => {
+    const fields = mapDaftraProductToSarhFields({
+      id: 9,
+      name: 'لحم بقري',
+      sku: 'SKU-1',
+      price: 40,
+      quantity: 12,
+      trackStock: true,
+      barcode: null,
+      description: 'لحم طازج',
+    });
+    expect(fields).toMatchObject({
+      nameAr: 'لحم بقري',
+      nameEn: 'لحم بقري',
+      category: 'special_orders',
+      priceFixed: 40,
+      availableQuantity: 12,
+      inStock: true,
+      availableCuts: ['عام'],
+    });
+  });
+
+  it('skips products without a usable name', () => {
+    expect(
+      mapDaftraProductToSarhFields({
+        id: 1,
+        name: '  ',
+        sku: null,
+        price: null,
+        quantity: null,
+        trackStock: false,
+        barcode: null,
+        description: null,
+      }),
+    ).toBeNull();
   });
 
   it('maps empty product pages', () => {

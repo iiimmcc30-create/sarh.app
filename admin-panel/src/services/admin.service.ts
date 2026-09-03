@@ -405,3 +405,17 @@ export async function fetchDaftraInventory(butcherId: string) {
     totalResults: number;
   }>(res);
 }
+
+export type DaftraProductSyncResult = {
+  fetched: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  pages: number;
+  errors: Array<{ daftraProductId: number | null; message: string }>;
+};
+
+export async function syncDaftraProducts(butcherId: string) {
+  const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/products/sync`);
+  return unwrap<DaftraProductSyncResult>(res);
+}

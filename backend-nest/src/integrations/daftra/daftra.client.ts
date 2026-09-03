@@ -26,6 +26,7 @@ export type DaftraConnectionResult =
 
 const ACCOUNT_ID_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i;
 const CONNECTION_PATH = DAFTRA_PATHS.apiKeyInfo;
+const CONNECTION_FALLBACK_PATH = DAFTRA_PATHS.products;
 
 export function normalizeDaftraAccountIdentifier(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
@@ -92,6 +93,32 @@ export function createDaftraClient(
   });
 }
 
+export type DaftraOAuthClientConfig = {
+  accountIdentifier: string;
+  accessToken: string;
+  refreshAccessToken?: () => Promise<string | null>;
+};
+
+export function createDaftraOAuthClient(
+  config: DaftraOAuthClientConfig,
+  fetchImpl?: typeof fetch,
+): DaftraClient {
+  const accessToken = config.accessToken?.trim() ?? '';
+  if (!accessToken) {
+    throw new DaftraRequestError(
+      'INVALID_API_KEY',
+      'بيانات اعتماد دفترة غير صحيحة',
+      null,
+    );
+  }
+  return new DaftraClient({
+    origin: resolveDaftraOrigin(config.accountIdentifier),
+    accessToken,
+    refreshAccessToken: config.refreshAccessToken,
+    fetchImpl,
+  });
+}
+
 /** Safe fields for logs/UI — never includes the API key. */
 export function daftraConnectionLogFields(
   result: DaftraConnectionResult,
@@ -107,6 +134,25 @@ export function daftraConnectionLogFields(
   };
 }
 
+export async function probeDaftraConnection(
+  client: DaftraClient,
+): Promise<{ httpStatus: number; path: string }> {
+  try {
+    const res = await client.get(CONNECTION_PATH);
+    return { httpStatus: res.httpStatus, path: CONNECTION_PATH };
+  } catch (err) {
+    // Some tenants return 404 Invalid Endpoint for api_key_info; products is documented.
+    if (isDaftraRequestError(err) && err.reason === 'NOT_FOUND') {
+      const res = await client.get(CONNECTION_FALLBACK_PATH, {
+        page: 1,
+        limit: 1,
+      });
+      return { httpStatus: res.httpStatus, path: CONNECTION_FALLBACK_PATH };
+    }
+    throw err;
+  }
+}
+
 export async function testDaftraConnection(
   config: DaftraAccountConfig,
   fetchImpl: typeof fetch = fetch,
@@ -120,12 +166,12 @@ export async function testDaftraConnection(
 
   try {
     const client = createDaftraClient(config, fetchImpl);
-    const res = await client.get(CONNECTION_PATH);
+    const probe = await probeDaftraConnection(client);
     return {
       connected: true,
-      httpStatus: res.httpStatus,
+      httpStatus: probe.httpStatus,
       host,
-      path: CONNECTION_PATH,
+      path: probe.path,
     };
   } catch (err) {
     if (isDaftraRequestError(err)) {
