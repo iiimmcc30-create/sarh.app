@@ -5,6 +5,8 @@ export type DaftraOwnerStatus = {
   status: 'NOT_CONFIGURED' | 'CONNECTED' | 'CONNECTION_FAILED' | 'DISABLED';
   accountIdentifier: string | null;
   apiKeyMasked: string | null;
+  authMethod?: 'API_KEY' | 'OAUTH' | 'BOTH' | null;
+  oauthConnected?: boolean;
   lastConnectionTestAt: string | null;
   lastConnectionError: string | null;
   configured: boolean;

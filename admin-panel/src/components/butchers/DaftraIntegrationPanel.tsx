@@ -10,6 +10,7 @@ import {
   fetchDaftraProducts,
   fetchDaftraStatus,
   saveDaftraConfig,
+  syncDaftraProducts,
   testDaftraConnection,
   type DaftraCatalogProduct,
   type DaftraStatus,
@@ -146,6 +147,23 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
     }
   };
 
+  const onSyncProducts = async () => {
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      const data = await syncDaftraProducts(butcherId);
+      setMessage(
+        `مزامنة المنتجات: جلب ${data.fetched} · إنشاء ${data.created} · تحديث ${data.updated} · تخطي ${data.skipped}`,
+      );
+      void loadCatalog();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذّر مزامنة المنتجات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 lg:col-span-2">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -257,6 +275,13 @@ export function DaftraIntegrationPanel({ butcherId }: { butcherId: string }) {
         </Button>
         <Button variant="danger" disabled={loading || !status?.configured} onClick={onDisable}>
           تعطيل
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={loading || status?.status !== 'CONNECTED'}
+          onClick={onSyncProducts}
+        >
+          مزامنة المنتجات إلى سرح
         </Button>
       </div>
       {status?.status === 'CONNECTED' ? (

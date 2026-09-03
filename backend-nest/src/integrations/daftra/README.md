@@ -38,13 +38,24 @@ Callers never pass `apiKey` or `subdomain` from the client for data requests.
 
 ## Connection test
 
-`GET /api2/api_key_info.json` with header `APIKEY` (no `Authorization`, no body `Content-Type`).
+`GET /api2/api_key_info.json` with either:
 
-- Host: `https://{accountIdentifier}.daftra.com` — use the **subdomain** (e.g. `sarh-app`), not the numeric Account ID.
-- Success: `{ connected: true }`.
-- Auth failure: `{ connected: false, reason: "INVALID_API_KEY", httpStatus: 401 }`.
-- Network/timeout: `CONNECTION_FAILED` (`httpStatus: null`).
-- Logs include `reason`, `httpStatus`, and `host` — never the API key.
+- header `APIKEY` (documented Method 1), or
+- header `Authorization: Bearer <access_token>` (documented Method 2) — do not send both.
+
+## Authentication (official Daftra docs)
+
+1. **API Key** — primary Sarh path (`PUT` admin configure + `POST .../test`).
+2. **OAuth2 password grant** — `POST /api2/oauth/token` with `grant_type=password` + client_id/secret + username/password. Tokens encrypted at rest. Service helper: `connectPasswordGrantForOwner`.
+
+**Authorization Code / browser Redirect is NOT documented** by Daftra public API docs. Routes kept for Redirect URI registration only:
+
+- `GET /api/butchers/daftra/oauth/start` → `501 oauth_authorization_code_unsupported`
+- `GET /api/butchers/daftra/oauth/callback` → redirect with same reason (no token exchange)
+
+Registered Redirect URI (ENV `DAFTRA_OAUTH_REDIRECT_URI`):
+
+`https://sarhsa.online/api/butchers/daftra/oauth/callback`
 
 ## Caching
 
@@ -65,6 +76,7 @@ Admin (ADMIN only):
 - `POST /api/admin/butchers/:id/daftra/test`
 - `POST /api/admin/butchers/:id/daftra/disable`
 - `GET /api/admin/butchers/:id/daftra/products`
+- `POST /api/admin/butchers/:id/daftra/products/sync` — pull Daftra catalog into Sarh (upsert, no auto-delete)
 - `GET /api/admin/butchers/:id/daftra/products/:productId`
 - `GET /api/admin/butchers/:id/daftra/inventory`
 
@@ -77,6 +89,16 @@ Butcher (JWT owner shop only):
 - `GET /api/butchers/daftra/inventory`
 - `GET /api/butchers/daftra/inventory/:id`
 - `GET/POST /api/butchers/daftra/product-links`
+
+## Product sync (Daftra → Sarh)
+
+`DaftraService.syncProductsFromDaftra`:
+
+1. Paginate `GET /api2/products.json` via `listProducts`.
+2. Map each row with `mapDaftraProductToSarhFields` (default category `special_orders`, cut `عام`).
+3. Upsert on unique `(butcherId, daftraProductId)` in `ButcherDaftraProduct`.
+4. Create or update the linked `ButcherProduct` — **never** delete Sarh products missing from Daftra.
+5. Logs only counts/ids — never API keys.
 
 `POST/PUT` Daftra product helpers exist on `DaftraService` for a later catalog flow and are **not** wired to Sarh `ButcherProduct` CRUD.
 

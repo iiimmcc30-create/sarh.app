@@ -18,5 +18,6 @@ describe('butcher dashboard Daftra catalog panel', () => {
     expect(panel).toContain('fetchMyDaftraStatus');
     expect(panel).toContain('apiKeyMasked');
     expect(panel).not.toContain('type="password"');
+    expect(panel).not.toContain('startMyDaftraOAuth');
   });
 });
