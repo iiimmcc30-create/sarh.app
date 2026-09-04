@@ -2,14 +2,17 @@ import { Image } from 'expo-image';
 import { OnboardingDots } from '@/components/onboarding/OnboardingDots';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { AppText } from '@/components/ui/AppText';
+import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import {
   ONBOARDING_NEXT_LABEL,
   ONBOARDING_SKIP_LABEL,
   ONBOARDING_SLIDES,
   ONBOARDING_START_LABEL,
 } from '@/constants/onboardingCopy';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { layout, spacing } from '@/constants/theme';
+import { layout, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { paddingStart, rtlForwardIcon } from '@/lib/rtl';
 import { useCallback, useRef, useState } from 'react';
@@ -18,7 +21,6 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type ListRenderItemInfo,
@@ -27,14 +29,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const CREAM = '#F4EFE6';
-const INK = '#163526';
-const MUTED = '#5C6B63';
-const DIVIDER = '#284E39';
-
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
   const { completeOnboarding } = useOnboarding();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -86,23 +85,39 @@ export default function OnboardingScreen() {
         <View style={[styles.slide, { width }]}>
           <Image source={item.image} style={StyleSheet.absoluteFillObject} contentFit="cover" />
           <LinearGradient
-            colors={[CREAM, `${CREAM}F2`, `${CREAM}66`, 'transparent']}
-            locations={[0, 0.28, 0.48, 0.72]}
-            style={styles.fade}
+            colors={[`${colors.bgDeep}F2`, `${colors.bgDeep}CC`, `${colors.bgDeep}66`, 'transparent']}
+            locations={[0, 0.22, 0.42, 0.68]}
+            style={styles.fadeTop}
+          />
+          <LinearGradient
+            colors={['transparent', `${colors.bgDeep}99`, colors.bgDeep]}
+            locations={[0.35, 0.72, 1]}
+            style={styles.fadeBottom}
           />
           <View style={[styles.textBlock, compact && styles.textBlockCompact]}>
-            <Text style={styles.title}>{item.title}</Text>
+            <SarhLogoMark size={compact ? 40 : 48} color={colors.textPrimary} />
+            <AppText style={styles.title}>{item.title}</AppText>
             <View style={styles.divider} />
-            <Text style={styles.description}>{item.description}</Text>
+            <AppText style={styles.description}>{item.description}</AppText>
           </View>
         </View>
       );
     },
-    [compact, width],
+    [colors.bgDeep, colors.textPrimary, compact, styles, width],
   );
 
   return (
     <View style={styles.root}>
+      <LinearGradient
+        colors={[colors.bgDeep, colors.bgPrimary, colors.bgDeep]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={[`${colors.electric}18`, 'transparent']}
+        style={styles.glow}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 0.45 }}
+      />
       <View style={styles.pagerShell}>
         <Animated.FlatList
           ref={listRef}
@@ -130,7 +145,7 @@ export default function OnboardingScreen() {
               onPress={handleSkip}
               style={({ pressed }) => [styles.skipBtn, pressed && styles.skipPressed]}
             >
-              <Text style={styles.skipText}>{ONBOARDING_SKIP_LABEL}</Text>
+              <AppText style={styles.skipText}>{ONBOARDING_SKIP_LABEL}</AppText>
             </Pressable>
           ) : (
             <View style={styles.skipBtn} />
@@ -156,96 +171,102 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: CREAM,
-  },
-  pagerShell: {
-    ...StyleSheet.absoluteFillObject,
-    direction: 'ltr',
-  },
-  list: {
-    flex: 1,
-  },
-  slide: {
-    flex: 1,
-    backgroundColor: CREAM,
-  },
-  fade: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '58%',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'flex-start',
-    ...paddingStart(layout.screenPadding),
-    paddingTop: spacing.sm,
-  },
-  skipBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  skipPressed: { opacity: 0.7 },
-  skipText: {
-    fontFamily: OFFICIAL_APP_FONT,
-    fontWeight: '700',
-    fontSize: 15,
-    color: MUTED,
-    writingDirection: 'rtl',
-  },
-  textBlock: {
-    position: 'absolute',
-    top: '16%',
-    left: layout.screenPadding,
-    right: layout.screenPadding,
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  textBlockCompact: {
-    top: '12%',
-    gap: spacing.md,
-  },
-  title: {
-    fontFamily: OFFICIAL_APP_FONT,
-    fontWeight: '700',
-    fontSize: 28,
-    lineHeight: 38,
-    color: INK,
-    textAlign: 'center',
-    writingDirection: 'rtl',
-    width: '100%',
-  },
-  divider: {
-    width: 42,
-    height: 1.5,
-    backgroundColor: DIVIDER,
-    borderRadius: 1,
-  },
-  description: {
-    fontFamily: OFFICIAL_APP_FONT,
-    fontWeight: '700',
-    fontSize: 16,
-    lineHeight: 26,
-    color: MUTED,
-    textAlign: 'center',
-    writingDirection: 'rtl',
-    width: '100%',
-    maxWidth: 340,
-  },
-  footer: {
-    paddingHorizontal: layout.screenPadding,
-    paddingBottom: spacing.lg,
-    gap: spacing.sm,
-    maxWidth: layout.contentMaxWidth,
-    width: '100%',
-    alignSelf: 'center',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.bgDeep,
+    },
+    glow: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 240,
+    },
+    pagerShell: {
+      ...StyleSheet.absoluteFillObject,
+      // Horizontal pager keeps LTR scroll physics; slide content stays RTL.
+      direction: 'ltr',
+    },
+    list: {
+      flex: 1,
+    },
+    slide: {
+      flex: 1,
+      backgroundColor: colors.bgDeep,
+    },
+    fadeTop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '52%',
+    },
+    fadeBottom: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: '48%',
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'space-between',
+    },
+    header: {
+      alignItems: 'flex-start',
+      ...paddingStart(layout.screenPadding),
+      paddingTop: spacing.sm,
+    },
+    skipBtn: {
+      minHeight: 44,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+    },
+    skipPressed: { opacity: 0.7 },
+    skipText: {
+      ...typography.secondary,
+      color: colors.textMuted,
+    },
+    textBlock: {
+      position: 'absolute',
+      top: '14%',
+      left: layout.screenPadding,
+      right: layout.screenPadding,
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    textBlockCompact: {
+      top: '10%',
+      gap: spacing.sm,
+    },
+    title: {
+      ...typography.h2,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      width: '100%',
+    },
+    divider: {
+      width: 42,
+      height: 2,
+      backgroundColor: colors.electric,
+      borderRadius: 1,
+    },
+    description: {
+      ...typography.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      width: '100%',
+      maxWidth: 340,
+    },
+    footer: {
+      paddingHorizontal: layout.screenPadding,
+      paddingBottom: spacing.lg,
+      gap: spacing.sm,
+      maxWidth: layout.contentMaxWidth,
+      width: '100%',
+      alignSelf: 'center',
+    },
+  });
+}
