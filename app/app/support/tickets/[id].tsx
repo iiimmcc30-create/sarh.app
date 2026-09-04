@@ -29,7 +29,9 @@ import {
 } from '@/services/support';
 
 export default function SupportTicketDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string | string[]; fresh?: string | string[] }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const fresh = Array.isArray(params.fresh) ? params.fresh[0] : params.fresh;
   const { accessToken } = useAuth();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [ticket, setTicket] = useState<SupportTicketDetail | null>(null);
@@ -48,7 +50,7 @@ export default function SupportTicketDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       void load();
-    }, [load]),
+    }, [load, fresh]),
   );
 
   useSupportTicketSocket(accessToken, ticket?.id ?? (id ? String(id) : null), () => {
