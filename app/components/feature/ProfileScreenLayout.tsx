@@ -451,7 +451,13 @@ export function ProfileScreenLayout({
           </View>
         </View>
 
-        <Animated.View style={[styles.postsFeed, { opacity: tabOpacity }]}>
+        <Animated.View
+          style={[
+            styles.postsFeed,
+            activeTab === 'posts' ? styles.postsFeedFlush : null,
+            { opacity: tabOpacity },
+          ]}
+        >
           {activeTab === 'posts' ? postsContent : adsContent}
         </Animated.View>
       </ScrollView>
@@ -708,6 +714,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingBottom: spacing.xl,
       minHeight: 200,
       gap: 4,
+    },
+    postsFeedFlush: {
+      paddingHorizontal: 0,
+      paddingTop: 0,
+      gap: 0,
     },
     tabsBar: {
       backgroundColor: colors.bgElevated,

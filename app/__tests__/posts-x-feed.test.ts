@@ -47,6 +47,12 @@ describe('Posts feed — X-style structure', () => {
     expect(detail).toContain('showPostMenu');
   });
 
+  it('profile posts tab uses the same flush feed as the posts tab', () => {
+    const profile = src('components/feature/ProfileScreenLayout.tsx');
+    expect(profile).toContain('postsFeedFlush');
+    expect(profile).toContain("activeTab === 'posts' ? styles.postsFeedFlush");
+  });
+
   it('formats real view counts in Arabic', () => {
     expect(formatViewsLabelAr(1)).toContain('مشاهدة');
     expect(formatViewsLabelAr(831)).toContain('مشاهدات');
