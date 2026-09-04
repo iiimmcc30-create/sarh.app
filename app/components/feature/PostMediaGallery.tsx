@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     aspectRatio: ASPECT_RATIO,
-    borderRadius: radius.lg,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     maxHeight: 340,

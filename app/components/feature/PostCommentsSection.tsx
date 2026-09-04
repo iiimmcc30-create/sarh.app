@@ -1,15 +1,26 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { AppText } from '@/components/ui/AppText';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { useCallback, useEffect, useImperativeHandle, useState, forwardRef } from 'react';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+  forwardRef,
+  type ReactNode,
+} from 'react';
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,12 +33,8 @@ import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
 import { useApp } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type PostCommentsSectionProps = {
   postId: string;
@@ -35,12 +42,42 @@ type PostCommentsSectionProps = {
   showInput?: boolean;
   onCommentAdded?: () => void;
   onSubmitComment?: (content: string) => Promise<boolean>;
+  children?: ReactNode;
 };
 
 export type PostCommentsSectionRef = {
   reload: () => Promise<void>;
   focusInput: () => void;
 };
+
+type CommentsApi = {
+  comments: PostComment[];
+  loading: boolean;
+  loadError: string | null;
+  text: string;
+  setText: (v: string) => void;
+  sending: boolean;
+  deletingId: string | null;
+  setInputRef: (ref: TextInput | null) => void;
+  loadComments: () => Promise<void>;
+  handleSend: () => Promise<void>;
+  handleDelete: (commentId: string) => Promise<void>;
+  postOwnerId?: string;
+  isAuthenticated: boolean;
+  user: ReturnType<typeof useAuth>['user'];
+  me: ReturnType<typeof useApp>['me'];
+  composerAvatar?: string;
+};
+
+const CommentsCtx = createContext<CommentsApi | null>(null);
+
+function useCommentsApi(): CommentsApi {
+  const ctx = useContext(CommentsCtx);
+  if (!ctx) {
+    throw new Error('Post comments UI must be inside PostCommentsProvider');
+  }
+  return ctx;
+}
 
 function mapComment(c: {
   id: string;
@@ -75,10 +112,11 @@ function mapComment(c: {
   };
 }
 
-export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommentsSectionProps>(
-  function PostCommentsSection({ postId, postOwnerId, showInput = true, onCommentAdded, onSubmitComment }, ref) {
-    const { colors } = useTheme();
-    const styles = useThemedStyles(({ colors }) => createStyles(colors));
+export const PostCommentsProvider = forwardRef<PostCommentsSectionRef, PostCommentsSectionProps>(
+  function PostCommentsProvider(
+    { postId, postOwnerId, onCommentAdded, onSubmitComment, children },
+    ref,
+  ) {
     const { isAuthenticated, user } = useAuth();
     const { me } = useApp();
     const [comments, setComments] = useState<PostComment[]>([]);
@@ -89,7 +127,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [inputRef, setInputRef] = useState<TextInput | null>(null);
 
-    const handleDelete = async (commentId: string) => {
+    const handleDelete = useCallback(async (commentId: string) => {
       const confirmed = await confirmDestructive(
         'حذف التعليق',
         'هل تريد حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء.',
@@ -107,7 +145,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       onCommentAdded?.();
       void showToast('تم حذف التعليق');
-    };
+    }, [postId, onCommentAdded]);
 
     const loadComments = useCallback(async () => {
       if (!postId) return;
@@ -141,7 +179,7 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
       focusInput: () => inputRef?.focus(),
     }), [loadComments, inputRef]);
 
-    const handleSend = async () => {
+    const handleSend = useCallback(async () => {
       if (!isAuthenticated) {
         await alertMessage('تسجيل الدخول', 'يجب تسجيل الدخول لإضافة تعليق', 'log-in-outline');
         return;
@@ -174,148 +212,200 @@ export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommen
       } finally {
         setSending(false);
       }
-    };
+    }, [isAuthenticated, text, sending, onSubmitComment, postId, onCommentAdded, loadComments]);
 
+    const api = useMemo<CommentsApi>(
+      () => ({
+        comments,
+        loading,
+        loadError,
+        text,
+        setText,
+        sending,
+        deletingId,
+        setInputRef,
+        loadComments,
+        handleSend,
+        handleDelete,
+        postOwnerId,
+        isAuthenticated,
+        user,
+        me,
+        composerAvatar: me?.avatar ?? user?.avatar,
+      }),
+      [
+        comments,
+        loading,
+        loadError,
+        text,
+        sending,
+        deletingId,
+        loadComments,
+        postOwnerId,
+        isAuthenticated,
+        user,
+        me,
+        handleSend,
+        handleDelete,
+      ],
+    );
+
+    return <CommentsCtx.Provider value={api}>{children}</CommentsCtx.Provider>;
+  },
+);
+
+export function PostCommentsList() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
+  const {
+    comments,
+    loading,
+    loadError,
+    loadComments,
+    handleDelete,
+    deletingId,
+    postOwnerId,
+    user,
+    me,
+  } = useCommentsApi();
+
+  if (loading) {
+    return <ActivityIndicator color={colors.electricBright} style={styles.loader} />;
+  }
+
+  if (loadError) {
     return (
-      <View style={styles.wrap}>
-        <CoverTrailRow justify="space-between" gap={8} style={styles.header}>
-          <Text style={styles.count}>{comments.length}</Text>
-          <CoverTrailRow justify="flex-end" gap={8} flex style={styles.headerTrail}>
-            <RtlTextShell flex>
-              <RtlText style={styles.title}>التعليقات</RtlText>
-            </RtlTextShell>
-            <View style={styles.sectionBar} />
-          </CoverTrailRow>
-        </CoverTrailRow>
-
-        {loading ? (
-          <ActivityIndicator color={colors.electricBright} style={styles.loader} />
-        ) : loadError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{loadError}</Text>
-            <Pressable onPress={() => void loadComments()} style={styles.retryBtn}>
-              <Text style={styles.retryText}>إعادة المحاولة</Text>
-            </Pressable>
-          </View>
-        ) : comments.length === 0 ? (
-          <RtlTextShell>
-            <RtlText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</RtlText>
-          </RtlTextShell>
-        ) : (
-          <View style={styles.list}>
-            {comments.map((c) => (
-              <View key={c.id} style={[styles.commentRow, getRtlRow()]}>
-                <UserProfileLink userId={c.author.id}>
-                  <Image source={uriSource(c.author.avatar)} style={styles.avatar} contentFit="cover" />
-                </UserProfileLink>
-                <View style={styles.commentBubble}>
-                  <View style={[styles.commentHeader, getRtlRow()]}>
-                    <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
-                      <CoverTrailRow justify="flex-end" gap={4} style={styles.nameTimeRow}>
-                        <Text style={styles.commentTime} numberOfLines={1}>
-                          {c.createdAt}
-                        </Text>
-                        <Text style={styles.metaDot}>·</Text>
-                        <VerifiedInlineName
-                          name={c.author.arabicName || c.author.displayName}
-                          verified={c.author.verified}
-                          badgeSize={14}
-                          nameStyle={styles.commentName}
-                        />
-                      </CoverTrailRow>
-                    </UserProfileLink>
-                    {canDeleteComment(c.author.id, postOwnerId, user, me) ? (
-                      <Pressable
-                        onPress={() => void handleDelete(c.id)}
-                        disabled={deletingId === c.id}
-                        hitSlop={8}
-                        style={styles.deleteBtn}
-                      >
-                        {deletingId === c.id ? (
-                          <ActivityIndicator size="small" color={colors.textMuted} />
-                        ) : (
-                          <AppIcon name="trash-outline" size={15} color={colors.textMuted} />
-                        )}
-                      </Pressable>
-                    ) : null}
-                  </View>
-                  <RtlTextShell>
-                    <RtlText style={styles.commentText}>{c.content}</RtlText>
-                  </RtlTextShell>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {showInput ? (
-          <View style={[styles.inputRow, getRtlRow()]}>
-            <TextInput
-              ref={setInputRef}
-              style={styles.input}
-              placeholder={isAuthenticated ? 'اكتب تعليقاً...' : 'سجّل الدخول للتعليق'}
-              placeholderTextColor={colors.textSubtle}
-              value={text}
-              onChangeText={setText}
-              editable={isAuthenticated && !sending && !loadError}
-              textAlign="right"
-              multiline
-              maxLength={500}
-            />
-            <Pressable
-              style={[styles.sendBtn, (!text.trim() || sending || !isAuthenticated || !!loadError) && styles.sendBtnDisabled]}
-              onPress={handleSend}
-              disabled={!text.trim() || sending || !isAuthenticated || !!loadError}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <AppIcon name="send" size={18} color="#fff" />
-              )}
-            </Pressable>
-          </View>
-        ) : null}
+      <View style={styles.errorBox}>
+        <AppText style={styles.errorText}>{loadError}</AppText>
+        <Pressable onPress={() => void loadComments()} style={styles.retryBtn}>
+          <AppText style={styles.retryText}>إعادة المحاولة</AppText>
+        </Pressable>
       </View>
+    );
+  }
+
+  if (comments.length === 0) {
+    return <AppText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</AppText>;
+  }
+
+  return (
+    <View>
+      {comments.map((c) => (
+        <View key={c.id} style={styles.commentWrap}>
+          <View style={[styles.commentRow, getRtlRow()]}>
+            <UserProfileLink userId={c.author.id}>
+              <Image source={uriSource(c.author.avatar)} style={styles.avatar} contentFit="cover" />
+            </UserProfileLink>
+            <View style={styles.commentMain}>
+              <View style={[styles.commentHeader, getRtlRow()]}>
+                <UserProfileLink userId={c.author.id} style={styles.commentMeta}>
+                  <View style={[styles.nameTimeRow, getRtlRow()]}>
+                    <AppText style={styles.commentName} numberOfLines={1}>
+                      {c.author.arabicName || c.author.displayName}
+                    </AppText>
+                    {c.author.verified ? <VerificationBadge size={13} /> : null}
+                    {c.author.username ? (
+                      <AppText style={styles.commentHandle} numberOfLines={1}>
+                        @{c.author.username}
+                      </AppText>
+                    ) : null}
+                    <AppText style={styles.metaDot}>·</AppText>
+                    <AppText style={styles.commentTime} numberOfLines={1}>
+                      {c.createdAt}
+                    </AppText>
+                  </View>
+                </UserProfileLink>
+                {canDeleteComment(c.author.id, postOwnerId, user, me) ? (
+                  <Pressable
+                    onPress={() => void handleDelete(c.id)}
+                    disabled={deletingId === c.id}
+                    hitSlop={12}
+                    accessibilityRole="button"
+                    accessibilityLabel="المزيد"
+                    style={styles.moreBtn}
+                  >
+                    {deletingId === c.id ? (
+                      <ActivityIndicator size="small" color={colors.textMuted} />
+                    ) : (
+                      <AppIcon name="ellipsis-vertical" size={16} color={colors.textMuted} />
+                    )}
+                  </Pressable>
+                ) : null}
+              </View>
+              <AppText style={styles.commentText}>{c.content}</AppText>
+            </View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function PostCommentsComposer() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
+  const {
+    text,
+    setText,
+    sending,
+    loadError,
+    setInputRef,
+    handleSend,
+    isAuthenticated,
+    composerAvatar,
+  } = useCommentsApi();
+
+  const disabled = !text.trim() || sending || !isAuthenticated || !!loadError;
+
+  return (
+    <View style={[styles.composer, getRtlRow()]}>
+      <Image source={uriSource(composerAvatar)} style={styles.composerAvatar} contentFit="cover" />
+      <TextInput
+        ref={setInputRef}
+        style={styles.input}
+        placeholder={isAuthenticated ? 'اكتب تعليقاً...' : 'سجّل الدخول للتعليق'}
+        placeholderTextColor={colors.textSubtle}
+        value={text}
+        onChangeText={setText}
+        editable={isAuthenticated && !sending && !loadError}
+        multiline
+        maxLength={500}
+      />
+      <Pressable
+        style={[styles.sendBtn, disabled && styles.sendBtnDisabled]}
+        onPress={() => void handleSend()}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel="إرسال التعليق"
+      >
+        {sending ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <AppIcon name="send" size={16} color="#fff" />
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
+/** Compatible wrapper: list + composer (inline). Prefer split layout on detail. */
+export const PostCommentsSection = forwardRef<PostCommentsSectionRef, PostCommentsSectionProps>(
+  function PostCommentsSection({ showInput = true, children, ...props }, ref) {
+    return (
+      <PostCommentsProvider ref={ref} {...props}>
+        {children ?? (
+          <>
+            <PostCommentsList />
+            {showInput ? <PostCommentsComposer /> : null}
+          </>
+        )}
+      </PostCommentsProvider>
     );
   },
 );
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    wrap: {
-      gap: spacing.md,
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderHairline,
-    },
-    header: {
-      width: '100%',
-    },
-    headerTrail: {
-      minWidth: 0,
-    },
-    sectionBar: {
-      width: 4,
-      height: 16,
-      borderRadius: 2,
-      backgroundColor: colors.electricBright,
-    },
-    /** Accent bar sits on physical right beside the section title. */
-    title: {
-      ...typography.feedTitle,
-      color: colors.textBrandStrong,
-    },
-    count: {
-      ...typography.feedBody,
-      color: colors.textMuted,
-      backgroundColor: colors.bgElevated,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: radius.pill,
-      overflow: 'hidden',
-    },
     loader: {
       paddingVertical: spacing.lg,
     },
@@ -323,59 +413,52 @@ function createStyles(colors: ThemeColors) {
       ...typography.feedBody,
       color: colors.textMuted,
       lineHeight: 22,
-      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.lg,
     },
     errorBox: {
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.md,
     },
     errorText: {
       ...typography.feedBody,
       color: colors.rose,
-      textAlign: 'center',
       lineHeight: 22,
     },
     retryBtn: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
     },
     retryText: {
       ...typography.feedTitle,
       color: colors.electricBright,
     },
-    list: {
-      gap: spacing.md,
+    commentWrap: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
+      backgroundColor: colors.bgDeep,
     },
     commentRow: {
       alignItems: 'flex-start',
-      gap: spacing.sm,
+      gap: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
     },
     avatar: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgElevated,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.bgSurface,
     },
-    commentBubble: {
+    commentMain: {
       flex: 1,
       minWidth: 0,
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
+      gap: 4,
     },
     commentHeader: {
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
       gap: spacing.sm,
     },
@@ -384,6 +467,9 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     nameTimeRow: {
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 4,
       minWidth: 0,
     },
     commentName: {
@@ -391,49 +477,61 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       flexShrink: 1,
     },
+    commentHandle: {
+      ...typography.caption,
+      color: colors.textMuted,
+      flexShrink: 1,
+    },
     metaDot: {
-      ...typography.feedBody,
+      ...typography.caption,
       color: colors.textSubtle,
       flexShrink: 0,
     },
     commentTime: {
-      ...typography.feedBody,
+      ...typography.caption,
       color: colors.textMuted,
       flexShrink: 0,
     },
     commentText: {
       ...typography.feedBody,
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       lineHeight: 22,
     },
-    deleteBtn: {
-      padding: 2,
-      borderRadius: radius.pill,
+    moreBtn: {
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    inputRow: {
+    composer: {
       alignItems: 'flex-end',
       gap: spacing.sm,
-      paddingTop: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.borderHairline,
+      backgroundColor: colors.bgDeep,
+    },
+    composerAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.bgSurface,
     },
     input: {
       flex: 1,
-      minHeight: 44,
+      minHeight: 40,
       maxHeight: 100,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      borderRadius: radius.lg,
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: 0,
       paddingVertical: 10,
       ...typography.feedBody,
       color: colors.textPrimary,
     },
     sendBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 20,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',

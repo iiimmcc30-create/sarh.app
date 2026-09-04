@@ -80,3 +80,33 @@ export function formatPostTimestampAr(input?: string | Date | null): string {
   });
   return `${datePart} - ${timePart}`;
 }
+
+/** Clock only — e.g. ١٠:٣٩ م */
+export function formatPostClockAr(input?: string | Date | null): string {
+  if (!input) return '';
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('ar-SA', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+/** Short calendar date — e.g. ١٠ سبتمبر ٢٦ */
+export function formatPostDateShortAr(input?: string | Date | null): string {
+  if (!input) return '';
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('ar-SA', {
+    day: 'numeric',
+    month: 'long',
+    year: '2-digit',
+  });
+}
+
+/** Real view count from API — never a placeholder. */
+export function formatViewsLabelAr(views: number): string {
+  const n = toArabicDigits(views);
+  return views === 1 ? `${n} مشاهدة` : `${n} مشاهدات`;
+}
