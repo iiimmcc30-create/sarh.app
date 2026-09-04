@@ -381,14 +381,12 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   listTitleShell: {
     flex: 1,
     minWidth: 0,
-    direction: 'ltr',
-  },
+      },
   listTitle: {
     ...typography.cardHeading,
     color: colors.textBrandStrong,
     width: '100%',
-    textAlign: 'right',
-    writingDirection: 'rtl',
+        writingDirection: 'rtl',
   },
   /**
    * Physical LTR three-column meta:
@@ -396,8 +394,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
    */
   listMetaRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
+        alignItems: 'center',
     flexWrap: 'nowrap',
     width: '100%',
   },
@@ -422,7 +419,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     justifyContent: 'center',
   },
   listLocationCluster: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     maxWidth: '100%',
@@ -465,23 +462,20 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   listSellerRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    width: '100%',
+        width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   listSeller: {
     flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
+        alignItems: 'center',
     gap: 6,
     flexShrink: 1,
     minWidth: 0,
     maxWidth: '100%',
   },
   listSellerNameShell: {
-    direction: 'ltr',
-    flexShrink: 1,
+        flexShrink: 1,
     minWidth: 0,
   },
   listAvatar: {
@@ -494,8 +488,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   listSellerName: {
     ...typography.caption,
     color: colors.textPrimary,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+        writingDirection: 'rtl',
   },
   listThumbWrap: {
     width: 118,
@@ -594,14 +587,12 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   profileTitle: {
     ...typography.cardHeading,
     color: '#fff',
-    textAlign: 'right',
-    flex: 1,
+        flex: 1,
   },
   profilePrice: {
     ...typography.value,
     color: colors.gold,
-    textAlign: 'right',
-  },
+      },
   profileStar: {
     position: 'absolute',
     top: 10,
@@ -748,23 +739,20 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   harajSellerRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    width: '100%',
+        width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   harajSellerInfo: {
     flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
+        alignItems: 'center',
     gap: 8,
     flexShrink: 1,
     minWidth: 0,
     maxWidth: '100%',
   },
   harajSellerNameShell: {
-    direction: 'ltr',
-    flexShrink: 1,
+        flexShrink: 1,
     minWidth: 0,
   },
   harajAvatar: {
@@ -778,8 +766,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     ...typography.cardHeading,
     color: colors.textPrimary,
     flexShrink: 1,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+        writingDirection: 'rtl',
   },
   harajFeatured: {
     ...getRtlRow(),

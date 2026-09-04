@@ -358,8 +358,7 @@ function createMarketStyles(
     },
     listingsHead: {
       width: '100%',
-      direction: 'ltr',
-      paddingHorizontal: spacing.md,
+            paddingHorizontal: spacing.md,
       paddingTop: spacing.xs,
       paddingBottom: spacing.sm,
     },
@@ -372,24 +371,20 @@ function createMarketStyles(
     listingsTitleShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     listingsTitle: {
       ...typography.feedTitle,
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     listingsCountShell: {
-      direction: 'ltr',
-      flexShrink: 0,
+            flexShrink: 0,
     },
     listingsCount: {
       ...typography.feedBody,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     categoriesLoading: {
       paddingHorizontal: spacing.lg,
@@ -398,8 +393,7 @@ function createMarketStyles(
     categoriesLoadingText: {
       ...typography.caption,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
     emptyIcon: { fontSize: 40 },

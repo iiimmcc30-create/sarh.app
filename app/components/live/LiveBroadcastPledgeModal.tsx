@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A1530',
     borderColor: `${colors.electric}40`,
   },
-  cardTitle: { ...typography.bodyStrong, color: colors.textBrandStrong, textAlign: 'right' },
-  cardTitleBlue: { ...typography.bodyStrong, color: colors.textBrand, textAlign: 'right' },
-  ruleItem: { ...typography.body, color: colors.textSecondary, lineHeight: 24, textAlign: 'right' },
+  cardTitle: { ...typography.bodyStrong, color: colors.textBrandStrong,  },
+  cardTitleBlue: { ...typography.bodyStrong, color: colors.textBrand,  },
+  ruleItem: { ...typography.body, color: colors.textSecondary, lineHeight: 24,  },
   oath: {
     ...typography.body,
     color: colors.textBrandStrong,

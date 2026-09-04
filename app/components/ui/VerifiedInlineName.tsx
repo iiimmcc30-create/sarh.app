@@ -1,6 +1,7 @@
 import { StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
-import { RtlText } from '@/components/ui/RtlText';
+import { getRtlRow } from '@/lib/rtl';
 
 export type VerifiedInlineNameProps = {
   name: string;
@@ -11,11 +12,7 @@ export type VerifiedInlineNameProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Arabic display name + verification badge — physical LTR row-reverse cluster.
- * Badge sits one space (gap 4) to the left of the name; pair aligns to the inline end
- * when wrapped in a parent with `direction: 'ltr'` (see ProfileScreenLayout nameBlock).
- */
+/** Name then badge — logical row (badge sits after the name toward inline end). */
 export function VerifiedInlineName({
   name,
   verified = false,
@@ -25,12 +22,10 @@ export function VerifiedInlineName({
   style,
 }: VerifiedInlineNameProps) {
   return (
-    <View style={[styles.root, style]}>
-      <View style={styles.nameShell}>
-        <RtlText style={[styles.nameInline, nameStyle]} numberOfLines={numberOfLines}>
-          {name}
-        </RtlText>
-      </View>
+    <View style={[styles.root, getRtlRow(), style]}>
+      <AppText style={[styles.nameInline, nameStyle]} numberOfLines={numberOfLines}>
+        {name}
+      </AppText>
       {verified ? <VerificationBadge size={badgeSize} /> : null}
     </View>
   );
@@ -38,24 +33,15 @@ export function VerifiedInlineName({
 
 const styles = StyleSheet.create({
   root: {
-    direction: 'ltr',
-    flexDirection: 'row-reverse',
     alignItems: 'center',
     flexWrap: 'nowrap',
     gap: 4,
     flexShrink: 1,
     maxWidth: '100%',
   },
-  nameShell: {
-    direction: 'ltr',
-    flexShrink: 1,
-    minWidth: 0,
-  },
   nameInline: {
     width: 'auto',
     flexShrink: 1,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });
 

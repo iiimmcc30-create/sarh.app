@@ -158,14 +158,12 @@ function createStyles(colors: ThemeColors) {
     hintTextShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     hintText: {
       ...typography.body,
       color: colors.textSecondary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
       lineHeight: 22,
     },
   });

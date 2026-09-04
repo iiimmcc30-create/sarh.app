@@ -250,7 +250,7 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
           colors={[colors.gold + '22', colors.amber + '11']}
           style={aboutStyles.verifiedCard}
         >
-          <View style={{ flex: 1, direction: 'ltr' }}>
+          <View style={{ flex: 1,  }}>
             <Text style={aboutStyles.verifiedTitle}>ملحمة موثّقة</Text>
             <Text style={aboutStyles.verifiedSub}>
               اشتراك نشط · صالح حتى {butcher.subscriptionExpiry
@@ -879,7 +879,7 @@ export default function ButcherProfileScreen() {
             <>
               <AboutTab butcher={butcher} />
               <View style={{ marginTop: spacing.xl }}>
-                <View style={{ paddingHorizontal: spacing.lg, direction: 'ltr', width: '100%' }}>
+                <View style={{ paddingHorizontal: spacing.lg,  width: '100%' }}>
                   <Text style={styles.sectionTitle}>
                     آراء العملاء ({butcher.reviewCount})
                   </Text>
@@ -1007,8 +1007,7 @@ function createMainStyles(colors: ThemeColors) {
     right: 0,
     bottom: spacing.md,
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     paddingHorizontal: spacing.lg,
   },
   profileHeader: {
@@ -1040,19 +1039,17 @@ function createMainStyles(colors: ThemeColors) {
     borderWidth: 1.5,
     borderColor: colors.gold,
   },
-  nameBlock: { width: '100%', direction: 'ltr' },
+  nameBlock: { width: '100%',  },
   name: {
     ...butcherTypography.titleLarge,
     color: colors.textPrimary,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+        writingDirection: 'rtl',
     width: '100%',
     marginBottom: 6,
   },
   ratingRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 4,
   },
@@ -1060,15 +1057,13 @@ function createMainStyles(colors: ThemeColors) {
   ratingCount: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },
   serviceRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     flexWrap: 'wrap',
     gap: spacing.md,
   },
   serviceItem: {
     flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
+        alignItems: 'center',
     gap: 4,
   },
   serviceText: {
@@ -1103,8 +1098,7 @@ function createMainStyles(colors: ThemeColors) {
 
   tabsRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
     paddingBottom: spacing.sm,
@@ -1116,12 +1110,10 @@ function createMainStyles(colors: ThemeColors) {
   },
   tabCoverTrail: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
   },
   tabTextShell: {
-    direction: 'ltr',
-  },
+      },
   tabLabel: {
     ...typography.smallHeading,
     color: colors.textMuted,
@@ -1190,8 +1182,7 @@ function createOffersStyles(colors: ThemeColors) {
   },
   priceRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     alignItems: 'baseline',
     gap: 10,
     marginTop: spacing.md,
@@ -1204,8 +1195,7 @@ function createOffersStyles(colors: ThemeColors) {
   },
   footer: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 5,
     marginTop: spacing.sm,
@@ -1247,8 +1237,7 @@ function createStoriesStyles(colors: ThemeColors) {
     bottom: 8,
     left: 8,
     right: 8,
-    direction: 'ltr',
-  },
+      },
   caption: {
     ...butcherTypography.meta,
     color: '#fff',
@@ -1282,8 +1271,7 @@ function createAboutStyles(colors: ThemeColors) {
   },
   infoRow: {
     flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
+        alignItems: 'center',
     justifyContent: 'flex-end',
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
@@ -1301,8 +1289,7 @@ function createAboutStyles(colors: ThemeColors) {
   },
   chipsWrap: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     flexWrap: 'wrap',
     gap: 8,
   },
@@ -1317,8 +1304,7 @@ function createAboutStyles(colors: ThemeColors) {
   chipText: { ...butcherTypography.secondary, color: colors.textBrand },
   verifiedCard: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.lg,
@@ -1364,7 +1350,7 @@ function createChatStyles(colors: ThemeColors) {
   bubbleText: { ...butcherTypography.body, lineHeight: 20 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
-  bubbleTime: { ...butcherTypography.meta, color: 'rgba(255,255,255,0.5)', marginTop: 4, textAlign: 'right' },
+  bubbleTime: { ...butcherTypography.meta, color: 'rgba(255,255,255,0.5)', marginTop: 4,  },
   openChatBtn: {
     marginTop: spacing.xl,
     borderRadius: radius.xl,
@@ -1430,8 +1416,7 @@ function createReviewsStyles(colors: ThemeColors) {
   },
   header: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 8,
     marginBottom: spacing.sm,
@@ -1443,8 +1428,7 @@ function createReviewsStyles(colors: ThemeColors) {
   },
   stars: {
     flexDirection: 'row',
-    direction: 'ltr',
-    justifyContent: 'flex-end',
+        justifyContent: 'flex-end',
     gap: 2,
     marginTop: 2,
   },

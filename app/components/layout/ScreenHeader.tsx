@@ -96,8 +96,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     /** Physical LTR shell — keeps centered Arabic titles visually correct under app RTL. */
     titleWrap: {
       flex: 1,
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
     },
     title: {
       ...typography.sectionHeading,

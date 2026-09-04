@@ -89,8 +89,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.cardHeading,
       color: '#fff',
       padding: spacing.md,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
       zIndex: 1,
     },
     empty: {

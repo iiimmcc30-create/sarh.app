@@ -209,8 +209,7 @@ function createStyles(colors: ThemeColors) {
     card: menuCardStyle(colors),
     switchRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       paddingHorizontal: spacing.lg,
       paddingVertical: 14,
       gap: spacing.md,
@@ -228,7 +227,7 @@ function createStyles(colors: ThemeColors) {
     },
     cardTitle: { ...typography.smallHeading, color: colors.textPrimary },
     langTrack: {
-      flexDirection: 'row-reverse',
+      flexDirection: 'row',
       backgroundColor: colors.bgDeep,
       borderRadius: 12,
       marginHorizontal: spacing.lg,

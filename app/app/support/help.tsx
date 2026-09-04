@@ -177,7 +177,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.huge },
-    lead: { ...typography.h3, color: colors.textPrimary, textAlign: 'right' },
+    lead: { ...typography.h3, color: colors.textPrimary,  },
     choice: {
       borderRadius: 16,
       padding: spacing.lg,
@@ -187,9 +187,9 @@ function createStyles(colors: ThemeColors) {
       gap: 4,
     },
     choiceOn: { borderColor: colors.electric },
-    choiceTitle: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right' },
-    choiceSub: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },
-    hint: { ...typography.body, color: colors.textMuted, textAlign: 'right' },
+    choiceTitle: { ...typography.bodyStrong, color: colors.textPrimary,  },
+    choiceSub: { ...typography.caption, color: colors.textMuted,  },
+    hint: { ...typography.body, color: colors.textMuted,  },
     textArea: { minHeight: 140, textAlignVertical: 'top' },
     backLink: { ...typography.caption, color: colors.electric, textAlign: 'center', marginTop: spacing.sm },
   });

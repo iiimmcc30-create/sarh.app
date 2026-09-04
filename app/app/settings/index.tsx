@@ -136,7 +136,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
     scroll: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
     intro: {
-      flexDirection: 'row-reverse',
+      flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.lg,
@@ -145,14 +145,12 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     introTitle: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     introSubtitle: {
       ...typography.caption,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     sectionBlock: menuCardStyle(colors),
   });

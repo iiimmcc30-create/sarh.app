@@ -9,12 +9,12 @@
  * right, title in rtlTextShell hugging the icon (same pattern as listing cover).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isNavigationLocked } from '@/lib/safeNavigate';
+import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 export type SidebarMenuItemProps = {
@@ -106,7 +106,29 @@ function OutlineMenuItem({
         style,
       ]}
     >
-      <View style={styles.outlineRow}>
+      <View style={[styles.outlineRow, getRtlRow()]}>
+        <View style={styles.iconWrapOutline}>
+          <AppIcon
+            name={icon}
+            size={SIDEBAR_MENU_ITEM.outlineIconSize}
+            color={iconTint}
+          />
+        </View>
+        <RtlTextShell flex style={styles.textShellGap}>
+          <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+            {title}
+          </RtlText>
+          {subtitle ? (
+            <RtlText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+              {subtitle}
+            </RtlText>
+          ) : null}
+        </RtlTextShell>
+        {showBadge ? (
+          <View style={[styles.badge, { backgroundColor: colors.electric }]}>
+            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+          </View>
+        ) : null}
         <View style={styles.chevronSlot}>
           {showChevron ? (
             <AppIcon
@@ -116,32 +138,6 @@ function OutlineMenuItem({
             />
           ) : null}
         </View>
-
-        {showBadge ? (
-          <View style={[styles.badge, { backgroundColor: colors.electric }]}>
-            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-          </View>
-        ) : null}
-
-        <CoverTrailRow flex justify="flex-end" gap={10}>
-          <RtlTextShell flex style={styles.textShellGap}>
-            <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
-              {title}
-            </RtlText>
-            {subtitle ? (
-              <RtlText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
-                {subtitle}
-              </RtlText>
-            ) : null}
-          </RtlTextShell>
-          <View style={styles.iconWrapOutline}>
-            <AppIcon
-              name={icon}
-              size={SIDEBAR_MENU_ITEM.outlineIconSize}
-              color={iconTint}
-            />
-          </View>
-        </CoverTrailRow>
       </View>
 
       {showDivider ? (
@@ -216,6 +212,7 @@ export function SidebarMenuItem({
       }}
       style={({ pressed }) => [
         styles.row,
+        getRtlRow(),
         { borderBottomColor: colors.borderHairline },
         showDivider && styles.rowDivider,
         active && { backgroundColor: `${colors.electric}14` },
@@ -223,19 +220,9 @@ export function SidebarMenuItem({
         style,
       ]}
     >
-      {showChevron ? (
-        <AppIcon
-          name="angle-left"
-          size={SIDEBAR_MENU_ITEM.chevronSize}
-          color={chevronColor}
-        />
-      ) : null}
-
-      {showBadge ? (
-        <View style={[styles.badge, { backgroundColor: colors.electric }]}>
-          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-        </View>
-      ) : null}
+      <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
+        <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
+      </View>
 
       <RtlTextShell flex style={styles.textShellGap}>
         <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
@@ -248,9 +235,19 @@ export function SidebarMenuItem({
         ) : null}
       </RtlTextShell>
 
-      <View style={[styles.iconWrap, { backgroundColor: `${tint}18` }]}>
-        <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
-      </View>
+      {showBadge ? (
+        <View style={[styles.badge, { backgroundColor: colors.electric }]}>
+          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      ) : null}
+
+      {showChevron ? (
+        <AppIcon
+          name="angle-left"
+          size={SIDEBAR_MENU_ITEM.chevronSize}
+          color={chevronColor}
+        />
+      ) : null}
     </Pressable>
   );
 }
@@ -258,7 +255,6 @@ export function SidebarMenuItem({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    direction: 'ltr',
     width: '100%',
     alignSelf: 'stretch',
     alignItems: 'center',
@@ -276,7 +272,6 @@ const styles = StyleSheet.create({
   },
   outlineRow: {
     flexDirection: 'row',
-    direction: 'ltr',
     alignItems: 'center',
     gap: SIDEBAR_MENU_ITEM.gap,
     paddingHorizontal: SIDEBAR_MENU_ITEM.outlinePaddingHorizontal,

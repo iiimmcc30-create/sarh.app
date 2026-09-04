@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
+import { getRtlRow } from '@/lib/rtl';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -69,7 +68,7 @@ export function UserIdentityRow({
   nameLines = 2,
   footer,
   trailing,
-  avatarSide = 'start',
+  avatarSide: _avatarSide = 'start',
   onPress,
   colors: colorsProp,
   style,
@@ -80,8 +79,6 @@ export function UserIdentityRow({
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const coverStyle = avatarSide === 'end';
-
   const handle = username
     ? username.startsWith('@')
       ? username
@@ -111,23 +108,19 @@ export function UserIdentityRow({
 
   const textBlock = (
     <View style={[styles.profileText, contentStyle]}>
-      <CoverTrailRow justify="flex-end" gap={6} style={styles.nameRow}>
-        <RtlTextShell flex>
-          <RtlText
-            style={[styles.displayName, nameStyle]}
-            numberOfLines={nameLines}
-          >
-            {displayName}
-          </RtlText>
-        </RtlTextShell>
+      <View style={[styles.nameRow, getRtlRow()]}>
+        <AppText
+          style={[styles.displayName, nameStyle]}
+          numberOfLines={nameLines}
+        >
+          {displayName}
+        </AppText>
         {verified ? <VerificationBadge size={14} /> : null}
-      </CoverTrailRow>
+      </View>
       {handle ? (
-        <RtlTextShell>
-          <RtlText style={[styles.usernameText, usernameStyle]} numberOfLines={1}>
-            {handle}
-          </RtlText>
-        </RtlTextShell>
+        <AppText style={[styles.usernameText, usernameStyle]} numberOfLines={1}>
+          {handle}
+        </AppText>
       ) : null}
       {footer}
     </View>
@@ -137,17 +130,7 @@ export function UserIdentityRow({
     <View style={styles.trailing}>{trailing}</View>
   ) : null;
 
-  /**
-   * Cover (end): [trailing?][name][avatar] — avatar aligns with sidebar menu icons.
-   * List (start): [avatar][name][trailing?]
-   */
-  const content = coverStyle ? (
-    <>
-      {trailingSlot}
-      {textBlock}
-      {avatar}
-    </>
-  ) : (
+  const content = (
     <>
       {avatar}
       {textBlock}
@@ -155,17 +138,17 @@ export function UserIdentityRow({
     </>
   );
 
-  const rowStyle = [styles.row, style];
+  const rowStyle = [styles.row, getRtlRow(), style];
 
   if (onPress) {
     return (
       <Pressable onPress={onPress}>
-        <CoverTrailRow style={rowStyle}>{content}</CoverTrailRow>
+        <View style={rowStyle}>{content}</View>
       </Pressable>
     );
   }
 
-  return <CoverTrailRow style={rowStyle}>{content}</CoverTrailRow>;
+  return <View style={rowStyle}>{content}</View>;
 }
 
 function createStyles(colors: ThemeColors) {

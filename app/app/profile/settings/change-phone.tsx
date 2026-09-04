@@ -159,8 +159,7 @@ function createStyles(colors: ThemeColors) {
     /** Physical LTR shell — same as listing title / SidebarMenuItem. */
     hintShell: {
       width: '100%',
-      direction: 'ltr',
-      padding: spacing.lg,
+            padding: spacing.lg,
       borderRadius: radius.lg,
       backgroundColor: colors.bgElevated,
       borderWidth: StyleSheet.hairlineWidth,
@@ -171,8 +170,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       lineHeight: 22,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
   });
 }

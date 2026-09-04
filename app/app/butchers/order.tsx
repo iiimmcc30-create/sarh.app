@@ -786,7 +786,7 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       ...getRtlText(),
     },
-    productCat: { ...butcherTypography.meta, color: colors.textMuted, textAlign: 'right' },
+    productCat: { ...butcherTypography.meta, color: colors.textMuted,  },
     productPrice: {
       ...butcherTypography.emphasis,
       color: colors.gold,

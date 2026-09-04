@@ -775,8 +775,7 @@ function createStyles(colors: ThemeColors) {
     goalPreviewTextShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     goalPreviewText: {
       ...typography.micro,
       color: colors.textMuted,

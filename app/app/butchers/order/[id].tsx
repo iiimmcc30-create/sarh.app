@@ -506,7 +506,7 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
     },
     trackRow: {
-      flexDirection: 'row-reverse',
+      flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
       paddingTop: spacing.sm,
@@ -645,14 +645,12 @@ function createStyles(colors: ThemeColors) {
       ...butcherTypography.emphasis,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      textAlign: 'right',
-    },
+          },
     footerSub: {
       ...butcherTypography.meta,
       color: colors.textMuted,
       writingDirection: 'rtl',
-      textAlign: 'right',
-    },
+          },
     errorText: {
       ...butcherTypography.body,
       color: colors.textMuted,

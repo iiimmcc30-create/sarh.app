@@ -99,7 +99,7 @@ const s = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.bgSurface,
   },
-  summaryRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   summaryLabel: { ...butcherTypography.secondary, color: colors.textMuted },
   summaryValue: { ...butcherTypography.emphasis, color: colors.textPrimary },
   pendingText: { ...butcherTypography.emphasis, color: colors.amber },
@@ -112,7 +112,7 @@ const s = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  stepRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: spacing.md },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepCircle: {
     width: 28,
     height: 28,
@@ -125,7 +125,7 @@ const s = StyleSheet.create({
   },
   stepCircleDone: { backgroundColor: colors.success, borderColor: colors.success },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.textMuted },
-  stepLabel: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1, textAlign: 'right' },
+  stepLabel: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1,  },
   stepLabelDone: { color: colors.textBrandSuccess },
   backBtn: {
     width: '100%',

@@ -337,7 +337,7 @@ function createStyles(colors: ThemeColors) {
     width: '100%', borderRadius: 20, padding: spacing.xl,
     backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline, gap: spacing.md,
   },
-  fieldLabel: { ...typography.smallHeading, color: colors.textPrimary, textAlign: 'right' },
+  fieldLabel: { ...typography.smallHeading, color: colors.textPrimary,  },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bgDeep, borderRadius: 12,
@@ -348,8 +348,8 @@ function createStyles(colors: ThemeColors) {
   countryCode: { ...typography.smallHeading, color: '#fff' },
   countryFlag: { fontSize: 16 },
   inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, ...typography.secondary, color: '#fff', textAlign: 'right' },
-  textInput: { flex: 1, ...typography.secondary, color: '#fff', textAlign: 'right' },
+  phoneInput: { flex: 1, ...typography.secondary, color: '#fff',  },
+  textInput: { flex: 1, ...typography.secondary, color: '#fff',  },
   pickerDropdown: {
     backgroundColor: colors.bgDeep, borderRadius: 12,
     borderWidth: 1, borderColor: colors.borderHairline, overflow: 'hidden',
@@ -379,7 +379,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
     borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
   },
-  errorText: { ...typography.caption, color: colors.danger, flex: 1, textAlign: 'right' },
+  errorText: { ...typography.caption, color: colors.danger, flex: 1,  },
   submitBtn: { borderRadius: 20, overflow: 'hidden', marginTop: 4 },
   submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
   submitText: { ...typography.button, color: '#fff' },

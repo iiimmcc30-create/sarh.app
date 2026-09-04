@@ -5,16 +5,15 @@
  *   allowRTL(true) + forceRTL(localeUsesRtl) + swapLeftAndRightInRTL(same)
  *   Stack contentStyle uses direction: 'rtl' | 'ltr' via getRtlDirection().
  *
- * Under swap, style left/right and textAlign 'left'|'right' are LOGICAL:
- *   textAlign:'right' becomes visual LEFT in Arabic — never use it as a fix.
+ * Under swap, style left/right and textAlign left/right are LOGICAL:
+ *   physical-edge textAlign becomes the opposite visual side — never use it as a fix.
  *   flexDirection:'row' already starts at the inline start (right in ar).
  *
  * Allowed in screens: AppText, AppTextInput, flexDirection:'row',
  * start/end helpers (marginStart, paddingEnd, …), textAlign:'center'.
  *
- * Forbidden as RTL workarounds: textAlign:'right', direction:'ltr' islands,
- * flexDirection:'row-reverse', alignSelf:'flex-end' to shove Arabic,
- * new RtlTextShell wrappers.
+ * Forbidden as RTL workarounds: LTR islands, reversed rows,
+ * alignSelf flex-end to shove Arabic, new RtlTextShell wrappers.
  *
  * RtlText / RtlTextShell / getRtlBlockTextStyle are deprecated leftovers
  * of the old dual system. Do not use them in new UI.
@@ -147,14 +146,14 @@ export type PhysicalLtrShellOptions = {
 };
 
 /**
- * @deprecated LTR island from the dual RTL system. Do not use in new UI.
+ * @deprecated No longer an LTR island. Width/flex only — same RTL model as the root.
  */
 export function getPhysicalLtrShellStyle(options?: PhysicalLtrShellOptions): ViewStyle {
   const flex = options?.flex ?? false;
   if (flex) {
-    return { flex: 1, minWidth: 0, direction: 'ltr' };
+    return { flex: 1, minWidth: 0 };
   }
-  return { width: '100%', direction: 'ltr' };
+  return { width: '100%' };
 }
 
 export type CoverTrailRowOptions = {
@@ -164,95 +163,90 @@ export type CoverTrailRowOptions = {
 };
 
 /**
- * @deprecated Physical LTR cover row. New UI: getRtlRow() + source order.
+ * Logical cover row — same model as getRtlRow().
+ * CoverTrailRow remaps leftover flex-end + reverse children so old
+ * [text, icon] call sites still place the icon at inline start.
  */
 export function getCoverTrailRowStyle(options?: CoverTrailRowOptions): ViewStyle {
+  const justify = options?.justifyContent === 'flex-end' ? 'flex-start' : options?.justifyContent;
   return {
-    flexDirection: 'row',
-    direction: 'ltr',
+    ...getRtlRow(),
     alignItems: 'center',
     minWidth: 0,
     ...(options?.flex ? { flex: 1 } : null),
-    ...(options?.justifyContent ? { justifyContent: options.justifyContent } : null),
+    ...(justify ? { justifyContent: justify } : null),
     ...(options?.gap != null ? { gap: options.gap } : null),
   };
 }
 
 /**
- * @deprecated Only for existing `RtlText` inside `RtlTextShell` (LTR island).
- * New UI must use `AppText` — no textAlign, no shell.
+ * Block text bounds only. No physical textAlign — same model as AppText.
  */
 export function getRtlBlockTextStyle(): TextStyle {
-  return isAppRtl()
-    ? { width: '100%', textAlign: 'right', writingDirection: 'rtl' }
-    : { width: '100%', textAlign: 'left', writingDirection: 'ltr' };
+  return { width: '100%', ...getRtlText() };
 }
 
-/** Cross-axis alignment at inline start. */
+/** Cross-axis alignment at inline start (Yoga logical). */
 export function alignInlineStart(): ViewStyle {
-  return { alignItems: isAppRtl() ? 'flex-end' : 'flex-start' };
+  return { alignItems: 'flex-start' };
 }
 
 /** Cross-axis alignment at inline end. */
 export function alignInlineEnd(): ViewStyle {
-  return { alignItems: isAppRtl() ? 'flex-start' : 'flex-end' };
+  return { alignItems: 'flex-end' };
 }
 
-/** Self alignment pushed to inline end (e.g. header actions). */
+/** Self alignment at inline end. */
 export function selfInlineEnd(): ViewStyle {
-  return { alignSelf: isAppRtl() ? 'flex-start' : 'flex-end' };
+  return { alignSelf: 'flex-end' };
 }
 
 export function inlineStart(offset: number): ViewStyle {
-  return isAppRtl() ? { right: offset } : { left: offset };
+  return { start: offset };
 }
 
 export function inlineEnd(offset: number): ViewStyle {
-  return isAppRtl() ? { left: offset } : { right: offset };
+  return { end: offset };
 }
 
 export function positionInlineStart(value: number | `${number}%`): ViewStyle {
-  return isAppRtl() ? { right: value } : { left: value };
+  return { start: value };
 }
 
 export function positionInlineEnd(value: number | `${number}%`): ViewStyle {
-  return isAppRtl() ? { left: value } : { right: value };
+  return { end: value };
 }
 
 export function marginStart(value: number): ViewStyle {
-  return isAppRtl() ? { marginRight: value } : { marginLeft: value };
+  return { marginStart: value };
 }
 
 export function marginEnd(value: number): ViewStyle {
-  return isAppRtl() ? { marginLeft: value } : { marginRight: value };
+  return { marginEnd: value };
 }
 
 export function marginAutoStart(): ViewStyle {
-  return isAppRtl() ? { marginRight: 'auto' } : { marginLeft: 'auto' };
+  return { marginStart: 'auto' };
 }
 
 export function marginAutoEnd(): ViewStyle {
-  return isAppRtl() ? { marginLeft: 'auto' } : { marginRight: 'auto' };
+  return { marginEnd: 'auto' };
 }
 
 export function paddingStart(value: number): ViewStyle {
-  return isAppRtl() ? { paddingRight: value } : { paddingLeft: value };
+  return { paddingStart: value };
 }
 
 export function paddingEnd(value: number): ViewStyle {
-  return isAppRtl() ? { paddingLeft: value } : { paddingRight: value };
+  return { paddingEnd: value };
 }
 
 export function borderInlineStart(width: number, color: string): ViewStyle {
-  return isAppRtl()
-    ? { borderRightWidth: width, borderRightColor: color }
-    : { borderLeftWidth: width, borderLeftColor: color };
+  return { borderStartWidth: width, borderStartColor: color };
 }
 
 export function borderInlineEnd(width: number, color: string): ViewStyle {
-  return isAppRtl()
-    ? { borderLeftWidth: width, borderLeftColor: color }
-    : { borderRightWidth: width, borderRightColor: color };
+  return { borderEndWidth: width, borderEndColor: color };
 }
 
 export function bubbleTailRadius(isOwn: boolean): ViewStyle {

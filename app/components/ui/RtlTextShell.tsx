@@ -1,5 +1,4 @@
 import { View, type ViewProps } from 'react-native';
-import { getPhysicalLtrShellStyle } from '@/lib/rtl';
 
 export type RtlTextShellProps = ViewProps & {
   /** Full-width block (default) vs flex row slot (`flex: 1`, `minWidth: 0`). */
@@ -7,11 +6,11 @@ export type RtlTextShellProps = ViewProps & {
 };
 
 /**
- * @deprecated Dual-system LTR island. New UI: wrap nothing — use `AppText`.
+ * Layout bounds only — no LTR island. Existing wrappers stay, without dual RTL.
  */
 export function RtlTextShell({ flex = false, style, children, ...rest }: RtlTextShellProps) {
   return (
-    <View style={[getPhysicalLtrShellStyle({ flex }), style]} {...rest}>
+    <View style={[flex ? { flex: 1, minWidth: 0 } : { width: '100%' }, style]} {...rest}>
       {children}
     </View>
   );

@@ -500,7 +500,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
-    suggestText: { ...typography.body, color: colors.textSecondary, flex: 1, textAlign: 'right' },
+    suggestText: { ...typography.body, color: colors.textSecondary, flex: 1,  },
     scroll: { paddingBottom: 20 },
     section: {
       marginHorizontal: spacing.lg,
@@ -525,7 +525,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
-    recentText: { ...typography.body, color: colors.textSecondary, flex: 1, textAlign: 'right' },
+    recentText: { ...typography.body, color: colors.textSecondary, flex: 1,  },
     trendingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     trendingChip: {
       paddingHorizontal: spacing.md,
@@ -560,7 +560,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     resultSubtitle: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
     loadingBox: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
     hintBox: { alignItems: 'center', paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, gap: spacing.sm },
-    mutedCaption: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },
+    mutedCaption: { ...typography.caption, color: colors.textMuted,  },
     errorText: { ...typography.body, color: colors.danger, textAlign: 'center' },
     noResults: { alignItems: 'center', paddingVertical: 60, gap: spacing.md },
     noResultsIcon: { fontSize: 48 },

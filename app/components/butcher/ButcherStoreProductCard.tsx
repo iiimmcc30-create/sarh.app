@@ -120,8 +120,7 @@ function createStyles(colors: ThemeColors) {
     },
     row: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'flex-start',
+            alignItems: 'flex-start',
       gap: 14,
     },
     mediaCol: {
@@ -157,30 +156,26 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.cardHeading,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
       width: '100%',
     },
     desc: {
       ...butcherTypography.secondary,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
       width: '100%',
       lineHeight: 20,
     },
     metaRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       flexWrap: 'wrap',
       gap: 10,
       marginTop: 2,
     },
     metaItem: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       gap: 4,
     },
     metaText: {
@@ -190,8 +185,7 @@ function createStyles(colors: ThemeColors) {
     },
     priceRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       alignItems: 'baseline',
       gap: 8,
       paddingTop: 4,

@@ -1,6 +1,14 @@
 import { readFileSync } from 'fs';
 import path from 'path';
-import { getRtlRow, getRtlText, rtlInputText, ltrInputText } from '@/lib/rtl';
+import {
+  getRtlRow,
+  getRtlText,
+  getRtlBlockTextStyle,
+  getPhysicalLtrShellStyle,
+  getCoverTrailRowStyle,
+  rtlInputText,
+  ltrInputText,
+} from '@/lib/rtl';
 
 const root = path.join(__dirname, '..');
 
@@ -28,6 +36,19 @@ describe('RTL policy — single I18nManager system', () => {
     expect(getRtlText()).not.toHaveProperty('textAlign');
     expect(rtlInputText).not.toHaveProperty('textAlign');
     expect(ltrInputText).not.toHaveProperty('textAlign');
+    expect(getRtlBlockTextStyle()).not.toHaveProperty('textAlign');
+    expect(getPhysicalLtrShellStyle()).not.toHaveProperty('direction');
+    expect(getCoverTrailRowStyle().flexDirection).toBe('row');
+    expect(JSON.stringify(getCoverTrailRowStyle())).not.toContain('row-reverse');
+  });
+});
+
+describe('shared primitives inherit the single RTL model', () => {
+  it('RtlText and RtlTextShell no longer create LTR islands', () => {
+    expect(src('components/ui/RtlText.tsx')).toContain('AppText');
+    expect(src('components/ui/RtlTextShell.tsx')).not.toContain("direction: 'ltr'");
+    expect(src('components/ui/VerifiedInlineName.tsx')).not.toContain('row-reverse');
+    expect(src('components/ui/SectionHeader.tsx')).not.toContain("direction: 'ltr'");
   });
 });
 

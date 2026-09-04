@@ -849,8 +849,7 @@ function createStyles(colors: ThemeColors) {
     },
     priceBadges: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       flexWrap: 'wrap',
       gap: spacing.sm,
     },
@@ -878,8 +877,7 @@ function createStyles(colors: ThemeColors) {
     },
     sellerRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      width: '100%',
+            width: '100%',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.sm,

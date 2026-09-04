@@ -99,8 +99,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
@@ -113,17 +112,14 @@ function createStyles(colors: ThemeColors) {
     },
     tabCoverTrail: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
     },
     tabTextShell: {
-      direction: 'ltr',
-    },
+          },
     tabLabel: {
       ...typography.smallHeading,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     tabLabelActive: {
       color: colors.textPrimary,
