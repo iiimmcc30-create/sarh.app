@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useRef } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 import {
   StyleSheet,
   TextInput,
@@ -84,11 +83,7 @@ function AppTextInputComponent({
 
   return (
     <View style={containerStyle}>
-      {label ? (
-        <RtlTextShell>
-          <RtlText style={styles.label}>{label}</RtlText>
-        </RtlTextShell>
-      ) : null}
+      {label ? <AppText style={styles.label}>{label}</AppText> : null}
       <View
         ref={wrapRef}
         style={[
@@ -115,16 +110,8 @@ function AppTextInputComponent({
           {...props}
         />
       </View>
-      {error ? (
-        <RtlTextShell>
-          <RtlText style={styles.error}>{error}</RtlText>
-        </RtlTextShell>
-      ) : null}
-      {!error && hint ? (
-        <RtlTextShell>
-          <RtlText style={styles.hint}>{hint}</RtlText>
-        </RtlTextShell>
-      ) : null}
+      {error ? <AppText style={styles.error}>{error}</AppText> : null}
+      {!error && hint ? <AppText style={styles.hint}>{hint}</AppText> : null}
     </View>
   );
 }

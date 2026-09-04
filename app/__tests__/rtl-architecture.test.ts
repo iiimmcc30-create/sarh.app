@@ -1,0 +1,83 @@
+import { readFileSync } from 'fs';
+import path from 'path';
+import { getRtlRow, getRtlText, rtlInputText, ltrInputText } from '@/lib/rtl';
+
+const root = path.join(__dirname, '..');
+
+function src(rel: string) {
+  return readFileSync(path.join(root, rel), 'utf8');
+}
+
+describe('RTL policy — single I18nManager system', () => {
+  it('keeps global forceRTL + swap and documents the policy', () => {
+    const boot = src('index.js');
+    expect(boot).toContain('I18nManager.forceRTL(true)');
+    expect(boot).toContain('I18nManager.swapLeftAndRightInRTL(true)');
+    expect(boot).toContain('RTL policy:');
+    expect(src('lib/rtl.ts')).toContain('RTL policy (Sarh, Arabic default)');
+  });
+
+  it('getRtlRow is a logical row without reverse or LTR islands', () => {
+    const row = getRtlRow();
+    expect(row.flexDirection).toBe('row');
+    expect(row.direction === 'rtl' || row.direction === 'ltr').toBe(true);
+    expect(JSON.stringify(row)).not.toContain('row-reverse');
+  });
+
+  it('getRtlText / input styles do not set textAlign', () => {
+    expect(getRtlText()).not.toHaveProperty('textAlign');
+    expect(rtlInputText).not.toHaveProperty('textAlign');
+    expect(ltrInputText).not.toHaveProperty('textAlign');
+  });
+});
+
+describe('AppText / AppTextInput primitives', () => {
+  it('AppText has no textAlign or LTR shell', () => {
+    const file = src('components/ui/AppText.tsx');
+    expect(file).toContain('getRtlText()');
+    expect(file).not.toContain("textAlign: 'right'");
+    expect(file).not.toContain('RtlTextShell');
+    expect(file).not.toContain("direction: 'ltr'");
+  });
+
+  it('AppTextInput label and field share the same RTL model', () => {
+    const file = src('components/ui/AppTextInput.tsx');
+    expect(file).toContain("from '@/components/ui/AppText'");
+    expect(file).toContain('getRtlRow()');
+    expect(file).not.toContain('RtlTextShell');
+    expect(file).not.toContain("direction: 'ltr'");
+    expect(file).not.toContain('row-reverse');
+    expect(file).not.toContain("textAlign: 'right'");
+  });
+});
+
+describe('Add listing — workarounds removed', () => {
+  const file = src('app/create/listing.tsx');
+
+  it('uses AppText and has no dual-system patches', () => {
+    expect(file).toContain("from '@/components/ui/AppText'");
+    expect(file).toContain('موقع العرض');
+    expect(file).toContain('عنوان العرض');
+    expect(file).toContain('إعادة الاقتراح');
+    expect(file).not.toContain("textAlign: 'right'");
+    expect(file).not.toContain("direction: 'ltr'");
+    expect(file).not.toContain('row-reverse');
+    expect(file).not.toContain('RtlTextShell');
+    expect(file).not.toContain("alignSelf: 'flex-end'");
+  });
+});
+
+describe('RTL architecture fixture', () => {
+  const file = src('components/ui/RtlPolicyFixture.tsx');
+
+  it('is a new-screen template without workarounds', () => {
+    expect(file).toContain('AppText');
+    expect(file).toContain('AppTextInput');
+    expect(file).toContain('getRtlRow');
+    expect(file).toContain('PrimaryButton');
+    expect(file).not.toContain("textAlign: 'right'");
+    expect(file).not.toContain("direction: 'ltr'");
+    expect(file).not.toContain('row-reverse');
+    expect(file).not.toContain('RtlTextShell');
+  });
+});

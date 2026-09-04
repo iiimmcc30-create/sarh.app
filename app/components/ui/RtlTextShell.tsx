@@ -7,8 +7,7 @@ export type RtlTextShellProps = ViewProps & {
 };
 
 /**
- * Physical LTR shell — isolates Arabic text bounds from parent RTL flex.
- * Pair with `RtlText` or styles from `getRtlBlockTextStyle()`.
+ * @deprecated Dual-system LTR island. New UI: wrap nothing — use `AppText`.
  */
 export function RtlTextShell({ flex = false, style, children, ...rest }: RtlTextShellProps) {
   return (

@@ -81,6 +81,7 @@ function RootNavigator() {
             backgroundColor: isDark
               ? themeColors.bgDeep || sarh.color.bg
               : themeColors.bgDeep,
+            // RTL policy: root direction from I18nManager — never force 'ltr' here.
             ...getRtlDirection(),
           },
           animation: stackSlideAnimation(),
