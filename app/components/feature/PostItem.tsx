@@ -1,23 +1,26 @@
-// SAFAT — Post card with elevated card layout, RTL body, and animated actions.
+// SAFAT — Full-width post row (X-style feed), no floating cards.
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { AppText } from '@/components/ui/AppText';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import {
   Animated,
-  Platform,
   Pressable,
   StyleSheet,
-  Text,
   View,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
-import { formatPostTimestampAr } from '@/lib/formatRelativeTime';
+import { getRtlRow } from '@/lib/rtl';
+import {
+  formatPostClockAr,
+  formatPostDateShortAr,
+  formatPostTimestampAr,
+  formatViewsLabelAr,
+} from '@/lib/formatRelativeTime';
 import { Post } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { PostMediaGallery } from '@/components/feature/PostMediaGallery';
@@ -66,24 +69,24 @@ function PostBody({ text, style, lines }: { text: string; style: TextStyle; line
 
   if (parts.length === 1 && !parts[0].isTag) {
     return (
-      <Text style={style} numberOfLines={lines}>
+      <AppText style={style} numberOfLines={lines}>
         {text}
-      </Text>
+      </AppText>
     );
   }
 
   return (
-    <Text style={style} numberOfLines={lines}>
+    <AppText style={style} numberOfLines={lines}>
       {parts.map((p, i) =>
         p.isTag ? (
-          <Text key={i} style={[style, { color: HASHTAG_BLUE }]}>
+          <AppText key={i} style={[style, { color: HASHTAG_BLUE }]}>
             {p.text}
-          </Text>
+          </AppText>
         ) : (
-          <Text key={i}>{p.text}</Text>
+          <AppText key={i}>{p.text}</AppText>
         ),
       )}
-    </Text>
+    </AppText>
   );
 }
 
@@ -91,17 +94,15 @@ function ActionBtn({
   icon,
   iconColor,
   count,
-  label,
   textColor,
   onPress,
   style,
   countStyle,
-  size = 20,
+  size = 18,
 }: {
   icon: string;
   iconColor: string;
   count?: number;
-  label?: string;
   textColor: string;
   onPress: () => void;
   style: ViewStyle;
@@ -129,11 +130,8 @@ function ActionBtn({
     <Pressable style={style} onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} hitSlop={10}>
       <Animated.View style={[{ transform: [{ scale }], opacity }, getRtlRow(), { alignItems: 'center', gap: 4 }]}>
         <AppIcon name={icon} size={size} color={iconColor} />
-        {label ? (
-          <Text style={[countStyle, { color: textColor }]}>{label}</Text>
-        ) : null}
         {count !== undefined && count > 0 ? (
-          <Text style={[countStyle, { color: textColor }]}>{formatCount(count)}</Text>
+          <AppText style={[countStyle, { color: textColor }]}>{formatCount(count)}</AppText>
         ) : null}
       </Animated.View>
     </Pressable>
@@ -151,7 +149,7 @@ function PostItemComponent({
   onBookmark,
 }: PostItemProps) {
   const { styles, colors, scheme } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors, theme.scheme, theme.scheme === 'dark' && variant === 'feed'),
+    styles: createStyles(theme.colors),
     colors: theme.colors,
     scheme: theme.scheme,
   }));
@@ -169,12 +167,24 @@ function PostItemComponent({
     [post.createdAt, post.postedAt],
   );
 
+  const clock = useMemo(
+    () => (post.createdAt ? formatPostClockAr(post.createdAt) : ''),
+    [post.createdAt],
+  );
+  const dateLabel = useMemo(
+    () => (post.createdAt ? formatPostDateShortAr(post.createdAt) : post.postedAt),
+    [post.createdAt, post.postedAt],
+  );
+
   const bodyText = post.arabicContent || post.content;
   const authorRating =
     typeof post.author.rating === 'number' ? post.author.rating.toFixed(1) : null;
+  const handle = post.author.username ? `@${post.author.username}` : '';
+  const viewsLabel =
+    typeof post.views === 'number' ? formatViewsLabelAr(post.views) : null;
 
   return (
-    <View style={[styles.card, variant === 'detail' && styles.cardDetail, variant === 'profile' && styles.cardProfile]}>
+    <View style={styles.rowWrap}>
       <View style={[styles.row, getRtlRow()]}>
         <UserProfileLink userId={post.author.id}>
           <Image source={uriSource(post.author.avatar)} style={styles.avatar} contentFit="cover" />
@@ -183,33 +193,41 @@ function PostItemComponent({
         <View style={styles.main}>
           <View style={[styles.metaLine, getRtlRow()]}>
             <UserProfileLink userId={post.author.id} style={styles.metaInfo}>
-              {/* LTR shell — same pattern as SidebarMenuItem / post body. */}
-              <View style={styles.nameTimeShell}>
-                <View style={styles.nameShell}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {post.author.arabicName}
-                  </Text>
-                </View>
+              <View style={[styles.nameRow, getRtlRow()]}>
+                <AppText style={styles.name} numberOfLines={1}>
+                  {post.author.arabicName}
+                </AppText>
                 {post.author.verified ? <VerificationBadge size={14} /> : null}
                 {authorRating ? (
-                  <View style={styles.ratingMini}>
+                  <View style={[styles.ratingMini, getRtlRow()]}>
                     <AppIcon name="star" size={11} color={colors.gold} />
-                    <Text style={styles.ratingMiniText}>{authorRating}</Text>
+                    <AppText style={styles.ratingMiniText}>{authorRating}</AppText>
                   </View>
                 ) : null}
-                <Text style={styles.metaDot}>·</Text>
-                <Text style={styles.metaMuted} numberOfLines={1}>
-                  {timestamp}
-                </Text>
+                {handle ? (
+                  <AppText style={styles.handle} numberOfLines={1}>
+                    {handle}
+                  </AppText>
+                ) : null}
+                {variant !== 'detail' && timestamp ? (
+                  <>
+                    <AppText style={styles.metaDot}>·</AppText>
+                    <AppText style={styles.metaMuted} numberOfLines={1}>
+                      {timestamp}
+                    </AppText>
+                  </>
+                ) : null}
               </View>
             </UserProfileLink>
 
             <Pressable
-              hitSlop={12}
+              hitSlop={14}
               onPress={onMenu}
+              accessibilityRole="button"
+              accessibilityLabel="المزيد"
               style={({ pressed }) => [styles.menuBtn, pressed && styles.menuBtnPressed]}
             >
-              <AppIcon name="ellipsis-horizontal" size={18} color={colors.textPrimary} />
+              <AppIcon name="ellipsis-vertical" size={18} color={colors.textMuted} />
             </Pressable>
           </View>
 
@@ -218,23 +236,20 @@ function PostItemComponent({
             disabled={!onPress || variant === 'detail'}
             style={({ pressed }) => [pressed && onPress ? styles.bodyPressed : null]}
           >
-            {/* LTR shell so textAlign:'right' stays on the visual right under app RTL. */}
-            <View style={styles.bodyShell}>
-              <PostBody
-                text={bodyText}
-                style={styles.body}
-                lines={expanded ? undefined : TEXT_COLLAPSE_LINES}
-              />
-            </View>
+            <PostBody
+              text={bodyText}
+              style={styles.body}
+              lines={expanded ? undefined : TEXT_COLLAPSE_LINES}
+            />
             {variant === 'feed' &&
             (bodyText.split('\n').length > TEXT_COLLAPSE_LINES || bodyText.length > 400) ? (
               !expanded ? (
                 <Pressable onPress={() => (onPress ? onPress() : setExpanded(true))} hitSlop={6}>
-                  <Text style={styles.showMore}>عرض المزيد</Text>
+                  <AppText style={styles.showMore}>عرض المزيد</AppText>
                 </Pressable>
               ) : (
                 <Pressable onPress={() => setExpanded(false)} hitSlop={6}>
-                  <Text style={styles.showMore}>عرض أقل</Text>
+                  <AppText style={styles.showMore}>عرض أقل</AppText>
                 </Pressable>
               )
             ) : null}
@@ -246,45 +261,65 @@ function PostItemComponent({
             ) : null}
           </Pressable>
 
+          {variant === 'detail' ? (
+            <View style={[styles.detailMeta, getRtlRow()]}>
+              {clock ? <AppText style={styles.metaMuted}>{clock}</AppText> : null}
+              {clock && dateLabel ? <AppText style={styles.metaDot}>·</AppText> : null}
+              {dateLabel ? <AppText style={styles.metaMuted}>{dateLabel}</AppText> : null}
+              {viewsLabel ? (
+                <>
+                  <AppText style={styles.metaDot}>·</AppText>
+                  <AppText style={styles.viewsMeta}>{viewsLabel}</AppText>
+                </>
+              ) : null}
+            </View>
+          ) : null}
+
           <View style={[styles.actions, getRtlRow()]}>
             <ActionBtn
               icon="chatbubble-ellipses-outline"
-              iconColor={colors.textPrimary}
-              textColor={colors.textPrimary}
+              iconColor={colors.textMuted}
+              textColor={colors.textMuted}
               count={post.comments}
-              label="تعليق"
               onPress={onComment}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
             <ActionBtn
               icon={post.liked ? 'heart' : 'heart-outline'}
-              iconColor={post.liked ? colors.rose : colors.textPrimary}
-              textColor={post.liked ? colors.rose : colors.textPrimary}
+              iconColor={post.liked ? colors.rose : colors.textMuted}
+              textColor={post.liked ? colors.rose : colors.textMuted}
               count={post.likes}
-              label="إعجاب"
               onPress={onLike}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
             <ActionBtn
               icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}
-              iconColor={post.bookmarked ? colors.electric : colors.textPrimary}
-              textColor={colors.textPrimary}
-              label="حفظ"
+              iconColor={post.bookmarked ? colors.electric : colors.textMuted}
+              textColor={colors.textMuted}
               onPress={onBookmark ?? (() => {})}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
             <ActionBtn
               icon="paper-plane-outline"
-              iconColor={colors.textPrimary}
-              textColor={colors.textPrimary}
-              label="مشاركة"
+              iconColor={colors.textMuted}
+              textColor={colors.textMuted}
               onPress={onShare}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
+            {variant !== 'detail' && typeof post.views === 'number' ? (
+              <View style={[styles.actionSlot, getRtlRow(), styles.viewsSlot]}>
+                <AppIcon name="eye-outline" size={18} color={colors.textMuted} />
+                {post.views > 0 ? (
+                  <AppText style={[styles.actionCount, { color: colors.textMuted }]}>
+                    {formatCount(post.views)}
+                  </AppText>
+                ) : null}
+              </View>
+            ) : null}
           </View>
         </View>
       </View>
@@ -322,37 +357,25 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
 
 export const PostItem = memo(PostItemComponent, arePropsEqual);
 
-function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard = false) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    card: {
-      marginHorizontal: spacing.md,
-      marginTop: feedCard ? 6 : 4,
-      marginBottom: feedCard ? 2 : 0,
-      borderRadius: MENU_CARD.radius,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 0,
-      overflow: 'hidden',
-    },
-    cardDetail: {
-      marginHorizontal: 0,
-      marginTop: 0,
-      borderRadius: 0,
-    },
-    cardProfile: {
-      marginHorizontal: 0,
-      marginTop: 0,
-      backgroundColor: colors.bgElevated,
+    rowWrap: {
+      backgroundColor: colors.bgDeep,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
     row: {
       alignItems: 'flex-start',
-      padding: feedCard ? spacing.xl : spacing.lg,
-      gap: feedCard ? 16 : 14,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      gap: 12,
     },
     avatar: {
-      width: 48,
-      height: 48,
+      width: 40,
+      height: 40,
       borderRadius: 20,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgSurface,
       flexShrink: 0,
     },
     main: {
@@ -360,45 +383,37 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       minWidth: 0,
     },
     metaLine: {
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
+      gap: 8,
     },
     metaInfo: {
       flex: 1,
       minWidth: 0,
-      overflow: 'hidden',
-      // Isolate from app RTL so flex-end = physical right (near avatar).
-      direction: 'ltr',
     },
-    nameTimeShell: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
+    nameRow: {
       alignItems: 'center',
-      flexWrap: 'nowrap',
+      flexWrap: 'wrap',
       gap: 4,
-      alignSelf: 'flex-end',
       maxWidth: '100%',
-    },
-    nameShell: {
-      direction: 'ltr',
-      flexShrink: 1,
-      minWidth: 0,
     },
     name: {
       ...typography.cardHeading,
       color: colors.textPrimary,
       flexShrink: 1,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+    },
+    handle: {
+      ...typography.caption,
+      color: colors.textMuted,
+      flexShrink: 1,
     },
     ratingMini: {
-      flexDirection: 'row',
       alignItems: 'center',
       gap: 2,
       paddingHorizontal: 5,
       paddingVertical: 1,
       borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgSurface,
       flexShrink: 0,
     },
     ratingMiniText: {
@@ -409,74 +424,71 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark', feedCard =
       ...typography.caption,
       color: colors.textMuted,
       flexShrink: 0,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     metaDot: {
       ...typography.caption,
       color: colors.textSubtle,
       flexShrink: 0,
     },
+    viewsMeta: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      flexShrink: 0,
+    },
     menuBtn: {
-      width: 30,
-      height: 30,
-      borderRadius: 16,
+      width: 32,
+      height: 32,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
     },
     menuBtnPressed: {
-      backgroundColor: colors.bgElevated,
-    },
-    bodyShell: {
-      width: '100%',
-      direction: 'ltr',
-      marginTop: 8,
+      opacity: 0.55,
     },
     body: {
       ...typography.body,
       color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
-      alignSelf: 'stretch',
+      marginTop: 4,
+      lineHeight: 24,
     },
     bodyPressed: {
       opacity: 0.92,
     },
     showMore: {
       ...typography.secondary,
-      color: colors.textSecondary,
+      color: colors.electricBright,
       marginTop: 4,
-      ...getRtlText(),
-    },
-    tagText: {
-      color: colors.textMuted,
-      opacity: 0.85,
     },
     mediaWrap: {
-      marginTop: 14,
-      marginBottom: 4,
-      alignItems: 'center',
+      marginTop: 12,
       width: '100%',
+    },
+    detailMeta: {
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 12,
     },
     actions: {
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginTop: 16,
-      paddingTop: spacing.sm,
-      paddingHorizontal: 2,
-      gap: spacing.xs,
+      marginTop: 10,
+      paddingTop: 2,
     },
     actionSlot: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 40,
+      minHeight: 36,
       paddingHorizontal: 2,
     },
     actionCount: {
       ...typography.caption,
+    },
+    viewsSlot: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
     },
   });
 }

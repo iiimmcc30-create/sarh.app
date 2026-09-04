@@ -15,6 +15,7 @@ export const FLATICON_ALIASES: Record<string, string> = {
   'close-circle-outline': 'cross-circle',
   menu: 'menu-burger',
   'ellipsis-horizontal': 'menu-dots',
+  'ellipsis-vertical': 'menu-dots-vertical',
   navigate: 'navigation',
   locate: 'target',
   refresh: 'refresh',

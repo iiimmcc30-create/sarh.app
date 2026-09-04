@@ -150,6 +150,7 @@ const MAP: Record<string, LucideIcon> = {
   menu: Menu,
   'menu-dots': MoreHorizontal,
   'ellipsis-horizontal': MoreHorizontal,
+  'ellipsis-vertical': MoreVertical,
   'menu-dots-vertical': MoreVertical,
   'more-vertical': MoreVertical,
   navigation: Navigation,

@@ -2,10 +2,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { PostItem } from '@/components/feature/PostItem';
 import {
-  PostCommentsSection,
+  PostCommentsComposer,
+  PostCommentsList,
+  PostCommentsProvider,
   type PostCommentsSectionRef,
 } from '@/components/feature/PostCommentsSection';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
@@ -165,41 +167,45 @@ export default function PostDetailScreen() {
         <View style={styles.backBtn} />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 48 : 0}
+      <PostCommentsProvider
+        ref={commentsRef}
+        postId={enrichedPost.id}
+        postOwnerId={enrichedPost.author.id}
+        onSubmitComment={(content) => addComment(enrichedPost.id, content)}
+        onCommentAdded={() => {
+          setPost((prev) => (prev ? { ...prev, comments: prev.comments + 1 } : prev));
+        }}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 48 : 0}
         >
-          <PostItem
-            post={enrichedPost}
-            variant="detail"
-            onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(enrichedPost.id)}
-            onComment={() => commentsRef.current?.focusInput()}
-            onBookmark={() =>
-              requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(enrichedPost.id)
-            }
-            onShare={() => sharePost(enrichedPost)}
-            onMenu={() =>
-              showPostMenu(enrichedPost, me, router, deletePost, isAuthenticated)
-            }
-          />
-
-          <PostCommentsSection
-            ref={commentsRef}
-            postId={enrichedPost.id}
-            postOwnerId={enrichedPost.author.id}
-            onSubmitComment={(content) => addComment(enrichedPost.id, content)}
-            onCommentAdded={() => {
-              setPost((prev) => (prev ? { ...prev, comments: prev.comments + 1 } : prev));
-            }}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            <PostItem
+              post={enrichedPost}
+              variant="detail"
+              onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(enrichedPost.id)}
+              onComment={() => commentsRef.current?.focusInput()}
+              onBookmark={() =>
+                requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(enrichedPost.id)
+              }
+              onShare={() => sharePost(enrichedPost)}
+              onMenu={() =>
+                showPostMenu(enrichedPost, me, router, deletePost, isAuthenticated)
+              }
+            />
+            <PostCommentsList />
+          </ScrollView>
+          <View style={{ paddingBottom: insets.bottom }}>
+            <PostCommentsComposer />
+          </View>
+        </KeyboardAvoidingView>
+      </PostCommentsProvider>
     </SafeAreaView>
   );
 }
