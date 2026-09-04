@@ -303,7 +303,7 @@ export const radius = {
   pill: sarh.radius.pill,
 };
 
-/** Text direction follows I18nManager — no hardcoded textAlign (avoids RTL mirror bugs). */
+/** RTL policy: writingDirection only. Never add textAlign:'right' here (swap mirrors it). */
 const directionalText = {
   writingDirection: 'rtl' as const,
 };

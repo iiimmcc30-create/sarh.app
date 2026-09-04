@@ -1,8 +1,8 @@
-import { StyleSheet, Text, type TextProps, type StyleProp, type TextStyle } from 'react-native';
+import { StyleSheet, Text, type StyleProp, type TextProps, type TextStyle } from 'react-native';
 import { OFFICIAL_APP_FONT, resolveAppFontFace } from '@/constants/fonts';
-import { getRtlBlockTextStyle } from '@/lib/rtl';
+import { getRtlText } from '@/lib/rtl';
 
-export type RtlTextProps = TextProps;
+export type AppTextProps = TextProps;
 
 function withOfficialFont(style: StyleProp<TextStyle> | undefined): StyleProp<TextStyle> {
   const flat = StyleSheet.flatten(style) as TextStyle | undefined;
@@ -12,14 +12,14 @@ function withOfficialFont(style: StyleProp<TextStyle> | undefined): StyleProp<Te
 }
 
 /**
- * @deprecated Dual-system leftover (LTR shell + physical textAlign).
- * New UI: `AppText` from `@/components/ui/AppText`.
+ * Default text primitive. Relies on global I18nManager RTL — no textAlign,
+ * no LTR island, no physical-edge alignment. Use this in all new screens.
  */
-export function RtlText({ style, ...rest }: RtlTextProps) {
+export function AppText({ style, ...rest }: AppTextProps) {
   return (
     <Text
       style={[
-        getRtlBlockTextStyle(),
+        getRtlText(),
         { fontFamily: OFFICIAL_APP_FONT, fontWeight: '700' },
         withOfficialFont(style),
       ]}
@@ -28,4 +28,4 @@ export function RtlText({ style, ...rest }: RtlTextProps) {
   );
 }
 
-export default RtlText;
+export default AppText;

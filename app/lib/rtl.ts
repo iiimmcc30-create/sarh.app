@@ -1,3 +1,24 @@
+/**
+ * RTL policy (Sarh, Arabic default)
+ * --------------------------------
+ * One system only: React Native I18nManager.
+ *   allowRTL(true) + forceRTL(localeUsesRtl) + swapLeftAndRightInRTL(same)
+ *   Stack contentStyle uses direction: 'rtl' | 'ltr' via getRtlDirection().
+ *
+ * Under swap, style left/right and textAlign 'left'|'right' are LOGICAL:
+ *   textAlign:'right' becomes visual LEFT in Arabic — never use it as a fix.
+ *   flexDirection:'row' already starts at the inline start (right in ar).
+ *
+ * Allowed in screens: AppText, AppTextInput, flexDirection:'row',
+ * start/end helpers (marginStart, paddingEnd, …), textAlign:'center'.
+ *
+ * Forbidden as RTL workarounds: textAlign:'right', direction:'ltr' islands,
+ * flexDirection:'row-reverse', alignSelf:'flex-end' to shove Arabic,
+ * new RtlTextShell wrappers.
+ *
+ * RtlText / RtlTextShell / getRtlBlockTextStyle are deprecated leftovers
+ * of the old dual system. Do not use them in new UI.
+ */
 import { I18nManager, Platform, type TextStyle, type ViewStyle } from 'react-native';
 import {
   DEFAULT_LOCALE,
@@ -102,28 +123,22 @@ export function getRtlDirection(): ViewStyle {
 }
 
 /**
- * Logical RTL row — flex follows app direction (navigation bars, input rows).
- * For mixed [text + icon] cover rows use `getCoverTrailRowStyle()` / `CoverTrailRow`.
+ * Logical row. `flexDirection: 'row'` plus the same `direction` as the root
+ * (not row-reverse). Needed on web: RN-web does not always inherit document
+ * dir onto a View, so a bare `row` can paint LTR. Do not add LTR islands here.
  */
 export function getRtlRow(): ViewStyle {
-  if (isAppRtl()) {
-    return Platform.OS === 'web'
-      ? { flexDirection: 'row-reverse' }
-      : { flexDirection: 'row', direction: 'rtl' };
-  }
-  return Platform.OS === 'web'
-    ? { flexDirection: 'row', direction: 'ltr' }
-    : { flexDirection: 'row' };
+  return { flexDirection: 'row', ...getRtlDirection() };
 }
 
 /**
- * Glyph alignment only — insufficient inside flex rows without bounds.
- * Prefer `getRtlBlockTextStyle()` inside `RtlTextShell`, or the `RtlText` component.
+ * Script direction only. No textAlign — Yoga/I18nManager owns alignment.
+ * Prefer `AppText` over spreading this onto raw Text.
  */
 export function getRtlText(): TextStyle {
   return isAppRtl()
-    ? { writingDirection: 'rtl', textAlign: 'right' }
-    : { writingDirection: 'ltr', textAlign: 'left' };
+    ? { writingDirection: 'rtl' }
+    : { writingDirection: 'ltr' };
 }
 
 export type PhysicalLtrShellOptions = {
@@ -132,8 +147,7 @@ export type PhysicalLtrShellOptions = {
 };
 
 /**
- * Physical LTR island — gives Text a stable box under global RTL flex.
- * Does not change business logic; only layout bounds.
+ * @deprecated LTR island from the dual RTL system. Do not use in new UI.
  */
 export function getPhysicalLtrShellStyle(options?: PhysicalLtrShellOptions): ViewStyle {
   const flex = options?.flex ?? false;
@@ -150,8 +164,7 @@ export type CoverTrailRowOptions = {
 };
 
 /**
- * Cover trail row — physical LTR order for [text + icon/image/button] clusters.
- * Icon/image on physical right; text shell adjacent (see SidebarMenuItem, SectionHeader).
+ * @deprecated Physical LTR cover row. New UI: getRtlRow() + source order.
  */
 export function getCoverTrailRowStyle(options?: CoverTrailRowOptions): ViewStyle {
   return {
@@ -165,7 +178,10 @@ export function getCoverTrailRowStyle(options?: CoverTrailRowOptions): ViewStyle
   };
 }
 
-/** Block Arabic text — use inside `RtlTextShell` (includes `width: '100%'`). */
+/**
+ * @deprecated Only for existing `RtlText` inside `RtlTextShell` (LTR island).
+ * New UI must use `AppText` — no textAlign, no shell.
+ */
 export function getRtlBlockTextStyle(): TextStyle {
   return isAppRtl()
     ? { width: '100%', textAlign: 'right', writingDirection: 'rtl' }
@@ -258,20 +274,17 @@ export function rtlForwardIcon(): string {
   return isAppRtl() ? 'angle-left' : 'angle-right';
 }
 
-/** Arabic / RTL input fields */
+/** Arabic fields — writing direction only; do not set textAlign. */
 export const rtlInputText: TextStyle = {
   writingDirection: 'rtl',
-  textAlign: 'right',
 };
 
-/** English-only or numeric fields */
+/** Latin / numeric typing — writing direction only. */
 export const ltrInputText: TextStyle = {
   writingDirection: 'ltr',
-  textAlign: 'left',
 };
 
 export const rtlTextInputProps = {
-  textAlign: 'right' as const,
   writingDirection: 'rtl' as const,
 };
 

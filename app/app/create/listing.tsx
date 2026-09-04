@@ -25,6 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { AppText } from '@/components/ui/AppText';
 import { getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -586,7 +587,7 @@ export default function CreateListingScreen() {
               ) : null}
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>موقع العرض</Text>
+                <AppText style={styles.fieldLabel}>موقع العرض</AppText>
                 <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
                   <TextInput
                     value={location}
@@ -605,7 +606,7 @@ export default function CreateListingScreen() {
                   <AppIcon name="location-outline" size={18} color={colors.electricBright} />
                 </View>
                 <Pressable onPress={() => setShowMap((v) => !v)} style={styles.linkBtn}>
-                  <Text style={styles.linkText}>{showMap ? 'إخفاء الخريطة' : 'اختيار من الخريطة'}</Text>
+                  <AppText style={styles.linkText}>{showMap ? 'إخفاء الخريطة' : 'اختيار من الخريطة'}</AppText>
                 </Pressable>
                 {showMap ? (
                   <LocationMapPreview
@@ -622,7 +623,7 @@ export default function CreateListingScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>عنوان العرض</Text>
+                <AppText style={styles.fieldLabel}>عنوان العرض</AppText>
                 <View style={[styles.inputWrap, titleAr.trim() ? styles.inputFilled : null]}>
                   <TextInput
                     value={titleAr}
@@ -640,12 +641,12 @@ export default function CreateListingScreen() {
 
               <View style={styles.fieldGroup}>
                 <View style={styles.categoryLabelRow}>
+                  <AppText style={styles.fieldLabel}>التصنيف</AppText>
                   {parentCategory ? (
                     <Pressable onPress={reSuggest} hitSlop={6}>
-                      <Text style={styles.linkText}>إعادة الاقتراح</Text>
+                      <AppText style={styles.linkText}>إعادة الاقتراح</AppText>
                     </Pressable>
                   ) : null}
-                  <Text style={styles.fieldLabel}>التصنيف</Text>
                 </View>
                 <Pressable
                   onPress={() => setCategoryPickerOpen(true)}
@@ -682,7 +683,7 @@ export default function CreateListingScreen() {
           {step === 1 && (
             <View style={styles.stepContent}>
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>موقع العرض</Text>
+                <AppText style={styles.fieldLabel}>موقع العرض</AppText>
                 <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
                   <TextInput
                     value={location}
@@ -696,7 +697,7 @@ export default function CreateListingScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>عنوان العرض</Text>
+                <AppText style={styles.fieldLabel}>عنوان العرض</AppText>
                 <View style={[styles.inputWrap, titleAr.trim() ? styles.inputFilled : null]}>
                   <TextInput
                     value={titleAr}
@@ -713,7 +714,7 @@ export default function CreateListingScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>التصنيف</Text>
+                <AppText style={styles.fieldLabel}>التصنيف</AppText>
                 <Pressable
                   onPress={() => setCategoryPickerOpen(true)}
                   style={[
@@ -740,7 +741,7 @@ export default function CreateListingScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الوصف</Text>
+                <AppText style={styles.fieldLabel}>الوصف</AppText>
                 <View style={[styles.inputWrap, styles.textareaWrap]}>
                   <TextInput
                     value={descAr}
@@ -757,7 +758,7 @@ export default function CreateListingScreen() {
 
               <View style={styles.compactRow}>
                 <View style={styles.compactField}>
-                  <Text style={styles.compactLabel}>السعر</Text>
+                  <AppText style={styles.compactLabel}>السعر</AppText>
                   <View style={styles.compactInput}>
                     <TextInput
                       value={price}
@@ -771,9 +772,9 @@ export default function CreateListingScreen() {
                   </View>
                 </View>
                 <View style={styles.compactField}>
-                  <Text style={styles.compactLabel}>
+                  <AppText style={styles.compactLabel}>
                     الوزن{needsWeight ? '' : ' (اختياري)'}
-                  </Text>
+                  </AppText>
                   <View style={styles.compactInput}>
                     <TextInput
                       value={weightKg}
@@ -789,7 +790,7 @@ export default function CreateListingScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>الجوال</Text>
+                <AppText style={styles.fieldLabel}>الجوال</AppText>
                 <View style={[styles.inputWrap, styles.phoneField]}>
                   <TextInput
                     value={contactPhone}
@@ -810,28 +811,28 @@ export default function CreateListingScreen() {
             <View style={styles.stepContent}>
               <View style={styles.reviewCard}>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>التصنيف</Text>
+                  <AppText style={styles.reviewLabel}>التصنيف</AppText>
                   <Text style={styles.reviewValue}>
                     {parentCategory?.nameAr || '—'}
                     {subCategory ? ` · ${subCategory.nameAr}` : ''}
                   </Text>
                 </View>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>العنوان</Text>
+                  <AppText style={styles.reviewLabel}>العنوان</AppText>
                   <Text style={styles.reviewValue}>{titleAr || '—'}</Text>
                 </View>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>الموقع</Text>
+                  <AppText style={styles.reviewLabel}>الموقع</AppText>
                   <Text style={styles.reviewValue}>{location || '—'}</Text>
                 </View>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>السعر</Text>
+                  <AppText style={styles.reviewLabel}>السعر</AppText>
                   <Text style={styles.reviewValue}>
                     {price ? `${Number(price).toLocaleString()} ر.س` : '—'}
                   </Text>
                 </View>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>الوسائط</Text>
+                  <AppText style={styles.reviewLabel}>الوسائط</AppText>
                   <Text style={styles.reviewValue}>
                     {imageUris.length} صور
                     {hasListingVideo ? ' · فيديو' : ''}
@@ -1018,12 +1019,9 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontWeight: '600',
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     inputWrap: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 8,
       backgroundColor: colors.bgSurface,
@@ -1042,8 +1040,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textPrimary,
       paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     textareaWrap: {
       flexDirection: 'column',
@@ -1060,31 +1056,25 @@ function createStyles(colors: ThemeColors) {
     charCount: {
       ...typography.micro,
       color: colors.textSubtle,
-      alignSelf: 'flex-end',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+      alignSelf: 'flex-start',
     },
-    linkBtn: { alignSelf: 'flex-end' },
+    linkBtn: { alignSelf: 'flex-start' },
     linkText: { ...typography.caption, color: colors.electricBright },
     categoryLabelRow: {
-      direction: 'ltr',
-      flexDirection: 'row',
+      ...getRtlRow(),
       justifyContent: 'space-between',
       alignItems: 'center',
       width: '100%',
     },
     categoryField: { minHeight: 56, alignItems: 'center' },
-    categoryValue: { flex: 1, minWidth: 0, alignItems: 'flex-end' },
+    categoryValue: { flex: 1, minWidth: 0 },
     categoryValueText: {
       ...typography.body,
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     compactRow: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       gap: 8,
       width: '100%',
     },
@@ -1093,12 +1083,9 @@ function createStyles(colors: ThemeColors) {
       ...typography.micro,
       color: colors.textMuted,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     compactInput: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
+      ...getRtlRow(),
       alignItems: 'center',
       gap: 4,
       minHeight: 44,
@@ -1114,8 +1101,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       flex: 1,
       minWidth: 0,
-      textAlign: 'right',
-      writingDirection: 'rtl',
     },
     compactUnit: { ...typography.micro, color: colors.textMuted, flexShrink: 0 },
     phoneField: {
@@ -1146,7 +1131,7 @@ function createStyles(colors: ThemeColors) {
       borderBottomColor: colors.borderSoft,
     },
     reviewLabel: { ...typography.caption, color: colors.textMuted },
-    reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right', flex: 1 },
+    reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1 },
     termsBox: {
       flexDirection: 'row',
       gap: spacing.sm,
@@ -1160,7 +1145,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       flex: 1,
       lineHeight: 18,
-      textAlign: 'right',
     },
     bottomBar: {
       paddingHorizontal: spacing.lg,
@@ -1195,7 +1179,7 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.lg,
       maxHeight: '72%',
     },
-    modalTitle: { ...typography.h3, color: colors.textPrimary, textAlign: 'right', marginBottom: spacing.md },
+    modalTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
     modalScroll: { maxHeight: 420 },
     modalGroup: { marginBottom: spacing.md },
     modalParent: {
@@ -1205,12 +1189,12 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
     },
     modalParentActive: { backgroundColor: `${colors.electric}18` },
-    modalParentText: { ...typography.bodyStrong, color: colors.textPrimary, textAlign: 'right' },
+    modalParentText: { ...typography.bodyStrong, color: colors.textPrimary },
     subList: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
-      justifyContent: 'flex-end',
+      justifyContent: 'flex-start',
       marginTop: spacing.sm,
     },
     subChip: {
