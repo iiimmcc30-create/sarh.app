@@ -147,12 +147,12 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
       'utf8',
     );
-    const bellAt = src.indexOf('<NotificationBellButton');
-    const searchAt = src.indexOf('accessibilityLabel="بحث"');
     const avatarAt = src.indexOf('accessibilityLabel="القائمة الجانبية"');
-    expect(bellAt).toBeGreaterThan(-1);
-    expect(searchAt).toBeGreaterThan(bellAt);
-    expect(avatarAt).toBeGreaterThan(searchAt);
+    const searchAt = src.indexOf('accessibilityLabel="بحث"');
+    const bellAt = src.indexOf('<NotificationBellButton');
+    expect(avatarAt).toBeGreaterThan(-1);
+    expect(searchAt).toBeGreaterThan(avatarAt);
+    expect(bellAt).toBeGreaterThan(searchAt);
     expect(src).toContain('onAvatarPress');
     expect(src).not.toContain('HomeProfileMenu');
     expect(src).not.toContain('angle-down');
