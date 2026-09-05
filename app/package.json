@@ -7,7 +7,7 @@
     "start:qr": "node scripts/start-qr.js",
     "start:railway": "node scripts/start-railway.js",
     "start:usb": "node scripts/start-usb.js",
-    "start:lan": "expo start --dev-client --lan --clear",
+    "start:lan": "node scripts/start-qr.js",
     "android": "node scripts/run-android-usb.js",
     "android:usb": "node scripts/run-android-usb.js",
     "android:dev": "node scripts/start-usb.js",

@@ -1,7 +1,7 @@
 const { spawn, execFile } = require('child_process');
 const path = require('path');
-const { networkInterfaces } = require('os');
 const { resolveDevApiUrls } = require('./resolve-dev-api-urls');
+const { resolveLanIp } = require('./resolve-lan-ip');
 
 const API_PORT = 3001;
 const SOCKET_PORT = 3002;
@@ -76,17 +76,6 @@ async function getDeviceState() {
   }
 }
 
-function getLanIp() {
-  for (const entries of Object.values(networkInterfaces())) {
-    for (const entry of entries ?? []) {
-      if (entry.family === 'IPv4' && !entry.internal && entry.address.startsWith('192.168.')) {
-        return entry.address;
-      }
-    }
-  }
-  return null;
-}
-
 function printUsbHelp(state) {
   if (state.kind === 'unauthorized') {
     console.error('[start:usb] موبايل/موبايلين متصلين لكن غير مصرّح.');
@@ -107,9 +96,9 @@ function printUsbHelp(state) {
 }
 
 function printLanFallback() {
-  const lanIp = getLanIp();
+  const lanIp = resolveLanIp();
   if (!lanIp) return;
-  console.error(`[start:usb] بديل: شغّل بالواي فاي → npm run start:lan`);
+  console.error(`[start:usb] بديل: شغّل بالواي فاي → npm run start:qr`);
   console.error(`[start:usb] وتأكد أن EXPO_PUBLIC_API_URL=http://${lanIp}:${API_PORT}`);
 }
 

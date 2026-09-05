@@ -6,41 +6,25 @@ const { spawn, execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
-const { networkInterfaces } = require('os');
 
 const { resolveDevApiUrlsAsync } = require('./resolve-dev-api-urls');
+const { resolveLanIp, isLikelyUnreachableDockerIp } = require('./resolve-lan-ip');
+const { resolveExpoPort } = require('./resolve-expo-port');
 
 const API_PORT = 3001;
 const SOCKET_PORT = 3002;
-const EXPO_PORT = process.env.EXPO_PORT || '8081';
+const DEFAULT_EXPO_PORT = 8081;
 /** Expo project slug (EAS). Dev-client URLs use exp+{slug}, not the store scheme. */
 const EXPO_SLUG = 'safat';
 const ROOT = path.join(__dirname, '..');
 const QR_PATH = path.join(ROOT, 'expo-qr.png');
 
-function getLanIp() {
-  for (const entries of Object.values(networkInterfaces())) {
-    for (const entry of entries ?? []) {
-      if (entry.family === 'IPv4' && !entry.internal) {
-        if (
-          entry.address.startsWith('192.168.') ||
-          entry.address.startsWith('10.') ||
-          entry.address.startsWith('172.')
-        ) {
-          return entry.address;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function buildDevClientUrl(lanIp, port = EXPO_PORT) {
+function buildDevClientUrl(lanIp, port) {
   const metroUrl = `http://${lanIp}:${port}`;
   return `exp+${EXPO_SLUG}://expo-development-client/?url=${encodeURIComponent(metroUrl)}`;
 }
 
-function buildExpoGoUrl(lanIp, port = EXPO_PORT) {
+function buildExpoGoUrl(lanIp, port) {
   return `exp://${lanIp}:${port}`;
 }
 
@@ -79,7 +63,6 @@ function killProjectMetro() {
       resolve();
       return;
     }
-    const appPath = ROOT.replace(/\\/g, '\\\\');
     const timer = setTimeout(() => resolve(), 8000);
     execFile(
       'powershell',
@@ -90,57 +73,6 @@ function killProjectMetro() {
           'Get-CimInstance Win32_Process -Filter "Name=\'node.exe\'" -ErrorAction SilentlyContinue | ' +
           'Where-Object { $_.CommandLine -and ($_.CommandLine -like "*$root*") -and ($_.CommandLine -match "expo|metro|@expo/cli") } | ' +
           'ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }',
-      ],
-      () => {
-        clearTimeout(timer);
-        resolve();
-      },
-    ).on('error', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-  });
-}
-
-function isPortListening(port) {
-  return new Promise((resolve) => {
-    if (process.platform !== 'win32') {
-      resolve(false);
-      return;
-    }
-    execFile(
-      'powershell',
-      [
-        '-NoProfile',
-        '-Command',
-        `$c = Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1; if ($c) { 'yes' }`,
-      ],
-      (_err, stdout) => resolve(String(stdout ?? '').trim() === 'yes'),
-    ).on('error', () => resolve(false));
-  });
-}
-
-async function resolveExpoPort() {
-  const preferred = Number(process.env.EXPO_PORT) || 8081;
-  for (let port = preferred; port < preferred + 10; port += 1) {
-    if (!(await isPortListening(port))) return String(port);
-  }
-  return String(preferred);
-}
-
-function killPort(port) {
-  return new Promise((resolve) => {
-    if (process.platform !== 'win32') {
-      resolve();
-      return;
-    }
-    const timer = setTimeout(() => resolve(), 4000);
-    execFile(
-      'powershell',
-      [
-        '-NoProfile',
-        '-Command',
-        `$p = Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if ($p) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }`,
       ],
       () => {
         clearTimeout(timer);
@@ -168,18 +100,30 @@ function clearMetroCache() {
 }
 
 async function main() {
-  const lanIp = getLanIp();
+  const lanIp = resolveLanIp();
   if (!lanIp) {
-    console.error('[start:qr] لم يُعثر على IP للشبكة المحلية. اتصل بالواي فاي.');
+    console.error('[start:qr] لم يُعثر على IP للشبكة المحلية (Wi‑Fi).');
+    console.error('[start:qr] تأكد أن الكمبيوتر متصل بالواي فاي، أو عيّن:');
+    console.error('[start:qr]   set EXPO_DEV_LAN_IP=192.168.x.x   (Windows)');
+    console.error('[start:qr]   export EXPO_DEV_LAN_IP=192.168.x.x (macOS/Linux)');
     process.exit(1);
   }
 
-  await killProjectMetro();
-  const expoPort = await resolveExpoPort();
-  if (expoPort !== (process.env.EXPO_PORT || '8081')) {
-    console.log(`[start:qr] المنفذ ${process.env.EXPO_PORT || '8081'} مشغول — استخدام ${expoPort}`);
+  if (isLikelyUnreachableDockerIp(lanIp)) {
+    console.warn(
+      `[start:qr] تحذير: ${lanIp} يبدو IP جسر Docker/WSL — Android قد لا يصل إليه.`,
+    );
+    console.warn('[start:qr] عيّن IP الواي فاي يدوياً: EXPO_DEV_LAN_IP=192.168.x.x');
   }
-  await killPort(expoPort);
+
+  await killProjectMetro();
+
+  const preferredPort = Number(process.env.EXPO_PORT) || DEFAULT_EXPO_PORT;
+  const expoPort = await resolveExpoPort(preferredPort);
+  if (expoPort !== String(preferredPort)) {
+    console.log(`[start:qr] المنفذ ${preferredPort} مشغول — استخدام ${expoPort}`);
+  }
+
   clearMetroCache();
 
   const devClientUrl = buildDevClientUrl(lanIp, expoPort);
@@ -200,20 +144,22 @@ async function main() {
 
   console.log('');
   console.log('══════════════════════════════════════════');
-  console.log('  سرح — تشغيل Metro للواي فاي');
+  console.log('  سرح — Metro + QR (Android Dev Client)');
   console.log('══════════════════════════════════════════');
-  console.log('  IP:', lanIp);
-  console.log('  Dev app (امسح QR):', devClientUrl);
-  console.log('  Expo Go (بديل):', expoGoUrl);
+  console.log('  LAN IP (للجوال):', lanIp);
+  console.log('  Metro port:     ', expoPort);
+  console.log('  Dev app (QR):   ', devClientUrl);
+  console.log('  Expo Go:        ', expoGoUrl);
   const remoteLabel =
-    mode === 'remote' || mode === 'railway-fallback' ? '(Railway)' : '';
-  console.log('  API:', apiUrl, remoteLabel);
-  console.log('  Socket:', socketUrl, remoteLabel);
-  console.log('  DevTools:', `http://localhost:${expoPort}`);
+    mode === 'remote' || mode === 'render-fallback' ? '(production)' : '';
+  console.log('  API:            ', apiUrl, remoteLabel);
+  console.log('  Socket:         ', socketUrl, remoteLabel);
+  console.log('  DevTools:       ', `http://localhost:${expoPort}`);
   console.log('');
-  console.log('  1) ثبّت التطبيق أولاً: npm run android');
+  console.log('  1) Development Build (ليس Preview APK)');
   console.log('  2) نفس شبكة Wi‑Fi للهاتف والكمبيوتر');
-  console.log('  3) امسح expo-qr.png من تطبيق سرح المثبّت');
+  console.log('  3) امسح expo-qr.png من تطبيق سرح');
+  console.log('  4) أو USB: npm run android:dev');
   console.log('══════════════════════════════════════════');
   console.log('');
 
@@ -243,9 +189,10 @@ async function main() {
         EXPO_NO_METRO_WORKSPACE_ROOT: '1',
         EXPO_PORT: expoPort,
         RCT_METRO_PORT: expoPort,
+        /** Forces Metro QR/deep-link to use Wi‑Fi IP, not Docker/WSL bridge. */
+        REACT_NATIVE_PACKAGER_HOSTNAME: lanIp,
         WATCHMAN_DISABLE: '1',
         METRO_DISABLE_WATCHMAN: '1',
-        // Polling retriggers rebuild loops on Windows during bundle writes — avoid it.
         CHOKIDAR_USEPOLLING: '0',
       },
     },
