@@ -193,7 +193,6 @@ export default function ProfileScreen() {
       hasStoryRing={hasStories}
       refreshing={refreshing}
       onRefresh={onRefresh}
-      onSettings={() => safePush('/profile/settings', undefined, router)}
       onEditProfile={() => safePush('/profile/edit', undefined, router)}
       onEditAvatar={() => safePush('/profile/edit', undefined, router)}
       onAvatarPress={() => {

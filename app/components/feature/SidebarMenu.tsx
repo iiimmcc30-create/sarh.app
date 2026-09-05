@@ -55,10 +55,12 @@ export function SidebarSection({
   title,
   children,
   colors,
+  variant = 'card',
 }: {
   title?: string;
   children: ReactNode;
   colors: ThemeColors;
+  variant?: 'card' | 'flat';
 }) {
   return (
     <View style={sectionStyles.block}>
@@ -67,7 +69,9 @@ export function SidebarSection({
           <RtlText style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</RtlText>
         </RtlTextShell>
       ) : null}
-      <View style={[sectionStyles.card, menuCardStyle(colors)]}>{children}</View>
+      <View style={[sectionStyles.card, variant === 'card' ? menuCardStyle(colors) : null]}>
+        {children}
+      </View>
     </View>
   );
 }
@@ -247,9 +251,11 @@ export function SidebarThemeToggle({
 export function SidebarLogoutButton({
   colors,
   onPress,
+  variant = 'card',
 }: {
   colors: ThemeColors;
   onPress: () => void;
+  variant?: 'card' | 'flat';
 }) {
   return (
     <Pressable
@@ -258,7 +264,7 @@ export function SidebarLogoutButton({
       onPress={onPress}
       style={({ pressed }) => [
         logoutStyles.btn,
-        menuCardStyle(colors),
+        variant === 'card' ? menuCardStyle(colors) : null,
         pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
       ]}
     >
