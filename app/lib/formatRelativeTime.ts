@@ -105,6 +105,43 @@ export function formatPostDateShortAr(input?: string | Date | null): string {
   });
 }
 
+/**
+ * External post card timestamp only (feed / profile rows).
+ * < 24h → Nس | 1–7 days → Nيوم | > 7 days → "8 أغسطس" (no year).
+ * Internal post detail page uses formatPostClockAr + formatPostDateShortAr instead.
+ */
+export function formatPostCardTimestampAr(
+  input?: string | Date | null,
+  nowMs: number = Date.now(),
+): string {
+  if (!input) return '';
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return typeof input === 'string' ? input : '';
+  }
+
+  const diffMs = nowMs - date.getTime();
+  const hourMs = 60 * 60 * 1000;
+  const dayMs = 24 * hourMs;
+  const totalHours = Math.floor(diffMs / hourMs);
+  const totalDays = Math.floor(diffMs / dayMs);
+
+  if (totalDays >= 8) {
+    const day = date.getDate();
+    const month = date.toLocaleDateString('ar-SA', { month: 'long' });
+    return `${day} ${month}`;
+  }
+
+  if (totalDays >= 1) {
+    return `${totalDays}يوم`;
+  }
+
+  if (diffMs < 0) return '1س';
+
+  const hours = Math.max(1, totalHours);
+  return `${hours}س`;
+}
+
 /** Real view count from API — never a placeholder. */
 export function formatViewsLabelAr(views: number): string {
   const n = toArabicDigits(views);
