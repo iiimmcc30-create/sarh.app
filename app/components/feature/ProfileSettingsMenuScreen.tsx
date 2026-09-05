@@ -49,7 +49,7 @@ export function ProfileSettingsMenuScreen({
       <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.sections}>
           {sections.map((section) => (
-            <SidebarSection key={section.title} title={section.title} colors={colors}>
+            <SidebarSection key={section.title} title={section.title} colors={colors} variant="flat">
               {section.items.map((item, index) => (
                 <SidebarMenuRow
                   key={item.key}
@@ -63,7 +63,7 @@ export function ProfileSettingsMenuScreen({
           ))}
         </View>
 
-        <SidebarLogoutButton colors={colors} onPress={onLogout} />
+        <SidebarLogoutButton colors={colors} onPress={onLogout} variant="flat" />
         <SidebarFooterArt />
       </AppScrollView>
     </SafeAreaView>

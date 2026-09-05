@@ -1,11 +1,25 @@
-import { useEffect } from 'react';
+import { AppSidebar } from '@/components/feature/AppSidebar';
 import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { getRtlRow } from '@/lib/rtl';
 
-/** Sidebar was retired as a primary nav surface — keep the route for old links. */
 export default function SidebarScreen() {
   const router = useRouter();
-  useEffect(() => {
-    router.replace('/(tabs)/more' as never);
-  }, [router]);
-  return null;
+
+  return (
+    <View style={[styles.backdrop, getRtlRow()]}>
+      <AppSidebar onClose={() => router.back()} />
+      <Pressable style={styles.backdropTap} onPress={() => router.back()} />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+  },
+  backdropTap: {
+    flex: 1,
+  },
+});

@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -557,11 +556,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     statsCard: {
       marginTop: 6,
-      backgroundColor: colors.bgElevated,
-      borderRadius: MENU_CARD.radius,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.xs,
-      borderWidth: 0,
+      backgroundColor: 'transparent',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: 0,
     },
     statsRow: {
       alignItems: 'stretch',
@@ -691,12 +688,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textPrimary,
     },
     contentCardTop: {
-      marginHorizontal: spacing.lg,
+      marginHorizontal: 0,
       marginTop: spacing.sm,
-      borderRadius: MENU_CARD.radius,
-      backgroundColor: colors.bgElevated,
-      overflow: 'hidden',
-      borderWidth: 0,
+      backgroundColor: 'transparent',
     },
     postsFeed: {
       paddingHorizontal: spacing.lg,
@@ -706,7 +700,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 4,
     },
     tabsBar: {
-      backgroundColor: colors.bgElevated,
+      backgroundColor: 'transparent',
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
     tabsRow: {
       paddingHorizontal: spacing.lg,

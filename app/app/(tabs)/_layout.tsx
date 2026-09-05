@@ -39,11 +39,11 @@ export default function TabsLayout() {
           href: null,
         }}
       />
-      <Tabs.Screen name="posts" options={{ href: null }} />
+      <Tabs.Screen name="posts" options={{ title: 'مجتمع سرح' }} />
       <Tabs.Screen name="live" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ title: 'المحادثات' }} />
-      <Tabs.Screen name="more" options={{ title: 'المزيد' }} />
-      <Tabs.Screen name="profile" options={{ title: 'الملف الشخصي', href: null }} />
+      <Tabs.Screen name="more" options={{ title: 'المزيد', href: null }} />
+      <Tabs.Screen name="profile" options={{ title: 'الملف الشخصي' }} />
     </Tabs>
   );
 }
