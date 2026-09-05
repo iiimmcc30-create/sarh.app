@@ -265,7 +265,7 @@ export function ProfileScreenLayout({
             <View style={[styles.identityRow, getRtlRow()]}>
               <View style={styles.infoCol}>
                 <View style={styles.nameBlock}>
-                  <View style={styles.nameWithBadge}>
+                  <View style={[styles.nameWithBadge, getRtlRow()]}>
                     <View style={styles.nameShell}>
                       <RtlText style={[styles.displayName, styles.displayNameInline]} numberOfLines={2}>
                         {displayName}
@@ -274,44 +274,43 @@ export function ProfileScreenLayout({
                     {user.verified ? <VerificationBadge size={18} /> : null}
                   </View>
 
-                  <CoverTrailRow justify="space-between" gap={8} style={styles.handleRow}>
-                    <Pressable
-                      onPress={onRatePress}
-                      disabled={!onRatePress}
-                      style={({ pressed }) => [
-                        styles.ratingRow,
-                        pressed && onRatePress && styles.ratingChipPressed,
-                      ]}
-                    >
-                      <CoverTrailRow justify="flex-start" gap={4}>
-                        <View style={styles.starsRow}>
-                          {[1, 2, 3, 4, 5].map((n) => (
-                            <AppIcon
-                              key={n}
-                              name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
-                              size={11}
-                              color={
-                                hasRating && n <= filledStars
-                                  ? themeColors.gold
-                                  : themeColors.textSubtle
-                              }
-                            />
-                          ))}
-                        </View>
-                        {ratingLabel ? (
-                          <Text style={styles.ratingText}>{ratingLabel}</Text>
-                        ) : null}
-                        {(user.reviewCount ?? 0) > 0 ? (
-                          <Text style={styles.ratingCount}>({user.reviewCount})</Text>
-                        ) : null}
-                      </CoverTrailRow>
-                    </Pressable>
-                    <RtlTextShell flex>
-                      <RtlText style={styles.handleText} numberOfLines={1}>
-                        @{user.username}
-                      </RtlText>
-                    </RtlTextShell>
-                  </CoverTrailRow>
+                  <RtlTextShell style={styles.handleShell}>
+                    <RtlText style={styles.handleText} numberOfLines={1}>
+                      @{user.username}
+                    </RtlText>
+                  </RtlTextShell>
+
+                  <Pressable
+                    onPress={onRatePress}
+                    disabled={!onRatePress}
+                    style={({ pressed }) => [
+                      styles.ratingRow,
+                      pressed && onRatePress && styles.ratingChipPressed,
+                    ]}
+                  >
+                    <CoverTrailRow justify="flex-start" gap={4}>
+                      <View style={styles.starsRow}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <AppIcon
+                            key={n}
+                            name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
+                            size={11}
+                            color={
+                              hasRating && n <= filledStars
+                                ? themeColors.gold
+                                : themeColors.textSubtle
+                            }
+                          />
+                        ))}
+                      </View>
+                      {ratingLabel ? (
+                        <Text style={styles.ratingText}>{ratingLabel}</Text>
+                      ) : null}
+                      {(user.reviewCount ?? 0) > 0 ? (
+                        <Text style={styles.ratingCount}>({user.reviewCount})</Text>
+                      ) : null}
+                    </CoverTrailRow>
+                  </Pressable>
                 </View>
 
                 <View style={styles.statsCard}>
@@ -502,23 +501,21 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     nameBlock: {
       gap: 4,
       width: '100%',
-      // Physical LTR island — without this, parent RTL flips flex-end to the left edge.
-          },
+      alignItems: 'flex-start',
+    },
     nameWithBadge: {
-            flexDirection: 'row',
       alignItems: 'center',
       flexWrap: 'nowrap',
       gap: 4,
-      alignSelf: 'flex-end',
       maxWidth: '100%',
     },
     nameShell: {
-            flexShrink: 1,
+      flexShrink: 1,
       minWidth: 0,
     },
-    handleRow: {
-      width: '100%',
-      minWidth: 0,
+    handleShell: {
+      alignSelf: 'stretch',
+      maxWidth: '100%',
     },
     ratingRow: {
       paddingVertical: 2,
@@ -552,7 +549,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     handleText: {
       ...typography.caption,
       color: colors.textMuted,
-      writingDirection: 'ltr',
+      ...getRtlText(),
     },
     statsCard: {
       marginTop: 6,

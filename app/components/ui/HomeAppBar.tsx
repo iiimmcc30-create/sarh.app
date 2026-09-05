@@ -5,6 +5,7 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { ds } from '@/constants/designSystem';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
@@ -21,7 +22,7 @@ type HomeAppBarProps = {
   avatarUri?: string | null;
 };
 
-/** Home header: flat full-width bar — notifications/search left, profile identity right. */
+/** Home header: avatar + name at the start (right in RTL), search + notifications opposite. */
 export function HomeAppBar({
   onSearch,
   onProfilePress,
@@ -36,39 +37,8 @@ export function HomeAppBar({
 
   return (
     <View style={styles.shell}>
-      <View style={styles.bar}>
-        <View style={styles.leftCluster}>
-          <NotificationBellButton
-            bare
-            size={ICON_BTN}
-            iconSize={ICON_SIZE}
-            style={styles.iconBtn}
-            iconColor={colors.textPrimary}
-            badgeBorderColor={colors.bgDeep}
-          />
-          <Pressable
-            onPress={onSearch}
-            style={styles.iconBtn}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="بحث"
-          >
-            <AppIcon name="search" size={ICON_SIZE} color={colors.textPrimary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.profileCluster}>
-          <Pressable
-            onPress={onProfilePress}
-            style={styles.nameTap}
-            accessibilityRole="button"
-            accessibilityLabel={displayName}
-          >
-            <Text style={styles.displayName} numberOfLines={1}>
-              {displayName}
-            </Text>
-          </Pressable>
-
+      <View style={[styles.bar, getRtlRow()]}>
+        <View style={[styles.profileCluster, getRtlRow()]}>
           <Pressable
             onPress={onAvatarPress}
             style={styles.avatarBtn}
@@ -81,6 +51,37 @@ export function HomeAppBar({
               contentFit="cover"
             />
           </Pressable>
+
+          <Pressable
+            onPress={onProfilePress}
+            style={styles.nameTap}
+            accessibilityRole="button"
+            accessibilityLabel={displayName}
+          >
+            <Text style={styles.displayName} numberOfLines={1}>
+              {displayName}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={[styles.toolsCluster, getRtlRow()]}>
+          <Pressable
+            onPress={onSearch}
+            style={styles.iconBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="بحث"
+          >
+            <AppIcon name="search" size={ICON_SIZE} color={colors.textPrimary} />
+          </Pressable>
+          <NotificationBellButton
+            bare
+            size={ICON_BTN}
+            iconSize={ICON_SIZE}
+            style={styles.iconBtn}
+            iconColor={colors.textPrimary}
+            badgeBorderColor={colors.bgDeep}
+          />
         </View>
       </View>
     </View>
@@ -97,16 +98,14 @@ function createStyles(colors: ThemeColors) {
     bar: {
       width: '100%',
       minHeight: BAR_H,
-      flexDirection: 'row',
-            alignItems: 'center',
+      alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       backgroundColor: colors.bgDeep,
     },
-    leftCluster: {
-      flexDirection: 'row',
-            alignItems: 'center',
+    toolsCluster: {
+      alignItems: 'center',
       gap: 4,
     },
     iconBtn: {
@@ -119,11 +118,8 @@ function createStyles(colors: ThemeColors) {
     profileCluster: {
       flex: 1,
       minWidth: 0,
-      flexDirection: 'row',
-            alignItems: 'center',
-      justifyContent: 'flex-end',
+      alignItems: 'center',
       gap: 8,
-      marginLeft: spacing.sm,
     },
     nameTap: {
       flexShrink: 1,
@@ -136,7 +132,6 @@ function createStyles(colors: ThemeColors) {
       fontSize: 17,
       lineHeight: 24,
       color: colors.textPrimary,
-            writingDirection: 'rtl',
     },
     avatarBtn: {
       flexShrink: 0,

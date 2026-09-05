@@ -1,7 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppText } from '@/components/ui/AppText';
-import { BrandSwitch } from '@/components/feature/SidebarMenu';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -73,22 +72,18 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
       <AppScrollView contentContainerStyle={styles.scroll}>
         <Pressable
           onPress={() => go('/(tabs)/profile')}
-          style={[styles.header, getRtlRow()]}
+          style={styles.header}
           accessibilityRole="button"
           accessibilityLabel={displayName}
         >
           <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
-          <View style={styles.identity}>
-            <AppText style={styles.name} numberOfLines={2}>
-              {displayName}
-            </AppText>
-            <AppText style={styles.handle} numberOfLines={1}>
-              {username}
-            </AppText>
-          </View>
+          <AppText style={styles.name} numberOfLines={2}>
+            {displayName}
+          </AppText>
+          <AppText style={styles.handle} numberOfLines={1}>
+            {username}
+          </AppText>
         </Pressable>
-
-        <View style={styles.divider} />
 
         {PRIMARY_ITEMS.map((item) => (
           <Pressable
@@ -98,7 +93,7 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
             accessibilityRole="button"
             accessibilityLabel={item.label}
           >
-            <AppIcon name={item.icon} size={20} color={colors.textPrimary} />
+            <AppIcon name={item.icon} size={24} color={colors.textPrimary} />
             <AppText style={styles.rowLabel}>{item.label}</AppText>
           </Pressable>
         ))}
@@ -109,32 +104,26 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
           <Pressable
             key={item.key}
             onPress={() => go(item.route)}
-            style={({ pressed }) => [styles.row, styles.rowSecondary, getRtlRow(), pressed && styles.pressed]}
+            style={({ pressed }) => [styles.row, getRtlRow(), pressed && styles.pressed]}
             accessibilityRole="button"
             accessibilityLabel={item.label}
           >
-            <AppIcon name={item.icon} size={18} color={colors.textMuted} />
-            <AppText style={styles.rowLabelSecondary}>{item.label}</AppText>
+            <AppIcon name={item.icon} size={24} color={colors.textPrimary} />
+            <AppText style={styles.rowLabel}>{item.label}</AppText>
           </Pressable>
         ))}
+      </AppScrollView>
 
+      <View style={[styles.footer, getRtlRow()]}>
         <Pressable
           onPress={() => void setPreference(isDark ? 'light' : 'dark')}
-          style={[styles.row, styles.rowSecondary, getRtlRow()]}
+          style={styles.themeBtn}
           accessibilityRole="button"
           accessibilityLabel="المظهر"
         >
-          <AppIcon name="weather-night" size={18} color={colors.textMuted} />
-          <AppText style={styles.rowLabelSecondary}>المظهر</AppText>
-          <View style={styles.switchSlot}>
-            <BrandSwitch
-              value={isDark}
-              onValueChange={(next) => void setPreference(next ? 'dark' : 'light')}
-              colors={colors}
-            />
-          </View>
+          <AppIcon name="weather-night" size={22} color={colors.textPrimary} />
         </Pressable>
-      </AppScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -160,30 +149,27 @@ function createStyles(colors: ThemeColors) {
     },
     scroll: {
       paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.xxl,
+      paddingBottom: spacing.md,
     },
     header: {
-      alignItems: 'center',
-      gap: spacing.md,
-      paddingVertical: spacing.sm,
+      alignItems: 'flex-start',
+      gap: 2,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.lg,
     },
     avatar: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       backgroundColor: colors.bgSurface,
-    },
-    identity: {
-      flex: 1,
-      minWidth: 0,
-      gap: 2,
+      marginBottom: spacing.sm,
     },
     name: {
-      ...typography.cardHeadingLarge,
+      ...typography.sectionHeading,
       color: colors.textPrimary,
     },
     handle: {
-      ...typography.caption,
+      ...typography.feedBody,
       color: colors.textMuted,
     },
     divider: {
@@ -194,25 +180,24 @@ function createStyles(colors: ThemeColors) {
     row: {
       alignItems: 'center',
       gap: spacing.md,
-      minHeight: 48,
-      paddingVertical: 10,
-    },
-    rowSecondary: {
-      minHeight: 42,
-      paddingVertical: 8,
+      minHeight: 56,
+      paddingVertical: 12,
     },
     rowLabel: {
-      ...typography.bodyStrong,
+      ...typography.sectionHeading,
       color: colors.textPrimary,
       flex: 1,
     },
-    rowLabelSecondary: {
-      ...typography.secondary,
-      color: colors.textSecondary,
-      flex: 1,
+    footer: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+      paddingTop: spacing.xs,
     },
-    switchSlot: {
-      flexShrink: 0,
+    themeBtn: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     pressed: {
       opacity: 0.72,
