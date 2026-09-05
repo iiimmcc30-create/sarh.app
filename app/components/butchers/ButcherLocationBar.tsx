@@ -65,8 +65,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     bar: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       gap: spacing.sm,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,

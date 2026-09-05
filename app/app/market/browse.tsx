@@ -344,15 +344,13 @@ function createStyles(
     },
     crumbShell: {
       flex: 1,
-      direction: 'ltr',
-      minWidth: 0,
+            minWidth: 0,
     },
     crumb: {
       ...typography.cardHeading,
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     searchRow: {
       gap: spacing.sm,
@@ -381,8 +379,7 @@ function createStyles(
       ...typography.secondary,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      textAlign: 'right',
-    },
+          },
     filterRow: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,

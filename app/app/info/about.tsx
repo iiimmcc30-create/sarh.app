@@ -218,8 +218,7 @@ function createStyles(colors: ThemeColors) {
     },
     headerTitleShell: {
       flex: 1,
-      direction: 'ltr',
-    },
+          },
     headerTitle: {
       ...typography.h3,
       color: colors.textPrimary,
@@ -286,8 +285,7 @@ function createStyles(colors: ThemeColors) {
     featureTextShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     featureText: {
       ...typography.body,
       color: colors.textSecondary,
@@ -307,8 +305,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
     },
     infoLabelShell: {
-      direction: 'ltr',
-      flexShrink: 0,
+            flexShrink: 0,
     },
     infoLabel: {
       ...typography.caption,
@@ -317,8 +314,7 @@ function createStyles(colors: ThemeColors) {
     infoValueShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     infoValue: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
@@ -342,14 +338,12 @@ function createStyles(colors: ThemeColors) {
     contactTextShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     contactText: {
       ...typography.body,
       color: colors.textBrandStrong,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'ltr',
+            writingDirection: 'ltr',
     },
     version: {
       ...typography.micro,

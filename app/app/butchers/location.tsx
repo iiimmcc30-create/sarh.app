@@ -236,7 +236,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.smallHeading,
       color: colors.textPrimary,
     },
-    chipsRow: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10 },
+    chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
     input: {
       ...butcherTypography.body,
       backgroundColor: colors.bgElevated,

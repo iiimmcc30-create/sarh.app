@@ -504,11 +504,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: 4,
       width: '100%',
       // Physical LTR island — without this, parent RTL flips flex-end to the left edge.
-      direction: 'ltr',
-    },
+          },
     nameWithBadge: {
-      direction: 'ltr',
-      flexDirection: 'row-reverse',
+            flexDirection: 'row',
       alignItems: 'center',
       flexWrap: 'nowrap',
       gap: 4,
@@ -516,8 +514,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       maxWidth: '100%',
     },
     nameShell: {
-      direction: 'ltr',
-      flexShrink: 1,
+            flexShrink: 1,
       minWidth: 0,
     },
     handleRow: {
@@ -540,8 +537,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     displayNameInline: {
       width: 'auto',
       flexShrink: 1,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     ratingChipPressed: {
       opacity: 0.75,

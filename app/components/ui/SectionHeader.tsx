@@ -1,8 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { getRtlRow } from '@/lib/rtl';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -31,24 +30,24 @@ export function SectionHeader({
 
   return (
     <View style={styles.wrap}>
-      <CoverTrailRow justify="space-between" gap={spacing.sm} style={styles.coverTrail}>
+      <View style={[styles.coverTrail, getRtlRow(), { justifyContent: 'space-between' }]}>
+        <View style={styles.titleCol}>
+          <AppText style={styles.title}>{title}</AppText>
+          {subtitle ? <AppText style={styles.subtitle}>{subtitle}</AppText> : null}
+        </View>
         {onSeeAll ? (
-          <Pressable onPress={onSeeAll} hitSlop={8} style={styles.seeAll}>
+          <Pressable onPress={onSeeAll} hitSlop={8} style={[styles.seeAll, getRtlRow()]}>
+            <AppText style={styles.seeAllText}>{seeAllLabel}</AppText>
             <AppIcon
               name={rtlForwardIcon()}
               size={14}
               color={isDark ? colors.textSecondary : colors.textBrandStrong}
             />
-            <Text style={styles.seeAllText}>{seeAllLabel}</Text>
           </Pressable>
         ) : (
           <View />
         )}
-        <RtlTextShell flex>
-          <RtlText style={styles.title}>{title}</RtlText>
-          {subtitle ? <RtlText style={styles.subtitle}>{subtitle}</RtlText> : null}
-        </RtlTextShell>
-      </CoverTrailRow>
+      </View>
     </View>
   );
 }
@@ -63,6 +62,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     coverTrail: {
       minHeight: 32,
+      alignItems: 'center',
+    },
+    titleCol: {
+      flex: 1,
+      minWidth: 0,
     },
     title: {
       ...typography.sectionHeading,
@@ -73,8 +77,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       color: colors.textMuted,
     },
     seeAll: {
-      flexDirection: 'row',
-      direction: 'ltr',
       alignItems: 'center',
       gap: spacing.xs,
       paddingVertical: spacing.xs,
@@ -83,7 +85,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     seeAllText: {
       ...typography.smallHeading,
       color: isDark ? colors.textSecondary : colors.textBrandStrong,
-      writingDirection: 'rtl',
     },
   });
 }

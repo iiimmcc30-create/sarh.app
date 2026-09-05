@@ -359,8 +359,7 @@ const themeStyles = StyleSheet.create({
 const logoutStyles = StyleSheet.create({
   btn: {
     flexDirection: 'row',
-    direction: 'ltr',
-    alignItems: 'center',
+        alignItems: 'center',
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     paddingHorizontal: spacing.lg,

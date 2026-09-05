@@ -328,7 +328,7 @@ function createStyles(colors: ThemeColors) {
     flex: 1, ...typography.body, color: colors.textPrimary,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
   },
-  inputRtl: { textAlign: 'right' },
+  inputRtl: {  },
   fieldHint: { ...typography.micro, color: colors.textSubtle },
   charCount: { ...typography.micro, color: colors.textSubtle, alignSelf: 'flex-start' },
   countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

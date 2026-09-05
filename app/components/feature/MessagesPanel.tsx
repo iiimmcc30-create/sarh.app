@@ -396,8 +396,7 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       ...typography.body,
       color: colors.textPrimary,
-      textAlign: 'right',
-      paddingVertical: 0,
+            paddingVertical: 0,
     },
     filtersScroll: { marginBottom: spacing.sm },
     chatRow: {

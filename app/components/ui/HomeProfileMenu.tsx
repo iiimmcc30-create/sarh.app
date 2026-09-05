@@ -107,8 +107,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     logoutText: {
       color: colors.rose,

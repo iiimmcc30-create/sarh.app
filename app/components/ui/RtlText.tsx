@@ -1,31 +1,12 @@
-import { StyleSheet, Text, type TextProps, type StyleProp, type TextStyle } from 'react-native';
-import { OFFICIAL_APP_FONT, resolveAppFontFace } from '@/constants/fonts';
-import { getRtlBlockTextStyle } from '@/lib/rtl';
+import { AppText, type AppTextProps } from '@/components/ui/AppText';
 
-export type RtlTextProps = TextProps;
-
-function withOfficialFont(style: StyleProp<TextStyle> | undefined): StyleProp<TextStyle> {
-  const flat = StyleSheet.flatten(style) as TextStyle | undefined;
-  const face = resolveAppFontFace(flat?.fontWeight, flat?.fontFamily);
-  if (face.fontFamily === 'monospace') return style;
-  return [style, { fontFamily: face.fontFamily, fontWeight: face.fontWeight }];
-}
+export type RtlTextProps = AppTextProps;
 
 /**
- * @deprecated Dual-system leftover (LTR shell + physical textAlign).
- * New UI: `AppText` from `@/components/ui/AppText`.
+ * Same primitive as AppText. Kept so existing screens inherit the single RTL model.
  */
-export function RtlText({ style, ...rest }: RtlTextProps) {
-  return (
-    <Text
-      style={[
-        getRtlBlockTextStyle(),
-        { fontFamily: OFFICIAL_APP_FONT, fontWeight: '700' },
-        withOfficialFont(style),
-      ]}
-      {...rest}
-    />
-  );
+export function RtlText(props: RtlTextProps) {
+  return <AppText {...props} />;
 }
 
 export default RtlText;

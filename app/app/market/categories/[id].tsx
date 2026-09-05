@@ -164,15 +164,13 @@ function createStyles(colors: ThemeColors) {
     },
     headerTitleShell: {
       flex: 1,
-      direction: 'ltr',
-      minWidth: 0,
+            minWidth: 0,
     },
     headerTitle: {
       ...typography.h2,
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     scroll: {
       paddingHorizontal: spacing.lg,
@@ -181,22 +179,19 @@ function createStyles(colors: ThemeColors) {
     },
     subtitleShell: {
       width: '100%',
-      direction: 'ltr',
-    },
+          },
     subtitle: {
       ...typography.body,
       color: colors.textMuted,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     list: {
       gap: spacing.sm,
     },
     row: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       justifyContent: 'flex-end',
       gap: spacing.sm,
       paddingVertical: 14,
@@ -207,15 +202,13 @@ function createStyles(colors: ThemeColors) {
     },
     rowLabelShell: {
       flex: 1,
-      direction: 'ltr',
-      minWidth: 0,
+            minWidth: 0,
     },
     rowLabel: {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     center: {
       flex: 1,

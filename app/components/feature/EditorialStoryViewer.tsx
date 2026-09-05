@@ -313,6 +313,5 @@ const styles = StyleSheet.create({
     color: BRAND_GREEN,
     textDecorationLine: 'underline',
     writingDirection: 'rtl',
-    textAlign: 'right',
-  },
+      },
 });

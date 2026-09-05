@@ -324,8 +324,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     parentAllTap: {
       padding: 4,
@@ -345,8 +344,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       fontFamily: OFFICIAL_APP_FONT,
       color: colors.textSecondary,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     subLabelActive: {
       color: colors.electricBright,

@@ -303,7 +303,7 @@ export const radius = {
   pill: sarh.radius.pill,
 };
 
-/** RTL policy: writingDirection only. Never add textAlign:'right' here (swap mirrors it). */
+/** RTL policy: writingDirection only. Never add physical-edge textAlign here. */
 const directionalText = {
   writingDirection: 'rtl' as const,
 };

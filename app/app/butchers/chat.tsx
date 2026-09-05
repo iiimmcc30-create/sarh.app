@@ -1006,7 +1006,7 @@ export default function ButcherChatScreen() {
               { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
             ]}
           >
-            <Text style={{ flex: 1, textAlign: 'right', color: colors.textMuted }}>
+            <Text style={{ flex: 1,  color: colors.textMuted }}>
               التواصل المباشر مع الملحمة غير متاح
             </Text>
           </View>
@@ -1140,21 +1140,18 @@ function createStyles(colors: ThemeColors) {
   listingCardTitle: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
-    textAlign: 'right',
-  },
+      },
   listingCardPrice: {
     ...typography.caption,
     color: colors.electricBright,
     marginTop: 2,
-    textAlign: 'right',
-    fontWeight: '600',
+        fontWeight: '600',
   },
   listingCardLocation: {
     ...typography.micro,
     color: colors.textMuted,
     marginTop: 2,
-    textAlign: 'right',
-  },
+      },
   listingCardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1180,7 +1177,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingVertical: 8,
   },
-  orderStripText: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1, textAlign: 'right' },
+  orderStripText: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1,  },
 
   messagesList: {
     paddingHorizontal: spacing.lg,
@@ -1336,7 +1333,7 @@ function createMessageStyles(colors: ThemeColors) {
   },
   timeText: { ...butcherTypography.meta, marginTop: 4 },
   timeTextMe: { color: 'rgba(255,255,255,0.7)', textAlign: 'left' },
-  timeTextThem: { color: colors.textSubtle, textAlign: 'right' },
+  timeTextThem: { color: colors.textSubtle,  },
   offerCard: {
     maxWidth: '82%',
     borderRadius: 18,
@@ -1352,18 +1349,15 @@ function createMessageStyles(colors: ThemeColors) {
   offerLabel: {
     ...typography.caption,
     color: colors.textMuted,
-    textAlign: 'right',
-  },
+      },
   offerAmount: {
     ...typography.h3,
     color: colors.electricBright,
-    textAlign: 'right',
-  },
+      },
   offerStatus: {
     ...typography.micro,
     color: colors.textSecondary,
-    textAlign: 'right',
-    marginBottom: 4,
+        marginBottom: 4,
   },
   offerActions: {
     flexDirection: 'row',

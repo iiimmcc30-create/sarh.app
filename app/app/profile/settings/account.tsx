@@ -278,14 +278,12 @@ function createStyles(colors: ThemeColors) {
     valueShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     value: {
       ...typography.body,
       color: colors.textSecondary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'ltr',
+            writingDirection: 'ltr',
     },
     changeBtn: {
       paddingHorizontal: spacing.md,
@@ -315,8 +313,7 @@ function createStyles(colors: ThemeColors) {
     noteTextShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-    },
+          },
     noteText: {
       ...typography.body,
       color: colors.textSecondary,

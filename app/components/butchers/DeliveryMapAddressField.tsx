@@ -107,8 +107,7 @@ function createStyles(colors: ThemeColors) {
     },
     ctaRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       justifyContent: 'flex-end',
       gap: 4,
     },

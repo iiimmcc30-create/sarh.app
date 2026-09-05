@@ -174,8 +174,7 @@ function createStyles(colors: ThemeColors) {
     },
     notice: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'flex-start',
+            alignItems: 'flex-start',
       gap: spacing.sm,
       padding: spacing.md,
       borderRadius: 14,
@@ -192,8 +191,7 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       flex: 1,
       lineHeight: 20,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
     },
     loader: { marginTop: spacing.xl },
     errorBox: {
@@ -223,8 +221,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.smallHeading,
       letterSpacing: 0.4,
       color: colors.textMuted,
-      textAlign: 'right',
-      writingDirection: 'rtl',
+            writingDirection: 'rtl',
       paddingHorizontal: 4,
     },
     sectionList: {

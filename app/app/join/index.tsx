@@ -563,9 +563,9 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.lg,
       gap: 8,
     },
-    section: { ...typography.cardHeading, color: colors.textPrimary, marginBottom: 8, textAlign: 'right' },
-    label: { ...typography.caption, color: colors.textMuted, textAlign: 'right', marginTop: 8 },
-    hint: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },
+    section: { ...typography.cardHeading, color: colors.textPrimary, marginBottom: 8,  },
+    label: { ...typography.caption, color: colors.textMuted,  marginTop: 8 },
+    hint: { ...typography.caption, color: colors.textMuted,  },
     input: {
       borderWidth: 1,
       borderColor: colors.borderMid,
@@ -586,9 +586,9 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       backgroundColor: colors.bgElevated,
     },
-    phoneRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
+    phoneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     dial: { color: colors.textSecondary, paddingHorizontal: 8 },
-    row: { flexDirection: 'row-reverse', gap: 12 },
+    row: { flexDirection: 'row', gap: 12 },
     col: { flex: 1 },
     fileBtn: {
       borderWidth: 1,
@@ -598,7 +598,7 @@ function createStyles(colors: ThemeColors) {
       padding: 12,
       gap: 4,
     },
-    fileTitle: { color: colors.textPrimary, textAlign: 'right', fontWeight: '600' },
+    fileTitle: { color: colors.textPrimary,  fontWeight: '600' },
     secondaryBtn: {
       marginTop: 8,
       borderWidth: 1,
@@ -608,8 +608,8 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     secondaryBtnText: { color: colors.emerald, fontWeight: '600' },
-    ok: { color: colors.success, textAlign: 'right', marginTop: 8 },
-    checkRow: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 12 },
+    ok: { color: colors.success,  marginTop: 8 },
+    checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
     checkbox: {
       width: 22,
       height: 22,
@@ -619,7 +619,7 @@ function createStyles(colors: ThemeColors) {
       marginTop: 2,
     },
     checkboxOn: { backgroundColor: colors.emerald, borderColor: colors.emerald },
-    checkText: { flex: 1, color: colors.textSecondary, textAlign: 'right', lineHeight: 22 },
+    checkText: { flex: 1, color: colors.textSecondary,  lineHeight: 22 },
     error: { color: colors.danger, textAlign: 'center' },
     submit: {
       backgroundColor: colors.emerald,

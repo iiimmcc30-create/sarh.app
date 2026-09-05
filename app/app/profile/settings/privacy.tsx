@@ -249,13 +249,11 @@ function createStyles(colors: ThemeColors) {
     label: {
       ...typography.cardHeading,
       color: colors.textPrimary,
-      textAlign: 'right',
-    },
+          },
     description: {
       ...typography.caption,
       color: colors.textMuted,
       lineHeight: 20,
-      textAlign: 'right',
-    },
+          },
   });
 }

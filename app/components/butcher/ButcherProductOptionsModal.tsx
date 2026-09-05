@@ -199,8 +199,7 @@ function createStyles(colors: ThemeColors) {
     },
     hero: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       alignItems: 'center',
       gap: spacing.md,
       marginBottom: spacing.lg,
@@ -227,8 +226,7 @@ function createStyles(colors: ThemeColors) {
     },
     chips: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       flexWrap: 'wrap',
       gap: 10,
     },
@@ -241,8 +239,7 @@ function createStyles(colors: ThemeColors) {
     },
     weightRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.md,
       backgroundColor: colors.bgSurface,
@@ -277,8 +274,7 @@ function createStyles(colors: ThemeColors) {
     iconColor: { color: colors.textPrimary },
     totalRow: {
       flexDirection: 'row',
-      direction: 'ltr',
-      justifyContent: 'flex-end',
+            justifyContent: 'flex-end',
       alignItems: 'center',
       gap: spacing.md,
       marginBottom: spacing.md,
@@ -293,8 +289,7 @@ function createStyles(colors: ThemeColors) {
     },
     cta: {
       flexDirection: 'row',
-      direction: 'ltr',
-      alignItems: 'center',
+            alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.xs,
       backgroundColor: colors.electric,

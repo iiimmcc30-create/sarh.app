@@ -194,8 +194,7 @@ function createStyles(colors: ThemeColors) {
     },
     headerTitleShell: {
       flex: 1,
-      direction: 'ltr',
-    },
+          },
     headerTitle: {
       ...typography.h3,
       color: colors.textPrimary,
@@ -237,8 +236,7 @@ function createStyles(colors: ThemeColors) {
     channelTextShell: {
       flex: 1,
       minWidth: 0,
-      direction: 'ltr',
-      gap: 2,
+            gap: 2,
     },
     channelLabel: {
       ...typography.caption,
@@ -248,8 +246,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.bodyStrong,
       color: colors.textPrimary,
       width: '100%',
-      textAlign: 'right',
-      writingDirection: 'ltr',
+            writingDirection: 'ltr',
     },
     fieldGroup: { gap: spacing.sm },
     fieldLabel: {

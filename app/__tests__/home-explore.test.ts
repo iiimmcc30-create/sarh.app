@@ -157,7 +157,7 @@ describe('HomeAppBar chrome', () => {
     expect(avatarAt).toBeGreaterThan(chevronAt);
     expect(src).toContain('HomeProfileMenu');
     expect(src).toContain('angle-down');
-    expect(src).toContain("direction: 'ltr'");
+    expect(src).not.toContain("direction: 'ltr'");
     expect(src).not.toContain('styles.searchBar');
     expect(src).not.toContain('more-vertical');
     expect(src).toContain('bare');
