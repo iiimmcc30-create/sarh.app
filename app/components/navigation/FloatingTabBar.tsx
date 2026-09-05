@@ -19,15 +19,14 @@ type TabDef =
 
 /**
  * Visual RTL order (right→left):
- * الرئيسية · السوق · إضافة عرض · مجتمع سرح · المحادثات · الملف الشخصي
+ * الرئيسية · السوق · إضافة عرض · المحادثات · مجتمع سرح
  */
 const TABS: TabDef[] = [
   { kind: 'route', route: 'index', icon: 'home-outline', label: 'الرئيسية' },
   { kind: 'route', route: 'market', icon: 'cart-outline', label: 'السوق' },
   { kind: 'create', label: 'إضافة عرض' },
-  { kind: 'route', route: 'posts', icon: 'people-outline', label: 'مجتمع سرح' },
   { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'المحادثات' },
-  { kind: 'route', route: 'profile', icon: 'person-outline', label: 'الملف الشخصي' },
+  { kind: 'route', route: 'posts', icon: 'people-outline', label: 'مجتمع سرح' },
 ];
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
@@ -159,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     minHeight: 52,
     paddingVertical: 2,
-    paddingHorizontal: 0,
+    paddingHorizontal: 2,
     gap: 4,
   },
   /** Fixed icon box so every tab (including +) shares the same visual height. */

@@ -8,16 +8,19 @@ function src(rel: string) {
 }
 
 describe('Sidebar + bottom nav + profile/settings flatten', () => {
-  it('replaces المزيد with مجتمع سرح and shows profile tab', () => {
+  it('replaces المزيد with مجتمع سرح and keeps profile off the tab bar', () => {
     const tabs = src('components/navigation/FloatingTabBar.tsx');
     const layout = src('app/(tabs)/_layout.tsx');
     expect(tabs).toContain("label: 'مجتمع سرح'");
     expect(tabs).toContain("route: 'posts'");
-    expect(tabs).toContain("route: 'profile'");
+    expect(tabs).not.toContain("route: 'profile'");
     expect(tabs).not.toContain("label: 'المزيد'");
+    expect(tabs).not.toContain("label: 'الملف الشخصي'");
     expect(layout).toContain("title: 'مجتمع سرح'");
-    expect(layout).toContain("href: null");
-    expect(layout).toContain("name=\"more\"");
+    expect(layout).toContain('name="more"');
+    expect(layout).toContain('name="profile"');
+    expect(layout).toMatch(/name="more"[\s\S]*href: null/);
+    expect(layout).toMatch(/name="profile"[\s\S]*href: null/);
   });
 
   it('opens the existing sidebar route from the home avatar', () => {
