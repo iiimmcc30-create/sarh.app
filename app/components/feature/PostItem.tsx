@@ -16,9 +16,9 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import {
+  formatPostCardTimestampAr,
   formatPostClockAr,
   formatPostDateShortAr,
-  formatPostTimestampAr,
   formatViewsLabelAr,
 } from '@/lib/formatRelativeTime';
 import { Post } from '@/services/types';
@@ -163,7 +163,7 @@ function PostItemComponent({
   }, [post.images, post.image]);
 
   const timestamp = useMemo(
-    () => (post.createdAt ? formatPostTimestampAr(post.createdAt) : post.postedAt),
+    () => (post.createdAt ? formatPostCardTimestampAr(post.createdAt) : post.postedAt),
     [post.createdAt, post.postedAt],
   );
 
@@ -310,14 +310,12 @@ function PostItemComponent({
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
-            {variant !== 'detail' && typeof post.views === 'number' ? (
+            {variant !== 'detail' ? (
               <View style={[styles.actionSlot, getRtlRow(), styles.viewsSlot]}>
                 <AppIcon name="eye-outline" size={18} color={colors.textMuted} />
-                {post.views > 0 ? (
-                  <AppText style={[styles.actionCount, { color: colors.textMuted }]}>
-                    {formatCount(post.views)}
-                  </AppText>
-                ) : null}
+                <AppText style={[styles.actionCount, { color: colors.textMuted }]}>
+                  {formatCount(post.views ?? 0)}
+                </AppText>
               </View>
             ) : null}
           </View>
