@@ -75,17 +75,22 @@ describe('Explore Sarh logo mark', () => {
     expect(usesExploreSarhLogoMark('promote')).toBe(false);
   });
 
-  it('uses a 2×2 grid with a full-width ministry card', () => {
+  it('uses a full-bleed butchers hero instead of explore cards', () => {
     const section = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(section).toContain('partitionExploreSections');
-    expect(section).toContain('gridRow');
-    expect(section).toContain('featuredCard');
-    expect(section).toContain('OFFICIAL_APP_FONT');
-    expect(section).not.toContain('ExploreStrip');
-    expect(section).not.toContain('ScrollView');
+    expect(section).toContain("title=\"استكشف سرح\"");
+    expect(section).toContain('ملاحم سرح');
+    expect(section).toContain('تصفح أفضل منتجات اللحوم بكل أمان وثقة');
+    expect(section).toContain('تصفح الملاحم');
+    expect(section).toContain("safePush('/butchers'");
+    expect(section).toContain('getRtlRow');
+    expect(section).toContain("width: '100%'");
+    expect(section).not.toContain('CARD_RADIUS');
+    expect(section).not.toContain('partitionExploreSections');
+    expect(section).not.toContain('gridRow');
+    expect(section).not.toContain('featuredCard');
   });
 });
 
@@ -213,13 +218,28 @@ describe('HomeAppBar chrome', () => {
     expect(chipSrc).toContain('const idleBorderWidth = compact ? 0');
   });
 
-  it('uses the same elevated surface as listing and post cards', () => {
+  it('keeps the butchers hero edge-to-edge without card chrome', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain('backgroundColor: colors.bgSurface');
-    expect(src).toContain('borderRadius: CARD_RADIUS');
-    expect(src).not.toContain('borderRadius: 14');
+    expect(src).toContain('backgroundColor: colors.bgDeep');
+    expect(src).not.toContain('paddingHorizontal: SIDE_PAD');
+    expect(src).not.toContain('CARD_RADIUS');
+    expect(src).not.toContain('menuCardStyle');
+  });
+
+  it('loads ministry services from the official API on home', () => {
+    const home = fs.readFileSync(path.join(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
+    const preview = fs.readFileSync(
+      path.join(__dirname, '../components/feature/HomeMinistryServicesPreview.tsx'),
+      'utf8',
+    );
+    expect(home).toContain('fetchOfficialServices');
+    expect(home).toContain('HomeMinistryServicesPreview');
+    expect(home).not.toContain('أحدث المنشورات');
+    expect(preview).toContain("title=\"خدمات الوزارة\"");
+    expect(preview).toContain("safePush('/sarh-services'");
+    expect(preview).toContain('previewOfficialServices');
   });
 });

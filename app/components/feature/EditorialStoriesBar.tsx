@@ -20,8 +20,8 @@ import type { EditorialStory } from '@/services/editorialStories';
 const SCREEN_W = Dimensions.get('window').width;
 const CARD_GAP = 12;
 const SIDE_PAD = spacing.lg;
-/** ~3.4 cards visible — close to the reference, slightly under the original 3.5. */
-const VISIBLE_CARDS = 3.4;
+/** Slightly smaller cards than before so more of the strip is visible. */
+const VISIBLE_CARDS = 3.85;
 const CARD_W = Math.round(
   (SCREEN_W - SIDE_PAD - CARD_GAP * 3) / VISIBLE_CARDS,
 );

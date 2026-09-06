@@ -10,6 +10,7 @@ import type { ButcherProduct } from '@/services/butcherData';
 import {
   FALLBACK_OFFICIAL_SERVICES,
   groupOfficialServicesByCategory,
+  previewOfficialServices,
   type OfficialService,
 } from '@/services/officialServices';
 
@@ -142,5 +143,20 @@ describe('officialServices grouping', () => {
     expect(groups[0].category).toBe('veterinary');
     expect(groups[groups.length - 1].category).toBe('custom-cat');
     expect(groups[groups.length - 1].emoji).toBe('📋');
+  });
+
+  it('previews the first active services in backend order', () => {
+    const inactive: OfficialService = {
+      ...FALLBACK_OFFICIAL_SERVICES[0],
+      id: 'inactive',
+      active: false,
+      title: 'مخفية',
+    };
+    const preview = previewOfficialServices([inactive, ...FALLBACK_OFFICIAL_SERVICES], 3);
+    expect(preview).toHaveLength(3);
+    expect(preview.map((item) => item.id)).toEqual(
+      FALLBACK_OFFICIAL_SERVICES.slice(0, 3).map((item) => item.id),
+    );
+    expect(preview.every((item) => item.active !== false)).toBe(true);
   });
 });

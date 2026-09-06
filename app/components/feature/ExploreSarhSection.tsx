@@ -1,214 +1,140 @@
-import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
+import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { Image } from '@/components/ui/AppImage';
+import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { AppText } from '@/components/ui/AppText';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { ds } from '@/constants/designSystem';
-import { motion, spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import {
-  partitionExploreSections,
-  usesExploreSarhLogoMark,
-  type HomeExploreCard,
-} from '@/lib/homeExplore';
+import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
-type Props = {
-  sections: HomeExploreCard[];
-};
+const HERO_IMAGE = require('../../assets/images/onboarding/slide-2.jpg');
+const ICON_BOX = 40;
 
-const GRID_GAP = 10;
-const SIDE_PAD = spacing.lg;
-const ICON_BOX = 32;
-const ICON_SIZE = 16;
-const GRID_CARD_H = 112;
-const FEATURED_CARD_H = 124;
-const CARD_RADIUS = ds.radius.sm;
-
-export function ExploreSarhSection({ sections }: Props) {
+export function ExploreSarhSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const { grid, featured } = partitionExploreSections(sections);
-
-  const inner = width - SIDE_PAD * 2;
-  const cellW = Math.floor((inner - GRID_GAP) / 2);
-
-  if (sections.length === 0) return null;
-
-  const open = (item: HomeExploreCard) => {
-    safePush(item.route as never, undefined, router);
-  };
-
-  const rowPairs: HomeExploreCard[][] = [];
-  for (let i = 0; i < grid.length; i += 2) {
-    rowPairs.push(grid.slice(i, i + 2));
-  }
+  const heroH = Math.round(Math.min(240, Math.max(188, width * 0.54)));
+  const imageW = Math.round(width * 0.48);
 
   return (
     <View style={styles.wrap}>
       <SectionHeader title="استكشف سرح" />
-      <View style={styles.gridWrap}>
-        {rowPairs.map((pair, rowIndex) => (
-          <View key={`row-${rowIndex}`} style={styles.gridRow}>
-            {pair.map((item) => (
-              <ExploreTile
-                key={item.id ?? item.destination}
-                item={item}
-                width={cellW}
-                height={GRID_CARD_H}
-                styles={styles}
-                onPress={() => open(item)}
-              />
-            ))}
-            {pair.length === 1 ? <View style={{ width: cellW }} /> : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="ملاحم سرح. تصفح أفضل منتجات اللحوم بكل أمان وثقة"
+        onPress={() => safePush('/butchers', undefined, router)}
+        style={({ pressed }) => [styles.hero, { height: heroH }, pressed && styles.pressed]}
+      >
+        <View style={[styles.heroRow, getRtlRow()]}>
+          <View style={styles.copy}>
+            <View style={styles.iconRing}>
+              <AppIcon name="storefront-outline" size={20} color={styles.accent.color} />
+            </View>
+            <AppText style={styles.title} numberOfLines={2}>
+              ملاحم سرح
+            </AppText>
+            <AppText style={styles.desc} numberOfLines={3}>
+              تصفح أفضل منتجات اللحوم بكل أمان وثقة
+            </AppText>
+            <View style={[styles.cta, getRtlRow()]}>
+              <AppText style={styles.ctaText}>تصفح الملاحم</AppText>
+              <AppIcon name={rtlForwardIcon()} size={14} color={styles.accent.color} />
+            </View>
           </View>
-        ))}
-        {featured ? (
-          <ExploreTile
-            item={featured}
-            width={inner}
-            height={FEATURED_CARD_H}
-            styles={styles}
-            featured
-            onPress={() => open(featured)}
-          />
-        ) : null}
-      </View>
+          <View style={[styles.imagePane, { width: imageW }]}>
+            <Image source={HERO_IMAGE} style={styles.image} contentFit="cover" />
+          </View>
+        </View>
+        <LinearGradient
+          pointerEvents="none"
+          colors={[styles.heroShade.color, styles.heroMid.color, 'transparent']}
+          locations={[0, 0.55, 1]}
+          start={{ x: 1, y: 0.5 }}
+          end={{ x: 0, y: 0.5 }}
+          style={styles.shade}
+        />
+      </Pressable>
     </View>
-  );
-}
-
-function ExploreTile({
-  item,
-  width,
-  height,
-  styles,
-  featured = false,
-  onPress,
-}: {
-  item: HomeExploreCard;
-  width: number;
-  height: number;
-  styles: ReturnType<typeof createStyles>;
-  featured?: boolean;
-  onPress: () => void;
-}) {
-  const useSarhMark = usesExploreSarhLogoMark(item.destination);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${item.titleAr}. ${item.descriptionAr}`}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        { width, height },
-        featured && styles.featuredCard,
-        pressed && styles.pressed,
-      ]}
-    >
-      {featured ? (
-        <View style={styles.featuredLeaf} pointerEvents="none">
-          <SarhLogoMark size={88} color={styles.leafTint.color} />
-        </View>
-      ) : null}
-      <View style={styles.cardInner} pointerEvents="none">
-        <View style={styles.iconRing}>
-          {useSarhMark ? (
-            <SarhLogoMark size={ICON_SIZE} color={styles.accent.color} />
-          ) : null}
-        </View>
-        <Text
-          style={[styles.title, featured && styles.featuredTitle]}
-          numberOfLines={featured ? 2 : 1}
-        >
-          {item.titleAr}
-        </Text>
-        <Text style={styles.desc} numberOfLines={featured ? 2 : 2}>
-          {item.descriptionAr}
-        </Text>
-      </View>
-    </Pressable>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
-      paddingBottom: spacing.sm,
+      paddingBottom: spacing.md,
     },
-    gridWrap: {
-      paddingHorizontal: SIDE_PAD,
-      gap: GRID_GAP,
-    },
-    gridRow: {
-      flexDirection: 'row',
-      gap: GRID_GAP,
-    },
-    card: {
-      borderRadius: CARD_RADIUS,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 0,
+    hero: {
+      width: '100%',
       overflow: 'hidden',
+      backgroundColor: colors.bgDeep,
     },
-    featuredCard: {
-      alignSelf: 'center',
-    },
-    featuredLeaf: {
-      position: 'absolute',
-      left: -8,
-      bottom: -12,
-      opacity: 0.1,
-    },
-    leafTint: { color: colors.electric },
-    cardInner: {
+    heroRow: {
       flex: 1,
-      alignItems: 'center',
+      alignItems: 'stretch',
+    },
+    copy: {
+      flex: 1,
+      minWidth: 0,
+      zIndex: 2,
       justifyContent: 'center',
-      paddingHorizontal: 10,
-      paddingTop: 12,
-      paddingBottom: 10,
-      gap: 4,
-    },
-    title: {
-      fontFamily: OFFICIAL_APP_FONT,
-      fontWeight: '700',
-      fontSize: 15,
-      lineHeight: 22,
-      color: colors.textPrimary,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      width: '100%',
-    },
-    featuredTitle: {
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    desc: {
-      fontFamily: OFFICIAL_APP_FONT,
-      fontWeight: '700',
-      fontSize: 11,
-      lineHeight: 16,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      width: '100%',
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
     },
     iconRing: {
       width: ICON_BOX,
       height: ICON_BOX,
       borderRadius: ICON_BOX / 2,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: colors.electric,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 2,
+    },
+    title: {
+      ...typography.sectionHeading,
+      color: colors.textPrimary,
+    },
+    desc: {
+      ...typography.feedBody,
+      color: colors.textSecondary,
+    },
+    cta: {
+      alignItems: 'center',
+      gap: spacing.xs,
+      minHeight: 44,
+      paddingTop: spacing.xs,
+    },
+    ctaText: {
+      ...typography.button,
+      color: colors.electricBright,
+    },
+    imagePane: {
+      height: '100%',
+      overflow: 'hidden',
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+    },
+    shade: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      start: 0,
+      width: '64%',
+      zIndex: 1,
     },
     accent: { color: colors.electric },
+    heroShade: { color: colors.bgDeep },
+    heroMid: { color: `${colors.bgDeep}B8` },
     pressed: {
-      transform: [{ scale: motion.pressScale }],
       opacity: 0.94,
     },
   });
 }
+
+export default ExploreSarhSection;
