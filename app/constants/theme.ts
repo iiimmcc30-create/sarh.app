@@ -1,5 +1,6 @@
 // SAFAT — Logo-aligned brand theme (forest green · white · black)
 // Supports dark + light palettes; apply via bootstrap before app modules load.
+// Phase-1 foundation tokens: `@/design-system`. This module remains the live theme.
 
 import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';

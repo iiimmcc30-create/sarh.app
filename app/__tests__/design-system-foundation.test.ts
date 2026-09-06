@@ -1,0 +1,168 @@
+import { APP_FONT_FACES, OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { luxuryDark } from '@/constants/homeLuxury';
+import { sarh } from '@/constants/sarhTokens';
+import { colors as liveThemeColors, typography as liveTypography } from '@/constants/theme';
+import {
+  colors,
+  darkTheme,
+  duration,
+  elevation,
+  fontFamily,
+  fontWeight,
+  functional,
+  HARDCODED_AUDIT,
+  LEGACY_TOKEN_MAP,
+  palette,
+  radius,
+  semantic,
+  space,
+  typography,
+} from '@/design-system';
+
+describe('Sarh design-system foundation', () => {
+  it('reuses the live Sarh Dark palette hex values', () => {
+    expect(palette.bg).toBe('#07131C');
+    expect(palette.surface).toBe('#0C1C27');
+    expect(palette.surfaceRaised).toBe('#102633');
+    expect(palette.surfaceAlt).toBe('#142C3A');
+    expect(palette.action).toBe('#20B66F');
+    expect(palette.actionPressed).toBe('#18965B');
+    expect(palette.text).toBe('#F4F7F9');
+    expect(palette.textSecondary).toBe('#94A6B2');
+    expect(palette.textMuted).toBe('#657985');
+    expect(palette.border).toBe('#1B3442');
+    expect(palette.danger).toBe('#E85D5D');
+    expect(palette.warning).toBe('#D4A017');
+    expect(palette.success).toBe('#20B66F');
+
+    expect(colors.background).toBe(sarh.color.bg);
+    expect(colors.surface).toBe(sarh.color.surface);
+    expect(colors.surfaceElevated).toBe(sarh.color.surfaceRaised);
+    expect(colors.primary).toBe(sarh.color.action);
+    expect(colors.primaryPressed).toBe(sarh.color.actionPressed);
+    expect(colors.borderStrong).toBe('#264556');
+    expect(functional.overlay).toBe(sarh.color.overlay);
+    expect(functional.primaryMuted).toBe(sarh.color.actionMuted);
+  });
+
+  it('does not introduce extra brand greens', () => {
+    const greens = new Set(
+      Object.values({ ...palette, ...colors, ...functional }).filter((value) =>
+        /^#20B66F$|^#18965B$/i.test(value),
+      ),
+    );
+    expect(greens).toEqual(new Set(['#20B66F', '#18965B']));
+    expect(colors.success).toBe(colors.primary);
+  });
+
+  it('exposes nested semantic aliases without new hex', () => {
+    expect(semantic.background).toBe(colors.background);
+    expect(semantic.surface).toBe(colors.surface);
+    expect(semantic.surfaceElevated).toBe(colors.surfaceElevated);
+    expect(semantic.text.primary).toBe(colors.textPrimary);
+    expect(semantic.text.secondary).toBe(colors.textSecondary);
+    expect(semantic.text.muted).toBe(colors.textMuted);
+    expect(semantic.action.primary).toBe(colors.primary);
+    expect(semantic.action.primaryPressed).toBe(colors.primaryPressed);
+    expect(semantic.border.default).toBe(colors.border);
+    expect(semantic.border.strong).toBe(colors.borderStrong);
+    expect(darkTheme.scheme).toBe('dark');
+    expect(darkTheme.semantic).toBe(semantic);
+  });
+
+  it('maps IBM Plex weights to four distinct families', () => {
+    expect(fontFamily.regular).toBe('IBMPlexSansArabic_400Regular');
+    expect(fontFamily.medium).toBe('IBMPlexSansArabic_500Medium');
+    expect(fontFamily.semiBold).toBe('IBMPlexSansArabic_600SemiBold');
+    expect(fontFamily.bold).toBe('IBMPlexSansArabic_700Bold');
+    expect(new Set(Object.values(fontFamily)).size).toBe(4);
+    expect(APP_FONT_FACES).toEqual([
+      fontFamily.regular,
+      fontFamily.medium,
+      fontFamily.semiBold,
+      fontFamily.bold,
+    ]);
+    expect(fontWeight.regular).toBe('400');
+    expect(fontWeight.medium).toBe('500');
+    expect(fontWeight.semiBold).toBe('600');
+    expect(fontWeight.bold).toBe('700');
+  });
+
+  it('defines the foundation type scale without colliding weight aliases', () => {
+    expect(typography.display).toMatchObject({
+      fontFamily: fontFamily.bold,
+      fontSize: 28,
+      lineHeight: 36,
+      fontWeight: '700',
+    });
+    expect(typography.heading1).toMatchObject({ fontSize: 24, lineHeight: 32, fontWeight: '700' });
+    expect(typography.heading2).toMatchObject({
+      fontFamily: fontFamily.semiBold,
+      fontSize: 20,
+      lineHeight: 28,
+      fontWeight: '600',
+    });
+    expect(typography.heading3).toMatchObject({ fontSize: 18, lineHeight: 26, fontWeight: '600' });
+    expect(typography.body).toMatchObject({
+      fontFamily: fontFamily.regular,
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '400',
+    });
+    expect(typography.bodySmall).toMatchObject({ fontSize: 14, lineHeight: 20, fontWeight: '400' });
+    expect(typography.label).toMatchObject({
+      fontFamily: fontFamily.medium,
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: '500',
+    });
+    expect(typography.caption).toMatchObject({ fontSize: 12, lineHeight: 18, fontWeight: '400' });
+    expect(typography.micro).toMatchObject({ fontSize: 11, lineHeight: 14, fontWeight: '400' });
+
+    const signatures = Object.values(typography).map(
+      (token) => `${token.fontFamily}:${token.fontWeight}:${token.fontSize}`,
+    );
+    expect(new Set(signatures).size).toBe(signatures.length);
+  });
+
+  it('does not rewrite the live Bold-only theme typography', () => {
+    expect(liveTypography.body.fontFamily).toBe(OFFICIAL_APP_FONT);
+    expect(liveTypography.display.fontSize).toBe(24);
+    expect(typography.display.fontSize).toBe(28);
+  });
+
+  it('uses the 4pt spacing grid and extracted radii', () => {
+    expect(Object.values(space)).toEqual([4, 8, 12, 16, 20, 24, 32, 40, 48, 64]);
+    expect(radius[8]).toBe(sarh.radius.sm);
+    expect(radius[12]).toBe(sarh.radius.md);
+    expect(radius[16]).toBe(sarh.radius.lg);
+    expect(radius[20]).toBe(sarh.radius.xl);
+    expect(radius[999]).toBe(sarh.radius.pill);
+  });
+
+  it('keeps motion durations centralized', () => {
+    expect(duration).toEqual({ instant: 0, fast: 120, normal: 200, slow: 300 });
+  });
+
+  it('documents live dark elevation recipes', () => {
+    expect(elevation.card).toMatchObject({
+      elevation: 1,
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+    });
+    expect(elevation.raised.elevation).toBe(3);
+  });
+
+  it('keeps legacy token paths pointing at the same live values', () => {
+    expect(LEGACY_TOKEN_MAP['sarh.color.bg']).toBe(sarh.color.bg);
+    expect(LEGACY_TOKEN_MAP['luxuryDark.bg']).toBe(luxuryDark.bg);
+    expect(LEGACY_TOKEN_MAP['sarh.color.action']).toBe(colors.primary);
+    expect(HARDCODED_AUDIT.hex).toBeGreaterThan(0);
+    expect(HARDCODED_AUDIT.highGravityFiles).toContain('constants/theme.ts');
+  });
+
+  it('does not change the live dark background', () => {
+    expect(liveThemeColors.bgPrimary).toBe(sarh.color.bg);
+    expect(colors.background).toBe(liveThemeColors.bgPrimary);
+  });
+});

@@ -4,6 +4,9 @@
  *
  * Light palette lives primarily in `theme.ts` / `designSystem.ts` (`ds.light`).
  * `sarh.color` remains the dark canonical surface set used by many screens.
+ *
+ * New work should import semantic tokens from `@/design-system` (foundation only).
+ * This file stays the live source of hex values — do not delete or replace it.
  */
 export const sarh = {
   color: {
