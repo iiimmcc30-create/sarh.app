@@ -3,10 +3,16 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Prisma } from '@prisma/client';
 import type { OfficialServiceCategory } from '../dto/official-services.dto';
 import {
+  MEWA_ABOUT,
   MEWA_ARABIC_NAME,
   MEWA_BIO,
+  MEWA_DEFAULT_AVATAR_PATH,
+  MEWA_DEFAULT_COVER_PATH,
   MEWA_DISPLAY_NAME,
+  MEWA_PUBLIC_EMAIL,
+  MEWA_PUBLIC_PHONE,
   MEWA_USERNAME,
+  MEWA_WEBSITE,
 } from '../mewa.constants';
 
 const DEFAULT_SERVICES: Array<{
@@ -86,13 +92,13 @@ export class OfficialServicesRepository implements OnModuleInit {
   findActive() {
     return this.prisma.service.findMany({
       where: { active: true },
-      orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
   findAll() {
     return this.prisma.service.findMany({
-      orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
@@ -123,6 +129,12 @@ export class OfficialServicesRepository implements OnModuleInit {
         role: 'USER',
         country: 'SA',
         bio: MEWA_BIO,
+        about: MEWA_ABOUT,
+        website: MEWA_WEBSITE,
+        publicPhone: MEWA_PUBLIC_PHONE,
+        publicEmail: MEWA_PUBLIC_EMAIL,
+        avatar: MEWA_DEFAULT_AVATAR_PATH,
+        coverImage: MEWA_DEFAULT_COVER_PATH,
         allowPrivateMessages: false,
         isActive: true,
       },
@@ -133,15 +145,83 @@ export class OfficialServicesRepository implements OnModuleInit {
     return this.prisma.user.update({
       where: { id },
       data: {
-        verified: true,
         isActive: true,
         emailVerified: true,
         allowPrivateMessages: false,
-        arabicName: MEWA_ARABIC_NAME,
-        displayName: MEWA_DISPLAY_NAME,
-        bio: MEWA_BIO,
         isAI: false,
       },
+    });
+  }
+
+  fillMewaDefaults(id: string, data: Prisma.UserUpdateInput) {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  updateMewaProfile(id: string, data: Prisma.UserUpdateInput) {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  updateMewaPassword(id: string, passwordHash: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash,
+        passwordVersion: { increment: 1 },
+      },
+    });
+  }
+
+  listMewaPosts(authorId: string) {
+    return this.prisma.post.findMany({
+      where: { authorId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findMewaPost(id: string, authorId: string) {
+    return this.prisma.post.findFirst({
+      where: { id, authorId, deletedAt: null },
+    });
+  }
+
+  createMewaPost(data: {
+    authorId: string;
+    content: string;
+    arabicContent: string;
+    image?: string | null;
+    images?: string[];
+  }) {
+    return this.prisma.post.create({
+      data: {
+        authorId: data.authorId,
+        content: data.content,
+        arabicContent: data.arabicContent,
+        image: data.image ?? null,
+        images: data.images ?? [],
+      },
+    });
+  }
+
+  updateMewaPost(
+    id: string,
+    data: {
+      content?: string;
+      arabicContent?: string;
+      image?: string | null;
+      images?: string[];
+      isHidden?: boolean;
+    },
+  ) {
+    return this.prisma.post.update({
+      where: { id },
+      data,
+    });
+  }
+
+  archiveMewaPost(id: string) {
+    return this.prisma.post.update({
+      where: { id },
+      data: { deletedAt: new Date(), isHidden: true },
     });
   }
 

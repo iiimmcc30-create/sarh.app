@@ -22,6 +22,10 @@ model User {
   avatar                              String?
   coverImage                          String?
   bio                                 String?
+  about                               String?
+  website                             String?
+  publicPhone                         String?
+  publicEmail                         String?
   verified                            Boolean                           @default(false)
   isAI                                Boolean                           @default(false)
   country                             Country                           @default(SA)
@@ -1522,18 +1526,27 @@ model AppSetting {
 
 /// Official MEWA / Naama services directory (informational links only)
 model Service {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  category    String
-  icon        String
-  externalUrl String
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(uuid())
+  title            String
+  description      String
+  category         String
+  icon             String
+  externalUrl      String
+  active           Boolean  @default(true)
+  feeText          String?
+  isFree           Boolean  @default(true)
+  steps            String?
+  conditions       String?
+  documents        String?
+  deliveryChannel  String?
+  imageUrl         String?
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([active])
   @@index([category])
+  @@index([sortOrder])
   @@map("services")
 }
 

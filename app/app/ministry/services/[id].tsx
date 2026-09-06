@@ -9,7 +9,9 @@ import {
   OFFICIAL_SERVICE_CATEGORY_META,
   fetchOfficialService,
   fetchOfficialServices,
-  inferServiceDeliveryChannel,
+  resolveServiceChannel,
+  resolveServiceFeeLabel,
+  splitServiceLines,
   type OfficialService,
 } from '@/services/officialServices';
 import { useLocalSearchParams } from 'expo-router';
@@ -68,7 +70,13 @@ export default function MinistryServiceDetailsScreen() {
     return OFFICIAL_SERVICE_CATEGORY_META[service.category]?.label ?? service.category;
   }, [service]);
 
-  const channel = inferServiceDeliveryChannel(service?.externalUrl);
+  const channel = service ? resolveServiceChannel(service) : null;
+  const feeLabel = service ? resolveServiceFeeLabel(service) : null;
+  const tabLines = service
+    ? splitServiceLines(
+        tab === 'steps' ? service.steps : tab === 'conditions' ? service.conditions : service.documents,
+      )
+    : [];
 
   const startService = () => {
     const url = service?.externalUrl?.trim();
@@ -76,7 +84,8 @@ export default function MinistryServiceDetailsScreen() {
     void Linking.openURL(url);
   };
 
-  const tabBody = 'لا توجد بيانات لهذه الخانة في النظام حالياً.';
+  const tabBody =
+    tabLines.length > 0 ? tabLines.join('\n') : 'لا توجد بيانات لهذه الخانة في النظام حالياً.';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -113,7 +122,7 @@ export default function MinistryServiceDetailsScreen() {
           </View>
 
           <View style={styles.metaCard}>
-            <MetaRow styles={styles} label="رسوم الخدمة" value="مجانا" />
+            {feeLabel ? <MetaRow styles={styles} label="رسوم الخدمة" value={feeLabel} /> : null}
             {channel ? <MetaRow styles={styles} label="قناة تقديم الخدمة" value={channel} /> : null}
           </View>
 

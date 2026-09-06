@@ -47,7 +47,9 @@ describe('MEWA ministry profile wiring', () => {
     expect(details).toContain('الخطوات');
     expect(details).toContain('الشروط');
     expect(details).toContain('المستندات المطلوبة');
-    expect(details).toContain('inferServiceDeliveryChannel');
+    expect(details).toContain('resolveServiceChannel');
+    expect(details).toContain('resolveServiceFeeLabel');
+    expect(details).toContain('splitServiceLines');
   });
 
   it('keeps the legacy services route as a redirect into the ministry profile', () => {

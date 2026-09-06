@@ -10,6 +10,7 @@ import * as editorial from '@/services/editorial-stories.service';
 import * as butcherBanners from '@/services/butcher-banners.service';
 import * as knowledge from '@/services/knowledge.service';
 import * as official from '@/services/official-services.service';
+import * as ministry from '@/services/ministry.service';
 import * as auth from '@/services/auth.service';
 
 jest.mock('@/services/api.client', () => {
@@ -254,4 +255,19 @@ describe('admin feature API wiring — login to every section', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/admin/services');
     expect(apiClient.post).toHaveBeenCalledWith('/admin/services', expect.any(Object));
   });
+
+  it('ministry profile and posts', async () => {
+    (apiClient.get as jest.Mock)
+      .mockResolvedValueOnce(ok({ account: { id: 'm1', username: 'mewa' } }))
+      .mockResolvedValueOnce(ok({ posts: [] }));
+    await ministry.fetchMinistryProfile();
+    await ministry.fetchMinistryPosts();
+    await ministry.createMinistryPost({ content: 'منشور الوزارة' });
+    expect(apiClient.get).toHaveBeenCalledWith('/admin/ministry/profile');
+    expect(apiClient.get).toHaveBeenCalledWith('/admin/ministry/posts');
+    expect(apiClient.post).toHaveBeenCalledWith('/admin/ministry/posts', {
+      content: 'منشور الوزارة',
+    });
+  });
 });
+

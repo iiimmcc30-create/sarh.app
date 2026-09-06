@@ -241,7 +241,8 @@ describe('HomeAppBar chrome', () => {
     expect(home).not.toContain('أحدث المنشورات');
     expect(card).toContain("title=\"خدمات الوزارة\"");
     expect(card).toContain("safePush('/ministry'");
-    expect(card).toContain('وزارة البيئة والمياه والزراعة');
+    expect(home).toContain('fetchMinistryAccount');
+    expect(card).toContain('account?.arabicName');
     expect(card).toContain('formatServiceCountLabel');
   });
 });

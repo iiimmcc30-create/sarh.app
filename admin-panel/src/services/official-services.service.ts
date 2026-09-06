@@ -8,8 +8,33 @@ export type OfficialServiceRecord = {
   icon: string;
   externalUrl: string;
   active: boolean;
+  feeText?: string | null;
+  isFree?: boolean;
+  steps?: string | null;
+  conditions?: string | null;
+  documents?: string | null;
+  deliveryChannel?: string | null;
+  imageUrl?: string | null;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type OfficialServicePayload = {
+  title: string;
+  description: string;
+  category: string;
+  icon: string;
+  externalUrl: string;
+  active?: boolean;
+  feeText?: string;
+  isFree?: boolean;
+  steps?: string;
+  conditions?: string;
+  documents?: string;
+  deliveryChannel?: string;
+  imageUrl?: string;
+  sortOrder?: number;
 };
 
 export const OFFICIAL_SERVICE_CATEGORIES = [
@@ -23,28 +48,14 @@ export async function fetchOfficialServicesAdmin() {
   return unwrap<{ services: OfficialServiceRecord[] }>(res).services;
 }
 
-export async function createOfficialService(data: {
-  title: string;
-  description: string;
-  category: string;
-  icon: string;
-  externalUrl: string;
-  active?: boolean;
-}) {
+export async function createOfficialService(data: OfficialServicePayload) {
   const res = await apiClient.post('/admin/services', data);
   return unwrap<{ service: OfficialServiceRecord }>(res).service;
 }
 
 export async function updateOfficialService(
   id: string,
-  data: Partial<{
-    title: string;
-    description: string;
-    category: string;
-    icon: string;
-    externalUrl: string;
-    active: boolean;
-  }>,
+  data: Partial<OfficialServicePayload>,
 ) {
   const res = await apiClient.patch(`/admin/services/${id}`, data);
   return unwrap<{ service: OfficialServiceRecord }>(res).service;

@@ -42,6 +42,7 @@ const NAV_ICONS = {
   '/posts': FileText,
   '/editorial-stories': Images,
   '/knowledge': BookOpen,
+  '/ministry': Briefcase,
   '/official-services': Briefcase,
   '/listings': Tag,
   '/categories': FolderTree,

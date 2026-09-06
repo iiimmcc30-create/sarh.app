@@ -1,26 +1,34 @@
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppText } from '@/components/ui/AppText';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { MEWA_ARABIC_NAME, MEWA_COVER, MEWA_LOGO } from '@/constants/branding';
+import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER } from '@/constants/branding';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
-import { formatServiceCountLabel } from '@/services/officialServices';
+import {
+  formatServiceCountLabel,
+  type MinistryAccount,
+} from '@/services/officialServices';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 type Props = {
+  account: MinistryAccount | null;
   serviceCount: number;
   loading?: boolean;
 };
 
-export function HomeMinistryOrgCard({ serviceCount, loading }: Props) {
+export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const cardH = Math.round(Math.min(228, Math.max(196, width * 0.52)));
+  const name = account?.arabicName || '';
+  const count = account?.servicesCount ?? serviceCount;
+  const cover = account?.coverImage ? uriSource(account.coverImage) : MEWA_FALLBACK_COVER;
+  const avatar = account?.avatar ? uriSource(account.avatar) : MEWA_FALLBACK_AVATAR;
 
   const openProfile = () => safePush('/ministry', undefined, router);
 
@@ -29,11 +37,11 @@ export function HomeMinistryOrgCard({ serviceCount, loading }: Props) {
       <SectionHeader title="خدمات الوزارة" />
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${MEWA_ARABIC_NAME}. ${formatServiceCountLabel(serviceCount)}. فتح`}
+        accessibilityLabel={`${name}. ${formatServiceCountLabel(count)}. فتح`}
         onPress={openProfile}
         style={({ pressed }) => [styles.card, { height: cardH }, pressed && styles.pressed]}
       >
-        <Image source={MEWA_COVER} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
         <LinearGradient
           colors={['transparent', 'rgba(7, 19, 28, 0.22)', 'rgba(7, 19, 28, 0.82)']}
           locations={[0, 0.48, 1]}
@@ -42,18 +50,18 @@ export function HomeMinistryOrgCard({ serviceCount, loading }: Props) {
         <View style={[styles.bar, getRtlRow()]}>
           <View style={styles.logoRing}>
             <Image
-              source={MEWA_LOGO}
+              source={avatar}
               style={styles.logo}
-              contentFit="contain"
-              accessibilityLabel="شعار وزارة البيئة والمياه والزراعة"
+              contentFit="cover"
+              accessibilityLabel={name}
             />
           </View>
           <View style={styles.copy}>
             <AppText style={styles.title} numberOfLines={2}>
-              {MEWA_ARABIC_NAME}
+              {name || (loading ? '…' : '')}
             </AppText>
             <AppText style={styles.subtitle} numberOfLines={1}>
-              {loading && serviceCount === 0 ? '…' : formatServiceCountLabel(serviceCount)}
+              {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
             </AppText>
           </View>
           <Pressable
@@ -105,8 +113,8 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     logo: {
-      width: 40,
-      height: 40,
+      width: 48,
+      height: 48,
     },
     copy: {
       flex: 1,

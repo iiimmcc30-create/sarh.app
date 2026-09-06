@@ -1,20 +1,10 @@
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText } from '@/components/ui/AppText';
 import { MinistryServiceCard } from '@/components/feature/MinistryServiceCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
-import {
-  MEWA_ABOUT,
-  MEWA_ARABIC_NAME,
-  MEWA_COVER,
-  MEWA_EMAIL,
-  MEWA_LOGO,
-  MEWA_PHONE,
-  MEWA_PROFILE_BIO,
-  MEWA_USERNAME,
-  MEWA_WEBSITE,
-} from '@/constants/branding';
+import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER, MEWA_USERNAME } from '@/constants/branding';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useApp } from '@/hooks/useApp';
@@ -163,7 +153,7 @@ export default function MinistryProfileScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `${MEWA_ARABIC_NAME}\n${sarhProfileShareUrl(account?.username || MEWA_USERNAME)}`,
+        message: `${account?.arabicName || ''}\n${sarhProfileShareUrl(account?.username || MEWA_USERNAME)}`,
       });
     } catch {
       // dismissed
@@ -177,27 +167,33 @@ export default function MinistryProfileScreen() {
   const renderInfo = () => (
     <View style={styles.block}>
       <AppText style={styles.sectionTitle}>الوصف</AppText>
-      <AppText style={styles.body}>{MEWA_ABOUT}</AppText>
+      {account?.about ? <AppText style={styles.body}>{account.about}</AppText> : null}
       <AppText style={[styles.sectionTitle, styles.sectionSpaced]}>المعلومات</AppText>
-      <InfoRow
-        styles={styles}
-        label="الموقع الإلكتروني"
-        value={MEWA_WEBSITE}
-        onPress={() => void Linking.openURL(MEWA_WEBSITE)}
-        link
-      />
-      <InfoRow
-        styles={styles}
-        label="الهاتف"
-        value={MEWA_PHONE}
-        onPress={() => void Linking.openURL(`tel:${MEWA_PHONE}`)}
-      />
-      <InfoRow
-        styles={styles}
-        label="البريد الإلكتروني"
-        value={MEWA_EMAIL}
-        onPress={() => void Linking.openURL(`mailto:${MEWA_EMAIL}`)}
-      />
+      {account?.website ? (
+        <InfoRow
+          styles={styles}
+          label="الموقع الإلكتروني"
+          value={account.website}
+          onPress={() => void Linking.openURL(account.website!)}
+          link
+        />
+      ) : null}
+      {account?.publicPhone ? (
+        <InfoRow
+          styles={styles}
+          label="الهاتف"
+          value={account.publicPhone}
+          onPress={() => void Linking.openURL(`tel:${account.publicPhone}`)}
+        />
+      ) : null}
+      {account?.publicEmail ? (
+        <InfoRow
+          styles={styles}
+          label="البريد الإلكتروني"
+          value={account.publicEmail}
+          onPress={() => void Linking.openURL(`mailto:${account.publicEmail}`)}
+        />
+      ) : null}
     </View>
   );
 
@@ -261,7 +257,7 @@ export default function MinistryProfileScreen() {
           <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
         </Pressable>
         <AppText style={styles.navTitle} numberOfLines={1}>
-          {MEWA_ARABIC_NAME}
+          {account?.arabicName || ''}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -284,26 +280,30 @@ export default function MinistryProfileScreen() {
         }
       >
         <View style={styles.coverWrap}>
-          <Image source={MEWA_COVER} style={styles.cover} contentFit="cover" />
+          <Image
+            source={account?.coverImage ? uriSource(account.coverImage) : MEWA_FALLBACK_COVER}
+            style={styles.cover}
+            contentFit="cover"
+          />
         </View>
         <View style={styles.avatarWrap}>
           <View style={styles.avatarRing}>
             <Image
-              source={MEWA_LOGO}
+              source={account?.avatar ? uriSource(account.avatar) : MEWA_FALLBACK_AVATAR}
               style={styles.avatar}
-              contentFit="contain"
-              accessibilityLabel="شعار وزارة البيئة والمياه والزراعة"
+              contentFit="cover"
+              accessibilityLabel={account?.arabicName || ''}
             />
           </View>
         </View>
 
         <View style={styles.identity}>
           <View style={[styles.nameRow, getRtlRow()]}>
-            <AppText style={styles.name}>{MEWA_ARABIC_NAME}</AppText>
-            <VerificationBadge size={18} />
+            <AppText style={styles.name}>{account?.arabicName || ''}</AppText>
+            {account?.verified ? <VerificationBadge size={18} /> : null}
           </View>
           <AppText style={styles.followers}>{followersLabel}</AppText>
-          <AppText style={styles.bio}>{account?.bio || MEWA_PROFILE_BIO}</AppText>
+          {account?.bio ? <AppText style={styles.bio}>{account.bio}</AppText> : null}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={account?.isFollowing ? 'متابَع' : 'متابعة'}
