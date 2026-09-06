@@ -9,8 +9,15 @@ export const duration = {
   slow: 300,
 } as const;
 
+export const opacity = {
+  disabled: 0.45,
+  pressed: 0.88,
+} as const;
+
 export const motion = {
   duration,
+  opacity,
+  pressScale: 0.97,
 } as const;
 
 export type DurationToken = keyof typeof duration;

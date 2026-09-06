@@ -4,8 +4,8 @@ import { appFont } from '@/constants/fonts';
  * Official Sarh face: IBM Plex Sans Arabic.
  * Each weight maps to a distinct loaded family — never alias Regular/Medium/SemiBold to Bold.
  *
- * Live UI still remaps content to Bold via `resolveAppFontFace` in `fonts.ts`.
- * These tokens are the foundation for later phases; do not wire screens yet.
+ * `@/design-system` AppText uses these families as-is.
+ * Legacy `@/components/ui/AppText` still remaps to Bold via `resolveAppFontFace`.
  */
 export const fontFamily = {
   regular: appFont.regular,
