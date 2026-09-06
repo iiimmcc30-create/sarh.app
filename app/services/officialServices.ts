@@ -113,6 +113,16 @@ export type FetchOfficialServicesResult = {
   fromApi: boolean;
 };
 
+export const HOME_MINISTRY_PREVIEW_LIMIT = 3;
+
+/** Home preview — keep backend order, skip inactive rows, cap the count. */
+export function previewOfficialServices(
+  services: OfficialService[],
+  limit = HOME_MINISTRY_PREVIEW_LIMIT,
+): OfficialService[] {
+  return services.filter((service) => service.active !== false).slice(0, limit);
+}
+
 export async function fetchOfficialServices(): Promise<FetchOfficialServicesResult> {
   try {
     const res = await fetch(`${API_BASE}/api/services`, {
