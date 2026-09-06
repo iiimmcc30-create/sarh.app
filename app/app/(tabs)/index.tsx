@@ -12,7 +12,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditorialStoriesBar } from '@/components/feature/EditorialStoriesBar';
 import { ExploreSarhSection } from '@/components/feature/ExploreSarhSection';
-import { HomeMinistryServicesPreview } from '@/components/feature/HomeMinistryServicesPreview';
+import { HomeMinistryOrgCard } from '@/components/feature/HomeMinistryOrgCard';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
 import {
   fetchOfficialServices,
@@ -119,7 +119,10 @@ export default function HomeScreen() {
         <AppScrollView contentContainerStyle={styles.scrollContent}>
           <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
           <ExploreSarhSection />
-          <HomeMinistryServicesPreview services={ministryServices} loading={ministryLoading} />
+          <HomeMinistryOrgCard
+            serviceCount={ministryServices.filter((item) => item.active !== false).length}
+            loading={ministryLoading}
+          />
           <View style={{ height: TAB_BAR_CLEARANCE }} />
         </AppScrollView>
       </SafeAreaView>

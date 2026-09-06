@@ -23,6 +23,7 @@ describe('homeExplore catalog', () => {
     expect(resolveExploreCard({ destination: 'butchers' })?.descriptionAr).toBe(
       'تصفح منتجات الملاحم والطلبات',
     );
+    expect(resolveExploreCard({ destination: 'services' })?.route).toBe('/ministry');
     expect(resolveExploreCard({ destination: 'services' })?.titleAr).toBe(
       'خدمات وزارة البيئة والمياه والزراعة',
     );
@@ -231,15 +232,16 @@ describe('HomeAppBar chrome', () => {
 
   it('loads ministry services from the official API on home', () => {
     const home = fs.readFileSync(path.join(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
-    const preview = fs.readFileSync(
-      path.join(__dirname, '../components/feature/HomeMinistryServicesPreview.tsx'),
+    const card = fs.readFileSync(
+      path.join(__dirname, '../components/feature/HomeMinistryOrgCard.tsx'),
       'utf8',
     );
     expect(home).toContain('fetchOfficialServices');
-    expect(home).toContain('HomeMinistryServicesPreview');
+    expect(home).toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('أحدث المنشورات');
-    expect(preview).toContain("title=\"خدمات الوزارة\"");
-    expect(preview).toContain("safePush('/sarh-services'");
-    expect(preview).toContain('previewOfficialServices');
+    expect(card).toContain("title=\"خدمات الوزارة\"");
+    expect(card).toContain("safePush('/ministry'");
+    expect(card).toContain('وزارة البيئة والمياه والزراعة');
+    expect(card).toContain('formatServiceCountLabel');
   });
 });

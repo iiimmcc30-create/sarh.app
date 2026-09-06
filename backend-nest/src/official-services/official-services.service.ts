@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { throwApi } from '../common/exceptions/api.exception';
 import {
   CreateOfficialServiceDto,
@@ -7,8 +9,33 @@ import {
 import { OfficialServicesRepository } from './repositories/official-services.repository';
 
 @Injectable()
-export class OfficialServicesService {
+export class OfficialServicesService implements OnModuleInit {
+  private readonly logger = new Logger(OfficialServicesService.name);
+
   constructor(private readonly repo: OfficialServicesRepository) {}
+
+  async onModuleInit() {
+    await this.ensureMewaUser();
+  }
+
+  async ensureMewaUser() {
+    const existing = await this.repo.findMewaUser();
+    if (existing) {
+      if (
+        !existing.isActive ||
+        !existing.verified ||
+        existing.allowPrivateMessages !== false
+      ) {
+        return this.repo.updateMewaUserFlags(existing.id);
+      }
+      return existing;
+    }
+
+    const passwordHash = await bcrypt.hash(randomBytes(48).toString('hex'), 12);
+    const user = await this.repo.createMewaUser({ passwordHash });
+    this.logger.log(`MEWA official account created (${user.id})`);
+    return user;
+  }
 
   listActive() {
     return this.repo.findActive();
@@ -16,6 +43,36 @@ export class OfficialServicesService {
 
   listAll() {
     return this.repo.findAll();
+  }
+
+  async getActiveById(id: string) {
+    const service = await this.repo.findById(id);
+    if (!service || !service.active) {
+      throwApi(404, 'not_found', 'الخدمة غير موجودة');
+    }
+    return service;
+  }
+
+  async getAccount(viewerId?: string) {
+    const user = await this.ensureMewaUser();
+    const [followersCount, servicesCount, follow] = await Promise.all([
+      this.repo.countFollowers(user.id),
+      this.repo.countActive(),
+      viewerId ? this.repo.findFollow(viewerId, user.id) : Promise.resolve(null),
+    ]);
+
+    return {
+      id: user.id,
+      username: user.username,
+      arabicName: user.arabicName,
+      displayName: user.displayName,
+      bio: user.bio,
+      verified: user.verified,
+      allowPrivateMessages: user.allowPrivateMessages,
+      followersCount,
+      servicesCount,
+      isFollowing: Boolean(follow),
+    };
   }
 
   async create(dto: CreateOfficialServiceDto) {

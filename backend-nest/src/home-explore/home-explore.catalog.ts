@@ -46,7 +46,7 @@ export const HOME_EXPLORE_CATALOG: HomeExploreCatalogEntry[] = [
     titleAr: 'خدمات الوزارة',
     descriptionAr: 'الخدمات الالكترونية-التراخيص-التصاريح',
     icon: 'briefcase-outline',
-    route: '/sarh-services',
+    route: '/ministry',
   },
   {
     key: 'news',

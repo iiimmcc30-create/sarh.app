@@ -2,6 +2,12 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Prisma } from '@prisma/client';
 import type { OfficialServiceCategory } from '../dto/official-services.dto';
+import {
+  MEWA_ARABIC_NAME,
+  MEWA_BIO,
+  MEWA_DISPLAY_NAME,
+  MEWA_USERNAME,
+} from '../mewa.constants';
 
 const DEFAULT_SERVICES: Array<{
   title: string;
@@ -92,6 +98,63 @@ export class OfficialServicesRepository implements OnModuleInit {
 
   findById(id: string) {
     return this.prisma.service.findUnique({ where: { id } });
+  }
+
+  countActive() {
+    return this.prisma.service.count({ where: { active: true } });
+  }
+
+  findMewaUser() {
+    return this.prisma.user.findFirst({
+      where: { username: MEWA_USERNAME, deletedAt: null },
+    });
+  }
+
+  createMewaUser(data: { passwordHash: string }) {
+    return this.prisma.user.create({
+      data: {
+        username: MEWA_USERNAME,
+        passwordHash: data.passwordHash,
+        displayName: MEWA_DISPLAY_NAME,
+        arabicName: MEWA_ARABIC_NAME,
+        verified: true,
+        isAI: false,
+        emailVerified: true,
+        role: 'USER',
+        country: 'SA',
+        bio: MEWA_BIO,
+        allowPrivateMessages: false,
+        isActive: true,
+      },
+    });
+  }
+
+  updateMewaUserFlags(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        verified: true,
+        isActive: true,
+        emailVerified: true,
+        allowPrivateMessages: false,
+        arabicName: MEWA_ARABIC_NAME,
+        displayName: MEWA_DISPLAY_NAME,
+        bio: MEWA_BIO,
+        isAI: false,
+      },
+    });
+  }
+
+  countFollowers(userId: string) {
+    return this.prisma.follow.count({ where: { followingId: userId } });
+  }
+
+  findFollow(followerId: string, followingId: string) {
+    return this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: { followerId, followingId },
+      },
+    });
   }
 
   create(data: Prisma.ServiceCreateInput) {

@@ -36,6 +36,8 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).toContain("route: '/profile/settings'");
     expect(panel).toContain('weather-night');
     expect(panel).not.toContain('menuCardStyle');
+    expect(panel).not.toContain('خدمات الوزارة');
+    expect(panel).not.toContain('/sarh-services');
   });
 
   it('flattens own-profile stats/tabs and removes settings icon entry', () => {

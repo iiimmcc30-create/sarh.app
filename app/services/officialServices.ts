@@ -1,4 +1,5 @@
 import { API_BASE } from '@/services/api';
+import { authFetch } from '@/services/authFetch';
 
 export type OfficialService = {
   id: string;
@@ -121,6 +122,79 @@ export function previewOfficialServices(
   limit = HOME_MINISTRY_PREVIEW_LIMIT,
 ): OfficialService[] {
   return services.filter((service) => service.active !== false).slice(0, limit);
+}
+
+export type MinistryAccount = {
+  id: string;
+  username: string;
+  arabicName: string;
+  displayName: string;
+  bio?: string | null;
+  verified: boolean;
+  allowPrivateMessages: boolean;
+  followersCount: number;
+  servicesCount: number;
+  isFollowing: boolean;
+};
+
+export function formatServiceCountLabel(count: number): string {
+  return `${count} خدمة`;
+}
+
+export function inferServiceDeliveryChannel(url?: string | null): string | null {
+  const raw = url?.trim();
+  if (!raw) return null;
+  try {
+    const host = new URL(raw).hostname.toLowerCase();
+    if (host.includes('naama.sa')) return 'تطبيق نما';
+    if (host.includes('mewa.gov.sa') || host.includes('anaam.mewa')) {
+      return 'منصة أنعام';
+    }
+    return host.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchMinistryAccount(): Promise<MinistryAccount | null> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/services/account`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+    });
+    const json = await res.json().catch(() => ({}));
+    const account = json?.data?.account;
+    if (!res.ok || !json.success || !account?.id) return null;
+    return {
+      id: String(account.id),
+      username: String(account.username ?? 'mewa'),
+      arabicName: String(account.arabicName ?? ''),
+      displayName: String(account.displayName ?? ''),
+      bio: account.bio ? String(account.bio) : null,
+      verified: Boolean(account.verified),
+      allowPrivateMessages: account.allowPrivateMessages !== false,
+      followersCount: Number(account.followersCount ?? 0),
+      servicesCount: Number(account.servicesCount ?? 0),
+      isFollowing: Boolean(account.isFollowing),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchOfficialService(id: string): Promise<OfficialService | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/services/${encodeURIComponent(id)}`, {
+      headers: { Accept: 'application/json' },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.success && json.data?.service?.id) {
+      return json.data.service as OfficialService;
+    }
+  } catch {
+    // fall through
+  }
+  return null;
 }
 
 export async function fetchOfficialServices(): Promise<FetchOfficialServicesResult> {

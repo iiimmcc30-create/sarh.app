@@ -45,7 +45,7 @@ const CATALOG: Record<
     titleAr: 'خدمات وزارة البيئة والمياه والزراعة',
     descriptionAr: 'الخدمات الإلكترونية - التراخيص - التصاريح',
     icon: 'briefcase-outline',
-    route: '/sarh-services',
+    route: '/ministry',
   },
   news: {
     titleAr: 'قطاع الأخبار',
