@@ -86,12 +86,18 @@ export class OfficialServicesService implements OnModuleInit {
     return bcrypt.hash(randomBytes(48).toString('hex'), 12);
   }
 
-  private async applyConfiguredPassword(user: { id: string; passwordHash: string }) {
+  private async applyConfiguredPassword(user: {
+    id: string;
+    passwordHash: string;
+  }) {
     const password = process.env.MEWA_ACCOUNT_PASSWORD?.trim();
     if (!password) return;
     const matches = await bcrypt.compare(password, user.passwordHash);
     if (matches) return;
-    await this.repo.updateMewaPassword(user.id, await bcrypt.hash(password, 12));
+    await this.repo.updateMewaPassword(
+      user.id,
+      await bcrypt.hash(password, 12),
+    );
   }
 
   listActive() {
@@ -116,7 +122,9 @@ export class OfficialServicesService implements OnModuleInit {
     const [followersCount, servicesCount, follow] = await Promise.all([
       this.repo.countFollowers(user.id),
       this.repo.countActive(),
-      viewerId ? this.repo.findFollow(viewerId, user.id) : Promise.resolve(null),
+      viewerId
+        ? this.repo.findFollow(viewerId, user.id)
+        : Promise.resolve(null),
     ]);
 
     return {
@@ -144,15 +152,21 @@ export class OfficialServicesService implements OnModuleInit {
     if (!user) throwApi(404, 'not_found', 'حساب الوزارة غير موجود');
     await this.repo.updateMewaProfile(user.id, {
       ...(dto.arabicName !== undefined ? { arabicName: dto.arabicName } : {}),
-      ...(dto.displayName !== undefined ? { displayName: dto.displayName } : {}),
+      ...(dto.displayName !== undefined
+        ? { displayName: dto.displayName }
+        : {}),
       ...(dto.bio !== undefined ? { bio: dto.bio } : {}),
       ...(dto.about !== undefined ? { about: dto.about } : {}),
       ...(dto.avatar !== undefined ? { avatar: dto.avatar } : {}),
       ...(dto.coverImage !== undefined ? { coverImage: dto.coverImage } : {}),
       ...(dto.verified !== undefined ? { verified: dto.verified } : {}),
       ...(dto.website !== undefined ? { website: dto.website } : {}),
-      ...(dto.publicPhone !== undefined ? { publicPhone: dto.publicPhone } : {}),
-      ...(dto.publicEmail !== undefined ? { publicEmail: dto.publicEmail } : {}),
+      ...(dto.publicPhone !== undefined
+        ? { publicPhone: dto.publicPhone }
+        : {}),
+      ...(dto.publicEmail !== undefined
+        ? { publicEmail: dto.publicEmail }
+        : {}),
       allowPrivateMessages: false,
     });
     return this.getAccount();
@@ -212,13 +226,19 @@ export class OfficialServicesService implements OnModuleInit {
     await this.cache.delPattern(`posts:user:${authorId}:*`).catch(() => 0);
   }
 
-  private serviceData(dto: CreateOfficialServiceDto | UpdateOfficialServiceDto) {
+  private serviceData(
+    dto: CreateOfficialServiceDto | UpdateOfficialServiceDto,
+  ) {
     return {
       ...(dto.title !== undefined ? { title: dto.title } : {}),
-      ...(dto.description !== undefined ? { description: dto.description } : {}),
+      ...(dto.description !== undefined
+        ? { description: dto.description }
+        : {}),
       ...(dto.category !== undefined ? { category: dto.category } : {}),
       ...(dto.icon !== undefined ? { icon: dto.icon } : {}),
-      ...(dto.externalUrl !== undefined ? { externalUrl: dto.externalUrl } : {}),
+      ...(dto.externalUrl !== undefined
+        ? { externalUrl: dto.externalUrl }
+        : {}),
       ...(dto.active !== undefined ? { active: dto.active } : {}),
       ...(dto.feeText !== undefined ? { feeText: dto.feeText } : {}),
       ...(dto.isFree !== undefined ? { isFree: dto.isFree } : {}),

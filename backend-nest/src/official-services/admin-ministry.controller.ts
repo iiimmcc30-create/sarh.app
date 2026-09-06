@@ -50,7 +50,9 @@ export class AdminMinistryController {
   @Post('posts')
   @HttpCode(HttpStatus.CREATED)
   async createPost(@Body() dto: CreateMinistryPostDto) {
-    return successResponse({ post: await this.services.createMinistryPost(dto) });
+    return successResponse({
+      post: await this.services.createMinistryPost(dto),
+    });
   }
 
   @Roles('ADMIN')
