@@ -12,10 +12,12 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditorialStoriesBar } from '@/components/feature/EditorialStoriesBar';
 import { ExploreSarhSection } from '@/components/feature/ExploreSarhSection';
-import { HomeMinistryServicesPreview } from '@/components/feature/HomeMinistryServicesPreview';
+import { HomeMinistryOrgCard } from '@/components/feature/HomeMinistryOrgCard';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
 import {
+  fetchMinistryAccount,
   fetchOfficialServices,
+  type MinistryAccount,
   type OfficialService,
 } from '@/services/officialServices';
 import { HomeAppBar } from '@/components/ui/HomeAppBar';
@@ -44,6 +46,7 @@ export default function HomeScreen() {
   const [editorialStories, setEditorialStories] = useState<EditorialStory[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(false);
   const [ministryServices, setMinistryServices] = useState<OfficialService[]>([]);
+  const [ministryAccount, setMinistryAccount] = useState<MinistryAccount | null>(null);
   const [ministryLoading, setMinistryLoading] = useState(false);
   const lastStoriesAt = useRef(0);
   const hasStoriesData = useRef(false);
@@ -75,9 +78,13 @@ export default function HomeScreen() {
     }
     setMinistryLoading(true);
     try {
-      const { services } = await fetchOfficialServices();
+      const [{ services }, account] = await Promise.all([
+        fetchOfficialServices(),
+        fetchMinistryAccount(),
+      ]);
       setMinistryServices(services);
-      hasMinistryData.current = services.length > 0;
+      setMinistryAccount(account);
+      hasMinistryData.current = Boolean(account || services.length > 0);
       lastMinistryAt.current = Date.now();
     } catch (err) {
       console.warn('[HomeScreen] Failed to fetch ministry services:', err);
@@ -119,7 +126,11 @@ export default function HomeScreen() {
         <AppScrollView contentContainerStyle={styles.scrollContent}>
           <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
           <ExploreSarhSection />
-          <HomeMinistryServicesPreview services={ministryServices} loading={ministryLoading} />
+          <HomeMinistryOrgCard
+            account={ministryAccount}
+            serviceCount={ministryServices.filter((item) => item.active !== false).length}
+            loading={ministryLoading}
+          />
           <View style={{ height: TAB_BAR_CLEARANCE }} />
         </AppScrollView>
       </SafeAreaView>

@@ -36,6 +36,7 @@ ENV DATABASE_URL=""
 ENV DIRECT_URL=""
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/assets ./assets
 COPY scripts/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 

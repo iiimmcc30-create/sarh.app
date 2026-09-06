@@ -30,7 +30,7 @@ describe('admin navigation & feature routes inventory', () => {
       '/posts',
       '/editorial-stories',
       '/knowledge',
-      '/official-services',
+      '/ministry',
       '/listings',
       '/categories',
       '/reports',

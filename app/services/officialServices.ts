@@ -1,4 +1,5 @@
 import { API_BASE } from '@/services/api';
+import { authFetch } from '@/services/authFetch';
 
 export type OfficialService = {
   id: string;
@@ -8,6 +9,14 @@ export type OfficialService = {
   icon: string;
   externalUrl: string;
   active: boolean;
+  feeText?: string | null;
+  isFree?: boolean;
+  steps?: string | null;
+  conditions?: string | null;
+  documents?: string | null;
+  deliveryChannel?: string | null;
+  imageUrl?: string | null;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -123,24 +132,124 @@ export function previewOfficialServices(
   return services.filter((service) => service.active !== false).slice(0, limit);
 }
 
+export type MinistryAccount = {
+  id: string;
+  username: string;
+  arabicName: string;
+  displayName: string;
+  bio?: string | null;
+  about?: string | null;
+  avatar?: string | null;
+  coverImage?: string | null;
+  website?: string | null;
+  publicPhone?: string | null;
+  publicEmail?: string | null;
+  verified: boolean;
+  allowPrivateMessages: boolean;
+  followersCount: number;
+  servicesCount: number;
+  isFollowing: boolean;
+};
+
+export function formatServiceCountLabel(count: number): string {
+  return `${count} خدمة`;
+}
+
+export function inferServiceDeliveryChannel(url?: string | null): string | null {
+  const raw = url?.trim();
+  if (!raw) return null;
+  try {
+    const host = new URL(raw).hostname.toLowerCase();
+    if (host.includes('naama.sa')) return 'تطبيق نما';
+    if (host.includes('mewa.gov.sa') || host.includes('anaam.mewa')) {
+      return 'منصة أنعام';
+    }
+    return host.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchMinistryAccount(): Promise<MinistryAccount | null> {
+  try {
+    const res = await authFetch(`${API_BASE}/api/services/account`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+    });
+    const json = await res.json().catch(() => ({}));
+    const account = json?.data?.account;
+    if (!res.ok || !json.success || !account?.id) return null;
+    return {
+      id: String(account.id),
+      username: String(account.username ?? 'mewa'),
+      arabicName: String(account.arabicName ?? ''),
+      displayName: String(account.displayName ?? ''),
+      bio: account.bio ? String(account.bio) : null,
+      about: account.about ? String(account.about) : null,
+      avatar: account.avatar ? String(account.avatar) : null,
+      coverImage: account.coverImage ? String(account.coverImage) : null,
+      website: account.website ? String(account.website) : null,
+      publicPhone: account.publicPhone ? String(account.publicPhone) : null,
+      publicEmail: account.publicEmail ? String(account.publicEmail) : null,
+      verified: Boolean(account.verified),
+      allowPrivateMessages: account.allowPrivateMessages !== false,
+      followersCount: Number(account.followersCount ?? 0),
+      servicesCount: Number(account.servicesCount ?? 0),
+      isFollowing: Boolean(account.isFollowing),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchOfficialService(id: string): Promise<OfficialService | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/services/${encodeURIComponent(id)}`, {
+      headers: { Accept: 'application/json' },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.success && json.data?.service?.id) {
+      return json.data.service as OfficialService;
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
+
 export async function fetchOfficialServices(): Promise<FetchOfficialServicesResult> {
   try {
     const res = await fetch(`${API_BASE}/api/services`, {
       headers: { Accept: 'application/json' },
     });
     const json = await res.json().catch(() => ({}));
-    if (
-      res.ok &&
-      json.success &&
-      Array.isArray(json.data?.services) &&
-      json.data.services.length > 0
-    ) {
+    if (res.ok && json.success && Array.isArray(json.data?.services)) {
       return { services: json.data.services as OfficialService[], fromApi: true };
     }
   } catch {
-    // network error — use fallback
+    // network error
   }
-  return { services: FALLBACK_OFFICIAL_SERVICES, fromApi: false };
+  return { services: [], fromApi: false };
+}
+
+export function splitServiceLines(value?: string | null): string[] {
+  return (value ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+export function resolveServiceFeeLabel(service: OfficialService): string | null {
+  const fee = service.feeText?.trim();
+  if (fee) return fee;
+  if (service.isFree !== false) return 'مجانا';
+  return null;
+}
+
+export function resolveServiceChannel(service: OfficialService): string | null {
+  const stored = service.deliveryChannel?.trim();
+  if (stored) return stored;
+  return inferServiceDeliveryChannel(service.externalUrl);
 }
 
 export function groupOfficialServicesByCategory(

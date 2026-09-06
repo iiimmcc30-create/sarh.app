@@ -41,6 +41,7 @@ test.describe('App web — public feature routes (§3/§12/§19)', () => {
     '/auth/forgot-password',
     '/search',
     '/sarh-services',
+    '/ministry',
     '/butchers',
     '/promote',
     '/subscription',
@@ -61,7 +62,7 @@ test.describe('App web — data-backed screens (§3)', () => {
     const api = process.env.LIVE_API_URL ?? 'http://127.0.0.1:3001';
     const svc = await request.get(`${api}/api/services`);
     expect(svc.ok()).toBeTruthy();
-    await page.goto('/sarh-services');
+    await page.goto('/ministry?tab=services');
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).toBeVisible();
   });

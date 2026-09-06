@@ -238,7 +238,9 @@ export default function SearchScreen() {
           <Pressable
             key={`service-${item.id}`}
             style={styles.resultRow}
-            onPress={() => router.push('/sarh-services' as never)}
+            onPress={() =>
+              router.push({ pathname: '/ministry/services/[id]', params: { id: item.id } } as never)
+            }
           >
             <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
               <AppIcon name="briefcase" size={20} color={colors.textMuted} />

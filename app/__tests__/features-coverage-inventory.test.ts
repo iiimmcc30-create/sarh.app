@@ -104,9 +104,9 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
   {
     id: 'official-services',
     titleAr: 'خدمات وزارة البيئة والمياه والزراعة',
-    routes: ['/sarh-services'],
-    coveredByTests: ['features-butcher-services.test.ts'],
-    modules: ['services/officialServices.ts'],
+    routes: ['/ministry', '/ministry/services/[id]', '/sarh-services'],
+    coveredByTests: ['features-butcher-services.test.ts', 'ministry-profile.test.ts'],
+    modules: ['services/officialServices.ts', 'app/ministry/index.tsx'],
   },
 ];
 

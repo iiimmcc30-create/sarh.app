@@ -9,7 +9,7 @@ export const ADMIN_SECTIONS: { path: string; navLabel: string }[] = [
   { path: '/posts', navLabel: 'المنشورات' },
   { path: '/editorial-stories', navLabel: 'ستوريات' },
   { path: '/knowledge', navLabel: 'مركز المعرفة' },
-  { path: '/official-services', navLabel: 'خدمات سرح' },
+  { path: '/ministry', navLabel: 'وزارة البيئة والمياه والزراعة' },
   { path: '/listings', navLabel: 'الإعلانات' },
   { path: '/reports', navLabel: 'البلاغات' },
   { path: '/support', navLabel: 'الدعم والمساعدة' },

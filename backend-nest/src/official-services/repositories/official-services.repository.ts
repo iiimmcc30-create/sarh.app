@@ -2,6 +2,18 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Prisma } from '@prisma/client';
 import type { OfficialServiceCategory } from '../dto/official-services.dto';
+import {
+  MEWA_ABOUT,
+  MEWA_ARABIC_NAME,
+  MEWA_BIO,
+  MEWA_DEFAULT_AVATAR_PATH,
+  MEWA_DEFAULT_COVER_PATH,
+  MEWA_DISPLAY_NAME,
+  MEWA_PUBLIC_EMAIL,
+  MEWA_PUBLIC_PHONE,
+  MEWA_USERNAME,
+  MEWA_WEBSITE,
+} from '../mewa.constants';
 
 const DEFAULT_SERVICES: Array<{
   title: string;
@@ -80,18 +92,149 @@ export class OfficialServicesRepository implements OnModuleInit {
   findActive() {
     return this.prisma.service.findMany({
       where: { active: true },
-      orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
   findAll() {
     return this.prisma.service.findMany({
-      orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
   findById(id: string) {
     return this.prisma.service.findUnique({ where: { id } });
+  }
+
+  countActive() {
+    return this.prisma.service.count({ where: { active: true } });
+  }
+
+  findMewaUser() {
+    return this.prisma.user.findFirst({
+      where: { username: MEWA_USERNAME, deletedAt: null },
+    });
+  }
+
+  createMewaUser(data: { passwordHash: string }) {
+    return this.prisma.user.create({
+      data: {
+        username: MEWA_USERNAME,
+        passwordHash: data.passwordHash,
+        displayName: MEWA_DISPLAY_NAME,
+        arabicName: MEWA_ARABIC_NAME,
+        verified: true,
+        isAI: false,
+        emailVerified: true,
+        role: 'USER',
+        country: 'SA',
+        bio: MEWA_BIO,
+        about: MEWA_ABOUT,
+        website: MEWA_WEBSITE,
+        publicPhone: MEWA_PUBLIC_PHONE,
+        publicEmail: MEWA_PUBLIC_EMAIL,
+        avatar: MEWA_DEFAULT_AVATAR_PATH,
+        coverImage: MEWA_DEFAULT_COVER_PATH,
+        allowPrivateMessages: false,
+        isActive: true,
+      },
+    });
+  }
+
+  updateMewaUserFlags(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        isActive: true,
+        emailVerified: true,
+        allowPrivateMessages: false,
+        isAI: false,
+      },
+    });
+  }
+
+  fillMewaDefaults(id: string, data: Prisma.UserUpdateInput) {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  updateMewaProfile(id: string, data: Prisma.UserUpdateInput) {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  updateMewaPassword(id: string, passwordHash: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash,
+        passwordVersion: { increment: 1 },
+      },
+    });
+  }
+
+  listMewaPosts(authorId: string) {
+    return this.prisma.post.findMany({
+      where: { authorId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findMewaPost(id: string, authorId: string) {
+    return this.prisma.post.findFirst({
+      where: { id, authorId, deletedAt: null },
+    });
+  }
+
+  createMewaPost(data: {
+    authorId: string;
+    content: string;
+    arabicContent: string;
+    image?: string | null;
+    images?: string[];
+  }) {
+    return this.prisma.post.create({
+      data: {
+        authorId: data.authorId,
+        content: data.content,
+        arabicContent: data.arabicContent,
+        image: data.image ?? null,
+        images: data.images ?? [],
+      },
+    });
+  }
+
+  updateMewaPost(
+    id: string,
+    data: {
+      content?: string;
+      arabicContent?: string;
+      image?: string | null;
+      images?: string[];
+      isHidden?: boolean;
+    },
+  ) {
+    return this.prisma.post.update({
+      where: { id },
+      data,
+    });
+  }
+
+  archiveMewaPost(id: string) {
+    return this.prisma.post.update({
+      where: { id },
+      data: { deletedAt: new Date(), isHidden: true },
+    });
+  }
+
+  countFollowers(userId: string) {
+    return this.prisma.follow.count({ where: { followingId: userId } });
+  }
+
+  findFollow(followerId: string, followingId: string) {
+    return this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: { followerId, followingId },
+      },
+    });
   }
 
   create(data: Prisma.ServiceCreateInput) {
