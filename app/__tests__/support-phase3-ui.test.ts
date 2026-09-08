@@ -26,7 +26,8 @@ describe('customer support UI phase 3', () => {
       path.join(__dirname, '../app/support/tickets/[id].tsx'),
       'utf8',
     );
-    expect(ticketScreen).toContain('رقم البلاغ');
-    expect(ticketScreen).toContain('خدمة العملاء');
+    expect(ticketScreen).toContain('SUPPORT_CUSTOMER_SERVICE');
+    expect(ticketScreen).not.toContain('سرحان لن يرد');
+    expect(ticketScreen).toContain("from '@/constants/supportIdentity'");
   });
 });

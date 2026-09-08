@@ -1,37 +1,22 @@
-import { SettingsMenuScreen } from '@/components/ui/SettingsMenuScreen';
+import { View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { SupportFlowSheet } from '@/components/support/SupportFlowSheet';
 
 export default function SupportHubScreen() {
+  const router = useRouter();
   return (
-    <SettingsMenuScreen
-      title="الدعم والمساعدة"
-      description="تذاكر الدعم، طلب توثيق الحساب، والأسئلة الشائعة"
-      heroIcon="lifebuoy"
-      items={[
-        {
-          icon: 'headset',
-          label: 'المساعدة',
-          subtitle: 'بلاغ ومساعدة سرحان دون تواصل مع الملحمة',
-          route: '/support/help',
-        },
-        {
-          icon: 'ticket-outline',
-          label: 'تذاكر الدعم',
-          subtitle: 'إنشاء ومتابعة تذاكر الدعم',
-          route: '/support/tickets',
-        },
-        {
-          icon: 'shield-check-outline',
-          label: 'إنشاء طلب توثيق الحسابات',
-          subtitle: 'تقديم ومتابعة طلب توثيق الحساب',
-          route: '/support/verification',
-        },
-        {
-          icon: 'help-circle-outline',
-          label: 'الأسئلة الشائعة',
-          subtitle: 'إجابات سريعة عن استخدام التطبيق',
-          route: '/support/faq',
-        },
-      ]}
-    />
+    <View style={styles.root}>
+      <SupportFlowSheet
+        visible
+        onClose={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace('/(tabs)' as never);
+        }}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: 'transparent' },
+});

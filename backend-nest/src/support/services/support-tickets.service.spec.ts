@@ -130,7 +130,7 @@ describe('SupportTicketsService', () => {
     expect(repo.createMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         authorKind: 'SARHAN',
-        body: sarhanWelcome('متعب'),
+        body: sarhanWelcome('متعب', 'مشكلة في الطلب'),
       }),
     );
     expect(sarhan.nextTurn).toHaveBeenCalled();
@@ -166,6 +166,34 @@ describe('SupportTicketsService', () => {
 
     expect(repo.findOwnedButcherOrder).not.toHaveBeenCalled();
     expect(repo.createTicket.mock.calls[0][0].order).toBeUndefined();
+  });
+
+  it('stores an existing support category on OTHER_HELP tickets', async () => {
+    repo.createTicket.mockResolvedValue({
+      id: 't-cat',
+      ticketNumber: 'SRH-2026-000009',
+      status: 'AI_ASSISTING',
+      handlerMode: 'AI_ACTIVE',
+      subject: 'الحساب',
+      createdAt: new Date(),
+    });
+    repo.findTicketById.mockResolvedValue({
+      id: 't-cat',
+      handlerMode: 'AI_ACTIVE',
+      status: 'AI_ASSISTING',
+      metadata: {},
+      messages: [],
+    });
+    repo.findUserTicket.mockResolvedValue({ id: 't-cat' });
+
+    await service.createTicket(user('cust-a'), {
+      helpKind: 'OTHER_HELP',
+      category: 'ACCOUNT',
+      description: 'لا أستطيع تغيير رقم الجوال',
+    });
+
+    expect(repo.createTicket.mock.calls[0][0].category).toBe('ACCOUNT');
+    expect(repo.createTicket.mock.calls[0][0].subject).toBe('الحساب');
   });
 
   it('retries ticket numbers on unique conflict', async () => {

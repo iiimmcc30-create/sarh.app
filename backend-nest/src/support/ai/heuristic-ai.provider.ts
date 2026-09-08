@@ -67,6 +67,17 @@ export class HeuristicAiProvider implements AiProvider {
     }
 
     if (NOT_RECEIVED.test(text)) {
+      if (context.order) {
+        return {
+          replyAr:
+            'سجّلت أن الطلب لم يصل، وسأحوّل الحالة للفريق المختص لمتابعتها.',
+          issueType: 'ORDER_NOT_RECEIVED',
+          escalate: true,
+          missingInformation: [],
+          summary: 'الطلب لم يصل',
+          metadataPatch: { issueType: 'ORDER_NOT_RECEIVED' },
+        };
+      }
       return {
         replyAr:
           'أفهمك، خلني أتأكد من تفاصيل طلبك.\nهل المشكلة أن الطلب لم يصل حتى الآن؟',
@@ -146,6 +157,22 @@ export class HeuristicAiProvider implements AiProvider {
           (context.issueType as SarhanDecision['issueType']) || 'OTHER',
         escalate: true,
         summary: context.summary || text.slice(0, 160),
+      };
+    }
+
+    const knownCategory =
+      context.category &&
+      context.category !== 'OTHER' &&
+      context.category !== 'OTHER_HELP';
+    const knownDescription = (context.customerDescription || text).trim()
+      .length >= 10;
+    if (knownCategory && knownDescription) {
+      return {
+        replyAr: 'اطلعت على التفاصيل المرسلة وسأحوّل الطلب للفريق المختص.',
+        issueType: 'OTHER',
+        escalate: true,
+        summary: (context.customerDescription || text).slice(0, 160),
+        missingInformation: [],
       };
     }
 

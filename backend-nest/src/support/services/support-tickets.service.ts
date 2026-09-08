@@ -257,8 +257,17 @@ export class SupportTicketsService {
 
     const names = await this.repo.findUserNames(user.userId);
     const firstName = firstNameFromUser(names ?? {});
+    const storedCategory =
+      helpKind === 'ORDER_HELP'
+        ? 'ORDER_HELP'
+        : dto.category && dto.category !== 'ORDER_HELP'
+          ? dto.category
+          : 'OTHER_HELP';
     const subject =
-      helpKind === 'ORDER_HELP' ? 'مشكلة في الطلب' : 'مساعدة في شيء آخر';
+      SUPPORT_TICKET_CATEGORY_LABEL_AR[
+        storedCategory as keyof typeof SUPPORT_TICKET_CATEGORY_LABEL_AR
+      ] ??
+      (helpKind === 'ORDER_HELP' ? 'مشكلة في الطلب' : 'مساعدة في شيء آخر');
 
     let ticket: Awaited<ReturnType<SupportRepository['createTicket']>> | null =
       null;
@@ -268,7 +277,7 @@ export class SupportTicketsService {
         ticket = await this.repo.createTicket({
           ticketNumber,
           type: 'SUPPORT',
-          category: helpKind,
+          category: storedCategory,
           subject,
           description,
           status: 'AI_ASSISTING',
@@ -278,6 +287,7 @@ export class SupportTicketsService {
           metadata: {
             issueType: 'OTHER',
             customerDescription: description,
+            selectedCategory: storedCategory,
             missingInformation: [],
           } as Prisma.InputJsonValue,
         });
@@ -293,7 +303,7 @@ export class SupportTicketsService {
       ticket: { connect: { id: ticket.id } },
       authorKind: 'SARHAN',
       isStaffReply: true,
-      body: sarhanWelcome(firstName),
+      body: sarhanWelcome(firstName, subject),
     });
 
     await this.repo.createMessage({
