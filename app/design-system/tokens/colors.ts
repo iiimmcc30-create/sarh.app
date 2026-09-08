@@ -54,6 +54,9 @@ export const functional = {
   overlay: sarh.color.overlay,
   pattern: sarh.color.pattern,
   primaryMuted: sarh.color.actionMuted,
+  /** Existing FAB label/icon pair — on-primary text, not a new brand color. */
+  onPrimary: sarh.color.fab,
+  onPrimaryInverse: sarh.color.fabIcon,
 } as const;
 
 export type ColorToken = keyof typeof colors;

@@ -1,18 +1,15 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { ds } from '@/constants/designSystem';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { colors, radius, space } from '@/design-system';
+import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
 import { getRtlRow } from '@/lib/rtl';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
 const BAR_H = HOME_APP_BAR_H;
-const ICON_BTN = 44;
-const ICON_SIZE = 24;
-const AVATAR = 42;
+const TOOL = space[48];
+const ICON_SIZE = space[20];
 
 type HomeAppBarProps = {
   onSearch: () => void;
@@ -30,121 +27,117 @@ export function HomeAppBar({
   displayName,
   avatarUri,
 }: HomeAppBarProps) {
-  const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
-    colors: theme.colors,
-  }));
-
   return (
-    <View style={styles.shell}>
+    <SarhSurface tone="background" style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
         <View style={[styles.profileCluster, getRtlRow()]}>
           <Pressable
             onPress={onAvatarPress}
             style={styles.avatarBtn}
+            hitSlop={space[4]}
             accessibilityRole="button"
             accessibilityLabel="القائمة الجانبية"
           >
-            <Image
-              source={uriSource(avatarUri)}
+            <SarhAvatar
+              uri={avatarUri}
+              name={displayName}
+              size="md"
+              accessibilityLabel={displayName}
               style={styles.avatar}
-              contentFit="cover"
             />
           </Pressable>
 
           <Pressable
             onPress={onProfilePress}
             style={styles.nameTap}
+            hitSlop={space[4]}
             accessibilityRole="button"
             accessibilityLabel={displayName}
           >
-            <Text style={styles.displayName} numberOfLines={1}>
+            <AppText variant="heading3" color="textPrimary" numberOfLines={1} ellipsizeMode="tail">
               {displayName}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
 
         <View style={[styles.toolsCluster, getRtlRow()]}>
-          <Pressable
+          <SarhIconButton
+            chrome="ghost"
+            size="sm"
+            accessibilityLabel="بحث"
             onPress={onSearch}
             style={styles.iconBtn}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="بحث"
           >
             <AppIcon name="search" size={ICON_SIZE} color={colors.textPrimary} />
-          </Pressable>
+          </SarhIconButton>
           <NotificationBellButton
             bare
-            size={ICON_BTN}
+            size={TOOL}
             iconSize={ICON_SIZE}
             style={styles.iconBtn}
             iconColor={colors.textPrimary}
-            badgeBorderColor={colors.bgDeep}
+            badgeBorderColor={colors.background}
           />
         </View>
       </View>
-    </View>
+    </SarhSurface>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    shell: {
-      backgroundColor: colors.bgDeep,
-      flexGrow: 0,
-      flexShrink: 0,
-    },
-    bar: {
-      width: '100%',
-      minHeight: BAR_H,
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      backgroundColor: colors.bgDeep,
-    },
-    toolsCluster: {
-      alignItems: 'center',
-      gap: 4,
-    },
-    iconBtn: {
-      width: ICON_BTN,
-      height: ICON_BTN,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'transparent',
-    },
-    profileCluster: {
-      flex: 1,
-      minWidth: 0,
-      alignItems: 'center',
-      gap: 8,
-    },
-    nameTap: {
-      flexShrink: 1,
-      minWidth: 0,
-      maxWidth: '70%',
-    },
-    displayName: {
-      ...typography.feedTitle,
-      fontFamily: OFFICIAL_APP_FONT,
-      fontSize: 17,
-      lineHeight: 24,
-      color: colors.textPrimary,
-    },
-    avatarBtn: {
-      flexShrink: 0,
-    },
-    avatar: {
-      width: AVATAR,
-      height: AVATAR,
-      borderRadius: AVATAR / 2,
-      borderWidth: 1.5,
-      borderColor: colors.electricBright,
-      backgroundColor: colors.bgElevated,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  shell: {
+    flexGrow: 0,
+    flexShrink: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  bar: {
+    width: '100%',
+    minHeight: BAR_H,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space[16],
+    paddingVertical: space[12],
+  },
+  toolsCluster: {
+    alignItems: 'center',
+    gap: space[4],
+  },
+  iconBtn: {
+    width: TOOL,
+    height: TOOL,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  profileCluster: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    gap: space[12],
+  },
+  nameTap: {
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '70%',
+    minHeight: space[48],
+    justifyContent: 'center',
+  },
+  avatarBtn: {
+    flexShrink: 0,
+    minWidth: space[48],
+    minHeight: space[48],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatar: {
+    width: space[40],
+    height: space[40],
+    borderRadius: radius[999],
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
+  },
+});
 
 export default HomeAppBar;

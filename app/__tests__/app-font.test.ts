@@ -4,6 +4,7 @@ import {
   APP_FONT_NAME,
   OFFICIAL_APP_FONT,
   resolveAppFontFace,
+  resolveDesignFontFace,
 } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
 import packageJson from '../package.json';
@@ -28,6 +29,25 @@ describe('resolveAppFontFace', () => {
     });
     expect(resolveAppFontFace('normal', appFont.medium)).toEqual({
       fontFamily: OFFICIAL_APP_FONT,
+      fontWeight: '700',
+    });
+  });
+
+  it('keeps a separate design-system resolver with real weights', () => {
+    expect(resolveDesignFontFace('400')).toEqual({
+      fontFamily: appFont.regular,
+      fontWeight: '400',
+    });
+    expect(resolveDesignFontFace('500')).toEqual({
+      fontFamily: appFont.medium,
+      fontWeight: '500',
+    });
+    expect(resolveDesignFontFace('600')).toEqual({
+      fontFamily: appFont.semibold,
+      fontWeight: '600',
+    });
+    expect(resolveDesignFontFace('700')).toEqual({
+      fontFamily: appFont.bold,
       fontWeight: '700',
     });
   });

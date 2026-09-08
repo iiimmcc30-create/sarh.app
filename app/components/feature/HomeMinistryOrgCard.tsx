@@ -1,10 +1,8 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppText } from '@/components/ui/AppText';
-import { SectionHeader } from '@/components/ui/SectionHeader';
+import { colors, elevation, functional, motion, radius, space } from '@/design-system';
+import { AppText, SarhAvatar, SarhButton, SarhCard } from '@/design-system/components';
 import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER } from '@/constants/branding';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import {
@@ -23,8 +21,7 @@ type Props = {
 export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const cardH = Math.round(Math.min(228, Math.max(196, width * 0.52)));
+  const cardH = Math.round(Math.min(200, Math.max(172, width * 0.46)));
   const name = account?.arabicName || '';
   const count = account?.servicesCount ?? serviceCount;
   const cover = account?.coverImage ? uriSource(account.coverImage) : MEWA_FALLBACK_COVER;
@@ -34,120 +31,112 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <SectionHeader title="خدمات الوزارة" />
+      <View style={styles.sectionHead}>
+        <AppText variant="heading2" color="textPrimary">
+          خدمات الوزارة
+        </AppText>
+      </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${name}. ${formatServiceCountLabel(count)}. فتح`}
         onPress={openProfile}
-        style={({ pressed }) => [styles.card, { height: cardH }, pressed && styles.pressed]}
+        style={({ pressed }) => [pressed && styles.pressed]}
       >
-        <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <LinearGradient
-          colors={['transparent', 'rgba(7, 19, 28, 0.22)', 'rgba(7, 19, 28, 0.82)']}
-          locations={[0, 0.48, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={[styles.bar, getRtlRow()]}>
-          <View style={styles.logoRing}>
-            <Image
+        <SarhCard variant="plain" padding="none" style={[styles.card, { height: cardH }]}>
+          <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient
+            colors={['transparent', functional.overlay]}
+            locations={[0.28, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={[styles.bar, getRtlRow()]}>
+            <SarhAvatar
               source={avatar}
-              style={styles.logo}
-              contentFit="cover"
+              name={name}
+              size="lg"
               accessibilityLabel={name}
+              style={styles.logo}
+            />
+            <View style={styles.copy}>
+              <AppText
+                variant="heading3"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={styles.title}
+              >
+                {name || (loading ? '…' : '')}
+              </AppText>
+              <AppText
+                variant="caption"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={styles.subtitle}
+              >
+                {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
+              </AppText>
+            </View>
+            <SarhButton
+              title="فتح"
+              variant="inverse"
+              size="sm"
+              shape="pill"
+              accessibilityLabel="فتح"
+              onPress={openProfile}
             />
           </View>
-          <View style={styles.copy}>
-            <AppText style={styles.title} numberOfLines={2}>
-              {name || (loading ? '…' : '')}
-            </AppText>
-            <AppText style={styles.subtitle} numberOfLines={1}>
-              {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
-            </AppText>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="فتح"
-            onPress={openProfile}
-            style={({ pressed }) => [styles.openBtn, pressed && styles.openPressed]}
-          >
-            <AppText style={styles.openText}>فتح</AppText>
-          </Pressable>
-        </View>
+        </SarhCard>
       </Pressable>
     </View>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    wrap: {
-      paddingBottom: spacing.sm,
-    },
-    card: {
-      marginHorizontal: spacing.lg,
-      borderRadius: 28,
-      overflow: 'hidden',
-      justifyContent: 'flex-end',
-      backgroundColor: colors.bgDeep,
-      shadowColor: '#07131C',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.22,
-      shadowRadius: 18,
-      elevation: 8,
-    },
-    bar: {
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-    },
-    logoRing: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: '#FFFFFF',
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.92)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
-    logo: {
-      width: 48,
-      height: 48,
-    },
-    copy: {
-      flex: 1,
-      minWidth: 0,
-      gap: 2,
-    },
-    title: {
-      ...typography.smallHeading,
-      color: '#FFFFFF',
-      fontWeight: '700',
-    },
-    subtitle: {
-      ...typography.caption,
-      color: 'rgba(255,255,255,0.86)',
-    },
-    openBtn: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: radius.pill,
-      paddingHorizontal: 18,
-      paddingVertical: 8,
-    },
-    openText: {
-      ...typography.caption,
-      color: '#101820',
-      fontWeight: '700',
-    },
-    openPressed: {
-      opacity: 0.88,
-    },
-    pressed: {
-      opacity: 0.96,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  wrap: {
+    paddingBottom: space[16],
+  },
+  sectionHead: {
+    paddingHorizontal: space[16],
+    paddingTop: space[16],
+    paddingBottom: space[12],
+  },
+  card: {
+    marginHorizontal: space[16],
+    borderRadius: radius[20],
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    backgroundColor: colors.surfaceElevated,
+    shadowColor: colors.background,
+    ...elevation.raised,
+  },
+  bar: {
+    alignItems: 'center',
+    gap: space[12],
+    paddingHorizontal: space[16],
+    paddingVertical: space[16],
+  },
+  logo: {
+    width: space[48],
+    height: space[48],
+    borderRadius: radius[999],
+    backgroundColor: functional.onPrimary,
+    borderWidth: 2,
+    borderColor: functional.onPrimary,
+  },
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    gap: space[4],
+  },
+  title: {
+    color: functional.onPrimary,
+  },
+  subtitle: {
+    color: functional.onPrimary,
+    opacity: motion.opacity.pressed,
+  },
+  pressed: {
+    opacity: motion.opacity.pressed,
+  },
+});
 
 export default HomeMinistryOrgCard;
