@@ -1,7 +1,8 @@
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { AppText } from '@/design-system/components';
+import { colors, radius, space } from '@/design-system';
+import { getRtlRow } from '@/lib/rtl';
 import { useRef } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 export type ButcherStoreNavItem = {
   /** Stable key — category slug, or "offers" / "about" / "stories". */
@@ -26,7 +27,6 @@ export function ButcherStoreNavBar({
   activeId,
   onChange,
 }: ButcherStoreNavBarProps) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const scroller = useRef<ScrollView>(null);
 
   if (!items.length) return null;
@@ -39,7 +39,7 @@ export function ButcherStoreNavBar({
       onContentSizeChange={() =>
         scroller.current?.scrollToEnd({ animated: false })
       }
-      contentContainerStyle={styles.row}
+      contentContainerStyle={[styles.row, getRtlRow()]}
     >
       {[...items].reverse().map((item) => {
         const isActive = activeId === item.id;
@@ -51,19 +51,14 @@ export function ButcherStoreNavBar({
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
           >
-            <View style={styles.tabCoverTrail}>
-              <View style={styles.tabTextShell}>
-                <Text
-                  style={[styles.tabLabel, isActive && styles.tabLabelActive]}
-                  numberOfLines={1}
-                >
-                  {item.label}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]}
-            />
+            <AppText
+              variant="label"
+              color={isActive ? 'primary' : 'textMuted'}
+              numberOfLines={1}
+            >
+              {item.label}
+            </AppText>
+            <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
           </Pressable>
         );
       })}
@@ -95,44 +90,28 @@ export function ButcherCategoryBar({
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-      gap: spacing.lg,
-    },
-    tabBtn: {
-      alignItems: 'stretch',
-      paddingBottom: 2,
-      maxWidth: 140,
-    },
-    tabCoverTrail: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
-    },
-    tabTextShell: {
-          },
-    tabLabel: {
-      ...typography.smallHeading,
-      color: colors.textMuted,
-            writingDirection: 'rtl',
-    },
-    tabLabelActive: {
-      color: colors.textPrimary,
-    },
-    tabUnderline: {
-      marginTop: 6,
-      height: 3,
-      width: '100%',
-      borderRadius: 2,
-      backgroundColor: 'transparent',
-    },
-    tabUnderlineActive: {
-      backgroundColor: colors.textPrimary,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  row: {
+    justifyContent: 'flex-end',
+    paddingHorizontal: space[16],
+    paddingTop: space[12],
+    paddingBottom: space[8],
+    gap: space[16],
+  },
+  tabBtn: {
+    alignItems: 'center',
+    paddingBottom: space[4],
+    maxWidth: 140,
+    minHeight: space[32],
+  },
+  tabUnderline: {
+    marginTop: space[4],
+    height: 2,
+    width: '100%',
+    borderRadius: radius[8],
+    backgroundColor: 'transparent',
+  },
+  tabUnderlineActive: {
+    backgroundColor: colors.primary,
+  },
+});
