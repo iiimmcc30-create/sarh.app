@@ -11,11 +11,11 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import {
   fetchMyTickets,
-  TICKET_STATUS_LABEL_AR,
   TICKET_CATEGORY_LABEL_AR,
   type SupportTicketSummary,
   type SupportTicketCategory,
 } from '@/services/support';
+import { userFacingTicketStatus } from '@/lib/supportFlow';
 
 export default function SupportTicketsScreen() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function SupportTicketsScreen() {
         <PrimaryButton
           title="إنشاء تذكرة جديدة"
           fullWidth
-          onPress={() => router.push('/support/tickets/create' as never)}
+          onPress={() => router.push('/support' as never)}
         />
 
         {loading ? (
@@ -70,7 +70,7 @@ export default function SupportTicketsScreen() {
                     <Text style={styles.ticketNo}>{item.ticketNumber}</Text>
                     <View style={styles.statusPill}>
                       <Text style={styles.statusText}>
-                        {TICKET_STATUS_LABEL_AR[item.status] ?? item.status}
+                        {userFacingTicketStatus(item.status)}
                       </Text>
                     </View>
                   </View>

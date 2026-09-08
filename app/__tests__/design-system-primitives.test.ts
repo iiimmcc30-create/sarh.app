@@ -136,15 +136,18 @@ describe('core UI primitives', () => {
     expect(FONT_WEIGHT_MIGRATION.join(' ')).toContain('theme.ts');
   });
 
-  it('pilots primitives only on the support help screen', () => {
-    const help = readFileSync(path.join(__dirname, '../app/support/help.tsx'), 'utf8');
-    expect(help).toContain("from '@/design-system/components'");
-    expect(help).toContain('<AppText variant="heading3"');
-    expect(help).toContain('<SarhButton');
-    expect(help).toContain('<SarhCard');
-    expect(help).toContain('<SarhInput');
-    expect(help).not.toContain('PrimaryButton');
-    expect(help).not.toContain('AppTextInput');
-    expect(help).not.toContain('GlassCard');
+  it('pilots primitives on the support flow sheet', () => {
+    const sheet = readFileSync(
+      path.join(__dirname, '../components/support/SupportFlowSheet.tsx'),
+      'utf8',
+    );
+    expect(sheet).toContain("from '@/design-system/components'");
+    expect(sheet).toContain('<AppText variant="heading2"');
+    expect(sheet).toContain('<SarhButton');
+    expect(sheet).toContain('<SarhInput');
+    expect(sheet).toContain('<SarhSurface');
+    expect(sheet).not.toContain('PrimaryButton');
+    expect(sheet).not.toContain('AppTextInput');
+    expect(sheet).not.toContain('GlassCard');
   });
 });
