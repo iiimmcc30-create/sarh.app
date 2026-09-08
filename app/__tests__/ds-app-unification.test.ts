@@ -21,7 +21,7 @@ describe('design-system unification — allowed redesigns only', () => {
     expect(post).not.toContain("from '@/design-system/components'");
   });
 
-  it('bottom nav keeps the same routes and has no icon chrome box', () => {
+  it('bottom nav keeps the pre-unification chrome and the same routes', () => {
     const tabs = src('components/navigation/FloatingTabBar.tsx');
     expect(tabs).toContain("route: 'index'");
     expect(tabs).toContain("route: 'market'");
@@ -29,9 +29,8 @@ describe('design-system unification — allowed redesigns only', () => {
     expect(tabs).toContain("route: 'posts'");
     expect(tabs).toContain("label: 'مجتمع سرح'");
     expect(tabs).toContain('navigateToCreateListing');
-    expect(tabs).not.toContain('addBox');
+    expect(tabs).toContain('addBox');
     expect(tabs).not.toContain("route: 'profile'");
-    expect(tabs).toContain("from '@/design-system/components'");
   });
 
   it('profile keeps share in the more menu and drops the header share arrow', () => {
