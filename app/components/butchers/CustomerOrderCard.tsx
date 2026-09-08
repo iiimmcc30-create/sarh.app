@@ -1,118 +1,120 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import {
-  customerOrderHeadline,
-  formatOrderDatePart,
-  formatOrderTimePart,
-  orderProductSummary,
-  orderSpecsLine,
-} from '@/lib/customerOrders';
-import { ORDER_STATUS_COLORS, PAYMENT_STATUS_LABELS } from '@/services/butcherData';
+import { AppText } from '@/design-system/components';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { customerOrderHeadline, formatOrderDatePart } from '@/lib/customerOrders';
+import { getRtlRow } from '@/lib/rtl';
+import { orderStatusLabel } from '@/services/butcherData';
 import { ButcherOrderRecord, formatCurrency } from '@/services/butcherOrders';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export function CustomerOrderCard({
   order,
   onPress,
   onChat,
+  onReorder,
   colors,
 }: {
   order: ButcherOrderRecord;
   onPress: () => void;
   onChat?: () => void;
+  onReorder?: () => void;
   colors: ThemeColors;
 }) {
   const styles = createStyles(colors);
-  const statusColor = ORDER_STATUS_COLORS[order.status] ?? colors.textMuted;
   const headline = customerOrderHeadline(order);
-  const statusText = headline.label;
-  const isPaid = order.paymentStatus === 'paid';
+  const statusText =
+    order.status === 'delivered'
+      ? orderStatusLabel(order.status, order.deliveryType)
+      : headline.label;
+  const delivered = order.status === 'delivered';
   const logo = uriSource(order.butcher?.logo);
+  const canReorder = delivered && Boolean(onReorder);
+  const primaryLabel = headline.awaitingPayment
+    ? 'إكمال الدفع'
+    : canReorder
+      ? 'إعادة الطلب'
+      : onChat
+        ? 'محادثة'
+        : null;
+
+  const onPrimary = headline.awaitingPayment
+    ? onPress
+    : canReorder
+      ? onReorder
+      : onChat;
+
+  const statusTone = headline.awaitingPayment
+    ? 'warn'
+    : headline.expired || order.status === 'cancelled'
+      ? 'danger'
+      : delivered
+        ? 'info'
+        : 'active';
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && { opacity: 0.94 }]}
+      style={({ pressed }) => [styles.card, pressed && { opacity: 0.96 }]}
+      accessibilityRole="button"
+      accessibilityLabel={`${order.butcher?.nameAr ?? 'ملحمة'} — ${statusText}`}
     >
-      <CoverTrailRow justify="space-between" gap={spacing.md} style={styles.topRow}>
-        <View style={styles.metaCol}>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: statusColor + '1F', borderColor: statusColor + '33' },
-            ]}
-          >
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
-          </View>
-          <CoverTrailRow gap={6}>
-            <AppIcon name="calendar-outline" size={13} color={colors.textMuted} />
-            <Text style={styles.stampText}>{formatOrderDatePart(order.createdAt)}</Text>
-          </CoverTrailRow>
-          <CoverTrailRow gap={6}>
-            <AppIcon name="time-outline" size={13} color={colors.textMuted} />
-            <Text style={styles.stampText}>{formatOrderTimePart(order.createdAt)}</Text>
-          </CoverTrailRow>
+      <View style={[styles.header, getRtlRow()]}>
+        <AppText variant="bodySmall" color="textMuted">
+          {formatOrderDatePart(order.createdAt)}
+        </AppText>
+        <View style={[styles.statusChip, styles[`chip_${statusTone}`]]}>
+          <AppText variant="micro" style={styles[`chipText_${statusTone}`]}>
+            {statusText}
+          </AppText>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={[styles.body, getRtlRow()]}>
+        <View style={styles.logoWrap}>
+          {logo ? (
+            <Image source={logo} style={styles.logo} contentFit="cover" />
+          ) : (
+            <AppIcon name="storefront-outline" size={18} color={colors.textMuted} />
+          )}
         </View>
 
-        <CoverTrailRow flex justify="flex-end" gap={spacing.sm} style={styles.identityRow}>
-          <RtlTextShell flex>
-            <RtlText style={styles.butcherName} numberOfLines={1}>
-              {order.butcher?.nameAr ?? 'ملحمة'}
-            </RtlText>
-            <RtlText style={styles.productName} numberOfLines={1}>
-              {orderProductSummary(order)}
-            </RtlText>
-            <RtlText style={styles.productMeta} numberOfLines={1}>
-              {orderSpecsLine(order)}
-            </RtlText>
-          </RtlTextShell>
-          <View style={styles.logoWrap}>
-            {logo ? (
-              <Image source={logo} style={styles.logo} contentFit="cover" />
-            ) : (
-              <AppIcon name="storefront-outline" size={18} color="#F5F7F9" />
-            )}
-          </View>
-        </CoverTrailRow>
-      </CoverTrailRow>
-
-      <View style={[styles.divider, { borderColor: colors.borderSoft }]} />
-
-      <CoverTrailRow justify="space-between" gap={spacing.sm} style={styles.bottomRow}>
-        <View style={styles.totalCol}>
-          <Text style={styles.totalValue}>{formatCurrency(order.totalPrice, order.currency)}</Text>
-          <Text style={styles.totalLabel}>الإجمالي</Text>
+        <View style={styles.info}>
+          <AppText variant="label" numberOfLines={1}>
+            {order.butcher?.nameAr ?? 'ملحمة'}
+          </AppText>
+          <AppText variant="bodySmall">{formatCurrency(order.totalPrice, order.currency)}</AppText>
+          <AppText variant="caption" color="textSecondary" style={styles.detailsLink}>
+            عرض التفاصيل
+          </AppText>
+          {onChat && !headline.awaitingPayment && !canReorder ? (
+            <AppText variant="caption" color="primary">
+              محادثة الملحمة
+            </AppText>
+          ) : null}
         </View>
 
-        <View style={styles.idCol}>
-          <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
-          <Text style={[styles.payText, { color: isPaid ? colors.success : colors.gold }]}>
-            {headline.awaitingPayment
-              ? 'إكمال الدفع'
-              : PAYMENT_STATUS_LABELS[order.paymentStatus] ?? (isPaid ? 'مدفوع' : 'غير مدفوع')}
-          </Text>
-        </View>
-
-        {onChat ? (
+        {primaryLabel && onPrimary ? (
           <Pressable
-            onPress={onChat}
-            style={({ pressed }) => [styles.chatPill, pressed && { opacity: 0.88 }]}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onPrimary();
+            }}
+            style={({ pressed }) => [
+              styles.cta,
+              headline.awaitingPayment ? styles.ctaPay : styles.ctaGold,
+              pressed && { opacity: 0.9 },
+            ]}
+            accessibilityLabel={primaryLabel}
           >
-            <CoverTrailRow gap={6}>
-              <Text style={styles.chatPillText}>محادثة الملحمة</Text>
-              <AppIcon name="chatbubbles-outline" size={15} color={colors.electricBright} />
-            </CoverTrailRow>
+            <AppText variant="label" style={headline.awaitingPayment ? styles.ctaPayText : styles.ctaGoldText}>
+              {primaryLabel}
+            </AppText>
           </Pressable>
-        ) : (
-          <View style={styles.chatSpacer} />
-        )}
-      </CoverTrailRow>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -121,15 +123,18 @@ export function CustomerOrderCardSkeleton({ colors }: { colors: ThemeColors }) {
   const styles = createStyles(colors);
   return (
     <View style={styles.card}>
-      <CoverTrailRow justify="space-between">
-        <View style={{ gap: 8 }}>
-          <View style={[styles.skeleton, { width: 78, height: 22, borderRadius: 999 }]} />
-          <View style={[styles.skeleton, { width: 96, height: 10, borderRadius: 6 }]} />
-        </View>
+      <View style={[styles.header, getRtlRow()]}>
+        <View style={[styles.skeleton, { width: 110, height: 12 }]} />
+        <View style={[styles.skeleton, { width: 72, height: 22, borderRadius: radius.pill }]} />
+      </View>
+      <View style={styles.divider} />
+      <View style={[styles.body, getRtlRow()]}>
         <View style={[styles.logoWrap, styles.skeleton]} />
-      </CoverTrailRow>
-      <View style={[styles.divider, { borderColor: colors.borderSoft }]} />
-      <View style={[styles.skeleton, { width: '70%', height: 16, borderRadius: 8, alignSelf: 'flex-end' }]} />
+        <View style={{ flex: 1, gap: 8 }}>
+          <View style={[styles.skeleton, { width: '70%', height: 14 }]} />
+          <View style={[styles.skeleton, { width: '40%', height: 12 }]} />
+        </View>
+      </View>
     </View>
   );
 }
@@ -139,100 +144,95 @@ function createStyles(colors: ThemeColors) {
     card: {
       backgroundColor: colors.bgElevated,
       borderRadius: 16,
-      padding: spacing.lg,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     },
-    topRow: { alignItems: 'flex-start' },
-    identityRow: { alignItems: 'flex-start' },
-    metaCol: {
-      alignItems: 'flex-start',
-      gap: 6,
-      flexShrink: 0,
-      maxWidth: '42%',
+    header: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingBottom: spacing.sm,
+    },
+    statusChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
+    },
+    chip_info: {
+      backgroundColor: colors.cyan + '22',
+    },
+    chip_active: {
+      backgroundColor: colors.electric + '18',
+    },
+    chip_warn: {
+      backgroundColor: colors.gold + '24',
+    },
+    chip_danger: {
+      backgroundColor: colors.danger + '18',
+    },
+    chipText_info: {
+      color: colors.cyan,
+    },
+    chipText_active: {
+      color: colors.electricBright,
+    },
+    chipText_warn: {
+      color: colors.textPrimary,
+    },
+    chipText_danger: {
+      color: colors.danger,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.borderHairline,
+    },
+    body: {
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingTop: spacing.md,
     },
     logoWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
+      width: 52,
+      height: 52,
+      borderRadius: 12,
       overflow: 'hidden',
-      backgroundColor: '#152033',
+      backgroundColor: colors.bgSurface,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },
-    butcherName: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-    },
-    productName: {
-      ...typography.secondary,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-    productMeta: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
-    statusBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-    },
-    statusDot: { width: 6, height: 6, borderRadius: 3 },
-    statusText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
-    stampText: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    divider: {
-      borderBottomWidth: 1,
-      borderStyle: 'dashed',
-    },
-    bottomRow: { alignItems: 'center' },
-    totalCol: { alignItems: 'flex-start', flexShrink: 0 },
-    totalValue: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-    },
-    totalLabel: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-    },
-    idCol: {
+    info: {
       flex: 1,
-      alignItems: 'center',
       minWidth: 0,
+      gap: 4,
     },
-    orderNumber: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
+    detailsLink: {
+      textDecorationLine: 'underline',
     },
-    payText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
-    chatPill: {
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electric + '1A',
+    cta: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
       flexShrink: 0,
+      minWidth: 108,
+      alignItems: 'center',
     },
-    chatPillText: {
-      ...typography.caption,
-      color: colors.electricBright,
-      writingDirection: 'rtl',
+    ctaGold: {
+      backgroundColor: colors.gold,
     },
-    chatSpacer: { width: 12 },
+    ctaPay: {
+      backgroundColor: colors.electric,
+    },
+    ctaGoldText: {
+      color: colors.textPrimary,
+    },
+    ctaPayText: {
+      color: colors.bgDeep,
+    },
     skeleton: {
       backgroundColor: colors.bgSurface,
       opacity: 0.7,
+      borderRadius: 8,
     },
   });
 }

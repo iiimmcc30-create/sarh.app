@@ -137,6 +137,16 @@ export default function MyOrdersScreen() {
                       colors={colors}
                       onPress={() => openOrder(order)}
                       onChat={chatHandler(order)}
+                      onReorder={
+                        order.butcherId
+                          ? () =>
+                              safePush(
+                                { pathname: '/butchers/[id]', params: { id: order.butcherId } },
+                                undefined,
+                                router,
+                              )
+                          : undefined
+                      }
                     />
                   ))}
                 </View>
@@ -154,6 +164,16 @@ export default function MyOrdersScreen() {
                       colors={colors}
                       onPress={() => openOrder(order)}
                       onChat={chatHandler(order)}
+                      onReorder={
+                        order.butcherId
+                          ? () =>
+                              safePush(
+                                { pathname: '/butchers/[id]', params: { id: order.butcherId } },
+                                undefined,
+                                router,
+                              )
+                          : undefined
+                      }
                     />
                   ))}
                 </View>
@@ -217,7 +237,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
     },
     emptyBtnText: {
       ...butcherTypography.primary,
-      color: '#fff',
+      color: colors.bgDeep,
       writingDirection: 'rtl',
     },
   });
