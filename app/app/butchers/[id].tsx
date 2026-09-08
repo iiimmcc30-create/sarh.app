@@ -42,6 +42,7 @@ import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductO
 import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
+import { showToast } from '@/lib/toast';
 import {
   butcherChatRouteParams,
   fetchButcherChatAccess,
@@ -717,10 +718,10 @@ export default function ButcherProfileScreen() {
       });
       const json = await res.json();
       if (!res.ok) {
-        Alert.alert('تعذر الإرسال', json.message || 'لا يمكنك التقييم حالياً');
+        void showToast(json.message || 'لا يمكنك التقييم حالياً', 'error');
         return;
       }
-      Alert.alert('شكراً لك', 'تم إرسال تقييمك بنجاح');
+      void showToast('تم إرسال تقييمك بنجاح', 'success');
       setReviewDraft({ rating: 5, comment: '' });
       const refresh = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -731,7 +732,7 @@ export default function ButcherProfileScreen() {
         if (payload?.distribution) setReviewDistribution(payload.distribution);
       }
     } catch {
-      Alert.alert('خطأ', 'تعذر إرسال التقييم');
+      void showToast('تعذر إرسال التقييم', 'error');
     } finally {
       setSubmittingReview(false);
     }

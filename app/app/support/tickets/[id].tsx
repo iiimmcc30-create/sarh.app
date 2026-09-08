@@ -14,6 +14,7 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { showToast } from '@/lib/toast';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useSupportTicketSocket } from '@/hooks/useSupportTicketSocket';
@@ -63,7 +64,7 @@ export default function SupportTicketDetailScreen() {
     const res = await replyToTicket(ticket.id, reply.trim());
     setSending(false);
     if (!res.ok) {
-      Alert.alert('تعذر الإرسال', res.error ?? 'حاول مرة أخرى');
+      void showToast(res.error ?? 'حاول مرة أخرى', 'error');
       return;
     }
     setReply('');
