@@ -1,7 +1,6 @@
-// SAFAT — Butchers market promo slider (admin-managed, 3 slides)
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { ButcherMarketBanner } from '@/services/butcherMarketBanners';
 import { useEffect, useRef, useState } from 'react';
@@ -22,8 +21,7 @@ type Props = {
 
 export function ButcherMarketBannerSlider({ banners }: Props) {
   const { width } = useWindowDimensions();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const slideWidth = width - spacing.lg * 2;
+  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const [index, setIndex] = useState(0);
   const scroller = useRef<ScrollView>(null);
 
@@ -32,16 +30,16 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
     const timer = setInterval(() => {
       setIndex((prev) => {
         const next = (prev + 1) % banners.length;
-        scroller.current?.scrollTo({ x: next * (slideWidth + spacing.sm), animated: true });
+        scroller.current?.scrollTo({ x: next * width, animated: true });
         return next;
       });
     }, 5000);
     return () => clearInterval(timer);
-  }, [banners.length, slideWidth]);
+  }, [banners.length, width]);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
-    const next = Math.round(x / (slideWidth + spacing.sm));
+    const next = Math.round(x / width);
     if (next !== index && next >= 0 && next < banners.length) setIndex(next);
   };
 
@@ -52,16 +50,14 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
       <ScrollView
         ref={scroller}
         horizontal
-        pagingEnabled={false}
-        snapToInterval={slideWidth + spacing.sm}
+        pagingEnabled
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
         {banners.map((banner) => (
-          <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
+          <View key={banner.id} style={[styles.slide, { width }]}>
             <Image source={uriSource(banner.imageUrl)} style={styles.image} contentFit="cover" />
             <View style={styles.veil} />
             <View style={styles.copy}>
@@ -78,8 +74,9 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
             key={banner.id}
             onPress={() => {
               setIndex(i);
-              scroller.current?.scrollTo({ x: i * (slideWidth + spacing.sm), animated: true });
+              scroller.current?.scrollTo({ x: i * width, animated: true });
             }}
+            accessibilityLabel={`بنر ${i + 1}`}
             style={[styles.dot, i === index && styles.dotActive]}
           />
         ))}
@@ -88,23 +85,21 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const overlayText = scheme === 'light' ? colors.bgElevated : colors.textPrimary;
   return StyleSheet.create({
-    wrap: { marginTop: spacing.md },
-    row: {
-      paddingHorizontal: spacing.lg,
-      gap: spacing.sm,
+    wrap: {
+      marginTop: 0,
     },
     slide: {
-      height: 168,
-      borderRadius: 16,
+      height: 176,
       overflow: 'hidden',
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgSurface,
     },
     image: { ...StyleSheet.absoluteFillObject },
     veil: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(8,14,10,0.42)',
+      backgroundColor: colors.bgOverlay,
     },
     copy: {
       flex: 1,
@@ -115,17 +110,17 @@ function createStyles(colors: ThemeColors) {
     },
     title: {
       ...butcherTypography.secondary,
-      color: '#fff',
+      color: overlayText,
       textAlign: 'center',
     },
     subtitle: {
       ...butcherTypography.title,
-      color: '#fff',
+      color: overlayText,
       textAlign: 'center',
     },
     caption: {
       ...butcherTypography.meta,
-      color: 'rgba(255,255,255,0.88)',
+      color: overlayText,
       textAlign: 'center',
     },
     dots: {

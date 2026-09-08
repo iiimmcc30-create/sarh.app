@@ -1,10 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
 import { useTheme } from '@/hooks/useTheme';
@@ -13,7 +10,6 @@ import {
   CUSTOMER_FLOW_LABELS,
   CUSTOMER_ORDER_FLOW,
   customerOrderHeadline,
-  firstProductImage,
   flowReached,
   formatOrderStamp,
   isPayableButcherOrder,
@@ -21,12 +17,15 @@ import {
   orderMoneySummary,
   timelineStamp,
 } from '@/lib/customerOrders';
-import { rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { safePush } from '@/lib/safeNavigate';
+import { showToast } from '@/lib/toast';
 import { API_BASE } from '@/services/api';
-import { ORDER_STATUS_COLORS } from '@/services/butcherData';
+import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import {
   completeButcherOrderPayment,
   formatCurrency,
+  isInvoiceOrder,
   type ButcherOrderRecord,
 } from '@/services/butcherOrders';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -37,7 +36,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -53,6 +51,7 @@ export default function OrderDetailsScreen() {
   const [order, setOrder] = useState<ButcherOrderRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(true);
 
   const loadOrder = useCallback(async () => {
     if (!id || !accessToken) {
@@ -105,45 +104,41 @@ export default function OrderDetailsScreen() {
   if (!order) {
     return (
       <SafeAreaView style={s.screen} edges={['top']}>
-        <Pressable onPress={() => router.back()} style={s.backBtn}>
+        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityLabel="رجوع">
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text style={s.errorText}>تعذر تحميل تفاصيل الطلب</Text>
+        <AppText variant="body" color="textMuted" align="center" style={s.errorText}>
+          تعذر تحميل تفاصيل الطلب
+        </AppText>
       </SafeAreaView>
     );
   }
 
-  const statusColor = ORDER_STATUS_COLORS[order.status] ?? colors.textMuted;
   const headline = customerOrderHeadline(order);
   const statusText = headline.label;
   const canPay = isPayableButcherOrder(order) && Boolean(accessToken);
   const isPickup = order.deliveryType !== 'delivery';
-  const customerName = order.customer?.arabicName || order.customer?.displayName || 'عميل سرح';
   const customerPhone = order.customer?.phone as string | undefined;
   const butcherPhone = order.butcher?.phone as string | undefined;
-  const deliveryLabel = isPickup ? 'استلام' : 'توصيل';
   const locationValue = isPickup
     ? [order.butcher?.addressAr, order.butcher?.cityAr]
         .map((p: unknown) => (typeof p === 'string' ? p.trim() : ''))
         .filter(Boolean)
         .join('، ')
     : order.deliveryAddress;
-  const locationLabel = isPickup ? 'موقع الملحمة' : 'موقع التوصيل';
   const lines = orderLineItems(order);
   const money = orderMoneySummary(order);
   const reached = flowReached(order);
   const delivered = order.status === 'delivered';
+  const summaryCount =
+    lines.length === 1 ? 'صنف واحد' : lines.length === 2 ? 'صنفين' : `${lines.length} أصناف`;
 
   const handleCompletePayment = async () => {
     if (!accessToken || paying) return;
     setPaying(true);
     try {
       const outcome = await completeButcherOrderPayment({ accessToken, order });
-      if (outcome === 'blocked') {
-        await loadOrder();
-        return;
-      }
-      if (outcome === 'cancelled' || outcome === 'failed') {
+      if (outcome === 'blocked' || outcome === 'cancelled' || outcome === 'failed') {
         await loadOrder();
       }
     } finally {
@@ -151,82 +146,85 @@ export default function OrderDetailsScreen() {
     }
   };
 
+  const pageTitle = delivered
+    ? order.deliveryType === 'pickup'
+      ? 'تم استلام طلبك'
+      : 'تم توصيل طلبك'
+    : headline.awaitingPayment
+      ? 'بانتظار الدفع'
+      : headline.expired
+        ? 'انتهت صلاحية الطلب'
+        : order.status === 'cancelled'
+          ? 'تم إلغاء طلبك'
+          : 'تفاصيل الطلب';
+
+  const copyOrderNumber = () => {
+    showToast(`رقم الطلب ${order.orderNumber}`, 'info');
+  };
+
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
-      <CoverTrailRow justify="space-between" style={s.navRow}>
-        <Pressable onPress={() => router.back()} style={s.backBtn}>
+      <View style={[s.navRow, getRtlRow()]}>
+        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityLabel="رجوع">
           <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
         </Pressable>
-        <View style={{ width: 40 }} />
-      </CoverTrailRow>
+        <AppText variant="heading3" numberOfLines={1} style={s.pageTitle}>
+          {pageTitle}
+        </AppText>
+        <View style={s.navSpacer} />
+      </View>
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <CoverTrailRow justify="space-between" gap={spacing.md} style={s.headerRow}>
-          <View
-            style={[
-              s.statusBadge,
-              delivered
-                ? { backgroundColor: colors.success, borderColor: colors.success }
-                : { backgroundColor: statusColor + '22', borderColor: statusColor + '55' },
-            ]}
-          >
-            {delivered ? <AppIcon name="checkmark" size={13} color="#fff" /> : null}
-            <Text style={[s.statusBadgeText, { color: delivered ? '#fff' : statusColor }]}>
-              {statusText}
-            </Text>
+        {!delivered ? (
+          <View style={[s.statusRow, getRtlRow()]}>
+            <View style={s.statusBadge}>
+              <AppText variant="micro" color="primary">
+                {statusText}
+              </AppText>
+            </View>
+            <View style={s.statusCopy}>
+              <AppText variant="label">{order.orderNumber}</AppText>
+              <AppText variant="caption" color="textMuted">
+                {formatOrderStamp(order.createdAt)}
+              </AppText>
+            </View>
           </View>
-          <RtlTextShell flex>
-            <RtlText style={s.orderNumber} numberOfLines={1}>
-              {order.orderNumber}
-            </RtlText>
-            <RtlText style={s.orderStamp}>{formatOrderStamp(order.createdAt)}</RtlText>
-          </RtlTextShell>
-        </CoverTrailRow>
+        ) : null}
 
         {headline.awaitingPayment ? (
-          <View style={s.card}>
-            <RtlTextShell>
-              <RtlText style={s.sectionTitle}>لم يكتمل الدفع</RtlText>
-              <RtlText style={s.payHint}>
-                يمكنك إكمال الدفع لهذا الطلب دون إنشاء طلب جديد. الملحمة لا تقبل الطلب قبل السداد.
-              </RtlText>
-            </RtlTextShell>
+          <View style={s.notice}>
+            <AppText variant="label">لم يكتمل الدفع</AppText>
+            <AppText variant="bodySmall" color="textMuted">
+              يمكنك إكمال الدفع لهذا الطلب دون إنشاء طلب جديد. الملحمة لا تقبل الطلب قبل السداد.
+            </AppText>
             <Pressable
               style={({ pressed }) => [s.payBtn, (pressed || paying) && { opacity: 0.88 }]}
               onPress={() => void handleCompletePayment()}
               disabled={paying || !canPay}
             >
               {paying ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.bgDeep} />
               ) : (
-                <Text style={s.payBtnText}>إكمال الدفع</Text>
+                <AppText variant="label" style={s.payBtnText}>
+                  إكمال الدفع
+                </AppText>
               )}
             </Pressable>
           </View>
         ) : null}
 
         {headline.expired ? (
-          <View style={s.card}>
-            <RtlTextShell>
-              <RtlText style={s.sectionTitle}>انتهت صلاحية الطلب</RtlText>
-              <RtlText style={s.payHint}>
-                انتهت مهلة الدفع وتم تحرير الكمية. يمكنك إنشاء طلب جديد من الملحمة.
-              </RtlText>
-            </RtlTextShell>
+          <View style={s.notice}>
+            <AppText variant="label">انتهت صلاحية الطلب</AppText>
+            <AppText variant="bodySmall" color="textMuted">
+              انتهت مهلة الدفع وتم تحرير الكمية. يمكنك إنشاء طلب جديد من الملحمة.
+            </AppText>
           </View>
         ) : null}
 
-        <View style={s.card}>
-          <RtlTextShell>
-            <RtlText style={s.sectionTitle}>متابعة الطلب</RtlText>
-          </RtlTextShell>
-          {order.status === 'cancelled' ? (
-            <RtlTextShell>
-              <RtlText style={s.cancelNote}>
-                {order.cancellationReason ? `ملغي · ${order.cancellationReason}` : 'تم إلغاء هذا الطلب'}
-              </RtlText>
-            </RtlTextShell>
-          ) : (
+        {!delivered && order.status !== 'cancelled' && !headline.expired ? (
+          <View style={s.block}>
+            <AppText variant="label">متابعة الطلب</AppText>
             <View style={s.trackRow}>
               {CUSTOMER_ORDER_FLOW.map((step, index) => {
                 const done = reached.has(step);
@@ -250,185 +248,203 @@ export default function OrderDetailsScreen() {
                         },
                       ]}
                     >
-                      {done ? <AppIcon name="checkmark" size={11} color="#fff" /> : null}
+                      {done ? <AppIcon name="checkmark" size={11} color={colors.bgElevated} /> : null}
                     </View>
-                    <Text style={[s.trackLabel, done && { color: colors.textPrimary }]}>
+                    <AppText
+                      variant="micro"
+                      color={done ? 'textPrimary' : 'textMuted'}
+                      align="center"
+                    >
                       {CUSTOMER_FLOW_LABELS[step]}
-                    </Text>
-                    {time ? <Text style={s.trackTime}>{time}</Text> : <Text style={s.trackTime}> </Text>}
+                    </AppText>
+                    <AppText variant="micro" color="textMuted" align="center">
+                      {time || ' '}
+                    </AppText>
                   </View>
                 );
               })}
             </View>
-          )}
+          </View>
+        ) : null}
+
+        {order.status === 'cancelled' ? (
+          <AppText variant="bodySmall" color="danger">
+            {order.cancellationReason ? `ملغي · ${order.cancellationReason}` : 'تم إلغاء هذا الطلب'}
+          </AppText>
+        ) : null}
+
+        <View style={s.block}>
+          <Pressable
+            onPress={() => setDetailsOpen((open) => !open)}
+            style={[s.collapseHead, getRtlRow()]}
+            accessibilityRole="button"
+            accessibilityLabel="تفاصيل الطلب"
+          >
+            <AppText variant="label">تفاصيل الطلب</AppText>
+            <AppIcon
+              name={detailsOpen ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={colors.textMuted}
+            />
+          </Pressable>
+          {detailsOpen ? (
+            <>
+              {locationValue ? (
+                <View style={[s.detailRow, getRtlRow()]}>
+                  <View style={s.iconCircle}>
+                    <AppIcon name="location-outline" size={16} color={colors.textPrimary} />
+                  </View>
+                  <View style={s.detailCopy}>
+                    <AppText variant="label">{isPickup ? 'استلام' : 'منزل'}</AppText>
+                    <AppText variant="caption" color="textMuted">
+                      {locationValue}
+                    </AppText>
+                  </View>
+                </View>
+              ) : null}
+              {customerPhone ? (
+                <Pressable
+                  onPress={() => void Linking.openURL(`tel:${customerPhone}`)}
+                  style={[s.detailRow, getRtlRow()]}
+                >
+                  <View style={s.iconCircle}>
+                    <AppIcon name="call-outline" size={16} color={colors.textPrimary} />
+                  </View>
+                  <View style={s.detailCopy}>
+                    <AppText variant="caption" color="textMuted">
+                      رقم الجوال
+                    </AppText>
+                    <AppText variant="bodySmall">{customerPhone}</AppText>
+                  </View>
+                </Pressable>
+              ) : null}
+              <View style={[s.detailRow, getRtlRow(), s.detailRowLast]}>
+                <View style={s.iconCircle}>
+                  <AppIcon name="card-outline" size={16} color={colors.textPrimary} />
+                </View>
+                <View style={s.detailCopy}>
+                  <AppText variant="caption" color="textMuted">
+                    طريقة الدفع
+                  </AppText>
+                  <AppText variant="bodySmall">
+                    {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? (isPickup ? 'استلام' : 'توصيل')}
+                  </AppText>
+                </View>
+              </View>
+            </>
+          ) : null}
         </View>
 
-        <View style={s.card}>
-          <SectionHead icon="person-outline" title="العميل والاستلام" colors={colors} styles={s} />
-          <InfoRow styles={s} label="العميل" value={customerName} />
-          {customerPhone ? (
-            <Pressable onPress={() => void Linking.openURL(`tel:${customerPhone}`)}>
-              <InfoRow styles={s} label="الجوال" value={customerPhone} valueColor={colors.electricBright} />
+        <View style={[s.merchantRow, getRtlRow()]}>
+          <View style={s.merchantLogo}>
+            {uriSource(order.butcher?.logo) ? (
+              <Image source={uriSource(order.butcher?.logo)} style={s.logoImg} contentFit="cover" />
+            ) : (
+              <AppIcon name="storefront-outline" size={18} color={colors.textMuted} />
+            )}
+          </View>
+          <View style={s.merchantCopy}>
+            <AppText variant="label">{order.butcher?.nameAr ?? 'ملحمة'}</AppText>
+            <Pressable onPress={copyOrderNumber} style={[s.orderIdRow, getRtlRow()]}>
+              <AppText variant="caption" color="textMuted">
+                #{order.orderNumber}
+              </AppText>
+              <AppIcon name="copy-outline" size={14} color={colors.textMuted} />
+            </Pressable>
+          </View>
+          {isInvoiceOrder(order) ? (
+            <Pressable
+              onPress={() =>
+                safePush({ pathname: '/butchers/invoice/[id]', params: { id: order.id } }, undefined, router)
+              }
+              style={[s.downloadBtn, getRtlRow()]}
+              accessibilityLabel="تحميل الفاتورة"
+            >
+              <AppIcon name="download-outline" size={16} color={colors.textPrimary} />
+              <AppText variant="caption">تحميل</AppText>
             </Pressable>
           ) : null}
-          <InfoRow
-            styles={s}
-            label="طريقة الاستلام"
-            value={deliveryLabel}
-            icon={isPickup ? 'storefront-outline' : 'truck'}
-            iconColor={colors.success}
-          />
-          {locationValue ? (
-            <InfoRow
-              styles={s}
-              label={locationLabel}
-              value={locationValue}
-              icon="location-outline"
-              iconColor={colors.success}
-            />
+        </View>
+
+        <View style={s.block}>
+          <AppText variant="label">ملخص الطلب | {summaryCount}</AppText>
+          {lines.map((item) => (
+            <View key={item.id} style={[s.summaryLine, getRtlRow()]}>
+              <AppText variant="bodySmall" numberOfLines={2} style={s.itemName}>
+                {item.quantity}x {item.name}
+              </AppText>
+              <AppText variant="bodySmall">{formatCurrency(item.linePrice, order.currency)}</AppText>
+            </View>
+          ))}
+          <View style={s.totalsDivider} />
+          <View style={[s.summaryLine, getRtlRow()]}>
+            <AppText variant="bodySmall" color="textMuted">
+              مجموع الطلب
+            </AppText>
+            <AppText variant="bodySmall">{formatCurrency(money.subtotal, order.currency)}</AppText>
+          </View>
+          <View style={[s.summaryLine, getRtlRow()]}>
+            <AppText variant="bodySmall" color="textMuted">
+              رسوم التوصيل
+            </AppText>
+            <AppText variant="bodySmall">
+              {money.deliveryFee == null ? '—' : formatCurrency(money.deliveryFee, order.currency)}
+            </AppText>
+          </View>
+          <View style={[s.summaryLine, getRtlRow()]}>
+            <AppText variant="label">الإجمالي</AppText>
+            <AppText variant="label">{formatCurrency(money.total, order.currency)}</AppText>
+          </View>
+          {order.notes ? (
+            <AppText variant="caption" color="textMuted">
+              ملاحظات: {order.notes}
+            </AppText>
           ) : null}
         </View>
 
-        <View style={s.card}>
-          <SectionHead icon="cart-outline" title="تفاصيل الطلب" colors={colors} styles={s} />
-          {lines.map((item) => {
-            const thumb = uriSource(item.image ?? firstProductImage(order));
-            return (
-              <CoverTrailRow key={item.id} justify="space-between" gap={spacing.sm} style={s.itemRow}>
-                <View style={s.itemPriceCol}>
-                  <Text style={s.itemLinePrice}>
-                    {formatCurrency(item.linePrice, order.currency)}
-                  </Text>
-                  <Text style={s.itemQty}>{item.quantity} قطعة</Text>
-                </View>
-                <RtlTextShell flex>
-                  <RtlText style={s.itemName} numberOfLines={1}>
-                    {item.name}
-                  </RtlText>
-                  <RtlText style={s.itemMeta} numberOfLines={2}>
-                    {item.weightKg > 0
-                      ? `${item.weightKg} كجم × ${formatCurrency(item.unitPrice, order.currency)}`
-                      : item.cutLabel}
-                  </RtlText>
-                </RtlTextShell>
-                <View style={s.thumb}>
-                  {thumb ? (
-                    <Image source={thumb} style={s.thumbImg} contentFit="cover" />
-                  ) : (
-                    <AppIcon name="cart-outline" size={18} color={colors.textMuted} />
-                  )}
-                </View>
-              </CoverTrailRow>
-            );
-          })}
-
-          <View style={s.summaryBlock}>
-            <InfoRow
-              styles={s}
-              label="المجموع الفرعي"
-              value={formatCurrency(money.subtotal, order.currency)}
-            />
-            <InfoRow
-              styles={s}
-              label="رسوم التوصيل"
-              value={
-                money.deliveryFee == null
-                  ? '—'
-                  : formatCurrency(money.deliveryFee, order.currency)
-              }
-            />
-            <InfoRow
-              styles={s}
-              label="الإجمالي"
-              value={formatCurrency(money.total, order.currency)}
-              valueColor={colors.success}
-              strong
-            />
-            <Text style={s.vatNote}>شامل الضريبة</Text>
-          </View>
-          {order.notes ? <InfoRow styles={s} label="ملاحظات" value={order.notes} /> : null}
-        </View>
-
-        <CoverTrailRow justify="space-between" gap={spacing.sm} style={s.footerRow}>
+        {delivered && order.butcherId ? (
           <Pressable
-            style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
             onPress={() =>
-              router.push(
-                {
-                  pathname: '/support/help',
-                  params: order.paymentStatus === 'paid' ? { orderId: order.id } : {},
-                } as never,
-              )
+              safePush({ pathname: '/butchers/[id]', params: { id: order.butcherId } }, undefined, router)
             }
+            style={s.reorderBtn}
+            accessibilityLabel="إعادة الطلب"
           >
-            <AppIcon name="headset" size={20} color={colors.electricBright} />
-            <Text style={s.footerTitle}>المساعدة</Text>
-            <Text style={s.footerSub}>سرحان وخدمة العملاء — بدون تواصل مع الملحمة</Text>
+            <AppText variant="label" style={s.reorderText}>
+              إعادة الطلب
+            </AppText>
           </Pressable>
-          <Pressable
-            style={({ pressed }) => [s.footerCard, pressed && { opacity: 0.9 }]}
-            onPress={() => {
-              if (butcherPhone) void Linking.openURL(`tel:${butcherPhone}`);
-            }}
-          >
-            <AppIcon name="call-outline" size={20} color={colors.electricBright} />
-            <Text style={s.footerTitle}>اتصل بالملحمة</Text>
-            <Text style={s.footerSub}>{butcherPhone || 'الرقم غير متوفر'}</Text>
-          </Pressable>
-        </CoverTrailRow>
+        ) : null}
+
+        <Pressable
+          style={[s.helpRow, getRtlRow()]}
+          onPress={() =>
+            router.push(
+              {
+                pathname: '/support/help',
+                params: order.paymentStatus === 'paid' ? { orderId: order.id } : {},
+              } as never,
+            )
+          }
+        >
+          <AppIcon name="headset" size={18} color={colors.electricBright} />
+          <AppText variant="bodySmall" color="primary">
+            المساعدة
+          </AppText>
+        </Pressable>
+        <Pressable
+          style={[s.helpRow, getRtlRow()]}
+          onPress={() => {
+            if (butcherPhone) void Linking.openURL(`tel:${butcherPhone}`);
+          }}
+        >
+          <AppIcon name="call-outline" size={18} color={colors.electricBright} />
+          <AppText variant="bodySmall" color="primary">
+            {butcherPhone ? 'اتصل بالملحمة' : 'رقم الملحمة غير متوفر'}
+          </AppText>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function SectionHead({
-  icon,
-  title,
-  colors,
-  styles,
-}: {
-  icon: string;
-  title: string;
-  colors: ThemeColors;
-  styles: ReturnType<typeof createStyles>;
-}) {
-  return (
-    <CoverTrailRow justify="flex-end" gap={8} style={styles.sectionHead}>
-      <RtlTextShell>
-        <RtlText style={styles.sectionTitle}>{title}</RtlText>
-      </RtlTextShell>
-      <AppIcon name={icon} size={16} color={colors.success} />
-    </CoverTrailRow>
-  );
-}
-
-function InfoRow({
-  styles,
-  label,
-  value,
-  icon,
-  iconColor,
-  valueColor,
-  strong,
-}: {
-  styles: ReturnType<typeof createStyles>;
-  label: string;
-  value: string;
-  icon?: string;
-  iconColor?: string;
-  valueColor?: string;
-  strong?: boolean;
-}) {
-  return (
-    <CoverTrailRow justify="space-between" gap={spacing.md} style={styles.infoRow}>
-      <CoverTrailRow gap={6} style={styles.infoValueWrap}>
-        {icon ? <AppIcon name={icon} size={14} color={iconColor} /> : null}
-        <Text style={[styles.infoValue, valueColor ? { color: valueColor } : null, strong && styles.infoValueStrong]}>
-          {value}
-        </Text>
-      </CoverTrailRow>
-      <Text style={styles.infoLabel}>{label}</Text>
-    </CoverTrailRow>
   );
 }
 
@@ -436,64 +452,47 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     navRow: {
-      paddingHorizontal: spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
     },
     backBtn: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.bgGlass,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: 'transparent',
     },
-    scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
-    headerRow: { alignItems: 'flex-start' },
-    orderNumber: {
-      ...butcherTypography.titleLarge,
-      color: colors.textPrimary,
+    navSpacer: { width: 40 },
+    pageTitle: {
+      flex: 1,
+      textAlign: 'center',
     },
-    orderStamp: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      marginTop: 4,
+    scroll: { paddingHorizontal: spacing.lg, gap: 0, paddingBottom: 40 },
+    statusRow: {
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
     statusBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: radius.pill,
-      borderWidth: 1,
-      flexShrink: 0,
+      backgroundColor: colors.electric + '18',
     },
-    statusBadgeText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
-    card: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      padding: spacing.lg,
+    statusCopy: { flex: 1, minWidth: 0 },
+    notice: {
+      paddingVertical: spacing.md,
       gap: spacing.sm,
-    },
-    sectionHead: { marginBottom: 4 },
-    sectionTitle: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-    },
-    cancelNote: {
-      ...butcherTypography.secondary,
-      color: colors.danger,
-    },
-    payHint: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      marginTop: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
     payBtn: {
-      marginTop: spacing.sm,
-      backgroundColor: colors.electricBright,
+      marginTop: spacing.xs,
+      backgroundColor: colors.electric,
       borderRadius: 14,
       minHeight: 48,
       alignItems: 'center',
@@ -501,9 +500,90 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
     },
     payBtnText: {
-      ...butcherTypography.emphasis,
-      color: '#fff',
-      writingDirection: 'rtl',
+      color: colors.bgDeep,
+    },
+    block: {
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
+      gap: spacing.sm,
+    },
+    collapseHead: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    detailRow: {
+      alignItems: 'flex-start',
+      gap: spacing.md,
+      paddingVertical: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+    },
+    detailRowLast: {},
+    iconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgSurface,
+      flexShrink: 0,
+    },
+    detailCopy: { flex: 1, minWidth: 0, gap: 2 },
+    merchantRow: {
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
+    },
+    merchantLogo: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      overflow: 'hidden',
+      backgroundColor: colors.bgSurface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoImg: { width: '100%', height: '100%' },
+    merchantCopy: { flex: 1, minWidth: 0, gap: 4 },
+    orderIdRow: { alignItems: 'center', gap: 6 },
+    downloadBtn: {
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 10,
+      backgroundColor: colors.bgSurface,
+    },
+    summaryLine: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      paddingVertical: 8,
+    },
+    itemName: { flex: 1, minWidth: 0 },
+    totalsDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.borderHairline,
+      marginVertical: spacing.xs,
+    },
+    reorderBtn: {
+      marginTop: spacing.md,
+      backgroundColor: colors.gold,
+      borderRadius: 12,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reorderText: {
+      color: colors.textPrimary,
+    },
+    helpRow: {
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
     },
     trackRow: {
       flexDirection: 'row',
@@ -533,128 +613,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       zIndex: 1,
     },
-    trackLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      marginTop: 6,
-    },
-    trackTime: {
-      ...typography.caption,
-      color: colors.textSubtle,
-      textAlign: 'center',
-      marginTop: 2,
-    },
-    chatCard: { paddingVertical: 16 },
-    chatIconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      backgroundColor: colors.electric + '1A',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    chatTitle: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-    },
-    chatSub: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
-    infoRow: { paddingVertical: 5 },
-    infoLabel: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-      flexShrink: 0,
-    },
-    infoValueWrap: { flexShrink: 1, maxWidth: '62%' },
-    infoValue: {
-      ...butcherTypography.emphasis,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      textAlign: 'left',
-    },
-    infoValueStrong: {
-      ...butcherTypography.title,
-      color: colors.success,
-    },
-    itemRow: {
-      paddingVertical: spacing.sm,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderSoft,
-    },
-    thumb: {
-      width: 56,
-      height: 56,
-      borderRadius: 12,
-      overflow: 'hidden',
-      backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
-    thumbImg: { width: '100%', height: '100%' },
-    itemName: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-    },
-    itemMeta: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      marginTop: 4,
-    },
-    itemPriceCol: { alignItems: 'flex-start', flexShrink: 0 },
-    itemLinePrice: {
-      ...butcherTypography.emphasis,
-      color: colors.textPrimary,
-    },
-    itemQty: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
-    summaryBlock: {
-      marginTop: spacing.sm,
-      paddingTop: spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: colors.borderSoft,
-      gap: 2,
-    },
-    vatNote: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      textAlign: 'left',
-      writingDirection: 'rtl',
-    },
-    footerRow: { alignItems: 'stretch' },
-    footerCard: {
-      flex: 1,
-      backgroundColor: colors.bgSurface,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      padding: spacing.md,
-      gap: 6,
-      alignItems: 'flex-end',
-    },
-    footerTitle: {
-      ...butcherTypography.emphasis,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-          },
-    footerSub: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-          },
     errorText: {
-      ...butcherTypography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
       marginTop: 80,
     },
   });

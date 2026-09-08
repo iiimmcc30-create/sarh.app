@@ -144,7 +144,7 @@ export const PostCommentsProvider = forwardRef<PostCommentsSectionRef, PostComme
       }
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       onCommentAdded?.();
-      void showToast('تم حذف التعليق');
+      void showToast('تم حذف التعليق', 'success');
     }, [postId, onCommentAdded]);
 
     const loadComments = useCallback(async () => {
@@ -203,7 +203,7 @@ export const PostCommentsProvider = forwardRef<PostCommentsSectionRef, PostComme
           setText('');
           await loadComments();
           onCommentAdded?.();
-          void showToast('تم إرسال التعليق');
+          void showToast('تم إرسال التعليق', 'success');
         } else {
           await alertMessage('تعذّر الإرسال', 'حاول مرة أخرى', 'alert-circle-outline');
         }

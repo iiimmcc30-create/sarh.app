@@ -2,6 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppText } from '@/components/ui/AppText';
 import { AppScrollView } from '@/components/ui/AppScrollView';
+import { AppText as DsText, SarhDivider } from '@/design-system/components';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -84,6 +85,8 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
           </AppText>
         </Pressable>
 
+        <SarhDivider accessibilityLabel="فاصل القائمة" />
+
         {PRIMARY_ITEMS.map((item) => (
           <Pressable
             key={item.key}
@@ -97,7 +100,7 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
           </Pressable>
         ))}
 
-        <View style={styles.divider} />
+        <SarhDivider accessibilityLabel="فاصل أقسام المساعدة" />
 
         {SECONDARY_ITEMS.map((item) => (
           <Pressable
@@ -107,8 +110,10 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
             accessibilityRole="button"
             accessibilityLabel={item.label}
           >
-            <AppIcon name={item.icon} size={24} color={colors.textPrimary} />
-            <AppText style={styles.rowLabel}>{item.label}</AppText>
+            <AppIcon name={item.icon} size={20} color={colors.textPrimary} />
+            <DsText variant="bodySmall" color="textSecondary" style={styles.secondaryLabel}>
+              {item.label}
+            </DsText>
           </Pressable>
         ))}
       </AppScrollView>
@@ -171,11 +176,6 @@ function createStyles(colors: ThemeColors) {
       ...typography.feedBody,
       color: colors.textMuted,
     },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: colors.borderHairline,
-      marginVertical: spacing.sm,
-    },
     row: {
       alignItems: 'center',
       gap: spacing.md,
@@ -185,6 +185,9 @@ function createStyles(colors: ThemeColors) {
     rowLabel: {
       ...typography.sectionHeading,
       color: colors.textPrimary,
+      flex: 1,
+    },
+    secondaryLabel: {
       flex: 1,
     },
     footer: {

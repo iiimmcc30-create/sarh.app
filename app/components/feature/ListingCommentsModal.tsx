@@ -85,7 +85,7 @@ export function ListingCommentsModal({
       if (res.ok && json.success) {
         setText('');
         onCommentAdded?.();
-        void showToast('تم إرسال التعليق');
+        void showToast('تم إرسال التعليق', 'success');
       } else {
         await alertMessage(
           'تعذّر الإرسال',
@@ -107,7 +107,7 @@ export function ListingCommentsModal({
   const toggleFollowReplies = () => {
     setFollowReplies((prev) => {
       const next = !prev;
-      void showToast(next ? 'تم تفعيل متابعة الردود' : 'تم إيقاف متابعة الردود');
+      void showToast(next ? 'تم تفعيل متابعة الردود' : 'تم إيقاف متابعة الردود', 'info');
       return next;
     });
   };

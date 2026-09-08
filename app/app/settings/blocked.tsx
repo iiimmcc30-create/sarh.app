@@ -57,7 +57,7 @@ export default function BlockedUsersScreen() {
       return;
     }
     setUsers((prev) => prev.filter((u) => u.id !== user.id));
-    void showToast('تم إلغاء الحظر');
+    void showToast('تم إلغاء الحظر', 'success');
   };
 
   return (

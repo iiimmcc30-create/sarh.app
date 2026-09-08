@@ -1,22 +1,25 @@
-// SAFAT — Butchers home delivery-location selector (tap to open smart map picker)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { getRtlRow } from '@/lib/rtl';
+import { safePush } from '@/lib/safeNavigate';
 import {
   deliveryLocationSummary,
   loadDeliveryLocation,
   type DeliveryLocation,
 } from '@/services/butcherDeliveryLocation';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText } from '@/design-system/components';
 
-export function ButcherLocationBar() {
+type Props = {
+  compact?: boolean;
+};
+
+export function ButcherLocationBar({ compact = false }: Props) {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
@@ -40,23 +43,27 @@ export function ButcherLocationBar() {
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.bar, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.bar, compact && styles.compact, pressed && styles.pressed]}
       onPress={() => safePush('/butchers/location', undefined, router)}
       accessibilityRole="button"
       accessibilityLabel="تحديد موقع التوصيل"
     >
-      <View style={styles.pin}>
-        <AppIcon name="location" size={18} color={colors.electricBright} />
+      <View style={[styles.cluster, getRtlRow()]}>
+        <View style={styles.pin}>
+          <AppIcon name="location" size={16} color={colors.bgDeep} />
+        </View>
+        <View style={styles.copy}>
+          <AppText variant="label" numberOfLines={1}>
+            {label}
+          </AppText>
+          <View style={[styles.addressRow, getRtlRow()]}>
+            <AppIcon name="chevron-down" size={14} color={colors.textMuted} />
+            <AppText variant="caption" color="textMuted" numberOfLines={1} style={styles.address}>
+              {hasLocation ? summary : 'اضغط لاختيار موقع التوصيل'}
+            </AppText>
+          </View>
+        </View>
       </View>
-      <RtlTextShell flex>
-        <RtlText style={styles.label} numberOfLines={1}>
-          {label}
-        </RtlText>
-        <RtlText style={styles.value} numberOfLines={1}>
-          {hasLocation ? summary : 'اضغط لاختيار موقع التوصيل على الخريطة'}
-        </RtlText>
-      </RtlTextShell>
-      <AppIcon name="chevron-down" size={18} color={colors.textMuted} />
     </Pressable>
   );
 }
@@ -64,29 +71,36 @@ export function ButcherLocationBar() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     bar: {
-      flexDirection: 'row',
-            alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      backgroundColor: colors.bgElevated,
+      flex: 1,
+      minWidth: 0,
+      backgroundColor: 'transparent',
+    },
+    compact: {
+      paddingVertical: 0,
     },
     pressed: { opacity: 0.85 },
+    cluster: {
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     pin: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.electric + '18',
+      backgroundColor: colors.electric,
     },
-    label: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
+    copy: {
+      flex: 1,
+      minWidth: 0,
     },
-    value: {
-      ...butcherTypography.secondary,
-      color: colors.textPrimary,
+    addressRow: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    address: {
+      flexShrink: 1,
     },
   });
 }

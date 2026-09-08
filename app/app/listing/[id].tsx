@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { SarhButton } from '@/design-system/components';
 import { sarhListingShareUrl } from '@/constants/sarhOfficial';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -15,6 +16,7 @@ import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { promptReport } from '@/services/reports';
 import { alertMessage, presentActionSheet } from '@/lib/actionSheet';
+import { showToast } from '@/lib/toast';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -265,7 +267,7 @@ export default function ListingDetailScreen() {
       if (!refreshed) throw new Error('profile_refetch_failed');
     } catch (error) {
       await refreshSellerFollowState();
-      Alert.alert('خطأ', 'تعذّرت المتابعة');
+      void showToast('تعذّرت المتابعة', 'error');
     } finally {
       setFollowLoading(false);
     }
@@ -498,27 +500,13 @@ export default function ListingDetailScreen() {
 
           {!isOwner ? (
             <View style={styles.sellerRow}>
-              <Pressable
+              <SarhButton
+                title={isFollowing ? 'متابَع' : 'متابعة'}
+                variant={isFollowing ? 'secondary' : 'primary'}
+                size="sm"
                 onPress={handleFollowSeller}
-                disabled={followLoading || isFollowing === null}
-                style={[styles.followPill, isFollowing === true && styles.followingPill]}
-              >
-                {isFollowing === null && isAuthenticated ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <RtlTextShell>
-                    <Text
-                      style={[
-                        styles.followPillText,
-                        getRtlText(),
-                        isFollowing === true && styles.followingPillText,
-                      ]}
-                    >
-                      {isFollowing ? 'متابَع' : 'متابعة'}
-                    </Text>
-                  </RtlTextShell>
-                )}
-              </Pressable>
+                loading={followLoading || (isFollowing === null && isAuthenticated)}
+              />
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
                 style={styles.sellerInline}
@@ -701,21 +689,21 @@ export default function ListingDetailScreen() {
       {/* Bottom CTA for buyers */}
       {!isOwner ? (
         <SafeAreaView edges={['bottom']} style={styles.ctaBar}>
-          <Pressable
+          <SarhButton
+            title="مراسلة"
+            variant="primary"
+            leftIcon="chatbubbles"
             onPress={() => openSellerChat()}
-            style={({ pressed }) => [styles.ctaBtnApp, pressed && { opacity: 0.88 }]}
-          >
-            <AppIcon name="chatbubbles" size={20} color="#fff" />
-            <Text style={styles.ctaBtnAppText}>مراسلة</Text>
-          </Pressable>
+            style={{ flex: 1 }}
+          />
           {listing.contactPhone ? (
-            <Pressable
+            <SarhButton
+              title="اتصل"
+              variant="secondary"
+              leftIcon="call"
               onPress={() => void openSellerCall()}
-              style={({ pressed }) => [styles.ctaBtnCall, pressed && { opacity: 0.88 }]}
-            >
-              <AppIcon name="call" size={20} color="#fff" />
-              <Text style={styles.ctaBtnCallText}>اتصل</Text>
-            </Pressable>
+              style={{ flex: 1 }}
+            />
           ) : (
             <View style={{ flex: 1 }}>
               <PrimaryButton title="مراسلة البائع" onPress={() => openSellerChat()} />

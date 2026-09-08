@@ -26,6 +26,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText } from '@/components/ui/AppText';
+import { showToast } from '@/lib/toast';
 import { getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -478,18 +479,18 @@ export default function CreateListingScreen() {
       } else if (result.ok) {
         router.replace('/(tabs)/market');
       } else {
-        Alert.alert(
-          'خطأ',
+        void showToast(
           sanitizeListingLimitMessage(
             result.error ||
               (isEditing
                 ? 'فشل تعديل الإعلان. يرجى التحقق من المدخلات والمحاولة مجدداً.'
                 : 'فشل نشر الإعلان. يرجى التحقق من المدخلات والمحاولة مجدداً.'),
           ),
+          'error',
         );
       }
     } catch (err: any) {
-      Alert.alert('خطأ', sanitizeListingLimitMessage(err?.message || 'فشل نشر الإعلان.'));
+      void showToast(sanitizeListingLimitMessage(err?.message || 'فشل نشر الإعلان.'), 'error');
     } finally {
       setSubmitting(false);
     }

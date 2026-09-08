@@ -4,7 +4,6 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Pressable,
   RefreshControl,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
+import { SarhButton, SarhIconButton } from '@/design-system/components';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -121,7 +121,7 @@ export function ProfileScreenLayout({
   onMenu,
   onSettings,
   onBack,
-  onShare,
+  onShare: _onShare,
   onEditProfile,
   onEditAvatar,
   onAvatarPress,
@@ -217,47 +217,43 @@ export function ProfileScreenLayout({
             <View style={[styles.toolbar, getRtlRow()]}>
               <View style={[styles.toolbarSide, getRtlRow()]}>
                 {mode === 'own' && onEditProfile ? (
-                  <Pressable
+                  <SarhIconButton
+                    icon="pencil-outline"
+                    chrome="ghost"
+                    size="sm"
                     onPress={onEditProfile}
-                    hitSlop={10}
-                    style={styles.iconBtn}
                     accessibilityLabel="تعديل الملف"
-                  >
-                    <AppIcon name="pencil-outline" size={20} color={themeColors.textPrimary} />
-                  </Pressable>
+                  />
                 ) : null}
                 {mode === 'visitor' && onBack ? (
-                  <Pressable onPress={onBack} hitSlop={10} style={styles.iconBtn}>
-                    <AppIcon name={rtlBackIcon()} size={22} color={themeColors.textPrimary} />
-                  </Pressable>
+                  <SarhIconButton
+                    icon={rtlBackIcon()}
+                    chrome="ghost"
+                    size="sm"
+                    onPress={onBack}
+                    accessibilityLabel="رجوع"
+                  />
                 ) : null}
               </View>
 
               <View style={[styles.toolbarSide, getRtlRow()]}>
                 {mode === 'own' && onSettings ? (
-                  <Pressable onPress={onSettings} hitSlop={10} style={styles.iconBtn} accessibilityLabel="إعدادات الحساب">
-                    <AppIcon name="settings-outline" size={22} color={themeColors.textPrimary} />
-                  </Pressable>
-                ) : null}
-                {onShare && mode === 'visitor' ? (
-                  <Pressable
-                    onPress={onShare}
-                    hitSlop={10}
-                    style={styles.iconBtn}
-                    accessibilityLabel="مشاركة"
-                  >
-                    <AppIcon name="share-arrow" size={22} color={themeColors.textPrimary} />
-                  </Pressable>
+                  <SarhIconButton
+                    icon="settings-outline"
+                    chrome="ghost"
+                    size="sm"
+                    onPress={onSettings}
+                    accessibilityLabel="إعدادات الحساب"
+                  />
                 ) : null}
                 {mode === 'visitor' && onMenu ? (
-                  <Pressable
+                  <SarhIconButton
+                    icon="menu-dots"
+                    chrome="ghost"
+                    size="sm"
                     onPress={onMenu}
-                    hitSlop={10}
-                    style={styles.iconBtn}
                     accessibilityLabel="المزيد"
-                  >
-                    <AppIcon name="menu-dots" size={22} color={themeColors.textPrimary} />
-                  </Pressable>
+                  />
                 ) : null}
               </View>
             </View>
@@ -383,47 +379,23 @@ export function ProfileScreenLayout({
             {mode === 'visitor' && (onFollow || onMessage) ? (
               <View style={[styles.actionsRow, getRtlRow()]}>
                 {onMessage ? (
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.actionBtn,
-                      styles.btnMessage,
-                      pressed && styles.actionBtnPressed,
-                    ]}
+                  <SarhButton
+                    title="مراسلة"
+                    variant="secondary"
+                    leftIcon="chatbubble-outline"
                     onPress={onMessage}
-                  >
-                    <AppIcon name="chatbubble-outline" size={18} color={themeColors.textPrimary} />
-                    <Text style={styles.btnMessageText}>مراسلة</Text>
-                  </Pressable>
+                    style={styles.actionBtnFlex}
+                  />
                 ) : null}
                 {onFollow ? (
-                  <Pressable
+                  <SarhButton
+                    title={isFollowing ? 'متابَع' : 'متابعة'}
+                    variant={isFollowing ? 'secondary' : 'primary'}
+                    leftIcon={isFollowing ? 'checkmark-circle-outline' : 'person-add-outline'}
                     onPress={onFollow}
-                    disabled={followLoading}
-                    style={({ pressed }) => [
-                      styles.actionBtn,
-                      styles.btnFollow,
-                      isFollowing && styles.btnFollowing,
-                      pressed && !followLoading && styles.actionBtnPressed,
-                    ]}
-                  >
-                    {followLoading ? (
-                      <ActivityIndicator
-                        size="small"
-                        color={isFollowing ? themeColors.textPrimary : '#fff'}
-                      />
-                    ) : (
-                      <>
-                        <AppIcon
-                          name={isFollowing ? 'checkmark-circle-outline' : 'person-add-outline'}
-                          size={18}
-                          color={isFollowing ? themeColors.textPrimary : '#fff'}
-                        />
-                        <Text style={[styles.btnFollowText, isFollowing && styles.btnFollowingText]}>
-                          {isFollowing ? 'متابَع' : 'متابعة'}
-                        </Text>
-                      </>
-                    )}
-                  </Pressable>
+                    loading={followLoading}
+                    style={styles.actionBtnFlex}
+                  />
                 ) : null}
               </View>
             ) : null}
@@ -482,11 +454,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
-      borderRadius: 12,
-      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 0,
+      backgroundColor: 'transparent',
     },
     identityRow: {
       alignItems: 'flex-start',
@@ -648,41 +618,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingTop: spacing.md,
       gap: spacing.sm,
     },
-    actionBtn: {
+    actionBtnFlex: {
       flex: 1,
-      minHeight: 44,
-      borderRadius: radius.pill,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...getRtlRow(),
-      gap: 6,
-      paddingHorizontal: spacing.md,
-    },
-    actionBtnPressed: {
-      opacity: 0.86,
-      transform: [{ scale: 0.99 }],
-    },
-    btnFollow: {
-      backgroundColor: colors.electric,
-    },
-    btnFollowing: {
-      backgroundColor: colors.bgElevated,
-      borderWidth: 0,
-    },
-    btnFollowText: {
-      ...typography.button,
-      color: '#fff',
-    },
-    btnFollowingText: {
-      color: colors.textPrimary,
-    },
-    btnMessage: {
-      borderWidth: 0,
-      backgroundColor: colors.bgElevated,
-    },
-    btnMessageText: {
-      ...typography.button,
-      color: colors.textPrimary,
     },
     contentCardTop: {
       marginHorizontal: 0,

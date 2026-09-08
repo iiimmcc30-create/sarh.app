@@ -1,32 +1,39 @@
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhSurface } from '@/design-system/components';
+import { showToast } from '@/lib/toast';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useSupportTicketSocket } from '@/hooks/useSupportTicketSocket';
 import { useAuth } from '@/contexts/AuthContext';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection } from '@/lib/rtl';
+import { spacing, type ThemeColors } from '@/constants/theme';
+import { getRtlRow } from '@/lib/rtl';
 import { messageAuthorLabel } from '@/lib/supportRealtime';
+import { SUPPORT_CUSTOMER_SERVICE } from '@/constants/supportIdentity';
+import { userFacingTicketStatus } from '@/lib/supportFlow';
 import {
   fetchTicket,
   replyToTicket,
-  TICKET_STATUS_LABEL_AR,
   type SupportTicketDetail,
+  type SupportTicketMessage,
 } from '@/services/support';
+
+function isSystemHandoff(msg: SupportTicketMessage) {
+  return (
+    msg.authorKind === 'SARHAN' &&
+    (msg.body.includes('تم تحويل طلبك') || msg.body.includes('الفريق المختص'))
+  );
+}
 
 export default function SupportTicketDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[]; fresh?: string | string[] }>();
@@ -63,7 +70,7 @@ export default function SupportTicketDetailScreen() {
     const res = await replyToTicket(ticket.id, reply.trim());
     setSending(false);
     if (!res.ok) {
-      Alert.alert('تعذر الإرسال', res.error ?? 'حاول مرة أخرى');
+      void showToast(res.error ?? 'حاول مرة أخرى', 'error');
       return;
     }
     setReply('');
@@ -73,7 +80,7 @@ export default function SupportTicketDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ScreenHeader title="تفاصيل التذكرة" showBack />
+        <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
         <ActivityIndicator style={styles.loader} />
       </SafeAreaView>
     );
@@ -82,63 +89,99 @@ export default function SupportTicketDetailScreen() {
   if (!ticket) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ScreenHeader title="تفاصيل التذكرة" showBack />
-        <Text style={styles.notFound}>التذكرة غير موجودة</Text>
+        <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
+        <AppText variant="body" color="textMuted" align="center" style={styles.notFound}>
+          المحادثة غير موجودة
+        </AppText>
       </SafeAreaView>
     );
   }
 
   const closed = ticket.status === 'CLOSED' || ticket.status === 'RESOLVED';
-  const humanActive =
-    ticket.handlerMode === 'HUMAN_ACTIVE' ||
-    ticket.status === 'WAITING_FOR_SUPPORT' ||
-    ticket.status === 'IN_PROGRESS';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title={ticket.ticketNumber} showBack />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
-          <GlassCard style={styles.headerCard}>
-            <Text style={styles.subject}>{ticket.subject}</Text>
-            <Text style={styles.ticketNumber}>رقم البلاغ: {ticket.ticketNumber}</Text>
-            <Text style={styles.status}>
-              {TICKET_STATUS_LABEL_AR[ticket.status] ?? ticket.status}
-            </Text>
-            {humanActive ? (
-              <Text style={styles.handoff}>
-                تم تحويلك إلى خدمة العملاء. سرحان لن يرد تلقائيًا على هذه المحادثة.
-              </Text>
-            ) : null}
-            <Text style={styles.description}>{ticket.description}</Text>
-          </GlassCard>
+      <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
+      <View style={[styles.identity, getRtlRow()]}>
+        <SarhAvatar
+          source={SUPPORT_CUSTOMER_SERVICE.avatarSource}
+          name={SUPPORT_CUSTOMER_SERVICE.assistantName}
+          size="md"
+          accessibilityLabel={SUPPORT_CUSTOMER_SERVICE.assistantName}
+        />
+        <View style={styles.identityCopy}>
+          <AppText variant="label">{SUPPORT_CUSTOMER_SERVICE.name}</AppText>
+          <AppText variant="caption" color="textMuted">
+            {SUPPORT_CUSTOMER_SERVICE.assistantName} · {userFacingTicketStatus(ticket.status)}
+          </AppText>
+        </View>
+      </View>
+      <SarhDivider />
 
-          {(ticket.messages ?? []).map((msg) => (
-            <GlassCard
-              key={msg.id}
-              style={[styles.message, msg.isStaffReply && styles.staffMessage]}
-            >
-              <Text style={styles.messageAuthor}>
-                {messageAuthorLabel(msg)}
-              </Text>
-              <Text style={styles.messageBody}>{msg.body}</Text>
-              <Text style={styles.messageTime}>
-                {new Date(msg.createdAt).toLocaleString('ar-SA')}
-              </Text>
-            </GlassCard>
-          ))}
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {(ticket.messages ?? []).map((msg) => {
+            const mine = msg.authorKind === 'CUSTOMER' && !msg.isStaffReply;
+            const system = isSystemHandoff(msg);
+            return (
+              <View
+                key={msg.id}
+                style={[
+                  styles.bubbleWrap,
+                  mine ? styles.bubbleMineWrap : styles.bubbleOtherWrap,
+                ]}
+              >
+                {system ? (
+                  <SarhSurface tone="surfaceAlt" style={styles.systemBubble}>
+                    <AppText variant="caption" color="textSecondary">
+                      {msg.body}
+                    </AppText>
+                  </SarhSurface>
+                ) : (
+                  <View
+                    style={[
+                      styles.msgRow,
+                      getRtlRow(),
+                      mine ? styles.msgRowMine : styles.msgRowOther,
+                    ]}
+                  >
+                    {!mine ? (
+                      <SarhAvatar
+                        source={
+                          msg.authorKind === 'SARHAN'
+                            ? SUPPORT_CUSTOMER_SERVICE.avatarSource
+                            : undefined
+                        }
+                        name={messageAuthorLabel(msg)}
+                        size="sm"
+                        accessibilityLabel={messageAuthorLabel(msg)}
+                      />
+                    ) : null}
+                    <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
+                      {!mine ? (
+                        <AppText variant="micro" color="textMuted">
+                          {messageAuthorLabel(msg)}
+                        </AppText>
+                      ) : null}
+                      <AppText variant="body">{msg.body}</AppText>
+                    </View>
+                  </View>
+                )}
+              </View>
+            );
+          })}
 
           {!closed ? (
             <View style={styles.replyBox}>
               <AppTextInput
-                label="ردك"
+                label="اكتب رسالة"
                 value={reply}
                 onChangeText={setReply}
                 multiline
-                numberOfLines={4}
+                numberOfLines={3}
               />
-              <PrimaryButton
-                title="إرسال الرد"
+              <SarhButton
+                title="إرسال"
                 fullWidth
                 loading={sending}
                 disabled={!reply.trim() || sending}
@@ -146,7 +189,9 @@ export default function SupportTicketDetailScreen() {
               />
             </View>
           ) : (
-            <Text style={styles.closedHint}>هذه التذكرة مغلقة ولا يمكن إضافة ردود.</Text>
+            <AppText variant="caption" color="textMuted" align="center">
+              هذه المحادثة مغلقة.
+            </AppText>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -158,21 +203,46 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
-    content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.huge },
     loader: { marginTop: spacing.xxl },
-    notFound: { ...typography.body, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xxl },
-    headerCard: { gap: spacing.sm },
-    subject: { ...typography.h3, color: colors.textPrimary },
-    ticketNumber: { ...typography.caption, color: colors.textBrandStrong },
-    status: { ...typography.caption, color: colors.electric },
-    handoff: { ...typography.caption, color: colors.warning, lineHeight: 20 },
-    description: { ...typography.body, color: colors.textSecondary, lineHeight: 22 },
-    message: { gap: spacing.xs },
-    staffMessage: { borderColor: colors.electric, borderWidth: StyleSheet.hairlineWidth },
-    messageAuthor: { ...typography.caption, color: colors.textBrandStrong },
-    messageBody: { ...typography.body, color: colors.textPrimary, lineHeight: 22 },
-    messageTime: { ...typography.micro, color: colors.textMuted },
+    notFound: { marginTop: spacing.xxl },
+    identity: {
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
+    identityCopy: { flex: 1, gap: 2 },
+    content: { padding: spacing.lg, gap: spacing.sm, paddingBottom: spacing.huge },
+    bubbleWrap: { width: '100%' },
+    bubbleMineWrap: { alignItems: 'flex-start' },
+    bubbleOtherWrap: { alignItems: 'flex-end' },
+    msgRow: {
+      alignItems: 'flex-end',
+      gap: spacing.sm,
+      maxWidth: '100%',
+    },
+    msgRowMine: { justifyContent: 'flex-start' },
+    msgRowOther: { justifyContent: 'flex-start' },
+    bubble: {
+      maxWidth: '86%',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: 16,
+      gap: 4,
+    },
+    bubbleMine: {
+      backgroundColor: colors.bgElevated,
+    },
+    bubbleOther: {
+      backgroundColor: colors.bgSurface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderHairline,
+    },
+    systemBubble: {
+      width: '100%',
+      padding: spacing.md,
+      borderRadius: 12,
+    },
     replyBox: { gap: spacing.md, marginTop: spacing.md },
-    closedHint: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
   });
 }

@@ -102,10 +102,11 @@ export function firstNameFromUser(user: {
   return (token || 'عميل').slice(0, 40);
 }
 
-export function sarhanWelcome(firstName: string): string {
-  return `مرحباً بك يا ${firstName}، معك سرحان كيف أقدر أخدمك؟`;
+export function sarhanWelcome(firstName: string, topicLabel?: string): string {
+  const topic = topicLabel ? ` بخصوص ${topicLabel}` : '';
+  return `مرحباً ${firstName}، أنا سرحان من فريق الدعم. اطلعت على تفاصيل طلبك${topic} وأراجع المعلومات التي أرسلتها.`;
 }
 
-export function sarhanHandoff(ticketNumber: string): string {
-  return `تم تسجيل طلبك، وسوف نقوم بتحويلك الآن إلى خدمة العملاء.\nرقم البلاغ: ${ticketNumber}`;
+export function sarhanHandoff(_ticketNumber?: string): string {
+  return 'شكرًا لك، اكتملت المعلومات اللازمة. تم تحويل طلبك إلى الفريق المختص.\nيرجى البقاء في المحادثة لمتابعة الرد.';
 }

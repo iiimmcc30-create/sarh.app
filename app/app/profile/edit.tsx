@@ -25,6 +25,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlBackIcon, marginEnd } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { Country } from '@/services/types';
+import { showToast } from '@/lib/toast';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦' },
@@ -80,7 +81,7 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!arabicName.trim() || !username.trim()) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
+      void showToast('يرجى ملء جميع الحقول المطلوبة', 'warning');
       return;
     }
     setSaving(true);
@@ -92,11 +93,13 @@ export default function EditProfileScreen() {
     setSaving(false);
     if (result.ok) {
       if (result.error) {
-        Alert.alert('تم الحفظ جزئياً', result.error);
+        void showToast(result.error, 'warning');
+      } else {
+        void showToast('تم حفظ التغييرات بنجاح', 'success');
       }
       router.back();
     } else {
-      Alert.alert('خطأ', result.error || 'فشل حفظ التغييرات، يرجى المحاولة مجدداً.');
+      void showToast(result.error || 'فشل حفظ التغييرات، يرجى المحاولة مجدداً.', 'error');
     }
   };
 

@@ -20,15 +20,20 @@ import { API_BASE } from '@/services/api';
 import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
 import { fetchButcherMarketBanners, type ButcherMarketBanner } from '@/services/butcherMarketBanners';
 import { ButchersAppBar } from '@/components/butchers/ButchersAppBar';
-import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { ButcherMarketBannerSlider } from '@/components/butchers/ButcherMarketBannerSlider';
 import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
+import { ButcherHomeOfferCard } from '@/components/butchers/ButcherHomeOfferCard';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getRtlText } from '@/lib/rtl';
 import { safePush, safeReplace } from '@/lib/safeNavigate';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
+import {
+  BUTCHER_HOME_OFFERS_LIMIT,
+  fetchButcherOffersPreview,
+  type ButcherOfferPreview,
+} from '@/services/butcherOffersPreview';
 
 const SECTION_LIMIT = 12;
 
@@ -54,6 +59,7 @@ export default function ButchersScreen() {
   const [picks, setPicks] = useState<ButcherProfile[]>([]);
   const [nearby, setNearby] = useState<ButcherProfile[]>([]);
   const [banners, setBanners] = useState<ButcherMarketBanner[]>([]);
+  const [homeOffers, setHomeOffers] = useState<ButcherOfferPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -98,15 +104,17 @@ export default function ButchersScreen() {
     void (async () => {
       setLoading(true);
       try {
-        const [rated, near, promo] = await Promise.all([
+        const [rated, near, promo, offers] = await Promise.all([
           fetchSorted('rating'),
           fetchSorted('distance'),
           fetchButcherMarketBanners(),
+          fetchButcherOffersPreview(accessToken, BUTCHER_HOME_OFFERS_LIMIT).catch(() => []),
         ]);
         if (cancelled) return;
         setPicks(rated);
         setNearby(near.length ? near : rated);
         setBanners(promo);
+        setHomeOffers(offers);
       } catch (err) {
         console.warn('[ButchersScreen] Failed to fetch home:', err);
       } finally {
@@ -116,7 +124,7 @@ export default function ButchersScreen() {
     return () => {
       cancelled = true;
     };
-  }, [fetchSorted]);
+  }, [accessToken, fetchSorted]);
 
   const filteredPicks = useMemo(() => filterButchers(picks, searchQuery), [picks, searchQuery]);
   const filteredNearby = useMemo(() => filterButchers(nearby, searchQuery), [nearby, searchQuery]);
@@ -133,7 +141,6 @@ export default function ButchersScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={s.stickyHeader}>
-          <ButcherLocationBar />
           <ButchersAppBar
             onBack={() => safeReplace('/(tabs)', undefined, router)}
             onCart={() =>
@@ -167,6 +174,31 @@ export default function ButchersScreen() {
           </View>
         ) : (
           <>
+            {homeOffers.length > 0 ? (
+              <>
+                <SectionHeader
+                  title="العروض"
+                  onSeeAll={() => safePush('/butchers/offers', undefined, router)}
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={s.offersRow}
+                >
+                  {homeOffers.map((offer) => (
+                    <ButcherHomeOfferCard
+                      key={`${offer.butcherId}-${offer.id}`}
+                      offer={offer}
+                      width={Math.round(screenWidth * 0.42)}
+                      onPress={() => openButcher(offer.butcherId)}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            ) : null}
+
+            {filteredPicks.length > 0 ? (
+              <>
             <SectionHeader
               title="مختارات سرح"
               onSeeAll={() => safePush('/butchers/all', undefined, router)}
@@ -186,7 +218,11 @@ export default function ButchersScreen() {
                 />
               ))}
             </ScrollView>
+              </>
+            ) : null}
 
+            {filteredNearby.length > 0 ? (
+              <>
             <SectionHeader
               title="الأقرب إليك"
               onSeeAll={() => safePush('/butchers/all', undefined, router)}
@@ -201,6 +237,8 @@ export default function ButchersScreen() {
                 />
               ))}
             </View>
+              </>
+            ) : null}
           </>
         )}
       </ScrollView>
@@ -215,7 +253,12 @@ function createScreenStyles(colors: ThemeColors) {
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
     scroll: { paddingBottom: 20 },
-    stickyHeader: { backgroundColor: colors.bgElevated },
+    stickyHeader: { backgroundColor: colors.screenRoot },
+    offersRow: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+      gap: spacing.md,
+    },
     loader: { paddingVertical: 40, alignItems: 'center' },
     picksRow: {
       paddingHorizontal: spacing.lg,

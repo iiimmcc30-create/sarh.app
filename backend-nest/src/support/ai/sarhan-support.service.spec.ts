@@ -33,8 +33,15 @@ describe('HeuristicAiProvider / SarhanSupportService', () => {
   const heuristic = new HeuristicAiProvider();
   const sarhan = new SarhanSupportService(heuristic, logger as never);
 
-  it('classifies a not-received order and asks for confirmation', async () => {
+  it('classifies a not-received order with known order context and hands off', async () => {
     const turn = await sarhan.nextTurn(baseContext(), {});
+    expect(turn.escalate).toBe(true);
+    expect(turn.issueType).toBe('ORDER_NOT_RECEIVED');
+    expect(turn.replyAr).toContain('الفريق المختص');
+  });
+
+  it('asks for confirmation only when the order is not already attached', async () => {
+    const turn = await sarhan.nextTurn(baseContext({ order: null }), {});
     expect(turn.escalate).toBe(false);
     expect(turn.issueType).toBe('ORDER_NOT_RECEIVED');
     expect(turn.replyAr).toContain('لم يصل');
@@ -73,7 +80,7 @@ describe('HeuristicAiProvider / SarhanSupportService', () => {
     );
     expect(turn.escalate).toBe(true);
     expect(turn.issueType).toBe('REFUND_ISSUE');
-    expect(turn.replyAr).toContain('رقم البلاغ');
+    expect(turn.replyAr).toContain('الفريق المختص');
   });
 
   it('refuses jailbreak / other-user data / refund execution', async () => {

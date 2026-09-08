@@ -259,11 +259,11 @@ export default function UserProfileScreen() {
     }
     setProfile((prev) => (prev ? { ...prev, isBlocked: result.blocked, isFollowing: false } : prev));
     if (result.blocked) {
-      void showToast('تم حظر الحساب');
+      void showToast('تم حظر الحساب', 'success');
       router.back();
       return;
     }
-    void showToast('تم إلغاء الحظر');
+    void showToast('تم إلغاء الحظر', 'info');
   };
 
   const handleMenu = async () => {
