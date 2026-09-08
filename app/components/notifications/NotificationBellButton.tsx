@@ -61,8 +61,8 @@ export function NotificationBellButton({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     iconBtn: {
-      borderRadius: 12,
-      backgroundColor: colors.bgElevated,
+      borderRadius: 0,
+      backgroundColor: 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 0,

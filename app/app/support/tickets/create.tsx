@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { showToast } from '@/lib/toast';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -98,7 +99,7 @@ export default function CreateSupportTicketScreen() {
       });
 
       if (!res.ok) {
-        Alert.alert('تعذر الإرسال', res.error ?? 'حاول مرة أخرى');
+        void showToast(res.error ?? 'حاول مرة أخرى', 'error');
         return;
       }
 

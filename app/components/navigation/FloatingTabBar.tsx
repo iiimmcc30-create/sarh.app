@@ -1,17 +1,15 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { ambientShadow, ds } from '@/constants/designSystem';
-import { sarh } from '@/constants/sarhTokens';
-import { motion, spacing, typography } from '@/constants/theme';
-import { useTheme } from '@/hooks/useTheme';
+import { AppText } from '@/design-system/components';
+import { colors, elevation, motion, space } from '@/design-system';
+import { ds } from '@/constants/designSystem';
 import { getRtlRow } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICON_SIZE = 22;
-const ADD_BOX = 22;
 
 type TabDef =
   | { kind: 'route'; route: string; icon: string; label: string }
@@ -31,12 +29,9 @@ const TABS: TabDef[] = [
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, scheme } = useTheme();
-  const isLight = scheme === 'light';
-  const tokens = isLight ? ds.light : ds.dark;
   const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
-  const activeTint = isLight ? colors.electricBright : sarh.color.action;
-  const inactiveTint = isLight ? colors.textMuted : '#E8EEF2';
+  const activeTint = colors.primary;
+  const inactiveTint = colors.textMuted;
 
   const activeRoute = state.routes[state.index]?.name;
 
@@ -54,22 +49,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={styles.wrap} pointerEvents="box-none">
-      <View
-        style={[
-          styles.bar,
-          { paddingBottom: bottomPad },
-          isLight
-            ? {
-                backgroundColor: tokens.glass,
-                borderTopColor: tokens.glassBorder,
-              }
-            : {
-                backgroundColor: '#0A161E',
-                borderTopColor: 'rgba(255,255,255,0.06)',
-              },
-          ambientShadow(scheme, 'soft'),
-        ]}
-      >
+      <View style={[styles.bar, { paddingBottom: bottomPad }]}>
         <View style={[styles.row, getRtlRow()]}>
           {TABS.map((tab) => {
             if (tab.kind === 'create') {
@@ -82,19 +62,11 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                   style={({ pressed }) => [styles.tabSlot, pressed && styles.pressed]}
                 >
                   <View style={styles.iconSlot}>
-                    <View style={[styles.addBox, { borderColor: inactiveTint }]}>
-                      <AppIcon name="plus" size={14} color={activeTint} variant="sr" />
-                    </View>
+                    <AppIcon name="plus" size={ICON_SIZE} color={activeTint} variant="sr" />
                   </View>
-                  <Text
-                    style={[
-                      typography.tab,
-                      { color: inactiveTint },
-                    ]}
-                    numberOfLines={1}
-                  >
+                  <AppText variant="micro" color="textMuted" numberOfLines={1}>
                     {tab.label}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             }
@@ -117,15 +89,14 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                     variant={focused ? 'sr' : 'rr'}
                   />
                 </View>
-                <Text
-                  style={[
-                    focused ? typography.tabActive : typography.tab,
-                    { color: tint },
-                  ]}
+                <AppText
+                  variant="micro"
+                  color={focused ? 'primary' : 'textMuted'}
+                  style={focused ? styles.labelActive : undefined}
                   numberOfLines={1}
                 >
                   {tab.label}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
@@ -141,12 +112,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: ds.tabBar.marginH,
+    paddingHorizontal: 0,
   },
   bar: {
+    backgroundColor: colors.surface,
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.xs,
+    borderTopColor: colors.border,
+    paddingTop: space[8],
+    paddingHorizontal: space[4],
+    ...elevation.subtle,
   },
   row: {
     alignItems: 'flex-start',
@@ -156,32 +130,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    minHeight: 52,
-    paddingVertical: 2,
-    paddingHorizontal: 2,
-    gap: 4,
+    minHeight: space[48],
+    paddingVertical: space[4],
+    paddingHorizontal: space[4],
+    gap: space[4],
   },
-  /** Fixed icon box so every tab (including +) shares the same visual height. */
   iconSlot: {
-    width: ICON_SIZE + 2,
-    height: ICON_SIZE + 2,
+    width: space[24],
+    height: space[24],
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
-  addBox: {
-    width: ADD_BOX,
-    height: ADD_BOX,
-    borderRadius: 5,
-    borderWidth: 1.75,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabLabel: {
-    ...typography.tab,
+  labelActive: {
+    fontWeight: '600',
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],
-    opacity: 0.92,
+    opacity: motion.opacity.pressed,
   },
 });
 

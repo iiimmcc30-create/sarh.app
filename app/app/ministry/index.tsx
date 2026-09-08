@@ -23,6 +23,8 @@ import {
   type OfficialService,
 } from '@/services/officialServices';
 import { setFollowUser } from '@/services/users';
+import { SarhButton } from '@/design-system/components';
+import { showToast } from '@/lib/toast';
 import type { Post } from '@/services/types';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -144,7 +146,7 @@ export default function MinistryProfileScreen() {
       const refreshed = await fetchMinistryAccount();
       if (refreshed) setAccount(refreshed);
     } catch {
-      Alert.alert('خطأ', 'تعذّرت المتابعة، حاول مجدداً');
+      void showToast('تعذّرت المتابعة، حاول مجدداً', 'error');
     } finally {
       setFollowLoading(false);
     }
@@ -304,30 +306,14 @@ export default function MinistryProfileScreen() {
           </View>
           <AppText style={styles.followers}>{followersLabel}</AppText>
           {account?.bio ? <AppText style={styles.bio}>{account.bio}</AppText> : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={account?.isFollowing ? 'متابَع' : 'متابعة'}
+          <SarhButton
+            title={account?.isFollowing ? 'متابَع' : 'متابعة'}
+            variant={account?.isFollowing ? 'secondary' : 'primary'}
+            size="sm"
             onPress={() => void handleFollow()}
-            disabled={followLoading}
-            style={({ pressed }) => [
-              styles.followBtn,
-              account?.isFollowing && styles.followBtnOn,
-              pressed && !followLoading && styles.pressed,
-            ]}
-          >
-            {followLoading ? (
-              <ActivityIndicator
-                size="small"
-                color={account?.isFollowing ? colors.textPrimary : '#FFFFFF'}
-              />
-            ) : (
-              <AppText
-                style={[styles.followText, account?.isFollowing && styles.followTextOn]}
-              >
-                {account?.isFollowing ? 'متابَع' : 'متابعة'}
-              </AppText>
-            )}
-          </Pressable>
+            loading={followLoading}
+            accessibilityLabel={account?.isFollowing ? 'متابَع' : 'متابعة'}
+          />
         </View>
 
         <View style={[styles.tabs, getRtlRow()]}>
