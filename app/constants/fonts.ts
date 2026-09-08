@@ -8,6 +8,9 @@
  *
  * Still loaded (for legacy name remaps / tooling): Regular / Medium / SemiBold.
  * Tajawal is not used and must not be reintroduced.
+ *
+ * Distinct weight families for the phase-1 type scale live in `@/design-system`.
+ * `resolveAppFontFace` stays Bold-only so live screens do not change.
  */
 export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
 

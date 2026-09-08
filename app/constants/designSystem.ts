@@ -1,6 +1,9 @@
 /**
  * Sarh Design System — premium surface hierarchy, spacing grid, glass-lite chrome.
  * UI tokens only; no business logic. Accent = existing brand green (#20B66F).
+ *
+ * Canonical foundation tokens now live in `@/design-system`. Keep importing `ds`
+ * from this file in existing screens; do not rewrite call sites in phase 1.
  */
 import { Platform, type ViewStyle } from 'react-native';
 import { sarh } from './sarhTokens';
