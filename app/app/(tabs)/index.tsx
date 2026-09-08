@@ -6,7 +6,7 @@ import { useCallback, useState, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
-import { spacing } from '@/constants/theme';
+import { space } from '@/design-system';
 import { SarhSurface } from '@/design-system/components';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
@@ -26,7 +26,7 @@ import { AppScrollView } from '@/components/ui/AppScrollView';
 import { safePush } from '@/lib/safeNavigate';
 
 const HOME_REFRESH_TTL_MS = 60_000;
-const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
+const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + space[16];
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function HomeScreen() {
       root: sarh.screenRoot,
       container: sarh.screenRoot,
       scrollContent: {
-        paddingBottom: spacing.lg,
+        paddingBottom: space[16],
       },
     }),
   );
