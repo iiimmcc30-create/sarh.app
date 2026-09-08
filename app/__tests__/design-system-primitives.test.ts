@@ -61,6 +61,9 @@ describe('core UI primitives', () => {
     expect(resolveSarhButtonColors('primary', 'pressed').backgroundColor).toBe(colors.primaryPressed);
     expect(resolveSarhButtonColors('danger', 'default').backgroundColor).toBe(colors.danger);
     expect(resolveSarhButtonColors('ghost', 'default').backgroundColor).toBe('transparent');
+    expect(resolveSarhButtonColors('inverse', 'default').contentColor).toBeTruthy();
+    expect(resolveSarhIconButtonColors('default', 'ghost').backgroundColor).toBe('transparent');
+    expect(resolveSarhCardStyle('plain', 'none').borderWidth).toBe(0);
     expect(resolveSarhChipColors(true).backgroundColor).toBe(colors.primary);
     expect(resolveSarhChipColors(false).borderColor).toBe(colors.border);
     expect(resolveSarhBadgeColors('danger').color).toBe('danger');

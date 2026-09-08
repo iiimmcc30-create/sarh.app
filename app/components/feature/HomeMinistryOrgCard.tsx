@@ -1,9 +1,9 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppText } from '@/design-system/components';
+import { AppText, SarhAvatar, SarhButton, SarhCard } from '@/design-system/components';
 import { functional } from '@/design-system';
 import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER } from '@/constants/branding';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
@@ -43,52 +43,51 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
         accessibilityRole="button"
         accessibilityLabel={`${name}. ${formatServiceCountLabel(count)}. فتح`}
         onPress={openProfile}
-        style={({ pressed }) => [styles.card, { height: cardH }, pressed && styles.pressed]}
+        style={({ pressed }) => [pressed && styles.pressed]}
       >
-        <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <LinearGradient
-          colors={['transparent', 'rgba(7, 19, 28, 0.22)', 'rgba(7, 19, 28, 0.82)']}
-          locations={[0, 0.48, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={[styles.bar, getRtlRow()]}>
-          <View style={styles.logoRing}>
-            <Image
+        <SarhCard variant="plain" padding="none" style={[styles.card, { height: cardH }]}>
+          <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient
+            colors={['transparent', 'rgba(7, 19, 28, 0.22)', 'rgba(7, 19, 28, 0.82)']}
+            locations={[0, 0.48, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={[styles.bar, getRtlRow()]}>
+            <SarhAvatar
               source={avatar}
-              style={styles.logo}
-              contentFit="cover"
+              name={name}
+              size="lg"
               accessibilityLabel={name}
+              style={styles.logo}
+            />
+            <View style={styles.copy}>
+              <AppText
+                variant="bodySmall"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={styles.title}
+              >
+                {name || (loading ? '…' : '')}
+              </AppText>
+              <AppText
+                variant="caption"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={styles.subtitle}
+              >
+                {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
+              </AppText>
+            </View>
+            <SarhButton
+              title="فتح"
+              variant="inverse"
+              size="sm"
+              shape="pill"
+              accessibilityLabel="فتح"
+              onPress={openProfile}
             />
           </View>
-          <View style={styles.copy}>
-            <AppText
-              variant="bodySmall"
-              numberOfLines={2}
-              ellipsizeMode="tail"
-              style={styles.title}
-            >
-              {name || (loading ? '…' : '')}
-            </AppText>
-            <AppText
-              variant="caption"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={styles.subtitle}
-            >
-              {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
-            </AppText>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="فتح"
-            onPress={openProfile}
-            style={({ pressed }) => [styles.openBtn, pressed && styles.openPressed]}
-          >
-            <AppText variant="caption" style={styles.openText}>
-              فتح
-            </AppText>
-          </Pressable>
-        </View>
+        </SarhCard>
       </Pressable>
     </View>
   );
@@ -123,20 +122,13 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
     },
-    logoRing: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: '#FFFFFF',
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.92)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
     logo: {
       width: 48,
       height: 48,
+      borderRadius: 24,
+      backgroundColor: functional.onPrimary,
+      borderWidth: 1.5,
+      borderColor: functional.onPrimary,
     },
     copy: {
       flex: 1,
@@ -148,18 +140,6 @@ function createStyles(colors: ThemeColors) {
     },
     subtitle: {
       color: 'rgba(255,255,255,0.86)',
-    },
-    openBtn: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: radius.pill,
-      paddingHorizontal: 18,
-      paddingVertical: 8,
-    },
-    openText: {
-      color: functional.onPrimaryInverse,
-    },
-    openPressed: {
-      opacity: 0.88,
     },
     pressed: {
       opacity: 0.96,

@@ -43,8 +43,15 @@ export function resolveAppTextStyle(options: {
   };
 }
 
-export type SarhButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type SarhButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'inverse';
 export type SarhButtonState = 'default' | 'pressed' | 'disabled' | 'loading';
+export type SarhButtonSize = 'sm' | 'md';
+export type SarhButtonShape = 'rounded' | 'pill';
+
+export const BUTTON_SIZE = {
+  sm: { minHeight: space[32], paddingHorizontal: space[16] },
+  md: { minHeight: space[48], paddingHorizontal: space[20] },
+} as const;
 
 export function resolveSarhButtonColors(
   variant: SarhButtonVariant,
@@ -52,6 +59,13 @@ export function resolveSarhButtonColors(
 ) {
   const pressed = state === 'pressed';
   const disabled = state === 'disabled';
+  if (variant === 'inverse') {
+    return {
+      backgroundColor: functional.onPrimary,
+      borderColor: functional.onPrimary,
+      contentColor: functional.onPrimaryInverse,
+    };
+  }
   if (variant === 'primary') {
     return {
       backgroundColor: pressed ? colors.primaryPressed : colors.primary,
@@ -82,6 +96,7 @@ export function resolveSarhButtonColors(
 
 export type SarhIconButtonSize = 'sm' | 'md' | 'lg';
 export type SarhIconButtonState = 'default' | 'pressed' | 'disabled' | 'selected';
+export type SarhIconButtonChrome = 'solid' | 'ghost';
 
 export const ICON_BUTTON_SIZE = {
   sm: { box: space[48], icon: space[16] + space[4] },
@@ -89,7 +104,17 @@ export const ICON_BUTTON_SIZE = {
   lg: { box: space[64] - space[8], icon: space[24] + space[4] },
 } as const;
 
-export function resolveSarhIconButtonColors(state: SarhIconButtonState) {
+export function resolveSarhIconButtonColors(
+  state: SarhIconButtonState,
+  chrome: SarhIconButtonChrome = 'solid',
+) {
+  if (chrome === 'ghost') {
+    return {
+      backgroundColor: 'transparent',
+      contentColor: colors.textPrimary,
+      borderColor: 'transparent',
+    };
+  }
   if (state === 'selected') {
     return {
       backgroundColor: colors.primary,
@@ -104,7 +129,7 @@ export function resolveSarhIconButtonColors(state: SarhIconButtonState) {
   };
 }
 
-export type SarhCardVariant = 'default' | 'elevated' | 'outlined';
+export type SarhCardVariant = 'default' | 'elevated' | 'outlined' | 'plain';
 export type SarhCardPadding = 'none' | 'sm' | 'md' | 'lg';
 
 export const CARD_PADDING = {
@@ -123,6 +148,14 @@ export function resolveSarhCardStyle(variant: SarhCardVariant, padding: SarhCard
     ...getRtlDirection(),
   };
 
+  if (variant === 'plain') {
+    return {
+      ...base,
+      backgroundColor: colors.surfaceElevated,
+      borderWidth: 0,
+      ...elevation.none,
+    };
+  }
   if (variant === 'elevated') {
     return {
       ...base,

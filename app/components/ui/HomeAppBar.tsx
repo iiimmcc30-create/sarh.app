@@ -1,9 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { ds } from '@/constants/designSystem';
-import { AppText, SarhSurface } from '@/design-system/components';
+import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -45,10 +44,12 @@ export function HomeAppBar({
             accessibilityRole="button"
             accessibilityLabel="القائمة الجانبية"
           >
-            <Image
-              source={uriSource(avatarUri)}
+            <SarhAvatar
+              uri={avatarUri}
+              name={displayName}
+              size="md"
+              accessibilityLabel={displayName}
               style={styles.avatar}
-              contentFit="cover"
             />
           </Pressable>
 
@@ -71,15 +72,15 @@ export function HomeAppBar({
         </View>
 
         <View style={[styles.toolsCluster, getRtlRow()]}>
-          <Pressable
+          <SarhIconButton
+            chrome="ghost"
+            size="sm"
+            accessibilityLabel="بحث"
             onPress={onSearch}
             style={styles.iconBtn}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="بحث"
           >
             <AppIcon name="search" size={ICON_SIZE} color={colors.textPrimary} />
-          </Pressable>
+          </SarhIconButton>
           <NotificationBellButton
             bare
             size={ICON_BTN}

@@ -5,6 +5,7 @@ import { motion, radius, space } from '../tokens';
 import {
   ICON_BUTTON_SIZE,
   resolveSarhIconButtonColors,
+  type SarhIconButtonChrome,
   type SarhIconButtonSize,
   type SarhIconButtonState,
 } from './resolvers';
@@ -14,6 +15,7 @@ export type SarhIconButtonProps = {
   children?: ReactNode;
   onPress?: () => void;
   size?: SarhIconButtonSize;
+  chrome?: SarhIconButtonChrome;
   disabled?: boolean;
   selected?: boolean;
   accessibilityLabel: string;
@@ -22,13 +24,14 @@ export type SarhIconButtonProps = {
 };
 
 export { ICON_BUTTON_SIZE, resolveSarhIconButtonColors } from './resolvers';
-export type { SarhIconButtonSize, SarhIconButtonState } from './resolvers';
+export type { SarhIconButtonChrome, SarhIconButtonSize, SarhIconButtonState } from './resolvers';
 
 export function SarhIconButton({
   icon,
   children,
   onPress,
   size = 'md',
+  chrome = 'solid',
   disabled = false,
   selected = false,
   accessibilityLabel,
@@ -54,17 +57,20 @@ export function SarhIconButton({
             : pressed
               ? 'pressed'
               : 'default';
-        const palette = resolveSarhIconButtonColors(state === 'disabled' ? 'default' : state);
+        const palette = resolveSarhIconButtonColors(
+          state === 'disabled' ? 'default' : state,
+          chrome,
+        );
         return [
           {
             width: metrics.box,
             height: metrics.box,
-            minWidth: metrics.box,
-            minHeight: metrics.box,
+            minWidth: space[48],
+            minHeight: space[48],
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: radius[12],
-            borderWidth: 1,
+            borderWidth: chrome === 'ghost' ? 0 : 1,
             backgroundColor: palette.backgroundColor,
             borderColor: palette.borderColor,
             opacity: disabled ? motion.opacity.disabled : pressed ? motion.opacity.pressed : 1,
@@ -81,7 +87,10 @@ export function SarhIconButton({
             : pressed
               ? 'pressed'
               : 'default';
-        const palette = resolveSarhIconButtonColors(state === 'disabled' ? 'default' : state);
+        const palette = resolveSarhIconButtonColors(
+          state === 'disabled' ? 'default' : state,
+          chrome,
+        );
         if (children) return children;
         if (typeof icon === 'string') {
           return <AppIcon name={icon} size={metrics.icon} color={palette.contentColor} />;

@@ -267,18 +267,23 @@ describe('Home design-system adoption', () => {
     'utf8',
   );
 
-  it('uses SarhSurface and design-system AppText on Home-owned files', () => {
+  it('uses SarhSurface, AppText, and matching primitives on Home-owned files', () => {
     expect(home).toContain("from '@/design-system/components'");
     expect(home).toContain('SarhSurface');
     expect(home).toContain('tone="background"');
-    expect(appBar).toContain("from '@/design-system/components'");
+    expect(appBar).toContain('SarhAvatar');
+    expect(appBar).toContain('SarhIconButton');
+    expect(appBar).toContain('chrome="ghost"');
     expect(appBar).toContain('variant="body"');
     expect(explore).toContain('variant="heading2"');
     expect(explore).toContain('variant="bodySmall"');
     expect(explore).toContain('variant="label"');
-    expect(ministry).toContain('variant="heading2"');
-    expect(ministry).toContain('variant="bodySmall"');
-    expect(ministry).toContain('variant="caption"');
+    expect(ministry).toContain('SarhCard');
+    expect(ministry).toContain('SarhButton');
+    expect(ministry).toContain('SarhAvatar');
+    expect(ministry).toContain('variant="inverse"');
+    expect(stories).toContain('SarhCard');
+    expect(stories).toContain('variant="plain"');
     expect(stories).toContain('variant="body"');
   });
 
@@ -291,12 +296,11 @@ describe('Home design-system adoption', () => {
     }
   });
 
-  it('does not wrap Home heroes or listing ads in SarhCard', () => {
-    expect(home).not.toContain('SarhCard');
+  it('does not wrap marketplace listing ads or the edge-to-edge butchers hero in SarhCard', () => {
     expect(explore).not.toContain('SarhCard');
-    expect(ministry).not.toContain('SarhCard');
-    expect(stories).not.toContain('SarhCard');
+    expect(explore).not.toContain('CARD_RADIUS');
     expect(listingCard).not.toContain('@/design-system');
+    expect(listingCard).not.toContain('SarhCard');
   });
 
   it('keeps Home RTL helpers and button labels', () => {
