@@ -129,13 +129,27 @@ function RootNavigator() {
         <Stack.Screen name="settings/blocked" />
         <Stack.Screen name="settings/info" />
         <Stack.Screen name="settings/support" />
-        <Stack.Screen name="support/index" />
+        <Stack.Screen
+          name="support/index"
+          options={{
+            presentation: 'transparentModal',
+            animation: 'slide_from_bottom',
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="support/faq" />
         <Stack.Screen name="support/verification" />
         <Stack.Screen name="support/tickets/index" />
         <Stack.Screen name="support/tickets/create" />
         <Stack.Screen name="support/tickets/[id]" />
-        <Stack.Screen name="support/help" />
+        <Stack.Screen
+          name="support/help"
+          options={{
+            presentation: 'transparentModal',
+            animation: 'slide_from_bottom',
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="onboarding/index" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="auth/welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="auth/phone" options={{ animation: 'fade' }} />
