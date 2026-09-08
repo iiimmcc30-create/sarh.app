@@ -104,15 +104,15 @@ export default function SupportTicketDetailScreen() {
       <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
       <View style={[styles.identity, getRtlRow()]}>
         <SarhAvatar
-          uri={SUPPORT_CUSTOMER_SERVICE.avatarUri}
-          name={SUPPORT_CUSTOMER_SERVICE.name}
+          source={SUPPORT_CUSTOMER_SERVICE.avatarSource}
+          name={SUPPORT_CUSTOMER_SERVICE.assistantName}
           size="md"
-          accessibilityLabel={SUPPORT_CUSTOMER_SERVICE.name}
+          accessibilityLabel={SUPPORT_CUSTOMER_SERVICE.assistantName}
         />
         <View style={styles.identityCopy}>
           <AppText variant="label">{SUPPORT_CUSTOMER_SERVICE.name}</AppText>
           <AppText variant="caption" color="textMuted">
-            {userFacingTicketStatus(ticket.status)}
+            {SUPPORT_CUSTOMER_SERVICE.assistantName} · {userFacingTicketStatus(ticket.status)}
           </AppText>
         </View>
       </View>
@@ -138,13 +138,33 @@ export default function SupportTicketDetailScreen() {
                     </AppText>
                   </SarhSurface>
                 ) : (
-                  <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
+                  <View
+                    style={[
+                      styles.msgRow,
+                      getRtlRow(),
+                      mine ? styles.msgRowMine : styles.msgRowOther,
+                    ]}
+                  >
                     {!mine ? (
-                      <AppText variant="micro" color="textMuted">
-                        {messageAuthorLabel(msg)}
-                      </AppText>
+                      <SarhAvatar
+                        source={
+                          msg.authorKind === 'SARHAN'
+                            ? SUPPORT_CUSTOMER_SERVICE.avatarSource
+                            : undefined
+                        }
+                        name={messageAuthorLabel(msg)}
+                        size="sm"
+                        accessibilityLabel={messageAuthorLabel(msg)}
+                      />
                     ) : null}
-                    <AppText variant="body">{msg.body}</AppText>
+                    <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
+                      {!mine ? (
+                        <AppText variant="micro" color="textMuted">
+                          {messageAuthorLabel(msg)}
+                        </AppText>
+                      ) : null}
+                      <AppText variant="body">{msg.body}</AppText>
+                    </View>
                   </View>
                 )}
               </View>
@@ -196,6 +216,13 @@ function createStyles(colors: ThemeColors) {
     bubbleWrap: { width: '100%' },
     bubbleMineWrap: { alignItems: 'flex-start' },
     bubbleOtherWrap: { alignItems: 'flex-end' },
+    msgRow: {
+      alignItems: 'flex-end',
+      gap: spacing.sm,
+      maxWidth: '100%',
+    },
+    msgRowMine: { justifyContent: 'flex-start' },
+    msgRowOther: { justifyContent: 'flex-start' },
     bubble: {
       maxWidth: '86%',
       paddingHorizontal: spacing.md,

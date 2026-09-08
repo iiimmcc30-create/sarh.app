@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { AppText, SarhButton, SarhDivider, SarhInput, SarhSurface } from '@/design-system/components';
+import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhInput, SarhSurface } from '@/design-system/components';
 import { motion, radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -31,6 +31,7 @@ import {
   supportDescriptionError,
   type SupportFlowChoice,
 } from '@/lib/supportFlow';
+import { SUPPORT_CUSTOMER_SERVICE } from '@/constants/supportIdentity';
 
 type FlowStep = 'welcome' | 'order' | 'describe' | 'sending' | 'handoff';
 
@@ -217,9 +218,12 @@ export function SupportFlowSheet({
               {step === 'welcome' ? (
                 <>
                   <View style={[styles.intro, getRtlRow()]}>
-                    <View style={styles.headset}>
-                      <AppIcon name="headset" size={22} color={colors.electric} />
-                    </View>
+                    <SarhAvatar
+                      source={SUPPORT_CUSTOMER_SERVICE.avatarSource}
+                      name={SUPPORT_CUSTOMER_SERVICE.assistantName}
+                      size="lg"
+                      accessibilityLabel={SUPPORT_CUSTOMER_SERVICE.assistantName}
+                    />
                     <View style={styles.introCopy}>
                       <AppText variant="body" color="textSecondary">
                         {hello}
@@ -390,12 +394,6 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.md,
     },
     introCopy: { flex: 1, gap: 4 },
-    headset: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     optionRow: {
       paddingVertical: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,

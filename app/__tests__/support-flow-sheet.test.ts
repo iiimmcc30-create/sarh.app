@@ -57,9 +57,10 @@ describe('support flow sheet', () => {
     expect(sheet).not.toContain('mock');
   });
 
-  it('keeps a single customer-service avatar placeholder', () => {
-    expect(identity).toContain('avatarUri: null');
-    expect(identity).toContain("name: 'خدمة العملاء'");
+  it('uses a single bundled Sarhan avatar asset', () => {
+    expect(identity).toContain("require('../assets/images/sarhan-avatar.jpg')");
+    expect(identity).toContain("assistantName: 'سرحان'");
+    expect(sheet).toContain('avatarSource');
     expect(sheet).not.toContain('https://');
   });
 
