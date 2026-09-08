@@ -11,24 +11,17 @@ import {
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
+import { colors, functional, motion, radius, space } from '@/design-system';
 import { AppText, SarhCard } from '@/design-system/components';
-import { functional } from '@/design-system';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_GAP = 12;
-const SIDE_PAD = spacing.lg;
-/** Slightly smaller cards than before so more of the strip is visible. */
-const VISIBLE_CARDS = 3.85;
-const CARD_W = Math.round(
-  (SCREEN_W - SIDE_PAD - CARD_GAP * 3) / VISIBLE_CARDS,
-);
-const CARD_H = Math.round(CARD_W * (4 / 3));
-const DOT_SIZE = 6;
-const DOT_ACTIVE_W = 22;
+const CARD_GAP = space[12];
+const SIDE_PAD = space[16];
+const VISIBLE_CARDS = 2.35;
+const CARD_W = Math.round((SCREEN_W - SIDE_PAD - CARD_GAP * 2) / VISIBLE_CARDS);
+const CARD_H = Math.round(CARD_W * 0.72);
 
 type Props = {
   stories: EditorialStory[];
@@ -36,7 +29,6 @@ type Props = {
 };
 
 export function EditorialStoriesBar({ stories, loading }: Props) {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [activeDot, setActiveDot] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -85,6 +77,7 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                   onPress={() => setViewerIndex(index)}
                   accessibilityRole="button"
                   accessibilityLabel={story.titleAr}
+                  style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <SarhCard variant="plain" padding="none" style={styles.card}>
                     <Image
@@ -93,13 +86,13 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                       contentFit="cover"
                     />
                     <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.75)']}
-                      locations={[0.35, 1]}
+                      colors={['transparent', functional.overlay]}
+                      locations={[0.4, 1]}
                       style={styles.gradient}
                     />
                     <View style={styles.cardTitleShell}>
                       <AppText
-                        variant="body"
+                        variant="caption"
                         numberOfLines={2}
                         ellipsizeMode="tail"
                         style={styles.cardTitle}
@@ -115,10 +108,7 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
         {stories.length > 1 ? (
           <View style={[styles.dots, getRtlRow()]}>
             {stories.map((story, i) => (
-              <View
-                key={story.id}
-                style={[styles.dot, i === activeDot && styles.dotActive]}
-              />
+              <View key={story.id} style={[styles.dot, i === activeDot && styles.dotActive]} />
             ))}
           </View>
         ) : null}
@@ -135,65 +125,63 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    wrap: {
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.md,
-    },
-    scroller: {
-      flexGrow: 0,
-    },
-    row: {
-      paddingHorizontal: SIDE_PAD,
-      gap: CARD_GAP,
-      paddingBottom: spacing.sm,
-    },
-    card: {
-      width: CARD_W,
-      height: CARD_H,
-      borderRadius: 16,
-      overflow: 'hidden',
-      backgroundColor: colors.bgElevated,
-      justifyContent: 'flex-end',
-    },
-    skeleton: {
-      backgroundColor: colors.borderSoft,
-      opacity: 0.45,
-    },
-    gradient: {
-      ...StyleSheet.absoluteFillObject,
-    },
-    cardTitleShell: {
-      width: '100%',
-            paddingHorizontal: 10,
-      paddingBottom: 10,
-      zIndex: 1,
-    },
-    cardTitle: {
-      color: functional.onPrimary,
-      width: '100%',
-      textShadowColor: 'rgba(0,0,0,0.45)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
-    dots: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 7,
-      marginTop: spacing.sm,
-    },
-    dot: {
-      width: DOT_SIZE,
-      height: DOT_SIZE,
-      borderRadius: DOT_SIZE / 2,
-      backgroundColor: '#FFFFFF',
-    },
-    dotActive: {
-      width: DOT_ACTIVE_W,
-      height: DOT_SIZE,
-      borderRadius: DOT_SIZE / 2,
-      backgroundColor: colors.emerald,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  wrap: {
+    paddingTop: space[8],
+    paddingBottom: space[8],
+  },
+  scroller: {
+    flexGrow: 0,
+  },
+  row: {
+    paddingHorizontal: SIDE_PAD,
+    gap: CARD_GAP,
+    paddingBottom: space[8],
+  },
+  card: {
+    width: CARD_W,
+    height: CARD_H,
+    borderRadius: radius[16],
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceElevated,
+    justifyContent: 'flex-end',
+  },
+  skeleton: {
+    backgroundColor: colors.surfaceAlt,
+    opacity: motion.opacity.disabled,
+  },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  cardTitleShell: {
+    width: '100%',
+    paddingHorizontal: space[12],
+    paddingBottom: space[12],
+    zIndex: 1,
+  },
+  cardTitle: {
+    color: functional.onPrimary,
+    width: '100%',
+  },
+  dots: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: space[4],
+    marginTop: space[8],
+  },
+  dot: {
+    width: space[4],
+    height: space[4],
+    borderRadius: radius[999],
+    backgroundColor: colors.borderStrong,
+  },
+  dotActive: {
+    width: space[16],
+    height: space[4],
+    borderRadius: radius[999],
+    backgroundColor: colors.primary,
+  },
+  pressed: {
+    opacity: motion.opacity.pressed,
+  },
+});

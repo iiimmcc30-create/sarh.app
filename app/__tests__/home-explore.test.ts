@@ -168,7 +168,7 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain('bare');
     expect(src).toContain('backgroundColor: \'transparent\'');
     expect(src).toContain('minHeight: BAR_H');
-    expect(src).toContain('fontSize: 17');
+    expect(src).toContain('variant="heading3"');
   });
 
   it('embeds filter inside market search bar with featured star on the right', () => {
@@ -224,7 +224,7 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain('backgroundColor: colors.bgDeep');
+    expect(src).toContain('backgroundColor: colors.background');
     expect(src).not.toContain('paddingHorizontal: SIDE_PAD');
     expect(src).not.toContain('CARD_RADIUS');
     expect(src).not.toContain('menuCardStyle');
@@ -274,8 +274,9 @@ describe('Home design-system adoption', () => {
     expect(appBar).toContain('SarhAvatar');
     expect(appBar).toContain('SarhIconButton');
     expect(appBar).toContain('chrome="ghost"');
-    expect(appBar).toContain('variant="body"');
+    expect(appBar).toContain('variant="heading3"');
     expect(explore).toContain('variant="heading2"');
+    expect(explore).toContain('variant="heading1"');
     expect(explore).toContain('variant="bodySmall"');
     expect(explore).toContain('variant="label"');
     expect(ministry).toContain('SarhCard');
@@ -284,7 +285,7 @@ describe('Home design-system adoption', () => {
     expect(ministry).toContain('variant="inverse"');
     expect(stories).toContain('SarhCard');
     expect(stories).toContain('variant="plain"');
-    expect(stories).toContain('variant="body"');
+    expect(stories).toContain('variant="caption"');
   });
 
   it('does not remap Home copy through the legacy Bold AppText path', () => {
@@ -320,6 +321,20 @@ describe('Home design-system adoption', () => {
     expect(home).not.toContain('HomeCard');
     expect(explore).not.toContain('PrimaryButton');
     expect(ministry).not.toContain('PrimaryButton');
+  });
+
+  it('keeps the existing Home section order and does not invent new sections', () => {
+    const storiesAt = home.indexOf('<EditorialStoriesBar');
+    const exploreAt = home.indexOf('<ExploreSarhSection');
+    const ministryAt = home.indexOf('<HomeMinistryOrgCard');
+    expect(storiesAt).toBeGreaterThan(-1);
+    expect(exploreAt).toBeGreaterThan(storiesAt);
+    expect(ministryAt).toBeGreaterThan(exploreAt);
+    expect(home).not.toContain('ListingCard');
+    expect(home).not.toContain('Marketplace');
+    expect(explore).toContain('ملاحم سرح');
+    expect(explore).toContain("safePush('/butchers'");
+    expect(ministry).toContain('formatServiceCountLabel');
   });
 });
 
