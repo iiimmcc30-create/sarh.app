@@ -10,7 +10,10 @@ import { getRtlRow } from '@/lib/rtl';
 import { motion, radius, space, typography } from '../tokens';
 import { AppText } from './AppText';
 import {
+  BUTTON_SIZE,
   resolveSarhButtonColors,
+  type SarhButtonShape,
+  type SarhButtonSize,
   type SarhButtonState,
   type SarhButtonVariant,
 } from './resolvers';
@@ -19,6 +22,8 @@ export type SarhButtonProps = {
   title: string;
   onPress?: () => void;
   variant?: SarhButtonVariant;
+  size?: SarhButtonSize;
+  shape?: SarhButtonShape;
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
@@ -29,8 +34,8 @@ export type SarhButtonProps = {
   testID?: string;
 };
 
-export { resolveSarhButtonColors } from './resolvers';
-export type { SarhButtonState, SarhButtonVariant } from './resolvers';
+export { BUTTON_SIZE, resolveSarhButtonColors } from './resolvers';
+export type { SarhButtonShape, SarhButtonSize, SarhButtonState, SarhButtonVariant } from './resolvers';
 
 function renderIcon(icon: ReactNode | string | undefined, color: string) {
   if (!icon) return null;
@@ -44,6 +49,8 @@ export function SarhButton({
   title,
   onPress,
   variant = 'primary',
+  size = 'md',
+  shape = 'rounded',
   disabled = false,
   loading = false,
   fullWidth = false,
@@ -70,15 +77,16 @@ export function SarhButton({
             ? 'pressed'
             : 'default';
         const palette = resolveSarhButtonColors(variant, state);
+        const metrics = BUTTON_SIZE[size];
         return [
           getRtlRow(),
           {
             alignItems: 'center',
             justifyContent: 'center',
-            minHeight: space[48],
-            paddingHorizontal: space[20],
+            minHeight: metrics.minHeight,
+            paddingHorizontal: metrics.paddingHorizontal,
             gap: space[8],
-            borderRadius: radius[12],
+            borderRadius: shape === 'pill' ? radius[999] : radius[12],
             borderWidth: variant === 'ghost' ? 0 : 1,
             backgroundColor: palette.backgroundColor,
             borderColor: palette.borderColor,
@@ -100,7 +108,11 @@ export function SarhButton({
             ) : (
               renderIcon(leftIcon, palette.contentColor)
             )}
-            <AppText variant="label" color="textPrimary" style={{ color: palette.contentColor }}>
+            <AppText
+              variant={size === 'sm' ? 'caption' : 'label'}
+              color="textPrimary"
+              style={{ color: palette.contentColor }}
+            >
               {title}
             </AppText>
             {loading ? null : renderIcon(rightIcon, palette.contentColor)}

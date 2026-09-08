@@ -3,7 +3,7 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { resolveSarhCardStyle, type SarhCardPadding, type SarhCardVariant } from './resolvers';
 
 export type SarhCardProps = {
-  children: ReactNode;
+  children?: ReactNode;
   variant?: SarhCardVariant;
   padding?: SarhCardPadding;
   style?: StyleProp<ViewStyle>;

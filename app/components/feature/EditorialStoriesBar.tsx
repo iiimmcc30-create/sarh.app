@@ -6,13 +6,14 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhCard } from '@/design-system/components';
+import { functional } from '@/design-system';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
@@ -71,29 +72,42 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
         >
           {loading && stories.length === 0
             ? [0, 1, 2].map((i) => (
-                <View key={`sk-${i}`} style={[styles.card, styles.skeleton]} />
+                <SarhCard
+                  key={`sk-${i}`}
+                  variant="plain"
+                  padding="none"
+                  style={[styles.card, styles.skeleton]}
+                />
               ))
             : stories.map((story, index) => (
                 <Pressable
                   key={story.id}
-                  style={styles.card}
                   onPress={() => setViewerIndex(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={story.titleAr}
                 >
-                  <Image
-                    source={uriSource(story.imageUrl)}
-                    style={StyleSheet.absoluteFillObject}
-                    contentFit="cover"
-                  />
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.75)']}
-                    locations={[0.35, 1]}
-                    style={styles.gradient}
-                  />
-                  <View style={styles.cardTitleShell}>
-                    <Text style={styles.cardTitle} numberOfLines={2}>
-                      {story.titleAr}
-                    </Text>
-                  </View>
+                  <SarhCard variant="plain" padding="none" style={styles.card}>
+                    <Image
+                      source={uriSource(story.imageUrl)}
+                      style={StyleSheet.absoluteFillObject}
+                      contentFit="cover"
+                    />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.75)']}
+                      locations={[0.35, 1]}
+                      style={styles.gradient}
+                    />
+                    <View style={styles.cardTitleShell}>
+                      <AppText
+                        variant="body"
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                        style={styles.cardTitle}
+                      >
+                        {story.titleAr}
+                      </AppText>
+                    </View>
+                  </SarhCard>
                 </Pressable>
               ))}
         </ScrollView>
@@ -157,10 +171,8 @@ function createStyles(colors: ThemeColors) {
       zIndex: 1,
     },
     cardTitle: {
-      ...typography.cardHeading,
-      color: '#fff',
+      color: functional.onPrimary,
       width: '100%',
-            writingDirection: 'rtl',
       textShadowColor: 'rgba(0,0,0,0.45)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,

@@ -7,6 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
 import { spacing } from '@/constants/theme';
+import { SarhSurface } from '@/design-system/components';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -101,7 +102,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.root}>
+    <SarhSurface tone="background" style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <HomeAppBar
           displayName={displayName}
@@ -134,6 +135,6 @@ export default function HomeScreen() {
           <View style={{ height: TAB_BAR_CLEARANCE }} />
         </AppScrollView>
       </SafeAreaView>
-    </View>
+    </SarhSurface>
   );
 }
