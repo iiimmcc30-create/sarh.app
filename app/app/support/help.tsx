@@ -11,9 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { AppText, SarhButton, SarhCard, SarhInput } from '@/design-system/components';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection } from '@/lib/rtl';
@@ -99,7 +97,7 @@ export default function CustomerHelpScreen() {
       <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
         {step === 'choose' ? (
           <>
-            <Text style={styles.lead}>كيف نقدر نساعدك؟</Text>
+            <AppText variant="heading3">كيف نقدر نساعدك؟</AppText>
             <Pressable style={styles.choice} onPress={() => openKind('ORDER_HELP')}>
               <Text style={styles.choiceTitle}>مشكلة في الطلب</Text>
             </Pressable>
@@ -111,7 +109,7 @@ export default function CustomerHelpScreen() {
 
         {step === 'order' ? (
           <>
-            <Text style={styles.lead}>اختر الطلب</Text>
+            <AppText variant="heading3">اختر الطلب</AppText>
             {loadingOrders ? <ActivityIndicator /> : null}
             {!loadingOrders && orders.length === 0 ? (
               <Text style={styles.hint}>لا توجد طلبات مرتبطة بحسابك. يمكنك طلب مساعدة في شيء آخر.</Text>
@@ -140,15 +138,17 @@ export default function CustomerHelpScreen() {
 
         {step === 'describe' ? (
           <>
-            <Text style={styles.lead}>
+            <AppText variant="heading3">
               {kind === 'ORDER_HELP' ? 'ما المشكلة في الطلب؟' : 'ما الذي تحتاج المساعدة فيه؟'}
-            </Text>
+            </AppText>
             {kind === 'ORDER_HELP' && selectedOrder ? (
-              <GlassCard>
-                <Text style={styles.choiceSub}>الطلب {selectedOrder.orderNumber}</Text>
-              </GlassCard>
+              <SarhCard variant="outlined" padding="md">
+                <AppText variant="caption" color="textMuted">
+                  الطلب {selectedOrder.orderNumber}
+                </AppText>
+              </SarhCard>
             ) : null}
-            <AppTextInput
+            <SarhInput
               label={kind === 'ORDER_HELP' ? 'اكتب وصف المشكلة...' : 'اكتب المشكلة أو استفسارك...'}
               value={description}
               onChangeText={setDescription}
@@ -156,7 +156,7 @@ export default function CustomerHelpScreen() {
               numberOfLines={6}
               style={styles.textArea}
             />
-            <PrimaryButton
+            <SarhButton
               title="فتح البلاغ"
               fullWidth
               loading={submitting}
@@ -177,7 +177,6 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.huge },
-    lead: { ...typography.h3, color: colors.textPrimary,  },
     choice: {
       borderRadius: 16,
       padding: spacing.lg,

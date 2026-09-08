@@ -1,8 +1,8 @@
 /**
- * Sarh Design Foundation — phase 1 tokens only.
+ * Sarh Design System — tokens + core UI primitives.
  *
- * Live screens must keep importing `@/constants/theme`, `sarhTokens`,
- * `designSystem`, and `fonts`. Do not rewire UI to this module yet.
+ * Existing screens may keep importing `@/constants/theme` and
+ * `@/components/ui/*`. New UI should prefer this module.
  */
 export {
   colors,
@@ -12,6 +12,7 @@ export {
   fontWeight,
   functional,
   motion,
+  opacity,
   palette,
   radius,
   radiusAlias,
@@ -31,4 +32,4 @@ export type {
 } from './tokens';
 export { darkTheme, semantic } from './theme';
 export type { DarkTheme } from './theme';
-export { HARDCODED_AUDIT, LEGACY_TOKEN_MAP, PHASE_2_SCOPE } from './migration';
+export { FONT_WEIGHT_MIGRATION, HARDCODED_AUDIT, LEGACY_TOKEN_MAP, PHASE_2_SCOPE } from './migration';

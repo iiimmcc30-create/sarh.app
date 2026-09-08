@@ -9,8 +9,11 @@
  * Still loaded (for legacy name remaps / tooling): Regular / Medium / SemiBold.
  * Tajawal is not used and must not be reintroduced.
  *
- * Distinct weight families for the phase-1 type scale live in `@/design-system`.
- * `resolveAppFontFace` stays Bold-only so live screens do not change.
+ * Phase-2 official scale: `resolveDesignFontFace` maps 400/500/600/700 to
+ * distinct IBM Plex files. Used by `@/design-system` AppText.
+ *
+ * `resolveAppFontFace` stays Bold-only so existing screens that still go
+ * through `@/components/ui/AppText` and `theme.typography` do not rewrite.
  */
 export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
 
@@ -45,7 +48,22 @@ const OFFICIAL_FACE = {
   fontWeight: '700' as const,
 };
 
-/** Map any requested weight → official price Bold face. */
+function normalizeAppFontWeight(weight?: string | number): AppFontWeight {
+  const value = String(weight ?? '400').toLowerCase();
+  if (value === '700' || value === 'bold') return '700';
+  if (value === '600' || value === 'semibold' || value === 'semi-bold') return '600';
+  if (value === '500' || value === 'medium') return '500';
+  return '400';
+}
+
+const DESIGN_FACES: Record<AppFontWeight, string> = {
+  '400': appFont.regular,
+  '500': appFont.medium,
+  '600': appFont.semibold,
+  '700': appFont.bold,
+};
+
+/** Map any requested weight → official price Bold face (legacy live UI). */
 export function resolveAppFontFace(
   weight?: string | number,
   existingFamily?: string,
@@ -61,6 +79,22 @@ export function resolveAppFontFace(
   }
 
   return { ...OFFICIAL_FACE };
+}
+
+/**
+ * Official design-system face resolver — real IBM Plex weights.
+ * Do not use from legacy screens that still expect Bold remapping.
+ */
+export function resolveDesignFontFace(
+  weight?: string | number,
+  existingFamily?: string,
+): { fontFamily: string; fontWeight: AppFontWeight } {
+  if (existingFamily && PRESERVED_FAMILIES.has(existingFamily)) {
+    return { fontFamily: existingFamily, fontWeight: '400' };
+  }
+
+  const fontWeight = normalizeAppFontWeight(weight);
+  return { fontFamily: DESIGN_FACES[fontWeight], fontWeight };
 }
 
 /** Registered IBM Plex Sans Arabic faces loaded at boot. */
