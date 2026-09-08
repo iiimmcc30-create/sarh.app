@@ -30,7 +30,11 @@ import { AdminIntegrationsController } from './controllers/admin-integrations.co
     IntegrationCheckoutService,
     NiWebhookService,
   ],
-  exports: [IntegrationCheckoutService, IntegrationOrdersRepository],
+  exports: [
+    IntegrationCheckoutService,
+    IntegrationOrdersRepository,
+    NiWebhookService,
+  ],
 })
 export class IntegrationsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

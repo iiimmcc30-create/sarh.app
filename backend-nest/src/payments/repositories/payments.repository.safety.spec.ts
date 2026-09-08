@@ -86,6 +86,10 @@ describe('PaymentsRepository payment-safety transitions', () => {
         data: expect.objectContaining({
           status: 'paid',
           transactionId: 'ni-cap',
+          metadata: expect.objectContaining({
+            capturedAfterCancel: true,
+            needsReconciliation: true,
+          }),
         }),
       }),
     );

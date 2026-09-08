@@ -17,6 +17,7 @@ export type IntegrationPaymentRow = {
     method?: string;
     referenceType?: string | null;
     transactionId?: string | null;
+    metadata?: { needsReconciliation?: boolean } | null;
     createdAt?: string;
     user?: {
       id: string;
