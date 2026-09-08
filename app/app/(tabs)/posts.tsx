@@ -9,19 +9,20 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { AppFlatList } from '@/components/ui/AppFlatList';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
-import { sarh } from '@/constants/sarhTokens';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhButton, SarhSurface } from '@/design-system/components';
+import { colors, radius, space } from '@/design-system';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
+import { getRtlRow } from '@/lib/rtl';
 import { PostItem } from '@/components/feature/PostItem';
 import { CreatePostFab } from '@/components/feature/CreatePostFab';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
@@ -136,18 +137,16 @@ export default function PostsScreen() {
 
   const ListEmpty = (
     <View style={styles.empty}>
-      <Text style={styles.emptyIcon}>
+      <AppText variant="heading2" align="center">
         {feedTab === 'following' ? '👥' : '📝'}
-      </Text>
-      <Text style={styles.emptyText}>
+      </AppText>
+      <AppText variant="body" color="textMuted" align="center">
         {feedTab === 'following'
           ? 'لا منشورات من حسابات تتابعها بعد'
           : 'لا توجد منشورات بعد'}
-      </Text>
+      </AppText>
       {feedTab === 'for_you' ? (
-        <Pressable style={styles.emptyBtn} onPress={() => router.push('/create/post')}>
-          <Text style={styles.emptyBtnText}>+ أنشئ أول منشور</Text>
-        </Pressable>
+        <SarhButton title="أنشئ أول منشور" onPress={() => router.push('/create/post')} />
       ) : null}
     </View>
   );
@@ -155,33 +154,30 @@ export default function PostsScreen() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.topBar}>
-          <Text style={styles.screenTitle}>المنشورات</Text>
-          <View style={styles.tabs}>
-            <Pressable
-              onPress={() => switchTab('for_you')}
-              style={styles.tab}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: feedTab === 'for_you' }}
-            >
-              <Text style={[styles.tabText, feedTab === 'for_you' && styles.tabTextActive]}>
-                لك
-              </Text>
-              {feedTab === 'for_you' ? <View style={styles.tabIndicator} /> : null}
-            </Pressable>
-            <Pressable
-              onPress={() => switchTab('following')}
-              style={styles.tab}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: feedTab === 'following' }}
-            >
-              <Text style={[styles.tabText, feedTab === 'following' && styles.tabTextActive]}>
-                متابعة
-              </Text>
-              {feedTab === 'following' ? <View style={styles.tabIndicator} /> : null}
-            </Pressable>
+        <SarhSurface tone="background" style={styles.topBar}>
+          <AppText variant="heading3" align="center" style={styles.screenTitle}>
+            المنشورات
+          </AppText>
+          <View style={[styles.tabs, getRtlRow()]}>
+            {(['for_you', 'following'] as const).map((tab) => {
+              const active = feedTab === tab;
+              return (
+                <Pressable
+                  key={tab}
+                  onPress={() => switchTab(tab)}
+                  style={styles.tab}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                >
+                  <AppText variant="label" color={active ? 'textPrimary' : 'textMuted'}>
+                    {tab === 'for_you' ? 'لك' : 'متابعة'}
+                  </AppText>
+                  {active ? <View style={styles.tabIndicator} /> : null}
+                </Pressable>
+              );
+            })}
           </View>
-        </View>
+        </SarhSurface>
 
         {loadingFeed && posts.length === 0 ? (
           <View style={styles.empty}>
@@ -215,79 +211,48 @@ export default function PostsScreen() {
 }
 
 function createPostsStyles(
-  colors: ThemeColors,
-  scheme: 'light' | 'dark',
+  _themeColors: ThemeColors,
+  _scheme: 'light' | 'dark',
   sarhStyles: ReturnType<typeof sarhScreenStyles>,
 ) {
-  const isDark = scheme === 'dark';
   return StyleSheet.create({
     root: sarhStyles.screenRoot,
     container: sarhStyles.screenRoot,
     topBar: {
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-      backgroundColor: 'transparent',
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.xs,
+      borderBottomColor: colors.border,
+      paddingHorizontal: space[16],
+      paddingBottom: space[8],
     },
     screenTitle: {
-      ...typography.h3,
-      ...typography.feedTitle,
-      color: colors.textPrimary,
-      textAlign: 'center',
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
+      paddingTop: space[8],
+      paddingBottom: space[8],
     },
     tabs: {
       flexDirection: 'row',
-      padding: 2,
-      borderRadius: radius.md,
-      backgroundColor: isDark ? `${colors.bgSurface}88` : `${colors.bgSurface}CC`,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderHairline,
+      gap: space[8],
     },
     tab: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 32,
-      borderRadius: radius.sm,
+      minHeight: space[32],
       position: 'relative',
-    },
-    tabText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      fontWeight: '500',
-    },
-    tabTextActive: {
-      ...typography.caption,
-      color: colors.textPrimary,
-      fontWeight: '600',
+      paddingBottom: space[8],
     },
     tabIndicator: {
       position: 'absolute',
-      bottom: 2,
-      width: 20,
+      bottom: 0,
+      width: space[20],
       height: 2,
-      borderRadius: radius.pill,
-      backgroundColor: isDark ? sarh.color.action : colors.electric,
+      borderRadius: radius[999],
+      backgroundColor: colors.primary,
     },
     scroll: { paddingBottom: spacing.md, flexGrow: 1 },
     empty: {
       alignItems: 'center',
-      paddingVertical: spacing.xxxl,
-      gap: spacing.md,
+      paddingVertical: space[32],
+      gap: space[12],
     },
-    emptyIcon: { fontSize: 40 },
-    emptyText: { ...typography.feedBody, color: colors.textMuted, textAlign: 'center' },
-    emptyBtn: {
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderRadius: radius.pill,
-      backgroundColor: colors.royal,
-      borderWidth: 1,
-      borderColor: colors.electric,
-    },
-    emptyBtnText: { ...typography.feedTitle, color: colors.textBrandStrong },
   });
 }
