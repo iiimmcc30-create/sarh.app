@@ -3,10 +3,12 @@ import {
   Controller,
   Headers,
   HttpCode,
+  Inject,
   Param,
   Post,
   Req,
   Res,
+  forwardRef,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
@@ -17,6 +19,7 @@ import {
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { successResponse } from '../common/utils/response.util';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
+import { NiWebhookService } from '../integrations/services/ni-webhook.service';
 import { InitiatePaymentDto } from './dto/payments.dto';
 import { PaymentsService } from './payments.service';
 
@@ -24,7 +27,11 @@ type RequestWithRawBody = Request & { rawBody?: string };
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly payments: PaymentsService) {}
+  constructor(
+    private readonly payments: PaymentsService,
+    @Inject(forwardRef(() => NiWebhookService))
+    private readonly niWebhooks: NiWebhookService,
+  ) {}
 
   @RateLimit('payment')
   @Post('initiate')
@@ -57,6 +64,11 @@ export class PaymentsController {
     return successResponse(await this.payments.syncPayment(user, id));
   }
 
+  /**
+   * Compatibility route for older NI webhook config.
+   * Signature + processing match POST /api/integrations/ni/webhook
+   * (NiWebhookService.handleRaw → IntegrationWebhookEvent idempotency).
+   */
   @RawBody()
   @Public()
   @Post('webhook')
@@ -69,12 +81,12 @@ export class PaymentsController {
     const rawBody = req.rawBody ?? '';
     const signature = xSignature ?? xNiSignature;
 
-    const verified = this.payments.verifyWebhookSignature(rawBody, signature);
+    const verified = this.niWebhooks.verifySignature(rawBody, signature);
     if (!verified.ok) {
       return res.status(verified.status).json({ error: verified.error });
     }
 
-    const result = await this.payments.processWebhook(rawBody);
+    const result = await this.niWebhooks.handleRaw(rawBody);
     return res.status(result.status).json(result.body);
   }
 }

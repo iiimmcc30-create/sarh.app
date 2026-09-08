@@ -62,6 +62,7 @@ export class IntegrationOrdersRepository {
               method: true,
               referenceType: true,
               transactionId: true,
+              metadata: true,
               createdAt: true,
               user: {
                 select: {

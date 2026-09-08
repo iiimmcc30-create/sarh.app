@@ -852,4 +852,34 @@ describe('PaymentsService', () => {
       0.01,
     );
   });
+
+  describe('verifyWebhookSignature', () => {
+    const prevEnv = process.env.NODE_ENV;
+    const prevSecret = process.env.NI_WEBHOOK_SECRET;
+
+    afterEach(() => {
+      process.env.NODE_ENV = prevEnv;
+      if (prevSecret === undefined) delete process.env.NI_WEBHOOK_SECRET;
+      else process.env.NI_WEBHOOK_SECRET = prevSecret;
+    });
+
+    it('fails closed in production when the signature is missing', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.NI_WEBHOOK_SECRET = 'webhook-secret';
+      expect(service.verifyWebhookSignature('{}', undefined)).toEqual({
+        ok: false,
+        status: 401,
+        error: 'missing_signature',
+      });
+    });
+
+    it('rejects an invalid signature', () => {
+      process.env.NI_WEBHOOK_SECRET = 'webhook-secret';
+      expect(service.verifyWebhookSignature('{}', 'not-a-valid-hmac')).toEqual({
+        ok: false,
+        status: 401,
+        error: 'invalid_signature',
+      });
+    });
+  });
 });

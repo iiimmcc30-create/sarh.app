@@ -101,6 +101,7 @@ export default function PaymentsPage() {
                   'مرجع التاجر',
                   'المبلغ',
                   'حالة الدفع',
+                  'مطابقة',
                   'التكامل',
                   'المزود',
                   'المستخدم',
@@ -125,6 +126,13 @@ export default function PaymentsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Badge>{row.payment?.status ?? '—'}</Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    {row.payment?.metadata?.needsReconciliation ? (
+                      <Badge>يحتاج مطابقة</Badge>
+                    ) : (
+                      <span className="text-slate-500">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Badge>{row.status}</Badge>
