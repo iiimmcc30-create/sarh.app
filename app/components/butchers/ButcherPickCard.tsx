@@ -1,19 +1,19 @@
-// Horizontal butcher pick card — cover image + RTL meta (Sarh identity)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
+import { AppText, SarhAvatar } from '@/design-system/components';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
   butcherEtaLabel,
   butcherFeeLabel,
-  butcherPickupLabel,
   butcherReviewCountLabel,
+  hasButcherRating,
 } from '@/lib/butcherStoreMeta';
+import { getRtlRow } from '@/lib/rtl';
 import type { ButcherProfile } from '@/services/butcherData';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 type Props = {
   butcher: ButcherProfile;
@@ -24,114 +24,126 @@ type Props = {
 
 export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const name = butcher.nameAr || butcher.name;
+  const cover = butcher.cover || butcher.logo;
+  const logo = butcher.logo || butcher.cover;
+  const showRating = hasButcherRating(butcher);
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.card, { width }, pressed && { opacity: 0.94 }]}
+      accessibilityRole="button"
+      accessibilityLabel={name}
     >
       <View style={styles.cover}>
-        <Image
-          source={uriSource(butcher.cover || butcher.logo)}
-          style={styles.coverImg}
-          contentFit="cover"
-        />
+        {cover ? (
+          <Image source={uriSource(cover)} style={styles.coverImg} contentFit="cover" />
+        ) : (
+          <View style={styles.coverFallback} />
+        )}
+        {showRating ? (
+          <View style={[styles.ratingBadge, getRtlRow()]}>
+            <AppIcon name="star" size={11} color={colors.gold} />
+            <AppText variant="micro">{butcher.rating.toFixed(1)}</AppText>
+          </View>
+        ) : null}
+        {logo ? (
+          <View style={styles.avatarWrap}>
+            <SarhAvatar uri={logo} name={name} size="sm" />
+          </View>
+        ) : null}
         {promoted || butcher.subscriptionActive ? (
           <View style={styles.promo}>
-            <Text style={styles.promoText}>مروج</Text>
+            <AppText variant="micro" style={styles.promoText}>
+              مروج
+            </AppText>
           </View>
         ) : null}
       </View>
-      <View style={styles.rtlShell}>
-        <Text style={styles.name} numberOfLines={1}>
-          {name}
-        </Text>
+      <AppText variant="label" numberOfLines={1} style={styles.name}>
+        {name}
+      </AppText>
+      {showRating ? (
+        <AppText variant="caption" color="textMuted">
+          ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
+        </AppText>
+      ) : null}
+      <View style={[styles.metaRow, getRtlRow()]}>
+        <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
+        <AppText variant="caption" color="textMuted">
+          {butcherEtaLabel(butcher)}
+        </AppText>
       </View>
-      <View style={styles.ratingRow}>
-        <AppIcon name="star" size={12} color={colors.gold} />
-        <Text style={styles.rating}>
-          {butcher.rating.toFixed(1)} ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
-        </Text>
-      </View>
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
-          <AppIcon name="bicycle-outline" size={12} color={colors.textMuted} />
-          <Text style={styles.metaText}>{butcherFeeLabel(butcher)}</Text>
-        </View>
-        <View style={styles.metaItem}>
-          <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
-          <Text style={styles.metaText}>{butcherEtaLabel(butcher)}</Text>
-        </View>
-        <View style={styles.metaItem}>
-          <AppIcon name="storefront-outline" size={12} color={colors.textMuted} />
-          <Text style={styles.metaText} numberOfLines={1}>
-            {butcherPickupLabel(butcher)}
-          </Text>
-        </View>
+      <View style={[styles.metaRow, getRtlRow()]}>
+        <AppIcon name="bicycle-outline" size={12} color={colors.electricBright} />
+        <AppText variant="caption" color="primary">
+          {butcherFeeLabel(butcher)}
+        </AppText>
       </View>
     </Pressable>
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
-      ...butcherSoftCardStyle(colors, scheme),
       gap: 6,
-      paddingBottom: spacing.sm,
+      backgroundColor: 'transparent',
     },
     cover: {
-      height: 118,
-      borderRadius: 0,
+      height: 148,
+      borderRadius: radius.lg,
       overflow: 'hidden',
-      backgroundColor: scheme === 'light' ? 'rgba(255,255,255,0.35)' : colors.bgSurface,
+      backgroundColor: colors.bgSurface,
     },
     coverImg: { width: '100%', height: '100%' },
+    coverFallback: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.bgSurface,
+    },
+    ratingBadge: {
+      position: 'absolute',
+      top: 8,
+      end: 8,
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      backgroundColor: colors.bgElevated,
+    },
+    avatarWrap: {
+      position: 'absolute',
+      start: 8,
+      bottom: 8,
+      padding: 3,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
+    },
     promo: {
       position: 'absolute',
       top: 8,
-      right: 8,
+      start: 8,
       backgroundColor: colors.electric,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 6,
     },
-    promoText: { ...butcherTypography.badge, color: '#fff' },
-    rtlShell: { width: '100%',  paddingHorizontal: spacing.sm, paddingTop: 8 },
+    promoText: {
+      color: colors.bgDeep,
+    },
     name: {
       ...butcherTypography.title,
       color: colors.textPrimary,
-      width: '100%',
-            writingDirection: 'rtl',
-    },
-    ratingRow: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: spacing.sm,
-    },
-    rating: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
+      marginTop: 2,
     },
     metaRow: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
-      flexWrap: 'wrap',
-      gap: 8,
-      paddingHorizontal: spacing.sm,
-    },
-    metaItem: {
-      flexDirection: 'row',
-            alignItems: 'center',
-      gap: 3,
-    },
-    metaText: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
+      alignItems: 'center',
+      gap: 4,
     },
   });
 }
+
+export default ButcherPickCard;

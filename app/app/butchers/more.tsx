@@ -3,7 +3,6 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
-import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -14,7 +13,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { RtlText } from '@/components/ui/RtlText';
@@ -44,7 +43,7 @@ export default function ButchersMoreScreen() {
       <ScreenHeader title="المزيد" />
 
       <AppScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
-        <View style={styles.card}>
+        <View>
           <View style={styles.userRow}>
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
               <RtlTextShell flex>
@@ -71,7 +70,7 @@ export default function ButchersMoreScreen() {
             <RtlText style={styles.sectionLabel}>حسابي</RtlText>
           </RtlTextShell>
         </View>
-        <View style={styles.card}>
+        <View>
           <SidebarMenuItem
             icon="heart-outline"
             title="تفضيلاتي"
@@ -95,7 +94,7 @@ export default function ButchersMoreScreen() {
             <RtlText style={styles.sectionLabel}>الخدمات والدعم</RtlText>
           </RtlTextShell>
         </View>
-        <View style={styles.card}>
+        <View>
           <SidebarMenuItem
             icon="storefront-outline"
             title="سجّل ملحمتك"
@@ -131,12 +130,11 @@ function createStyles(colors: ThemeColors) {
     screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
     scroll: {
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: 0,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      gap: spacing.lg,
+      gap: spacing.md,
     },
-    card: menuCardStyle(colors),
     userRow: {
       paddingHorizontal: spacing.lg,
       paddingVertical: 14,

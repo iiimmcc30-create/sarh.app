@@ -66,8 +66,7 @@ describe('design-system unification — allowed redesigns only', () => {
     expect(store).toContain("label: 'عروضنا'");
     expect(store).toContain("label: 'عن الملحمة'");
     expect(bar).toContain("from '@/design-system/components'");
-    expect(bar).toContain('tabUnderlineActive');
-    expect(bar).toContain('colors.primary');
+    expect(bar).toContain('SarhChip');
   });
 
   it('legacy PrimaryButton delegates to SarhButton', () => {
