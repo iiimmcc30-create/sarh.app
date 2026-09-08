@@ -6,13 +6,14 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { functional } from '@/design-system';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
@@ -78,6 +79,8 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                   key={story.id}
                   style={styles.card}
                   onPress={() => setViewerIndex(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={story.titleAr}
                 >
                   <Image
                     source={uriSource(story.imageUrl)}
@@ -90,9 +93,14 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                     style={styles.gradient}
                   />
                   <View style={styles.cardTitleShell}>
-                    <Text style={styles.cardTitle} numberOfLines={2}>
+                    <AppText
+                      variant="body"
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                      style={styles.cardTitle}
+                    >
                       {story.titleAr}
-                    </Text>
+                    </AppText>
                   </View>
                 </Pressable>
               ))}
@@ -157,10 +165,8 @@ function createStyles(colors: ThemeColors) {
       zIndex: 1,
     },
     cardTitle: {
-      ...typography.cardHeading,
-      color: '#fff',
+      color: functional.onPrimary,
       width: '100%',
-            writingDirection: 'rtl',
       textShadowColor: 'rgba(0,0,0,0.45)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,

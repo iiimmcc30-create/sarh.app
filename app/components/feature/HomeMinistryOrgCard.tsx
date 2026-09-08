@@ -1,9 +1,9 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppText } from '@/components/ui/AppText';
-import { SectionHeader } from '@/components/ui/SectionHeader';
+import { AppText } from '@/design-system/components';
+import { functional } from '@/design-system';
 import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER } from '@/constants/branding';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
@@ -34,7 +34,11 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <SectionHeader title="خدمات الوزارة" />
+      <View style={styles.sectionHead}>
+        <AppText variant="heading2" color="textPrimary">
+          خدمات الوزارة
+        </AppText>
+      </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${name}. ${formatServiceCountLabel(count)}. فتح`}
@@ -57,10 +61,20 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
             />
           </View>
           <View style={styles.copy}>
-            <AppText style={styles.title} numberOfLines={2}>
+            <AppText
+              variant="bodySmall"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              style={styles.title}
+            >
               {name || (loading ? '…' : '')}
             </AppText>
-            <AppText style={styles.subtitle} numberOfLines={1}>
+            <AppText
+              variant="caption"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.subtitle}
+            >
               {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
             </AppText>
           </View>
@@ -70,7 +84,9 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
             onPress={openProfile}
             style={({ pressed }) => [styles.openBtn, pressed && styles.openPressed]}
           >
-            <AppText style={styles.openText}>فتح</AppText>
+            <AppText variant="caption" style={styles.openText}>
+              فتح
+            </AppText>
           </Pressable>
         </View>
       </Pressable>
@@ -82,6 +98,12 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
       paddingBottom: spacing.sm,
+    },
+    sectionHead: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.md,
+      minHeight: 32,
     },
     card: {
       marginHorizontal: spacing.lg,
@@ -122,12 +144,9 @@ function createStyles(colors: ThemeColors) {
       gap: 2,
     },
     title: {
-      ...typography.smallHeading,
-      color: '#FFFFFF',
-      fontWeight: '700',
+      color: functional.onPrimary,
     },
     subtitle: {
-      ...typography.caption,
       color: 'rgba(255,255,255,0.86)',
     },
     openBtn: {
@@ -137,9 +156,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 8,
     },
     openText: {
-      ...typography.caption,
-      color: '#101820',
-      fontWeight: '700',
+      color: functional.onPrimaryInverse,
     },
     openPressed: {
       opacity: 0.88,

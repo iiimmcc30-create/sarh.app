@@ -1,12 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { ds } from '@/constants/designSystem';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { AppText, SarhSurface } from '@/design-system/components';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
 const BAR_H = HOME_APP_BAR_H;
@@ -36,7 +36,7 @@ export function HomeAppBar({
   }));
 
   return (
-    <View style={styles.shell}>
+    <SarhSurface tone="background" style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
         <View style={[styles.profileCluster, getRtlRow()]}>
           <Pressable
@@ -58,9 +58,15 @@ export function HomeAppBar({
             accessibilityRole="button"
             accessibilityLabel={displayName}
           >
-            <Text style={styles.displayName} numberOfLines={1}>
+            <AppText
+              variant="body"
+              color="textPrimary"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.displayName}
+            >
               {displayName}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
 
@@ -84,7 +90,7 @@ export function HomeAppBar({
           />
         </View>
       </View>
-    </View>
+    </SarhSurface>
   );
 }
 
@@ -127,11 +133,9 @@ function createStyles(colors: ThemeColors) {
       maxWidth: '70%',
     },
     displayName: {
-      ...typography.feedTitle,
-      fontFamily: OFFICIAL_APP_FONT,
+      // Legacy header lock — no design-system size is 17/24.
       fontSize: 17,
       lineHeight: 24,
-      color: colors.textPrimary,
     },
     avatarBtn: {
       flexShrink: 0,

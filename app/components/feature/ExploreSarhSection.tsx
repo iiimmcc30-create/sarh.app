@@ -1,9 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppText } from '@/components/ui/AppText';
-import { SectionHeader } from '@/components/ui/SectionHeader';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
@@ -22,7 +21,11 @@ export function ExploreSarhSection() {
 
   return (
     <View style={styles.wrap}>
-      <SectionHeader title="استكشف سرح" />
+      <View style={styles.sectionHead}>
+        <AppText variant="heading2" color="textPrimary">
+          استكشف سرح
+        </AppText>
+      </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="ملاحم سرح. تصفح أفضل منتجات اللحوم بكل أمان وثقة"
@@ -34,14 +37,16 @@ export function ExploreSarhSection() {
             <View style={styles.iconRing}>
               <AppIcon name="storefront-outline" size={20} color={styles.accent.color} />
             </View>
-            <AppText style={styles.title} numberOfLines={2}>
+            <AppText variant="heading2" color="textPrimary" numberOfLines={2} ellipsizeMode="tail">
               ملاحم سرح
             </AppText>
-            <AppText style={styles.desc} numberOfLines={3}>
+            <AppText variant="bodySmall" color="textSecondary" numberOfLines={3} ellipsizeMode="tail">
               تصفح أفضل منتجات اللحوم بكل أمان وثقة
             </AppText>
             <View style={[styles.cta, getRtlRow()]}>
-              <AppText style={styles.ctaText}>تصفح الملاحم</AppText>
+              <AppText variant="label" color="primary">
+                تصفح الملاحم
+              </AppText>
               <AppIcon name={rtlForwardIcon()} size={14} color={styles.accent.color} />
             </View>
           </View>
@@ -66,6 +71,12 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: {
       paddingBottom: spacing.md,
+    },
+    sectionHead: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.md,
+      minHeight: 32,
     },
     hero: {
       width: '100%',
@@ -94,23 +105,11 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    title: {
-      ...typography.sectionHeading,
-      color: colors.textPrimary,
-    },
-    desc: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-    },
     cta: {
       alignItems: 'center',
       gap: spacing.xs,
       minHeight: 44,
       paddingTop: spacing.xs,
-    },
-    ctaText: {
-      ...typography.button,
-      color: colors.electricBright,
     },
     imagePane: {
       height: '100%',
