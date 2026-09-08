@@ -1,28 +1,28 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppText } from '@/components/ui/AppText';
-import { SectionHeader } from '@/components/ui/SectionHeader';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { colors, functional, motion, radius, space } from '@/design-system';
+import { AppText } from '@/design-system/components';
 import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 const HERO_IMAGE = require('../../assets/images/onboarding/slide-2.jpg');
-const ICON_BOX = 40;
 
 export function ExploreSarhSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const heroH = Math.round(Math.min(240, Math.max(188, width * 0.54)));
-  const imageW = Math.round(width * 0.48);
+  const heroH = Math.round(Math.min(208, Math.max(176, width * 0.48)));
+  const imageW = Math.round(width * 0.5);
 
   return (
     <View style={styles.wrap}>
-      <SectionHeader title="استكشف سرح" />
+      <View style={styles.sectionHead}>
+        <AppText variant="heading2" color="textPrimary">
+          استكشف سرح
+        </AppText>
+      </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="ملاحم سرح. تصفح أفضل منتجات اللحوم بكل أمان وثقة"
@@ -32,17 +32,19 @@ export function ExploreSarhSection() {
         <View style={[styles.heroRow, getRtlRow()]}>
           <View style={styles.copy}>
             <View style={styles.iconRing}>
-              <AppIcon name="storefront-outline" size={20} color={styles.accent.color} />
+              <AppIcon name="storefront-outline" size={space[20]} color={colors.primary} />
             </View>
-            <AppText style={styles.title} numberOfLines={2}>
+            <AppText variant="heading1" color="textPrimary" numberOfLines={2} ellipsizeMode="tail">
               ملاحم سرح
             </AppText>
-            <AppText style={styles.desc} numberOfLines={3}>
+            <AppText variant="bodySmall" color="textSecondary" numberOfLines={3} ellipsizeMode="tail">
               تصفح أفضل منتجات اللحوم بكل أمان وثقة
             </AppText>
             <View style={[styles.cta, getRtlRow()]}>
-              <AppText style={styles.ctaText}>تصفح الملاحم</AppText>
-              <AppIcon name={rtlForwardIcon()} size={14} color={styles.accent.color} />
+              <AppText variant="label" color="primary">
+                تصفح الملاحم
+              </AppText>
+              <AppIcon name={rtlForwardIcon()} size={space[16]} color={colors.primary} />
             </View>
           </View>
           <View style={[styles.imagePane, { width: imageW }]}>
@@ -51,8 +53,8 @@ export function ExploreSarhSection() {
         </View>
         <LinearGradient
           pointerEvents="none"
-          colors={[styles.heroShade.color, styles.heroMid.color, 'transparent']}
-          locations={[0, 0.55, 1]}
+          colors={[colors.background, functional.overlay, 'transparent']}
+          locations={[0, 0.42, 1]}
           start={{ x: 1, y: 0.5 }}
           end={{ x: 0, y: 0.5 }}
           style={styles.shade}
@@ -62,79 +64,68 @@ export function ExploreSarhSection() {
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    wrap: {
-      paddingBottom: spacing.md,
-    },
-    hero: {
-      width: '100%',
-      overflow: 'hidden',
-      backgroundColor: colors.bgDeep,
-    },
-    heroRow: {
-      flex: 1,
-      alignItems: 'stretch',
-    },
-    copy: {
-      flex: 1,
-      minWidth: 0,
-      zIndex: 2,
-      justifyContent: 'center',
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      gap: spacing.sm,
-    },
-    iconRing: {
-      width: ICON_BOX,
-      height: ICON_BOX,
-      borderRadius: ICON_BOX / 2,
-      borderWidth: 1.5,
-      borderColor: colors.electric,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title: {
-      ...typography.sectionHeading,
-      color: colors.textPrimary,
-    },
-    desc: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-    },
-    cta: {
-      alignItems: 'center',
-      gap: spacing.xs,
-      minHeight: 44,
-      paddingTop: spacing.xs,
-    },
-    ctaText: {
-      ...typography.button,
-      color: colors.electricBright,
-    },
-    imagePane: {
-      height: '100%',
-      overflow: 'hidden',
-    },
-    image: {
-      width: '100%',
-      height: '100%',
-    },
-    shade: {
-      position: 'absolute',
-      top: 0,
-      bottom: 0,
-      start: 0,
-      width: '64%',
-      zIndex: 1,
-    },
-    accent: { color: colors.electric },
-    heroShade: { color: colors.bgDeep },
-    heroMid: { color: `${colors.bgDeep}B8` },
-    pressed: {
-      opacity: 0.94,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  wrap: {
+    paddingBottom: space[8],
+  },
+  sectionHead: {
+    paddingHorizontal: space[16],
+    paddingTop: space[16],
+    paddingBottom: space[12],
+  },
+  hero: {
+    width: '100%',
+    overflow: 'hidden',
+    backgroundColor: colors.background,
+  },
+  heroRow: {
+    flex: 1,
+    alignItems: 'stretch',
+  },
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    zIndex: 2,
+    justifyContent: 'center',
+    paddingVertical: space[16],
+    paddingHorizontal: space[16],
+    gap: space[8],
+  },
+  iconRing: {
+    width: space[40],
+    height: space[40],
+    borderRadius: radius[999],
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: functional.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cta: {
+    alignItems: 'center',
+    gap: space[8],
+    minHeight: space[48],
+    paddingTop: space[4],
+  },
+  imagePane: {
+    height: '100%',
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  shade: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    start: 0,
+    width: '68%',
+    zIndex: 1,
+  },
+  pressed: {
+    opacity: motion.opacity.pressed,
+  },
+});
 
 export default ExploreSarhSection;

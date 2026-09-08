@@ -76,12 +76,14 @@ export type ThemeGradients = {
 const sharedAccents = {
   gold: '#F5C56A',
   emerald: '#20B66F',
+  /** @deprecated Former theme.danger — keep for decorative rose accents only. */
   rose: '#F43F5E',
+  /** @deprecated Former theme.warning — keep for gold-ring accents only. */
   amber: '#FBBF24',
   /** Align success with brand accent — one green identity */
-  success: '#20B66F',
-  danger: '#F43F5E',
-  warning: '#FBBF24',
+  success: sarh.color.success,
+  danger: sarh.color.danger,
+  warning: sarh.color.warning,
   liveRed: '#EF4444',
 };
 

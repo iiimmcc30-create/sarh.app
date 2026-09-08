@@ -74,9 +74,19 @@ export const HARDCODED_AUDIT = {
 } as const;
 
 export const PHASE_2_SCOPE = [
-  'Adopt foundation colors through shared primitives (AppText, cards, buttons) without restyling screens ad hoc',
-  'Stop remapping every content face to Bold once the type scale is approved',
+  'Core primitives live in `@/design-system/components` — adopt screen-by-screen',
+  'Legacy `@/components/ui/AppText` and `resolveAppFontFace` still remap to Bold',
   'Replace hardcoded hex in payment / live / story / listing surfaces',
-  'Reconcile theme.ts danger (#F43F5E) and warning (#FBBF24) with sarh.color (#E85D5D / #D4A017)',
+  'theme.ts danger/warning now alias sarh.color; rose/amber remain decorative',
   'Leave gold / rose / amber / liveRed as local accents — do not promote to brand tokens',
+] as const;
+
+/**
+ * Screens still on Bold remapping via `@/components/ui/AppText` + `theme.typography`.
+ * Switch to `@/design-system` AppText variants when a screen is redesigned.
+ */
+export const FONT_WEIGHT_MIGRATION = [
+  'components/ui/AppText.tsx — default Bold wrapper for existing screens',
+  'constants/theme.ts typography — every role still sets Bold / OFFICIAL_APP_FONT',
+  'Home / Feed / Marketplace / Profile / Messaging / Ministry — do not migrate in phase 2',
 ] as const;
