@@ -83,13 +83,14 @@ function StoreProductsList({
 
   return (
     <View>
-      {products.map((product) => (
+      {products.map((product, index) => (
         <ButcherStoreProductCard
           key={product.id}
           product={product}
           currencySymbol={currencySymbol}
           onPress={() => onOpenOptions(product)}
           onAdd={() => onOpenOptions(product)}
+          showDivider={index < products.length - 1}
         />
       ))}
     </View>
@@ -476,7 +477,12 @@ export default function ButcherProfileScreen() {
   /** Unified bar: offers + dynamic product categories + stories + about (about is not a category). */
   const navItems = useMemo((): ButcherStoreNavItem[] => {
     const items: ButcherStoreNavItem[] = [];
-    items.push({ id: 'offers', label: 'عروضنا', kind: 'offers' });
+    if (offers.length > 0) {
+      items.push({ id: 'offers', label: 'عروضنا', kind: 'offers' });
+    }
+    if (products.length > 0) {
+      items.push({ id: 'all', label: 'الكل', kind: 'category' });
+    }
     const seen = new Set<string>();
     for (const p of products) {
       if (!p.category || seen.has(p.category)) continue;
@@ -490,7 +496,7 @@ export default function ButcherProfileScreen() {
     }
     items.push({ id: 'about', label: 'عن الملحمة', kind: 'about' });
     return items;
-  }, [products, stories.length]);
+  }, [products, stories.length, offers.length]);
 
   const activeNav = useMemo(() => {
     return (
@@ -511,6 +517,7 @@ export default function ButcherProfileScreen() {
 
   const categoryProducts = useMemo(() => {
     if (!activeNav || activeNav.kind !== 'category') return [];
+    if (activeNav.id === 'all') return products;
     return products.filter((p) => p.category === activeNav.id);
   }, [products, activeNav]);
 
@@ -802,7 +809,10 @@ export default function ButcherProfileScreen() {
               <AppIcon name="heart-outline" size={20} color="#fff" />
             </Pressable>
           </View>
-          <View style={styles.coverAvatarTrail}>
+        </View>
+
+        <View style={styles.profileHeader}>
+          <View style={styles.identityRow}>
             <View style={styles.logoWrap}>
               <Image source={{ uri: butcher.logo }} style={styles.logo} contentFit="cover" />
               {butcher.subscriptionActive && (
@@ -811,16 +821,13 @@ export default function ButcherProfileScreen() {
                 </View>
               )}
             </View>
-          </View>
-        </View>
-
-        <View style={styles.profileHeader}>
-          <View style={styles.nameBlock}>
-            <Text style={styles.name}>{butcher.nameAr}</Text>
-            <View style={styles.ratingRow}>
-              <AppIcon name="star" size={14} color={colors.gold} />
-              <Text style={styles.ratingScore}>{butcher.rating.toFixed(1)}</Text>
-              <Text style={styles.ratingCount}>({butcher.reviewCount} + التقييمات)</Text>
+            <View style={styles.nameBlock}>
+              <Text style={styles.name}>{butcher.nameAr}</Text>
+              <View style={styles.ratingRow}>
+                <AppIcon name="star" size={14} color={colors.gold} />
+                <Text style={styles.ratingScore}>{butcher.rating.toFixed(1)}</Text>
+                <Text style={styles.ratingCount}>({butcher.reviewCount} + التقييمات)</Text>
+              </View>
             </View>
           </View>
 
@@ -1002,29 +1009,26 @@ function createMainStyles(colors: ThemeColors) {
     justifyContent: 'center',
   },
 
-  coverAvatarTrail: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: spacing.md,
-    flexDirection: 'row',
-        justifyContent: 'flex-end',
-    paddingHorizontal: spacing.lg,
-  },
   profileHeader: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     gap: spacing.md,
   },
+  identityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   logoWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: '#fff',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderSoft,
     backgroundColor: colors.bgElevated,
     overflow: 'hidden',
     position: 'relative',
+    flexShrink: 0,
   },
   logo: { width: '100%', height: '100%' },
   verifiedRing: {
@@ -1040,17 +1044,16 @@ function createMainStyles(colors: ThemeColors) {
     borderWidth: 1.5,
     borderColor: colors.gold,
   },
-  nameBlock: { width: '100%',  },
+  nameBlock: { flex: 1, minWidth: 0 },
   name: {
     ...butcherTypography.titleLarge,
     color: colors.textPrimary,
-        writingDirection: 'rtl',
+    writingDirection: 'rtl',
     width: '100%',
     marginBottom: 6,
   },
   ratingRow: {
     flexDirection: 'row',
-        justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 4,
   },

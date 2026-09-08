@@ -1,13 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { MENU_CARD } from '@/components/feature/SidebarMenu';
+import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { ds } from '@/constants/designSystem';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { RtlText } from '@/components/ui/RtlText';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 
 type ButchersAppBarProps = {
   onBack: () => void;
@@ -18,7 +17,7 @@ type ButchersAppBarProps = {
   searchPlaceholder?: string;
 };
 
-/** Butchers header — back to main app · search · cart. */
+/** Butchers market header — location cluster + bare search/cart/back icons. */
 export function ButchersAppBar({
   onBack,
   onCart,
@@ -31,43 +30,63 @@ export function ButchersAppBar({
     styles: createStyles(theme.colors),
     colors: theme.colors,
   }));
+  const [searchOpen, setSearchOpen] = useState(false);
+  const showField = searchOpen || searchQuery.length > 0;
 
   return (
     <View style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
-        <Pressable onPress={onBack} style={styles.iconBtn} hitSlop={8} accessibilityLabel="رجوع للتطبيق">
-          <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
-        </Pressable>
-
-        <View style={[styles.searchPill, getRtlRow()]}>
-          <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
-          <RtlTextShell>
+        {showField ? (
+          <View style={[styles.searchField, getRtlRow()]}>
+            <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
             <TextInput
               style={styles.searchInput}
               placeholder={searchPlaceholder}
               placeholderTextColor={colors.textMuted}
               value={searchQuery}
               onChangeText={onSearchChange}
-              textAlign="right"
+              autoFocus={searchOpen && searchQuery.length === 0}
               returnKeyType="search"
               accessibilityLabel={searchPlaceholder}
             />
-          </RtlTextShell>
-          {searchQuery.length > 0 ? (
-            <Pressable onPress={() => onSearchChange('')} hitSlop={8} accessibilityLabel="مسح البحث">
+            <Pressable
+              onPress={() => {
+                onSearchChange('');
+                setSearchOpen(false);
+              }}
+              hitSlop={8}
+              accessibilityLabel="مسح البحث"
+            >
               <AppIcon name="close-circle" size={16} color={colors.textMuted} />
             </Pressable>
-          ) : null}
-        </View>
+          </View>
+        ) : (
+          <ButcherLocationBar compact />
+        )}
 
-        <Pressable onPress={onCart} style={styles.iconBtn} hitSlop={8} accessibilityLabel="السلة">
-          <AppIcon name="cart-outline" size={ds.icon.md} color={colors.textPrimary} />
-          {cartCount > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
-            </View>
+        <View style={[styles.actions, getRtlRow()]}>
+          <Pressable onPress={onCart} style={styles.iconBtn} hitSlop={8} accessibilityLabel="السلة">
+            <AppIcon name="cart-outline" size={ds.icon.md} color={colors.textPrimary} />
+            {cartCount > 0 ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+          {!showField ? (
+            <Pressable
+              onPress={() => setSearchOpen(true)}
+              style={styles.iconBtn}
+              hitSlop={8}
+              accessibilityLabel="بحث"
+            >
+              <AppIcon name="search" size={ds.icon.md} color={colors.textPrimary} />
+            </Pressable>
           ) : null}
-        </Pressable>
+          <Pressable onPress={onBack} style={styles.iconBtn} hitSlop={8} accessibilityLabel="رجوع للتطبيق">
+            <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -76,48 +95,45 @@ export function ButchersAppBar({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     shell: {
-      backgroundColor: colors.bgElevated,
-      borderBottomWidth: 0,
-      flexGrow: 0,
-      flexShrink: 0,
+      backgroundColor: colors.screenRoot,
     },
     bar: {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      minHeight: 52,
+      minHeight: 56,
       gap: spacing.sm,
     },
-    searchPill: {
+    searchField: {
       flex: 1,
-      minHeight: 44,
+      minHeight: 40,
       alignItems: 'center',
       gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      backgroundColor: colors.bgDeep,
-      borderRadius: MENU_CARD.controlRadius,
-      borderWidth: 0,
     },
     searchInput: {
       ...butcherTypography.secondary,
       color: colors.textPrimary,
+      flex: 1,
       paddingVertical: 0,
+    },
+    actions: {
+      alignItems: 'center',
+      flexShrink: 0,
+      gap: 2,
     },
     iconBtn: {
       width: ds.iconBtn.md,
       height: ds.iconBtn.md,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgDeep,
-      borderRadius: 12,
-      borderWidth: 0,
+      backgroundColor: 'transparent',
       position: 'relative',
     },
     badge: {
       position: 'absolute',
       top: 4,
-      left: 4,
+      start: 4,
       minWidth: 16,
       height: 16,
       borderRadius: 8,
@@ -128,7 +144,7 @@ function createStyles(colors: ThemeColors) {
     },
     badgeText: {
       ...butcherTypography.badge,
-      color: '#fff',
+      color: colors.bgDeep,
     },
   });
 }

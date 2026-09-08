@@ -28,3 +28,7 @@ export function butcherReviewCountLabel(count: number): string {
   if (count > 999) return `${(count / 1000).toFixed(1)}k+`;
   return `${count}+`;
 }
+
+export function hasButcherRating(butcher: Pick<ButcherProfile, 'rating' | 'reviewCount'>): boolean {
+  return Number.isFinite(butcher.rating) && (butcher.reviewCount ?? 0) > 0;
+}
