@@ -164,8 +164,8 @@ export class HeuristicAiProvider implements AiProvider {
       context.category &&
       context.category !== 'OTHER' &&
       context.category !== 'OTHER_HELP';
-    const knownDescription = (context.customerDescription || text).trim()
-      .length >= 10;
+    const knownDescription =
+      (context.customerDescription || text).trim().length >= 10;
     if (knownCategory && knownDescription) {
       return {
         replyAr: 'اطلعت على التفاصيل المرسلة وسأحوّل الطلب للفريق المختص.',
