@@ -21,6 +21,7 @@ import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
+import { prefetchRemoteImages } from '@/lib/prefetchRemoteImages';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 /** v2: invalidate v1 snapshots that may hold Mojibake from ArrayBuffer feed clones. */
@@ -113,6 +114,24 @@ interface AppContextValue {
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);
+
+export type AppUserContextValue = Pick<AppContextValue, 'me' | 'updateMe'>;
+
+/** Narrow user slice — liking/feed updates must not rerender Home/sidebars. */
+export const AppUserContext = createContext<AppUserContextValue | null>(null);
+
+function collectPostImageUris(posts: Post[]): Array<string | undefined> {
+  const uris: Array<string | undefined> = [];
+  for (const post of posts) {
+    if (post.images?.length) {
+      for (const img of post.images) uris.push(img);
+    } else {
+      uris.push(post.image);
+    }
+    uris.push(post.author?.avatar);
+  }
+  return uris;
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user, accessToken, isAuthenticated } = useAuth();
@@ -285,6 +304,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
               Boolean(listing && listing.country !== 'EG'),
             );
           setListingsState(market);
+          prefetchRemoteImages(
+            market.map((l: Listing) => l.thumbnailUrl || l.images?.[0]),
+            8,
+          );
           succeeded = true;
           listingsLastSuccessAt = Date.now();
           void patchFeedSnapshot({ listings: market });
@@ -347,6 +370,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               .map(mapBackendPost)
               .filter((p: Post | null): p is Post => Boolean(p?.id));
             setPosts(fetchedPosts);
+            prefetchRemoteImages(collectPostImageUris(fetchedPosts), 8);
 
             const liked = new Set<string>();
             const reposted = new Set<string>();
@@ -479,8 +503,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const snapshot = await readFeedSnapshot();
       if (cancelled) return;
       if (snapshot) {
-        if (snapshot.posts.length > 0) setPosts(snapshot.posts);
-        if (snapshot.listings.length > 0) setListingsState(snapshot.listings);
+        if (snapshot.posts.length > 0) {
+          setPosts(snapshot.posts);
+          prefetchRemoteImages(collectPostImageUris(snapshot.posts), 8);
+        }
+        if (snapshot.listings.length > 0) {
+          setListingsState(snapshot.listings);
+          prefetchRemoteImages(
+            snapshot.listings.map((l) => l.thumbnailUrl || l.images?.[0]),
+            8,
+          );
+        }
       }
       if (bootstrapStartedRef.current) return;
       bootstrapStartedRef.current = true;
@@ -884,6 +917,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, accessToken]);
 
+  const userValue = useMemo<AppUserContextValue>(
+    () => ({ me, updateMe }),
+    [me, updateMe],
+  );
+
   const value = useMemo<AppContextValue>(
     () => ({
       me,
@@ -931,5 +969,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppUserContext.Provider value={userValue}>
+      <AppContext.Provider value={value}>{children}</AppContext.Provider>
+    </AppUserContext.Provider>
+  );
 }

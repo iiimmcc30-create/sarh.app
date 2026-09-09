@@ -1,6 +1,6 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -51,7 +51,7 @@ const TOGGLES: Array<{
 ];
 
 export default function PrivacySettingsScreen() {
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { accessToken, isLoading: authLoading } = useAuth();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StoryViewer } from '@/components/feature/StoryViewer';
 import { buildStoryGroups } from '@/components/feature/StoriesBar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
 
 export default function StoryViewScreen() {
@@ -14,7 +14,7 @@ export default function StoryViewScreen() {
   const insets = useSafeAreaInsets();
   const { groupIndex: groupIndexParam } = useLocalSearchParams<{ groupIndex?: string }>();
   const { accessToken } = useAuth();
-  const { me } = useApp();
+  const { me } = useAppUser();
 
   const [groups, setGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);

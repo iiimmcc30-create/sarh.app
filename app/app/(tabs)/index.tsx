@@ -9,7 +9,7 @@ import { ds } from '@/constants/designSystem';
 import { space } from '@/design-system';
 import { SarhSurface } from '@/design-system/components';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditorialStoriesBar } from '@/components/feature/EditorialStoriesBar';
 import { ExploreSarhSection } from '@/components/feature/ExploreSarhSection';
@@ -39,7 +39,7 @@ export default function HomeScreen() {
       },
     }),
   );
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { isAuthenticated } = useAuth();
   const displayName = isAuthenticated
     ? me.arabicName || me.displayName || me.username || 'حسابي'
@@ -59,7 +59,7 @@ export default function HomeScreen() {
     if (!force && now - lastStoriesAt.current < HOME_REFRESH_TTL_MS && hasStoriesData.current) {
       return;
     }
-    setStoriesLoading(true);
+    if (!hasStoriesData.current) setStoriesLoading(true);
     try {
       const data = await fetchEditorialStories();
       setEditorialStories(data);
@@ -77,7 +77,7 @@ export default function HomeScreen() {
     if (!force && now - lastMinistryAt.current < HOME_REFRESH_TTL_MS && hasMinistryData.current) {
       return;
     }
-    setMinistryLoading(true);
+    if (!hasMinistryData.current) setMinistryLoading(true);
     try {
       const [{ services }, account] = await Promise.all([
         fetchOfficialServices(),

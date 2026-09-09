@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { openUserProfile } from '@/lib/openUserProfile';
@@ -33,7 +33,7 @@ type ConnectionsTab = 'followers' | 'following';
 
 export default function ProfileConnectionsScreen() {
   const router = useRouter();
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));

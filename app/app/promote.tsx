@@ -6,7 +6,7 @@ import { SIDEBAR_MENU_ITEM } from '@/components/ui/SidebarMenuItem';
 import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
@@ -52,7 +52,7 @@ export default function PromoteHubScreen() {
     colors: theme.colors,
   }));
   const router = useRouter();
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { user, accessToken } = useAuth();
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);

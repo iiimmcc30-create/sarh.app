@@ -32,7 +32,7 @@ import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
 import { uploadMediaFromUri } from '@/services/upload';
 import { useEffect } from 'react';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchButcherChatAccess } from '@/services/butcherChat';
 import { fetchUserProfile } from '@/services/users';
@@ -148,7 +148,7 @@ export default function ButcherChatScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const messageStyles = useThemedStyles(({ colors }) => createMessageStyles(colors));
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { accessToken } = useAuth();
   const MY_ID = me?.id || 'anonymous';
   const listRef = useRef<FlatList>(null);

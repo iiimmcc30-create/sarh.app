@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { launchPaymentCheckout } from '@/services/payments';
@@ -191,7 +191,7 @@ export default function PaymentScreen() {
   const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const router = useRouter();
   const { planId, cycle } = useLocalSearchParams<{ planId: string; cycle: 'monthly' | 'yearly' }>();
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { user: authUser, accessToken } = useAuth();
   const { upgradePlan, subscription, refetchSubscription } = useSubscription();
   const planAudience = useSubscriptionAudience();
