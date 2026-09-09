@@ -117,32 +117,25 @@ function ListingCardInner({
             ) : null}
           </View>
 
-          {/* Physical LTR: price (left) · time (center) · location (right) */}
-          <View style={styles.listMetaRow}>
-            <View style={styles.listMetaSideLeft}>
-              {listing.price > 0 ? (
-                <View style={styles.listPriceCluster}>
-                  <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
-                  <View style={styles.listRiyalBadge}>
-                    <Text style={styles.listRiyalText}>﷼</Text>
-                  </View>
-                </View>
-              ) : null}
+          <View style={[styles.listMetaRow, getRtlRow()]}>
+            <View style={[styles.listMetaCluster, getRtlRow()]}>
+              <AppIcon name="map-marker-outline" size={12} color={colors.textPrimary} />
+              <Text style={styles.listMetaText} numberOfLines={1} ellipsizeMode="tail">
+                {location}
+              </Text>
             </View>
-            <View style={styles.listMetaCenter}>
-              <AppIcon name="time-outline" size={11} color={colors.textPrimary} />
+            <View style={[styles.listMetaCluster, getRtlRow()]}>
+              <AppIcon name="time-outline" size={12} color={colors.textPrimary} />
               <Text style={styles.listMetaText} numberOfLines={1}>
                 {displayTime}
               </Text>
             </View>
-            <View style={styles.listMetaSideRight}>
-              <View style={styles.listLocationCluster}>
-                <AppIcon name="map-marker-outline" size={11} color={colors.textPrimary} />
-                <Text style={styles.listMetaText} numberOfLines={1} ellipsizeMode="tail">
-                  {location}
-                </Text>
+            {listing.price > 0 ? (
+              <View style={[styles.listMetaCluster, getRtlRow()]}>
+                <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
+                <Text style={styles.listRiyalText}>﷼</Text>
               </View>
-            </View>
+            ) : null}
           </View>
 
           {/*
@@ -180,9 +173,6 @@ function ListingCardInner({
               <Text style={styles.listThumbIcon}>{CATEGORY_ICONS[listing.category] || '📦'}</Text>
             </View>
           )}
-          <View style={styles.listHeartOverlay}>
-            <AppIcon name="heart-outline" size={14} color="#fff" />
-          </View>
           {hasVideo ? (
             <View style={styles.listVideoBadge}>
               <AppIcon name="play" size={10} color="#fff" variant="sr" />
@@ -353,16 +343,17 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   listRow: {
     ...getRtlRow(),
     alignItems: 'stretch',
-    height: 118,
+    minHeight: 118,
     paddingVertical: 0,
     paddingStart: spacing.md,
     paddingEnd: 0,
     gap: spacing.sm,
-    backgroundColor: colors.bgElevated,
-    borderRadius: MENU_CARD.radius,
+    backgroundColor: colors.bgDeep,
+    borderRadius: 10,
     marginHorizontal: spacing.md,
-    marginVertical: 2,
-    borderWidth: 0,
+    marginVertical: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
   listContent: {
@@ -384,76 +375,37 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       },
   listTitle: {
     ...typography.cardHeading,
-    color: colors.textBrandStrong,
+    color: colors.electricBright,
     width: '100%',
-        writingDirection: 'rtl',
+    writingDirection: 'rtl',
   },
-  /**
-   * Physical LTR three-column meta:
-   * LEFT price · CENTER time · RIGHT location
-   */
   listMetaRow: {
-    flexDirection: 'row',
-        alignItems: 'center',
-    flexWrap: 'nowrap',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
     width: '100%',
   },
-  listMetaSideLeft: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  listMetaCenter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    flexShrink: 0,
-    paddingHorizontal: 4,
-  },
-  listMetaSideRight: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  listLocationCluster: {
-    flexDirection: 'row',
+  listMetaCluster: {
     alignItems: 'center',
     gap: 3,
+    flexShrink: 1,
     maxWidth: '100%',
-  },
-  listPriceCluster: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
   },
   listMetaText: {
     ...typography.caption,
-    color: colors.textMuted,
+    color: colors.textPrimary,
     writingDirection: 'rtl',
     flexShrink: 1,
   },
   listPriceAmount: {
-    ...typography.value,
+    ...typography.caption,
     color: colors.textPrimary,
     writingDirection: 'ltr',
     fontVariant: ['tabular-nums'],
   },
-  listRiyalBadge: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bgElevated,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.borderSoft,
-  },
   listRiyalText: {
     ...typography.caption,
-    color: colors.textMuted,
+    color: colors.textPrimary,
   },
   listStatusNew: {
     ...typography.badge,
@@ -497,17 +449,6 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     backgroundColor: colors.bgElevated,
     flexShrink: 0,
     position: 'relative',
-  },
-  listHeartOverlay: {
-    position: 'absolute',
-    top: 6,
-    start: 6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   listThumb: {
     ...StyleSheet.absoluteFillObject,

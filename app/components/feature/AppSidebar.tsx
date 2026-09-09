@@ -50,6 +50,8 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
     ? me.arabicName || me.displayName || me.username || 'حسابي'
     : 'ضيف';
   const username = isAuthenticated && me.username ? `@${me.username}` : '@guest';
+  const followingCount = isAuthenticated ? me.following ?? 0 : 0;
+  const followersCount = isAuthenticated ? me.followers ?? 0 : 0;
 
   const go = (route: string) => {
     closeThenPush(route);
@@ -83,6 +85,17 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
           <AppText style={styles.handle} numberOfLines={1}>
             {username}
           </AppText>
+        </Pressable>
+        <Pressable
+          onPress={() => go('/profile/connections')}
+          style={[styles.statsRow, getRtlRow()]}
+          accessibilityRole="button"
+          accessibilityLabel={`${followingCount} يتابع، ${followersCount} متابعون`}
+        >
+          <AppText style={styles.statValue}>{followingCount}</AppText>
+          <AppText style={styles.statLabel}>يتابع</AppText>
+          <AppText style={styles.statValue}>{followersCount}</AppText>
+          <AppText style={styles.statLabel}>متابعون</AppText>
         </Pressable>
 
         <SarhDivider accessibilityLabel="فاصل القائمة" />
@@ -159,7 +172,7 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'flex-start',
       gap: 2,
       paddingTop: spacing.xs,
-      paddingBottom: spacing.lg,
+      paddingBottom: spacing.sm,
     },
     avatar: {
       width: 48,
@@ -174,6 +187,19 @@ function createStyles(colors: ThemeColors) {
     },
     handle: {
       ...typography.feedBody,
+      color: colors.textMuted,
+    },
+    statsRow: {
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 6,
+    },
+    statValue: {
+      ...typography.caption,
+      color: colors.textPrimary,
+    },
+    statLabel: {
+      ...typography.caption,
       color: colors.textMuted,
     },
     row: {
