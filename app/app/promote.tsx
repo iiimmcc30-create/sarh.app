@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { usePaidServices } from '@/hooks/usePaidServices';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 
 const CATEGORY_ICONS: Record<Listing['category'], string> = {
   camels: '🐪',
@@ -130,10 +130,11 @@ export default function PromoteHubScreen() {
                   </View>
                   <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
                   <Text style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</Text>
-                  <Pressable style={styles.createBtn} onPress={() => void navigateToCreateListing()}>
-                    <Text style={styles.createBtnText}>إنشاء إعلان</Text>
-                    <AppIcon name="add-circle-outline" size={18} color="#fff" />
-                  </Pressable>
+                  <SarhButton
+                    title="إنشاء إعلان"
+                    onPress={() => void navigateToCreateListing()}
+                    leftIcon="add-circle-outline"
+                  />
                 </View>
               ) : (
                 <View style={styles.listingsList}>

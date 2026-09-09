@@ -18,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhButton } from '@/design-system/components';
 import { AgoraVideoView } from '@/components/live/AgoraVideoView';
 import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeModal';
 import { VideoSourceType } from '@/lib/agora';
@@ -241,9 +242,12 @@ export default function CreateStreamScreen() {
           <Text style={styles.muted}>
             ميزة بدء البث المباشر ستتوفر قريباً مع إطلاق التطبيق. يمكنك مشاهدة البثوث الحية من تبويب البث.
           </Text>
-          <Pressable style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/live')}>
-            <Text style={styles.primaryBtnText}>مشاهدة البث المباشر</Text>
-          </Pressable>
+          <SarhButton
+            title="مشاهدة البث المباشر"
+            fullWidth
+            onPress={() => router.replace('/(tabs)/live')}
+            style={styles.primaryCta}
+          />
           <Pressable onPress={() => router.back()} style={{ marginTop: spacing.md }}>
             <Text style={styles.link}>رجوع</Text>
           </Pressable>
@@ -256,9 +260,12 @@ export default function CreateStreamScreen() {
         <Text style={styles.blockedIcon}>📋</Text>
         <Text style={styles.blockedTitle}>إعلان مطلوب للبث</Text>
         <Text style={styles.muted}>انشر إعلاناً واحداً على الأقل في السوق، ثم يمكنك بدء بث مباشر.</Text>
-        <Pressable style={styles.primaryBtn} onPress={() => void navigateToCreateListing()}>
-          <Text style={styles.primaryBtnText}>إنشاء إعلان</Text>
-        </Pressable>
+        <SarhButton
+          title="إنشاء إعلان"
+          fullWidth
+          onPress={() => void navigateToCreateListing()}
+          style={styles.primaryCta}
+        />
         <Pressable onPress={() => router.back()} style={{ marginTop: spacing.md }}>
           <Text style={styles.link}>رجوع</Text>
         </Pressable>
@@ -436,14 +443,7 @@ const styles = StyleSheet.create({
   muted: { ...typography.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
   blockedIcon: { fontSize: 48 },
   blockedTitle: { ...typography.h2, color: colors.textPrimary, textAlign: 'center' },
-  primaryBtn: {
-    marginTop: spacing.md,
-    backgroundColor: colors.electric,
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.md,
-  },
-  primaryBtnText: { ...typography.bodyStrong, color: '#fff' },
+  primaryCta: { marginTop: spacing.md },
   link: { ...typography.caption, color: colors.textMuted },
   topBar: {
     flexDirection: 'row',

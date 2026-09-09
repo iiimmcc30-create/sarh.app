@@ -7,6 +7,7 @@ import { getRtlText } from '@/lib/rtl';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
+import { SarhButton } from '@/design-system/components';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -41,20 +42,13 @@ export default function AuthWelcomeScreen() {
           </View>
 
           <View style={styles.actions}>
-            <Pressable
-              style={({ pressed }) => [styles.primaryBtn, pressed && styles.pressed]}
-              onPress={() => router.push('/auth/register')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.primaryText}>{copy.startCta}</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.secondaryBtn, pressed && styles.pressed]}
+            <SarhButton title={copy.startCta} fullWidth onPress={() => router.push('/auth/register')} />
+            <SarhButton
+              title={copy.haveAccount}
+              variant="secondary"
+              fullWidth
               onPress={() => router.push('/auth/phone')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.secondaryText}>{copy.haveAccount}</Text>
-            </Pressable>
+            />
           </View>
         </View>
       </SafeAreaView>
@@ -103,32 +97,5 @@ function createStyles(colors: ThemeColors) {
       ...getRtlText(),
     },
     actions: { gap: spacing.md },
-    primaryBtn: {
-      height: 54,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.electric,
-    },
-    primaryText: {
-      ...typography.button,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: '#fff',
-    },
-    secondaryBtn: {
-      height: 54,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-      backgroundColor: 'transparent',
-    },
-    secondaryText: {
-      ...typography.button,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-    },
-    pressed: { opacity: 0.88 },
   });
 }

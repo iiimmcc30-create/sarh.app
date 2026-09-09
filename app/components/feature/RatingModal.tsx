@@ -4,13 +4,13 @@
 // update immediately on submit.
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SarhButton } from '@/design-system/components';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -94,19 +94,13 @@ export function RatingModal({
             {selected > 0 ? STAR_LABELS[selected - 1] : 'اختر تقييمك'}
           </Text>
 
-          <Pressable
-            style={[styles.submitBtn, selected < 1 && styles.submitBtnDisabled]}
+          <SarhButton
+            title={myRating ? 'تحديث التقييم' : 'إرسال التقييم'}
+            fullWidth
+            loading={submitting}
+            disabled={selected < 1}
             onPress={handleSubmit}
-            disabled={selected < 1 || submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.submitText}>
-                {myRating ? 'تحديث التقييم' : 'إرسال التقييم'}
-              </Text>
-            )}
-          </Pressable>
+          />
 
           <Pressable style={styles.cancelBtn} onPress={onClose}>
             <Text style={styles.cancelText}>إلغاء</Text>

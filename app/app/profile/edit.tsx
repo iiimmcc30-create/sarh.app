@@ -27,7 +27,7 @@ import { ltrInputText, marginEnd, rtlInputText } from '@/lib/rtl';
 import { useAppUser } from '@/hooks/useApp';
 import { Country } from '@/services/types';
 import { showToast } from '@/lib/toast';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦' },
@@ -115,23 +115,13 @@ export default function EditProfileScreen() {
         <View style={styles.header}>
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
           <Text style={styles.headerTitle} numberOfLines={1}>تعديل الملف الشخصي</Text>
-          <Pressable
-            style={[styles.saveBtn, saving && styles.saveBtnLoading]}
+          <SarhButton
+            title={saving ? 'جاري...' : 'حفظ'}
+            size="sm"
+            loading={saving}
             onPress={handleSave}
-            disabled={saving}
-            accessibilityRole="button"
             accessibilityLabel="حفظ التعديلات"
-            accessibilityState={{ disabled: saving, busy: saving }}
-          >
-            <LinearGradient
-              colors={saving ? [colors.bgSurface, colors.bgSurface] : gradients.royal}
-              style={styles.saveBtnInner}
-            >
-              <Text style={[styles.saveBtnText, saving && { color: colors.textMuted }]}>
-                {saving ? 'جاري...' : 'حفظ'}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+          />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>

@@ -26,6 +26,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText } from '@/components/ui/AppText';
+import { SarhButton } from '@/design-system/components';
 import { showToast } from '@/lib/toast';
 import { getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
@@ -852,28 +853,19 @@ export default function CreateListingScreen() {
 
         <View style={styles.bottomBar}>
           {stepError ? <Text style={styles.stepError}>{stepError}</Text> : null}
-          <Pressable
-            style={[styles.continueBtn, (!canContinue() || submitting) && styles.continueBtnDisabled]}
+          <SarhButton
+            title={
+              step === STEPS.length - 1
+                ? isEditing
+                  ? 'حفظ التعديل'
+                  : 'نشر العرض'
+                : 'التالي'
+            }
+            fullWidth
+            loading={submitting}
+            disabled={!canContinue()}
             onPress={handleNext}
-            disabled={submitting}
-          >
-            <LinearGradient
-              colors={canContinue() && !submitting ? gradients.electric : [colors.bgSurface, colors.bgSurface]}
-              style={styles.continueBtnInner}
-            >
-              {submitting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={[styles.continueBtnText, !canContinue() && { color: colors.textMuted }]}>
-                  {step === STEPS.length - 1
-                    ? isEditing
-                      ? 'حفظ التعديل'
-                      : 'نشر العرض'
-                    : 'التالي'}
-                </Text>
-              )}
-            </LinearGradient>
-          </Pressable>
+          />
           {step > 0 ? (
             <Pressable onPress={() => setStep((s) => s - 1)} style={styles.backStep}>
               <Text style={styles.linkText}>رجوع</Text>

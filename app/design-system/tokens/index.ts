@@ -1,5 +1,19 @@
 export { colors, functional, palette } from './colors';
 export type { ColorToken } from './colors';
+export {
+  BUTTON_SIZE,
+  applyButtonTokens,
+  buttonColors,
+  buttonMetrics,
+  resolveButtonTone,
+} from './button';
+export type {
+  ButtonSizeMetrics,
+  ButtonSizeName,
+  ButtonStateTokens,
+  ButtonTone,
+  ButtonVariantName,
+} from './button';
 export { elevation } from './elevation';
 export type { ElevationName, ElevationToken } from './elevation';
 export { duration, motion, opacity } from './motion';

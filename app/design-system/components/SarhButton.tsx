@@ -6,11 +6,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
-import { motion, radius, space, typography } from '../tokens';
+import { buttonMetrics, colors, motion } from '../tokens';
 import { AppText } from './AppText';
 import {
-  BUTTON_SIZE,
   resolveSarhButtonColors,
   type SarhButtonShape,
   type SarhButtonSize,
@@ -37,10 +37,10 @@ export type SarhButtonProps = {
 export { BUTTON_SIZE, resolveSarhButtonColors } from './resolvers';
 export type { SarhButtonShape, SarhButtonSize, SarhButtonState, SarhButtonVariant } from './resolvers';
 
-function renderIcon(icon: ReactNode | string | undefined, color: string) {
+function renderIcon(icon: ReactNode | string | undefined, color: string, size: number) {
   if (!icon) return null;
   if (typeof icon === 'string') {
-    return <AppIcon name={icon} size={typography.label.fontSize} color={color} />;
+    return <AppIcon name={icon} size={size} color={color} />;
   }
   return icon;
 }
@@ -60,7 +60,16 @@ export function SarhButton({
   style,
   testID,
 }: SarhButtonProps) {
+  useTheme();
   const blocked = disabled || loading;
+  const metrics = buttonMetrics.size[size];
+  const filled = variant === 'primary' || variant === 'danger' || variant === 'inverse';
+
+  function visualState(pressed: boolean): Exclude<SarhButtonState, 'loading'> {
+    if (disabled) return 'disabled';
+    if (pressed && !loading) return 'pressed';
+    return 'default';
+  }
 
   return (
     <Pressable
@@ -71,27 +80,23 @@ export function SarhButton({
       disabled={blocked}
       onPress={blocked ? undefined : onPress}
       style={({ pressed }) => {
-        const state: Exclude<SarhButtonState, 'loading'> = blocked
-          ? 'disabled'
-          : pressed
-            ? 'pressed'
-            : 'default';
-        const palette = resolveSarhButtonColors(variant, state);
-        const metrics = BUTTON_SIZE[size];
+        const palette = resolveSarhButtonColors(variant, visualState(pressed));
         return [
           getRtlRow(),
+          filled && !disabled ? buttonMetrics.elevation : null,
           {
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: metrics.minHeight,
             paddingHorizontal: metrics.paddingHorizontal,
-            gap: space[8],
-            borderRadius: shape === 'pill' ? radius[999] : radius[12],
-            borderWidth: variant === 'ghost' ? 0 : 1,
+            gap: buttonMetrics.gap,
+            borderRadius: shape === 'pill' ? buttonMetrics.pillRadius : buttonMetrics.radius,
+            borderWidth: variant === 'ghost' ? 0 : buttonMetrics.borderWidth,
             backgroundColor: palette.backgroundColor,
             borderColor: palette.borderColor,
-            opacity: blocked ? motion.opacity.disabled : pressed ? motion.opacity.pressed : 1,
+            opacity: disabled ? motion.opacity.disabled : 1,
             transform: [{ scale: pressed && !blocked ? motion.pressScale : 1 }],
+            shadowColor: colors.background,
             width: fullWidth ? '100%' : undefined,
             flexShrink: fullWidth ? 1 : 0,
             flexWrap: 'nowrap',
@@ -101,17 +106,16 @@ export function SarhButton({
       }}
     >
       {({ pressed }) => {
-        const state: Exclude<SarhButtonState, 'loading'> = blocked ? 'disabled' : pressed ? 'pressed' : 'default';
-        const palette = resolveSarhButtonColors(variant, state);
+        const palette = resolveSarhButtonColors(variant, visualState(pressed));
         return (
           <>
             {loading ? (
               <ActivityIndicator color={palette.contentColor} />
             ) : (
-              renderIcon(leftIcon, palette.contentColor)
+              renderIcon(leftIcon, palette.contentColor, metrics.icon)
             )}
             <AppText
-              variant={size === 'sm' ? 'caption' : 'label'}
+              variant={metrics.typeRole}
               color="textPrimary"
               numberOfLines={1}
               ellipsizeMode="tail"
@@ -119,7 +123,7 @@ export function SarhButton({
             >
               {title}
             </AppText>
-            {loading ? null : renderIcon(rightIcon, palette.contentColor)}
+            {loading ? null : renderIcon(rightIcon, palette.contentColor, metrics.icon)}
           </>
         );
       }}

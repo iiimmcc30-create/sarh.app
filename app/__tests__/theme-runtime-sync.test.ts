@@ -1,6 +1,11 @@
 import { applyThemeScheme } from '@/constants/theme';
 import { colors, functional } from '@/design-system';
-import { SURFACE_TONE, resolveAppTextStyle, resolveSarhCardStyle } from '@/design-system/components/resolvers';
+import {
+  SURFACE_TONE,
+  resolveAppTextStyle,
+  resolveSarhButtonColors,
+  resolveSarhCardStyle,
+} from '@/design-system/components/resolvers';
 
 describe('theme runtime Light ↔ Dark sync', () => {
   afterEach(() => {
@@ -16,6 +21,10 @@ describe('theme runtime Light ↔ Dark sync', () => {
     expect(resolveSarhCardStyle('default', 'none').backgroundColor).toBe('#FFFFFF');
     expect(resolveAppTextStyle({ color: 'textPrimary' }).color).toBe('#101820');
     expect(functional.onPrimaryInverse).toBe('#F5F7F9');
+    expect(resolveSarhButtonColors('primary', 'default').backgroundColor).toBe('#20B66F');
+    expect(resolveSarhButtonColors('primary', 'default').contentColor).toBe('#FFFFFF');
+    expect(colors.primary).toBe('#20B66F');
+    expect(colors.success).toBe('#20B66F');
 
     applyThemeScheme('dark');
     expect(colors.background).toBe('#07131C');
@@ -24,6 +33,10 @@ describe('theme runtime Light ↔ Dark sync', () => {
     expect(SURFACE_TONE.background).toBe('#07131C');
     expect(resolveSarhCardStyle('default', 'none').backgroundColor).toBe('#0C1C27');
     expect(resolveAppTextStyle({ color: 'textPrimary' }).color).toBe('#F4F7F9');
+    expect(resolveSarhButtonColors('primary', 'default').backgroundColor).toBe('#FFFFFF');
+    expect(resolveSarhButtonColors('primary', 'default').contentColor).toBe('#07131C');
+    expect(colors.primary).toBe('#20B66F');
+    expect(colors.success).toBe('#20B66F');
 
     applyThemeScheme('light');
     expect(colors.background).toBe('#F5F7F9');

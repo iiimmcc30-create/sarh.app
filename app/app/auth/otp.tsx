@@ -3,6 +3,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { getRtlRow, getRtlText, inlineEnd, ltrInputText, rtlForwardIcon } from '@/lib/rtl';
 
+import { SarhButton } from '@/design-system/components';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -276,16 +277,14 @@ export default function OtpScreen() {
             </View>
 
             {/* Verify Button (Manual fallback) */}
-            <Pressable
-              style={[
-                styles.verifyBtn,
-                (loading || otp.join('').length < OTP_LENGTH) && styles.verifyBtnDisabled,
-              ]}
+            <SarhButton
+              title="تأكيد"
+              fullWidth
+              loading={loading}
+              disabled={otp.join('').length < OTP_LENGTH}
               onPress={() => handleVerify(otp.join(''))}
-              disabled={loading || otp.join('').length < OTP_LENGTH}
-            >
-              <Text style={styles.verifyText}>تأكيد</Text>
-            </Pressable>
+              style={styles.verifyCta}
+            />
 
           </View>
         </KeyboardAvoidingView>
@@ -366,17 +365,9 @@ function createStyles(colors: ThemeColors) {
   resendActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   resendActionText: { ...typography.button, color: colors.textBrandStrong },
 
-  verifyBtn: {
-    width: '100%',
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.electric,
-    alignItems: 'center',
-    justifyContent: 'center',
+  verifyCta: {
     marginTop: 10,
   },
-  verifyBtnDisabled: { opacity: 0.45 },
-  verifyText: { ...typography.button, color: '#fff' },
 
   // Success screen
   successCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },

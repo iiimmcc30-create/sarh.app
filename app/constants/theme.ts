@@ -6,6 +6,7 @@ import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';
 import { OFFICIAL_APP_FONT } from './fonts';
 import { applyDesignSystemColors } from '@/design-system/tokens/colors';
+import { applyButtonTokens } from '@/design-system/tokens/button';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -273,6 +274,7 @@ export function applyThemeScheme(scheme: ColorScheme) {
       onPrimaryInverse: live.bgDeep,
     },
   );
+  applyButtonTokens(scheme);
 }
 
 // Synchronous init — colors must never be an empty object at first render.

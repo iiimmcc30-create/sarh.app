@@ -3,6 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { SarhButton } from '@/design-system/components';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -312,9 +313,7 @@ export default function PaymentResultScreen() {
               مدة الترقية: {paramDurationDays === '7' ? '٧ أيام' : '٣ أيام'}
             </Text>
           ) : null}
-          <Pressable style={styles.primaryBtn} onPress={goPrimary}>
-            <Text style={styles.primaryBtnText}>{copy.primaryLabel}</Text>
-          </Pressable>
+          <SarhButton title={copy.primaryLabel} fullWidth onPress={goPrimary} />
           {copy.secondaryLabel ? (
             <Pressable style={styles.secondaryBtn} onPress={goSecondary}>
               <Text style={styles.secondaryBtnText}>{copy.secondaryLabel}</Text>
@@ -337,9 +336,7 @@ export default function PaymentResultScreen() {
           <Text style={styles.subtitle}>
             {statusMessage ?? 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
           </Text>
-          <Pressable style={styles.primaryBtn} onPress={goPrimary}>
-            <Text style={styles.primaryBtnText}>{copy.primaryLabel}</Text>
-          </Pressable>
+          <SarhButton title={copy.primaryLabel} fullWidth onPress={goPrimary} />
         </SafeAreaView>
       </View>
     );
@@ -356,15 +353,12 @@ export default function PaymentResultScreen() {
         <Text style={styles.subtitle}>
           {statusMessage ?? copy.pendingSubtitle}
         </Text>
-        <Pressable
-          style={[styles.primaryBtn, retrying && styles.primaryBtnDisabled]}
+        <SarhButton
+          title={retrying ? 'جارٍ التحقق...' : 'إعادة التحقق'}
+          fullWidth
+          loading={retrying}
           onPress={retrySync}
-          disabled={retrying}
-        >
-          <Text style={styles.primaryBtnText}>
-            {retrying ? 'جارٍ التحقق...' : 'إعادة التحقق'}
-          </Text>
-        </Pressable>
+        />
         <Pressable style={styles.secondaryBtn} onPress={goPrimary}>
           <Text style={styles.secondaryBtnText}>{copy.primaryLabel}</Text>
         </Pressable>

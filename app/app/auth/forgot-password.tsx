@@ -2,6 +2,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { getRtlRow, getRtlText, inlineEnd, ltrInputText, rtlForwardIcon } from '@/lib/rtl';
 
+import { SarhButton } from '@/design-system/components';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -15,7 +16,6 @@ import {
   Text,
   TextInput,
   View,
-  ActivityIndicator,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -289,33 +289,32 @@ export default function ForgotPasswordScreen() {
               ) : null}
 
               {step !== 'done' && (
-                <Pressable
-                  style={styles.submitBtn}
-                  onPress={
-                    step === 'phone' ? handleSendOtp
-                    : step === 'otp' ? () => handleVerifyOtp(otp.join(''))
-                    : handleResetPassword
+                <SarhButton
+                  title={
+                    step === 'phone'
+                      ? 'إرسال رمز التحقق'
+                      : step === 'otp'
+                        ? 'تحقق من الرمز'
+                        : 'حفظ كلمة المرور'
                   }
-                  disabled={loading}
-                >
-                  <LinearGradient colors={[colors.electric, colors.electricBright]} style={styles.submitGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                    {loading ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Text style={styles.submitText}>
-                        {step === 'phone' ? 'إرسال رمز التحقق' : step === 'otp' ? 'تحقق من الرمز' : 'حفظ كلمة المرور'}
-                      </Text>
-                    )}
-                  </LinearGradient>
-                </Pressable>
+                  fullWidth
+                  loading={loading}
+                  onPress={
+                    step === 'phone'
+                      ? handleSendOtp
+                      : step === 'otp'
+                        ? () => handleVerifyOtp(otp.join(''))
+                        : handleResetPassword
+                  }
+                />
               )}
 
               {step === 'done' && (
-                <Pressable style={styles.submitBtn} onPress={() => router.replace('/auth/phone')}>
-                  <LinearGradient colors={[colors.electric, colors.electricBright]} style={styles.submitGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                    <Text style={styles.submitText}>تسجيل الدخول</Text>
-                  </LinearGradient>
-                </Pressable>
+                <SarhButton
+                  title="تسجيل الدخول"
+                  fullWidth
+                  onPress={() => router.replace('/auth/phone')}
+                />
               )}
             </View>
           </ScrollView>

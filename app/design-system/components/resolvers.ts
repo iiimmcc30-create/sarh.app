@@ -1,6 +1,17 @@
 import { getRtlDirection, getRtlText } from '@/lib/rtl';
 import type { TextStyle, ViewStyle } from 'react-native';
-import { colors, elevation, functional, radius, space, typography, type TypeRole } from '../tokens';
+import {
+  BUTTON_SIZE,
+  buttonMetrics,
+  colors,
+  elevation,
+  functional,
+  radius,
+  resolveButtonTone,
+  space,
+  typography,
+  type TypeRole,
+} from '../tokens';
 
 export type AppTextVariant = TypeRole;
 export type AppTextColor =
@@ -62,50 +73,13 @@ export type SarhButtonState = 'default' | 'pressed' | 'disabled' | 'loading';
 export type SarhButtonSize = 'sm' | 'md';
 export type SarhButtonShape = 'rounded' | 'pill';
 
-export const BUTTON_SIZE = {
-  sm: { minHeight: space[32], paddingHorizontal: space[16] },
-  md: { minHeight: space[48], paddingHorizontal: space[20] },
-} as const;
+export { BUTTON_SIZE, buttonMetrics };
 
 export function resolveSarhButtonColors(
   variant: SarhButtonVariant,
   state: Exclude<SarhButtonState, 'loading'>,
 ) {
-  const pressed = state === 'pressed';
-  const disabled = state === 'disabled';
-  if (variant === 'inverse') {
-    return {
-      backgroundColor: functional.onPrimary,
-      borderColor: functional.onPrimary,
-      contentColor: functional.onPrimaryInverse,
-    };
-  }
-  if (variant === 'primary') {
-    return {
-      backgroundColor: pressed ? colors.primaryPressed : colors.primary,
-      borderColor: pressed ? colors.primaryPressed : colors.primary,
-      contentColor: functional.onPrimary,
-    };
-  }
-  if (variant === 'danger') {
-    return {
-      backgroundColor: colors.danger,
-      borderColor: colors.danger,
-      contentColor: functional.onPrimary,
-    };
-  }
-  if (variant === 'secondary') {
-    return {
-      backgroundColor: pressed ? colors.surfaceElevated : colors.surface,
-      borderColor: colors.borderStrong,
-      contentColor: colors.textPrimary,
-    };
-  }
-  return {
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
-    contentColor: disabled ? colors.textMuted : colors.primary,
-  };
+  return resolveButtonTone(variant, state);
 }
 
 export type SarhIconButtonSize = 'sm' | 'md' | 'lg';

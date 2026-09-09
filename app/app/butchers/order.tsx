@@ -1,6 +1,7 @@
 // SAFAT — Butcher Order Screen (صفحة الطلب + الدفع)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
+import { SarhButton } from '@/design-system/components';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { DeliveryMapAddressField } from '@/components/butchers/DeliveryMapAddressField';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -579,27 +580,14 @@ export default function ButcherOrderScreen() {
               {currency.symbol}
             </Text>
           </View>
-          <Pressable
-            style={[styles.submitBtn, (loadingSubmit || products.length === 0) && { opacity: 0.5 }]}
+          <SarhButton
+            title="ادفع وأرسل الطلب"
+            disabled={products.length === 0}
+            loading={loadingSubmit}
+            leftIcon="card-outline"
             onPress={() => void handleSubmit()}
-            disabled={loadingSubmit || products.length === 0}
-          >
-            <LinearGradient
-              colors={[colors.electric, colors.cyan]}
-              style={styles.submitGrad}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              {loadingSubmit ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <AppIcon name="card-outline" size={18} color="#fff" />
-                  <Text style={styles.submitText}>ادفع وأرسل الطلب</Text>
-                </>
-              )}
-            </LinearGradient>
-          </Pressable>
+            style={styles.submitCta}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -936,15 +924,6 @@ function createStyles(colors: ThemeColors) {
     },
     footerLabel: { ...butcherTypography.meta, color: colors.textMuted },
     footerTotal: { ...typography.valueLarge, color: colors.gold },
-    submitBtn: { flex: 1, borderRadius: radius.xl, overflow: 'hidden', maxWidth: 220 },
-    submitGrad: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: radius.xl,
-    },
-    submitText: { ...butcherTypography.primary, color: '#fff' },
+    submitCta: { flex: 1, maxWidth: 220 },
   });
 }

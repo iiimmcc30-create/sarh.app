@@ -11,7 +11,6 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +21,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SarhButton } from '@/design-system/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SAUDI_DIAL = '+966';
@@ -169,21 +169,14 @@ export default function PhoneLoginScreen() {
 
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryBtn,
-                  (loading || !isPhoneValid || password.length < 6) && styles.btnDisabled,
-                  pressed && styles.pressed,
-                ]}
+              <SarhButton
+                title={copy.loginCta}
+                fullWidth
+                loading={loading}
+                disabled={!isPhoneValid || password.length < 6}
                 onPress={handleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryText}>{copy.loginCta}</Text>
-                )}
-              </Pressable>
+                style={styles.primaryCta}
+              />
 
               <Pressable
                 onPress={() => router.push('/auth/register')}
@@ -273,20 +266,8 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.md,
       ...getRtlText(),
     },
-    primaryBtn: {
-      height: 54,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.electric,
+    primaryCta: {
       marginTop: spacing.xl,
-    },
-    btnDisabled: { opacity: 0.45 },
-    pressed: { opacity: 0.88 },
-    primaryText: {
-      ...typography.button,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: '#fff',
     },
     footerLink: {
       alignItems: 'center',
