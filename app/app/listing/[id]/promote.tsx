@@ -1,13 +1,12 @@
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { launchPaymentCheckout } from '@/services/payments';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -61,8 +60,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 function goalAccentColor(
   accent: 'electric' | 'gold' | 'promotion',
@@ -288,9 +288,7 @@ export default function ListingPromoteScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={[styles.header, getRtlRow()]}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
           <Text style={styles.pageTitle}>الترويج</Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -336,17 +334,17 @@ export default function ListingPromoteScreen() {
 
           <View style={styles.section}>
             <RtlTextShell>
-              <RtlText style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</RtlText>
+              <AppText style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</AppText>
             </RtlTextShell>
             <RtlTextShell>
-              <RtlText style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</RtlText>
+              <AppText style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</AppText>
             </RtlTextShell>
             <View style={styles.goalList}>
               {!hasAnyBoostService ? (
                 <RtlTextShell>
-                  <RtlText style={styles.sectionHint}>
+                  <AppText style={styles.sectionHint}>
                     خدمات الترقية غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
-                  </RtlText>
+                  </AppText>
                 </RtlTextShell>
               ) : null}
               {enabledGoals.map((option) => {
@@ -382,12 +380,12 @@ export default function ListingPromoteScreen() {
                       </View>
                       <View style={styles.goalTextWrap}>
                         <RtlTextShell>
-                          <RtlText style={[styles.goalTitle, selected && { color: accent }]}>
+                          <AppText style={[styles.goalTitle, selected && { color: accent }]}>
                             {option.title}
-                          </RtlText>
+                          </AppText>
                         </RtlTextShell>
                         <RtlTextShell>
-                          <RtlText style={styles.goalDesc}>{option.desc}</RtlText>
+                          <AppText style={styles.goalDesc}>{option.desc}</AppText>
                         </RtlTextShell>
                       </View>
                     </View>
@@ -535,14 +533,14 @@ export default function ListingPromoteScreen() {
           <View style={[styles.bottomInner, getRtlRow()]}>
             <View style={styles.totalBlock}>
               <RtlTextShell>
-                <RtlText style={styles.totalLabel}>الإجمالي</RtlText>
+                <AppText style={styles.totalLabel}>الإجمالي</AppText>
               </RtlTextShell>
               <RtlTextShell>
-                <RtlText style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</RtlText>
+                <AppText style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</AppText>
               </RtlTextShell>
             </View>
             <View style={styles.payBtnWrap}>
-              <PrimaryButton
+              <SarhButton
                 title="الدفع"
                 onPress={handlePay}
                 disabled={!canPay || !hasAnyBoostService || !goal}
@@ -565,7 +563,7 @@ export default function ListingPromoteScreen() {
                 placeholder={`${PROMOTE_AMOUNT_MIN} - ${PROMOTE_AMOUNT_MAX}`}
                 placeholderTextColor={colors.textMuted}
               />
-              <PrimaryButton title="تطبيق" onPress={applyCustomAmount} fullWidth />
+              <SarhButton title="تطبيق" onPress={applyCustomAmount} fullWidth />
             </Pressable>
           </Pressable>
         </Modal>
@@ -587,7 +585,7 @@ export default function ListingPromoteScreen() {
                 placeholder={`${PROMOTE_DURATION_HOURS_MIN} - ${PROMOTE_DURATION_HOURS_MAX}`}
                 placeholderTextColor={colors.textMuted}
               />
-              <PrimaryButton title="تطبيق" onPress={applyCustomDuration} fullWidth />
+              <SarhButton title="تطبيق" onPress={applyCustomDuration} fullWidth />
             </Pressable>
           </Pressable>
         </Modal>

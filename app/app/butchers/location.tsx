@@ -8,7 +8,6 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText } from '@/lib/rtl';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { reverseGeocodeToAddress } from '@/lib/formatAddress';
 import {
@@ -31,6 +30,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppText } from '@/components/ui/AppText';
 
 const LABEL_OPTIONS = ['المنزل', 'العمل', 'آخر'];
 
@@ -129,9 +129,9 @@ export default function ButcherLocationScreen() {
           showsVerticalScrollIndicator={false}
         >
           <RtlTextShell>
-            <RtlText style={styles.hint}>
+            <AppText style={styles.hint}>
               اضغط على الخريطة لتحديد موقعك، أو استخدم «موقعي الحالي».
-            </RtlText>
+            </AppText>
           </RtlTextShell>
 
           <LocationMapPreview
@@ -156,7 +156,7 @@ export default function ButcherLocationScreen() {
           {/* Label chips */}
           <View style={styles.field}>
             <RtlTextShell>
-              <RtlText style={styles.fieldLabel}>نوع العنوان</RtlText>
+              <AppText style={styles.fieldLabel}>نوع العنوان</AppText>
             </RtlTextShell>
             <View style={styles.chipsRow}>
               {LABEL_OPTIONS.map((opt) => (
@@ -173,7 +173,7 @@ export default function ButcherLocationScreen() {
           {/* House number */}
           <View style={styles.field}>
             <RtlTextShell>
-              <RtlText style={styles.fieldLabel}>رقم المنزل / المبنى</RtlText>
+              <AppText style={styles.fieldLabel}>رقم المنزل / المبنى</AppText>
             </RtlTextShell>
             <TextInput
               style={styles.input}
@@ -188,7 +188,7 @@ export default function ButcherLocationScreen() {
           {/* Address */}
           <View style={styles.field}>
             <RtlTextShell>
-              <RtlText style={styles.fieldLabel}>العنوان / الحي</RtlText>
+              <AppText style={styles.fieldLabel}>العنوان / الحي</AppText>
             </RtlTextShell>
             <TextInput
               style={[styles.input, styles.inputMultiline]}

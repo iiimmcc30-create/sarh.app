@@ -13,7 +13,6 @@ import { useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +28,7 @@ import {
   type VerificationRequest,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
+import { SarhButton } from '@/design-system/components';
 
 export default function AccountVerificationScreen() {
   const { accessToken } = useAuth();
@@ -204,8 +204,8 @@ export default function AccountVerificationScreen() {
               ))}
             </GlassCard>
 
-            <PrimaryButton title="حفظ المسودة" variant="outline" fullWidth loading={saving} onPress={() => void saveDraft()} />
-            <PrimaryButton title="إرسال الطلب" fullWidth loading={saving} onPress={() => void submit()} />
+            <SarhButton title="حفظ المسودة" variant="secondary" fullWidth loading={saving} onPress={() => void saveDraft()} />
+            <SarhButton title="إرسال الطلب" fullWidth loading={saving} onPress={() => void submit()} />
           </>
         ) : null}
       </ScrollView>

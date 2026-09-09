@@ -1,6 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { AppText } from '@/design-system/components';
+import { AppText, SarhBackButton } from '@/design-system/components';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
@@ -17,7 +17,7 @@ import {
   orderMoneySummary,
   timelineStamp,
 } from '@/lib/customerOrders';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { showToast } from '@/lib/toast';
 import { API_BASE } from '@/services/api';
@@ -104,9 +104,7 @@ export default function OrderDetailsScreen() {
   if (!order) {
     return (
       <SafeAreaView style={s.screen} edges={['top']}>
-        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityLabel="رجوع">
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} accessibilityLabel="رجوع" color={colors.textPrimary} style={s.backBtn} />
         <AppText variant="body" color="textMuted" align="center" style={s.errorText}>
           تعذر تحميل تفاصيل الطلب
         </AppText>
@@ -165,9 +163,7 @@ export default function OrderDetailsScreen() {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <View style={[s.navRow, getRtlRow()]}>
-        <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityLabel="رجوع">
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} accessibilityLabel="رجوع" color={colors.textPrimary} style={s.backBtn} />
         <AppText variant="heading3" numberOfLines={1} style={s.pageTitle}>
           {pageTitle}
         </AppText>

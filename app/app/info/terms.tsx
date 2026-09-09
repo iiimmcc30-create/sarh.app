@@ -8,9 +8,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
-import { RtlText } from '@/components/ui/RtlText';
+
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 const TERMS = [
   {
@@ -55,9 +56,7 @@ export default function TermsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>الشروط والأحكام</Text>
         <View style={{ width: 38 }} />
       </View>
@@ -74,11 +73,11 @@ export default function TermsScreen() {
             <View style={styles.titleRow}>
               <Text style={styles.sectionNum}>{i + 1}</Text>
               <RtlTextShell>
-                <RtlText style={styles.sectionTitle}>{item.title}</RtlText>
+                <AppText style={styles.sectionTitle}>{item.title}</AppText>
               </RtlTextShell>
             </View>
             <RtlTextShell>
-              <RtlText style={styles.sectionContent}>{item.content}</RtlText>
+              <AppText style={styles.sectionContent}>{item.content}</AppText>
             </RtlTextShell>
           </View>
         ))}
@@ -86,7 +85,7 @@ export default function TermsScreen() {
         {/* Contact */}
         <View style={styles.contactSection}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>للاستفسار</RtlText>
+            <AppText style={styles.sectionTitle}>للاستفسار</AppText>
           </RtlTextShell>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />

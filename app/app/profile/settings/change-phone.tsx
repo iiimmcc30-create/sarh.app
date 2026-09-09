@@ -1,4 +1,3 @@
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -18,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhButton } from '@/design-system/components';
 
 const COUNTRY_CODE = '+966';
 
@@ -104,12 +104,12 @@ export default function ChangePhoneScreen() {
                 keyboardType="phone-pad"
                 ltr
               />
-              <PrimaryButton
+              <SarhButton
                 title="إرسال رمز التحقق"
                 onPress={() => void handleSendOtp()}
                 loading={loading}
                 fullWidth
-                icon="phone-portrait-outline"
+                leftIcon="phone-portrait-outline"
               />
             </>
           ) : (
@@ -123,20 +123,20 @@ export default function ChangePhoneScreen() {
                 maxLength={6}
                 ltr
               />
-              <PrimaryButton
+              <SarhButton
                 title="تأكيد وتغيير الرقم"
                 onPress={() => void handleVerifyAndSave()}
                 loading={loading}
                 fullWidth
-                icon="checkmark-done-outline"
+                leftIcon="checkmark-done-outline"
               />
-              <PrimaryButton
+              <SarhButton
                 title="تغيير الرقم"
                 onPress={() => {
                   setStep('phone');
                   setCode('');
                 }}
-                variant="ghost"
+                variant="secondary"
                 fullWidth
               />
             </>

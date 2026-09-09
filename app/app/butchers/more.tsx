@@ -16,8 +16,8 @@ import { safePush } from '@/lib/safeNavigate';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 function formatPhone(phone?: string): string {
   if (!phone) return 'لم يتم إضافة رقم جوال';
@@ -47,12 +47,12 @@ export default function ButchersMoreScreen() {
           <View style={styles.userRow}>
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
               <RtlTextShell flex>
-                <RtlText style={styles.userName} numberOfLines={1}>
+                <AppText style={styles.userName} numberOfLines={1}>
                   {displayName}
-                </RtlText>
-                <RtlText style={styles.userPhone} numberOfLines={1}>
+                </AppText>
+                <AppText style={styles.userPhone} numberOfLines={1}>
                   {formatPhone(phone)}
-                </RtlText>
+                </AppText>
               </RtlTextShell>
               <View style={styles.avatarWrap}>
                 {me.avatar ? (
@@ -67,7 +67,7 @@ export default function ButchersMoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>حسابي</RtlText>
+            <AppText style={styles.sectionLabel}>حسابي</AppText>
           </RtlTextShell>
         </View>
         <View>
@@ -91,7 +91,7 @@ export default function ButchersMoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>الخدمات والدعم</RtlText>
+            <AppText style={styles.sectionLabel}>الخدمات والدعم</AppText>
           </RtlTextShell>
         </View>
         <View>

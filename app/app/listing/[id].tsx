@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhBackButton } from '@/design-system/components';
 import { sarhListingShareUrl } from '@/constants/sarhOfficial';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { rtlBackIcon, getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { type Listing } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,8 +49,8 @@ import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 const CATEGORY_LABELS: Record<string, string> = {
   camels: 'إبل',
@@ -425,9 +424,7 @@ export default function ListingDetailScreen() {
     <View style={[styles.screen, getRtlDirection()]}>
       <SafeAreaView edges={['top']} style={styles.topSafe}>
         <View style={[styles.topBar, getRtlRow()]}>
-          <Pressable onPress={() => router.back()} hitSlop={8} style={styles.topBarBtn}>
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.topBarBtn} />
           <View style={[styles.topBarActions, getRtlRow()]}>
             {isOwner ? (
               <Pressable hitSlop={8} style={styles.topBarBtn} onPress={showOwnerMenu}>
@@ -471,9 +468,9 @@ export default function ListingDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerSection}>
           <RtlTextShell>
-            <RtlText style={styles.title} numberOfLines={3} ellipsizeMode="tail">
+            <AppText style={styles.title} numberOfLines={3} ellipsizeMode="tail">
               {listing.arabicTitle || listing.title}
-            </RtlText>
+            </AppText>
           </RtlTextShell>
 
           <View style={[styles.headerMetaRow, getRtlRow()]}>
@@ -513,9 +510,9 @@ export default function ListingDetailScreen() {
               >
                 <CoverTrailRow justify="flex-end" gap={8} style={styles.sellerInlineTrail}>
                   <RtlTextShell flex>
-                    <RtlText style={styles.sellerInlineName} numberOfLines={1}>
+                    <AppText style={styles.sellerInlineName} numberOfLines={1}>
                       {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
-                    </RtlText>
+                    </AppText>
                   </RtlTextShell>
                   {listing.seller.verified ? <VerificationBadge size={16} /> : null}
                   <Image
@@ -564,12 +561,12 @@ export default function ListingDetailScreen() {
             ) : null}
             {listing.arabicDescription ? (
               <RtlTextShell>
-                <RtlText style={styles.descArabic}>{listing.arabicDescription}</RtlText>
+                <AppText style={styles.descArabic}>{listing.arabicDescription}</AppText>
               </RtlTextShell>
             ) : null}
             {listing.description && listing.description !== listing.arabicDescription ? (
               <RtlTextShell>
-                <RtlText style={styles.desc}>{listing.description}</RtlText>
+                <AppText style={styles.desc}>{listing.description}</AppText>
               </RtlTextShell>
             ) : null}
           </View>
@@ -579,7 +576,7 @@ export default function ListingDetailScreen() {
           <View style={styles.mediaSection}>
             <View style={styles.mediaLabelWrap}>
               <RtlTextShell>
-                <RtlText style={styles.mediaHeading}>الفيديو</RtlText>
+                <AppText style={styles.mediaHeading}>الفيديو</AppText>
               </RtlTextShell>
             </View>
             <View style={styles.mediaBleed}>
@@ -597,9 +594,9 @@ export default function ListingDetailScreen() {
           <View style={styles.mediaSection}>
             <View style={styles.mediaLabelWrap}>
               <RtlTextShell>
-                <RtlText style={styles.mediaHeading}>
+                <AppText style={styles.mediaHeading}>
                   الصور ({images.length.toLocaleString('ar-SA')})
-                </RtlText>
+                </AppText>
               </RtlTextShell>
             </View>
             {images.map((uri, index) => (
@@ -625,13 +622,13 @@ export default function ListingDetailScreen() {
         <View style={styles.priceSection}>
           {listing.price > 0 ? (
             <RtlTextShell>
-              <RtlText style={styles.price}>
+              <AppText style={styles.price}>
                 {`السعر: ${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
-              </RtlText>
+              </AppText>
             </RtlTextShell>
           ) : (
             <RtlTextShell>
-              <RtlText style={styles.priceOnRequest}>السعر عند الطلب</RtlText>
+              <AppText style={styles.priceOnRequest}>السعر عند الطلب</AppText>
             </RtlTextShell>
           )}
           {(listing.pinned || listing.featured) ? (
@@ -706,7 +703,7 @@ export default function ListingDetailScreen() {
             />
           ) : (
             <View style={{ flex: 1 }}>
-              <PrimaryButton title="مراسلة البائع" onPress={() => openSellerChat()} />
+              <SarhButton title="مراسلة البائع" onPress={() => openSellerChat()} />
             </View>
           )}
         </SafeAreaView>

@@ -1,6 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import {
   FEE_PAYMENT_METHODS,
   PaymentBrandLogo,
@@ -17,6 +16,7 @@ import {
 import { launchPaymentCheckout } from '@/services/payments';
 import type { NIPaymentMethod } from '@/services/network_international';
 import { useEffect, useRef, useState } from 'react';
+import { SarhButton } from '@/design-system/components';
 import {
   ActivityIndicator,
   Animated,
@@ -203,7 +203,7 @@ export function ListingFeePaymentSheet({
               <Text style={[styles.resultTitle, getRtlText()]}>
                 تم سداد الرسوم بنجاح، شكراً لك.
               </Text>
-              <PrimaryButton title="حسناً" onPress={handleClose} fullWidth />
+              <SarhButton title="حسناً" onPress={handleClose} fullWidth />
             </View>
           ) : phase === 'error' ? (
             <View style={styles.resultWrap}>
@@ -212,14 +212,14 @@ export function ListingFeePaymentSheet({
               </View>
               <Text style={[styles.resultTitle, getRtlText()]}>تعذّر إتمام الدفع</Text>
               <Text style={[styles.errorBody, getRtlText()]}>{errorMessage}</Text>
-              <PrimaryButton
+              <SarhButton
                 title="إعادة المحاولة"
                 onPress={() => {
                   setPhase('form');
                   setErrorMessage('');
                 }}
                 fullWidth
-                icon="refresh-outline"
+                leftIcon="refresh-outline"
               />
               <Pressable onPress={handleClose} style={styles.cancelBtn}>
                 <Text style={[styles.cancelText, getRtlText()]}>إغلاق</Text>

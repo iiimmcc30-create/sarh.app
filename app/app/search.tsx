@@ -21,10 +21,11 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, marginAutoStart, rtlBackIcon, getRtlRow } from '@/lib/rtl';
+import { getRtlText, marginAutoStart, getRtlRow } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { ensureApiReachable } from '@/services/api';
+import { SarhBackButton } from '@/design-system/components';
 import {
   fetchSearchSuggestions,
   fetchTrendingTags,
@@ -283,9 +284,7 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.searchBar}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <View style={styles.inputWrap}>
           <AppIcon name="search" size={16} color={colors.textPrimary} />
           <TextInput

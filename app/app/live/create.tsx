@@ -24,10 +24,11 @@ import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { colors, radius, spacing, typography } from '@/constants/theme';
 import { FilterChip, FILTER_CHIP } from '@/components/ui/FilterChip';
-import { getRtlText, rtlBackIcon } from '@/lib/rtl';
+import { getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { showLiveBroadcastComingSoonAlert, showLiveStreamEligibilityDeniedAlert } from '@/lib/liveStreamAccess';
+import { SarhBackButton } from '@/design-system/components';
 
 const AGORA_APP_ID = process.env.EXPO_PUBLIC_AGORA_APP_ID ?? '';
 /** Disabled until app launch — see liveStreamAccess.ts */
@@ -272,9 +273,7 @@ export default function CreateStreamScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.topBar}>
-          <Pressable onPress={() => { destroy(); router.back(); }} hitSlop={8} style={styles.backBtn}>
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+          <SarhBackButton onPress={() => { destroy(); router.back(); }} color={colors.textPrimary} style={styles.backBtn} />
           <Text style={styles.topTitle}>إعداد البث المباشر</Text>
           <View style={{ width: 38 }} />
         </View>

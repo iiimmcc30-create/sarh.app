@@ -14,13 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { SarhButton } from '@/design-system/components';
 import {
   fetchFaqs,
   FAQ_CATEGORY_LABEL_AR,
@@ -115,7 +115,7 @@ export default function SupportFaqScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerTitle}>لم تجد إجابة لسؤالك؟</Text>
-          <PrimaryButton
+          <SarhButton
             title="إنشاء تذكرة دعم"
             fullWidth
             onPress={() => router.push('/support/tickets/create' as never)}

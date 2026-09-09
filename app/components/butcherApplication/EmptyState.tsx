@@ -1,8 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { StyleSheet, Text, View } from 'react-native';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { SarhButton } from '@/design-system/components';
 
 type EmptyStateProps = {
   title: string;
@@ -32,7 +32,7 @@ export function EmptyState({
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
       {actionLabel && onAction ? (
-        <PrimaryButton title={actionLabel} onPress={onAction} style={styles.button} />
+        <SarhButton title={actionLabel} onPress={onAction} style={styles.button} />
       ) : null}
     </View>
   );

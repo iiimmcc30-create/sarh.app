@@ -8,10 +8,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
-import { RtlText } from '@/components/ui/RtlText';
+
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { PRIVACY_POLICY_URL } from '@/constants/legal';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 const SECTIONS = [
   {
@@ -52,9 +53,7 @@ export default function PrivacyScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>سياسة الخصوصية</Text>
         <View style={{ width: 38 }} />
       </View>
@@ -69,20 +68,20 @@ export default function PrivacyScreen() {
         {SECTIONS.map((sec, i) => (
           <View key={i} style={styles.section}>
             <RtlTextShell>
-              <RtlText style={styles.sectionTitle}>{sec.title}</RtlText>
+              <AppText style={styles.sectionTitle}>{sec.title}</AppText>
             </RtlTextShell>
             <RtlTextShell>
-              <RtlText style={styles.sectionContent}>{sec.content}</RtlText>
+              <AppText style={styles.sectionContent}>{sec.content}</AppText>
             </RtlTextShell>
           </View>
         ))}
 
         <View style={styles.contactSection}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>تواصل معنا</RtlText>
+            <AppText style={styles.sectionTitle}>تواصل معنا</AppText>
           </RtlTextShell>
           <RtlTextShell>
-            <RtlText style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</RtlText>
+            <AppText style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</AppText>
           </RtlTextShell>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />

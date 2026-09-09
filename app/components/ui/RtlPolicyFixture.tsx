@@ -2,8 +2,8 @@ import { View } from 'react-native';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText } from '@/components/ui/AppText';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { getRtlRow } from '@/lib/rtl';
+import { SarhButton } from '@/design-system/components';
 
 /**
  * Architecture fixture — only AppText / AppTextInput / getRtlRow.
@@ -19,7 +19,7 @@ export function RtlPolicyFixture() {
         <AppIcon name="location-outline" size={16} color="#1B4D3E" />
         <AppText>أيقونة مع نص</AppText>
       </View>
-      <PrimaryButton title="زر" onPress={() => undefined} />
+      <SarhButton title="زر" onPress={() => undefined} />
     </View>
   );
 }

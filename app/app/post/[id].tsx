@@ -12,7 +12,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { rtlBackIcon, getRtlRow } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -31,6 +31,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SarhBackButton } from '@/design-system/components';
 
 function mapBackendPost(p: any): Post | null {
   if (!p?.id || !p?.author) return null;
@@ -160,9 +161,7 @@ export default function PostDetailScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={[styles.topBar, getRtlRow()]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.screenTitle}>منشور</Text>
         <View style={styles.backBtn} />
       </View>

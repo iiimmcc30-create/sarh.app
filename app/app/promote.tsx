@@ -10,7 +10,8 @@ import { useApp } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlForwardIcon } from '@/lib/rtl';
+
 import { searchAllSellerListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -24,6 +25,7 @@ import {
 } from 'react-native';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { usePaidServices } from '@/hooks/usePaidServices';
+import { SarhBackButton } from '@/design-system/components';
 
 const CATEGORY_ICONS: Record<Listing['category'], string> = {
   camels: '🐪',
@@ -93,9 +95,7 @@ export default function PromoteHubScreen() {
         <View style={styles.header}>
           <View style={styles.headerSpacer} />
           <Text style={styles.headerTitle}>تعزيز سرح</Text>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         </View>
 
         <AppScrollView contentContainerStyle={styles.scroll}>
@@ -159,7 +159,7 @@ export default function PromoteHubScreen() {
                         onPress={() => openPromote(listing.id)}
                       >
                         <AppIcon
-                          name="angle-left"
+                          name={rtlForwardIcon()}
                           size={SIDEBAR_MENU_ITEM.chevronSize}
                           color={colors.textSubtle}
                         />

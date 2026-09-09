@@ -1,5 +1,4 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +22,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhButton } from '@/design-system/components';
 
 type PrivacyToggleKey = {
   [Key in keyof PrivacySettings]: PrivacySettings[Key] extends boolean ? Key : never;
@@ -121,7 +121,7 @@ export default function PrivacySettingsScreen() {
       ) : !settings ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>تعذّر تحميل إعدادات الخصوصية</Text>
-          <PrimaryButton title="إعادة المحاولة" onPress={() => void loadSettings()} />
+          <SarhButton title="إعادة المحاولة" onPress={() => void loadSettings()} />
         </View>
       ) : (
         <ScrollView
@@ -133,10 +133,10 @@ export default function PrivacySettingsScreen() {
               <Text style={styles.noticeText}>
                 عُرضت الإعدادات الافتراضية. قد تحتاج تحديث التطبيق أو الخادم لمزامنة تفضيلاتك.
               </Text>
-              <PrimaryButton
+              <SarhButton
                 title="إعادة المحاولة"
                 onPress={() => void loadSettings()}
-                variant="outline"
+                variant="secondary"
               />
             </View>
           ) : null}

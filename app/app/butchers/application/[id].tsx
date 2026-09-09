@@ -17,7 +17,6 @@ import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
 import { TimelineItem } from '@/components/butcherApplication/TimelineItem';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,8 +29,9 @@ import {
   formatApplicationDate,
   formatApplicationDateTime,
 } from '@/lib/butcherApplicationLabels';
-import { rtlBackIcon } from '@/lib/rtl';
+
 import type { ApplicationDetail } from '@/services/butcherApplicationTypes';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -153,7 +153,7 @@ export default function ButcherApplicationDetailScreen() {
           description={error ?? 'حاول مرة أخرى لاحقاً.'}
           actionLabel="إعادة المحاولة"
           onAction={load}
-          icon="alert-circle-outline"
+          leftIcon="alert-circle-outline"
         />
       </SafeAreaView>
     );
@@ -175,9 +175,7 @@ export default function ButcherApplicationDetailScreen() {
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={s.backBtn} />
         <Text style={s.headerTitle} numberOfLines={1}>
           طلب #{application.applicationNumber}
         </Text>
@@ -209,10 +207,10 @@ export default function ButcherApplicationDetailScreen() {
               <Text style={s.provisionTitle}>تم تفعيل ملحمتك</Text>
               <Text style={s.provisionSub}>يمكنك زيارة صفحة الملحمة من الزر أدناه.</Text>
             </View>
-            <PrimaryButton
+            <SarhButton
               title="زيارة الملحمة"
-              small
-              variant="gold"
+              size="sm"
+              variant="primary"
               onPress={() =>
                 router.push({
                   pathname: '/butchers/[id]',
@@ -313,7 +311,7 @@ export default function ButcherApplicationDetailScreen() {
         {error ? <Text style={s.errorText}>{error}</Text> : null}
 
         {application.status === 'DRAFT' ? (
-          <PrimaryButton
+          <SarhButton
             title="متابعة التعديل"
             onPress={() =>
               router.push({
@@ -325,9 +323,9 @@ export default function ButcherApplicationDetailScreen() {
           />
         ) : null}
 
-        <PrimaryButton
+        <SarhButton
           title="العودة لطلباتي"
-          variant="outline"
+          variant="secondary"
           onPress={() => router.push('/butchers/my-application')}
           style={s.footerBtn}
         />

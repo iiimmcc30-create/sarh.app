@@ -2,7 +2,8 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { rtlBackIcon } from '@/lib/rtl';
+
+import { rtlForwardIcon } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import {
   fetchMarketCategory,
@@ -20,6 +21,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhBackButton } from '@/design-system/components';
 
 export default function MarketSubcategoriesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -84,9 +86,7 @@ export default function MarketSubcategoriesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <View style={styles.headerTitleShell}>
           <Text style={styles.headerTitle} numberOfLines={1}>
             {parent?.emoji ? `${parent.emoji} ` : ''}
@@ -126,7 +126,7 @@ export default function MarketSubcategoriesScreen() {
                   pressed && styles.rowPressed,
                 ]}
               >
-                <AppIcon name="angle-left" size={16} color={colors.textMuted} />
+                <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
                 <View style={styles.rowLabelShell}>
                   <Text style={styles.rowLabel} numberOfLines={1}>
                     {sub.emoji ? `${sub.emoji} ` : ''}

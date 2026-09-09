@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { colors, gradients, radius, spacing } from '@/constants/theme';
-import { marginAutoStart, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
+import { marginAutoStart, rtlForwardIcon } from '@/lib/rtl';
 import { useEffect } from 'react';
 import {
   ButcherProfile,
@@ -32,6 +32,7 @@ import { hasValidCoords, COUNTRY_MAP_CENTER } from '@/lib/butcherLocation';
 import { isNativeMapsEnabled } from '@/lib/maps';
 import { NativeButchersMap } from '@/components/feature/NativeButchersMap';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
+import { SarhBackButton } from '@/design-system/components';
 
 // ─── Map pin layout coordinates (% of map container) ─────────────────────────────
 const GCC_COORDINATES: Partial<Record<Country, { x: number; y: number }>> = {
@@ -318,9 +319,7 @@ export default function ButchersMapScreen() {
 
       {/* Header */}
       <View style={s.header}>
-        <Pressable onPress={() => router.replace('/(tabs)')} hitSlop={12} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.replace('/(tabs)')} color={colors.textPrimary} style={s.backBtn} />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={s.headerTitle}>خريطة الملاحم</Text>
           <Text style={s.headerSub}>{filtered.length} ملحمة متاحة</Text>

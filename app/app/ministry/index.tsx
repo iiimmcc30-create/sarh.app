@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { openPostDetail } from '@/lib/openPost';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchUserPosts } from '@/services/posts';
 import {
@@ -23,7 +23,7 @@ import {
   type OfficialService,
 } from '@/services/officialServices';
 import { setFollowUser } from '@/services/users';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhBackButton } from '@/design-system/components';
 import { showToast } from '@/lib/toast';
 import type { Post } from '@/services/types';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -250,14 +250,7 @@ export default function MinistryProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={[styles.nav, getRtlRow()]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-          style={styles.navBtn}
-        >
-          <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} accessibilityLabel="رجوع" color={colors.textPrimary} style={styles.navBtn} />
         <AppText style={styles.navTitle} numberOfLines={1}>
           {account?.arabicName || ''}
         </AppText>

@@ -1,6 +1,5 @@
 import { Image } from 'expo-image';
 import { OnboardingDots } from '@/components/onboarding/OnboardingDots';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppText } from '@/components/ui/AppText';
 import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
@@ -28,6 +27,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhButton } from '@/design-system/components';
 
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
@@ -159,11 +159,11 @@ export default function OnboardingScreen() {
             scrollX={scrollX}
             slideWidth={width}
           />
-          <PrimaryButton
+          <SarhButton
             title={isLastSlide ? ONBOARDING_START_LABEL : ONBOARDING_NEXT_LABEL}
             onPress={handleNext}
             fullWidth
-            icon={isLastSlide ? 'checkmark' : rtlForwardIcon()}
+            leftIcon={isLastSlide ? 'checkmark' : rtlForwardIcon()}
           />
         </View>
       </SafeAreaView>

@@ -20,7 +20,7 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlBackIcon } from '@/lib/rtl';
+import { getRtlText } from '@/lib/rtl';
 import { countries, Country } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -54,8 +54,9 @@ import {
   butcherMinOrderLabel,
   butcherPickupLabel,
 } from '@/lib/butcherStoreMeta';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 // ─── Products list (filter owned by parent unified nav) ───────────────────────
 function StoreProductsList({
@@ -75,7 +76,7 @@ function StoreProductsList({
       <View style={emptyStyles.wrap}>
         <AppIcon name="storefront-outline" size={36} color={colors.textMuted} />
         <RtlTextShell>
-          <RtlText style={emptyStyles.title}>لا منتجات حالياً</RtlText>
+          <AppText style={emptyStyles.title}>لا منتجات حالياً</AppText>
         </RtlTextShell>
       </View>
     );
@@ -110,7 +111,7 @@ function OffersTab({ offers, currencySymbol }: {
       <View style={emptyStyles.wrap}>
         <AppIcon name="pricetag-outline" size={36} color={colors.textMuted} />
         <RtlTextShell>
-          <RtlText style={emptyStyles.title}>لا توجد عروض حالياً</RtlText>
+          <AppText style={emptyStyles.title}>لا توجد عروض حالياً</AppText>
         </RtlTextShell>
       </View>
     );
@@ -129,10 +130,10 @@ function OffersTab({ offers, currencySymbol }: {
               <Text style={offersStyles.discountText}>-{offer.discountPercent}%</Text>
             </View>
             <RtlTextShell>
-              <RtlText style={offersStyles.offerTitle}>{offer.titleAr}</RtlText>
+              <AppText style={offersStyles.offerTitle}>{offer.titleAr}</AppText>
             </RtlTextShell>
             <RtlTextShell>
-              <RtlText style={offersStyles.offerDesc} numberOfLines={2}>{offer.descriptionAr}</RtlText>
+              <AppText style={offersStyles.offerDesc} numberOfLines={2}>{offer.descriptionAr}</AppText>
             </RtlTextShell>
             <View style={offersStyles.priceRow}>
               <Text style={offersStyles.originalPrice}>
@@ -165,7 +166,7 @@ function StoriesTab({ stories }: { stories: ButcherStory[] }) {
       <View style={emptyStyles.wrap}>
         <AppIcon name="images-outline" size={36} color={colors.textMuted} />
         <RtlTextShell>
-          <RtlText style={emptyStyles.title}>لا توجد قصص بعد</RtlText>
+          <AppText style={emptyStyles.title}>لا توجد قصص بعد</AppText>
         </RtlTextShell>
       </View>
     );
@@ -213,10 +214,10 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
       {/* Bio */}
       <View style={aboutStyles.section}>
         <RtlTextShell>
-          <RtlText style={aboutStyles.sectionTitle}>عن الملحمة</RtlText>
+          <AppText style={aboutStyles.sectionTitle}>عن الملحمة</AppText>
         </RtlTextShell>
         <RtlTextShell>
-          <RtlText style={aboutStyles.bio}>{butcher.bioAr}</RtlText>
+          <AppText style={aboutStyles.bio}>{butcher.bioAr}</AppText>
         </RtlTextShell>
       </View>
 
@@ -235,7 +236,7 @@ function AboutTab({ butcher }: { butcher: ButcherProfile }) {
       {/* Specialties */}
       <View style={aboutStyles.section}>
         <RtlTextShell>
-          <RtlText style={aboutStyles.sectionTitle}>التخصصات</RtlText>
+          <AppText style={aboutStyles.sectionTitle}>التخصصات</AppText>
         </RtlTextShell>
         <View style={aboutStyles.chipsWrap}>
           {butcher.specialties.map((s, i) => (
@@ -273,8 +274,8 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   return (
     <View style={aboutStyles.infoRow}>
       <RtlTextShell flex>
-        <RtlText style={aboutStyles.infoValue}>{value}</RtlText>
-        <RtlText style={aboutStyles.infoLabel}>{label}</RtlText>
+        <AppText style={aboutStyles.infoValue}>{value}</AppText>
+        <AppText style={aboutStyles.infoLabel}>{label}</AppText>
       </RtlTextShell>
       <AppIcon name={icon} size={16} color={colors.electricBright} />
     </View>
@@ -301,13 +302,13 @@ function ChatTab({
         <View style={chatStyles.lockedCard}>
           <AppIcon name="chatbubble-outline" size={28} color={colors.textMuted} />
           <RtlTextShell>
-            <RtlText style={chatStyles.lockedTitle}>المحادثة غير متاحة</RtlText>
+            <AppText style={chatStyles.lockedTitle}>المحادثة غير متاحة</AppText>
           </RtlTextShell>
           <RtlTextShell>
-            <RtlText style={chatStyles.lockedSub}>
+            <AppText style={chatStyles.lockedSub}>
               {chatAccess?.messageAr ??
                 'التواصل المباشر مع الملحمة غير متاح'}
-            </RtlText>
+            </AppText>
           </RtlTextShell>
           <Pressable
             style={chatStyles.ordersLink}
@@ -417,7 +418,7 @@ function ReviewsStrip({ reviews }: { reviews: ButcherReview[] }) {
         <View key={r.id} style={reviewsStyles.card}>
           <View style={reviewsStyles.header}>
             <RtlTextShell flex>
-              <RtlText style={reviewsStyles.author}>{r.authorNameAr}</RtlText>
+              <AppText style={reviewsStyles.author}>{r.authorNameAr}</AppText>
               <View style={reviewsStyles.stars}>
                 {[...Array(5)].map((_, i) => (
                   <AppIcon
@@ -432,7 +433,7 @@ function ReviewsStrip({ reviews }: { reviews: ButcherReview[] }) {
             <Image source={{ uri: r.authorAvatar }} style={reviewsStyles.avatar} />
           </View>
           <RtlTextShell>
-            <RtlText style={reviewsStyles.comment} numberOfLines={3}>{r.commentAr}</RtlText>
+            <AppText style={reviewsStyles.comment} numberOfLines={3}>{r.commentAr}</AppText>
           </RtlTextShell>
         </View>
       ))}
@@ -794,13 +795,7 @@ export default function ButcherProfileScreen() {
             colors={['rgba(8,14,10,0.35)', 'transparent', 'rgba(8,14,10,0.55)']}
             style={StyleSheet.absoluteFill}
           />
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={12}
-            style={styles.backBtn}
-          >
-            <AppIcon name={rtlBackIcon()} size={22} color="#fff" />
-          </Pressable>
+          <SarhBackButton onPress={() => router.back()} color="#fff" style={styles.backBtn} />
           <View style={styles.coverActions}>
             <Pressable style={styles.coverAction}>
               <AppIcon name="information-circle-outline" size={18} color="#fff" />

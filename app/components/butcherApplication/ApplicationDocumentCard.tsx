@@ -1,6 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -12,6 +11,7 @@ import {
 } from '@/lib/butcherApplicationLabels';
 import { maxBytesLabelForDocumentType } from '@/lib/butcherApplicationValidation';
 import { getRtlText, getRtlRow } from '@/lib/rtl';
+import { SarhButton } from '@/design-system/components';
 import type {
   ApplicationDocument,
   ButcherApplicationDocumentType,
@@ -142,29 +142,29 @@ export function ApplicationDocumentCard({
 
       <View style={styles.actions}>
         {!hasFile ? (
-          <PrimaryButton
+          <SarhButton
             title="رفع المستند"
             onPress={onUpload}
             disabled={disabled || busy}
-            small
+            size="sm"
             style={styles.actionBtn}
           />
         ) : (
           <>
-            <PrimaryButton
+            <SarhButton
               title="استبدال"
-              variant="outline"
+              variant="secondary"
               onPress={onReplace}
               disabled={disabled || busy}
-              small
+              size="sm"
               style={styles.actionBtn}
             />
-            <PrimaryButton
+            <SarhButton
               title="حذف"
-              variant="ghost"
+              variant="secondary"
               onPress={confirmDelete}
               disabled={disabled || busy}
-              small
+              size="sm"
               style={styles.actionBtn}
             />
           </>

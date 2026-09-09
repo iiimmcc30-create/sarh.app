@@ -27,8 +27,8 @@ import type { PostComment } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 type ListingCommentsModalProps = {
   visible: boolean;
@@ -133,9 +133,9 @@ export function ListingCommentsModal({
             </Pressable>
 
             <RtlTextShell flex>
-              <RtlText style={styles.headerTitle}>
+              <AppText style={styles.headerTitle}>
                 عدد التعليقات ({comments.length})
-              </RtlText>
+              </AppText>
             </RtlTextShell>
 
             <Pressable
@@ -175,7 +175,7 @@ export function ListingCommentsModal({
             >
               {comments.length === 0 ? (
                 <RtlTextShell>
-                  <RtlText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</RtlText>
+                  <AppText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</AppText>
                 </RtlTextShell>
               ) : (
                 comments.map((c) => (
@@ -199,7 +199,7 @@ export function ListingCommentsModal({
                       </CoverTrailRow>
                     </View>
                     <RtlTextShell>
-                      <RtlText style={styles.commentText}>{c.content}</RtlText>
+                      <AppText style={styles.commentText}>{c.content}</AppText>
                     </RtlTextShell>
                     <Pressable onPress={focusInput} style={[styles.replyBtn, getRtlRow()]}>
                       <AppIcon name="chatbubble-outline" size={14} color={colors.electricBright} />

@@ -6,9 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { RtlText } from '@/components/ui/RtlText';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 const REFUND_SECTIONS = [
   {
@@ -49,9 +50,7 @@ export default function RefundScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={[styles.header, getRtlRow()]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>سياسة الاسترداد</Text>
         <View style={styles.backBtn} />
       </View>
@@ -62,18 +61,18 @@ export default function RefundScreen() {
         showsVerticalScrollIndicator={false}
       >
         <RtlTextShell>
-          <RtlText style={styles.intro}>
+          <AppText style={styles.intro}>
             آخر تحديث: يوليو ٢٠٢٥ · هذه السياسة جزء من شروط وأحكام منصة سرح وتنظّم حالات استرداد المبالغ المدفوعة.
-          </RtlText>
+          </AppText>
         </RtlTextShell>
 
         {REFUND_SECTIONS.map((section, i) => (
           <View key={i} style={styles.section}>
             <RtlTextShell>
-              <RtlText style={styles.sectionTitle}>{section.title}</RtlText>
+              <AppText style={styles.sectionTitle}>{section.title}</AppText>
             </RtlTextShell>
             <RtlTextShell>
-              <RtlText style={styles.sectionBody}>{section.content}</RtlText>
+              <AppText style={styles.sectionBody}>{section.content}</AppText>
             </RtlTextShell>
           </View>
         ))}

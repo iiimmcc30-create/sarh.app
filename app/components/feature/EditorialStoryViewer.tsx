@@ -16,8 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography } from '@/constants/theme';
 import { rtlForwardIcon } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const SNIPPET_LEN = 160;
@@ -193,7 +193,7 @@ export function EditorialStoryViewer({ stories, startIndex, onClose }: Props) {
           pointerEvents="box-none"
         >
           <RtlTextShell>
-            <RtlText style={styles.title}>{story.titleAr}</RtlText>
+            <AppText style={styles.title}>{story.titleAr}</AppText>
           </RtlTextShell>
           {expanded ? (
             <ScrollView
@@ -202,14 +202,14 @@ export function EditorialStoryViewer({ stories, startIndex, onClose }: Props) {
               showsVerticalScrollIndicator={false}
             >
               <RtlTextShell>
-                <RtlText style={styles.body}>{story.bodyAr}</RtlText>
+                <AppText style={styles.body}>{story.bodyAr}</AppText>
               </RtlTextShell>
             </ScrollView>
           ) : (
             <RtlTextShell>
-              <RtlText style={styles.body} numberOfLines={4}>
+              <AppText style={styles.body} numberOfLines={4}>
                 {snippet}
-              </RtlText>
+              </AppText>
             </RtlTextShell>
           )}
           {canToggle || expanded ? (

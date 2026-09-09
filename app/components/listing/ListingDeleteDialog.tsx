@@ -1,9 +1,9 @@
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SarhButton } from '@/design-system/components';
 
 type ListingDeleteDialogProps = {
   visible: boolean;
@@ -66,7 +66,7 @@ export function ListingDeleteDialog({
                 style={[styles.input, getRtlText()]}
                 multiline
               />
-              <PrimaryButton
+              <SarhButton
                 title="تأكيد حذف الإعلان"
                 onPress={() => onConfirm({ sold, reason: reason.trim() })}
                 disabled={!canConfirm || submitting}

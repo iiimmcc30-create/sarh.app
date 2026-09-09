@@ -14,14 +14,14 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
-import { SarhButton, SarhIconButton } from '@/design-system/components';
+import { SarhBackButton, SarhButton, SarhIconButton } from '@/design-system/components';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -226,8 +226,7 @@ export function ProfileScreenLayout({
                   />
                 ) : null}
                 {mode === 'visitor' && onBack ? (
-                  <SarhIconButton
-                    icon={rtlBackIcon()}
+                  <SarhBackButton
                     chrome="ghost"
                     size="sm"
                     onPress={onBack}
@@ -263,17 +262,17 @@ export function ProfileScreenLayout({
                 <View style={styles.nameBlock}>
                   <View style={[styles.nameWithBadge, getRtlRow()]}>
                     <View style={styles.nameShell}>
-                      <RtlText style={[styles.displayName, styles.displayNameInline]} numberOfLines={2}>
+                      <AppText style={[styles.displayName, styles.displayNameInline]} numberOfLines={2}>
                         {displayName}
-                      </RtlText>
+                      </AppText>
                     </View>
                     {user.verified ? <VerificationBadge size={18} /> : null}
                   </View>
 
                   <RtlTextShell style={styles.handleShell}>
-                    <RtlText style={styles.handleText} numberOfLines={1}>
+                    <AppText style={styles.handleText} numberOfLines={1}>
                       @{user.username}
-                    </RtlText>
+                    </AppText>
                   </RtlTextShell>
 
                   <Pressable
@@ -332,9 +331,9 @@ export function ProfileScreenLayout({
 
                 {!!user.bio ? (
                   <RtlTextShell style={styles.bioShell}>
-                    <RtlText style={styles.bio} numberOfLines={4}>
+                    <AppText style={styles.bio} numberOfLines={4}>
                       {user.bio}
-                    </RtlText>
+                    </AppText>
                   </RtlTextShell>
                 ) : null}
               </View>

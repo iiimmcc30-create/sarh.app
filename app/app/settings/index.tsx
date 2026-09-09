@@ -11,7 +11,8 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+
+import { SarhBackButton } from '@/design-system/components';
 
 type SubItem = { icon: string; label: string; route: string };
 type Section = { key: string; icon: string; title: string; route: string; items: SubItem[] };
@@ -66,9 +67,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>الإعدادات والخصوصية</Text>
         <View style={styles.headerSpacer} />
       </View>

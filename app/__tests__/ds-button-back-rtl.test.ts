@@ -34,4 +34,10 @@ describe('Back control uses a single RTL icon helper', () => {
     expect(bar.indexOf('<SarhBackButton')).toBeLessThan(bar.indexOf('<ButcherLocationBar'));
     expect(bar).not.toContain('rtlBackIcon');
   });
+
+  it('profile visitor back uses SarhBackButton instead of a raw icon', () => {
+    const layout = src('components/feature/ProfileScreenLayout.tsx');
+    expect(layout).toContain('SarhBackButton');
+    expect(layout).not.toContain('rtlBackIcon');
+  });
 });

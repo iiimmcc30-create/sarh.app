@@ -25,8 +25,8 @@ import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 const MAX_BUTCHERS = 24;
 
@@ -288,8 +288,8 @@ export default function ButcherOffersScreen() {
             <>
               <View style={styles.sectionLabelWrap}>
                 <RtlTextShell>
-                  <RtlText style={styles.heroTitle}>عروض بالقرب منك</RtlText>
-                  <RtlText style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</RtlText>
+                  <AppText style={styles.heroTitle}>عروض بالقرب منك</AppText>
+                  <AppText style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</AppText>
                 </RtlTextShell>
               </View>
               {data.map((item) => (

@@ -12,9 +12,10 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { rtlForwardIcon } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 type Props = {
   onAddressChange?: (addressLine: string) => void;
@@ -55,17 +56,17 @@ export function DeliveryMapAddressField({ onAddressChange }: Props) {
     >
       <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
         <RtlTextShell flex>
-          <RtlText style={styles.title}>عنوان التوصيل</RtlText>
-          <RtlText style={styles.value} numberOfLines={2}>
+          <AppText style={styles.title}>عنوان التوصيل</AppText>
+          <AppText style={styles.value} numberOfLines={2}>
             {hasLocation ? summary : 'اضغط لتحديد الموقع على الخريطة'}
-          </RtlText>
+          </AppText>
         </RtlTextShell>
         <View style={styles.iconWrap}>
           <AppIcon name="location" size={20} color={colors.electricBright} />
         </View>
       </CoverTrailRow>
       <View style={styles.ctaRow}>
-        <AppIcon name="angle-left" size={14} color={colors.textMuted} />
+        <AppIcon name={rtlForwardIcon()} size={14} color={colors.textMuted} />
         <Text style={styles.cta}>
           {hasLocation ? 'تعديل الموقع على الخريطة' : 'فتح الخريطة'}
         </Text>
