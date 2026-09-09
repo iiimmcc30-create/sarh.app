@@ -193,6 +193,7 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       gap: 6,
       marginTop: 6,
+      marginBottom: spacing.lg,
     },
     statValue: {
       ...typography.caption,
