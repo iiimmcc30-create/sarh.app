@@ -109,7 +109,11 @@ export function CustomerOrderCard({
             ]}
             accessibilityLabel={primaryLabel}
           >
-            <AppText variant="label" style={headline.awaitingPayment ? styles.ctaPayText : styles.ctaGoldText}>
+            <AppText
+              variant="label"
+              numberOfLines={1}
+              style={headline.awaitingPayment ? styles.ctaPayText : styles.ctaGoldText}
+            >
               {primaryLabel}
             </AppText>
           </Pressable>
@@ -210,12 +214,12 @@ function createStyles(colors: ThemeColors) {
       textDecorationLine: 'underline',
     },
     cta: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       paddingVertical: 12,
       borderRadius: 12,
       flexShrink: 0,
-      minWidth: 108,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     ctaGold: {
       backgroundColor: colors.gold,

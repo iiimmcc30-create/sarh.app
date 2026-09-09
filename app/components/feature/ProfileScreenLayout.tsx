@@ -619,7 +619,8 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: spacing.sm,
     },
     actionBtnFlex: {
-      flex: 1,
+      flexGrow: 1,
+      flexShrink: 0,
     },
     contentCardTop: {
       marginHorizontal: 0,

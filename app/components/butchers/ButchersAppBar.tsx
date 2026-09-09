@@ -4,7 +4,8 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { ds } from '@/constants/designSystem';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { SarhBackButton } from '@/design-system/components';
+import { getRtlRow } from '@/lib/rtl';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -36,6 +37,11 @@ export function ButchersAppBar({
   return (
     <View style={styles.shell}>
       <View style={[styles.bar, getRtlRow()]}>
+        <SarhBackButton
+          onPress={onBack}
+          color={colors.textPrimary}
+          accessibilityLabel="رجوع للتطبيق"
+        />
         {showField ? (
           <View style={[styles.searchField, getRtlRow()]}>
             <AppIcon name="search" size={ds.icon.sm} color={colors.textPrimary} />
@@ -61,7 +67,9 @@ export function ButchersAppBar({
             </Pressable>
           </View>
         ) : (
-          <ButcherLocationBar compact />
+          <View style={styles.searchField}>
+            <ButcherLocationBar compact />
+          </View>
         )}
 
         <View style={[styles.actions, getRtlRow()]}>
@@ -83,9 +91,6 @@ export function ButchersAppBar({
               <AppIcon name="search" size={ds.icon.md} color={colors.textPrimary} />
             </Pressable>
           ) : null}
-          <Pressable onPress={onBack} style={styles.iconBtn} hitSlop={8} accessibilityLabel="رجوع للتطبيق">
-            <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
-          </Pressable>
         </View>
       </View>
     </View>
