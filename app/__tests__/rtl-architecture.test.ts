@@ -44,8 +44,8 @@ describe('RTL policy — single I18nManager system', () => {
 });
 
 describe('shared primitives inherit the single RTL model', () => {
-  it('RtlText no longer creates LTR islands and RtlTextShell is gone', () => {
-    expect(src('components/ui/RtlText.tsx')).toContain('AppText');
+  it('RtlText and RtlTextShell implementations are gone', () => {
+    expect(() => src('components/ui/RtlText.tsx')).toThrow();
     expect(() => src('components/ui/RtlTextShell.tsx')).toThrow();
     expect(src('components/ui/VerifiedInlineName.tsx')).not.toContain('row-reverse');
     expect(src('components/ui/SectionHeader.tsx')).not.toContain("direction: 'ltr'");
