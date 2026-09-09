@@ -48,7 +48,6 @@ import {
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { AppText } from '@/components/ui/AppText';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -465,7 +464,27 @@ export default function ListingDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerSection}>
-          <View style={{ width: '100%' }}>
+          <View style={styles.titleBlock}>
+            {!isOwner ? (
+              <Pressable
+                onPress={() => openUserProfile(router, listing.seller.id)}
+                style={[styles.sellerTitleCluster, getRtlRow()]}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  listing.seller.arabicName || listing.seller.displayName || listing.seller.username
+                }
+              >
+                <Image
+                  source={uriSource(listing.seller.avatar)}
+                  style={styles.sellerInlineAvatar}
+                  contentFit="cover"
+                />
+                {listing.seller.verified ? <VerificationBadge size={16} /> : null}
+                <AppText style={styles.sellerInlineName} numberOfLines={1}>
+                  {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
+                </AppText>
+              </Pressable>
+            ) : null}
             <AppText style={styles.title} numberOfLines={3} ellipsizeMode="tail">
               {listing.arabicTitle || listing.title}
             </AppText>
@@ -502,7 +521,7 @@ export default function ListingDetailScreen() {
           </View>
 
           {!isOwner ? (
-            <View style={styles.sellerRow}>
+            <View style={[styles.sellerRow, getRtlRow()]}>
               <SarhButton
                 title={isFollowing ? 'متابَع' : 'متابعة'}
                 variant={isFollowing ? 'secondary' : 'primary'}
@@ -510,24 +529,6 @@ export default function ListingDetailScreen() {
                 onPress={handleFollowSeller}
                 loading={followLoading || (isFollowing === null && isAuthenticated)}
               />
-              <Pressable
-                onPress={() => openUserProfile(router, listing.seller.id)}
-                style={styles.sellerInline}
-              >
-                <CoverTrailRow justify="flex-end" gap={8} style={styles.sellerInlineTrail}>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <AppText style={styles.sellerInlineName} numberOfLines={1}>
-                      {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
-                    </AppText>
-                  </View>
-                  {listing.seller.verified ? <VerificationBadge size={16} /> : null}
-                  <Image
-                    source={uriSource(listing.seller.avatar)}
-                    style={styles.sellerInlineAvatar}
-                    contentFit="cover"
-                  />
-                </CoverTrailRow>
-              </Pressable>
             </View>
           ) : null}
 
@@ -852,25 +853,26 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     pinnedText: { ...typography.badge, color: '#fff' },
+    titleBlock: {
+      width: '100%',
+      gap: spacing.sm,
+    },
     title: {
       ...typography.sectionHeading,
       color: colors.electricBright,
     },
-    sellerRow: {
-      flexDirection: 'row',
-            width: '100%',
+    sellerTitleCluster: {
       alignItems: 'center',
-      justifyContent: 'space-between',
+      gap: 8,
+      alignSelf: 'flex-start',
+      maxWidth: '100%',
+    },
+    sellerRow: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
       gap: spacing.sm,
       paddingTop: spacing.xs,
-    },
-    sellerInline: {
-      flexShrink: 1,
-      minWidth: 0,
-      maxWidth: '72%',
-    },
-    sellerInlineTrail: {
-      width: '100%',
     },
     sellerInlineAvatar: {
       width: 28,
@@ -884,6 +886,8 @@ function createStyles(colors: ThemeColors) {
     sellerInlineName: {
       ...typography.feedTitle,
       color: colors.textSecondary,
+      flexShrink: 1,
+      minWidth: 0,
     },
     contactPhoneRow: {
       alignItems: 'center',
