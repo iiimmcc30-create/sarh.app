@@ -4,6 +4,7 @@ import { ds } from '@/constants/designSystem';
 import { colors, radius, space } from '@/design-system';
 import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
 import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -29,9 +30,18 @@ export function HomeAppBar({
   avatarUri,
 }: HomeAppBarProps) {
   const { colors: themeColors } = useTheme();
+  const colorStyles = useThemedStyles(() =>
+    StyleSheet.create({
+      shell: { borderBottomColor: colors.border },
+      avatar: {
+        borderColor: colors.primary,
+        backgroundColor: colors.surfaceElevated,
+      },
+    }),
+  );
 
   return (
-    <SarhSurface tone="background" style={[styles.shell, { borderBottomColor: themeColors.borderSoft }]}>
+    <SarhSurface tone="background" style={[styles.shell, colorStyles.shell]}>
       <View style={[styles.bar, getRtlRow()]}>
         <View style={[styles.profileCluster, getRtlRow()]}>
           <Pressable
@@ -46,7 +56,7 @@ export function HomeAppBar({
               name={displayName}
               size="md"
               accessibilityLabel={displayName}
-              style={[styles.avatar, { borderColor: themeColors.electric, backgroundColor: themeColors.bgElevated }]}
+              style={[styles.avatar, colorStyles.avatar]}
             />
           </Pressable>
 
@@ -92,7 +102,6 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
   bar: {
     width: '100%',
@@ -138,8 +147,6 @@ const styles = StyleSheet.create({
     height: space[40],
     borderRadius: radius[999],
     borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceElevated,
   },
 });
 

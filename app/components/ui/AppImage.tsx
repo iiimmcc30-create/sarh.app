@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { resolveMediaUrl } from '@/services/media';
+import { useTheme } from '@/hooks/useTheme';
 
 type ContentFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
@@ -33,8 +34,6 @@ function hasValidUri(source: ImageSourcePropType | null | undefined): boolean {
 }
 
 /** Soft surface when media is missing or fails to load (avoids solid black tiles). */
-const PLACEHOLDER_BG = '#102633';
-
 export function Image({
   contentFit = 'cover',
   transition = 200,
@@ -44,6 +43,7 @@ export function Image({
   onError,
   ...props
 }: AppImageProps) {
+  const { colors } = useTheme();
   const [failed, setFailed] = useState(false);
   const handleError = useCallback(
     (event: Parameters<NonNullable<ExpoImageProps['onError']>>[0]) => {
@@ -56,7 +56,7 @@ export function Image({
   if (!hasValidUri(source) || failed) {
     return (
       <View
-        style={[styles.placeholder, style as StyleProp<ImageStyle>]}
+        style={[styles.placeholder, { backgroundColor: colors.bgElevated }, style as StyleProp<ImageStyle>]}
         accessibilityLabel="تعذّر تحميل الصورة"
       />
     );
@@ -84,6 +84,6 @@ export function Image({
 
 const styles = StyleSheet.create({
   placeholder: {
-    backgroundColor: PLACEHOLDER_BG,
+    backgroundColor: 'transparent',
   },
 });

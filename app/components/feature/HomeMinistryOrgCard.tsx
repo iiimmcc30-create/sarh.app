@@ -2,6 +2,7 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { colors, elevation, functional, motion, radius, space } from '@/design-system';
 import { AppText, SarhAvatar, SarhButton, SarhCard } from '@/design-system/components';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER } from '@/constants/branding';
 import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
@@ -21,6 +22,7 @@ type Props = {
 export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const styles = useThemedStyles(() => createStyles());
   const cardH = Math.round(Math.min(200, Math.max(172, width * 0.46)));
   const name = account?.arabicName || '';
   const count = account?.servicesCount ?? serviceCount;
@@ -90,7 +92,8 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles() {
+  return StyleSheet.create({
   wrap: {
     paddingBottom: space[16],
   },
@@ -138,5 +141,6 @@ const styles = StyleSheet.create({
     opacity: motion.opacity.pressed,
   },
 });
+}
 
 export default HomeMinistryOrgCard;
