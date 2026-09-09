@@ -14,7 +14,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
 import { safePush } from '@/lib/safeNavigate';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 export default function ButchersAllScreen() {
@@ -81,9 +80,9 @@ export default function ButchersAllScreen() {
         >
           {butchers.length === 0 ? (
             <View style={styles.empty}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.emptyTitle}>لا توجد ملاحم حالياً</AppText>
-              </RtlTextShell>
+              </View>
             </View>
           ) : (
             butchers.map((butcher, index) => (

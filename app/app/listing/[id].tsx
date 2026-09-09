@@ -49,7 +49,6 @@ import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -466,11 +465,11 @@ export default function ListingDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerSection}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.title} numberOfLines={3} ellipsizeMode="tail">
               {listing.arabicTitle || listing.title}
             </AppText>
-          </RtlTextShell>
+          </View>
 
           <View style={[styles.headerMetaRow, getRtlRow()]}>
             <View style={[styles.headerMetaChip, getRtlRow()]}>
@@ -516,11 +515,11 @@ export default function ListingDetailScreen() {
                 style={styles.sellerInline}
               >
                 <CoverTrailRow justify="flex-end" gap={8} style={styles.sellerInlineTrail}>
-                  <RtlTextShell flex>
+                  <View style={{ flex: 1, minWidth: 0 }}>
                     <AppText style={styles.sellerInlineName} numberOfLines={1}>
                       {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
                     </AppText>
-                  </RtlTextShell>
+                  </View>
                   {listing.seller.verified ? <VerificationBadge size={16} /> : null}
                   <Image
                     source={uriSource(listing.seller.avatar)}
@@ -555,7 +554,7 @@ export default function ListingDetailScreen() {
         {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
           <View style={styles.descriptionSection}>
             {categoryLabel || listing.breed || listing.age ? (
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <View style={[styles.specMetaLine, getRtlRow()]}>
                   {categoryLabel ? (
                     <Text style={[styles.specMetaText, getRtlText()]}>{categoryLabel}</Text>
@@ -567,17 +566,17 @@ export default function ListingDetailScreen() {
                     <Text style={[styles.specMetaText, getRtlText()]}>{listing.age}</Text>
                   ) : null}
                 </View>
-              </RtlTextShell>
+              </View>
             ) : null}
             {listing.arabicDescription ? (
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.descArabic}>{listing.arabicDescription}</AppText>
-              </RtlTextShell>
+              </View>
             ) : null}
             {listing.description && listing.description !== listing.arabicDescription ? (
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.desc}>{listing.description}</AppText>
-              </RtlTextShell>
+              </View>
             ) : null}
           </View>
         ) : null}
@@ -585,9 +584,9 @@ export default function ListingDetailScreen() {
         {videoUri ? (
           <View style={styles.mediaSection}>
             <View style={styles.mediaLabelWrap}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.mediaHeading}>الفيديو</AppText>
-              </RtlTextShell>
+              </View>
             </View>
             <View style={styles.mediaBleed}>
               <ListingVideoPlayer
@@ -603,11 +602,11 @@ export default function ListingDetailScreen() {
         {images.length > 0 ? (
           <View style={styles.mediaSection}>
             <View style={styles.mediaLabelWrap}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.mediaHeading}>
                   الصور ({images.length.toLocaleString('ar-SA')})
                 </AppText>
-              </RtlTextShell>
+              </View>
             </View>
             {images.map((uri, index) => (
               <Pressable
@@ -631,15 +630,15 @@ export default function ListingDetailScreen() {
 
         <View style={styles.priceSection}>
           {listing.price > 0 ? (
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.price}>
                 {`السعر: ${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
               </AppText>
-            </RtlTextShell>
+            </View>
           ) : (
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.priceOnRequest}>السعر عند الطلب</AppText>
-            </RtlTextShell>
+            </View>
           )}
           {(listing.pinned || listing.featured) ? (
             <View style={styles.priceBadges}>

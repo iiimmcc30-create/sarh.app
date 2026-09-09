@@ -3,7 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { SarhBackButton, SarhButton, SarhInput } from '@/design-system/components';
 import {
   useCallback,
   useEffect,
@@ -26,7 +26,6 @@ import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { DocumentsStep } from '@/components/butcherApplication/DocumentsStep';
 import { WizardStepBar } from '@/components/butcherApplication/WizardStepBar';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -567,13 +566,13 @@ export default function ButcherApplicationEditScreen() {
         <Text style={s.stepTitle}>معلومات المحل</Text>
         <Text style={s.stepSub}>أدخل بيانات ملحمتك الأساسية كما ستظهر للعملاء</Text>
 
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="اسم المحل *"
           value={form.nameAr}
           onChangeText={(v) => patchForm({ nameAr: v, nameEn: v })}
           error={fieldErrors.nameAr || fieldErrors.nameEn}
         />
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="هاتف المحل *"
           value={form.shopPhone}
           onChangeText={(v) => patchForm({ shopPhone: v })}
@@ -586,7 +585,7 @@ export default function ButcherApplicationEditScreen() {
           hint="مثال: 05XXXXXXXX أو +9665XXXXXXXX"
           error={fieldErrors.shopPhone}
         />
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="رقم السجل التجاري *"
           value={form.commercialReg}
           onChangeText={(v) => patchForm({ commercialReg: v })}
@@ -603,13 +602,13 @@ export default function ButcherApplicationEditScreen() {
           <Text style={s.countryFixedText}>🇸🇦 السعودية</Text>
         </View>
 
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="المدينة *"
           value={form.cityAr}
           onChangeText={(v) => patchForm({ cityAr: v, city: v })}
           error={fieldErrors.cityAr || fieldErrors.city}
         />
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="العنوان *"
           value={form.addressAr}
           onChangeText={(v) => patchForm({ addressAr: v, address: v })}
@@ -634,7 +633,7 @@ export default function ButcherApplicationEditScreen() {
           />
         ) : (
           <>
-            <AppTextInput
+            <SarhInput appearance="theme"
               label="خط العرض (Latitude) *"
               value={form.lat}
               onChangeText={(v) => patchForm({ lat: v })}
@@ -643,7 +642,7 @@ export default function ButcherApplicationEditScreen() {
               hint="مثال: 24.7136"
               error={fieldErrors.lat}
             />
-            <AppTextInput
+            <SarhInput appearance="theme"
               label="خط الطول (Longitude) *"
               value={form.lng}
               onChangeText={(v) => patchForm({ lng: v })}
@@ -664,14 +663,14 @@ export default function ButcherApplicationEditScreen() {
         <Text style={s.stepTitle}>تفاصيل العمل</Text>
         <Text style={s.stepSub}>نبذة عن ملحمتك وساعات العمل</Text>
 
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="نبذة"
           value={form.bioAr}
           onChangeText={(v) => patchForm({ bioAr: v, bioEn: v })}
           multiline
           error={fieldErrors.bioAr}
         />
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="التخصصات"
           value={form.specialtiesText}
           onChangeText={(v) => patchForm({ specialtiesText: v })}
@@ -679,7 +678,7 @@ export default function ButcherApplicationEditScreen() {
           hint="افصل بين التخصصات بفاصلة"
           error={fieldErrors.specialties}
         />
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="وقت الفتح *"
           value={form.openTime}
           onChangeText={(v) => patchForm({ openTime: v })}
@@ -688,7 +687,7 @@ export default function ButcherApplicationEditScreen() {
           hint="صيغة HH:mm"
           error={fieldErrors.openTime}
         />
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="وقت الإغلاق *"
           value={form.closeTime}
           onChangeText={(v) => patchForm({ closeTime: v })}

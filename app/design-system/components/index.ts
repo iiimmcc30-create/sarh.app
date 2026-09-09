@@ -15,7 +15,7 @@ export { CARD_PADDING, SarhCard, resolveSarhCardStyle } from './SarhCard';
 export type { SarhCardPadding, SarhCardProps, SarhCardVariant } from './SarhCard';
 
 export { SarhInput, resolveSarhInputBorder } from './SarhInput';
-export type { SarhInputProps, SarhInputState } from './SarhInput';
+export type { SarhInputAppearance, SarhInputProps, SarhInputState } from './SarhInput';
 
 export { AVATAR_SIZE, SarhAvatar, avatarInitials } from './SarhAvatar';
 export type { SarhAvatarProps, SarhAvatarSize } from './SarhAvatar';
@@ -24,7 +24,7 @@ export { SarhBadge, resolveSarhBadgeColors } from './SarhBadge';
 export type { SarhBadgeProps, SarhBadgeState, SarhBadgeTone } from './SarhBadge';
 
 export { SarhChip, resolveSarhChipColors } from './SarhChip';
-export type { SarhChipProps, SarhChipState } from './SarhChip';
+export type { SarhChipAppearance, SarhChipProps, SarhChipState } from './SarhChip';
 
 export { SarhDivider } from './SarhDivider';
 export type { SarhDividerProps } from './SarhDivider';

@@ -11,7 +11,6 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -48,9 +47,9 @@ export default function ContactScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Channels */}
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>قنوات التواصل</AppText>
-          </RtlTextShell>
+          </View>
 
           <Pressable
             style={[styles.channelCard, getRtlRow()]}
@@ -111,14 +110,14 @@ export default function ContactScreen() {
 
         {/* Message form */}
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>أرسل رسالة</AppText>
-          </RtlTextShell>
+          </View>
 
           <View style={styles.fieldGroup}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.fieldLabel}>الاسم</AppText>
-            </RtlTextShell>
+            </View>
             <View style={styles.inputWrap}>
               <TextInput
                 value={name}
@@ -132,9 +131,9 @@ export default function ContactScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.fieldLabel}>الرسالة</AppText>
-            </RtlTextShell>
+            </View>
             <View style={[styles.inputWrap, { alignItems: 'flex-start', paddingVertical: spacing.sm }]}>
               <TextInput
                 value={message}
@@ -160,9 +159,9 @@ export default function ContactScreen() {
           </Pressable>
         </View>
 
-        <RtlTextShell>
+        <View style={{ width: '100%' }}>
           <AppText style={styles.footer}>نرد على جميع الرسائل خلال 24 ساعة في أيام العمل</AppText>
-        </RtlTextShell>
+        </View>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>

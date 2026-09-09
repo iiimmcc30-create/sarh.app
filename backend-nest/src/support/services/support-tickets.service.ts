@@ -266,8 +266,7 @@ export class SupportTicketsService {
     const subject =
       SUPPORT_TICKET_CATEGORY_LABEL_AR[
         storedCategory as keyof typeof SUPPORT_TICKET_CATEGORY_LABEL_AR
-      ] ??
-      (helpKind === 'ORDER_HELP' ? 'مشكلة في الطلب' : 'مساعدة في شيء آخر');
+      ] ?? (helpKind === 'ORDER_HELP' ? 'مشكلة في الطلب' : 'مساعدة في شيء آخر');
 
     let ticket: Awaited<ReturnType<SupportRepository['createTicket']>> | null =
       null;

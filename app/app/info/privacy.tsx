@@ -9,7 +9,6 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { PRIVACY_POLICY_URL } from '@/constants/legal';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
@@ -67,22 +66,22 @@ export default function PrivacyScreen() {
 
         {SECTIONS.map((sec, i) => (
           <View key={i} style={styles.section}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.sectionTitle}>{sec.title}</AppText>
-            </RtlTextShell>
-            <RtlTextShell>
+            </View>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.sectionContent}>{sec.content}</AppText>
-            </RtlTextShell>
+            </View>
           </View>
         ))}
 
         <View style={styles.contactSection}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>تواصل معنا</AppText>
-          </RtlTextShell>
-          <RtlTextShell>
+          </View>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</AppText>
-          </RtlTextShell>
+          </View>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>sarh@sarhsa.online</Text>

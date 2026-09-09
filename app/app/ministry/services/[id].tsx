@@ -209,7 +209,7 @@ function createStyles(colors: ThemeColors) {
     title: {
       ...typography.h2,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '700',
     },
     catBadge: {
       alignSelf: 'flex-start',

@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +27,7 @@ import {
   type VerificationRequest,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhInput } from '@/design-system/components';
 
 export default function AccountVerificationScreen() {
   const { accessToken } = useAuth();
@@ -169,11 +168,11 @@ export default function AccountVerificationScreen() {
           ))}
         </GlassCard>
 
-        <AppTextInput label="الاسم الكامل" value={fullName} onChangeText={setFullName} editable={!!editable} />
-        <AppTextInput label="رقم الهوية" value={nationalId} onChangeText={setNationalId} editable={!!editable} />
-        <AppTextInput label="اسم المنشأة (اختياري)" value={businessName} onChangeText={setBusinessName} editable={!!editable} />
-        <AppTextInput label="نوع النشاط (اختياري)" value={businessType} onChangeText={setBusinessType} editable={!!editable} />
-        <AppTextInput
+        <SarhInput appearance="theme" label="الاسم الكامل" value={fullName} onChangeText={setFullName} editable={!!editable} />
+        <SarhInput appearance="theme" label="رقم الهوية" value={nationalId} onChangeText={setNationalId} editable={!!editable} />
+        <SarhInput appearance="theme" label="اسم المنشأة (اختياري)" value={businessName} onChangeText={setBusinessName} editable={!!editable} />
+        <SarhInput appearance="theme" label="نوع النشاط (اختياري)" value={businessType} onChangeText={setBusinessType} editable={!!editable} />
+        <SarhInput appearance="theme"
           label="معلومات إضافية"
           value={additionalInfo}
           onChangeText={setAdditionalInfo}

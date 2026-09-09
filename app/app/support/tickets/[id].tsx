@@ -10,8 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
-import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhSurface } from '@/design-system/components';
+import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhSurface, SarhInput } from '@/design-system/components';
 import { showToast } from '@/lib/toast';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useSupportTicketSocket } from '@/hooks/useSupportTicketSocket';
@@ -173,7 +172,7 @@ export default function SupportTicketDetailScreen() {
 
           {!closed ? (
             <View style={styles.replyBox}>
-              <AppTextInput
+              <SarhInput appearance="theme"
                 label="اكتب رسالة"
                 value={reply}
                 onChangeText={setReply}

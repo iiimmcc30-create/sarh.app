@@ -14,7 +14,6 @@ import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { rtlForwardIcon } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 type Props = {
@@ -55,12 +54,12 @@ export function DeliveryMapAddressField({ onAddressChange }: Props) {
       accessibilityLabel="اختيار عنوان التوصيل على الخريطة"
     >
       <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
-        <RtlTextShell flex>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <AppText style={styles.title}>عنوان التوصيل</AppText>
           <AppText style={styles.value} numberOfLines={2}>
             {hasLocation ? summary : 'اضغط لتحديد الموقع على الخريطة'}
           </AppText>
-        </RtlTextShell>
+        </View>
         <View style={styles.iconWrap}>
           <AppIcon name="location" size={20} color={colors.electricBright} />
         </View>

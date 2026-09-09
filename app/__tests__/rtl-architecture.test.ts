@@ -44,15 +44,15 @@ describe('RTL policy — single I18nManager system', () => {
 });
 
 describe('shared primitives inherit the single RTL model', () => {
-  it('RtlText and RtlTextShell no longer create LTR islands', () => {
+  it('RtlText no longer creates LTR islands and RtlTextShell is gone', () => {
     expect(src('components/ui/RtlText.tsx')).toContain('AppText');
-    expect(src('components/ui/RtlTextShell.tsx')).not.toContain("direction: 'ltr'");
+    expect(() => src('components/ui/RtlTextShell.tsx')).toThrow();
     expect(src('components/ui/VerifiedInlineName.tsx')).not.toContain('row-reverse');
     expect(src('components/ui/SectionHeader.tsx')).not.toContain("direction: 'ltr'");
   });
 });
 
-describe('AppText / AppTextInput primitives', () => {
+describe('AppText / SarhInput primitives', () => {
   it('AppText has no textAlign or LTR shell', () => {
     const file = src('components/ui/AppText.tsx');
     expect(file).toContain('getRtlText()');
@@ -61,10 +61,11 @@ describe('AppText / AppTextInput primitives', () => {
     expect(file).not.toContain("direction: 'ltr'");
   });
 
-  it('AppTextInput label and field share the same RTL model', () => {
-    const file = src('components/ui/AppTextInput.tsx');
-    expect(file).toContain("from '@/components/ui/AppText'");
+  it('SarhInput theme + foundation fields share the same RTL model', () => {
+    const file = src('design-system/components/SarhInput.tsx');
     expect(file).toContain('getRtlRow()');
+    expect(file).toContain('rtlInputText');
+    expect(file).toContain('ltrInputText');
     expect(file).not.toContain('RtlTextShell');
     expect(file).not.toContain("direction: 'ltr'");
     expect(file).not.toContain('row-reverse');
@@ -93,7 +94,7 @@ describe('RTL architecture fixture', () => {
 
   it('is a new-screen template without workarounds', () => {
     expect(file).toContain('AppText');
-    expect(file).toContain('AppTextInput');
+    expect(file).toContain('SarhInput');
     expect(file).toContain('getRtlRow');
     expect(file).toContain('SarhButton');
     expect(file).not.toContain("textAlign: 'right'");

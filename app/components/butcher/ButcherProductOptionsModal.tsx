@@ -1,3 +1,4 @@
+import { SarhChip } from '@/design-system/components';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -21,8 +22,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
-import { FilterChip } from '@/components/ui/FilterChip';
 import { AppText } from '@/components/ui/AppText';
 
 const PLACEHOLDER =
@@ -84,13 +83,13 @@ export function ButcherProductOptionsModal({
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.hero}>
             <View style={styles.heroText}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.title}>{product.nameAr}</AppText>
-              </RtlTextShell>
+              </View>
               {product.descriptionAr ? (
-                <RtlTextShell>
+                <View style={{ width: '100%' }}>
                   <AppText style={styles.subtitle}>{product.descriptionAr}</AppText>
-                </RtlTextShell>
+                </View>
               ) : null}
             </View>
             <Image
@@ -102,12 +101,12 @@ export function ButcherProductOptionsModal({
 
           {product.availableCuts.length > 0 ? (
             <View style={styles.section}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.sectionTitle}>طريقة التقطيع</AppText>
-              </RtlTextShell>
+              </View>
               <View style={styles.chips}>
                 {[...product.availableCuts].reverse().map((cut) => (
-                  <FilterChip
+                  <SarhChip appearance="filter"
                     key={cut}
                     label={cutLabelAr(cut)}
                     selected={selectedCut === cut}
@@ -152,9 +151,9 @@ export function ButcherProductOptionsModal({
 
           <View style={styles.totalRow}>
             <Text style={styles.totalValue}>{priceLabel}</Text>
-            <RtlTextShell flex>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <AppText style={styles.totalLabel}>الإجمالي</AppText>
-            </RtlTextShell>
+            </View>
           </View>
         </ScrollView>
 

@@ -13,10 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { showToast } from '@/lib/toast';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
+import { FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -27,7 +26,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhChip, SarhInput } from '@/design-system/components';
 
 const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[]).filter(
   (c) => c !== 'ORDER_HELP' && c !== 'OTHER_HELP',
@@ -142,7 +141,7 @@ export default function CreateSupportTicketScreen() {
             <Text style={styles.label}>تصنيف المشكلة</Text>
             <FilterChipRow contentPaddingHorizontal={0}>
               {CATEGORIES.map((cat) => (
-                <FilterChip
+                <SarhChip appearance="filter"
                   key={cat}
                   label={TICKET_CATEGORY_LABEL_AR[cat]}
                   selected={category === cat}
@@ -153,8 +152,8 @@ export default function CreateSupportTicketScreen() {
             <Text style={styles.selectedHint}>المحدد: {categoryLabel}</Text>
           </GlassCard>
 
-          <AppTextInput label="عنوان المشكلة" value={subject} onChangeText={setSubject} />
-          <AppTextInput
+          <SarhInput appearance="theme" label="عنوان المشكلة" value={subject} onChangeText={setSubject} />
+          <SarhInput appearance="theme"
             label="وصف المشكلة بالتفصيل"
             value={description}
             onChangeText={setDescription}

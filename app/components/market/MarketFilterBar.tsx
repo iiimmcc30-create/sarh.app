@@ -1,10 +1,11 @@
+import { SarhChip } from '@/design-system/components';
 import type { RegionSelection } from '@/constants/saudiRegions';
 import { regionSelectionLabel } from '@/lib/saudiRegionSearch';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
-import { FilterChip, FilterChipRow, MARKET_CHIP } from '@/components/ui/FilterChip';
+import { FilterChipRow, MARKET_CHIP } from '@/components/ui/FilterChip';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -71,7 +72,7 @@ export function MarketFilterBar({
           />
         </Pressable>
 
-        <FilterChip label="القريب" icon="navigation" compact onPress={onNearbyPress} />
+        <SarhChip appearance="filter" label="القريب" icon="navigation" compact onPress={onNearbyPress} />
 
         <View style={[styles.sortCategoryBar, getRtlRow()]}>
           <Pressable

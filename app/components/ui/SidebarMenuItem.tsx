@@ -9,7 +9,6 @@
  * right, title in rtlTextShell hugging the icon (same pattern as listing cover).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isNavigationLocked } from '@/lib/safeNavigate';
@@ -114,7 +113,7 @@ function OutlineMenuItem({
             color={iconTint}
           />
         </View>
-        <RtlTextShell flex style={styles.textShellGap}>
+        <View style={[{ flex: 1, minWidth: 0 }, styles.textShellGap]}>
           <AppText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
             {title}
           </AppText>
@@ -123,7 +122,7 @@ function OutlineMenuItem({
               {subtitle}
             </AppText>
           ) : null}
-        </RtlTextShell>
+        </View>
         {showBadge ? (
           <View style={[styles.badge, { backgroundColor: colors.electric }]}>
             <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
@@ -224,7 +223,7 @@ export function SidebarMenuItem({
         <AppIcon name={icon} size={SIDEBAR_MENU_ITEM.iconSize} color={tint} />
       </View>
 
-      <RtlTextShell flex style={styles.textShellGap}>
+      <View style={[{ flex: 1, minWidth: 0 }, styles.textShellGap]}>
         <AppText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
           {title}
         </AppText>
@@ -233,7 +232,7 @@ export function SidebarMenuItem({
             {subtitle}
           </AppText>
         ) : null}
-      </RtlTextShell>
+      </View>
 
       {showBadge ? (
         <View style={[styles.badge, { backgroundColor: colors.electric }]}>

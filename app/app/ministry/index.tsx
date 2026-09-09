@@ -435,7 +435,7 @@ function createStyles(colors: ThemeColors) {
     name: {
       ...typography.h2,
       color: colors.textPrimary,
-      fontWeight: '800',
+      fontWeight: '700',
       textAlign: 'center',
     },
     followers: {

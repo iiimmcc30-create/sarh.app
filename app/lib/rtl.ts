@@ -9,7 +9,7 @@
  *   physical-edge textAlign becomes the opposite visual side — never use it as a fix.
  *   flexDirection:'row' already starts at the inline start (right in ar).
  *
- * Allowed in screens: AppText, AppTextInput, flexDirection:'row',
+ * Allowed in screens: AppText, SarhInput, flexDirection:'row',
  * start/end helpers (marginStart, paddingEnd, …), textAlign:'center'.
  *
  * Forbidden as RTL workarounds: LTR islands, reversed rows,

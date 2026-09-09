@@ -27,7 +27,6 @@ import type { PostComment } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 type ListingCommentsModalProps = {
@@ -132,11 +131,11 @@ export function ListingCommentsModal({
               <AppIcon name="close" size={22} color={colors.textPrimary} />
             </Pressable>
 
-            <RtlTextShell flex>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <AppText style={styles.headerTitle}>
                 عدد التعليقات ({comments.length})
               </AppText>
-            </RtlTextShell>
+            </View>
 
             <Pressable
               onPress={toggleFollowReplies}
@@ -174,9 +173,9 @@ export function ListingCommentsModal({
               showsVerticalScrollIndicator
             >
               {comments.length === 0 ? (
-                <RtlTextShell>
+                <View style={{ width: '100%' }}>
                   <AppText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</AppText>
-                </RtlTextShell>
+                </View>
               ) : (
                 comments.map((c) => (
                   <View key={c.id} style={styles.commentCard}>
@@ -198,9 +197,9 @@ export function ListingCommentsModal({
                         </UserProfileLink>
                       </CoverTrailRow>
                     </View>
-                    <RtlTextShell>
+                    <View style={{ width: '100%' }}>
                       <AppText style={styles.commentText}>{c.content}</AppText>
-                    </RtlTextShell>
+                    </View>
                     <Pressable onPress={focusInput} style={[styles.replyBtn, getRtlRow()]}>
                       <AppIcon name="chatbubble-outline" size={14} color={colors.electricBright} />
                       <Text style={styles.replyBtnText}>رد</Text>

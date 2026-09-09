@@ -1,14 +1,13 @@
+import { SarhChip } from '@/design-system/components';
 // SAFAT — Butchers delivery location picker (خريطة ذكية لموقع التوصيل)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { FilterChip } from '@/components/ui/FilterChip';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText } from '@/lib/rtl';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { reverseGeocodeToAddress } from '@/lib/formatAddress';
 import {
   loadDeliveryLocation,
@@ -128,11 +127,11 @@ export default function ButcherLocationScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.hint}>
               اضغط على الخريطة لتحديد موقعك، أو استخدم «موقعي الحالي».
             </AppText>
-          </RtlTextShell>
+          </View>
 
           <LocationMapPreview
             country="SA"
@@ -155,12 +154,12 @@ export default function ButcherLocationScreen() {
 
           {/* Label chips */}
           <View style={styles.field}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.fieldLabel}>نوع العنوان</AppText>
-            </RtlTextShell>
+            </View>
             <View style={styles.chipsRow}>
               {LABEL_OPTIONS.map((opt) => (
-                <FilterChip
+                <SarhChip appearance="filter"
                   key={opt}
                   label={opt}
                   selected={label === opt}
@@ -172,9 +171,9 @@ export default function ButcherLocationScreen() {
 
           {/* House number */}
           <View style={styles.field}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.fieldLabel}>رقم المنزل / المبنى</AppText>
-            </RtlTextShell>
+            </View>
             <TextInput
               style={styles.input}
               value={houseNumber}
@@ -187,9 +186,9 @@ export default function ButcherLocationScreen() {
 
           {/* Address */}
           <View style={styles.field}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.fieldLabel}>العنوان / الحي</AppText>
-            </RtlTextShell>
+            </View>
             <TextInput
               style={[styles.input, styles.inputMultiline]}
               value={address}

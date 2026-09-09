@@ -22,7 +22,7 @@ describe('customerOrders', () => {
     ]);
     expect(CUSTOMER_FLOW_LABELS.pending).toBe('قيد الانتظار');
     expect(CUSTOMER_FLOW_LABELS.confirmed).toBe('تم قبول الطلب');
-    expect(CUSTOMER_FLOW_LABELS.delivered).toBe('تم التوصيل');
+    expect(CUSTOMER_FLOW_LABELS.delivered).toBe('مكتمل');
   });
 
   it('summarizes product and specs for the outer card', () => {
@@ -108,7 +108,7 @@ describe('customerOrders', () => {
     ).toEqual({ label: 'تم قبول الطلب', awaitingPayment: false, expired: false });
     expect(
       customerOrderHeadline({ status: 'delivered', paymentStatus: 'paid' }),
-    ).toEqual({ label: 'تم التوصيل', awaitingPayment: false, expired: false });
+    ).toEqual({ label: 'مكتمل', awaitingPayment: false, expired: false });
     expect(
       customerOrderHeadline({
         status: 'cancelled',

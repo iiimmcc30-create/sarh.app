@@ -16,7 +16,6 @@ import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { VerifiedInlineName } from '@/components/ui/VerifiedInlineName';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { ListingCommentsModal } from '@/components/feature/ListingCommentsModal';
 import { AppText } from '@/components/ui/AppText';
 
@@ -43,9 +42,9 @@ export function ListingCommentsSection({
   return (
     <>
       <View style={layout === 'edge' ? styles.section : styles.card}>
-        <RtlTextShell>
+        <View style={{ width: '100%' }}>
           <AppText style={styles.sectionTitle}>عدد التعليقات ({comments.length})</AppText>
-        </RtlTextShell>
+        </View>
 
         {loading ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
@@ -59,9 +58,9 @@ export function ListingCommentsSection({
             ) : null}
           </View>
         ) : comments.length === 0 ? (
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.empty}>لا توجد تعليقات بعد — كن أول من يعلّق</AppText>
-          </RtlTextShell>
+          </View>
         ) : (
           <View style={styles.list}>
             {comments.map((c, index) => (
@@ -90,9 +89,9 @@ export function ListingCommentsSection({
                     </UserProfileLink>
                   </CoverTrailRow>
                 </View>
-                <RtlTextShell>
+                <View style={{ width: '100%' }}>
                   <AppText style={styles.commentText}>{c.content}</AppText>
-                </RtlTextShell>
+                </View>
               </View>
             ))}
           </View>
@@ -103,9 +102,9 @@ export function ListingCommentsSection({
           style={[styles.addCommentTrigger, getRtlRow()]}
         >
           <View style={[styles.addCommentInput, getRtlRow()]}>
-            <RtlTextShell flex>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <AppText style={styles.addCommentPlaceholder}>أكتب تعليقك هنا...</AppText>
-            </RtlTextShell>
+            </View>
             <AppIcon name="send" size={18} color={colors.textSubtle} />
           </View>
         </Pressable>

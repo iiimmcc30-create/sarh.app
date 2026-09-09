@@ -1,3 +1,4 @@
+import { SarhChip } from '@/design-system/components';
 // Powered by OnSpace.AI
 // SAFAT — Create Post Screen (إنشاء منشور - نظام X)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
@@ -28,7 +29,7 @@ import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { uploadImageFromUri } from '@/services/upload';
 import { rtlInputText, ltrInputText } from '@/lib/rtl';
-import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
+import { FilterChipRow } from '@/components/ui/FilterChip';
 
 const HASHTAG_BLUE = '#1D9BF0';
 const MAX_POST_IMAGES = 4;
@@ -210,7 +211,7 @@ export default function CreatePostScreen() {
         {/* Post type selector */}
         <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.typeRow}>
           {POST_TYPES.map((t) => (
-            <FilterChip
+            <SarhChip appearance="filter"
               key={t.id}
               label={t.label}
               selected={selectedType === t.id}
