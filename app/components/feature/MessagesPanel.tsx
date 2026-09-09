@@ -31,14 +31,6 @@ import {
   type MessageListingPreview,
 } from '@/lib/messageListingContext';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
-import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
-
-const FILTERS: { id: MessageThreadFilter; label: string }[] = [
-  { id: 'all', label: 'الكل' },
-  { id: 'unread', label: 'غير مقروءة' },
-  { id: 'transactions', label: 'المعاملات' },
-  { id: 'requests', label: 'الطلبات' },
-];
 
 function formatThreadTime(iso: string): string {
   const date = new Date(iso);
@@ -85,7 +77,7 @@ export function MessagesPanel({
     variant === 'embedded' ? spacing.lg : tabBarClearance + spacing.xl;
   const { accessToken } = useAuth();
   const { threads, loading, error, refetch } = useMessageThreads(accessToken, 'ALL');
-  const [filter, setFilter] = useState<MessageThreadFilter>('all');
+  const filter: MessageThreadFilter = 'all';
   const [search, setSearch] = useState('');
   const [listingByPeer, setListingByPeer] = useState<
     Record<string, MessageListingPreview>
@@ -172,14 +164,7 @@ export function MessagesPanel({
     <View style={styles.root}>
       {showHeader ? (
         <View style={[styles.header, getRtlRow()]}>
-          <Pressable
-            style={styles.headerIconBtn}
-            onPress={() => router.push('/(tabs)/market' as never)}
-            hitSlop={8}
-            accessibilityLabel="إنشاء محادثة جديدة"
-          >
-            <AppIcon name="create-outline" size={22} color={colors.textPrimary} />
-          </Pressable>
+          <View style={styles.headerSide} />
           <Text style={styles.title}>الرسائل</Text>
           <View style={styles.headerSide} />
         </View>
@@ -197,17 +182,6 @@ export function MessagesPanel({
           clearButtonMode="while-editing"
         />
       </View>
-
-      <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.filtersScroll}>
-        {FILTERS.map((item) => (
-          <FilterChip
-            key={item.id}
-            label={item.label}
-            selected={filter === item.id}
-            onPress={() => setFilter(item.id)}
-          />
-        ))}
-      </FilterChipRow>
 
       <ScrollView
         showsVerticalScrollIndicator={false}

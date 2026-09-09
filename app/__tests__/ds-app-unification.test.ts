@@ -13,7 +13,8 @@ describe('design-system unification — allowed redesigns only', () => {
     const feed = src('app/(tabs)/posts.tsx');
     const post = src('components/feature/PostItem.tsx');
     expect(feed).toContain("from '@/design-system/components'");
-    expect(feed).toContain('المنشورات');
+    expect(feed).not.toContain('>المنشورات<');
+    expect(feed).not.toContain('screenTitle');
     expect(feed).toContain("tab === 'for_you' ? 'لك' : 'متابعة'");
     expect(feed).not.toContain('PostItem layout');
     expect(post).toContain("from '@/components/ui/AppText'");
