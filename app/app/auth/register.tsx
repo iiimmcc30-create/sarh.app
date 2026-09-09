@@ -25,6 +25,7 @@ import {
   TextInput,
   UIManager,
   View,
+  type TextStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -647,7 +648,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textMuted,
       ...marginStart(4),
-    },
+    } as TextStyle,
     eye: { padding: 4 },
     hint: {
       ...typography.caption,

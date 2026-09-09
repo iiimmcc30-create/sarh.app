@@ -17,6 +17,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -345,7 +346,7 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1, borderColor: colors.borderSoft,
   },
   inputMultiline: { alignItems: 'flex-start', paddingVertical: spacing.sm },
-  atSign: { ...typography.body, color: colors.textMuted, ...marginEnd(4) },
+  atSign: { ...typography.body, color: colors.textMuted, ...marginEnd(4) } as TextStyle,
   input: {
     flex: 1, ...typography.body, color: colors.textPrimary,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,

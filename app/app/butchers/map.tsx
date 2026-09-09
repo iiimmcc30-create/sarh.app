@@ -14,6 +14,7 @@ import {
   Text,
   View,
   Platform,
+  type TextStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -176,13 +177,13 @@ function BottomCard({
         </View>
         <View style={bc.hoursPill}>
           <AppIcon name="time-outline" size={12} color={colors.textMuted} />
-          <Text style={bc.hoursText}>{butcher.workingHours.open}–{butcher.workingHours.close}</Text>
+          <Text style={bc.hoursText as TextStyle}>{butcher.workingHours.open}–{butcher.workingHours.close}</Text>
         </View>
         <View style={bc.completionPill}>
           <AppIcon name="check-circle-outline" size={12} color={colors.electricBright} />
-          <Text style={bc.completionText}>{butcher.orderCompletionRate}%</Text>
+          <Text style={bc.completionText as TextStyle}>{butcher.orderCompletionRate}%</Text>
         </View>
-        <Text style={bc.currencyText}>{currency.symbol}</Text>
+        <Text style={bc.currencyText as TextStyle}>{currency.symbol}</Text>
       </View>
 
       {/* Specialties */}
@@ -695,7 +696,7 @@ const bc = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  hoursText: { ...butcherTypography.meta, color: colors.textMuted },
+  hoursText: { ...butcherTypography.meta, color: colors.textMuted } as TextStyle,
   completionPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 8, paddingVertical: 5,
