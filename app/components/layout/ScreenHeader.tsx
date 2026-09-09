@@ -1,11 +1,12 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { SarhBackButton } from '@/design-system/components';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ds } from '@/constants/designSystem';
 import { controls, layout, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { alignInlineEnd, getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { alignInlineEnd, getRtlRow } from '@/lib/rtl';
 
 interface ScreenHeaderProps {
   title: string;
@@ -38,15 +39,11 @@ export function ScreenHeader({
     <View style={[styles.container, getRtlRow()]}>
       <View style={styles.side}>
         {showBack ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
+          <SarhBackButton
             onPress={() => (onBackPress ? onBackPress() : router.back())}
-            hitSlop={12}
-            style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
-          >
-            <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
-          </Pressable>
+            color={colors.textPrimary}
+            style={styles.iconBtn}
+          />
         ) : showSidebar ? (
           <Pressable
             accessibilityRole="button"

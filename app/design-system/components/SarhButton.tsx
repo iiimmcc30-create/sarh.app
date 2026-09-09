@@ -93,6 +93,8 @@ export function SarhButton({
             opacity: blocked ? motion.opacity.disabled : pressed ? motion.opacity.pressed : 1,
             transform: [{ scale: pressed && !blocked ? motion.pressScale : 1 }],
             width: fullWidth ? '100%' : undefined,
+            flexShrink: fullWidth ? 1 : 0,
+            flexWrap: 'nowrap',
           },
           style,
         ];
@@ -111,7 +113,9 @@ export function SarhButton({
             <AppText
               variant={size === 'sm' ? 'caption' : 'label'}
               color="textPrimary"
-              style={{ color: palette.contentColor }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={{ color: palette.contentColor, flexShrink: 0 }}
             >
               {title}
             </AppText>

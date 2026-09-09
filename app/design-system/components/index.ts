@@ -8,6 +8,9 @@ export type { SarhButtonProps, SarhButtonState, SarhButtonVariant } from './Sarh
 export { ICON_BUTTON_SIZE, SarhIconButton, resolveSarhIconButtonColors } from './SarhIconButton';
 export type { SarhIconButtonProps, SarhIconButtonSize, SarhIconButtonState } from './SarhIconButton';
 
+export { SarhBackButton } from './SarhBackButton';
+export type { SarhBackButtonProps } from './SarhBackButton';
+
 export { CARD_PADDING, SarhCard, resolveSarhCardStyle } from './SarhCard';
 export type { SarhCardPadding, SarhCardProps, SarhCardVariant } from './SarhCard';
 
