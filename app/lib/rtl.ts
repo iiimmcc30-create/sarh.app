@@ -89,6 +89,13 @@ export const isRTL = activeRtl;
  */
 export function setupRtl(locale: AppLocale = DEFAULT_LOCALE): void {
   const rtl = localeUsesRtl(locale);
+  if (activeLocale === locale && activeRtl === rtl) {
+    if (Platform.OS === 'web') {
+      applyDocumentDirection(locale, rtl);
+      return;
+    }
+    if (I18nManager.isRTL === rtl) return;
+  }
   activeLocale = locale;
   activeRtl = rtl;
 
