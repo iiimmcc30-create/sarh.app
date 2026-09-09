@@ -420,48 +420,47 @@ export default function ListingDetailScreen() {
     if (key === 'delete') void handleDelete();
   };
 
+  const showVisitorMenu = async () => {
+    const key = await presentActionSheet({
+      title: 'الإعلان',
+      items: [
+        { key: 'share', label: 'مشاركة', icon: 'share-outline' },
+        { key: 'favorite', label: 'حفظ', icon: 'heart-outline' },
+        { key: 'report', label: 'إبلاغ', icon: 'flag-outline' },
+        { key: 'cancel', label: 'إلغاء', cancel: true },
+      ],
+    });
+    if (key === 'share') {
+      void Share.share({
+        message: `${listing.arabicTitle} — ${listing.price.toLocaleString()} ${listing.currency}\n${sarhListingShareUrl(listing.id)}`,
+      });
+    }
+    if (key === 'favorite') {
+      const feedback = listingFavoriteFeedback();
+      Alert.alert(feedback.title, feedback.message);
+    }
+    if (key === 'report') promptReport('listing', listing.id, isAuthenticated);
+  };
+
   return (
     <View style={[styles.screen, getRtlDirection()]}>
       <SafeAreaView edges={['top']} style={styles.topSafe}>
         <View style={[styles.topBar, getRtlRow()]}>
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.topBarBtn} />
-          <View style={[styles.topBarActions, getRtlRow()]}>
-            {isOwner ? (
-              <Pressable hitSlop={8} style={styles.topBarBtn} onPress={showOwnerMenu}>
-                <AppIcon name="ellipsis-horizontal" size={20} color={colors.textPrimary} />
-              </Pressable>
-            ) : null}
-            {!isOwner ? (
-              <Pressable
-                hitSlop={8}
-                style={styles.topBarBtn}
-                onPress={() => promptReport('listing', listing.id, isAuthenticated)}
-              >
-                <AppIcon name="flag-outline" size={20} color={colors.textPrimary} />
-              </Pressable>
-            ) : null}
-            <Pressable
-              hitSlop={8}
-              style={styles.topBarBtn}
-              onPress={() => {
-                const feedback = listingFavoriteFeedback();
-                Alert.alert(feedback.title, feedback.message);
-              }}
-            >
-              <AppIcon name="heart-outline" size={20} color={colors.textPrimary} />
-            </Pressable>
-            <Pressable
-              hitSlop={8}
-              style={styles.topBarBtn}
-              onPress={() =>
-                Share.share({
-                  message: `${listing.arabicTitle} — ${listing.price.toLocaleString()} ${listing.currency}\n${sarhListingShareUrl(listing.id)}`,
-                })
+          <Pressable
+            hitSlop={8}
+            style={styles.topBarBtn}
+            onPress={() => {
+              if (isOwner) {
+                void showOwnerMenu();
+                return;
               }
-            >
-              <AppIcon name="share-outline" size={20} color={colors.textPrimary} />
-            </Pressable>
-          </View>
+              void showVisitorMenu();
+            }}
+            accessibilityLabel="المزيد"
+          >
+            <AppIcon name="ellipsis-vertical" size={20} color={colors.textPrimary} />
+          </Pressable>
         </View>
       </SafeAreaView>
 
@@ -493,6 +492,14 @@ export default function ListingDetailScreen() {
               </Text>
               <AppIcon name="time-outline" size={13} color={colors.textMuted} />
             </View>
+            {listing.seller.rating != null && (listing.seller.reviewCount ?? 0) > 0 ? (
+              <View style={[styles.headerMetaChip, getRtlRow()]}>
+                <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+                  {`${listing.seller.rating.toFixed(1)} (${listing.seller.reviewCount} تقييم)`}
+                </Text>
+                <AppIcon name="star" size={13} color={colors.gold} />
+              </View>
+            ) : null}
           </View>
 
           {!isOwner ? (
@@ -526,12 +533,15 @@ export default function ListingDetailScreen() {
           ) : null}
 
           {listing.contactPhone ? (
-            <View style={[styles.contactPhoneRow, getRtlRow()]}>
+            <Pressable
+              onPress={() => void openSellerCall()}
+              style={[styles.contactPhoneRow, getRtlRow()]}
+            >
               <Text style={[styles.contactPhoneText, getRtlText()]} numberOfLines={1}>
                 {listing.contactPhone}
               </Text>
-              <AppIcon name="call-outline" size={14} color={colors.textMuted} />
-            </View>
+              <AppIcon name="call-outline" size={14} color={colors.electricBright} />
+            </Pressable>
           ) : null}
         </View>
 
@@ -687,25 +697,12 @@ export default function ListingDetailScreen() {
       {!isOwner ? (
         <SafeAreaView edges={['bottom']} style={styles.ctaBar}>
           <SarhButton
-            title="مراسلة"
+            title="تواصل"
             variant="primary"
             leftIcon="chatbubbles"
             onPress={() => openSellerChat()}
             style={{ flex: 1 }}
           />
-          {listing.contactPhone ? (
-            <SarhButton
-              title="اتصل"
-              variant="secondary"
-              leftIcon="call"
-              onPress={() => void openSellerCall()}
-              style={{ flex: 1 }}
-            />
-          ) : (
-            <View style={{ flex: 1 }}>
-              <SarhButton title="مراسلة البائع" onPress={() => openSellerChat()} />
-            </View>
-          )}
         </SafeAreaView>
       ) : null}
 
@@ -760,7 +757,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.screenRoot,
     },
     headerMetaRow: {
       alignItems: 'center',
@@ -826,7 +823,7 @@ function createStyles(colors: ThemeColors) {
     },
     price: {
       ...typography.valueLarge,
-      color: colors.textBrandStrong,
+      color: colors.electricBright,
     },
     priceOnRequest: {
       ...typography.valueLarge,
@@ -858,7 +855,7 @@ function createStyles(colors: ThemeColors) {
     pinnedText: { ...typography.badge, color: '#fff' },
     title: {
       ...typography.sectionHeading,
-      color: colors.textBrandStrong,
+      color: colors.electricBright,
     },
     sellerRow: {
       flexDirection: 'row',

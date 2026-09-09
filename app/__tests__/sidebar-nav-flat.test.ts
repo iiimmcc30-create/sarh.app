@@ -35,6 +35,8 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).toContain("route: '/support'");
     expect(panel).toContain("route: '/profile/settings'");
     expect(panel).toContain('weather-night');
+    expect(panel).toContain('يتابع');
+    expect(panel).toContain('متابعون');
     expect(panel).not.toContain('menuCardStyle');
     expect(panel).not.toContain('خدمات الوزارة');
     expect(panel).not.toContain('/sarh-services');

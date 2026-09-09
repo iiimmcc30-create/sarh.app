@@ -155,9 +155,6 @@ export default function PostsScreen() {
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <SarhSurface tone="background" style={styles.topBar}>
-          <AppText variant="heading3" align="center" style={styles.screenTitle}>
-            المنشورات
-          </AppText>
           <View style={[styles.tabs, getRtlRow()]}>
             {(['for_you', 'following'] as const).map((tab) => {
               const active = feedTab === tab;
@@ -223,10 +220,7 @@ function createPostsStyles(
       borderBottomColor: colors.border,
       paddingHorizontal: space[16],
       paddingBottom: space[8],
-    },
-    screenTitle: {
       paddingTop: space[8],
-      paddingBottom: space[8],
     },
     tabs: {
       flexDirection: 'row',
