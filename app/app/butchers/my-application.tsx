@@ -254,7 +254,7 @@ export default function MyButcherApplicationScreen() {
             description="لم تقدّم طلب تسجيل ملحمة بعد. ابدأ الآن لإنشاء مسودة طلبك."
             actionLabel="ابدأ طلب التسجيل"
             onAction={() => router.push('/butchers/apply')}
-            leftIcon="storefront-outline"
+            icon="storefront-outline"
           />
         ) : (
           <>

@@ -124,7 +124,7 @@ export default function NotificationsScreen() {
             description={error}
             actionLabel="إعادة المحاولة"
             onAction={retry}
-            leftIcon="alert-circle-outline"
+            icon="alert-circle-outline"
           />
         </View>
       ) : (
@@ -148,7 +148,7 @@ export default function NotificationsScreen() {
             <EmptyState
               title="لا توجد إشعارات"
               description="ستظهر هنا إشعارات نشاطك وطلباتك."
-              leftIcon="notifications-outline"
+              icon="notifications-outline"
             />
           }
           showsVerticalScrollIndicator={false}

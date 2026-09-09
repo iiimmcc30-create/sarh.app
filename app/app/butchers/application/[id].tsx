@@ -153,7 +153,7 @@ export default function ButcherApplicationDetailScreen() {
           description={error ?? 'حاول مرة أخرى لاحقاً.'}
           actionLabel="إعادة المحاولة"
           onAction={load}
-          leftIcon="alert-circle-outline"
+          icon="alert-circle-outline"
         />
       </SafeAreaView>
     );

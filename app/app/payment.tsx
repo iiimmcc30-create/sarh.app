@@ -391,7 +391,11 @@ export default function PaymentScreen() {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <SarhBackButton onPress={() => step === 'card_details' ? setStep('method') : router.back()} color={colors.textPrimary} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.65 }]} />
+        <SarhBackButton
+          onPress={() => (step === 'card_details' ? setStep('method') : router.back())}
+          color={colors.textPrimary}
+          style={styles.backBtn}
+        />
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>الدفع الآمن</Text>
           <View style={styles.headerSecure}>
