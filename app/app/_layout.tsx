@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { enableFreeze } from 'react-native-screens';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as WebBrowser from 'expo-web-browser';
@@ -27,6 +28,7 @@ import { resolveBootNavigation } from '@/lib/bootRouting';
 
 import { bootstrapTheme } from '@/constants/themeBootstrap';
 
+enableFreeze(true);
 bootstrapTheme().catch(() => {});
 setupRtl();
 
@@ -77,6 +79,7 @@ function RootNavigator() {
       <Stack
         screenOptions={{
           headerShown: false,
+          freezeOnBlur: true,
           contentStyle: {
             backgroundColor: isDark
               ? themeColors.bgDeep || sarh.color.bg
@@ -157,9 +160,9 @@ function RootNavigator() {
         <Stack.Screen name="auth/register" options={{ animation: 'fade' }} />
         <Stack.Screen name="auth/forgot-password" options={{ animation: stackSlideAnimation() }} />
         <Stack.Screen name="expo-auth-session" options={{ animation: 'none', headerShown: false }} />
-        <Stack.Screen name="live/create" />
-        <Stack.Screen name="live/broadcast" />
-        <Stack.Screen name="live/watch/[id]" />
+        <Stack.Screen name="live/create" options={{ freezeOnBlur: false }} />
+        <Stack.Screen name="live/broadcast" options={{ freezeOnBlur: false }} />
+        <Stack.Screen name="live/watch/[id]" options={{ freezeOnBlur: false }} />
       </Stack>
     </>
   );

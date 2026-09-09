@@ -71,6 +71,7 @@ export function Image({
       transition={transition}
       priority={priority}
       cachePolicy="memory-disk"
+      allowDownscaling
       onError={handleError}
       recyclingKey={
         typeof source === 'object' && source && !Array.isArray(source) && 'uri' in source
