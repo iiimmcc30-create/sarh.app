@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react';
 import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { FilterChipAppearance } from '@/components/ui/filterChipAppearance';
 import { getRtlRow } from '@/lib/rtl';
 import { motion, radius, space } from '../tokens';
 import { AppText } from './AppText';
 import { resolveSarhChipColors } from './resolvers';
+
+export type SarhChipAppearance = 'foundation' | 'filter';
 
 export type SarhChipProps = {
   label: string;
@@ -13,6 +16,12 @@ export type SarhChipProps = {
   leading?: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Foundation = DS dark chip. Filter = live theme FilterChip chrome (market/search). */
+  appearance?: SarhChipAppearance;
+  compact?: boolean;
+  icon?: string;
+  selectedCheck?: boolean;
+  chevron?: boolean;
 };
 
 export { resolveSarhChipColors } from './resolvers';
@@ -26,7 +35,30 @@ export function SarhChip({
   leading,
   style,
   testID,
+  appearance = 'foundation',
+  compact = false,
+  icon,
+  selectedCheck = false,
+  chevron = false,
 }: SarhChipProps) {
+  if (appearance === 'filter') {
+    return (
+      <FilterChipAppearance
+        label={label}
+        selected={selected}
+        disabled={disabled}
+        onPress={onPress}
+        leading={leading}
+        style={style}
+        testID={testID}
+        compact={compact}
+        icon={icon}
+        selectedCheck={selectedCheck}
+        chevron={chevron}
+      />
+    );
+  }
+
   const palette = resolveSarhChipColors(selected);
 
   return (

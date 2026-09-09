@@ -23,9 +23,9 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, marginAutoStart, getRtlRow } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
-import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
+import { FilterChipRow } from '@/components/ui/FilterChip';
 import { ensureApiReachable } from '@/services/api';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhChip } from '@/design-system/components';
 import {
   fetchSearchSuggestions,
   fetchTrendingTags,
@@ -320,7 +320,7 @@ export default function SearchScreen() {
       {hasQuery ? (
         <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.filterRowWrap}>
           {FILTERS.map((f) => (
-            <FilterChip
+            <SarhChip appearance="filter"
               key={f.id}
               label={f.label}
               selected={filter === f.id}

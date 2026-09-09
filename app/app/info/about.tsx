@@ -20,7 +20,6 @@ import {
   BRAND_VISION_AR,
   FOUNDER_NAME,
 } from '@/constants/brandCopy';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -44,47 +43,47 @@ export default function AboutScreen() {
         {/* Hero */}
         <LinearGradient colors={['#0B1330', '#162149', '#1E3A8A']} style={styles.hero}>
           <AppLogo size={96} showRing={false} />
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.heroTitle}>{BRAND_NAME_AR}</AppText>
-          </RtlTextShell>
-          <RtlTextShell>
+          </View>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.heroSub}>{BRAND_TAGLINE_AR}</AppText>
-          </RtlTextShell>
+          </View>
         </LinearGradient>
 
         {/* About text */}
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>رسالتنا</AppText>
-          </RtlTextShell>
-          <RtlTextShell>
+          </View>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.bodyText}>{BRAND_MISSION_AR}</AppText>
-          </RtlTextShell>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>رؤيتنا</AppText>
-          </RtlTextShell>
-          <RtlTextShell>
+          </View>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.bodyText}>{BRAND_VISION_AR}</AppText>
-          </RtlTextShell>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>هدفنا</AppText>
-          </RtlTextShell>
-          <RtlTextShell>
+          </View>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.bodyText}>{BRAND_GOAL_AR}</AppText>
-          </RtlTextShell>
+          </View>
         </View>
 
         {/* Features */}
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>ما نقدّمه</AppText>
-          </RtlTextShell>
+          </View>
           {[
             { icon: 'tag-multiple', label: 'إعلانات واضحة وموثوقة لبيع وشراء الحيوانات والمعدات' },
             { icon: 'broadcast', label: 'بث مباشر للمزادات والعروض الحية' },
@@ -105,9 +104,9 @@ export default function AboutScreen() {
 
         {/* Ownership */}
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>المالك والامتثال</AppText>
-          </RtlTextShell>
+          </View>
           <View style={styles.infoCard}>
             <View style={[styles.infoRow, getRtlRow()]}>
               <View style={styles.infoLabelShell}>
@@ -149,9 +148,9 @@ export default function AboutScreen() {
 
         {/* Contact */}
         <View style={styles.section}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>تواصل معنا</AppText>
-          </RtlTextShell>
+          </View>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
             onPress={() => Linking.openURL('tel:+966591298136')}
@@ -181,12 +180,12 @@ export default function AboutScreen() {
           </Pressable>
         </View>
 
-        <RtlTextShell>
+        <View style={{ width: '100%' }}>
           <AppText style={styles.version}>
             {BRAND_FOOTER_AR}{'\n'}
             Uicons by Flaticon
           </AppText>
-        </RtlTextShell>
+        </View>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>

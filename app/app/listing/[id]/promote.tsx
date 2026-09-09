@@ -60,7 +60,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton, SarhButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -333,19 +332,19 @@ export default function ListingPromoteScreen() {
           </View>
 
           <View style={styles.section}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</AppText>
-            </RtlTextShell>
-            <RtlTextShell>
+            </View>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</AppText>
-            </RtlTextShell>
+            </View>
             <View style={styles.goalList}>
               {!hasAnyBoostService ? (
-                <RtlTextShell>
+                <View style={{ width: '100%' }}>
                   <AppText style={styles.sectionHint}>
                     خدمات الترقية غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
                   </AppText>
-                </RtlTextShell>
+                </View>
               ) : null}
               {enabledGoals.map((option) => {
                 const selected = goal === option.key;
@@ -379,14 +378,14 @@ export default function ListingPromoteScreen() {
                         />
                       </View>
                       <View style={styles.goalTextWrap}>
-                        <RtlTextShell>
+                        <View style={{ width: '100%' }}>
                           <AppText style={[styles.goalTitle, selected && { color: accent }]}>
                             {option.title}
                           </AppText>
-                        </RtlTextShell>
-                        <RtlTextShell>
+                        </View>
+                        <View style={{ width: '100%' }}>
                           <AppText style={styles.goalDesc}>{option.desc}</AppText>
-                        </RtlTextShell>
+                        </View>
                       </View>
                     </View>
                     <View style={[styles.goalPreviewTag, getRtlRow()]}>
@@ -532,12 +531,12 @@ export default function ListingPromoteScreen() {
         <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
           <View style={[styles.bottomInner, getRtlRow()]}>
             <View style={styles.totalBlock}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.totalLabel}>الإجمالي</AppText>
-              </RtlTextShell>
-              <RtlTextShell>
+              </View>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</AppText>
-              </RtlTextShell>
+              </View>
             </View>
             <View style={styles.payBtnWrap}>
               <SarhButton

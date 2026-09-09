@@ -13,14 +13,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
+import { FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhChip, SarhInput } from '@/design-system/components';
 import {
   fetchFaqs,
   FAQ_CATEGORY_LABEL_AR,
@@ -70,7 +69,7 @@ export default function SupportFaqScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title="الأسئلة الشائعة" showBack />
       <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
-        <AppTextInput
+        <SarhInput appearance="theme"
           label="بحث"
           value={search}
           onChangeText={setSearch}
@@ -80,7 +79,7 @@ export default function SupportFaqScreen() {
 
         <FilterChipRow contentPaddingHorizontal={0} style={styles.chipsWrap}>
           {categoryChips.map((cat) => (
-            <FilterChip
+            <SarhChip appearance="filter"
               key={cat.value || 'all'}
               label={cat.labelAr}
               selected={(category ?? '') === cat.value}

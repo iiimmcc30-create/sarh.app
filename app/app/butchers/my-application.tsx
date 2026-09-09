@@ -18,7 +18,6 @@ import { ApplicationCard } from '@/components/butcherApplication/ApplicationCard
 import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { gradients, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,7 +31,7 @@ import {
 import { confirmDestructive } from '@/lib/actionSheet';
 
 import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { SarhBackButton, SarhButton, SarhInput } from '@/design-system/components';
 
 function pickCurrentApplication(apps: ApplicationSummary[]): ApplicationSummary | null {
   if (apps.length === 0) return null;
@@ -153,7 +152,7 @@ export default function MyButcherApplicationScreen() {
               style={actionStyles.btn}
             />
             {showWithdrawInput ? (
-              <AppTextInput
+              <SarhInput appearance="theme"
                 label="سبب السحب (اختياري)"
                 value={withdrawReason}
                 onChangeText={setWithdrawReason}

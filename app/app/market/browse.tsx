@@ -1,7 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
-import { FilterChip } from '@/components/ui/FilterChip';
 import { ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { sarhScreenStyles } from '@/constants/sarhScreen';
@@ -30,7 +29,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhChip } from '@/design-system/components';
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
@@ -261,12 +260,12 @@ export default function MarketBrowseScreen() {
       </View>
 
       <View style={[styles.filterRow, getRtlRow()]}>
-        <FilterChip
+        <SarhChip appearance="filter"
           label="السعودية"
           selected={activeCountry === 'SA'}
           onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
         />
-        <FilterChip label={sortLabel} icon="sort-alt" chevron onPress={cycleSort} />
+        <SarhChip appearance="filter" label={sortLabel} icon="sort-alt" chevron onPress={cycleSort} />
       </View>
 
       <View style={[styles.countRow, getRtlRow()]}>

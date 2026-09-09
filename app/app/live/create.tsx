@@ -23,12 +23,12 @@ import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeM
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { colors, radius, spacing, typography } from '@/constants/theme';
-import { FilterChip, FILTER_CHIP } from '@/components/ui/FilterChip';
+import { FILTER_CHIP } from '@/components/ui/FilterChip';
 import { getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { showLiveBroadcastComingSoonAlert, showLiveStreamEligibilityDeniedAlert } from '@/lib/liveStreamAccess';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhChip } from '@/design-system/components';
 
 const AGORA_APP_ID = process.env.EXPO_PUBLIC_AGORA_APP_ID ?? '';
 /** Disabled until app launch — see liveStreamAccess.ts */
@@ -366,7 +366,7 @@ export default function CreateStreamScreen() {
           </View>
           <View style={styles.catGrid}>
             {CATEGORIES.map((cat) => (
-              <FilterChip
+              <SarhChip appearance="filter"
                 key={cat.id + cat.ar}
                 label={cat.ar}
                 selected={category === cat.id}

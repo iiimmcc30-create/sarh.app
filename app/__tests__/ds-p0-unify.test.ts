@@ -41,10 +41,8 @@ describe('P0 design-system unification', () => {
     expect(offenders.map(rel)).toEqual([]);
   });
 
-  it('keeps PrimaryButton as an unused adapter only', () => {
+  it('does not keep a PrimaryButton adapter or production imports', () => {
     const usages = production.filter((file) => {
-      const r = rel(file);
-      if (r === 'components/ui/PrimaryButton.tsx') return false;
       const src = readFileSync(file, 'utf8');
       return src.includes("from '@/components/ui/PrimaryButton'") || src.includes('<PrimaryButton');
     });

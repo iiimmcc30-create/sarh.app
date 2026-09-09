@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography } from '@/constants/theme';
 import { rtlForwardIcon } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -192,25 +191,25 @@ export function EditorialStoryViewer({ stories, startIndex, onClose }: Props) {
           style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}
           pointerEvents="box-none"
         >
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.title}>{story.titleAr}</AppText>
-          </RtlTextShell>
+          </View>
           {expanded ? (
             <ScrollView
               style={styles.bodyScroll}
               contentContainerStyle={styles.bodyScrollContent}
               showsVerticalScrollIndicator={false}
             >
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.body}>{story.bodyAr}</AppText>
-              </RtlTextShell>
+              </View>
             </ScrollView>
           ) : (
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.body} numberOfLines={4}>
                 {snippet}
               </AppText>
-            </RtlTextShell>
+            </View>
           )}
           {canToggle || expanded ? (
             <Pressable

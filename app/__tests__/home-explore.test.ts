@@ -212,7 +212,7 @@ describe('HomeAppBar chrome', () => {
 
   it('uses elevated listing-card surface for compact market chips', () => {
     const chipSrc = fs.readFileSync(
-      path.join(__dirname, '../components/ui/FilterChip.tsx'),
+      path.join(__dirname, '../components/ui/filterChipAppearance.tsx'),
       'utf8',
     );
     expect(chipSrc).toContain('compact ? colors.bgElevated');

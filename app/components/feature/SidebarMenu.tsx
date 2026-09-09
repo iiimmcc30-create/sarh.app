@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import {
   SidebarMenuItem as SidebarMenuItemRow,
   type SidebarMenuItemProps,
@@ -66,9 +65,9 @@ export function SidebarSection({
   return (
     <View style={sectionStyles.block}>
       {title ? (
-        <RtlTextShell style={sectionStyles.titleShell}>
+        <View style={[{ width: '100%' }, sectionStyles.titleShell]}>
           <AppText style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</AppText>
-        </RtlTextShell>
+        </View>
       ) : null}
       <View style={[sectionStyles.card, variant === 'card' ? menuCardStyle(colors) : null]}>
         {children}
@@ -186,16 +185,16 @@ export function SidebarThemeToggle({
     >
       <View style={[themeStyles.header, themeStyles.headerCover]}>
         <CoverTrailRow justify="flex-end" gap={10} style={themeStyles.coverTrail}>
-          <RtlTextShell flex>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <AppText style={[themeStyles.title, { color: colors.textPrimary }]}>{title}</AppText>
-          </RtlTextShell>
+          </View>
           <AppIcon name={resolvedHeaderIcon} size={22} color={iconTint} />
         </CoverTrailRow>
       </View>
       {showThemeLabel ? (
-        <RtlTextShell style={themeStyles.subLabelShell}>
+        <View style={[{ width: '100%' }, themeStyles.subLabelShell]}>
           <AppText style={[themeStyles.subLabel, { color: colors.textMuted }]}>{themeLabel}</AppText>
-        </RtlTextShell>
+        </View>
       ) : null}
       <View
         style={[
@@ -271,9 +270,9 @@ export function SidebarLogoutButton({
     >
       <View style={logoutStyles.chevronSlot} />
       <CoverTrailRow flex justify="flex-end" gap={10}>
-        <RtlTextShell flex>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <AppText style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</AppText>
-        </RtlTextShell>
+        </View>
         <View style={logoutStyles.iconWrapOutline}>
           <AppIcon name="log-out-outline" size={22} color={colors.rose} />
         </View>

@@ -16,7 +16,6 @@ import { safePush } from '@/lib/safeNavigate';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 function formatPhone(phone?: string): string {
@@ -46,14 +45,14 @@ export default function ButchersMoreScreen() {
         <View>
           <View style={styles.userRow}>
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
-              <RtlTextShell flex>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <AppText style={styles.userName} numberOfLines={1}>
                   {displayName}
                 </AppText>
                 <AppText style={styles.userPhone} numberOfLines={1}>
                   {formatPhone(phone)}
                 </AppText>
-              </RtlTextShell>
+              </View>
               <View style={styles.avatarWrap}>
                 {me.avatar ? (
                   <Image source={uriSource(me.avatar)} style={styles.avatar} contentFit="cover" />
@@ -66,9 +65,9 @@ export default function ButchersMoreScreen() {
         </View>
 
         <View style={styles.sectionLabelWrap}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionLabel}>حسابي</AppText>
-          </RtlTextShell>
+          </View>
         </View>
         <View>
           <SidebarMenuItem
@@ -90,9 +89,9 @@ export default function ButchersMoreScreen() {
         </View>
 
         <View style={styles.sectionLabelWrap}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionLabel}>الخدمات والدعم</AppText>
-          </RtlTextShell>
+          </View>
         </View>
         <View>
           <SidebarMenuItem

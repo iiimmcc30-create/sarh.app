@@ -20,7 +20,6 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { AppText } from '@/components/ui/AppText';
 
 export type ProfileTabKey = 'posts' | 'ads';
@@ -269,11 +268,11 @@ export function ProfileScreenLayout({
                     {user.verified ? <VerificationBadge size={18} /> : null}
                   </View>
 
-                  <RtlTextShell style={styles.handleShell}>
+                  <View style={[{ width: '100%' }, styles.handleShell]}>
                     <AppText style={styles.handleText} numberOfLines={1}>
                       @{user.username}
                     </AppText>
-                  </RtlTextShell>
+                  </View>
 
                   <Pressable
                     onPress={onRatePress}
@@ -330,11 +329,11 @@ export function ProfileScreenLayout({
                 </View>
 
                 {!!user.bio ? (
-                  <RtlTextShell style={styles.bioShell}>
+                  <View style={[{ width: '100%' }, styles.bioShell]}>
                     <AppText style={styles.bio} numberOfLines={4}>
                       {user.bio}
                     </AppText>
-                  </RtlTextShell>
+                  </View>
                 ) : null}
               </View>
 

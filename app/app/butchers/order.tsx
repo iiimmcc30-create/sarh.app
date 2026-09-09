@@ -3,7 +3,6 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { DeliveryMapAddressField } from '@/components/butchers/DeliveryMapAddressField';
-import { FilterChip } from '@/components/ui/FilterChip';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
@@ -43,7 +42,7 @@ import {
 } from '@/services/butcherData';
 import { PAYMENT_METHODS, NIPaymentMethod } from '@/services/network_international';
 import { formatDeliveryAddressLine, loadDeliveryLocation } from '@/services/butcherDeliveryLocation';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhChip } from '@/design-system/components';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -439,7 +438,7 @@ export default function ButcherOrderScreen() {
           <Section title="طريقة التقطيع" styles={styles}>
             <View style={styles.chipsWrap}>
               {availableCuts.map((cut) => (
-                <FilterChip
+                <SarhChip appearance="filter"
                   key={cut}
                   label={cutLabelAr(cut)}
                   selected={selectedCut === cut}

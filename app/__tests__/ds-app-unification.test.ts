@@ -70,11 +70,8 @@ describe('design-system unification — allowed redesigns only', () => {
     expect(bar).toContain('SarhChip');
   });
 
-  it('legacy PrimaryButton delegates to SarhButton', () => {
-    const button = src('components/ui/PrimaryButton.tsx');
-    expect(button).toContain('SarhButton');
-    expect(button).toContain("from '@/design-system/components'");
-    expect(button).not.toContain('LinearGradient');
+  it('removes the unused PrimaryButton adapter', () => {
+    expect(() => src('components/ui/PrimaryButton.tsx')).toThrow();
   });
 
   it('toast host supports success/error/warning/info', () => {

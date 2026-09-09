@@ -34,7 +34,6 @@ import {
 } from '@/services/butcherData';
 import { launchPaymentCheckout } from '@/services/payments';
 import { resolveMediaUrl } from '@/services/media';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -304,9 +303,9 @@ export default function ButcherCartScreen() {
             ) : null}
 
             <View style={styles.fieldBlock}>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.fieldLabel}>ملاحظات (اختياري)</AppText>
-              </RtlTextShell>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="تعليمات خاصة للملحمة..."

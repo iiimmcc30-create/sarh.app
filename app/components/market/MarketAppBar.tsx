@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
@@ -55,11 +54,11 @@ export function MarketAppBar({
             accessibilityLabel={searchPlaceholder}
           >
             <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
-            <RtlTextShell flex>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <AppText style={styles.searchPlaceholder} numberOfLines={1}>
                 {searchPlaceholder}
               </AppText>
-            </RtlTextShell>
+            </View>
           </Pressable>
 
           <View style={styles.searchDivider} />

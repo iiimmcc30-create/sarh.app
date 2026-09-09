@@ -1,6 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -18,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhInput } from '@/design-system/components';
 
 export default function ChangePasswordScreen() {
   const { accessToken } = useAuth();
@@ -96,7 +95,7 @@ export default function ChangePasswordScreen() {
             </View>
           </View>
 
-          <AppTextInput
+          <SarhInput appearance="theme"
             label="كلمة المرور الحالية"
             value={currentPassword}
             onChangeText={setCurrentPassword}
@@ -104,7 +103,7 @@ export default function ChangePasswordScreen() {
             autoCapitalize="none"
             ltr
           />
-          <AppTextInput
+          <SarhInput appearance="theme"
             label="كلمة المرور الجديدة"
             value={newPassword}
             onChangeText={setNewPassword}
@@ -112,7 +111,7 @@ export default function ChangePasswordScreen() {
             autoCapitalize="none"
             ltr
           />
-          <AppTextInput
+          <SarhInput appearance="theme"
             label="تأكيد كلمة المرور الجديدة"
             value={confirmPassword}
             onChangeText={setConfirmPassword}

@@ -7,7 +7,6 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -60,20 +59,20 @@ export default function RefundScreen() {
         contentContainerStyle={[styles.content, getRtlDirection()]}
         showsVerticalScrollIndicator={false}
       >
-        <RtlTextShell>
+        <View style={{ width: '100%' }}>
           <AppText style={styles.intro}>
             آخر تحديث: يوليو ٢٠٢٥ · هذه السياسة جزء من شروط وأحكام منصة سرح وتنظّم حالات استرداد المبالغ المدفوعة.
           </AppText>
-        </RtlTextShell>
+        </View>
 
         {REFUND_SECTIONS.map((section, i) => (
           <View key={i} style={styles.section}>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.sectionTitle}>{section.title}</AppText>
-            </RtlTextShell>
-            <RtlTextShell>
+            </View>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.sectionBody}>{section.content}</AppText>
-            </RtlTextShell>
+            </View>
           </View>
         ))}
 

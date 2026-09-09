@@ -1,5 +1,4 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppTextInput } from '@/components/ui/AppTextInput';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -17,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhButton } from '@/design-system/components';
+import { SarhButton, SarhInput } from '@/design-system/components';
 
 const COUNTRY_CODE = '+966';
 
@@ -96,7 +95,7 @@ export default function ChangePhoneScreen() {
 
           {step === 'phone' ? (
             <>
-              <AppTextInput
+              <SarhInput appearance="theme"
                 label={`رقم الجوال (${COUNTRY_CODE})`}
                 value={phoneDigits}
                 onChangeText={setPhoneDigits}
@@ -114,7 +113,7 @@ export default function ChangePhoneScreen() {
             </>
           ) : (
             <>
-              <AppTextInput
+              <SarhInput appearance="theme"
                 label="رمز التحقق"
                 value={code}
                 onChangeText={setCode}

@@ -10,7 +10,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -67,13 +66,13 @@ export default function PolicyDetailScreen() {
           {sections.map((section, i) => (
             <View key={`${section.title}-${i}`} style={styles.section}>
               {section.title ? (
-                <RtlTextShell>
+                <View style={{ width: '100%' }}>
                   <AppText style={styles.sectionTitle}>{section.title}</AppText>
-                </RtlTextShell>
+                </View>
               ) : null}
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.sectionBody}>{section.body}</AppText>
-              </RtlTextShell>
+              </View>
             </View>
           ))}
           <Text style={styles.updated}>آخر تحديث: {updatedLabel}</Text>

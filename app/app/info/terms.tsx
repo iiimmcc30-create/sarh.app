@@ -9,7 +9,6 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 
-import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -72,21 +71,21 @@ export default function TermsScreen() {
           <View key={i} style={styles.section}>
             <View style={styles.titleRow}>
               <Text style={styles.sectionNum}>{i + 1}</Text>
-              <RtlTextShell>
+              <View style={{ width: '100%' }}>
                 <AppText style={styles.sectionTitle}>{item.title}</AppText>
-              </RtlTextShell>
+              </View>
             </View>
-            <RtlTextShell>
+            <View style={{ width: '100%' }}>
               <AppText style={styles.sectionContent}>{item.content}</AppText>
-            </RtlTextShell>
+            </View>
           </View>
         ))}
 
         {/* Contact */}
         <View style={styles.contactSection}>
-          <RtlTextShell>
+          <View style={{ width: '100%' }}>
             <AppText style={styles.sectionTitle}>للاستفسار</AppText>
-          </RtlTextShell>
+          </View>
           <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
             <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
             <Text style={styles.contactLink}>sarh@sarhsa.online</Text>
