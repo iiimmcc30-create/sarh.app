@@ -1,4 +1,4 @@
-import { SarhChip } from '@/design-system/components';
+import { SarhChip, SarhButton } from '@/design-system/components';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -157,18 +157,13 @@ export function ButcherProductOptionsModal({
           </View>
         </ScrollView>
 
-        <Pressable
-          onPress={handleAdd}
+        <SarhButton
+          title="إضافة للسلة"
+          fullWidth
           disabled={lineTotal <= 0}
-          style={({ pressed }) => [
-            styles.cta,
-            lineTotal <= 0 && styles.ctaDisabled,
-            pressed && { opacity: 0.9 },
-          ]}
-        >
-          <AppIcon name="cart-outline" size={15} color="#fff" />
-          <Text style={styles.ctaText}>إضافة للسلة</Text>
-        </Pressable>
+          leftIcon="cart-outline"
+          onPress={handleAdd}
+        />
       </View>
     </Modal>
   );

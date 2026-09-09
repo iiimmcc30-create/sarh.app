@@ -22,7 +22,7 @@ import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { openUserProfile } from '@/lib/openUserProfile';
-import { SarhBackButton } from '@/design-system/components';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 import {
   fetchUserConnectionsWithMeta,
   setFollowUser,
@@ -146,25 +146,13 @@ export default function ProfileConnectionsScreen() {
           style={styles.identity}
           trailing={
             showFollowBtn ? (
-              <Pressable
-                style={[styles.followBtn, item.isFollowing && styles.followingBtn]}
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  handleFollowToggle(item);
-                }}
-                disabled={followLoadingId === item.id}
-              >
-                {followLoadingId === item.id ? (
-                  <ActivityIndicator
-                    size="small"
-                    color={item.isFollowing ? colors.electricBright : '#FFFFFF'}
-                  />
-                ) : (
-                  <Text style={[styles.followBtnText, item.isFollowing && styles.followingText]}>
-                    {item.isFollowing ? 'متابَع' : 'متابعة'}
-                  </Text>
-                )}
-              </Pressable>
+                <SarhButton
+                  title={item.isFollowing ? 'متابَع' : 'متابعة'}
+                  variant={item.isFollowing ? 'secondary' : 'primary'}
+                  size="sm"
+                  loading={followLoadingId === item.id}
+                  onPress={() => handleFollowToggle(item)}
+                />
             ) : null
           }
         />

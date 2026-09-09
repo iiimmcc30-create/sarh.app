@@ -2,6 +2,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SarhButton } from '@/design-system/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -38,8 +39,9 @@ export default function PaymentCancelScreen() {
             ? 'طلبك ما زال بانتظار الدفع. يمكنك إكمال الدفع من تفاصيل الطلب دون إنشاء طلب جديد.'
             : 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
         </Text>
-        <Pressable
-          style={styles.primaryBtn}
+        <SarhButton
+          title={isButcherOrder ? 'إكمال الدفع' : 'إعادة المحاولة'}
+          fullWidth
           onPress={() => {
             if (isButcherOrder) {
               router.replace({
@@ -50,11 +52,7 @@ export default function PaymentCancelScreen() {
             }
             router.replace('/subscription' as never);
           }}
-        >
-          <Text style={styles.primaryBtnText}>
-            {isButcherOrder ? 'إكمال الدفع' : 'إعادة المحاولة'}
-          </Text>
-        </Pressable>
+        />
         <Pressable
           style={styles.secondaryBtn}
           onPress={() => {

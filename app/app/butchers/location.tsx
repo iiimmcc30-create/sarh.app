@@ -1,4 +1,4 @@
-import { SarhChip } from '@/design-system/components';
+import { SarhChip, SarhButton } from '@/design-system/components';
 // SAFAT — Butchers delivery location picker (خريطة ذكية لموقع التوصيل)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
@@ -201,21 +201,14 @@ export default function ButcherLocationScreen() {
         </ScrollView>
 
         <View style={styles.footer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.saveBtn,
-              !canSave && styles.saveBtnDisabled,
-              pressed && canSave && { opacity: 0.9 },
-            ]}
-            onPress={() => void onSave()}
+          <SarhButton
+            title="حفظ الموقع"
+            fullWidth
             disabled={!canSave}
-            accessibilityRole="button"
+            leftIcon="checkmark"
+            onPress={() => void onSave()}
             accessibilityLabel="حفظ الموقع"
-            accessibilityState={{ disabled: !canSave }}
-          >
-            <AppIcon name="checkmark" size={18} color="#fff" />
-            <Text style={styles.saveBtnText}>حفظ الموقع</Text>
-          </Pressable>
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

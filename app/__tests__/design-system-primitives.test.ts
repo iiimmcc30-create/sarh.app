@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
 import { sarh } from '@/constants/sarhTokens';
 import { colors as liveThemeColors } from '@/constants/theme';
-import { colors, FONT_WEIGHT_MIGRATION, fontFamily, fontWeight, typography } from '@/design-system';
+import { buttonColors, colors, FONT_WEIGHT_MIGRATION, fontFamily, fontWeight, typography } from '@/design-system';
 import {
   APP_TEXT_COLOR,
   AVATAR_SIZE,
@@ -57,8 +57,12 @@ describe('core UI primitives', () => {
   });
 
   it('keeps button / chip / badge colors on design tokens', () => {
-    expect(resolveSarhButtonColors('primary', 'default').backgroundColor).toBe(colors.primary);
-    expect(resolveSarhButtonColors('primary', 'pressed').backgroundColor).toBe(colors.primaryPressed);
+    expect(resolveSarhButtonColors('primary', 'default').backgroundColor).toBe(
+      buttonColors.primary.default.backgroundColor,
+    );
+    expect(resolveSarhButtonColors('primary', 'pressed').backgroundColor).toBe(
+      buttonColors.primary.pressed.backgroundColor,
+    );
     expect(resolveSarhButtonColors('danger', 'default').backgroundColor).toBe(colors.danger);
     expect(resolveSarhButtonColors('ghost', 'default').backgroundColor).toBe('transparent');
     expect(resolveSarhButtonColors('inverse', 'default').contentColor).toBeTruthy();

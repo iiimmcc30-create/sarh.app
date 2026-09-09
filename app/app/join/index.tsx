@@ -1,3 +1,4 @@
+import { SarhButton } from '@/design-system/components';
 import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
@@ -23,7 +24,6 @@ import { hasValidCoords } from '@/lib/butcherLocation';
 import { ltrInputText, rtlInputText } from '@/lib/rtl';
 import type { ButcherApplicationDocumentType } from '@/services/butcherApplicationTypes';
 import {
-  ActivityIndicator,
   Linking,
   Platform,
   Pressable,
@@ -334,14 +334,20 @@ export default function ButcherJoinScreen() {
                 placeholder="000000"
                 placeholderTextColor={colors.textMuted}
               />
-              <Pressable style={styles.secondaryBtn} onPress={verifyOtp} disabled={loading}>
-                <Text style={styles.secondaryBtnText}>تأكيد الرمز</Text>
-              </Pressable>
+              <SarhButton
+                title="تأكيد الرمز"
+                fullWidth
+                loading={loading}
+                onPress={verifyOtp}
+              />
             </>
           ) : (
-            <Pressable style={styles.secondaryBtn} onPress={sendOtp} disabled={loading}>
-              <Text style={styles.secondaryBtnText}>إرسال رمز التحقق</Text>
-            </Pressable>
+            <SarhButton
+              title="إرسال رمز التحقق"
+              fullWidth
+              loading={loading}
+              onPress={sendOtp}
+            />
           )}
           {phoneToken ? <Text style={styles.ok}>تم التحقق من الجوال</Text> : null}
         </View>
@@ -520,17 +526,12 @@ export default function ButcherJoinScreen() {
         {uploadStatus ? <Text style={styles.ok}>{uploadStatus}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Pressable
-          style={[styles.submit, loading && { opacity: 0.7 }]}
+        <SarhButton
+          title="إرسال طلب الانضمام"
+          fullWidth
+          loading={loading}
           onPress={() => void submit()}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitText}>إرسال طلب الانضمام</Text>
-          )}
-        </Pressable>
+        />
         <Pressable
           onPress={() => void Linking.openURL(SARH_BUTCHER_LOGIN_URL)}
           accessibilityRole="link"

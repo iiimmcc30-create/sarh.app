@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText } from '@/components/ui/AppText';
+import { SarhButton } from '@/design-system/components';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -109,15 +110,14 @@ export default function MinistryServiceDetailsScreen() {
               <AppText style={styles.desc}>{service.description}</AppText>
             ) : null}
             {service.externalUrl ? (
-              <Pressable
-                accessibilityRole="button"
+              <SarhButton
+                title="بدء الخدمة"
+                fullWidth
                 accessibilityLabel="بدء الخدمة"
+                rightIcon={rtlForwardIcon()}
                 onPress={startService}
-                style={({ pressed }) => [styles.startBtn, getRtlRow(), pressed && styles.pressed]}
-              >
-                <AppText style={styles.startText}>بدء الخدمة</AppText>
-                <AppIcon name={rtlForwardIcon()} size={16} color="#FFFFFF" />
-              </Pressable>
+                style={styles.startCta}
+              />
             ) : null}
           </View>
 
@@ -228,19 +228,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       lineHeight: 24,
     },
-    startBtn: {
+    startCta: {
       marginTop: spacing.sm,
-      backgroundColor: colors.electric,
-      borderRadius: radius.md,
-      minHeight: 50,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    startText: {
-      ...typography.body,
-      color: '#FFFFFF',
-      fontWeight: '700',
     },
     metaCard: {
       backgroundColor: colors.bgSurface,

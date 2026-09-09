@@ -81,7 +81,6 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
               title="فتح"
               variant="inverse"
               size="sm"
-              shape="pill"
               accessibilityLabel="فتح"
               onPress={openProfile}
             />

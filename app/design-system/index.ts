@@ -5,6 +5,9 @@
  * `@/components/ui/*`. New UI should prefer this module.
  */
 export {
+  applyButtonTokens,
+  buttonColors,
+  buttonMetrics,
   colors,
   duration,
   elevation,
@@ -21,6 +24,9 @@ export {
   typography,
 } from './tokens';
 export type {
+  ButtonSizeName,
+  ButtonTone,
+  ButtonVariantName,
   ColorToken,
   DurationToken,
   ElevationName,

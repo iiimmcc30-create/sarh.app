@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { SarhButton } from '@/design-system/components';
 import { updateAccountSettings } from '@/services/users';
 import { interpretOtpVerifyResult } from '@/lib/otpVerifyOutcome';
 import { getRtlText, ltrInputText, marginStart, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
@@ -14,7 +15,6 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
@@ -296,18 +296,13 @@ export default function RegisterScreen() {
                       autoFocus
                     />
                   </View>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.primaryBtn,
-                      !isPhoneValid && styles.btnDisabled,
-                      pressed && styles.pressed,
-                    ]}
-                    onPress={advanceFromPhone}
+                  <SarhButton
+                    title={copy.continueCta}
+                    fullWidth
                     disabled={!isPhoneValid}
-                    accessibilityState={{ disabled: !isPhoneValid }}
-                  >
-                    <Text style={styles.primaryText}>{copy.continueCta}</Text>
-                  </Pressable>
+                    onPress={advanceFromPhone}
+                    style={styles.primaryCta}
+                  />
                 </View>
               ) : null}
 
@@ -327,18 +322,13 @@ export default function RegisterScreen() {
                       autoFocus
                     />
                   </View>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.primaryBtn,
-                      displayName.trim().length < 2 && styles.btnDisabled,
-                      pressed && styles.pressed,
-                    ]}
-                    onPress={advanceFromName}
+                  <SarhButton
+                    title={copy.continueCta}
+                    fullWidth
                     disabled={displayName.trim().length < 2}
-                    accessibilityState={{ disabled: displayName.trim().length < 2 }}
-                  >
-                    <Text style={styles.primaryText}>{copy.continueCta}</Text>
-                  </Pressable>
+                    onPress={advanceFromName}
+                    style={styles.primaryCta}
+                  />
                 </View>
               ) : null}
 
@@ -393,18 +383,13 @@ export default function RegisterScreen() {
                     />
                   </View>
 
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.primaryBtn,
-                      (!usernameOk || !dobOk) && styles.btnDisabled,
-                      pressed && styles.pressed,
-                    ]}
-                    onPress={advanceFromIdentity}
+                  <SarhButton
+                    title={copy.continueCta}
+                    fullWidth
                     disabled={!usernameOk || !dobOk}
-                    accessibilityState={{ disabled: !usernameOk || !dobOk }}
-                  >
-                    <Text style={styles.primaryText}>{copy.continueCta}</Text>
-                  </Pressable>
+                    onPress={advanceFromIdentity}
+                    style={styles.primaryCta}
+                  />
                 </View>
               ) : null}
 
@@ -489,38 +474,14 @@ export default function RegisterScreen() {
                     </Text>
                   </Pressable>
 
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.primaryBtn,
-                      (loading ||
-                        password.length < 6 ||
-                        password !== confirmPassword ||
-                        !agreed) &&
-                        styles.btnDisabled,
-                      pressed && styles.pressed,
-                    ]}
+                  <SarhButton
+                    title={copy.registerCta}
+                    fullWidth
+                    loading={loading}
+                    disabled={password.length < 6 || password !== confirmPassword || !agreed}
                     onPress={startRegister}
-                    disabled={
-                      loading ||
-                      password.length < 6 ||
-                      password !== confirmPassword ||
-                      !agreed
-                    }
-                    accessibilityState={{
-                      disabled:
-                        loading ||
-                        password.length < 6 ||
-                        password !== confirmPassword ||
-                        !agreed,
-                      busy: loading,
-                    }}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.primaryText}>{copy.registerCta}</Text>
-                    )}
-                  </Pressable>
+                    style={styles.primaryCta}
+                  />
                 </View>
               ) : null}
 
@@ -542,21 +503,14 @@ export default function RegisterScreen() {
                       autoFocus
                     />
                   </View>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.primaryBtn,
-                      (loading || otpCode.length !== 6) && styles.btnDisabled,
-                      pressed && styles.pressed,
-                    ]}
+                  <SarhButton
+                    title={copy.otpConfirm}
+                    fullWidth
+                    loading={loading}
+                    disabled={otpCode.length !== 6}
                     onPress={verifyAndCreate}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.primaryText}>{copy.otpConfirm}</Text>
-                    )}
-                  </Pressable>
+                    style={styles.primaryCta}
+                  />
                   <Pressable
                     onPress={() => goTo('password')}
                     style={styles.editLink}
@@ -683,20 +637,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       ...getRtlText(),
     },
-    primaryBtn: {
-      height: 54,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.electric,
+    primaryCta: {
       marginTop: spacing.xl,
-    },
-    btnDisabled: { opacity: 0.45 },
-    pressed: { opacity: 0.88 },
-    primaryText: {
-      ...typography.button,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: '#fff',
     },
     editLink: { alignItems: 'center', marginTop: spacing.md, padding: spacing.sm },
     editText: {

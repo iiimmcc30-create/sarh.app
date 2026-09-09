@@ -1,4 +1,4 @@
-import { SarhChip, SarhChipRow } from '@/design-system/components';
+import { SarhChip, SarhChipRow, SarhButton } from '@/design-system/components';
 // Powered by OnSpace.AI
 // SAFAT — Create Post Screen (إنشاء منشور - نظام X)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
@@ -191,20 +191,13 @@ export default function CreatePostScreen() {
             <Text style={styles.cancelText}>إلغاء</Text>
           </Pressable>
           <Text style={styles.headerTitle}>{isEditing ? 'تعديل المنشور' : 'منشور جديد'}</Text>
-          <Pressable
-            style={[styles.postBtn, !canPost && styles.postBtnDisabled]}
+          <SarhButton
+            title={submitting ? '...' : isEditing ? 'حفظ' : 'نشر'}
+            size="sm"
+            loading={submitting}
+            disabled={!canPost}
             onPress={handlePost}
-            disabled={!canPost || submitting}
-          >
-            <LinearGradient
-              colors={canPost ? gradients.royal : [colors.bgSurface, colors.bgSurface]}
-              style={styles.postBtnInner}
-            >
-              <Text style={[styles.postBtnText, !canPost && { color: colors.textMuted }]}>
-                {submitting ? '...' : isEditing ? 'حفظ' : 'نشر'}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+          />
         </View>
 
         {/* Post type selector */}
