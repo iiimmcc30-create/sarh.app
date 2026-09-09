@@ -5,8 +5,9 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
-import { useState, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,7 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { marginAutoStart, rtlForwardIcon } from '@/lib/rtl';
-import { useEffect } from 'react';
 import {
   ButcherProfile,
   Country,
@@ -224,60 +224,67 @@ export default function ButchersMapScreen() {
   const { accessToken } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [butchersList, setButchersList] = useState<ButcherProfile[]>([]);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  const fetchButchers = useCallback(async () => {
+    setLoadState('loading');
+    try {
+      const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+      const res = await fetch(`${API_BASE}/api/butchers`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.butchers) {
+          const mapped = json.data.butchers
+            .filter((b: any) => (b.country || 'SA') !== 'EG')
+            .map((b: any) => ({
+            id: b.id,
+            name: b.nameAr || b.nameEn,
+            nameAr: b.nameAr,
+            logo: b.logo || undefined,
+            cover: b.cover || undefined,
+            type: b.type || 'regular',
+            country: b.country || 'SA',
+            city: b.city || '',
+            cityAr: b.cityAr || '',
+            address: b.address || '',
+            addressAr: b.addressAr || '',
+            lat: b.lat || 0,
+            lng: b.lng || 0,
+            phone: b.phone || '',
+            rating: b.rating ?? 5.0,
+            reviewCount: b.reviewCount ?? 0,
+            orderCompletionRate: b.orderCompletionRate ?? 100,
+            workingHours: {
+              open: b.openTime || '06:00',
+              close: b.closeTime || '22:00',
+              isOpen: b.isOpen ?? true,
+              closedOn: b.closedDays || [],
+            },
+            bio: b.bioAr || b.bioEn || '',
+            bioAr: b.bioAr || '',
+            specialties: b.specialties || [],
+            subscriptionActive: b.subscriptionActive ?? false,
+            subscriptionExpiry: b.subscriptionExpiry,
+            commercialReg: b.commercialReg,
+            activityScore: b.activityScore ?? 50,
+            totalOrders: b.totalOrders ?? 0,
+            joinedAt: b.createdAt || new Date().toISOString(),
+            }));
+          setButchersList(mapped);
+          setLoadState('ready');
+          return;
+        }
+      }
+      setLoadState('error');
+    } catch (err) {
+      console.warn('[ButchersMapScreen] Failed to fetch butchers:', err);
+      setLoadState('error');
+    }
+  }, [accessToken]);
 
   useEffect(() => {
-    const fetchButchers = async () => {
-      try {
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const res = await fetch(`${API_BASE}/api/butchers`, { headers });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data?.butchers) {
-            const mapped = json.data.butchers
-              .filter((b: any) => (b.country || 'SA') !== 'EG')
-              .map((b: any) => ({
-              id: b.id,
-              name: b.nameAr || b.nameEn,
-              nameAr: b.nameAr,
-              logo: b.logo || undefined,
-              cover: b.cover || undefined,
-              type: b.type || 'regular',
-              country: b.country || 'SA',
-              city: b.city || '',
-              cityAr: b.cityAr || '',
-              address: b.address || '',
-              addressAr: b.addressAr || '',
-              lat: b.lat || 0,
-              lng: b.lng || 0,
-              phone: b.phone || '',
-              rating: b.rating ?? 5.0,
-              reviewCount: b.reviewCount ?? 0,
-              orderCompletionRate: b.orderCompletionRate ?? 100,
-              workingHours: {
-                open: b.openTime || '06:00',
-                close: b.closeTime || '22:00',
-                isOpen: b.isOpen ?? true,
-                closedOn: b.closedDays || [],
-              },
-              bio: b.bioAr || b.bioEn || '',
-              bioAr: b.bioAr || '',
-              specialties: b.specialties || [],
-              subscriptionActive: b.subscriptionActive ?? false,
-              subscriptionExpiry: b.subscriptionExpiry,
-              commercialReg: b.commercialReg,
-              activityScore: b.activityScore ?? 50,
-              totalOrders: b.totalOrders ?? 0,
-              joinedAt: b.createdAt || new Date().toISOString(),
-              }));
-            setButchersList(mapped);
-          }
-        }
-      } catch (err) {
-        console.warn('[ButchersMapScreen] Failed to fetch butchers:', err);
-      }
-    };
-    fetchButchers();
-  }, [accessToken]);
+    void fetchButchers();
+  }, [fetchButchers]);
 
   const ranked = rankButchers(butchersList);
   const filtered = ranked;
@@ -320,18 +327,36 @@ export default function ButchersMapScreen() {
       {/* Header */}
       <View style={s.header}>
         <SarhBackButton onPress={() => router.replace('/(tabs)')} color={colors.textPrimary} style={s.backBtn} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={s.headerTitle}>خريطة الملاحم</Text>
+        <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }}>
+          <Text style={s.headerTitle} numberOfLines={1}>خريطة الملاحم</Text>
           <Text style={s.headerSub}>{filtered.length} ملحمة متاحة</Text>
         </View>
         <Pressable
           onPress={() => router.push('/butchers/cart')}
           style={s.listBtn}
+          accessibilityRole="button"
           accessibilityLabel="السلة"
         >
           <AppIcon name="cart-outline" size={20} color={colors.electricBright} />
         </Pressable>
       </View>
+
+      {loadState === 'loading' && butchersList.length === 0 ? (
+        <View style={s.statusBanner}>
+          <ActivityIndicator color={colors.electricBright} />
+          <Text style={s.statusText}>جاري تحميل الملاحم...</Text>
+        </View>
+      ) : null}
+      {loadState === 'error' ? (
+        <Pressable
+          style={s.statusBanner}
+          onPress={() => void fetchButchers()}
+          accessibilityRole="button"
+          accessibilityLabel="إعادة تحميل الملاحم"
+        >
+          <Text style={s.statusText}>تعذر تحميل الملاحم. اضغط لإعادة المحاولة</Text>
+        </Pressable>
+      ) : null}
 
       {/* Map area */}
       <View style={s.mapContainer}>
@@ -472,6 +497,15 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   headerTitle: { ...butcherTypography.title, color: colors.textPrimary },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  statusText: { ...butcherTypography.secondary, color: colors.textMuted, flexShrink: 1 },
   headerSub: { ...butcherTypography.secondary, color: colors.textBrand, marginTop: 1 },
   listBtn: {
     width: 40, height: 40, borderRadius: 20,
