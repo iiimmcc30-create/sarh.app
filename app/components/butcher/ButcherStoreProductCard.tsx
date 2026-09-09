@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { AppText } from '@/design-system/components';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -8,10 +9,10 @@ import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
 import { resolveMediaUrl } from '@/services/media';
 import type { ButcherProduct } from '@/services/butcherData';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-const IMAGE_SIZE = 88;
-const ADD_SIZE = 36;
+const IMAGE_SIZE = 92;
+const ADD_SIZE = 34;
 
 type ButcherStoreProductCardProps = {
   product: ButcherProduct;
@@ -20,6 +21,14 @@ type ButcherStoreProductCardProps = {
   onAdd: () => void;
   showDivider?: boolean;
 };
+
+function unitLabel(product: ButcherProduct): string {
+  if (product.pricePerKg != null) {
+    const kg = product.weightRange?.min ?? 1;
+    return `${kg} كيلو غرام`;
+  }
+  return '1 قطعة';
+}
 
 export function ButcherStoreProductCard({
   product,
@@ -35,6 +44,10 @@ export function ButcherStoreProductCard({
     product.pricePerKg && product.priceFixed && product.priceFixed > product.pricePerKg
       ? product.priceFixed
       : null;
+  const discount =
+    comparePrice && currentPrice
+      ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100)
+      : 0;
   const description =
     product.descriptionAr?.trim() ||
     product.pricingNoteAr?.trim() ||
@@ -60,19 +73,25 @@ export function ButcherStoreProductCard({
           <AppText variant="label" numberOfLines={2}>
             {product.nameAr}
           </AppText>
-          {description ? (
-            <AppText variant="caption" color="textMuted" numberOfLines={2}>
-              {description}
-            </AppText>
-          ) : null}
-          <AppText variant="label" color="primary">
-            {currentPrice.toLocaleString('en-US')} {currencySymbol}
+          <AppText variant="caption" color="textMuted" numberOfLines={1}>
+            {unitLabel(product)}
+            {description ? ` · ${description}` : ''}
           </AppText>
-          {comparePrice ? (
-            <AppText variant="caption" color="textMuted" style={styles.compare}>
-              {comparePrice.toLocaleString('en-US')} {currencySymbol}
-            </AppText>
-          ) : null}
+          <View style={[styles.priceRow, getRtlRow()]}>
+            <Text style={styles.price}>
+              {currentPrice.toLocaleString('en-US')} {currencySymbol}
+            </Text>
+            {comparePrice ? (
+              <Text style={styles.compare}>
+                {comparePrice.toLocaleString('en-US')} {currencySymbol}
+              </Text>
+            ) : null}
+            {discount > 0 ? (
+              <View style={styles.discount}>
+                <Text style={styles.discountText}>-{discount}%</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
 
         <Pressable
@@ -84,7 +103,10 @@ export function ButcherStoreProductCard({
           hitSlop={6}
           accessibilityLabel="إضافة للسلة"
         >
-          <AppIcon name="add" size={20} color={colors.bgDeep} />
+          <AppIcon name="cart-outline" size={16} color={butcherMarket.seeAll} />
+          <View style={styles.plusDot}>
+            <AppIcon name="plus" size={9} color="#fff" />
+          </View>
         </Pressable>
       </View>
     </Pressable>
@@ -105,7 +127,7 @@ function createStyles(colors: ThemeColors) {
     },
     row: {
       alignItems: 'center',
-      gap: 14,
+      gap: 12,
     },
     imageWrap: {
       width: IMAGE_SIZE,
@@ -127,20 +149,54 @@ function createStyles(colors: ThemeColors) {
     addBtn: {
       width: ADD_SIZE,
       height: ADD_SIZE,
-      borderRadius: ADD_SIZE / 2,
-      backgroundColor: colors.electric,
+      borderRadius: 8,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: butcherMarket.seeAll,
+    },
+    plusDot: {
+      position: 'absolute',
+      top: -3,
+      end: -3,
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: butcherMarket.seeAll,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     body: {
       flex: 1,
       minWidth: 0,
       gap: 4,
     },
+    priceRow: {
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 4,
+    },
+    price: {
+      ...butcherTypography.title,
+      color: butcherMarket.seeAll,
+    },
     compare: {
       ...butcherTypography.meta,
+      color: colors.textMuted,
       textDecorationLine: 'line-through',
+    },
+    discount: {
+      backgroundColor: butcherMarket.seeAll,
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: radius.pill,
+    },
+    discountText: {
+      ...butcherTypography.badge,
+      color: '#fff',
     },
   });
 }
