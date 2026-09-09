@@ -9,7 +9,7 @@ import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
-const HERO_IMAGE = require('../../assets/images/onboarding/slide-2.jpg');
+const HERO_IMAGE = require('../../assets/images/explore-sarh-butchers.jpg');
 
 export function ExploreSarhSection() {
   const router = useRouter();

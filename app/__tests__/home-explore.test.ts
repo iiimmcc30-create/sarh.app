@@ -333,6 +333,7 @@ describe('Home design-system adoption', () => {
     expect(home).not.toContain('ListingCard');
     expect(home).not.toContain('Marketplace');
     expect(explore).toContain('ملاحم سرح');
+    expect(explore).toContain('explore-sarh-butchers.jpg');
     expect(explore).toContain("safePush('/butchers'");
     expect(ministry).toContain('formatServiceCountLabel');
   });

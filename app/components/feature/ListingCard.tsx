@@ -138,23 +138,19 @@ function ListingCardInner({
             ) : null}
           </View>
 
-          {/*
-           * Physical LTR seller cluster — same shell as listing detail:
-           * name → badge → avatar, pinned to the visual right.
-           */}
-          <View style={styles.listSellerRow}>
-            <UserProfileLink userId={sellerId} style={styles.listSeller}>
-              <View style={styles.listSellerNameShell}>
-                <Text style={styles.listSellerName} numberOfLines={1}>
-                  {sellerName}
-                </Text>
-              </View>
-              {seller?.verified ? <VerificationBadge size={14} /> : null}
+          <View style={[styles.listSellerRow, getRtlRow()]}>
+            <UserProfileLink userId={sellerId} style={[styles.listSeller, getRtlRow()]}>
               <Image
                 source={uriSource(seller?.avatar)}
                 style={styles.listAvatar}
                 contentFit="cover"
               />
+              {seller?.verified ? <VerificationBadge size={14} /> : null}
+              <View style={styles.listSellerNameShell}>
+                <Text style={styles.listSellerName} numberOfLines={1}>
+                  {sellerName}
+                </Text>
+              </View>
             </UserProfileLink>
           </View>
         </View>
@@ -283,20 +279,19 @@ function ListingCardInner({
         </View>
       </View>
 
-      {/* Physical LTR seller cluster — same shell as listing detail / list card. */}
-      <View style={styles.harajSellerRow}>
-        <UserProfileLink userId={sellerId} style={styles.harajSellerInfo}>
-          <View style={styles.harajSellerNameShell}>
-            <Text style={styles.harajSellerName} numberOfLines={1}>
-              {sellerName}
-            </Text>
-          </View>
-          {seller?.verified ? <VerificationBadge size={14} /> : null}
+      <View style={[styles.harajSellerRow, getRtlRow()]}>
+        <UserProfileLink userId={sellerId} style={[styles.harajSellerInfo, getRtlRow()]}>
           <Image
             source={uriSource(seller?.avatar)}
             style={styles.harajAvatar}
             contentFit="cover"
           />
+          {seller?.verified ? <VerificationBadge size={14} /> : null}
+          <View style={styles.harajSellerNameShell}>
+            <Text style={styles.harajSellerName} numberOfLines={1}>
+              {sellerName}
+            </Text>
+          </View>
         </UserProfileLink>
       </View>
 
@@ -414,14 +409,12 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     flexShrink: 0,
   },
   listSellerRow: {
-    flexDirection: 'row',
-        width: '100%',
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
   },
   listSeller: {
-    flexDirection: 'row',
-        alignItems: 'center',
+    alignItems: 'center',
     gap: 6,
     flexShrink: 1,
     minWidth: 0,
@@ -680,14 +673,12 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     writingDirection: 'rtl',
   },
   harajSellerRow: {
-    flexDirection: 'row',
-        width: '100%',
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
   },
   harajSellerInfo: {
-    flexDirection: 'row',
-        alignItems: 'center',
+    alignItems: 'center',
     gap: 8,
     flexShrink: 1,
     minWidth: 0,
