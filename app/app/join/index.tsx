@@ -20,6 +20,7 @@ import {
   type PickedApplicationFile,
 } from '@/lib/pickApplicationDocument';
 import { hasValidCoords } from '@/lib/butcherLocation';
+import { ltrInputText, rtlInputText } from '@/lib/rtl';
 import type { ButcherApplicationDocumentType } from '@/services/butcherApplicationTypes';
 import {
   ActivityIndicator,
@@ -313,27 +314,25 @@ export default function ButcherJoinScreen() {
           <View style={styles.phoneRow}>
             <Text style={styles.dial}>{SAUDI_DIAL}</Text>
             <TextInput
-              style={styles.inputFlex}
+              style={[styles.inputFlex, ltrInputText]}
               value={phoneDigits}
               onChangeText={setPhoneDigits}
               keyboardType="phone-pad"
               placeholder="5xxxxxxxx"
               placeholderTextColor={colors.textMuted}
-              textAlign="right"
             />
           </View>
           {otpSent ? (
             <>
               <Text style={styles.label}>رمز التحقق</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, ltrInputText, { textAlign: 'center' }]}
                 value={otp}
                 onChangeText={setOtp}
                 keyboardType="number-pad"
                 maxLength={6}
                 placeholder="000000"
                 placeholderTextColor={colors.textMuted}
-                textAlign="center"
               />
               <Pressable style={styles.secondaryBtn} onPress={verifyOtp} disabled={loading}>
                 <Text style={styles.secondaryBtnText}>تأكيد الرمز</Text>
@@ -351,45 +350,41 @@ export default function ButcherJoinScreen() {
           <Text style={styles.section}>2. بيانات صاحب الطلب</Text>
           <Text style={styles.label}>الاسم</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, rtlInputText]}
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="الاسم الكامل"
             placeholderTextColor={colors.textMuted}
-            textAlign="right"
           />
           <Text style={styles.label}>البريد الإلكتروني (اختياري)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, ltrInputText]}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
             placeholder="name@example.com"
             placeholderTextColor={colors.textMuted}
-            textAlign="right"
           />
           {isNewUser ? (
             <>
               <Text style={styles.label}>اسم المستخدم</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, ltrInputText]}
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 placeholder="latin_username"
                 placeholderTextColor={colors.textMuted}
-                textAlign="left"
               />
               <Text style={styles.label}>كلمة المرور (اختياري)</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, ltrInputText]}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
                 placeholder="••••••••"
                 placeholderTextColor={colors.textMuted}
-                textAlign="right"
               />
             </>
           ) : null}
@@ -398,39 +393,36 @@ export default function ButcherJoinScreen() {
         <View style={styles.card}>
           <Text style={styles.section}>3. بيانات الملحمة</Text>
           <Text style={styles.label}>اسم الملحمة (عربي)</Text>
-          <TextInput style={styles.input} value={nameAr} onChangeText={setNameAr} textAlign="right" />
+          <TextInput style={[styles.input, rtlInputText]} value={nameAr} onChangeText={setNameAr} />
           <Text style={styles.label}>اسم الملحمة (إنجليزي)</Text>
-          <TextInput style={styles.input} value={nameEn} onChangeText={setNameEn} textAlign="left" />
+          <TextInput style={[styles.input, ltrInputText]} value={nameEn} onChangeText={setNameEn} />
           <Text style={styles.label}>هاتف المحل</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, ltrInputText]}
             value={shopPhone}
             onChangeText={setShopPhone}
             keyboardType="phone-pad"
-            textAlign="right"
           />
           <Text style={styles.label}>السجل التجاري</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, ltrInputText]}
             value={commercialReg}
             onChangeText={setCommercialReg}
-            textAlign="right"
           />
           <Text style={styles.label}>المدينة</Text>
-          <TextInput style={styles.input} value={cityAr} onChangeText={setCityAr} textAlign="right" />
+          <TextInput style={[styles.input, rtlInputText]} value={cityAr} onChangeText={setCityAr} />
           <Text style={styles.label}>المدينة (إنجليزي)</Text>
-          <TextInput style={styles.input} value={city} onChangeText={setCity} textAlign="left" />
+          <TextInput style={[styles.input, ltrInputText]} value={city} onChangeText={setCity} />
           <Text style={styles.label}>العنوان</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, rtlInputText]}
             value={addressAr}
             onChangeText={setAddressAr}
             placeholder="الحي، الشارع"
             placeholderTextColor={colors.textMuted}
-            textAlign="right"
           />
           <Text style={styles.label}>العنوان (إنجليزي)</Text>
-          <TextInput style={styles.input} value={address} onChangeText={setAddress} textAlign="left" />
+          <TextInput style={[styles.input, ltrInputText]} value={address} onChangeText={setAddress} />
         </View>
 
         <View style={styles.card}>
@@ -449,37 +441,42 @@ export default function ButcherJoinScreen() {
           <Text style={styles.section}>5. النشاط وأوقات العمل</Text>
           <Text style={styles.label}>نبذة عربية (اختياري)</Text>
           <TextInput
-            style={[styles.input, styles.multiline]}
+            style={[styles.input, styles.multiline, rtlInputText]}
             value={bioAr}
             onChangeText={setBioAr}
             multiline
-            textAlign="right"
           />
           <Text style={styles.label}>نبذة إنجليزية (اختياري)</Text>
           <TextInput
-            style={[styles.input, styles.multiline]}
+            style={[styles.input, styles.multiline, ltrInputText]}
             value={bioEn}
             onChangeText={setBioEn}
             multiline
-            textAlign="left"
           />
           <Text style={styles.label}>التخصصات (اختياري)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, rtlInputText]}
             value={specialties}
             onChangeText={setSpecialties}
             placeholder="لحم بقري، غنم"
             placeholderTextColor={colors.textMuted}
-            textAlign="right"
           />
           <View style={styles.row}>
             <View style={styles.col}>
               <Text style={styles.label}>الفتح</Text>
-              <TextInput style={styles.input} value={openTime} onChangeText={setOpenTime} textAlign="center" />
+              <TextInput
+                style={[styles.input, ltrInputText, { textAlign: 'center' }]}
+                value={openTime}
+                onChangeText={setOpenTime}
+              />
             </View>
             <View style={styles.col}>
               <Text style={styles.label}>الإغلاق</Text>
-              <TextInput style={styles.input} value={closeTime} onChangeText={setCloseTime} textAlign="center" />
+              <TextInput
+                style={[styles.input, ltrInputText, { textAlign: 'center' }]}
+                value={closeTime}
+                onChangeText={setCloseTime}
+              />
             </View>
           </View>
         </View>
@@ -491,7 +488,13 @@ export default function ButcherJoinScreen() {
             const picked = docs[type];
             const required = type !== 'other';
             return (
-              <Pressable key={type} style={styles.fileBtn} onPress={() => void pickDoc(type)}>
+              <Pressable
+                key={type}
+                style={styles.fileBtn}
+                onPress={() => void pickDoc(type)}
+                accessibilityRole="button"
+                accessibilityLabel={`رفع ${DOCUMENT_TYPE_LABELS[type]}`}
+              >
                 <Text style={styles.fileTitle}>
                   {DOCUMENT_TYPE_LABELS[type]}
                   {required ? ' *' : ' (اختياري)'}
@@ -544,7 +547,14 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: '#07131C' },
     glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 280 },
-    scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: 48 },
+    scroll: {
+      width: '100%',
+      maxWidth: 560,
+      alignSelf: 'center',
+      padding: spacing.xl,
+      gap: spacing.lg,
+      paddingBottom: 48,
+    },
     hero: { alignItems: 'center', gap: 10, paddingTop: spacing.md },
     kicker: { ...typography.caption, color: colors.gold, letterSpacing: 1 },
     title: { ...typography.display, color: colors.textPrimary, textAlign: 'center' },

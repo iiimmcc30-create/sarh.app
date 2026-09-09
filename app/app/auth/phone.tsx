@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlText, marginStart, rtlForwardIcon, isAppRtl } from '@/lib/rtl';
+import { getRtlText, ltrInputText, marginStart, rtlForwardIcon } from '@/lib/rtl';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
@@ -92,6 +92,7 @@ export default function PhoneLoginScreen() {
             onPress={() => router.replace('/auth/welcome')}
             style={styles.backBtn}
             hitSlop={12}
+            accessibilityRole="button"
             accessibilityLabel={copy.back}
           >
             <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
@@ -114,7 +115,7 @@ export default function PhoneLoginScreen() {
                 style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}
               >
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, ltrInputText]}
                   value={phone}
                   onChangeText={(t) => {
                     setPhone(t.replace(/[^\d\s]/g, ''));
@@ -123,7 +124,6 @@ export default function PhoneLoginScreen() {
                   placeholder={copy.phonePlaceholder}
                   placeholderTextColor={colors.textSubtle}
                   keyboardType="phone-pad"
-                  textAlign="right"
                   maxLength={10}
                   autoComplete="tel"
                 />
@@ -137,6 +137,8 @@ export default function PhoneLoginScreen() {
                   onPress={() => setShowPassword((v) => !v)}
                   hitSlop={8}
                   style={styles.eye}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                 >
                   <AppIcon
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -145,7 +147,7 @@ export default function PhoneLoginScreen() {
                   />
                 </Pressable>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, ltrInputText]}
                   value={password}
                   onChangeText={(t) => {
                     setPassword(t);
@@ -154,7 +156,6 @@ export default function PhoneLoginScreen() {
                   placeholder={copy.passwordPlaceholder}
                   placeholderTextColor={colors.textSubtle}
                   secureTextEntry={!showPassword}
-                  textAlign="right"
                   autoComplete="password"
                 />
               </View>
@@ -209,6 +210,9 @@ function createStyles(colors: ThemeColors) {
       ...marginStart(spacing.sm),
     },
     scroll: {
+      width: '100%',
+      maxWidth: 440,
+      alignSelf: 'center',
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xxl,
       flexGrow: 1,

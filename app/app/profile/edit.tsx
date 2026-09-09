@@ -22,7 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { marginEnd } from '@/lib/rtl';
+import { ltrInputText, marginEnd, rtlInputText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { Country } from '@/services/types';
 import { showToast } from '@/lib/toast';
@@ -113,11 +113,14 @@ export default function EditProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-          <Text style={styles.headerTitle}>تعديل الملف الشخصي</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>تعديل الملف الشخصي</Text>
           <Pressable
             style={[styles.saveBtn, saving && styles.saveBtnLoading]}
             onPress={handleSave}
             disabled={saving}
+            accessibilityRole="button"
+            accessibilityLabel="حفظ التعديلات"
+            accessibilityState={{ disabled: saving, busy: saving }}
           >
             <LinearGradient
               colors={saving ? [colors.bgSurface, colors.bgSurface] : gradients.royal}
@@ -152,7 +155,12 @@ export default function EditProfileScreen() {
                 colors={['rgba(6,9,26,0.1)', 'rgba(6,9,26,0.5)']}
                 style={StyleSheet.absoluteFill}
               />
-              <Pressable style={styles.coverCameraBtn} onPress={handlePickCover}>
+              <Pressable
+                style={styles.coverCameraBtn}
+                onPress={handlePickCover}
+                accessibilityRole="button"
+                accessibilityLabel="تغيير صورة الغلاف"
+              >
                 <AppIcon name="camera-outline" size={16} color="#fff" />
               </Pressable>
             </View>
@@ -165,7 +173,12 @@ export default function EditProfileScreen() {
           <View style={styles.avatarSection}>
             <View style={styles.avatarWrap}>
               <Image source={{ uri: avatarUri ?? me.avatar }} style={styles.avatar} contentFit="cover" />
-              <Pressable style={styles.cameraBtn} onPress={handlePickAvatar}>
+              <Pressable
+                style={styles.cameraBtn}
+                onPress={handlePickAvatar}
+                accessibilityRole="button"
+                accessibilityLabel="تغيير الصورة الشخصية"
+              >
                 <AppIcon name="camera" size={16} color="#fff" />
               </Pressable>
             </View>
@@ -182,8 +195,7 @@ export default function EditProfileScreen() {
                   onChangeText={setArabicName}
                   placeholder="اسمك الكامل"
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.input, styles.inputRtl]}
-                  textAlign="right"
+                  style={[styles.input, styles.inputRtl, rtlInputText]}
                 />
               </View>
             </View>
@@ -198,7 +210,7 @@ export default function EditProfileScreen() {
                   onChangeText={(t) => setUsername(t.replace(/\s/g, '').toLowerCase())}
                   placeholder="اسم_المستخدم"
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.input, { flex: 1 }]}
+                  style={[styles.input, ltrInputText, { flex: 1 }]}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
@@ -215,10 +227,9 @@ export default function EditProfileScreen() {
                   onChangeText={setBio}
                   placeholder="أخبرنا عن نفسك..."
                   placeholderTextColor={colors.textMuted}
-                  style={[styles.input, styles.inputRtl, { height: 80, textAlignVertical: 'top' }]}
+                  style={[styles.input, styles.inputRtl, rtlInputText, { height: 80, textAlignVertical: 'top' }]}
                   multiline
                   maxLength={160}
-                  textAlign="right"
                 />
               </View>
               <Text style={styles.charCount}>{bio.length}/160</Text>
@@ -233,6 +244,9 @@ export default function EditProfileScreen() {
                     key={c.code}
                     onPress={() => setCountry(c.code)}
                     style={[styles.countryChip, country === c.code && styles.countryChipActive]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: country === c.code }}
+                    accessibilityLabel={c.ar}
                   >
                     <Text style={styles.countryFlag}>{c.flag}</Text>
                     <Text style={[styles.countryLabel, country === c.code && styles.countryLabelActive]}>
@@ -264,7 +278,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.borderSoft,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, minWidth: 0 },
   saveBtn: { borderRadius: radius.pill, overflow: 'hidden' },
   saveBtnLoading: { opacity: 0.7 },
   saveBtnInner: {
@@ -315,7 +329,13 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 2, borderColor: colors.bgDeep,
   },
   avatarHint: { ...typography.micro, color: colors.textMuted, marginTop: spacing.sm },
-  form: { paddingHorizontal: spacing.lg, gap: spacing.lg },
+  form: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
+  },
   fieldGroup: { gap: spacing.sm },
   fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
   inputWrap: {

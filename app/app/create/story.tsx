@@ -38,6 +38,7 @@ import {
   validateStoryVideoDuration,
   type StoryMediaKind,
 } from '@/lib/storyMedia';
+import { rtlInputText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { uploadMediaFromUri } from '@/services/upload';
@@ -391,13 +392,12 @@ export default function CreateStoryScreen() {
                   ) : null}
                   {!isButcherMode ? (
                     <TextInput
-                      style={styles.optionInput}
+                      style={[styles.optionInput, rtlInputText]}
                       value={location}
                       onChangeText={setLocation}
                       placeholder="📍 الموقع (اختياري)"
                       placeholderTextColor="rgba(255,255,255,0.45)"
                       maxLength={120}
-                      textAlign="right"
                     />
                   ) : null}
                 </ScrollView>
@@ -405,14 +405,13 @@ export default function CreateStoryScreen() {
 
               <View style={[styles.captionBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
                 <TextInput
-                  style={styles.captionInput}
+                  style={[styles.captionInput, rtlInputText]}
                   value={captionAr}
                   onChangeText={setCaptionAr}
                   placeholder="اكتب تعليقاً..."
                   placeholderTextColor="rgba(255,255,255,0.45)"
                   maxLength={200}
                   multiline
-                  textAlign="right"
                 />
               </View>
             </View>

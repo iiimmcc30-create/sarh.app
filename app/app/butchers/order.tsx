@@ -21,7 +21,7 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText } from '@/lib/rtl';
+import { getRtlText, rtlInputText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { launchPaymentCheckout } from '@/services/payments';
@@ -514,13 +514,12 @@ export default function ButcherOrderScreen() {
 
         <Section title="ملاحظات (اختياري)" styles={styles}>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, rtlInputText]}
             placeholder="مثال: افصل الكبد والرقبة..."
             placeholderTextColor={colors.textSubtle}
             value={notes}
             onChangeText={setNotes}
             multiline
-            textAlign="right"
           />
         </Section>
 
