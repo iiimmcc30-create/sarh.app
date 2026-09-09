@@ -64,8 +64,10 @@ describe('malahm home redesign', () => {
     expect(card).toContain('borderBottomWidth: StyleSheet.hairlineWidth');
     expect(card).toContain("backgroundColor: 'transparent'");
     expect(card).toContain('getRtlRow()');
-    expect(store).toContain("label: 'الكل'");
-    expect(store).toContain("activeNav.id === 'all'");
+    expect(store).toContain('ButcherStoreHero');
+    expect(store).toContain('ButcherMenuPager');
+    expect(store).toContain('البحث في القائمة...');
+    expect(store).not.toContain("label: 'الكل'");
     expect(store).toContain('CATEGORY_LABELS');
   });
 

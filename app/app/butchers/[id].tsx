@@ -5,22 +5,28 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
+  Alert,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText } from '@/lib/rtl';
+import { getRtlRow, getRtlText, rtlInputText } from '@/lib/rtl';
+import { butcherMarket, butcherSearchFill } from '@/constants/butcherMarket';
+import {
+  fetchButcherFavoriteStatus,
+  toggleButcherFavorite,
+} from '@/services/butcherFavorites';
 import { countries, Country } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -32,14 +38,16 @@ import {
   ButcherReview,
   ButcherStory,
   gccCurrencies,
-  ChatMessage,
   CATEGORY_LABELS,
   type CutType,
   type MeatCategory,
 } from '@/services/butcherData';
-import { ButcherStoreNavBar, type ButcherStoreNavItem } from '@/components/butcher/ButcherCategoryBar';
+import { type ButcherStoreNavItem } from '@/components/butcher/ButcherCategoryBar';
+import { ButcherMenuCategoryBar } from '@/components/butcher/ButcherMenuCategoryBar';
+import { ButcherMenuPager, type MenuPagerPage } from '@/components/butcher/ButcherMenuPager';
 import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
 import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
+import { ButcherStoreHero } from '@/components/butcher/ButcherStoreHero';
 import { ButcherStoreProductCard } from '@/components/butcher/ButcherStoreProductCard';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import { showToast } from '@/lib/toast';
@@ -54,7 +62,6 @@ import {
   butcherMinOrderLabel,
   butcherPickupLabel,
 } from '@/lib/butcherStoreMeta';
-import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
 // ─── Products list (filter owned by parent unified nav) ───────────────────────
@@ -62,20 +69,25 @@ function StoreProductsList({
   products,
   currencySymbol,
   onOpenOptions,
+  heading,
 }: {
   products: ButcherProduct[];
   currencySymbol: string;
   onOpenOptions: (p: ButcherProduct) => void;
+  heading?: string;
 }) {
   const colors = useTheme().colors;
   const emptyStyles = useThemedStyles(({ colors }) => createEmptyStyles(colors));
 
   if (!products.length) {
     return (
-      <View style={emptyStyles.wrap}>
-        <AppIcon name="storefront-outline" size={36} color={colors.textMuted} />
-        <View style={{ width: '100%' }}>
-          <AppText style={emptyStyles.title}>لا منتجات حالياً</AppText>
+      <View>
+        {heading ? <AppText style={emptyStyles.heading}>{heading}</AppText> : null}
+        <View style={emptyStyles.wrap}>
+          <AppIcon name="storefront-outline" size={36} color={colors.textMuted} />
+          <View style={{ width: '100%' }}>
+            <AppText style={emptyStyles.title}>لا منتجات حالياً</AppText>
+          </View>
         </View>
       </View>
     );
@@ -83,6 +95,7 @@ function StoreProductsList({
 
   return (
     <View>
+      {heading ? <AppText style={emptyStyles.heading}>{heading}</AppText> : null}
       {products.map((product, index) => (
         <ButcherStoreProductCard
           key={product.id}
@@ -445,7 +458,7 @@ export default function ButcherProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createMainStyles(colors));
+  const styles = useThemedStyles(({ colors, scheme }) => createMainStyles(colors, scheme));
   const { accessToken, user } = useAuth();
   const {
     setButcherMeta,
@@ -454,6 +467,9 @@ export default function ButcherProfileScreen() {
     addLine,
   } = useButcherCart();
   const [activeNavId, setActiveNavId] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [favorited, setFavorited] = useState(false);
   const [optionsProduct, setOptionsProduct] = useState<ButcherProduct | null>(null);
 
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
@@ -474,14 +490,11 @@ export default function ButcherProfileScreen() {
     [storiesList, butcher],
   );
 
-  /** Unified bar: offers + dynamic product categories + stories + about (about is not a category). */
+  /** Hunger-style bar: offers + product categories in menu order + stories. About is the info sheet. */
   const navItems = useMemo((): ButcherStoreNavItem[] => {
     const items: ButcherStoreNavItem[] = [];
     if (offers.length > 0) {
       items.push({ id: 'offers', label: 'عروضنا', kind: 'offers' });
-    }
-    if (products.length > 0) {
-      items.push({ id: 'all', label: 'الكل', kind: 'category' });
     }
     const seen = new Set<string>();
     for (const p of products) {
@@ -491,10 +504,12 @@ export default function ButcherProfileScreen() {
         CATEGORY_LABELS[p.category as MeatCategory]?.ar ?? p.category;
       items.push({ id: p.category, label, kind: 'category' });
     }
+    if (products.length > 0 && seen.size === 0) {
+      items.push({ id: 'menu', label: 'المنتجات', kind: 'category' });
+    }
     if (stories.length > 0) {
       items.push({ id: 'stories', label: 'القصص', kind: 'stories' });
     }
-    items.push({ id: 'about', label: 'عن الملحمة', kind: 'about' });
     return items;
   }, [products, stories.length, offers.length]);
 
@@ -515,11 +530,15 @@ export default function ButcherProfileScreen() {
     }
   }, [navItems, activeNavId]);
 
-  const categoryProducts = useMemo(() => {
-    if (!activeNav || activeNav.kind !== 'category') return [];
-    if (activeNav.id === 'all') return products;
-    return products.filter((p) => p.category === activeNav.id);
-  }, [products, activeNav]);
+  const searching = searchQuery.trim().length > 0;
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return products.filter((p) => {
+      const hay = `${p.nameAr} ${p.name ?? ''} ${p.descriptionAr ?? ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [products, searchQuery]);
 
   const loadChatAccess = useCallback(async () => {
     if (!id) return;
@@ -538,6 +557,24 @@ export default function ButcherProfileScreen() {
   useEffect(() => {
     void loadChatAccess();
   }, [loadChatAccess]);
+
+  useEffect(() => {
+    if (!id || !accessToken) {
+      setFavorited(false);
+      return;
+    }
+    let cancelled = false;
+    void fetchButcherFavoriteStatus(accessToken, id)
+      .then((value) => {
+        if (!cancelled) setFavorited(value);
+      })
+      .catch(() => {
+        if (!cancelled) setFavorited(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, accessToken]);
 
   useFocusEffect(
     useCallback(() => {
@@ -705,6 +742,57 @@ export default function ButcherProfileScreen() {
     void fetchReviews();
   }, [id, accessToken]);
 
+  const handleOpenOptions = useCallback((product: ButcherProduct) => {
+    if (!product.inStock) {
+      Alert.alert('غير متوفر', 'هذا المنتج غير متوفر حالياً');
+      return;
+    }
+    setOptionsProduct(product);
+  }, []);
+
+  const handleFavorite = useCallback(async () => {
+    if (!accessToken || !user?.id || !id) {
+      router.push('/auth/phone');
+      return;
+    }
+    try {
+      const next = await toggleButcherFavorite(accessToken, user.id, id, favorited);
+      setFavorited(next);
+    } catch {
+      void showToast('تعذر تحديث المفضلة', 'error');
+    }
+  }, [accessToken, user?.id, id, favorited, router]);
+
+  const currency = butcher
+    ? gccCurrencies[butcher.country as Country] || gccCurrencies['SA']
+    : gccCurrencies['SA'];
+
+  const menuPages = useMemo((): MenuPagerPage[] => {
+    return navItems.map((item) => ({
+      id: item.id,
+      render: () => {
+        if (item.kind === 'offers') {
+          return <OffersTab offers={offers} currencySymbol={currency.symbol} />;
+        }
+        if (item.kind === 'stories') {
+          return <StoriesTab stories={stories} />;
+        }
+        const list =
+          item.id === 'menu'
+            ? products
+            : products.filter((p) => p.category === item.id);
+        return (
+          <StoreProductsList
+            heading={item.label}
+            products={list}
+            currencySymbol={currency.symbol}
+            onOpenOptions={handleOpenOptions}
+          />
+        );
+      },
+    }));
+  }, [navItems, offers, stories, products, currency.symbol, handleOpenOptions]);
+
   const submitReview = async () => {
     if (!accessToken || !id) {
       router.push('/auth/phone');
@@ -761,16 +849,6 @@ export default function ButcherProfileScreen() {
     );
   }
 
-  const currency = gccCurrencies[butcher.country as Country] || gccCurrencies['SA'];
-
-  const handleOpenOptions = (product: ButcherProduct) => {
-    if (!product.inStock) {
-      Alert.alert('غير متوفر', 'هذا المنتج غير متوفر حالياً');
-      return;
-    }
-    setOptionsProduct(product);
-  };
-
   const handleAddToCart = (input: {
     product: ButcherProduct;
     cutType: CutType;
@@ -786,46 +864,25 @@ export default function ButcherProfileScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ── Cover + Back ── */}
-        <View style={styles.coverWrap}>
-          <Image source={{ uri: butcher.cover }} style={styles.cover} contentFit="cover" />
-          <LinearGradient
-            colors={['rgba(8,14,10,0.35)', 'transparent', 'rgba(8,14,10,0.55)']}
-            style={StyleSheet.absoluteFill}
-          />
-          <SarhBackButton onPress={() => router.back()} color="#fff" style={styles.backBtn} />
-          <View style={styles.coverActions}>
-            <Pressable style={styles.coverAction}>
-              <AppIcon name="information-circle-outline" size={18} color="#fff" />
-            </Pressable>
-            <Pressable style={styles.coverAction}>
-              <AppIcon name="heart-outline" size={20} color="#fff" />
-            </Pressable>
-          </View>
-        </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ButcherStoreHero
+          butcher={butcher}
+          favorited={favorited}
+          onBack={() => router.back()}
+          onFavorite={() => void handleFavorite()}
+          onInfo={() => setInfoOpen(true)}
+        />
 
         <View style={styles.profileHeader}>
-          <View style={styles.identityRow}>
-            <View style={styles.logoWrap}>
-              <Image source={{ uri: butcher.logo }} style={styles.logo} contentFit="cover" />
-              {butcher.subscriptionActive && (
-                <View style={styles.verifiedRing}>
-                  <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
-                </View>
-              )}
-            </View>
-            <View style={styles.nameBlock}>
-              <Text style={styles.name}>{butcher.nameAr}</Text>
-              <View style={styles.ratingRow}>
-                <AppIcon name="star" size={14} color={colors.gold} />
-                <Text style={styles.ratingScore}>{butcher.rating.toFixed(1)}</Text>
-                <Text style={styles.ratingCount}>({butcher.reviewCount} + التقييمات)</Text>
-              </View>
-            </View>
-          </View>
-
+          <Text style={styles.name}>{butcher.nameAr}</Text>
           <View style={styles.serviceRow}>
+            <View style={styles.serviceItem}>
+              <AppIcon name="map-marker-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.serviceText}>{butcher.cityAr || butcher.city}</Text>
+            </View>
             <View style={styles.serviceItem}>
               <AppIcon name="bicycle-outline" size={14} color={colors.textMuted} />
               <Text style={styles.serviceText}>{butcherFeeLabel(butcher)}</Text>
@@ -843,107 +900,146 @@ export default function ButcherProfileScreen() {
               <Text style={styles.serviceText}>{butcherPickupLabel(butcher)}</Text>
             </View>
           </View>
-        </View>
-
-        {chatAccess?.allowed ? (
-          <View style={styles.ctaRow}>
+          {chatAccess?.allowed ? (
             <Pressable
-              style={[styles.chatCta, styles.chatCtaFull, styles.chatCtaActive]}
+              style={[styles.chatCta, styles.chatCtaActive]}
               onPress={onOpenChat}
             >
               <AppIcon name="chatbubble-outline" size={18} color={colors.electricBright} />
               <Text style={styles.chatCtaText}>محادثة</Text>
             </Pressable>
+          ) : null}
+        </View>
+
+        <View style={styles.searchWrap}>
+          <View style={[styles.searchPill, getRtlRow()]}>
+            <AppIcon name="search-outline" size={18} color={colors.textMuted} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="البحث في القائمة..."
+              placeholderTextColor={colors.textMuted}
+              style={[styles.searchInput, rtlInputText]}
+              returnKeyType="search"
+            />
           </View>
-        ) : null}
+        </View>
 
-        {/* ── Unified store nav (categories + offers + about) ── */}
-        <ButcherStoreNavBar
-          items={navItems}
-          activeId={activeNav?.id ?? ''}
-          onChange={(item) => setActiveNavId(item.id)}
-        />
-
-        {/* ── Content ── */}
-        <View style={styles.tabContent}>
-          {activeNav?.kind === 'category' && (
+        {searching ? (
+          <View style={styles.tabContent}>
             <StoreProductsList
-              products={categoryProducts}
+              heading="نتائج البحث"
+              products={searchResults}
               currencySymbol={currency.symbol}
               onOpenOptions={handleOpenOptions}
             />
-          )}
-          {activeNav?.kind === 'offers' && (
-            <OffersTab offers={offers} currencySymbol={currency.symbol} />
-          )}
-          {activeNav?.kind === 'stories' && <StoriesTab stories={stories} />}
-          {activeNav?.kind === 'about' && (
-            <>
-              <AboutTab butcher={butcher} />
-              <View style={{ marginTop: spacing.xl }}>
-                <View style={{ paddingHorizontal: spacing.lg,  width: '100%' }}>
-                  <Text style={styles.sectionTitle}>
-                    آراء العملاء ({butcher.reviewCount})
-                  </Text>
-                </View>
-                <RatingDistribution
-                  average={butcher.rating}
-                  total={butcher.reviewCount}
-                  distribution={reviewDistribution}
+          </View>
+        ) : (
+          <>
+            <View style={styles.stickyNav}>
+              <ButcherMenuCategoryBar
+                items={navItems}
+                activeId={activeNav?.id ?? ''}
+                onChange={(item) => setActiveNavId(item.id)}
+              />
+            </View>
+            <View style={styles.tabContent}>
+              {menuPages.length ? (
+                <ButcherMenuPager
+                  pages={menuPages}
+                  activeId={activeNav?.id ?? menuPages[0].id}
+                  onActiveId={setActiveNavId}
                 />
-                {accessToken ? (
-                  <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm, marginBottom: spacing.md }}>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Pressable key={star} onPress={() => setReviewDraft((d) => ({ ...d, rating: star }))}>
-                          <AppIcon
-                            name="star"
-                            size={22}
-                            color={star <= reviewDraft.rating ? colors.gold : colors.borderSoft}
-                          />
-                        </Pressable>
-                      ))}
-                    </View>
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: colors.borderSoft,
-                        borderRadius: radius.lg,
-                        padding: spacing.md,
-                        color: colors.textPrimary,
-                        ...getRtlText(),
-                        minHeight: 80,
-                      }}
-                      placeholder="تعليق اختياري..."
-                      placeholderTextColor={colors.textMuted}
-                      value={reviewDraft.comment}
-                      onChangeText={(t) => setReviewDraft((d) => ({ ...d, comment: t }))}
-                      multiline
-                    />
-                    <Pressable
-                      onPress={() => void submitReview()}
-                      disabled={submittingReview}
-                      style={{
-                        backgroundColor: colors.electric,
-                        borderRadius: radius.pill,
-                        paddingVertical: 12,
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text style={{ ...butcherTypography.primary, color: '#fff' }}>
-                        {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : null}
-                {reviews.length > 0 ? <ReviewsStrip reviews={reviews} /> : null}
-              </View>
-            </>
-          )}
-        </View>
+              ) : (
+                <StoreProductsList
+                  products={[]}
+                  currencySymbol={currency.symbol}
+                  onOpenOptions={handleOpenOptions}
+                />
+              )}
+            </View>
+          </>
+        )}
 
         <View style={{ height: itemCount > 0 ? 120 : 100 }} />
       </ScrollView>
+
+      <Modal
+        visible={infoOpen}
+        animationType="slide"
+        onRequestClose={() => setInfoOpen(false)}
+      >
+        <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+          <View style={[styles.infoHeader, getRtlRow()]}>
+            <Text style={styles.infoTitle}>عن الملحمة</Text>
+            <Pressable onPress={() => setInfoOpen(false)} accessibilityLabel="إغلاق">
+              <AppIcon name="close" size={22} color={colors.textPrimary} />
+            </Pressable>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <AboutTab butcher={butcher} />
+            <View style={{ marginTop: spacing.xl }}>
+              <View style={{ paddingHorizontal: spacing.lg, width: '100%' }}>
+                <Text style={styles.sectionTitle}>
+                  آراء العملاء ({butcher.reviewCount})
+                </Text>
+              </View>
+              <RatingDistribution
+                average={butcher.rating}
+                total={butcher.reviewCount}
+                distribution={reviewDistribution}
+              />
+              {accessToken ? (
+                <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm, marginBottom: spacing.md }}>
+                  <View style={[getRtlRow(), { gap: 6 }]}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Pressable key={star} onPress={() => setReviewDraft((d) => ({ ...d, rating: star }))}>
+                        <AppIcon
+                          name="star"
+                          size={22}
+                          color={star <= reviewDraft.rating ? colors.gold : colors.borderSoft}
+                        />
+                      </Pressable>
+                    ))}
+                  </View>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.borderSoft,
+                      borderRadius: radius.lg,
+                      padding: spacing.md,
+                      color: colors.textPrimary,
+                      ...getRtlText(),
+                      minHeight: 80,
+                    }}
+                    placeholder="تعليق اختياري..."
+                    placeholderTextColor={colors.textMuted}
+                    value={reviewDraft.comment}
+                    onChangeText={(t) => setReviewDraft((d) => ({ ...d, comment: t }))}
+                    multiline
+                  />
+                  <Pressable
+                    onPress={() => void submitReview()}
+                    disabled={submittingReview}
+                    style={{
+                      backgroundColor: butcherMarket.seeAll,
+                      borderRadius: radius.pill,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ ...butcherTypography.primary, color: '#fff' }}>
+                      {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
+              {reviews.length > 0 ? <ReviewsStrip reviews={reviews} /> : null}
+            </View>
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
 
       <ButcherProductOptionsModal
         visible={optionsProduct != null}
@@ -970,7 +1066,7 @@ export default function ButcherProfileScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-function createMainStyles(colors: ThemeColors) {
+function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
 
@@ -1007,6 +1103,42 @@ function createMainStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     gap: spacing.md,
+  },
+  searchWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  searchPill: {
+    alignItems: 'center',
+    minHeight: 46,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: butcherSearchFill(scheme),
+  },
+  searchInput: {
+    ...butcherTypography.secondary,
+    color: colors.textPrimary,
+    flex: 1,
+    paddingVertical: 0,
+  },
+  stickyNav: {
+    backgroundColor: colors.screenRoot,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderHairline,
+  },
+  infoHeader: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderHairline,
+  },
+  infoTitle: {
+    ...butcherTypography.title,
+    color: colors.textPrimary,
   },
   identityRow: {
     flexDirection: 'row',
@@ -1139,6 +1271,13 @@ function createMainStyles(colors: ThemeColors) {
 function createEmptyStyles(colors: ThemeColors) {
   return StyleSheet.create({
   wrap: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm, paddingHorizontal: spacing.lg },
+  heading: {
+    ...butcherTypography.title,
+    color: colors.textPrimary,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
   title: {
     ...butcherTypography.title,
     color: colors.textMuted,
