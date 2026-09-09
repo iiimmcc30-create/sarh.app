@@ -1,4 +1,4 @@
-// SAFAT — Butchers market bottom navigation (الرئيسية · الطلبات · العروض · المزيد)
+// SAFAT — Butchers market bottom navigation (الرئيسية · الملاحم · الطلبات · المزيد)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow } from '@/constants/designSystem';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -11,28 +11,28 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/** Map remains a valid route/screen; it is no longer a bottom-nav tab. */
-export type ButchersTab = 'home' | 'orders' | 'offers' | 'map' | 'more';
+/** Map and offers remain valid screens; they are not bottom-nav tabs. */
+export type ButchersTab = 'home' | 'stores' | 'orders' | 'offers' | 'map' | 'more';
 
 type TabDef = {
-  key: Exclude<ButchersTab, 'map'>;
+  key: Exclude<ButchersTab, 'map' | 'offers'>;
   label: string;
   icon: string;
   route: string;
 };
 
-/** Visual RTL order (right → left): الرئيسية · الطلبات · العروض · المزيد */
+/** Visual RTL order (right → left): الرئيسية · الملاحم · الطلبات · المزيد */
 const TABS: TabDef[] = [
   { key: 'home', label: 'الرئيسية', icon: 'home-outline', route: '/butchers' },
+  { key: 'stores', label: 'الملاحم', icon: 'storefront-outline', route: '/butchers/all' },
   { key: 'orders', label: 'الطلبات', icon: 'bag-outline', route: '/butchers/my-orders' },
-  { key: 'offers', label: 'العروض', icon: 'pricetag-outline', route: '/butchers/offers' },
   { key: 'more', label: 'المزيد', icon: 'grid-outline', route: '/butchers/more' },
 ];
 
 export function ButchersTabBar({ active }: { active: ButchersTab }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, scheme } = useTheme();
+  const { scheme } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const onPress = (tab: TabDef) => {
@@ -51,7 +51,7 @@ export function ButchersTabBar({ active }: { active: ButchersTab }) {
       <View style={[styles.row, getRtlRow()]}>
         {TABS.map((tab) => {
           const focused = tab.key === active;
-          const tint = focused ? colors.electricBright : colors.textMuted;
+          const tint = focused ? styles.focused.color : styles.muted.color;
           return (
             <Pressable
               key={tab.key}
@@ -61,7 +61,7 @@ export function ButchersTabBar({ active }: { active: ButchersTab }) {
               onPress={() => onPress(tab)}
               style={({ pressed }) => [styles.slot, pressed && styles.pressed]}
             >
-              <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <View style={styles.iconWrap}>
                 <AppIcon name={tab.icon} size={22} color={tint} />
               </View>
               <Text
@@ -108,8 +108,9 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    iconWrapActive: {},
     pressed: { opacity: 0.92, transform: [{ scale: 0.98 }] },
+    focused: { color: colors.electricBright },
+    muted: { color: colors.textMuted },
   });
 }
 

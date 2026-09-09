@@ -25,14 +25,16 @@ describe('Back control uses a single RTL icon helper', () => {
     expect(back).not.toContain('row-reverse');
   });
 
-  it('ScreenHeader and butchers app bar use the shared back button at inline start', () => {
+  it('ScreenHeader uses the shared back button; butchers market exits left beside the cart', () => {
     const header = src('components/layout/ScreenHeader.tsx');
     const bar = src('components/butchers/ButchersAppBar.tsx');
     expect(header).toContain('SarhBackButton');
     expect(header).toContain('getRtlRow()');
-    expect(bar).toContain('SarhBackButton');
-    expect(bar.indexOf('<SarhBackButton')).toBeLessThan(bar.indexOf('<ButcherLocationBar'));
-    expect(bar).not.toContain('rtlBackIcon');
+    expect(bar).toContain('accessibilityLabel="رجوع للتطبيق"');
+    expect(bar).toContain('angle-left');
+    expect(bar).toContain('ButcherLocationBar');
+    expect(bar.indexOf('ButcherLocationBar')).toBeLessThan(bar.indexOf('السلة'));
+    expect(bar.indexOf('السلة')).toBeLessThan(bar.indexOf('رجوع للتطبيق'));
   });
 
   it('profile visitor back uses SarhBackButton instead of a raw icon', () => {

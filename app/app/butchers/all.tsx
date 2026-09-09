@@ -98,7 +98,7 @@ export default function ButchersAllScreen() {
           )}
         </ScrollView>
       )}
-      <ButchersTabBar active="home" />
+      <ButchersTabBar active="stores" />
     </SafeAreaView>
   );
 }

@@ -7,6 +7,8 @@ const MAX_BUTCHERS = 12;
 export type ButcherOfferPreview = {
   id: string;
   butcherId: string;
+  butcherNameAr?: string;
+  butcherLogo?: string;
   titleAr: string;
   image?: string;
   originalPrice?: number;
@@ -14,11 +16,18 @@ export type ButcherOfferPreview = {
   discountPercent?: number;
 };
 
-function mapOffers(raw: unknown, butcherId: string): ButcherOfferPreview[] {
+function mapOffers(
+  raw: unknown,
+  butcherId: string,
+  butcherNameAr?: string,
+  butcherLogo?: string,
+): ButcherOfferPreview[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((o: Record<string, unknown>) => ({
     id: String(o.id),
     butcherId,
+    butcherNameAr,
+    butcherLogo: resolveMediaUrl(butcherLogo) ?? butcherLogo,
     titleAr: String(o.titleAr || o.titleEn || 'عرض'),
     image: resolveMediaUrl(o.image as string | undefined) ?? undefined,
     originalPrice: typeof o.originalPrice === 'number' ? o.originalPrice : undefined,
@@ -61,7 +70,11 @@ export async function fetchButcherOffersPreview(
           const json = await res.json();
           const d = json?.data;
           if (!d?.id) return [];
-          return mapOffers(d.offers, String(d.id));
+          const nameAr = String(d.nameAr || d.name || b.nameAr || b.name || '');
+          const logo =
+            resolveMediaUrl((d.logo || d.cover || b.logo || b.cover) as string | undefined) ??
+            undefined;
+          return mapOffers(d.offers, String(d.id), nameAr, logo);
         } catch {
           return [] as ButcherOfferPreview[];
         }

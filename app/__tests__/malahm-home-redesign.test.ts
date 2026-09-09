@@ -21,39 +21,41 @@ describe('malahm home redesign', () => {
   it('keeps home offers preview at 20 and omits the section when empty', () => {
     const home = src('app/butchers/index.tsx');
     expect(home).toContain('BUTCHER_HOME_OFFERS_LIMIT');
-    expect(home).toContain('homeOffers.length > 0');
-    expect(home).toContain("title=\"العروض\"");
+    expect(home).toContain('filteredOffers.length > 0');
+    expect(home).toContain('title="العروض"');
     expect(home).toContain("'/butchers/offers'");
     expect(home).not.toContain('لا توجد عروض');
     expect(BUTCHER_HOME_OFFERS_LIMIT).toBe(20);
   });
 
-  it('makes market banners full-bleed and keeps carousel logic', () => {
+  it('keeps banner carousel and makes the slide easier to read', () => {
     const slider = src('components/butchers/ButcherMarketBannerSlider.tsx');
     expect(slider).toContain('pagingEnabled');
     expect(slider).toContain('useWindowDimensions');
-    expect(slider).not.toContain('slideWidth = width -');
-    expect(slider).not.toContain('contentContainerStyle={styles.row}');
-    expect(slider).toContain('{ width }');
-    expect(slider).not.toContain('borderRadius: 16');
+    expect(slider).toContain('butcherMeatBg');
+    expect(slider).toContain('banner.titleAr');
+    expect(slider).toContain('banner.imageUrl');
   });
 
-  it('places butcher avatar and rating on the cover image', () => {
+  it('puts the butcher avatar on offer photos and store meta on pick cards', () => {
+    const offer = src('components/butchers/ButcherHomeOfferCard.tsx');
     const pick = src('components/butchers/ButcherPickCard.tsx');
-    expect(pick).toContain('SarhAvatar');
-    expect(pick).toContain('avatarWrap');
-    expect(pick).toContain('ratingBadge');
-    expect(pick).toContain('position: \'absolute\'');
+    expect(offer).toContain('SarhAvatar');
+    expect(offer).toContain('offer.butcherLogo');
+    expect(offer).toContain("position: 'absolute'");
+    expect(pick).toContain('butcherMinOrderLabel');
+    expect(pick).toContain('cityAr');
     expect(pick).not.toContain('butcherSoftCardStyle');
   });
 
-  it('uses a flat header with bare search and cart icons', () => {
+  it('uses a meat-wash header with search pill, cart, and a left exit arrow', () => {
     const bar = src('components/butchers/ButchersAppBar.tsx');
     expect(bar).toContain('ButcherLocationBar');
     expect(bar).toContain('accessibilityLabel="السلة"');
     expect(bar).toContain('accessibilityLabel="بحث"');
-    expect(bar).toContain("backgroundColor: 'transparent'");
-    expect(bar).not.toContain('searchPill');
+    expect(bar).toContain('searchPill');
+    expect(bar).toContain('angle-left');
+    expect(bar).toContain('رجوع للتطبيق');
   });
 
   it('renders store products as divider rows without card chrome', () => {
@@ -72,6 +74,16 @@ describe('malahm home redesign', () => {
     expect(more).not.toContain('menuCardStyle');
     expect(more).toContain('screenRoot');
     expect(more).toContain('SidebarMenuItem');
+  });
+
+  it('uses الرئيسية · الملاحم · الطلبات · المزيد on the butcher tab bar', () => {
+    const tabs = src('components/butchers/ButchersTabBar.tsx');
+    expect(tabs).toContain("label: 'الرئيسية'");
+    expect(tabs).toContain("label: 'الملاحم'");
+    expect(tabs).toContain("label: 'الطلبات'");
+    expect(tabs).toContain("label: 'المزيد'");
+    expect(tabs).not.toContain("label: 'العروض'");
+    expect(tabs).toContain("route: '/butchers/all'");
   });
 
   it('caps preview offers at the requested limit', async () => {
