@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — OTP Verification Screen (شاشة التحقق من رمز OTP)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlRow, getRtlText, inlineEnd, ltrInputText, rtlForwardIcon } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -189,7 +189,13 @@ export default function OtpScreen() {
           style={styles.kav}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="رجوع"
+          >
             <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
           </Pressable>
 
@@ -218,7 +224,7 @@ export default function OtpScreen() {
                 >
                   <TextInput
                     ref={(r) => { inputs.current[idx] = r; }}
-                    style={styles.otpInput}
+                    style={[styles.otpInput, ltrInputText]}
                     value={digit}
                     onChangeText={(t) => handleChange(t, idx)}
                     onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, idx)}
@@ -292,7 +298,14 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.screenRoot },
   safe: { flex: 1 },
-  kav: { flex: 1, paddingHorizontal: 22, paddingTop: 56 },
+  kav: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+    paddingHorizontal: 22,
+    paddingTop: 56,
+  },
 
   backBtn: {
     position: 'absolute', top: 8, ...inlineEnd(8),

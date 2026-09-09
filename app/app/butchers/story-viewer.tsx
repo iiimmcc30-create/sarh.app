@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Butcher Story Viewer (مشاهد قصص الملاحم)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlText } from '@/lib/rtl';
+import { getRtlText, rtlInputText } from '@/lib/rtl';
 
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -245,7 +245,7 @@ export default function ButcherStoryViewerScreen() {
           </Pressable>
 
           {/* Share */}
-          <Pressable style={s.actionBtn}>
+          <Pressable style={s.actionBtn} accessibilityRole="button" accessibilityLabel="مشاركة">
             <AppIcon name="share-outline" size={24} color="#fff" />
           </Pressable>
         </View>
@@ -253,12 +253,11 @@ export default function ButcherStoryViewerScreen() {
         {/* Reply bar */}
         <View style={s.replyBar}>
           <TextInput
-            style={s.replyInput}
+            style={[s.replyInput, rtlInputText]}
             placeholder="رد على هذه القصة..."
             placeholderTextColor="rgba(255,255,255,0.4)"
             value={replyText}
             onChangeText={setReplyText}
-            textAlign="right"
           />
           {replyText.length > 0 ? (
             <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>

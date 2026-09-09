@@ -102,7 +102,7 @@ describe('login screen layout', () => {
       'utf8',
     );
     expect(src).toContain('getRtlText');
-    expect(src).toContain('isAppRtl');
+    expect(src).toContain('ltrInputText');
     expect(src).toContain('useAuthCopy');
     expect(src).toContain('shape="square"');
     expect(src).toContain('signInWithPassword');

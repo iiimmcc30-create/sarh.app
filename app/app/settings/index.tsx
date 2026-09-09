@@ -68,7 +68,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>الإعدادات والخصوصية</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>الإعدادات والخصوصية</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -132,8 +132,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: isDark ? sarh.color.border : 'transparent',
     },
     headerSpacer: { width: 42, height: 42 },
-    headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
-    scroll: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
+    headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, minWidth: 0, textAlign: 'center' },
+    scroll: {
+      width: '100%',
+      maxWidth: 720,
+      alignSelf: 'center',
+      padding: spacing.lg,
+      paddingBottom: spacing.huge,
+      gap: spacing.lg,
+    },
     intro: {
       flexDirection: 'row',
       alignItems: 'center',

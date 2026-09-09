@@ -24,7 +24,7 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlForwardIcon } from '@/lib/rtl';
+import { rtlForwardIcon, rtlInputText } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ChatMessage, ButcherProfile } from '@/services/butcherData';
@@ -1020,6 +1020,9 @@ export default function ButcherChatScreen() {
             style={[styles.attachBtn, sending && { opacity: 0.4 }]}
             onPress={() => setAttachOpen((v) => !v)}
             disabled={sending}
+            accessibilityRole="button"
+            accessibilityLabel={attachOpen ? 'إغلاق المرفقات' : 'إضافة مرفق'}
+            accessibilityState={{ disabled: sending }}
           >
             <AppIcon
               name={attachOpen ? 'close' : 'add'}
@@ -1029,14 +1032,13 @@ export default function ButcherChatScreen() {
           </Pressable>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, rtlInputText]}
             placeholder="اكتب رسالة..."
             placeholderTextColor={colors.textSubtle}
             value={inputText}
             onChangeText={setInputText}
             multiline
             maxLength={500}
-            textAlign="right"
             onFocus={() => setAttachOpen(false)}
           />
 
@@ -1049,6 +1051,9 @@ export default function ButcherChatScreen() {
               if (inputText.trim()) void sendMessage(inputText);
             }}
             disabled={!inputText.trim() || sending}
+            accessibilityRole="button"
+            accessibilityLabel="إرسال الرسالة"
+            accessibilityState={{ disabled: !inputText.trim() || sending, busy: sending }}
           >
             {sending ? (
               <ActivityIndicator size="small" color="#fff" />

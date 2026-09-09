@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { updateAccountSettings } from '@/services/users';
 import { interpretOtpVerifyResult } from '@/lib/otpVerifyOutcome';
-import { getRtlText, marginStart, rtlForwardIcon, isAppRtl } from '@/lib/rtl';
+import { getRtlText, ltrInputText, marginStart, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -25,6 +25,7 @@ import {
   TextInput,
   UIManager,
   View,
+  type TextStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -282,7 +283,7 @@ export default function RegisterScreen() {
                 <View style={styles.block}>
                   <View style={styles.inputWrap}>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, ltrInputText]}
                       value={phone}
                       onChangeText={(t) => {
                         setPhone(t.replace(/[^\d\s]/g, ''));
@@ -291,7 +292,6 @@ export default function RegisterScreen() {
                       placeholder={copy.phonePlaceholder}
                       placeholderTextColor={colors.textSubtle}
                       keyboardType="phone-pad"
-                      textAlign={isAppRtl() ? "right" : "left"}
                       maxLength={10}
                       autoFocus
                     />
@@ -303,6 +303,8 @@ export default function RegisterScreen() {
                       pressed && styles.pressed,
                     ]}
                     onPress={advanceFromPhone}
+                    disabled={!isPhoneValid}
+                    accessibilityState={{ disabled: !isPhoneValid }}
                   >
                     <Text style={styles.primaryText}>{copy.continueCta}</Text>
                   </Pressable>
@@ -313,7 +315,7 @@ export default function RegisterScreen() {
                 <View style={styles.block}>
                   <View style={styles.inputWrap}>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, rtlInputText]}
                       value={displayName}
                       onChangeText={(t) => {
                         setDisplayName(t);
@@ -321,7 +323,6 @@ export default function RegisterScreen() {
                       }}
                       placeholder={copy.namePlaceholder}
                       placeholderTextColor={colors.textSubtle}
-                      textAlign={isAppRtl() ? "right" : "left"}
                       maxLength={45}
                       autoFocus
                     />
@@ -333,6 +334,8 @@ export default function RegisterScreen() {
                       pressed && styles.pressed,
                     ]}
                     onPress={advanceFromName}
+                    disabled={displayName.trim().length < 2}
+                    accessibilityState={{ disabled: displayName.trim().length < 2 }}
                   >
                     <Text style={styles.primaryText}>{copy.continueCta}</Text>
                   </Pressable>
@@ -344,7 +347,7 @@ export default function RegisterScreen() {
                   <View style={styles.inputWrap}>
                     <Text style={styles.at}>@</Text>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, ltrInputText]}
                       value={username}
                       onChangeText={(t) => {
                         setUsername(t.toLowerCase().replace(/[^a-z0-9_]/g, ''));
@@ -377,7 +380,7 @@ export default function RegisterScreen() {
                   </Text>
                   <View style={styles.inputWrap}>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, ltrInputText]}
                       value={birthDate}
                       onChangeText={(t) => {
                         setBirthDate(t.replace(/[^\d-]/g, ''));
@@ -397,6 +400,8 @@ export default function RegisterScreen() {
                       pressed && styles.pressed,
                     ]}
                     onPress={advanceFromIdentity}
+                    disabled={!usernameOk || !dobOk}
+                    accessibilityState={{ disabled: !usernameOk || !dobOk }}
                   >
                     <Text style={styles.primaryText}>{copy.continueCta}</Text>
                   </Pressable>
@@ -410,6 +415,8 @@ export default function RegisterScreen() {
                       onPress={() => setShowPassword((v) => !v)}
                       hitSlop={8}
                       style={styles.eye}
+                      accessibilityRole="button"
+                      accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                     >
                       <AppIcon
                         name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -418,7 +425,7 @@ export default function RegisterScreen() {
                       />
                     </Pressable>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, ltrInputText]}
                       value={password}
                       onChangeText={(t) => {
                         setPassword(t);
@@ -427,7 +434,6 @@ export default function RegisterScreen() {
                       placeholder={copy.passwordPlaceholder}
                       placeholderTextColor={colors.textSubtle}
                       secureTextEntry={!showPassword}
-                      textAlign={isAppRtl() ? "right" : "left"}
                       autoFocus
                     />
                   </View>
@@ -440,6 +446,8 @@ export default function RegisterScreen() {
                       onPress={() => setShowConfirm((v) => !v)}
                       hitSlop={8}
                       style={styles.eye}
+                      accessibilityRole="button"
+                      accessibilityLabel={showConfirm ? 'إخفاء تأكيد كلمة المرور' : 'إظهار تأكيد كلمة المرور'}
                     >
                       <AppIcon
                         name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
@@ -448,7 +456,7 @@ export default function RegisterScreen() {
                       />
                     </Pressable>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, ltrInputText]}
                       value={confirmPassword}
                       onChangeText={(t) => {
                         setConfirmPassword(t);
@@ -457,13 +465,15 @@ export default function RegisterScreen() {
                       placeholder={copy.confirmPasswordPlaceholder}
                       placeholderTextColor={colors.textSubtle}
                       secureTextEntry={!showConfirm}
-                      textAlign={isAppRtl() ? "right" : "left"}
                     />
                   </View>
 
                   <Pressable
                     onPress={() => setAgreed((v) => !v)}
                     style={styles.termsRow}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: agreed }}
+                    accessibilityLabel="الموافقة على الشروط والأحكام وسياسة الخصوصية"
                   >
                     <View
                       style={[styles.check, agreed && styles.checkOn]}
@@ -490,7 +500,20 @@ export default function RegisterScreen() {
                       pressed && styles.pressed,
                     ]}
                     onPress={startRegister}
-                    disabled={loading}
+                    disabled={
+                      loading ||
+                      password.length < 6 ||
+                      password !== confirmPassword ||
+                      !agreed
+                    }
+                    accessibilityState={{
+                      disabled:
+                        loading ||
+                        password.length < 6 ||
+                        password !== confirmPassword ||
+                        !agreed,
+                      busy: loading,
+                    }}
                   >
                     {loading ? (
                       <ActivityIndicator color="#fff" />
@@ -505,7 +528,7 @@ export default function RegisterScreen() {
                 <View style={styles.block}>
                   <View style={styles.inputWrap}>
                     <TextInput
-                      style={[styles.input, styles.otpInput]}
+                      style={[styles.input, styles.otpInput, ltrInputText]}
                       value={otpCode}
                       onChangeText={(t) => {
                         setOtpCode(t.replace(/\D/g, '').slice(0, 6));
@@ -574,6 +597,9 @@ function createStyles(colors: ThemeColors) {
     },
     dotActive: { backgroundColor: colors.electric, width: 18 },
     scroll: {
+      width: '100%',
+      maxWidth: 440,
+      alignSelf: 'center',
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xxl,
       flexGrow: 1,
@@ -622,7 +648,7 @@ function createStyles(colors: ThemeColors) {
       ...typography.body,
       color: colors.textMuted,
       ...marginStart(4),
-    },
+    } as TextStyle,
     eye: { padding: 4 },
     hint: {
       ...typography.caption,

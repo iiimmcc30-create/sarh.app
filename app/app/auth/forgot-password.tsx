@@ -1,6 +1,6 @@
 // SAFAT — Forgot Password via OTP (نسيت كلمة المرور)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlRow, getRtlText, inlineEnd, ltrInputText, rtlForwardIcon } from '@/lib/rtl';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
@@ -173,20 +173,24 @@ export default function ForgotPasswordScreen() {
                 <>
                   <Text style={styles.fieldLabel}>رقم الجوال *</Text>
                   <Animated.View style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}>
-                    <Pressable style={styles.countryBtn} onPress={() => setShowPicker((v) => !v)}>
+                    <Pressable
+                      style={styles.countryBtn}
+                      onPress={() => setShowPicker((v) => !v)}
+                      accessibilityRole="button"
+                      accessibilityLabel="اختيار رمز الدولة"
+                    >
                       <AppIcon name={showPicker ? 'chevron-up' : 'chevron-down'} size={14} color={colors.textMuted} />
                       <Text style={styles.countryCode}>{currentCountry.code}</Text>
                       <Text style={styles.countryFlag}>{currentCountry.flag}</Text>
                     </Pressable>
                     <View style={styles.inputDivider} />
                     <TextInput
-                      style={styles.phoneInput}
+                      style={[styles.phoneInput, ltrInputText]}
                       value={phone}
                       onChangeText={(t) => { setPhone(t); setError(''); }}
                       placeholder="05xxxxxxxx"
                       placeholderTextColor={colors.textSubtle}
                       keyboardType="phone-pad"
-                      textAlign="right"
                     />
                   </Animated.View>
 
@@ -217,7 +221,7 @@ export default function ForgotPasswordScreen() {
                       <View key={idx} style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}>
                         <TextInput
                           ref={(r) => { inputs.current[idx] = r; }}
-                          style={styles.otpInput}
+                          style={[styles.otpInput, ltrInputText]}
                           value={digit}
                           onChangeText={(t) => handleOtpChange(t, idx)}
                           keyboardType="number-pad"
@@ -238,30 +242,33 @@ export default function ForgotPasswordScreen() {
                 <>
                   <Text style={styles.fieldLabel}>كلمة المرور الجديدة *</Text>
                   <View style={styles.inputWrap}>
-                    <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
+                    <Pressable
+                      onPress={() => setShowPassword(!showPassword)}
+                      hitSlop={10}
+                      accessibilityRole="button"
+                      accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                    >
                       <AppIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
                     </Pressable>
                     <TextInput
-                      style={styles.textInput}
+                      style={[styles.textInput, ltrInputText]}
                       value={newPassword}
                       onChangeText={setNewPassword}
                       placeholder="........"
                       placeholderTextColor={colors.textSubtle}
                       secureTextEntry={!showPassword}
-                      textAlign="right"
                     />
                   </View>
 
                   <Text style={styles.fieldLabel}>تأكيد كلمة المرور *</Text>
                   <View style={styles.inputWrap}>
                     <TextInput
-                      style={styles.textInput}
+                      style={[styles.textInput, ltrInputText]}
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       placeholder="........"
                       placeholderTextColor={colors.textSubtle}
                       secureTextEntry={!showPassword}
-                      textAlign="right"
                     />
                   </View>
                 </>
@@ -329,7 +336,14 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
     alignItems: 'center', justifyContent: 'center',
   },
-  scroll: { paddingHorizontal: spacing.xl, paddingTop: 60, paddingBottom: 30 },
+  scroll: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: 60,
+    paddingBottom: 30,
+  },
   header: { alignItems: 'center', marginBottom: 24, gap: 10 },
   title: { ...typography.sectionHeading, color: colors.textPrimary, textAlign: 'center' },
   sub: { ...typography.secondary, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 12 },

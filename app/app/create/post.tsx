@@ -233,7 +233,6 @@ export default function CreatePostScreen() {
                 style={[styles.textInput, styles.textInputAr]}
                 multiline
                 maxLength={MAX_CHARS}
-                textAlign="right"
                 autoFocus
               />
             </View>
@@ -249,6 +248,8 @@ export default function CreatePostScreen() {
                     style={styles.imageRemoveBtn}
                     onPress={() => removeImage(index)}
                     hitSlop={6}
+                    accessibilityRole="button"
+                    accessibilityLabel="حذف الصورة"
                   >
                     <AppIcon name="close" size={14} color="#fff" />
                   </Pressable>
