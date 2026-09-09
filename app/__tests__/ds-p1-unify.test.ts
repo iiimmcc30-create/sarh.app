@@ -29,23 +29,30 @@ describe('P1 design-system technical debt', () => {
     expect(Object.values(fontWeight)).toEqual(['400', '500', '600', '700']);
   });
 
-  it('has no production FilterChip / AppTextInput / PrimaryButton / RtlTextShell imports', () => {
+  it('has no production FilterChip / AppTextInput / PrimaryButton / RtlText / RtlTextShell imports', () => {
     const offenders = production.filter((file) => {
       const r = rel(file);
-      if (r === 'components/ui/FilterChip.tsx') return false;
       if (r === 'components/ui/filterChipAppearance.tsx') return false;
       const text = readFileSync(file, 'utf8');
       return (
+        text.includes("from '@/components/ui/FilterChip'") ||
         text.includes("from '@/components/ui/AppTextInput'") ||
         text.includes("from '@/components/ui/PrimaryButton'") ||
+        text.includes("from '@/components/ui/RtlText'") ||
         text.includes("from '@/components/ui/RtlTextShell'") ||
         text.includes('<FilterChip ') ||
+        text.includes('<FilterChipRow') ||
         text.includes('<AppTextInput') ||
         text.includes('<PrimaryButton') ||
         text.includes('<RtlTextShell')
       );
     });
     expect(offenders.map(rel)).toEqual([]);
+  });
+
+  it('exposes SarhChipRow as the official chip scroller', () => {
+    expect(src('design-system/components/SarhChipRow.tsx')).toContain('getRtlRow()');
+    expect(src('design-system/components/index.ts')).toContain('SarhChipRow');
   });
 
   it('SarhChip covers filter appearance without dropping foundation chips', () => {

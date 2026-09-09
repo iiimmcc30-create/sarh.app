@@ -15,7 +15,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { showToast } from '@/lib/toast';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -26,7 +25,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
-import { SarhButton, SarhChip, SarhInput } from '@/design-system/components';
+import { SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 
 const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[]).filter(
   (c) => c !== 'ORDER_HELP' && c !== 'OTHER_HELP',
@@ -139,7 +138,7 @@ export default function CreateSupportTicketScreen() {
         <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
           <GlassCard style={styles.section}>
             <Text style={styles.label}>تصنيف المشكلة</Text>
-            <FilterChipRow contentPaddingHorizontal={0}>
+            <SarhChipRow contentPaddingHorizontal={0}>
               {CATEGORIES.map((cat) => (
                 <SarhChip appearance="filter"
                   key={cat}
@@ -148,7 +147,7 @@ export default function CreateSupportTicketScreen() {
                   onPress={() => setCategory(cat)}
                 />
               ))}
-            </FilterChipRow>
+            </SarhChipRow>
             <Text style={styles.selectedHint}>المحدد: {categoryLabel}</Text>
           </GlassCard>
 

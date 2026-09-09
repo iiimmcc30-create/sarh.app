@@ -5,9 +5,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { FILTER_CHIP } from '@/components/ui/filterChipTokens';
 
-export { FILTER_CHIP, MARKET_CHIP } from '@/components/ui/filterChipTokens';
-
-type FilterChipRowProps = {
+export type SarhChipRowProps = {
   children: ReactNode;
   contentContainerStyle?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
@@ -15,19 +13,20 @@ type FilterChipRowProps = {
   contentPaddingHorizontal?: number;
 };
 
-/** Horizontal scroller for filter chips — RTL-aware, no flex stretch. */
-export function FilterChipRow({
+/** Horizontal scroller for SarhChip items — RTL-aware, no flex stretch. */
+export function SarhChipRow({
   children,
   contentContainerStyle,
   style,
   contentPaddingHorizontal = 16,
-}: FilterChipRowProps) {
+}: SarhChipRowProps) {
   const styles = useThemedStyles(({ colors }) => createRowStyles(colors));
 
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      accessibilityRole="scrollbar"
       style={[styles.scroll, style]}
       contentContainerStyle={[
         styles.content,
@@ -54,3 +53,5 @@ function createRowStyles(_colors: ThemeColors) {
     },
   });
 }
+
+export default SarhChipRow;

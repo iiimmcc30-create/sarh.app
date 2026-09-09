@@ -1,4 +1,4 @@
-import { SarhChip } from '@/design-system/components';
+import { SarhChip, SarhChipRow } from '@/design-system/components';
 // Powered by OnSpace.AI
 // SAFAT — Live Tab (البث المباشر)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
@@ -25,7 +25,6 @@ import { LiveStreamItem } from '@/components/feature/LiveStreamItem';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { LiveStream } from '@/services/types';
 import { marginAutoStart } from '@/lib/rtl';
-import { FilterChipRow } from '@/components/ui/FilterChip';
 
 const LIVE_CATEGORIES = ['الكل', 'إبل', 'خيول', 'أغنام', 'صقور', 'معز'] as const;
 const LIVE_CAT_MAP: Record<string, string> = {
@@ -120,7 +119,7 @@ export default function LiveScreen() {
   const ListHeader = useCallback(
     () => (
       <View>
-        <FilterChipRow contentPaddingHorizontal={0} style={styles.catRow}>
+        <SarhChipRow contentPaddingHorizontal={0} style={styles.catRow}>
           {LIVE_CATEGORIES.map((cat) => (
             <SarhChip appearance="filter"
               key={cat}
@@ -129,7 +128,7 @@ export default function LiveScreen() {
               onPress={() => setActiveCategory(cat)}
             />
           ))}
-        </FilterChipRow>
+        </SarhChipRow>
 
         {featured ? (
           <Pressable style={styles.featured} onPress={() => openWatch(featured.id)}>
