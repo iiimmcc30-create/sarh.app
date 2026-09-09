@@ -24,7 +24,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { ltrInputText, marginEnd, rtlInputText } from '@/lib/rtl';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { Country } from '@/services/types';
 import { showToast } from '@/lib/toast';
 import { SarhBackButton } from '@/design-system/components';
@@ -37,7 +37,7 @@ export default function EditProfileScreen() {
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router = useRouter();
-  const { me, updateMe } = useApp();
+  const { me, updateMe } = useAppUser();
 
   const [arabicName, setArabicName] = useState(me.arabicName || me.displayName);
   const [username, setUsername] = useState(me.username);

@@ -6,7 +6,7 @@ import { AppText as DsText, SarhDivider } from '@/design-system/components';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRtlRow } from '@/lib/rtl';
 import { closeThenPush } from '@/lib/safeNavigate';
@@ -41,7 +41,7 @@ type AppSidebarProps = {
 
 export function AppSidebar({ onClose }: AppSidebarProps) {
   const { colors, preference, setPreference } = useTheme();
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { isAuthenticated } = useAuth();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const isDark = preference !== 'light';

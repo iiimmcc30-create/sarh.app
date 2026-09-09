@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useEffect, useState, type ReactNode } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { markPerf } from '@/lib/perfDev';
 
 type BootSplashGateProps = {
   children: ReactNode;
@@ -43,6 +44,7 @@ export function BootSplashGate({ children }: BootSplashGateProps) {
         timedOut,
       })
     ) {
+      markPerf('native-splash-hide');
       void SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsReady, authLoading, onboardingLoading, timedOut]);

@@ -14,7 +14,7 @@ import {
   type ThemeColors,
 } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { borderInlineEnd } from '@/lib/rtl';
 import { closeThenPush } from '@/lib/safeNavigate';
 
@@ -87,7 +87,7 @@ function isItemActive(item: ButchersMarketMenuItem, path: string): boolean {
 export function ButchersMarketSidebarPanel({ onClose }: Props) {
   const router = useRouter();
   const segments = useSegments();
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,

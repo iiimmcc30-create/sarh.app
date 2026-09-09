@@ -195,6 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Restore session ────────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
+      let restoredAccess: string | null = null;
       try {
         const [storedToken, storedUser, storedMode, storedRefresh, storedAuthOk] =
           await AsyncStorage.multiGet([
@@ -215,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (persisted === 'missing_refresh') {
           await clearSession();
         } else if (token && userJson) {
+          restoredAccess = token;
           setAccessToken(token);
           const storedUserData = JSON.parse(userJson) as Record<string, unknown>;
           const parsedUser = normalizeAuthUser(storedUserData) as unknown as AuthUser;
@@ -222,12 +224,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const parsedOk = storedAuthOk[1] ? Number(storedAuthOk[1]) : Date.now();
           setLastAuthOkAt(Number.isFinite(parsedOk) ? parsedOk : Date.now());
           setActiveMode(parseActiveMode(mode));
-          await refreshSessionRef.current();
         }
       } catch {
         // Storage read failed — start fresh
       } finally {
         setIsLoading(false);
+      }
+      // Cached session is enough for first paint; rotate tokens after splash.
+      if (restoredAccess) {
+        void refreshSessionRef.current();
       }
     })();
   }, []);

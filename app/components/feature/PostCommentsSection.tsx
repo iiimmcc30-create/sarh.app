@@ -31,7 +31,7 @@ import { deletePostComment } from '@/services/comments';
 import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
 import { canDeleteComment } from '@/lib/currentUser';
 import { showToast } from '@/lib/toast';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import type { PostComment } from '@/services/types';
@@ -65,7 +65,7 @@ type CommentsApi = {
   postOwnerId?: string;
   isAuthenticated: boolean;
   user: ReturnType<typeof useAuth>['user'];
-  me: ReturnType<typeof useApp>['me'];
+  me: ReturnType<typeof useAppUser>['me'];
   composerAvatar?: string;
 };
 
@@ -118,7 +118,7 @@ export const PostCommentsProvider = forwardRef<PostCommentsSectionRef, PostComme
     ref,
   ) {
     const { isAuthenticated, user } = useAuth();
-    const { me } = useApp();
+    const { me } = useAppUser();
     const [comments, setComments] = useState<PostComment[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);

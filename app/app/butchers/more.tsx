@@ -9,7 +9,7 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
@@ -27,7 +27,7 @@ export default function ButchersMoreScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const { me } = useApp();
+  const { me } = useAppUser();
   const { user } = useAuth();
 
   const displayName = me.arabicName || me.displayName || me.username || 'مستخدم سرح';

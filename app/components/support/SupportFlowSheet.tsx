@@ -16,7 +16,7 @@ import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhInput, SarhSurface } 
 import { motion, radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { useApp } from '@/hooks/useApp';
+import { useAppUser } from '@/hooks/useApp';
 import { getRtlRow } from '@/lib/rtl';
 import {
   createTicket,
@@ -51,7 +51,7 @@ export function SupportFlowSheet({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const { me } = useApp();
+  const { me } = useAppUser();
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
 
   const [step, setStep] = useState<FlowStep>('welcome');

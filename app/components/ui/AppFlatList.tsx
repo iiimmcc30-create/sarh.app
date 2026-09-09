@@ -24,10 +24,10 @@ function AppFlatListInner<T>(
     bounces = true,
     alwaysBounceVertical,
     overScrollMode,
-    maxToRenderPerBatch = 10,
+    maxToRenderPerBatch = Platform.OS === 'android' ? 6 : 10,
     updateCellsBatchingPeriod = 50,
-    windowSize = 11,
-    initialNumToRender = 8,
+    windowSize = Platform.OS === 'android' ? 7 : 11,
+    initialNumToRender = Platform.OS === 'android' ? 6 : 8,
     removeClippedSubviews = Platform.OS === 'android',
     ...rest
   } = props;
