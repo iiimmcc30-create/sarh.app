@@ -1,8 +1,8 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { SarhBackButton } from '@/design-system/components';
+import { AppText, SarhBackButton } from '@/design-system/components';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { ds } from '@/constants/designSystem';
 import { controls, layout, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -17,6 +17,7 @@ interface ScreenHeaderProps {
   showSidebar?: boolean;
   onSidebar?: () => void;
   onBackPress?: () => void;
+  rightAccessibilityLabel?: string;
 }
 
 export function ScreenHeader({
@@ -28,6 +29,7 @@ export function ScreenHeader({
   showSidebar,
   onSidebar,
   onBackPress,
+  rightAccessibilityLabel,
 }: ScreenHeaderProps) {
   const router = useRouter();
   const { styles, colors } = useThemedStyles((theme) => ({
@@ -58,14 +60,21 @@ export function ScreenHeader({
       </View>
 
       <View style={styles.titleWrap}>
-        <Text style={styles.title}>{title}</Text>
-        {arabic ? <Text style={styles.arabic}>{arabic}</Text> : null}
+        <AppText variant="heading2" color="textPrimary" align="center" numberOfLines={1} style={styles.title}>
+          {title}
+        </AppText>
+        {arabic ? (
+          <AppText variant="caption" color="textMuted" align="center" numberOfLines={1} style={styles.arabic}>
+            {arabic}
+          </AppText>
+        ) : null}
       </View>
 
       <View style={[styles.side, alignInlineEnd()]}>
         {rightIcon ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={rightAccessibilityLabel ?? 'إجراء إضافي'}
             onPress={onRightPress}
             hitSlop={12}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
@@ -93,7 +102,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     /** Physical LTR shell — keeps centered Arabic titles visually correct under app RTL. */
     titleWrap: {
       flex: 1,
-            alignItems: 'center',
+      minWidth: 0,
+      alignItems: 'center',
     },
     title: {
       ...typography.sectionHeading,
