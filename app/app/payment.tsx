@@ -32,7 +32,7 @@ import { useSubscriptionAudience } from '@/hooks/useSubscriptionAudience';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlText, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
 import { SarhBackButton } from '@/design-system/components';
 
 type Step = 'method' | 'card_details' | 'processing' | 'success';
@@ -706,14 +706,13 @@ function FloatingField({ label, value, onChangeText, placeholder, keyboardType, 
         onChangeText={onChangeText}
         placeholder={focused ? placeholder : ''}
         placeholderTextColor={colors.textSubtle}
-        style={[floatStyles.input, { color: colors.textPrimary, paddingRight: icon ? 42 : 16 }]}
+        style={[floatStyles.input, rtlInputText, { color: colors.textPrimary, paddingEnd: icon ? 42 : 16 }]}
         keyboardType={keyboardType}
         maxLength={maxLength}
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        textAlign="right"
       />
       {icon ? (
         <View style={floatStyles.iconWrap}>
@@ -739,7 +738,7 @@ const floatStyles = StyleSheet.create({
   },
   label: {
     position: 'absolute',
-    right: 16,
+    end: 16,
     fontWeight: '500',
   },
   input: {
@@ -750,7 +749,7 @@ const floatStyles = StyleSheet.create({
   },
   iconWrap: {
     position: 'absolute',
-    left: 14,
+    start: 14,
     bottom: 14,
   },
 });
