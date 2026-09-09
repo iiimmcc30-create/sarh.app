@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,7 +24,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
-import { SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
+import { AppText, SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 
 const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[]).filter(
   (c) => c !== 'ORDER_HELP' && c !== 'OTHER_HELP',
@@ -137,7 +136,7 @@ export default function CreateSupportTicketScreen() {
       >
         <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
           <GlassCard style={styles.section}>
-            <Text style={styles.label}>تصنيف المشكلة</Text>
+            <AppText style={styles.label}>تصنيف المشكلة</AppText>
             <SarhChipRow contentPaddingHorizontal={0}>
               {CATEGORIES.map((cat) => (
                 <SarhChip appearance="filter"
@@ -148,7 +147,7 @@ export default function CreateSupportTicketScreen() {
                 />
               ))}
             </SarhChipRow>
-            <Text style={styles.selectedHint}>المحدد: {categoryLabel}</Text>
+            <AppText style={styles.selectedHint}>المحدد: {categoryLabel}</AppText>
           </GlassCard>
 
           <SarhInput appearance="theme" label="عنوان المشكلة" value={subject} onChangeText={setSubject} />
@@ -163,23 +162,29 @@ export default function CreateSupportTicketScreen() {
 
           <GlassCard style={styles.section}>
             <View style={styles.attachHeader}>
-              <Text style={styles.label}>المرفقات (اختياري)</Text>
-              <Pressable onPress={() => void pickAttachments()}>
-                <Text style={styles.link}>إضافة</Text>
+              <AppText style={styles.label}>المرفقات (اختياري)</AppText>
+              <Pressable
+                onPress={() => void pickAttachments()}
+                accessibilityRole="button"
+                accessibilityLabel="إضافة مرفق"
+              >
+                <AppText style={styles.link}>إضافة</AppText>
               </Pressable>
             </View>
             {attachments.length === 0 ? (
-              <Text style={styles.hint}>صور أو فيديو — حتى 8 ملفات</Text>
+              <AppText style={styles.hint}>صور أو فيديو — حتى 8 ملفات</AppText>
             ) : (
               attachments.map((item, index) => (
                 <View key={`${item.uri}-${index}`} style={styles.attachRow}>
-                  <Text style={styles.attachName} numberOfLines={1}>
+                  <AppText style={styles.attachName} numberOfLines={1}>
                     {item.fileName ?? `مرفق ${index + 1}`}
-                  </Text>
+                  </AppText>
                   <Pressable
                     onPress={() => setAttachments((prev) => prev.filter((_, i) => i !== index))}
+                    accessibilityRole="button"
+                    accessibilityLabel="حذف المرفق"
                   >
-                    <Text style={styles.remove}>حذف</Text>
+                    <AppText style={styles.remove}>حذف</AppText>
                   </Pressable>
                 </View>
               ))

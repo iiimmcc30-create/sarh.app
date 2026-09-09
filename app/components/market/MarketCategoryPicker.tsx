@@ -337,7 +337,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.md,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
-      paddingRight: spacing.xl,
+      paddingEnd: spacing.xl,
     },
     subLabel: {
       flex: 1,

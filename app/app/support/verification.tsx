@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,7 +26,7 @@ import {
   type VerificationRequest,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
-import { SarhButton, SarhInput } from '@/design-system/components';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
 
 export default function AccountVerificationScreen() {
   const { accessToken } = useAuth();
@@ -145,26 +144,26 @@ export default function AccountVerificationScreen() {
       <ScreenHeader title="طلب توثيق الحساب" showBack />
       <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
         <GlassCard style={styles.statusCard}>
-          <Text style={styles.statusLabel}>حالة الطلب</Text>
-          <Text style={styles.statusValue}>
+          <AppText style={styles.statusLabel}>حالة الطلب</AppText>
+          <AppText style={styles.statusValue}>
             {userVerified
               ? 'موثق'
               : VERIFICATION_STATUS_LABEL_AR[request?.status ?? 'DRAFT']}
-          </Text>
+          </AppText>
           {request?.reviewReason ? (
-            <Text style={styles.reason}>{request.reviewReason}</Text>
+            <AppText style={styles.reason}>{request.reviewReason}</AppText>
           ) : null}
         </GlassCard>
 
         <GlassCard style={styles.section}>
-          <Text style={styles.sectionTitle}>المتطلبات</Text>
+          <AppText style={styles.sectionTitle}>المتطلبات</AppText>
           {[
             'الاسم الكامل كما في الهوية',
             'رقم الهوية الوطنية',
             'صورة واضحة للهوية',
             'للحسابات التجارية: السجل التجاري',
           ].map((item) => (
-            <Text key={item} style={styles.requirement}>• {item}</Text>
+            <AppText key={item} style={styles.requirement}>• {item}</AppText>
           ))}
         </GlassCard>
 
@@ -184,20 +183,34 @@ export default function AccountVerificationScreen() {
         {editable ? (
           <>
             <GlassCard style={styles.section}>
-              <Text style={styles.sectionTitle}>المستندات</Text>
+              <AppText style={styles.sectionTitle}>المستندات</AppText>
               <View style={styles.docActions}>
-                <Pressable style={styles.docBtn} onPress={() => void uploadDocument('NATIONAL_ID')}>
-                  <Text style={styles.docBtnText}>رفع الهوية</Text>
+                <Pressable
+                  style={styles.docBtn}
+                  onPress={() => void uploadDocument('NATIONAL_ID')}
+                  accessibilityRole="button"
+                  accessibilityLabel="رفع الهوية"
+                >
+                  <AppText style={styles.docBtnText}>رفع الهوية</AppText>
                 </Pressable>
-                <Pressable style={styles.docBtn} onPress={() => void uploadDocument('COMMERCIAL_REGISTER')}>
-                  <Text style={styles.docBtnText}>رفع السجل التجاري</Text>
+                <Pressable
+                  style={styles.docBtn}
+                  onPress={() => void uploadDocument('COMMERCIAL_REGISTER')}
+                  accessibilityRole="button"
+                  accessibilityLabel="رفع السجل التجاري"
+                >
+                  <AppText style={styles.docBtnText}>رفع السجل التجاري</AppText>
                 </Pressable>
               </View>
               {(request?.documents ?? []).map((doc) => (
                 <View key={doc.id} style={styles.docRow}>
-                  <Text style={styles.docName}>{doc.originalFileName ?? doc.type}</Text>
-                  <Pressable onPress={() => void removeVerificationDocument(doc.id).then(load)}>
-                    <Text style={styles.remove}>حذف</Text>
+                  <AppText style={styles.docName}>{doc.originalFileName ?? doc.type}</AppText>
+                  <Pressable
+                    onPress={() => void removeVerificationDocument(doc.id).then(load)}
+                    accessibilityRole="button"
+                    accessibilityLabel="حذف المستند"
+                  >
+                    <AppText style={styles.remove}>حذف</AppText>
                   </Pressable>
                 </View>
               ))}

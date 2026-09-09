@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -15,7 +15,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { userFacingTicketStatus } from '@/lib/supportFlow';
-import { SarhButton } from '@/design-system/components';
+import { AppText, SarhButton } from '@/design-system/components';
 
 export default function SupportTicketsScreen() {
   const router = useRouter();
@@ -51,8 +51,8 @@ export default function SupportTicketsScreen() {
         ) : items.length === 0 ? (
           <GlassCard style={styles.empty}>
             <AppIcon name="ticket" size={32} color={styles.mutedColor.color} />
-            <Text style={styles.emptyTitle}>لا توجد تذاكر بعد</Text>
-            <Text style={styles.emptyText}>أنشئ تذكرة جديدة وسنرد عليك في أقرب وقت</Text>
+            <AppText style={styles.emptyTitle}>لا توجد تذاكر بعد</AppText>
+            <AppText style={styles.emptyText}>أنشئ تذكرة جديدة وسنرد عليك في أقرب وقت</AppText>
           </GlassCard>
         ) : (
           <FlatList
@@ -64,21 +64,25 @@ export default function SupportTicketsScreen() {
                 onPress={() =>
                   router.push({ pathname: '/support/tickets/[id]', params: { id: item.id } } as never)
                 }
+                accessibilityRole="button"
+                accessibilityLabel={`تذكرة ${item.ticketNumber}`}
               >
                 <GlassCard style={styles.card}>
                   <View style={styles.cardTop}>
-                    <Text style={styles.ticketNo}>{item.ticketNumber}</Text>
+                    <AppText style={styles.ticketNo}>{item.ticketNumber}</AppText>
                     <View style={styles.statusPill}>
-                      <Text style={styles.statusText}>
+                      <AppText style={styles.statusText}>
                         {userFacingTicketStatus(item.status)}
-                      </Text>
+                      </AppText>
                     </View>
                   </View>
-                  <Text style={styles.subject}>{item.subject}</Text>
+                  <AppText style={styles.subject} numberOfLines={2}>
+                    {item.subject}
+                  </AppText>
                   <View style={styles.cardBottom}>
-                    <Text style={styles.meta}>
+                    <AppText style={styles.meta}>
                       {TICKET_CATEGORY_LABEL_AR[item.category as SupportTicketCategory] ?? item.category}
-                    </Text>
+                    </AppText>
                     <AppIcon name={rtlForwardIcon()} size={14} color={styles.mutedColor.color} />
                   </View>
                 </GlassCard>

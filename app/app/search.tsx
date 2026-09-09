@@ -21,7 +21,7 @@ import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, marginAutoStart, getRtlRow } from '@/lib/rtl';
+import { getRtlText, marginAutoStart, getRtlRow, rtlInputText } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { ensureApiReachable } from '@/services/api';
 import { SarhBackButton, SarhChip, SarhChipRow } from '@/design-system/components';
@@ -291,14 +291,13 @@ export default function SearchScreen() {
             onChangeText={setQuery}
             placeholder="ابحث في سرح..."
             placeholderTextColor={colors.textMuted}
-            style={styles.input}
+            style={[styles.input, rtlInputText]}
             autoFocus
             returnKeyType="search"
-            textAlign="right"
             onSubmitEditing={() => addRecentSearch(query)}
           />
           {hasQuery ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={8}>
+            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="مسح البحث">
               <AppIcon name="close-circle" size={16} color={colors.textPrimary} />
             </Pressable>
           ) : null}

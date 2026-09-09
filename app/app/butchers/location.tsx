@@ -7,7 +7,7 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText } from '@/lib/rtl';
+import { getRtlText, ltrInputText, rtlInputText } from '@/lib/rtl';
 import { reverseGeocodeToAddress } from '@/lib/formatAddress';
 import {
   loadDeliveryLocation,
@@ -175,12 +175,12 @@ export default function ButcherLocationScreen() {
               <AppText style={styles.fieldLabel}>رقم المنزل / المبنى</AppText>
             </View>
             <TextInput
-              style={styles.input}
+              style={[styles.input, ltrInputText]}
               value={houseNumber}
               onChangeText={setHouseNumber}
               placeholder="مثال: 5243"
               placeholderTextColor={colors.textMuted}
-              textAlign="right"
+              keyboardType="numbers-and-punctuation"
             />
           </View>
 
@@ -190,12 +190,11 @@ export default function ButcherLocationScreen() {
               <AppText style={styles.fieldLabel}>العنوان / الحي</AppText>
             </View>
             <TextInput
-              style={[styles.input, styles.inputMultiline]}
+              style={[styles.input, styles.inputMultiline, rtlInputText]}
               value={address}
               onChangeText={setAddress}
               placeholder="اسم الحي أو وصف مختصر للعنوان"
               placeholderTextColor={colors.textMuted}
-              textAlign="right"
               multiline
             />
           </View>
@@ -210,6 +209,9 @@ export default function ButcherLocationScreen() {
             ]}
             onPress={() => void onSave()}
             disabled={!canSave}
+            accessibilityRole="button"
+            accessibilityLabel="حفظ الموقع"
+            accessibilityState={{ disabled: !canSave }}
           >
             <AppIcon name="checkmark" size={18} color="#fff" />
             <Text style={styles.saveBtnText}>حفظ الموقع</Text>

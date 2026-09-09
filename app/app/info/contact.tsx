@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlRow, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
 import { SarhBackButton } from '@/design-system/components';
 import { AppText } from '@/components/ui/AppText';
 
@@ -124,8 +124,7 @@ export default function ContactScreen() {
                 onChangeText={setName}
                 placeholder="اسمك الكريم"
                 placeholderTextColor={colors.textMuted}
-                style={[styles.input, styles.inputRtl]}
-                textAlign="right"
+                style={[styles.input, styles.inputRtl, rtlInputText]}
               />
             </View>
           </View>
@@ -140,9 +139,8 @@ export default function ContactScreen() {
                 onChangeText={setMessage}
                 placeholder="اكتب رسالتك هنا..."
                 placeholderTextColor={colors.textMuted}
-                style={[styles.input, styles.inputRtl, { height: 100, textAlignVertical: 'top' }]}
+                style={[styles.input, styles.inputRtl, rtlInputText, { height: 100, textAlignVertical: 'top' }]}
                 multiline
-                textAlign="right"
               />
             </View>
           </View>

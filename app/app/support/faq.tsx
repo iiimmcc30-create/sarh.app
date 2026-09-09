@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   UIManager,
   View,
 } from 'react-native';
@@ -18,7 +17,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
+import { AppText, SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 import {
   fetchFaqs,
   FAQ_CATEGORY_LABEL_AR,
@@ -90,29 +89,35 @@ export default function SupportFaqScreen() {
         {loading ? (
           <ActivityIndicator style={styles.loader} />
         ) : faqs.length === 0 ? (
-          <Text style={styles.empty}>لا توجد أسئلة مطابقة</Text>
+          <AppText style={styles.empty}>لا توجد أسئلة مطابقة</AppText>
         ) : (
           faqs.map((faq) => {
             const open = expandedId === faq.id;
             return (
               <GlassCard key={faq.id} style={styles.faqCard}>
-                <Pressable onPress={() => toggle(faq.id)} style={styles.faqHeader}>
+                <Pressable
+                  onPress={() => toggle(faq.id)}
+                  style={styles.faqHeader}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: open }}
+                  accessibilityLabel={faq.questionAr}
+                >
                   <View style={styles.faqTitleWrap}>
-                    <Text style={styles.faqCategory}>
+                    <AppText style={styles.faqCategory}>
                       {FAQ_CATEGORY_LABEL_AR[faq.category as FaqCategory] ?? faq.category}
-                    </Text>
-                    <Text style={styles.faqQuestion}>{faq.questionAr}</Text>
+                    </AppText>
+                    <AppText style={styles.faqQuestion}>{faq.questionAr}</AppText>
                   </View>
                   <AppIcon name={open ? 'chevron-up' : 'chevron-down'} size={18} color={styles.muted.color} />
                 </Pressable>
-                {open ? <Text style={styles.faqAnswer}>{faq.answerAr}</Text> : null}
+                {open ? <AppText style={styles.faqAnswer}>{faq.answerAr}</AppText> : null}
               </GlassCard>
             );
           })
         )}
 
         <View style={styles.footer}>
-          <Text style={styles.footerTitle}>لم تجد إجابة لسؤالك؟</Text>
+          <AppText style={styles.footerTitle}>لم تجد إجابة لسؤالك؟</AppText>
           <SarhButton
             title="إنشاء تذكرة دعم"
             fullWidth
