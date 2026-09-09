@@ -1,33 +1,28 @@
-import { SettingsMenuScreen, type SettingsMenuItem } from '@/components/ui/SettingsMenuScreen';
-
-const ITEMS: SettingsMenuItem[] = [
-  {
-    icon: 'information-outline',
-    label: 'من نحن',
-    subtitle: 'تعرّف على منصة سرح ورسالتها',
-    route: '/info/about',
-  },
-  {
-    icon: 'file-document-outline',
-    label: 'السياسات والشروط',
-    subtitle: 'الشروط، الخصوصية، الملكية الفكرية والدفع',
-    route: '/info/policies',
-  },
-  {
-    icon: 'mail-outline',
-    label: 'تواصل معنا',
-    subtitle: 'قنوات الدعم والتواصل',
-    route: '/info/contact',
-  },
-];
+import { SettingsMenuScreen } from '@/components/ui/SettingsMenuScreen';
 
 export default function InfoCenterScreen() {
   return (
     <SettingsMenuScreen
       title="مركز المعلومات"
-      description="كل ما تحتاج معرفته عن منصة سرح وسياساتها في مكان واحد."
-      heroIcon="information-outline"
-      items={ITEMS}
+      sections={[
+        {
+          title: 'المساعدة',
+          items: [
+            { icon: 'lifebuoy', label: 'مركز المساعدة', route: '/support' },
+            { icon: 'help-circle-outline', label: 'الأسئلة الشائعة', route: '/support/faq' },
+            { icon: 'email-outline', label: 'تواصل معنا', route: '/info/contact' },
+          ],
+        },
+        {
+          title: 'حول التطبيق',
+          items: [
+            { icon: 'information-outline', label: 'عن سرح', route: '/info/about' },
+            { icon: 'file-document-outline', label: 'الشروط والأحكام', route: '/info/terms' },
+            { icon: 'lock-outline', label: 'سياسة الخصوصية', route: '/info/privacy' },
+          ],
+        },
+      ]}
+      footerValue={{ label: 'الإصدار الحالي', value: '1.0.0' }}
     />
   );
 }

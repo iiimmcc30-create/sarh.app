@@ -1,19 +1,15 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import {
-  SidebarLogoutButton,
-  SidebarMenuRow,
-  SidebarSection,
-  type SidebarNavItem,
-} from '@/components/feature/SidebarMenu';
-import { SidebarFooterArt } from '@/components/feature/SidebarFooterArt';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
+import { type SidebarNavItem } from '@/components/feature/SidebarMenu';
 import { AppScrollView } from '@/components/ui/AppScrollView';
+import { colors, space } from '@/design-system';
+import { SarhSettingsRow, SarhSettingsSection } from '@/design-system/components';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppText } from '@/design-system/components';
+import { motion } from '@/design-system';
 
 type ProfileSettingsMenuScreenProps = {
   title?: string;
@@ -30,8 +26,18 @@ export function ProfileSettingsMenuScreen({
   onLogout,
 }: ProfileSettingsMenuScreenProps) {
   const router = useRouter();
-  const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(() =>
+    StyleSheet.create({
+      container: { flex: 1, backgroundColor: colors.background },
+      content: { paddingBottom: space[48] },
+      logout: {
+        marginTop: space[32],
+        minHeight: space[48],
+        paddingHorizontal: space[16],
+        justifyContent: 'center',
+      },
+    }),
+  );
 
   const handleItemPress = (item: SidebarNavItem) => {
     if (item.onPress) {
@@ -47,41 +53,34 @@ export function ProfileSettingsMenuScreen({
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title={title} showBack />
       <AppScrollView contentContainerStyle={styles.content}>
-        <View style={styles.sections}>
-          {sections.map((section) => (
-            <SidebarSection key={section.title} title={section.title} colors={colors} variant="flat">
-              {section.items.map((item, index) => (
-                <SidebarMenuRow
-                  key={item.key}
-                  item={item}
-                  colors={colors}
-                  onPress={() => handleItemPress(item)}
-                  isLast={index === section.items.length - 1}
-                />
-              ))}
-            </SidebarSection>
-          ))}
-        </View>
-
-        <SidebarLogoutButton colors={colors} onPress={onLogout} variant="flat" />
-        <SidebarFooterArt />
+        {sections.map((section) => (
+          <SarhSettingsSection key={section.title} title={section.title}>
+            {section.items.map((item, index) => (
+              <SarhSettingsRow
+                key={item.key}
+                icon={item.icon}
+                title={item.title ?? item.label ?? ''}
+                value={item.subtitle}
+                showDivider={index < section.items.length - 1}
+                onPress={() => handleItemPress(item)}
+              />
+            ))}
+          </SarhSettingsSection>
+        ))}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="تسجيل الخروج"
+          onPress={onLogout}
+          style={({ pressed }) => [
+            styles.logout,
+            { opacity: pressed ? motion.opacity.pressed : 1 },
+          ]}
+        >
+          <AppText variant="label" color="danger">
+            تسجيل الخروج
+          </AppText>
+        </Pressable>
       </AppScrollView>
     </SafeAreaView>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.screenRoot,
-    },
-    content: {
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xxl,
-    },
-    sections: {
-      gap: 0,
-    },
-  });
 }
