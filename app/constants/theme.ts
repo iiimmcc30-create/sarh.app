@@ -5,6 +5,7 @@
 import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';
 import { OFFICIAL_APP_FONT } from './fonts';
+import { applyDesignSystemColors } from '@/design-system/tokens/colors';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -243,9 +244,35 @@ export function applyThemeScheme(scheme: ColorScheme) {
   activeScheme = scheme;
   const palette = scheme === 'dark' ? darkColors : lightColors;
   const paletteGradients = scheme === 'dark' ? darkGradients : lightGradients;
-  Object.assign(colors, enrichTextColors(palette, scheme));
+  const live = enrichTextColors(palette, scheme);
+  Object.assign(colors, live);
   Object.assign(gradients, paletteGradients);
   Object.assign(shadow, createShadow(palette));
+  applyDesignSystemColors(
+    {
+      background: live.screenRoot,
+      surface: live.bgSurface,
+      surfaceElevated: live.bgElevated,
+      surfaceAlt: live.royal,
+      primary: live.electric,
+      primaryPressed: sarh.color.actionPressed,
+      textPrimary: live.textPrimary,
+      textSecondary: live.textSecondary,
+      textMuted: live.textMuted,
+      border: live.borderSoft,
+      borderStrong: live.borderStrong,
+      success: live.success,
+      warning: live.warning,
+      danger: live.danger,
+    },
+    {
+      overlay: scheme === 'dark' ? sarh.color.overlay : live.bgOverlay,
+      pattern: scheme === 'dark' ? sarh.color.pattern : live.borderMid,
+      primaryMuted: sarh.color.actionMuted,
+      onPrimary: sarh.color.fab,
+      onPrimaryInverse: live.bgDeep,
+    },
+  );
 }
 
 // Synchronous init — colors must never be an empty object at first render.

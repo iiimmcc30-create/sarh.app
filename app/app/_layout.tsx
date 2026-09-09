@@ -22,7 +22,6 @@ import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
 import { NavigationPathTracker } from '@/components/navigation/NavigationPathTracker';
-import { sarh } from '@/constants/sarhTokens';
 import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
 import { resolveBootNavigation } from '@/lib/bootRouting';
 
@@ -81,9 +80,7 @@ function RootNavigator() {
           headerShown: false,
           freezeOnBlur: true,
           contentStyle: {
-            backgroundColor: isDark
-              ? themeColors.bgDeep || sarh.color.bg
-              : themeColors.bgDeep,
+            backgroundColor: themeColors.screenRoot,
             // RTL policy: root direction from I18nManager — never force 'ltr' here.
             ...getRtlDirection(),
           },
@@ -175,12 +172,13 @@ function RootNavigator() {
 }
 
 function RootLayoutBody() {
+  const { colors } = useTheme();
   useEffect(() => {
     void setupRtlFromStorage(AsyncStorage.getItem);
   }, []);
 
   return (
-    <View style={[styles.rtlRoot, getRtlDirection()]}>
+    <View style={[styles.rtlRoot, { backgroundColor: colors.screenRoot }, getRtlDirection()]}>
       <AuthProvider>
         <OnboardingProvider>
           <BootSplashGate>
@@ -207,17 +205,14 @@ function RootLayoutBody() {
 
 export default function RootLayout() {
   return (
-    <View style={[styles.rtlRoot, getRtlDirection()]}>
-      <ThemeProvider>
-        <RootLayoutBody />
-      </ThemeProvider>
-    </View>
+    <ThemeProvider>
+      <RootLayoutBody />
+    </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
   rtlRoot: {
     flex: 1,
-    backgroundColor: sarh.color.bg,
   },
 });

@@ -8,7 +8,6 @@ import { AppScrollView } from '@/components/ui/AppScrollView';
 import { safePush } from '@/lib/safeNavigate';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { sarh } from '@/constants/sarhTokens';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -62,7 +61,7 @@ const SECTIONS: Section[] = [
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles((t) => createStyles(t.colors, t.scheme));
+  const styles = useThemedStyles((t) => createStyles(t.colors));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -108,8 +107,7 @@ export default function SettingsScreen() {
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const isDark = scheme === 'dark';
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
     header: {
@@ -125,11 +123,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: 42,
       height: 42,
       borderRadius: radius.md,
-      backgroundColor: isDark ? sarh.color.surface : colors.bgSurface,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
     },
     headerSpacer: { width: 42, height: 42 },
     headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, minWidth: 0, textAlign: 'center' },

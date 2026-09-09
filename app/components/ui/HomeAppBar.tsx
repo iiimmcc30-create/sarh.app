@@ -3,6 +3,7 @@ import { NotificationBellButton } from '@/components/notifications/NotificationB
 import { ds } from '@/constants/designSystem';
 import { colors, radius, space } from '@/design-system';
 import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
+import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -27,8 +28,10 @@ export function HomeAppBar({
   displayName,
   avatarUri,
 }: HomeAppBarProps) {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <SarhSurface tone="background" style={styles.shell}>
+    <SarhSurface tone="background" style={[styles.shell, { borderBottomColor: themeColors.borderSoft }]}>
       <View style={[styles.bar, getRtlRow()]}>
         <View style={[styles.profileCluster, getRtlRow()]}>
           <Pressable
@@ -43,7 +46,7 @@ export function HomeAppBar({
               name={displayName}
               size="md"
               accessibilityLabel={displayName}
-              style={styles.avatar}
+              style={[styles.avatar, { borderColor: themeColors.electric, backgroundColor: themeColors.bgElevated }]}
             />
           </Pressable>
 
@@ -68,15 +71,15 @@ export function HomeAppBar({
             onPress={onSearch}
             style={styles.iconBtn}
           >
-            <AppIcon name="search" size={ICON_SIZE} color={colors.textPrimary} />
+            <AppIcon name="search" size={ICON_SIZE} color={themeColors.textPrimary} />
           </SarhIconButton>
           <NotificationBellButton
             bare
             size={TOOL}
             iconSize={ICON_SIZE}
             style={styles.iconBtn}
-            iconColor={colors.textPrimary}
-            badgeBorderColor={colors.background}
+            iconColor={themeColors.textPrimary}
+            badgeBorderColor={themeColors.screenRoot}
           />
         </View>
       </View>

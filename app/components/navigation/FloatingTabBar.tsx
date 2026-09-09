@@ -1,6 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
-import { sarh } from '@/constants/sarhTokens';
 import { motion, spacing, typography } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
@@ -32,11 +31,9 @@ const TABS: TabDef[] = [
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, scheme } = useTheme();
-  const isLight = scheme === 'light';
-  const tokens = isLight ? ds.light : ds.dark;
   const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
-  const activeTint = isLight ? colors.electricBright : sarh.color.action;
-  const inactiveTint = isLight ? colors.textMuted : '#E8EEF2';
+  const activeTint = colors.electricBright;
+  const inactiveTint = colors.textSecondary;
 
   const activeRoute = state.routes[state.index]?.name;
 
@@ -58,15 +55,10 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
         style={[
           styles.bar,
           { paddingBottom: bottomPad },
-          isLight
-            ? {
-                backgroundColor: tokens.glass,
-                borderTopColor: tokens.glassBorder,
-              }
-            : {
-                backgroundColor: '#0A161E',
-                borderTopColor: 'rgba(255,255,255,0.06)',
-              },
+          {
+            backgroundColor: colors.bgElevated,
+            borderTopColor: colors.borderSoft,
+          },
           ambientShadow(scheme, 'soft'),
         ]}
       >

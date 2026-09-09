@@ -2,7 +2,8 @@ import { sarh } from '@/constants/sarhTokens';
 
 /**
  * Raw Sarh Dark palette — extracted from `sarh.color`.
- * Do not invent brand greens. Hex values stay identical to the live tokens.
+ * Canonical dark hex for documentation and fallbacks. Runtime chrome reads `colors`,
+ * which `applyDesignSystemColors` keeps in sync with the live theme.
  */
 export const palette = {
   bg: sarh.color.bg,
@@ -20,14 +21,36 @@ export const palette = {
   success: sarh.color.success,
 } as const;
 
+export type DesignSystemColorValues = {
+  background: string;
+  surface: string;
+  surfaceElevated: string;
+  surfaceAlt: string;
+  primary: string;
+  primaryPressed: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  border: string;
+  borderStrong: string;
+  success: string;
+  warning: string;
+  danger: string;
+};
+
+export type DesignSystemFunctionalValues = {
+  overlay: string;
+  pattern: string;
+  primaryMuted: string;
+  onPrimary: string;
+  onPrimaryInverse: string;
+};
+
 /**
- * Flat semantic colors required by the foundation contract.
- * Values are aliases of the live palette — not a new visual system.
- *
- * `borderStrong` is the live dark `theme.ts` token (`#264556`), which is not
- * on `sarh.color`. It is extracted, not invented.
+ * Live semantic colors. Seeded from the dark palette, then overwritten when
+ * `applyThemeScheme` runs so primitives follow Light/Dark.
  */
-export const colors = {
+export const colors: DesignSystemColorValues = {
   background: palette.bg,
   surface: palette.surface,
   surfaceElevated: palette.surfaceRaised,
@@ -42,21 +65,23 @@ export const colors = {
   success: palette.success,
   warning: palette.warning,
   danger: palette.danger,
-} as const;
+};
 
-/**
- * Functional extras already in `sarh.color`. Not new brand colors.
- * - overlay: full-screen dim (`rgba(7, 19, 28, 0.88)`)
- * - pattern: hairline / motif (`#1E3A4A`)
- * - primaryMuted: brand-green wash for chips (`rgba(32, 182, 111, 0.14)`)
- */
-export const functional = {
+export const functional: DesignSystemFunctionalValues = {
   overlay: sarh.color.overlay,
   pattern: sarh.color.pattern,
   primaryMuted: sarh.color.actionMuted,
-  /** Existing FAB label/icon pair — on-primary text, not a new brand color. */
   onPrimary: sarh.color.fab,
   onPrimaryInverse: sarh.color.fabIcon,
-} as const;
+};
 
-export type ColorToken = keyof typeof colors;
+/** Keep DS primitives on the same palette `theme.ts` just applied. */
+export function applyDesignSystemColors(
+  next: DesignSystemColorValues,
+  extras?: Partial<DesignSystemFunctionalValues>,
+) {
+  Object.assign(colors, next);
+  if (extras) Object.assign(functional, extras);
+}
+
+export type ColorToken = keyof DesignSystemColorValues;
