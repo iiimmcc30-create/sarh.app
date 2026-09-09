@@ -13,6 +13,7 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
 import { colors, functional, motion, radius, space } from '@/design-system';
 import { AppText, SarhCard } from '@/design-system/components';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
 
@@ -29,6 +30,7 @@ type Props = {
 };
 
 export function EditorialStoriesBar({ stories, loading }: Props) {
+  const styles = useThemedStyles(() => createStyles());
   const [activeDot, setActiveDot] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -125,7 +127,8 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles() {
+  return StyleSheet.create({
   wrap: {
     paddingTop: space[8],
     paddingBottom: space[8],
@@ -185,3 +188,4 @@ const styles = StyleSheet.create({
     opacity: motion.opacity.pressed,
   },
 });
+}

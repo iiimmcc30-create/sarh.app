@@ -14,14 +14,28 @@ export type AppTextColor =
 export type AppTextAlign = 'auto' | 'center' | 'left' | 'right';
 
 export const APP_TEXT_COLOR = {
-  textPrimary: colors.textPrimary,
-  textSecondary: colors.textSecondary,
-  textMuted: colors.textMuted,
-  primary: colors.primary,
-  danger: colors.danger,
-  warning: colors.warning,
-  success: colors.success,
-} as const;
+  get textPrimary() {
+    return colors.textPrimary;
+  },
+  get textSecondary() {
+    return colors.textSecondary;
+  },
+  get textMuted() {
+    return colors.textMuted;
+  },
+  get primary() {
+    return colors.primary;
+  },
+  get danger() {
+    return colors.danger;
+  },
+  get warning() {
+    return colors.warning;
+  },
+  get success() {
+    return colors.success;
+  },
+};
 
 export function resolveAppTextStyle(options: {
   variant?: AppTextVariant;
@@ -248,8 +262,16 @@ export function resolveSarhChipColors(selected: boolean) {
 export type SarhSurfaceTone = 'background' | 'surface' | 'surfaceElevated' | 'surfaceAlt';
 
 export const SURFACE_TONE = {
-  background: colors.background,
-  surface: colors.surface,
-  surfaceElevated: colors.surfaceElevated,
-  surfaceAlt: colors.surfaceAlt,
-} as const;
+  get background() {
+    return colors.background;
+  },
+  get surface() {
+    return colors.surface;
+  },
+  get surfaceElevated() {
+    return colors.surfaceElevated;
+  },
+  get surfaceAlt() {
+    return colors.surfaceAlt;
+  },
+};

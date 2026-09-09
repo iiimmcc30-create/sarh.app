@@ -1,7 +1,7 @@
 import { APP_FONT_FACES, OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { luxuryDark } from '@/constants/homeLuxury';
 import { sarh } from '@/constants/sarhTokens';
-import { colors as liveThemeColors, typography as liveTypography } from '@/constants/theme';
+import { colors as liveThemeColors, typography as liveTypography, applyThemeScheme } from '@/constants/theme';
 import {
   colors,
   darkTheme,
@@ -164,5 +164,16 @@ describe('Sarh design-system foundation', () => {
   it('does not change the live dark background', () => {
     expect(liveThemeColors.bgPrimary).toBe(sarh.color.bg);
     expect(colors.background).toBe(liveThemeColors.bgPrimary);
+  });
+
+  it('keeps design-system semantic colors in sync with applyThemeScheme', () => {
+    applyThemeScheme('light');
+    expect(colors.background).toBe('#F5F7F9');
+    expect(colors.surface).toBe('#FFFFFF');
+    expect(colors.textPrimary).toBe('#101820');
+    applyThemeScheme('dark');
+    expect(colors.background).toBe(sarh.color.bg);
+    expect(colors.surface).toBe(sarh.color.surface);
+    expect(colors.textPrimary).toBe(sarh.color.text);
   });
 });

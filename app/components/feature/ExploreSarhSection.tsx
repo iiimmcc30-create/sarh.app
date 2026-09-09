@@ -3,6 +3,7 @@ import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { colors, functional, motion, radius, space } from '@/design-system';
 import { AppText } from '@/design-system/components';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
@@ -15,6 +16,7 @@ export function ExploreSarhSection() {
   const { width } = useWindowDimensions();
   const heroH = Math.round(Math.min(208, Math.max(176, width * 0.48)));
   const imageW = Math.round(width * 0.5);
+  const styles = useThemedStyles(() => createStyles());
 
   return (
     <View style={styles.wrap}>
@@ -64,7 +66,8 @@ export function ExploreSarhSection() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles() {
+  return StyleSheet.create({
   wrap: {
     paddingBottom: space[8],
   },
@@ -127,5 +130,6 @@ const styles = StyleSheet.create({
     opacity: motion.opacity.pressed,
   },
 });
+}
 
 export default ExploreSarhSection;

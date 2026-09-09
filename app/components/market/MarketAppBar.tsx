@@ -1,14 +1,14 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 
-const SEARCH_H = 50;
-const TOOL_H = 34;
-const TOOL_ICON = 17;
-const SEARCH_ICON = 17;
+const SEARCH_H = 48;
+const TOOL_H = 36;
+const TOOL_ICON = 18;
+const SEARCH_ICON = 18;
 
 type Props = {
   onSearch: () => void;
@@ -18,7 +18,7 @@ type Props = {
   searchPlaceholder?: string;
 };
 
-/** Market header: filter inside full-width search bar (physical left), featured star inside right. */
+/** Market header: one search field, filter and featured stay inside the bar. */
 export function MarketAppBar({
   onSearch,
   onFilterPress,
@@ -42,10 +42,8 @@ export function MarketAppBar({
             accessibilityRole="button"
             accessibilityLabel="تصفية"
           >
-            <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textPrimary} />
+            <AppIcon name="settings-sliders" size={TOOL_ICON} color={colors.textSecondary} />
           </Pressable>
-
-          <View style={styles.searchDivider} />
 
           <Pressable
             onPress={onSearch}
@@ -61,8 +59,6 @@ export function MarketAppBar({
             </View>
           </Pressable>
 
-          <View style={styles.searchDivider} />
-
           <Pressable
             onPress={onFeaturedPress}
             style={[styles.inlineToolBtn, featuredActive && styles.inlineToolBtnActive]}
@@ -74,7 +70,7 @@ export function MarketAppBar({
             <AppIcon
               name="star"
               size={TOOL_ICON}
-              color={featuredActive ? colors.gold : colors.textPrimary}
+              color={featuredActive ? colors.gold : colors.textSecondary}
               variant={featuredActive ? 'sr' : 'rr'}
             />
           </Pressable>
@@ -90,18 +86,21 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
       flexGrow: 0,
       flexShrink: 0,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
     },
     searchRow: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
     },
     searchBar: {
       width: '100%',
       height: SEARCH_H,
       alignItems: 'center',
-      paddingHorizontal: spacing.xs,
+      paddingHorizontal: 4,
       backgroundColor: colors.bgElevated,
-      borderRadius: 8,
+      borderRadius: radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
@@ -112,18 +111,11 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       backgroundColor: 'transparent',
       borderWidth: 0,
-      borderRadius: 8,
+      borderRadius: radius.pill,
       flexShrink: 0,
     },
     inlineToolBtnActive: {
-      backgroundColor: `${colors.gold}14`,
-    },
-    searchDivider: {
-      width: StyleSheet.hairlineWidth,
-      height: 26,
-      backgroundColor: colors.borderSoft,
-      marginHorizontal: 4,
-      flexShrink: 0,
+      backgroundColor: `${colors.gold}18`,
     },
     searchTap: {
       flex: 1,
@@ -131,7 +123,7 @@ function createStyles(colors: ThemeColors) {
       height: '100%',
       alignItems: 'center',
       gap: 8,
-      paddingHorizontal: spacing.xs,
+      paddingHorizontal: spacing.sm,
     },
     searchPlaceholder: {
       ...typography.secondary,

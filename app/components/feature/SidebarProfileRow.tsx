@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { MENU_CARD, menuCardStyle } from '@/components/feature/SidebarMenu';
 import { SIDEBAR_MENU_ITEM } from '@/components/ui/SidebarMenuItem';
-import { sarh } from '@/constants/sarhTokens';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -45,9 +44,7 @@ export function SidebarProfileRow({
 }: SidebarProfileRowProps) {
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
-  const styles = useThemedStyles(({ colors, scheme }) =>
-    createStyles(colors, scheme === 'dark'),
-  );
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const footer = (
     <>
@@ -73,7 +70,7 @@ export function SidebarProfileRow({
           avatarSize={SIDEBAR_PROFILE.avatarSize}
           avatarRadius={SIDEBAR_PROFILE.avatarRadius}
           avatarBorderWidth={SIDEBAR_PROFILE.avatarBorder}
-          avatarBorderColor={sarh.color.action}
+          avatarBorderColor={colors.electric}
           nameLines={SIDEBAR_PROFILE.nameLines}
           nameStyle={styles.displayName}
           footer={badgeLabel || badge ? footer : undefined}
@@ -84,7 +81,7 @@ export function SidebarProfileRow({
   );
 }
 
-function createStyles(colors: ThemeColors, isDark: boolean) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     /** Match SidebarSection horizontal inset. */
     wrap: {
@@ -109,11 +106,11 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 999,
-      backgroundColor: isDark ? sarh.color.actionMuted : '#E8F9E3',
+      backgroundColor: `${colors.electric}22`,
     },
     badgePillText: {
       ...typography.badge,
-      color: isDark ? colors.textPrimary : '#3FA82E',
+      color: colors.electric,
       writingDirection: 'rtl',
     },
   });

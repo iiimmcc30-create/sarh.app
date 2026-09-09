@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { sarh } from '@/constants/sarhTokens';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -14,9 +13,7 @@ type SidebarCloseHeaderProps = {
 export function SidebarCloseHeader({ onClose, colors: colorsProp }: SidebarCloseHeaderProps) {
   const theme = useTheme();
   const colors = colorsProp ?? theme.colors;
-  const styles = useThemedStyles(({ colors, scheme }) =>
-    createStyles(colors, scheme === 'dark'),
-  );
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
     <View style={styles.header}>
@@ -27,7 +24,7 @@ export function SidebarCloseHeader({ onClose, colors: colorsProp }: SidebarClose
   );
 }
 
-function createStyles(colors: ThemeColors, isDark: boolean) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     header: {
       alignItems: 'flex-end',
@@ -39,11 +36,11 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
       width: 40,
       height: 40,
       borderRadius: 12,
-      backgroundColor: isDark ? colors.bgElevated : '#F3F4F6',
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: isDark ? StyleSheet.hairlineWidth : 0,
-      borderColor: isDark ? sarh.color.border : 'transparent',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
     },
   });
 }

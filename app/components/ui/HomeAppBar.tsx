@@ -3,6 +3,8 @@ import { NotificationBellButton } from '@/components/notifications/NotificationB
 import { ds } from '@/constants/designSystem';
 import { colors, radius, space } from '@/design-system';
 import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -27,8 +29,19 @@ export function HomeAppBar({
   displayName,
   avatarUri,
 }: HomeAppBarProps) {
+  const { colors: themeColors } = useTheme();
+  const colorStyles = useThemedStyles(() =>
+    StyleSheet.create({
+      shell: { borderBottomColor: colors.border },
+      avatar: {
+        borderColor: colors.primary,
+        backgroundColor: colors.surfaceElevated,
+      },
+    }),
+  );
+
   return (
-    <SarhSurface tone="background" style={styles.shell}>
+    <SarhSurface tone="background" style={[styles.shell, colorStyles.shell]}>
       <View style={[styles.bar, getRtlRow()]}>
         <View style={[styles.profileCluster, getRtlRow()]}>
           <Pressable
@@ -43,7 +56,7 @@ export function HomeAppBar({
               name={displayName}
               size="md"
               accessibilityLabel={displayName}
-              style={styles.avatar}
+              style={[styles.avatar, colorStyles.avatar]}
             />
           </Pressable>
 
@@ -68,15 +81,15 @@ export function HomeAppBar({
             onPress={onSearch}
             style={styles.iconBtn}
           >
-            <AppIcon name="search" size={ICON_SIZE} color={colors.textPrimary} />
+            <AppIcon name="search" size={ICON_SIZE} color={themeColors.textPrimary} />
           </SarhIconButton>
           <NotificationBellButton
             bare
             size={TOOL}
             iconSize={ICON_SIZE}
             style={styles.iconBtn}
-            iconColor={colors.textPrimary}
-            badgeBorderColor={colors.background}
+            iconColor={themeColors.textPrimary}
+            badgeBorderColor={themeColors.screenRoot}
           />
         </View>
       </View>
@@ -89,7 +102,6 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
   bar: {
     width: '100%',
@@ -135,8 +147,6 @@ const styles = StyleSheet.create({
     height: space[40],
     borderRadius: radius[999],
     borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceElevated,
   },
 });
 

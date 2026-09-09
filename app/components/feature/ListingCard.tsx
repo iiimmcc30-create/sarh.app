@@ -342,13 +342,14 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   // Elevated listing card — More-tab contrast (bgElevated, no border)
   listRow: {
     ...getRtlRow(),
-    alignItems: 'stretch',
-    minHeight: 118,
+    alignItems: 'flex-start',
+    flexGrow: 0,
+    width: '100%',
     paddingVertical: 0,
     paddingStart: spacing.md,
     paddingEnd: 0,
     gap: spacing.sm,
-    backgroundColor: colors.bgDeep,
+    backgroundColor: colors.bgSurface,
     borderRadius: 10,
     marginHorizontal: spacing.md,
     marginVertical: 4,
@@ -362,7 +363,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     gap: 6,
     paddingVertical: 10,
     paddingEnd: spacing.xs,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   listTitleRow: {
     alignItems: 'center',
@@ -444,10 +445,10 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   listThumbWrap: {
     width: 118,
-    alignSelf: 'stretch',
+    aspectRatio: 1,
+    flexShrink: 0,
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
-    flexShrink: 0,
     position: 'relative',
   },
   listThumb: {
