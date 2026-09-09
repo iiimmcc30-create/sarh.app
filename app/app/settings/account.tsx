@@ -4,19 +4,16 @@ const ITEMS: SettingsMenuItem[] = [
   {
     icon: 'shield-check-outline',
     label: 'التحقق من الحساب والأمان',
-    subtitle: 'حالة التوثيق وإعدادات الأمان',
     route: '/profile/edit',
   },
   {
     icon: 'lock-outline',
     label: 'تغيير كلمة المرور والبريد',
-    subtitle: 'تحديث بيانات الدخول',
     route: '/auth/forgot-password',
   },
   {
     icon: 'block',
     label: 'المحظورين',
-    subtitle: 'إدارة الحسابات التي حظرتها',
     route: '/settings/blocked',
   },
 ];
@@ -25,8 +22,6 @@ export default function AccountSettingsScreen() {
   return (
     <SettingsMenuScreen
       title="الحساب"
-      description="حدّث بيانات الدخول وراجع خيارات حماية حسابك."
-      heroIcon="shield-check-outline"
       items={ITEMS}
     />
   );
