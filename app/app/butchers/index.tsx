@@ -1,4 +1,4 @@
-// SAFAT — Butchers market home: banners · picks · nearby
+// SAFAT — Butchers market home: banners · offers · picks · nearby
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Location from 'expo-location';
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
+import { butcherMeatBg } from '@/constants/butcherMarket';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -25,7 +26,7 @@ import { ButcherMarketBannerSlider } from '@/components/butchers/ButcherMarketBa
 import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
 import { ButcherHomeOfferCard } from '@/components/butchers/ButcherHomeOfferCard';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
-import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ButcherSectionHeader } from '@/components/butchers/ButcherSectionHeader';
 import { getRtlText } from '@/lib/rtl';
 import { safePush, safeReplace } from '@/lib/safeNavigate';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
@@ -51,7 +52,7 @@ function filterButchers(list: ButcherProfile[], query: string): ButcherProfile[]
 
 export default function ButchersScreen() {
   const { colors } = useTheme();
-  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
+  const s = useThemedStyles(({ colors, scheme }) => createScreenStyles(colors, scheme));
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const { accessToken } = useAuth();
@@ -65,6 +66,7 @@ export default function ButchersScreen() {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const pickWidth = Math.round((screenWidth - spacing.lg * 2) * 0.72);
+  const offerWidth = Math.round(Math.min(156, screenWidth * 0.38));
 
   const fetchSorted = useCallback(
     async (sort: 'rating' | 'distance'): Promise<ButcherProfile[]> => {
@@ -128,6 +130,15 @@ export default function ButchersScreen() {
 
   const filteredPicks = useMemo(() => filterButchers(picks, searchQuery), [picks, searchQuery]);
   const filteredNearby = useMemo(() => filterButchers(nearby, searchQuery), [nearby, searchQuery]);
+  const filteredOffers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return homeOffers;
+    return homeOffers.filter(
+      (o) =>
+        o.titleAr.toLowerCase().includes(q) ||
+        (o.butcherNameAr ?? '').toLowerCase().includes(q),
+    );
+  }, [homeOffers, searchQuery]);
   const openButcher = (id: string) =>
     safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
 
@@ -167,16 +178,20 @@ export default function ButchersScreen() {
           </View>
         ) : null}
 
-        {!loading && searchQuery.trim() && filteredPicks.length === 0 && filteredNearby.length === 0 ? (
+        {!loading &&
+        searchQuery.trim() &&
+        filteredPicks.length === 0 &&
+        filteredNearby.length === 0 &&
+        filteredOffers.length === 0 ? (
           <View style={s.emptyState}>
             <Text style={s.emptyTitle}>لا توجد نتائج</Text>
             <Text style={s.emptySub}>جرّب كلمة بحث أخرى</Text>
           </View>
         ) : (
           <>
-            {homeOffers.length > 0 ? (
+            {filteredOffers.length > 0 ? (
               <>
-                <SectionHeader
+                <ButcherSectionHeader
                   title="العروض"
                   onSeeAll={() => safePush('/butchers/offers', undefined, router)}
                 />
@@ -185,11 +200,11 @@ export default function ButchersScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={s.offersRow}
                 >
-                  {homeOffers.map((offer) => (
+                  {filteredOffers.map((offer) => (
                     <ButcherHomeOfferCard
                       key={`${offer.butcherId}-${offer.id}`}
                       offer={offer}
-                      width={Math.round(screenWidth * 0.42)}
+                      width={offerWidth}
                       onPress={() => openButcher(offer.butcherId)}
                     />
                   ))}
@@ -199,44 +214,44 @@ export default function ButchersScreen() {
 
             {filteredPicks.length > 0 ? (
               <>
-            <SectionHeader
-              title="مختارات سرح"
-              onSeeAll={() => safePush('/butchers/all', undefined, router)}
-            />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.picksRow}
-            >
-              {filteredPicks.map((butcher, i) => (
-                <ButcherPickCard
-                  key={butcher.id}
-                  butcher={butcher}
-                  width={pickWidth}
-                  promoted={i < 2 || butcher.subscriptionActive}
-                  onPress={() => openButcher(butcher.id)}
+                <ButcherSectionHeader
+                  title="مختارات سرح"
+                  onSeeAll={() => safePush('/butchers/all', undefined, router)}
                 />
-              ))}
-            </ScrollView>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={s.picksRow}
+                >
+                  {filteredPicks.map((butcher, i) => (
+                    <ButcherPickCard
+                      key={butcher.id}
+                      butcher={butcher}
+                      width={pickWidth}
+                      promoted={i < 2 || butcher.subscriptionActive}
+                      onPress={() => openButcher(butcher.id)}
+                    />
+                  ))}
+                </ScrollView>
               </>
             ) : null}
 
             {filteredNearby.length > 0 ? (
               <>
-            <SectionHeader
-              title="الأقرب إليك"
-              onSeeAll={() => safePush('/butchers/all', undefined, router)}
-            />
-            <View style={s.nearbyList}>
-              {filteredNearby.map((butcher, index) => (
-                <ButcherNearbyRow
-                  key={butcher.id}
-                  butcher={butcher}
-                  onPress={() => openButcher(butcher.id)}
-                  showDivider={index < filteredNearby.length - 1}
+                <ButcherSectionHeader
+                  title="الأقرب إليك"
+                  onSeeAll={() => safePush('/butchers/all', undefined, router)}
                 />
-              ))}
-            </View>
+                <View style={s.nearbyList}>
+                  {filteredNearby.map((butcher, index) => (
+                    <ButcherNearbyRow
+                      key={butcher.id}
+                      butcher={butcher}
+                      onPress={() => openButcher(butcher.id)}
+                      showDivider={index < filteredNearby.length - 1}
+                    />
+                  ))}
+                </View>
               </>
             ) : null}
           </>
@@ -248,25 +263,30 @@ export default function ButchersScreen() {
   );
 }
 
-function createScreenStyles(colors: ThemeColors) {
+function createScreenStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
+    screen: { flex: 1, backgroundColor: butcherMeatBg(scheme) },
     flex: { flex: 1 },
-    scroll: { paddingBottom: 20 },
-    stickyHeader: { backgroundColor: colors.screenRoot },
+    scroll: { paddingBottom: 20, backgroundColor: colors.screenRoot },
+    stickyHeader: { backgroundColor: butcherMeatBg(scheme) },
     offersRow: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
       gap: spacing.md,
     },
-    loader: { paddingVertical: 40, alignItems: 'center' },
+    loader: { paddingVertical: 40, alignItems: 'center', backgroundColor: colors.screenRoot },
     picksRow: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
       gap: spacing.md,
     },
     nearbyList: { backgroundColor: colors.screenRoot, paddingBottom: spacing.sm },
-    emptyState: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: 60,
+      gap: spacing.sm,
+      backgroundColor: colors.screenRoot,
+    },
     emptyTitle: { ...butcherTypography.title, color: colors.textPrimary, ...getRtlText() },
     emptySub: { ...butcherTypography.secondary, color: colors.textMuted, ...getRtlText() },
   });

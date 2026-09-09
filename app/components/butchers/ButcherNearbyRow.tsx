@@ -1,8 +1,7 @@
-// Vertical nearby butcher row — logo on physical right, RTL cover trail
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { butcherSoftCardStyle } from '@/components/butchers/butcherSoftCard';
 import { butcherTypography } from '@/constants/butcherTypography';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -10,8 +9,11 @@ import {
   butcherEtaLabel,
   butcherFeeLabel,
   butcherMinOrderLabel,
+  butcherPickupLabel,
   butcherReviewCountLabel,
+  hasButcherRating,
 } from '@/lib/butcherStoreMeta';
+import { getRtlRow } from '@/lib/rtl';
 import type { ButcherProfile } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -21,48 +23,20 @@ type Props = {
   showDivider?: boolean;
 };
 
-export function ButcherNearbyRow({ butcher, onPress }: Props) {
+export function ButcherNearbyRow({ butcher, onPress, showDivider = true }: Props) {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const name = butcher.nameAr || butcher.name;
+  const showRating = hasButcherRating(butcher);
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.92 }]}
+      style={({ pressed }) => [styles.row, showDivider && styles.divider, pressed && { opacity: 0.92 }]}
+      accessibilityRole="button"
+      accessibilityLabel={name}
     >
-      <View style={styles.coverTrail}>
-        <View style={styles.textShell}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          <View style={styles.ratingRow}>
-            <AppIcon name="star" size={12} color={colors.gold} />
-            <Text style={styles.rating}>
-              {butcher.rating.toFixed(1)} ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
-            </Text>
-          </View>
-          <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
-              <AppIcon name="map-marker-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText}>{butcher.cityAr || '—'}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <AppIcon name="bicycle-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText}>{butcherFeeLabel(butcher)}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText}>{butcherEtaLabel(butcher)}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <AppIcon name="receipt-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.metaText} numberOfLines={1}>
-                {butcherMinOrderLabel(butcher)}
-              </Text>
-            </View>
-          </View>
-        </View>
+      <View style={[styles.body, getRtlRow()]}>
         <View style={styles.logoWrap}>
           <Image
             source={uriSource(butcher.logo || butcher.cover)}
@@ -70,53 +44,90 @@ export function ButcherNearbyRow({ butcher, onPress }: Props) {
             contentFit="cover"
           />
         </View>
+        <View style={styles.textShell}>
+          <Text style={styles.name} numberOfLines={1}>
+            {name}
+          </Text>
+          {showRating ? (
+            <View style={[styles.ratingRow, getRtlRow()]}>
+              <AppIcon name="star" size={12} color={colors.gold} />
+              <Text style={styles.rating}>
+                {butcher.rating.toFixed(1)} ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
+              </Text>
+            </View>
+          ) : null}
+          <View style={[styles.metaRow, getRtlRow()]}>
+            <View style={[styles.metaItem, getRtlRow()]}>
+              <AppIcon name="map-marker-outline" size={12} color={butcherMarket.seeAll} />
+              <Text style={styles.metaText}>{butcher.cityAr || '—'}</Text>
+            </View>
+            <View style={[styles.metaItem, getRtlRow()]}>
+              <AppIcon name="bicycle-outline" size={12} color={colors.electricBright} />
+              <Text style={styles.metaText}>{butcherFeeLabel(butcher)}</Text>
+            </View>
+            <View style={[styles.metaItem, getRtlRow()]}>
+              <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
+              <Text style={styles.metaText}>{butcherEtaLabel(butcher)}</Text>
+            </View>
+          </View>
+          <View style={[styles.metaRow, getRtlRow()]}>
+            <View style={[styles.metaItem, getRtlRow()]}>
+              <AppIcon name="receipt-outline" size={12} color={colors.electricBright} />
+              <Text style={styles.metaText} numberOfLines={1}>
+                {butcherMinOrderLabel(butcher)}
+              </Text>
+            </View>
+            <View style={[styles.metaItem, getRtlRow()]}>
+              <AppIcon name="storefront-outline" size={12} color={colors.textMuted} />
+              <Text style={styles.metaText} numberOfLines={1}>
+                {butcherPickupLabel(butcher)}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
     </Pressable>
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     row: {
-      ...butcherSoftCardStyle(colors, scheme),
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.sm,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: 14,
+      backgroundColor: colors.screenRoot,
     },
-    coverTrail: {
-      flexDirection: 'row',
-            alignItems: 'center',
-      justifyContent: 'flex-end',
+    divider: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSoft,
+    },
+    body: {
+      alignItems: 'center',
       gap: 12,
     },
     textShell: {
       flex: 1,
       minWidth: 0,
-            gap: 4,
+      gap: 4,
     },
     name: {
       ...butcherTypography.title,
       color: colors.textPrimary,
       width: '100%',
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
     },
     ratingRow: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
       alignItems: 'center',
       gap: 4,
     },
     rating: { ...butcherTypography.secondary, color: colors.textMuted },
     metaRow: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
+      alignItems: 'center',
       flexWrap: 'wrap',
       gap: 8,
     },
     metaItem: {
-      flexDirection: 'row',
-            alignItems: 'center',
+      alignItems: 'center',
       gap: 3,
     },
     metaText: {
@@ -128,7 +139,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       height: 56,
       borderRadius: 28,
       overflow: 'hidden',
-      backgroundColor: colors.bgDeep,
+      backgroundColor: colors.bgSurface,
       flexShrink: 0,
     },
     logo: { width: '100%', height: '100%' },

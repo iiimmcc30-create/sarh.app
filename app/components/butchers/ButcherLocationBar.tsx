@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { butcherTypography } from '@/constants/butcherTypography';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -50,7 +51,7 @@ export function ButcherLocationBar({ compact = false }: Props) {
     >
       <View style={[styles.cluster, getRtlRow()]}>
         <View style={styles.pin}>
-          <AppIcon name="location" size={16} color={colors.bgDeep} />
+          <AppIcon name="location" size={16} color={butcherMarket.pin} />
         </View>
         <View style={styles.copy}>
           <AppText variant="label" numberOfLines={1}>
@@ -89,7 +90,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.electric,
+      backgroundColor: colors.bgElevated,
     },
     copy: {
       flex: 1,

@@ -1,8 +1,10 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { AppText } from '@/design-system/components';
+import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { AppText, SarhAvatar } from '@/design-system/components';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import type { ButcherOfferPreview } from '@/services/butcherOffersPreview';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -13,11 +15,10 @@ type Props = {
 };
 
 export function ButcherHomeOfferCard({ offer, width, onPress }: Props) {
+  const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const hasCompare =
-    offer.originalPrice != null &&
-    offer.offerPrice != null &&
-    offer.originalPrice !== offer.offerPrice;
+  const price = offer.offerPrice ?? offer.originalPrice;
+  const butcherName = offer.butcherNameAr || 'ملحمة';
 
   return (
     <Pressable
@@ -26,31 +27,32 @@ export function ButcherHomeOfferCard({ offer, width, onPress }: Props) {
       accessibilityRole="button"
       accessibilityLabel={offer.titleAr}
     >
-      <View style={styles.imageWrap}>
-        <Image source={uriSource(offer.image)} style={styles.image} contentFit="cover" />
-        {offer.discountPercent ? (
-          <View style={styles.discount}>
-            <AppText variant="micro" color="textPrimary" style={styles.discountText}>
-              -{offer.discountPercent}%
-            </AppText>
-          </View>
-        ) : null}
+      <View style={[styles.imageWrap, { width, height: width }]}>
+        {offer.image ? (
+          <Image source={uriSource(offer.image)} style={styles.image} contentFit="cover" />
+        ) : (
+          <View style={styles.imageFallback} />
+        )}
+        <View style={styles.avatar}>
+          <SarhAvatar uri={offer.butcherLogo} name={butcherName} size="xs" />
+        </View>
+        <Pressable
+          onPress={onPress}
+          style={styles.addBtn}
+          accessibilityRole="button"
+          accessibilityLabel="عرض المنتج"
+        >
+          <AppIcon name="plus" size={18} color={colors.textPrimary} />
+        </Pressable>
       </View>
       <AppText variant="label" numberOfLines={2} style={styles.name}>
         {offer.titleAr}
       </AppText>
-      <View style={styles.priceRow}>
-        {offer.offerPrice != null ? (
-          <AppText variant="label" color="primary">
-            {offer.offerPrice.toLocaleString('en-US')} ر.س
-          </AppText>
-        ) : null}
-        {hasCompare ? (
-          <AppText variant="micro" color="textMuted" style={styles.compare}>
-            {offer.originalPrice!.toLocaleString('en-US')}
-          </AppText>
-        ) : null}
-      </View>
+      {price != null ? (
+        <AppText variant="label" style={styles.price}>
+          {price.toLocaleString('en-US')} ﷼
+        </AppText>
+      ) : null}
     </Pressable>
   );
 }
@@ -61,35 +63,42 @@ function createStyles(colors: ThemeColors) {
       gap: 6,
     },
     imageWrap: {
-      height: 118,
       borderRadius: radius.lg,
       overflow: 'hidden',
       backgroundColor: colors.bgSurface,
     },
     image: { width: '100%', height: '100%' },
-    discount: {
+    imageFallback: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.bgSurface,
+    },
+    avatar: {
       position: 'absolute',
       top: 8,
-      start: 8,
-      backgroundColor: colors.rose,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: radius.pill,
+      end: 8,
+      borderRadius: 8,
+      overflow: 'hidden',
+      backgroundColor: colors.bgElevated,
+      padding: 2,
     },
-    discountText: {
-      color: colors.bgDeep,
+    addBtn: {
+      position: 'absolute',
+      start: 8,
+      bottom: 8,
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     name: {
       ...butcherTypography.title,
       color: colors.textPrimary,
     },
-    priceRow: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: 6,
-    },
-    compare: {
-      textDecorationLine: 'line-through',
+    price: {
+      ...butcherTypography.title,
+      color: colors.textPrimary,
     },
   });
 }

@@ -1,13 +1,15 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { AppText, SarhAvatar } from '@/design-system/components';
+import { AppText } from '@/design-system/components';
 import { butcherTypography } from '@/constants/butcherTypography';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
   butcherEtaLabel,
   butcherFeeLabel,
+  butcherMinOrderLabel,
   butcherReviewCountLabel,
   hasButcherRating,
 } from '@/lib/butcherStoreMeta';
@@ -27,7 +29,6 @@ export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const name = butcher.nameAr || butcher.name;
   const cover = butcher.cover || butcher.logo;
-  const logo = butcher.logo || butcher.cover;
   const showRating = hasButcherRating(butcher);
 
   return (
@@ -43,17 +44,6 @@ export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
         ) : (
           <View style={styles.coverFallback} />
         )}
-        {showRating ? (
-          <View style={[styles.ratingBadge, getRtlRow()]}>
-            <AppIcon name="star" size={11} color={colors.gold} />
-            <AppText variant="micro">{butcher.rating.toFixed(1)}</AppText>
-          </View>
-        ) : null}
-        {logo ? (
-          <View style={styles.avatarWrap}>
-            <SarhAvatar uri={logo} name={name} size="sm" />
-          </View>
-        ) : null}
         {promoted || butcher.subscriptionActive ? (
           <View style={styles.promo}>
             <AppText variant="micro" style={styles.promoText}>
@@ -62,24 +52,42 @@ export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
           </View>
         ) : null}
       </View>
-      <AppText variant="label" numberOfLines={1} style={styles.name}>
+      <AppText variant="label" numberOfLines={2} style={styles.name}>
         {name}
       </AppText>
       {showRating ? (
-        <AppText variant="caption" color="textMuted">
-          ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
-        </AppText>
+        <View style={[styles.ratingRow, getRtlRow()]}>
+          <AppIcon name="star" size={13} color={colors.gold} />
+          <AppText variant="caption">{butcher.rating.toFixed(1)}</AppText>
+          <AppText variant="caption" color="textMuted">
+            ({butcherReviewCountLabel(butcher.reviewCount || butcher.totalOrders)})
+          </AppText>
+        </View>
       ) : null}
       <View style={[styles.metaRow, getRtlRow()]}>
-        <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
-        <AppText variant="caption" color="textMuted">
-          {butcherEtaLabel(butcher)}
-        </AppText>
+        <View style={[styles.metaItem, getRtlRow()]}>
+          <AppIcon name="map-marker-outline" size={12} color={butcherMarket.seeAll} />
+          <AppText variant="caption" color="textMuted" numberOfLines={1}>
+            {butcher.cityAr || '—'}
+          </AppText>
+        </View>
+        <View style={[styles.metaItem, getRtlRow()]}>
+          <AppIcon name="bicycle-outline" size={12} color={colors.electricBright} />
+          <AppText variant="caption" color="textMuted">
+            {butcherFeeLabel(butcher)}
+          </AppText>
+        </View>
+        <View style={[styles.metaItem, getRtlRow()]}>
+          <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
+          <AppText variant="caption" color="textMuted">
+            {butcherEtaLabel(butcher)}
+          </AppText>
+        </View>
       </View>
       <View style={[styles.metaRow, getRtlRow()]}>
-        <AppIcon name="bicycle-outline" size={12} color={colors.electricBright} />
-        <AppText variant="caption" color="primary">
-          {butcherFeeLabel(butcher)}
+        <AppIcon name="receipt-outline" size={12} color={colors.electricBright} />
+        <AppText variant="caption" color="textMuted" numberOfLines={1}>
+          {butcherMinOrderLabel(butcher)}
         </AppText>
       </View>
     </Pressable>
@@ -91,9 +99,10 @@ function createStyles(colors: ThemeColors) {
     card: {
       gap: 6,
       backgroundColor: 'transparent',
+      paddingBottom: spacing.xs,
     },
     cover: {
-      height: 148,
+      height: 132,
       borderRadius: radius.lg,
       overflow: 'hidden',
       backgroundColor: colors.bgSurface,
@@ -102,25 +111,6 @@ function createStyles(colors: ThemeColors) {
     coverFallback: {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: colors.bgSurface,
-    },
-    ratingBadge: {
-      position: 'absolute',
-      top: 8,
-      end: 8,
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: radius.pill,
-      backgroundColor: colors.bgElevated,
-    },
-    avatarWrap: {
-      position: 'absolute',
-      start: 8,
-      bottom: 8,
-      padding: 3,
-      borderRadius: 12,
-      backgroundColor: colors.bgElevated,
     },
     promo: {
       position: 'absolute',
@@ -139,9 +129,19 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       marginTop: 2,
     },
-    metaRow: {
+    ratingRow: {
       alignItems: 'center',
       gap: 4,
+    },
+    metaRow: {
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    metaItem: {
+      alignItems: 'center',
+      gap: 3,
+      maxWidth: '100%',
     },
   });
 }
