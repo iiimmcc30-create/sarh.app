@@ -1,11 +1,11 @@
-import { SarhChip } from '@/design-system/components';
+import { SarhChip, SarhChipRow } from '@/design-system/components';
 import type { RegionSelection } from '@/constants/saudiRegions';
 import { regionSelectionLabel } from '@/lib/saudiRegionSearch';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
-import { FilterChipRow, MARKET_CHIP } from '@/components/ui/FilterChip';
+import { MARKET_CHIP } from '@/components/ui/filterChipTokens';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -43,7 +43,7 @@ export function MarketFilterBar({
 
   return (
     <View style={styles.wrap}>
-      <FilterChipRow contentPaddingHorizontal={spacing.md}>
+      <SarhChipRow contentPaddingHorizontal={spacing.md}>
         <Pressable
           style={[
             styles.regionBtn,
@@ -106,7 +106,7 @@ export function MarketFilterBar({
             </Text>
           </Pressable>
         </View>
-      </FilterChipRow>
+      </SarhChipRow>
     </View>
   );
 }

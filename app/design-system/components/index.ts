@@ -26,6 +26,9 @@ export type { SarhBadgeProps, SarhBadgeState, SarhBadgeTone } from './SarhBadge'
 export { SarhChip, resolveSarhChipColors } from './SarhChip';
 export type { SarhChipAppearance, SarhChipProps, SarhChipState } from './SarhChip';
 
+export { SarhChipRow } from './SarhChipRow';
+export type { SarhChipRowProps } from './SarhChipRow';
+
 export { SarhDivider } from './SarhDivider';
 export type { SarhDividerProps } from './SarhDivider';
 

@@ -51,7 +51,7 @@ if (__DEV__) {
 // RTL policy: one global React Native direction (forceRTL + swapLeftAndRightInRTL).
 // left/right and textAlign left/right are LOGICAL under swap — do not add
 // textAlign:'right', direction:'ltr', or row-reverse to "fix" Arabic.
-// Use AppText / AppTextInput / flexDirection:'row' / start-end helpers.
+// Use AppText / SarhInput / flexDirection:'row' / start-end helpers.
 // See app/lib/rtl.ts.
 // On web, react-native-web's I18nManager is a no-op stub (isRTL always false),
 // so we patch it and set <html dir="rtl"> before expo-router boots.

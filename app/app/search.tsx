@@ -23,9 +23,8 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, marginAutoStart, getRtlRow } from '@/lib/rtl';
 import { ListingCard } from '@/components/feature/ListingCard';
-import { FilterChipRow } from '@/components/ui/FilterChip';
 import { ensureApiReachable } from '@/services/api';
-import { SarhBackButton, SarhChip } from '@/design-system/components';
+import { SarhBackButton, SarhChip, SarhChipRow } from '@/design-system/components';
 import {
   fetchSearchSuggestions,
   fetchTrendingTags,
@@ -318,7 +317,7 @@ export default function SearchScreen() {
       ) : null}
 
       {hasQuery ? (
-        <FilterChipRow contentPaddingHorizontal={spacing.lg} style={styles.filterRowWrap}>
+        <SarhChipRow contentPaddingHorizontal={spacing.lg} style={styles.filterRowWrap}>
           {FILTERS.map((f) => (
             <SarhChip appearance="filter"
               key={f.id}
@@ -327,7 +326,7 @@ export default function SearchScreen() {
               onPress={() => setFilter(f.id)}
             />
           ))}
-        </FilterChipRow>
+        </SarhChipRow>
       ) : null}
 
       {!hasQuery ? (

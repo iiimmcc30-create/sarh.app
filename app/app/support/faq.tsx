@@ -15,11 +15,10 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { FilterChipRow } from '@/components/ui/FilterChip';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { SarhButton, SarhChip, SarhInput } from '@/design-system/components';
+import { SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 import {
   fetchFaqs,
   FAQ_CATEGORY_LABEL_AR,
@@ -77,7 +76,7 @@ export default function SupportFaqScreen() {
           onSubmitEditing={() => void load()}
         />
 
-        <FilterChipRow contentPaddingHorizontal={0} style={styles.chipsWrap}>
+        <SarhChipRow contentPaddingHorizontal={0} style={styles.chipsWrap}>
           {categoryChips.map((cat) => (
             <SarhChip appearance="filter"
               key={cat.value || 'all'}
@@ -86,7 +85,7 @@ export default function SupportFaqScreen() {
               onPress={() => setCategory(cat.value || undefined)}
             />
           ))}
-        </FilterChipRow>
+        </SarhChipRow>
 
         {loading ? (
           <ActivityIndicator style={styles.loader} />

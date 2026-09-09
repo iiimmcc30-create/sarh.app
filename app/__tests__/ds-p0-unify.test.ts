@@ -51,7 +51,6 @@ describe('P0 design-system unification', () => {
 
   it('does not import RtlText in production screens', () => {
     const usages = production.filter((file) => {
-      if (rel(file) === 'components/ui/RtlText.tsx') return false;
       return readFileSync(file, 'utf8').includes("from '@/components/ui/RtlText'");
     });
     expect(usages.map(rel)).toEqual([]);

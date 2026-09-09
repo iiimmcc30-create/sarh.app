@@ -1,4 +1,4 @@
-import { SarhChip } from '@/design-system/components';
+import { SarhChip, SarhChipRow } from '@/design-system/components';
 // SAFAT — Create Story Screen (إنشاء قصة)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
@@ -39,7 +39,6 @@ import {
   type StoryMediaKind,
 } from '@/lib/storyMedia';
 import { useAuth } from '@/contexts/AuthContext';
-import { FilterChipRow } from '@/components/ui/FilterChip';
 import { API_BASE } from '@/services/api';
 import { uploadMediaFromUri } from '@/services/upload';
 
@@ -379,7 +378,7 @@ export default function CreateStoryScreen() {
                   keyboardShouldPersistTaps="handled"
                 >
                   {isButcherMode ? (
-                    <FilterChipRow contentPaddingHorizontal={0}>
+                    <SarhChipRow contentPaddingHorizontal={0}>
                       {BUTCHER_TYPES.map((t) => (
                         <SarhChip appearance="filter"
                           key={t.id}
@@ -388,7 +387,7 @@ export default function CreateStoryScreen() {
                           onPress={() => setStoryType(t.id)}
                         />
                       ))}
-                    </FilterChipRow>
+                    </SarhChipRow>
                   ) : null}
                   {!isButcherMode ? (
                     <TextInput

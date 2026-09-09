@@ -23,7 +23,7 @@ import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeM
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { colors, radius, spacing, typography } from '@/constants/theme';
-import { FILTER_CHIP } from '@/components/ui/FilterChip';
+import { FILTER_CHIP } from '@/components/ui/filterChipTokens';
 import { getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
