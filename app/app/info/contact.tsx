@@ -10,9 +10,10 @@ import { useState } from 'react';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
-import { RtlText } from '@/components/ui/RtlText';
+import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 export default function ContactScreen() {
   const { colors, gradients } = useTheme();
@@ -37,9 +38,7 @@ export default function ContactScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <View style={styles.headerTitleShell}>
           <Text style={styles.headerTitle}>تواصل معنا</Text>
         </View>
@@ -50,7 +49,7 @@ export default function ContactScreen() {
         {/* Channels */}
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>قنوات التواصل</RtlText>
+            <AppText style={styles.sectionTitle}>قنوات التواصل</AppText>
           </RtlTextShell>
 
           <Pressable
@@ -113,12 +112,12 @@ export default function ContactScreen() {
         {/* Message form */}
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>أرسل رسالة</RtlText>
+            <AppText style={styles.sectionTitle}>أرسل رسالة</AppText>
           </RtlTextShell>
 
           <View style={styles.fieldGroup}>
             <RtlTextShell>
-              <RtlText style={styles.fieldLabel}>الاسم</RtlText>
+              <AppText style={styles.fieldLabel}>الاسم</AppText>
             </RtlTextShell>
             <View style={styles.inputWrap}>
               <TextInput
@@ -134,7 +133,7 @@ export default function ContactScreen() {
 
           <View style={styles.fieldGroup}>
             <RtlTextShell>
-              <RtlText style={styles.fieldLabel}>الرسالة</RtlText>
+              <AppText style={styles.fieldLabel}>الرسالة</AppText>
             </RtlTextShell>
             <View style={[styles.inputWrap, { alignItems: 'flex-start', paddingVertical: spacing.sm }]}>
               <TextInput
@@ -162,7 +161,7 @@ export default function ContactScreen() {
         </View>
 
         <RtlTextShell>
-          <RtlText style={styles.footer}>نرد على جميع الرسائل خلال 24 ساعة في أيام العمل</RtlText>
+          <AppText style={styles.footer}>نرد على جميع الرسائل خلال 24 ساعة في أيام العمل</AppText>
         </RtlTextShell>
         <View style={{ height: 40 }} />
       </ScrollView>

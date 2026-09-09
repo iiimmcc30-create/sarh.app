@@ -32,7 +32,8 @@ import { useSubscriptionAudience } from '@/hooks/useSubscriptionAudience';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlBackIcon, rtlForwardIcon } from '@/lib/rtl';
+import { getRtlText, rtlForwardIcon } from '@/lib/rtl';
+import { SarhBackButton } from '@/design-system/components';
 
 type Step = 'method' | 'card_details' | 'processing' | 'success';
 
@@ -390,13 +391,11 @@ export default function PaymentScreen() {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Pressable
-          hitSlop={12}
-          onPress={() => step === 'card_details' ? setStep('method') : router.back()}
-          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.65 }]}
-        >
-          <AppIcon name={rtlBackIcon()} size={20} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton
+          onPress={() => (step === 'card_details' ? setStep('method') : router.back())}
+          color={colors.textPrimary}
+          style={styles.backBtn}
+        />
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>الدفع الآمن</Text>
           <View style={styles.headerSecure}>

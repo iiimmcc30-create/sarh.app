@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -19,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhButton } from '@/design-system/components';
 
 export default function ChangePasswordScreen() {
   const { accessToken } = useAuth();
@@ -121,12 +121,12 @@ export default function ChangePasswordScreen() {
             ltr
           />
 
-          <PrimaryButton
+          <SarhButton
             title="حفظ كلمة المرور"
             onPress={handleSubmit}
             loading={loading}
             fullWidth
-            icon="checkmark-done-outline"
+            leftIcon="checkmark-done-outline"
           />
         </ScrollView>
       </KeyboardAvoidingView>

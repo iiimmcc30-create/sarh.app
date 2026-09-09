@@ -10,7 +10,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/ui/AppLogo';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import {
   BRAND_FOOTER_AR,
   BRAND_GOAL_AR,
@@ -20,8 +20,9 @@ import {
   BRAND_VISION_AR,
   FOUNDER_NAME,
 } from '@/constants/brandCopy';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 export default function AboutScreen() {
   const { colors } = useTheme();
@@ -32,9 +33,7 @@ export default function AboutScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <View style={styles.headerTitleShell}>
           <Text style={styles.headerTitle}>من نحن</Text>
         </View>
@@ -46,45 +45,45 @@ export default function AboutScreen() {
         <LinearGradient colors={['#0B1330', '#162149', '#1E3A8A']} style={styles.hero}>
           <AppLogo size={96} showRing={false} />
           <RtlTextShell>
-            <RtlText style={styles.heroTitle}>{BRAND_NAME_AR}</RtlText>
+            <AppText style={styles.heroTitle}>{BRAND_NAME_AR}</AppText>
           </RtlTextShell>
           <RtlTextShell>
-            <RtlText style={styles.heroSub}>{BRAND_TAGLINE_AR}</RtlText>
+            <AppText style={styles.heroSub}>{BRAND_TAGLINE_AR}</AppText>
           </RtlTextShell>
         </LinearGradient>
 
         {/* About text */}
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>رسالتنا</RtlText>
+            <AppText style={styles.sectionTitle}>رسالتنا</AppText>
           </RtlTextShell>
           <RtlTextShell>
-            <RtlText style={styles.bodyText}>{BRAND_MISSION_AR}</RtlText>
-          </RtlTextShell>
-        </View>
-
-        <View style={styles.section}>
-          <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>رؤيتنا</RtlText>
-          </RtlTextShell>
-          <RtlTextShell>
-            <RtlText style={styles.bodyText}>{BRAND_VISION_AR}</RtlText>
+            <AppText style={styles.bodyText}>{BRAND_MISSION_AR}</AppText>
           </RtlTextShell>
         </View>
 
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>هدفنا</RtlText>
+            <AppText style={styles.sectionTitle}>رؤيتنا</AppText>
           </RtlTextShell>
           <RtlTextShell>
-            <RtlText style={styles.bodyText}>{BRAND_GOAL_AR}</RtlText>
+            <AppText style={styles.bodyText}>{BRAND_VISION_AR}</AppText>
+          </RtlTextShell>
+        </View>
+
+        <View style={styles.section}>
+          <RtlTextShell>
+            <AppText style={styles.sectionTitle}>هدفنا</AppText>
+          </RtlTextShell>
+          <RtlTextShell>
+            <AppText style={styles.bodyText}>{BRAND_GOAL_AR}</AppText>
           </RtlTextShell>
         </View>
 
         {/* Features */}
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>ما نقدّمه</RtlText>
+            <AppText style={styles.sectionTitle}>ما نقدّمه</AppText>
           </RtlTextShell>
           {[
             { icon: 'tag-multiple', label: 'إعلانات واضحة وموثوقة لبيع وشراء الحيوانات والمعدات' },
@@ -107,7 +106,7 @@ export default function AboutScreen() {
         {/* Ownership */}
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>المالك والامتثال</RtlText>
+            <AppText style={styles.sectionTitle}>المالك والامتثال</AppText>
           </RtlTextShell>
           <View style={styles.infoCard}>
             <View style={[styles.infoRow, getRtlRow()]}>
@@ -151,7 +150,7 @@ export default function AboutScreen() {
         {/* Contact */}
         <View style={styles.section}>
           <RtlTextShell>
-            <RtlText style={styles.sectionTitle}>تواصل معنا</RtlText>
+            <AppText style={styles.sectionTitle}>تواصل معنا</AppText>
           </RtlTextShell>
           <Pressable
             style={[styles.contactBtn, getRtlRow()]}
@@ -183,10 +182,10 @@ export default function AboutScreen() {
         </View>
 
         <RtlTextShell>
-          <RtlText style={styles.version}>
+          <AppText style={styles.version}>
             {BRAND_FOOTER_AR}{'\n'}
             Uicons by Flaticon
-          </RtlText>
+          </AppText>
         </RtlTextShell>
         <View style={{ height: 40 }} />
       </ScrollView>

@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -16,6 +15,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { userFacingTicketStatus } from '@/lib/supportFlow';
+import { SarhButton } from '@/design-system/components';
 
 export default function SupportTicketsScreen() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export default function SupportTicketsScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title="تذاكر الدعم" showBack />
       <View style={styles.body}>
-        <PrimaryButton
+        <SarhButton
           title="إنشاء تذكرة جديدة"
           fullWidth
           onPress={() => router.push('/support' as never)}

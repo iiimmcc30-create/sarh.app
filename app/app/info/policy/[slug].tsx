@@ -5,13 +5,14 @@ import { fetchPublicPolicy } from '@/services/content';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 export default function PolicyDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -50,9 +51,7 @@ export default function PolicyDetailScreen() {
   return (
     <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top', 'bottom']}>
       <View style={[styles.header, getRtlRow()]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {title}
         </Text>
@@ -69,11 +68,11 @@ export default function PolicyDetailScreen() {
             <View key={`${section.title}-${i}`} style={styles.section}>
               {section.title ? (
                 <RtlTextShell>
-                  <RtlText style={styles.sectionTitle}>{section.title}</RtlText>
+                  <AppText style={styles.sectionTitle}>{section.title}</AppText>
                 </RtlTextShell>
               ) : null}
               <RtlTextShell>
-                <RtlText style={styles.sectionBody}>{section.body}</RtlText>
+                <AppText style={styles.sectionBody}>{section.body}</AppText>
               </RtlTextShell>
             </View>
           ))}

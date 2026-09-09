@@ -21,9 +21,9 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { FilterChip } from '@/components/ui/FilterChip';
+import { AppText } from '@/components/ui/AppText';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -85,11 +85,11 @@ export function ButcherProductOptionsModal({
           <View style={styles.hero}>
             <View style={styles.heroText}>
               <RtlTextShell>
-                <RtlText style={styles.title}>{product.nameAr}</RtlText>
+                <AppText style={styles.title}>{product.nameAr}</AppText>
               </RtlTextShell>
               {product.descriptionAr ? (
                 <RtlTextShell>
-                  <RtlText style={styles.subtitle}>{product.descriptionAr}</RtlText>
+                  <AppText style={styles.subtitle}>{product.descriptionAr}</AppText>
                 </RtlTextShell>
               ) : null}
             </View>
@@ -103,7 +103,7 @@ export function ButcherProductOptionsModal({
           {product.availableCuts.length > 0 ? (
             <View style={styles.section}>
               <RtlTextShell>
-                <RtlText style={styles.sectionTitle}>طريقة التقطيع</RtlText>
+                <AppText style={styles.sectionTitle}>طريقة التقطيع</AppText>
               </RtlTextShell>
               <View style={styles.chips}>
                 {[...product.availableCuts].reverse().map((cut) => (
@@ -153,7 +153,7 @@ export function ButcherProductOptionsModal({
           <View style={styles.totalRow}>
             <Text style={styles.totalValue}>{priceLabel}</Text>
             <RtlTextShell flex>
-              <RtlText style={styles.totalLabel}>الإجمالي</RtlText>
+              <AppText style={styles.totalLabel}>الإجمالي</AppText>
             </RtlTextShell>
           </View>
         </ScrollView>

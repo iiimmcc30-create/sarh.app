@@ -22,10 +22,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon, marginEnd } from '@/lib/rtl';
+import { marginEnd } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { Country } from '@/services/types';
 import { showToast } from '@/lib/toast';
+import { SarhBackButton } from '@/design-system/components';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦' },
@@ -111,9 +112,7 @@ export default function EditProfileScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
           <Text style={styles.headerTitle}>تعديل الملف الشخصي</Text>
           <Pressable
             style={[styles.saveBtn, saving && styles.saveBtnLoading]}

@@ -1,12 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { SarhButton } from '@/design-system/components';
 import {
   Modal,
   Pressable,
@@ -122,12 +122,12 @@ export function SarhListingCovenantModal({
           </ScrollView>
 
           <View style={styles.footer}>
-            <PrimaryButton
+            <SarhButton
               title="إضافة الإعلان"
               onPress={handleAccept}
               disabled={!checked}
               fullWidth
-              icon="add-circle-outline"
+              leftIcon="add-circle-outline"
             />
             <Pressable onPress={handleClose} style={styles.cancelBtn}>
               <Text style={[styles.cancelText, getRtlText()]}>إلغاء</Text>

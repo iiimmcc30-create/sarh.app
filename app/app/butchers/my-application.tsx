@@ -19,7 +19,6 @@ import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { gradients, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,8 +30,9 @@ import {
   formatApplicationDate,
 } from '@/lib/butcherApplicationLabels';
 import { confirmDestructive } from '@/lib/actionSheet';
-import { rtlBackIcon } from '@/lib/rtl';
+
 import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 
 function pickCurrentApplication(apps: ApplicationSummary[]): ApplicationSummary | null {
   if (apps.length === 0) return null;
@@ -131,14 +131,14 @@ export default function MyButcherApplicationScreen() {
       case 'DRAFT':
         return (
           <>
-            <PrimaryButton
+            <SarhButton
               title="متابعة إكمال الطلب"
               onPress={() => openEdit(current.id)}
               style={actionStyles.btn}
             />
-            <PrimaryButton
+            <SarhButton
               title="عرض التفاصيل"
-              variant="outline"
+              variant="secondary"
               onPress={() => openDetails(current.id)}
               style={actionStyles.btn}
             />
@@ -147,7 +147,7 @@ export default function MyButcherApplicationScreen() {
       case 'SUBMITTED':
         return (
           <>
-            <PrimaryButton
+            <SarhButton
               title="عرض التفاصيل"
               onPress={() => openDetails(current.id)}
               style={actionStyles.btn}
@@ -163,9 +163,9 @@ export default function MyButcherApplicationScreen() {
                 containerStyle={actionStyles.input}
               />
             ) : null}
-            <PrimaryButton
+            <SarhButton
               title={showWithdrawInput ? 'تأكيد سحب الطلب' : 'سحب الطلب'}
-              variant="ghost"
+              variant="secondary"
               onPress={showWithdrawInput ? confirmWithdraw : () => setShowWithdrawInput(true)}
               style={actionStyles.btn}
               disabled={loading}
@@ -175,15 +175,15 @@ export default function MyButcherApplicationScreen() {
       case 'APPROVED':
         return (
           <>
-            <PrimaryButton
+            <SarhButton
               title="عرض التفاصيل"
               onPress={() => openDetails(current.id)}
               style={actionStyles.btn}
             />
             {current.provisionedButcherId ? (
-              <PrimaryButton
+              <SarhButton
                 title="زيارة الملحمة"
-                variant="gold"
+                variant="primary"
                 onPress={() =>
                   router.push({
                     pathname: '/butchers/[id]',
@@ -199,12 +199,12 @@ export default function MyButcherApplicationScreen() {
       case 'WITHDRAWN':
         return (
           <>
-            <PrimaryButton
+            <SarhButton
               title="عرض التفاصيل"
               onPress={() => openDetails(current.id)}
               style={actionStyles.btn}
             />
-            <PrimaryButton
+            <SarhButton
               title="تقديم طلب جديد"
               onPress={() => router.push('/butchers/apply')}
               style={actionStyles.btn}
@@ -230,9 +230,7 @@ export default function MyButcherApplicationScreen() {
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>طلب تسجيل الملحمة</Text>
         <View style={styles.backBtn} />
       </View>

@@ -10,8 +10,8 @@ import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 export type SettingsMenuItem = {
   icon: string;
@@ -47,10 +47,10 @@ export function SettingsMenuScreen({
         <View style={styles.hero}>
           <AppIcon name={heroIcon} size={28} color={colors.textPrimary} />
           <RtlTextShell>
-            <RtlText style={styles.heroTitle}>{title}</RtlText>
+            <AppText style={styles.heroTitle}>{title}</AppText>
           </RtlTextShell>
           <RtlTextShell>
-            <RtlText style={styles.heroDescription}>{description}</RtlText>
+            <AppText style={styles.heroDescription}>{description}</AppText>
           </RtlTextShell>
         </View>
 

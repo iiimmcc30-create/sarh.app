@@ -22,7 +22,7 @@ import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatWeightLabel } from '@/lib/butcherOrderPricing';
-import { getRtlRow, getRtlText, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -34,8 +34,9 @@ import {
 } from '@/services/butcherData';
 import { launchPaymentCheckout } from '@/services/payments';
 import { resolveMediaUrl } from '@/services/media';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhBackButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -216,9 +217,7 @@ export default function ButcherCartScreen() {
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={styles.iconColor.color} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={styles.iconColor.color} style={styles.backBtn} />
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>سلة الطلب</Text>
           {butcherNameAr ? (
@@ -306,7 +305,7 @@ export default function ButcherCartScreen() {
 
             <View style={styles.fieldBlock}>
               <RtlTextShell>
-                <RtlText style={styles.fieldLabel}>ملاحظات (اختياري)</RtlText>
+                <AppText style={styles.fieldLabel}>ملاحظات (اختياري)</AppText>
               </RtlTextShell>
               <TextInput
                 style={styles.input}

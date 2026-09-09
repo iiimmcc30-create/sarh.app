@@ -25,8 +25,8 @@ import {
   isActiveOrder,
 } from '@/services/butcherOrders';
 import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 export default function MyOrdersScreen() {
   const router = useRouter();
@@ -114,10 +114,10 @@ export default function MyOrdersScreen() {
                 <AppIcon name="bag-outline" size={34} color={colors.electricBright} />
               </View>
               <RtlTextShell>
-                <RtlText style={styles.emptyTitle}>لا توجد طلبات بعد</RtlText>
+                <AppText style={styles.emptyTitle}>لا توجد طلبات بعد</AppText>
               </RtlTextShell>
               <RtlTextShell>
-                <RtlText style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</RtlText>
+                <AppText style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</AppText>
               </RtlTextShell>
               <Pressable style={styles.emptyBtn} onPress={() => router.replace('/butchers')}>
                 <Text style={styles.emptyBtnText}>تصفح الملاحم</Text>
@@ -128,7 +128,7 @@ export default function MyOrdersScreen() {
               {activeOrders.length > 0 ? (
                 <View style={styles.section}>
                   <RtlTextShell>
-                    <RtlText style={styles.sectionTitle}>الطلبات الحالية</RtlText>
+                    <AppText style={styles.sectionTitle}>الطلبات الحالية</AppText>
                   </RtlTextShell>
                   {activeOrders.map((order) => (
                     <CustomerOrderCard
@@ -155,7 +155,7 @@ export default function MyOrdersScreen() {
               {pastOrders.length > 0 ? (
                 <View style={styles.section}>
                   <RtlTextShell>
-                    <RtlText style={styles.sectionTitle}>الطلبات السابقة</RtlText>
+                    <AppText style={styles.sectionTitle}>الطلبات السابقة</AppText>
                   </RtlTextShell>
                   {pastOrders.map((order) => (
                     <CustomerOrderCard

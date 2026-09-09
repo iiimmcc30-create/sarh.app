@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { NotificationCard } from '@/components/notifications/NotificationCard';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -22,8 +21,9 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationsList } from '@/hooks/useNotificationsList';
 import { handleNotificationNavigation } from '@/lib/notifications';
-import { rtlBackIcon } from '@/lib/rtl';
+
 import type { AppNotification } from '@/services/notifications';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 
 export default function NotificationsScreen() {
   const { colors } = useTheme();
@@ -80,9 +80,7 @@ export default function NotificationsScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.iconBtn}>
-          <AppIcon name={rtlBackIcon()} size={ds.icon.md} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.iconBtn} />
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>الإشعارات</Text>
           {unreadCount > 0 ? (
@@ -109,10 +107,10 @@ export default function NotificationsScreen() {
 
       {unreadCount > 0 ? (
         <View style={styles.markAllRow}>
-          <PrimaryButton
+          <SarhButton
             title="تعليم الكل كمقروء"
-            variant="outline"
-            small
+            variant="secondary"
+            size="sm"
             onPress={markAllAsRead}
             style={styles.markAllBtn}
           />

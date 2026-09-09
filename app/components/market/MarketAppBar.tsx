@@ -1,10 +1,10 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
 
 const SEARCH_H = 50;
 const TOOL_H = 34;
@@ -56,9 +56,9 @@ export function MarketAppBar({
           >
             <AppIcon name="search" size={SEARCH_ICON} color={colors.textMuted} />
             <RtlTextShell flex>
-              <RtlText style={styles.searchPlaceholder} numberOfLines={1}>
+              <AppText style={styles.searchPlaceholder} numberOfLines={1}>
                 {searchPlaceholder}
-              </RtlText>
+              </AppText>
             </RtlTextShell>
           </Pressable>
 

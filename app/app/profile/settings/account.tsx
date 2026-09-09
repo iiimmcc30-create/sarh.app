@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
@@ -24,8 +23,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { SarhButton } from '@/design-system/components';
+import { AppText } from '@/components/ui/AppText';
 
 function formatPhone(phone: string | null | undefined) {
   if (!phone) return 'غير مضاف';
@@ -142,7 +142,7 @@ export default function AccountInfoScreen() {
         >
           <View style={styles.card}>
             <RtlTextShell>
-              <RtlText style={styles.sectionLabel}>رقم الهاتف</RtlText>
+              <AppText style={styles.sectionLabel}>رقم الهاتف</AppText>
             </RtlTextShell>
             <View style={[styles.row, getRtlRow()]}>
               <Pressable
@@ -159,7 +159,7 @@ export default function AccountInfoScreen() {
 
           <View style={styles.card}>
             <RtlTextShell>
-              <RtlText style={styles.sectionLabel}>البريد الإلكتروني</RtlText>
+              <AppText style={styles.sectionLabel}>البريد الإلكتروني</AppText>
             </RtlTextShell>
             <AppTextInput
               value={email}
@@ -170,18 +170,18 @@ export default function AccountInfoScreen() {
               autoCorrect={false}
               ltr
             />
-            <PrimaryButton
+            <SarhButton
               title="حفظ البريد"
               onPress={() => void saveEmail()}
               loading={saving}
               fullWidth
-              icon="mail-outline"
+              leftIcon="mail-outline"
             />
           </View>
 
           <View style={styles.card}>
             <RtlTextShell>
-              <RtlText style={styles.sectionLabel}>تاريخ الميلاد</RtlText>
+              <AppText style={styles.sectionLabel}>تاريخ الميلاد</AppText>
             </RtlTextShell>
             <AppTextInput
               value={birthDate}
@@ -192,17 +192,17 @@ export default function AccountInfoScreen() {
             />
             {account?.birthDate ? (
               <RtlTextShell>
-                <RtlText style={styles.hint}>
+                <AppText style={styles.hint}>
                   المحفوظ: {formatBirthDate(account.birthDate)}
-                </RtlText>
+                </AppText>
               </RtlTextShell>
             ) : null}
-            <PrimaryButton
+            <SarhButton
               title="حفظ تاريخ الميلاد"
               onPress={() => void saveBirthDate()}
               loading={saving}
               fullWidth
-              icon="calendar-outline"
+              leftIcon="calendar-outline"
             />
           </View>
 
@@ -217,13 +217,13 @@ export default function AccountInfoScreen() {
 
           <View style={styles.dangerCard}>
             <RtlTextShell>
-              <RtlText style={styles.dangerTitle}>حذف الحساب</RtlText>
+              <AppText style={styles.dangerTitle}>حذف الحساب</AppText>
             </RtlTextShell>
             <RtlTextShell>
-              <RtlText style={styles.dangerText}>
+              <AppText style={styles.dangerText}>
                 عند حذف حسابك سيتم إلغاء تفعيله وإزالة بياناتك وإعلاناتك ومنشوراتك بشكل
                 نهائي. لا يمكن التراجع عن هذا الإجراء.
-              </RtlText>
+              </AppText>
             </RtlTextShell>
             <Pressable
               style={[styles.deleteBtn, deleting && styles.deleteBtnDisabled]}

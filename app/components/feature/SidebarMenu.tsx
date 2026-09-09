@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import {
   SidebarMenuItem as SidebarMenuItemRow,
   type SidebarMenuItemProps,
 } from '@/components/ui/SidebarMenuItem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { I18nManager, Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
+import { isAppRtl } from '@/lib/rtl';
+import { AppText } from '@/components/ui/AppText';
 
 /** Shared elevated surface — More tab / reference contrast style. */
 export const MENU_CARD = {
@@ -66,7 +67,7 @@ export function SidebarSection({
     <View style={sectionStyles.block}>
       {title ? (
         <RtlTextShell style={sectionStyles.titleShell}>
-          <RtlText style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</RtlText>
+          <AppText style={[sectionStyles.title, { color: colors.textPrimary }]}>{title}</AppText>
         </RtlTextShell>
       ) : null}
       <View style={[sectionStyles.card, variant === 'card' ? menuCardStyle(colors) : null]}>
@@ -163,7 +164,7 @@ export function SidebarThemeToggle({
   footer?: ReactNode;
 }) {
   const isDark = preference !== 'light';
-  const isRtl = I18nManager.isRTL;
+  const isRtl = isAppRtl();
   const isOutline = variant === 'outline';
   const iconTint = isOutline ? colors.textPrimary : colors.textMuted;
   const resolvedHeaderIcon =
@@ -186,14 +187,14 @@ export function SidebarThemeToggle({
       <View style={[themeStyles.header, themeStyles.headerCover]}>
         <CoverTrailRow justify="flex-end" gap={10} style={themeStyles.coverTrail}>
           <RtlTextShell flex>
-            <RtlText style={[themeStyles.title, { color: colors.textPrimary }]}>{title}</RtlText>
+            <AppText style={[themeStyles.title, { color: colors.textPrimary }]}>{title}</AppText>
           </RtlTextShell>
           <AppIcon name={resolvedHeaderIcon} size={22} color={iconTint} />
         </CoverTrailRow>
       </View>
       {showThemeLabel ? (
         <RtlTextShell style={themeStyles.subLabelShell}>
-          <RtlText style={[themeStyles.subLabel, { color: colors.textMuted }]}>{themeLabel}</RtlText>
+          <AppText style={[themeStyles.subLabel, { color: colors.textMuted }]}>{themeLabel}</AppText>
         </RtlTextShell>
       ) : null}
       <View
@@ -271,7 +272,7 @@ export function SidebarLogoutButton({
       <View style={logoutStyles.chevronSlot} />
       <CoverTrailRow flex justify="flex-end" gap={10}>
         <RtlTextShell flex>
-          <RtlText style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</RtlText>
+          <AppText style={[logoutStyles.text, { color: colors.rose }]}>تسجيل الخروج</AppText>
         </RtlTextShell>
         <View style={logoutStyles.iconWrapOutline}>
           <AppIcon name="log-out-outline" size={22} color={colors.rose} />

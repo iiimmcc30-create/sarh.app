@@ -95,7 +95,7 @@ describe('RTL architecture fixture', () => {
     expect(file).toContain('AppText');
     expect(file).toContain('AppTextInput');
     expect(file).toContain('getRtlRow');
-    expect(file).toContain('PrimaryButton');
+    expect(file).toContain('SarhButton');
     expect(file).not.toContain("textAlign: 'right'");
     expect(file).not.toContain("direction: 'ltr'");
     expect(file).not.toContain('row-reverse');

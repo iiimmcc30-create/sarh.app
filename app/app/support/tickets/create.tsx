@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { showToast } from '@/lib/toast';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { FilterChip, FilterChipRow } from '@/components/ui/FilterChip';
@@ -28,6 +27,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
+import { SarhButton } from '@/design-system/components';
 
 const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[]).filter(
   (c) => c !== 'ORDER_HELP' && c !== 'OTHER_HELP',
@@ -188,7 +188,7 @@ export default function CreateSupportTicketScreen() {
             )}
           </GlassCard>
 
-          <PrimaryButton
+          <SarhButton
             title="إرسال التذكرة"
             fullWidth
             loading={submitting}

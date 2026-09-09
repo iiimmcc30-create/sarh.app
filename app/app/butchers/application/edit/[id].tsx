@@ -3,6 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 import {
   useCallback,
   useEffect,
@@ -26,7 +27,6 @@ import { DocumentsStep } from '@/components/butcherApplication/DocumentsStep';
 import { WizardStepBar } from '@/components/butcherApplication/WizardStepBar';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
 import { AppTextInput } from '@/components/ui/AppTextInput';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { colors, gradients, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,7 +48,7 @@ import {
   validateWizardStep3,
 } from '@/lib/butcherApplicationValidation';
 import { hasValidCoords } from '@/lib/butcherLocation';
-import { getRtlText, rtlBackIcon, getRtlRow } from '@/lib/rtl';
+import { getRtlText, getRtlRow } from '@/lib/rtl';
 import type {
   ApplicationDetail,
   ApplicationSnapshotInput,
@@ -764,9 +764,7 @@ export default function ButcherApplicationEditScreen() {
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <View style={s.header}>
-        <Pressable onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={goBack} color={colors.textPrimary} style={s.backBtn} />
         <View style={s.headerCenter}>
           <Text style={s.headerTitle}>إكمال الطلب</Text>
           <Text style={s.headerSub}>#{application.applicationNumber}</Text>
@@ -804,23 +802,23 @@ export default function ButcherApplicationEditScreen() {
             <Text style={s.inlineError}>{submitError || error}</Text>
           ) : null}
           {step < 4 ? (
-            <PrimaryButton
+            <SarhButton
               title={step === 3 ? 'متابعة للمراجعة' : 'التالي'}
               onPress={goNext}
               disabled={saving || loading || documentsBusy}
             />
           ) : (
-            <PrimaryButton
+            <SarhButton
               title="تقديم الطلب"
-              variant="gold"
+              variant="primary"
               onPress={handleSubmit}
               disabled={saving || loading || documentsBusy || !acceptedTerms || !confirmAccuracy}
             />
           )}
           {step > 0 && step < 4 ? (
-            <PrimaryButton
+            <SarhButton
               title="السابق"
-              variant="outline"
+              variant="secondary"
               onPress={goBack}
               disabled={saving || loading || documentsBusy}
               style={s.secondaryBtn}

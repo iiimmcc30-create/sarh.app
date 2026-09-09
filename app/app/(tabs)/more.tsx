@@ -26,8 +26,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
+import { AppText } from '@/components/ui/AppText';
 
 const TAB_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 24;
 const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000';
@@ -89,14 +89,14 @@ export default function MoreScreen() {
       <AppScrollView contentContainerStyle={styles.content}>
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>عام</RtlText>
+            <AppText style={styles.sectionLabel}>عام</AppText>
           </RtlTextShell>
         </View>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
               <RtlTextShell flex>
-                <RtlText style={styles.cardTitle}>اللغة</RtlText>
+                <AppText style={styles.cardTitle}>اللغة</AppText>
               </RtlTextShell>
               <AppIcon name="globe-outline" size={22} color={colors.textPrimary} />
             </CoverTrailRow>
@@ -120,7 +120,7 @@ export default function MoreScreen() {
             <BrandSwitch value={isDark} onValueChange={onToggleTheme} colors={colors} />
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
               <RtlTextShell flex>
-                <RtlText style={styles.rowTitle}>المظهر</RtlText>
+                <AppText style={styles.rowTitle}>المظهر</AppText>
               </RtlTextShell>
               <AppIcon name="weather-night" size={22} color={colors.textPrimary} />
             </CoverTrailRow>
@@ -129,7 +129,7 @@ export default function MoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>المحفوظات</RtlText>
+            <AppText style={styles.sectionLabel}>المحفوظات</AppText>
           </RtlTextShell>
         </View>
         <View style={styles.card}>
@@ -144,7 +144,7 @@ export default function MoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>عن سرح</RtlText>
+            <AppText style={styles.sectionLabel}>عن سرح</AppText>
           </RtlTextShell>
         </View>
         <View style={styles.card}>
@@ -173,7 +173,7 @@ export default function MoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <RtlTextShell>
-            <RtlText style={styles.sectionLabel}>المساعدة</RtlText>
+            <AppText style={styles.sectionLabel}>المساعدة</AppText>
           </RtlTextShell>
         </View>
         <View style={styles.card}>

@@ -24,7 +24,7 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+import { rtlForwardIcon } from '@/lib/rtl';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ChatMessage, ButcherProfile } from '@/services/butcherData';
@@ -48,6 +48,7 @@ import {
   parseOfferMessage,
 } from '@/lib/messageOffers';
 import * as Location from 'expo-location';
+import { SarhBackButton } from '@/design-system/components';
 
 function mapApiMessage(m: {
   id: string;
@@ -853,9 +854,7 @@ export default function ButcherChatScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-            <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
           <UserProfileLink userId={receiverUserId} style={styles.headerCenter}>
             <Image source={uriSource(headerAvatar)} style={styles.headerAvatar} contentFit="cover" />
             <View style={{ flex: 1 }}>
@@ -929,7 +928,7 @@ export default function ButcherChatScreen() {
               }
             >
               <Text style={styles.listingCardBtnText}>عرض الإعلان</Text>
-              <AppIcon name={rtlBackIcon()} size={16} color={colors.electricBright} />
+              <AppIcon name={rtlForwardIcon()} size={16} color={colors.electricBright} />
             </Pressable>
           </View>
         ) : chatUiKind === 'butcher' ? (

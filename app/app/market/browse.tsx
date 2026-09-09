@@ -8,7 +8,7 @@ import { sarhScreenStyles } from '@/constants/sarhScreen';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
-import { getRtlRow, rtlBackIcon } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchMarketCategories } from '@/services/categories';
@@ -30,6 +30,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SarhBackButton } from '@/design-system/components';
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
@@ -219,9 +220,7 @@ export default function MarketBrowseScreen() {
   const ListHeader = (
     <View>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <View style={styles.crumbShell}>
           <Text style={styles.crumb} numberOfLines={2}>
             السوق

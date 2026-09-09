@@ -9,13 +9,13 @@
  * right, title in rtlTextShell hugging the icon (same pattern as listing cover).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { RtlText } from '@/components/ui/RtlText';
 import { RtlTextShell } from '@/components/ui/RtlTextShell';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { isNavigationLocked } from '@/lib/safeNavigate';
-import { getRtlRow } from '@/lib/rtl';
+import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
 
 export type SidebarMenuItemProps = {
   icon: string;
@@ -115,13 +115,13 @@ function OutlineMenuItem({
           />
         </View>
         <RtlTextShell flex style={styles.textShellGap}>
-          <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+          <AppText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
             {title}
-          </RtlText>
+          </AppText>
           {subtitle ? (
-            <RtlText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+            <AppText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
               {subtitle}
-            </RtlText>
+            </AppText>
           ) : null}
         </RtlTextShell>
         {showBadge ? (
@@ -132,7 +132,7 @@ function OutlineMenuItem({
         <View style={styles.chevronSlot}>
           {showChevron ? (
             <AppIcon
-              name="angle-left"
+              name={rtlForwardIcon()}
               size={SIDEBAR_MENU_ITEM.chevronSize}
               color={chevronColor}
             />
@@ -225,13 +225,13 @@ export function SidebarMenuItem({
       </View>
 
       <RtlTextShell flex style={styles.textShellGap}>
-        <RtlText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
+        <AppText style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>
           {title}
-        </RtlText>
+        </AppText>
         {subtitle ? (
-          <RtlText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+          <AppText style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
             {subtitle}
-          </RtlText>
+          </AppText>
         ) : null}
       </RtlTextShell>
 
@@ -243,7 +243,7 @@ export function SidebarMenuItem({
 
       {showChevron ? (
         <AppIcon
-          name="angle-left"
+          name={rtlForwardIcon()}
           size={SIDEBAR_MENU_ITEM.chevronSize}
           color={chevronColor}
         />

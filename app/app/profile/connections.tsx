@@ -20,8 +20,9 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { rtlBackIcon } from '@/lib/rtl';
+
 import { openUserProfile } from '@/lib/openUserProfile';
+import { SarhBackButton } from '@/design-system/components';
 import {
   fetchUserConnectionsWithMeta,
   setFollowUser,
@@ -174,9 +175,7 @@ export default function ProfileConnectionsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>{title}</Text>
         <View style={{ width: 38 }} />
       </View>

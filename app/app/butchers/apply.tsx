@@ -7,15 +7,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { gradients, radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { rtlBackIcon } from '@/lib/rtl';
+
 import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
+import { SarhBackButton, SarhButton } from '@/design-system/components';
 
 function findActiveDraftOrSubmitted(apps: ApplicationSummary[]): ApplicationSummary | null {
   return (
@@ -123,9 +123,7 @@ export default function ButcherApplyScreen() {
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name={rtlBackIcon()} size={22} color={colors.textPrimary} />
-        </Pressable>
+        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         <Text style={styles.headerTitle}>تسجيل ملحمة</Text>
         <View style={styles.backBtn} />
       </View>
@@ -166,7 +164,7 @@ export default function ButcherApplyScreen() {
         ) : null}
 
         {canStartNew ? (
-          <PrimaryButton
+          <SarhButton
             title="ابدأ طلب التسجيل"
             onPress={handleStart}
             disabled={loading}
