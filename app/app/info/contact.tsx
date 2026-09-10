@@ -1,23 +1,45 @@
-// Powered by OnSpace.AI
-// SAFAT — Contact Us (تواصل معنا)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useRouter } from 'expo-router';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
-import { SarhBackButton } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { AppText, SarhDivider } from '@/design-system/components';
+import { Alert, Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+
+const CHANNELS = [
+  {
+    icon: 'call',
+    label: 'الهاتف',
+    value: '+966 591 298 136',
+    href: 'tel:+966591298136',
+  },
+  {
+    icon: 'whatsapp',
+    label: 'واتساب',
+    value: '+966 591 298 136',
+    href: 'https://wa.me/966591298136',
+  },
+  {
+    icon: 'mail',
+    label: 'البريد الإلكتروني',
+    value: 'sarh@sarhsa.online',
+    href: 'mailto:sarh@sarhsa.online',
+  },
+  {
+    icon: 'globe-outline',
+    label: 'الموقع الإلكتروني',
+    value: 'sarhsa.online',
+    href: 'https://sarhsa.online',
+  },
+];
 
 export default function ContactScreen() {
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const router = useRouter();
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -35,133 +57,90 @@ export default function ContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <View style={styles.headerTitleShell}>
-          <Text style={styles.headerTitle}>تواصل معنا</Text>
-        </View>
-        <View style={{ width: 38 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScreenHeader title="تواصل معنا" showBack />
+      <AppScrollView contentContainerStyle={styles.scroll}>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Channels */}
         <View style={styles.section}>
-          <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionTitle}>قنوات التواصل</AppText>
+          <AppText variant="label" color="textSecondary">قنوات التواصل</AppText>
+          <View style={styles.channelList}>
+            {CHANNELS.map((ch, idx) => (
+              <View key={ch.href}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.channelRow,
+                    getRtlRow(),
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                  onPress={() => Linking.openURL(ch.href)}
+                >
+                  <View style={styles.channelIconWrap}>
+                    <AppIcon name={ch.icon} size={18} color={colors.electricBright} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <AppText variant="caption" color="textMuted">{ch.label}</AppText>
+                    <AppText variant="label" color="textPrimary">{ch.value}</AppText>
+                  </View>
+                  <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
+                </Pressable>
+                {idx < CHANNELS.length - 1 ? <SarhDivider inset /> : null}
+              </View>
+            ))}
           </View>
-
-          <Pressable
-            style={[styles.channelCard, getRtlRow()]}
-            onPress={() => Linking.openURL('tel:+966591298136')}
-          >
-            <LinearGradient colors={['#162149', '#1E3A8A']} style={styles.channelIcon}>
-              <AppIcon name="call" size={22} color={colors.electricBright} />
-            </LinearGradient>
-            <View style={styles.channelTextShell}>
-              <Text style={styles.channelLabel}>الهاتف والواتساب</Text>
-              <Text style={styles.channelValue}>+966 591 298 136</Text>
-            </View>
-            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
-          </Pressable>
-
-          <Pressable
-            style={[styles.channelCard, getRtlRow()]}
-            onPress={() => Linking.openURL('https://wa.me/966591298136')}
-          >
-            <LinearGradient colors={['#18965B', '#20B66F']} style={styles.channelIcon}>
-              <AppIcon name="whatsapp" size={22} color="#fff" />
-            </LinearGradient>
-            <View style={styles.channelTextShell}>
-              <Text style={styles.channelLabel}>واتساب</Text>
-              <Text style={styles.channelValue}>+966 591 298 136</Text>
-            </View>
-            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
-          </Pressable>
-
-          <Pressable
-            style={[styles.channelCard, getRtlRow()]}
-            onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}
-          >
-            <LinearGradient colors={['#3730a3', '#6366f1']} style={styles.channelIcon}>
-              <AppIcon name="mail" size={22} color="#fff" />
-            </LinearGradient>
-            <View style={styles.channelTextShell}>
-              <Text style={styles.channelLabel}>البريد الإلكتروني</Text>
-              <Text style={styles.channelValue}>sarh@sarhsa.online</Text>
-            </View>
-            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
-          </Pressable>
-
-          <Pressable
-            style={[styles.channelCard, getRtlRow()]}
-            onPress={() => Linking.openURL('https://sarhsa.online')}
-          >
-            <LinearGradient colors={['#0f4c75', '#1B6CA8']} style={styles.channelIcon}>
-              <AppIcon name="globe" size={22} color="#fff" />
-            </LinearGradient>
-            <View style={styles.channelTextShell}>
-              <Text style={styles.channelLabel}>الموقع الإلكتروني</Text>
-              <Text style={styles.channelValue}>sarhsa.online</Text>
-            </View>
-            <AppIcon name={rtlForwardIcon()} size={18} color={colors.textMuted} />
-          </Pressable>
         </View>
 
         {/* Message form */}
         <View style={styles.section}>
-          <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionTitle}>أرسل رسالة</AppText>
+          <AppText variant="label" color="textSecondary">أرسل رسالة مباشرة</AppText>
+          <View style={styles.formCard}>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="اسمك"
+              placeholderTextColor={colors.textMuted}
+              style={[styles.input, rtlInputText]}
+              returnKeyType="next"
+            />
+            <SarhDivider />
+            <TextInput
+              value={message}
+              onChangeText={setMessage}
+              placeholder="رسالتك"
+              placeholderTextColor={colors.textMuted}
+              style={[styles.input, styles.inputMultiline, rtlInputText]}
+              multiline
+              numberOfLines={4}
+              returnKeyType="send"
+              textAlignVertical="top"
+            />
           </View>
-
-          <View style={styles.fieldGroup}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.fieldLabel}>الاسم</AppText>
-            </View>
-            <View style={styles.inputWrap}>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="اسمك الكريم"
-                placeholderTextColor={colors.textMuted}
-                style={[styles.input, styles.inputRtl, rtlInputText]}
-              />
-            </View>
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.fieldLabel}>الرسالة</AppText>
-            </View>
-            <View style={[styles.inputWrap, { alignItems: 'flex-start', paddingVertical: spacing.sm }]}>
-              <TextInput
-                value={message}
-                onChangeText={setMessage}
-                placeholder="اكتب رسالتك هنا..."
-                placeholderTextColor={colors.textMuted}
-                style={[styles.input, styles.inputRtl, rtlInputText, { height: 100, textAlignVertical: 'top' }]}
-                multiline
-              />
-            </View>
-          </View>
-
           <Pressable
-            style={[styles.sendBtn, sending && { opacity: 0.6 }]}
-            onPress={handleSend}
+            accessibilityRole="button"
             disabled={sending}
+            onPress={handleSend}
+            style={({ pressed }) => [
+              styles.sendBtn,
+              { opacity: pressed || sending ? 0.7 : 1 },
+            ]}
           >
-            <LinearGradient colors={gradients.royal} style={[styles.sendBtnInner, getRtlRow()]}>
-              <AppIcon name="send" size={18} color="#fff" />
-              <Text style={styles.sendBtnText}>{sending ? 'جارٍ الإرسال...' : 'إرسال عبر البريد'}</Text>
-            </LinearGradient>
+            <AppIcon name="send" size={16} color={colors.screenRoot} />
+            <AppText variant="label" style={{ color: colors.screenRoot }}>
+              {sending ? 'جارٍ الإرسال…' : 'إرسال عبر البريد'}
+            </AppText>
           </Pressable>
         </View>
 
-        <View style={{ width: '100%' }}>
-          <AppText style={styles.footer}>نرد على جميع الرسائل خلال 24 ساعة في أيام العمل</AppText>
+        {/* Working hours */}
+        <View style={styles.section}>
+          <AppText variant="label" color="textSecondary">أوقات العمل</AppText>
+          <AppText variant="body" color="textSecondary">
+            الأحد — الخميس · ٩ص — ٦م (بتوقيت الرياض)
+          </AppText>
         </View>
-        <View style={{ height: 40 }} />
-      </ScrollView>
+
+        <View style={{ height: 32 }} />
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -169,124 +148,67 @@ export default function ContactScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
-    },
-    backBtn: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor: colors.bgGlass,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-    },
-    headerTitleShell: {
-      flex: 1,
-          },
-    headerTitle: {
-      ...typography.h3,
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    scroll: { paddingBottom: 40 },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
+    scroll: { paddingBottom: 32 },
+
     section: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.lg,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
       gap: spacing.sm,
     },
-    sectionTitle: {
-      ...typography.h3,
-      color: colors.textPrimary,
-      marginBottom: spacing.sm,
+
+    channelList: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      overflow: 'hidden',
     },
-    channelCard: {
+    channelRow: {
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
-    channelIcon: {
-      width: 44,
-      height: 44,
+    channelIconWrap: {
+      width: 36,
+      height: 36,
       borderRadius: radius.md,
+      backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      flexShrink: 0,
     },
-    channelTextShell: {
-      flex: 1,
-      minWidth: 0,
-            gap: 2,
-    },
-    channelLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    channelValue: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      width: '100%',
-            writingDirection: 'ltr',
-    },
-    fieldGroup: { gap: spacing.sm },
-    fieldLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-      fontWeight: '600',
-    },
-    inputWrap: {
-      flexDirection: 'row',
-      alignItems: 'center',
+
+    formCard: {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.lg,
-      paddingHorizontal: spacing.md,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
+      overflow: 'hidden',
     },
     input: {
-      flex: 1,
-      ...typography.body,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       color: colors.textPrimary,
-      paddingVertical: 12,
+      fontSize: 15,
+      minHeight: 44,
     },
-    inputRtl: {
+    inputMultiline: {
+      minHeight: 100,
     },
-    sendBtn: { borderRadius: radius.pill, overflow: 'hidden', marginTop: spacing.sm },
-    sendBtnInner: {
+
+    sendBtn: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
+      backgroundColor: colors.electricBright,
+      borderRadius: radius.lg,
       paddingVertical: spacing.md,
-      borderRadius: radius.pill,
-    },
-    sendBtnText: {
-      ...typography.bodyStrong,
-      color: '#fff',
-    },
-    footer: {
-      ...typography.caption,
-      color: colors.textMuted,
-      width: '100%',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      marginTop: spacing.xl,
       paddingHorizontal: spacing.lg,
+      minHeight: 48,
     },
   });
 }

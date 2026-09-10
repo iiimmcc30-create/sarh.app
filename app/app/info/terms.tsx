@@ -1,16 +1,13 @@
-// Powered by OnSpace.AI
-// SAFAT — Terms & Conditions (الشروط والأحكام)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
-import { useRouter } from 'expo-router';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-
-import { SarhBackButton } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { getRtlRow } from '@/lib/rtl';
+import { AppText, SarhDivider } from '@/design-system/components';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TERMS = [
   {
@@ -50,107 +47,99 @@ const TERMS = [
 export default function TermsScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>الشروط والأحكام</Text>
-        <View style={{ width: 38 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScreenHeader title="الشروط والأحكام" showBack />
+      <AppScrollView contentContainerStyle={styles.scroll}>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {/* Banner */}
         <View style={styles.topBanner}>
-          <AppIcon name="document-text" size={28} color={colors.gold} />
-          <Text style={styles.bannerTitle}>شروط الاستخدام</Text>
-          <Text style={styles.bannerDate}>آخر تحديث: يناير 2024</Text>
+          <AppIcon name="document-text" size={26} color={colors.textSecondary} />
+          <AppText variant="heading3" color="textPrimary">شروط الاستخدام</AppText>
+          <AppText variant="caption" color="textMuted">آخر تحديث: يناير 2024</AppText>
         </View>
 
+        <SarhDivider />
+
         {TERMS.map((item, i) => (
-          <View key={i} style={styles.section}>
-            <View style={styles.titleRow}>
-              <Text style={styles.sectionNum}>{i + 1}</Text>
-              <View style={{ width: '100%' }}>
-                <AppText style={styles.sectionTitle}>{item.title}</AppText>
+          <View key={i}>
+            <View style={styles.section}>
+              <View style={[getRtlRow(), { alignItems: 'center', gap: spacing.sm }]}>
+                <View style={styles.numBadge}>
+                  <AppText variant="micro" color="textSecondary" align="center">{i + 1}</AppText>
+                </View>
+                <AppText variant="label" color="textPrimary">{item.title}</AppText>
               </View>
+              <AppText variant="body" color="textSecondary" style={styles.sectionContent}>
+                {item.content}
+              </AppText>
             </View>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionContent}>{item.content}</AppText>
-            </View>
+            {i < TERMS.length - 1 ? <SarhDivider /> : null}
           </View>
         ))}
 
+        <SarhDivider />
+
         {/* Contact */}
-        <View style={styles.contactSection}>
-          <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionTitle}>للاستفسار</AppText>
-          </View>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
-            <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.contactLink}>sarh@sarhsa.online</Text>
-          </Pressable>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('tel:+966591298136')}>
-            <AppIcon name="call-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.contactLink}>+966 591 298 136</Text>
-          </Pressable>
+        <View style={styles.section}>
+          <AppText variant="label" color="textPrimary">للاستفسار</AppText>
+          {[
+            { icon: 'mail-outline', href: 'mailto:sarh@sarhsa.online', text: 'sarh@sarhsa.online' },
+            { icon: 'call-outline', href: 'tel:+966591298136', text: '+966 591 298 136' },
+          ].map((item) => (
+            <Pressable
+              key={item.href}
+              style={({ pressed }) => [styles.contactRow, getRtlRow(), { opacity: pressed ? 0.7 : 1 }]}
+              onPress={() => Linking.openURL(item.href)}
+            >
+              <AppIcon name={item.icon} size={16} color={colors.electricBright} />
+              <AppText variant="body" color="primary">{item.text}</AppText>
+            </Pressable>
+          ))}
         </View>
 
-        <Text style={styles.footer}>© 2024 مؤسسة ماد يونيت للتجارة · سرح · جميع الحقوق محفوظة</Text>
-        <View style={{ height: 40 }} />
-      </ScrollView>
+        <AppText variant="micro" color="textMuted" align="center" style={styles.footer}>
+          © 2024 مؤسسة ماد يونيت للتجارة · سرح · جميع الحقوق محفوظة
+        </AppText>
+        <View style={{ height: 32 }} />
+      </AppScrollView>
     </SafeAreaView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.screenRoot },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-  },
-  backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
-  scroll: { paddingBottom: 40 },
-  topBanner: {
-    alignItems: 'center', gap: spacing.sm,
-    paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-    backgroundColor: `${colors.gold}08`,
-  },
-  bannerTitle: { ...typography.h2, color: colors.textPrimary },
-  bannerDate: { ...typography.caption, color: colors.textMuted },
-  section: {
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.lg,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-  },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm, justifyContent: 'flex-end' },
-  sectionNum: {
-    width: 24, height: 24, borderRadius: 12,
-    backgroundColor: `${colors.electric}20`,
-    ...typography.micro,
-    lineHeight: 24,
-    textAlign: 'center',
-    color: colors.textBrandStrong,
-  },
-  sectionTitle: {
-    ...typography.bodyStrong,
-    color: colors.gold,
-  },
-  sectionContent: {
-    ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 26,
-  },
-  contactSection: { paddingHorizontal: spacing.lg, paddingVertical: spacing.lg, gap: spacing.sm },
-  contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
-  contactLink: { ...typography.body, color: colors.textBrandStrong },
-  footer: { ...typography.micro, color: colors.textSubtle, textAlign: 'center', marginTop: spacing.xl, paddingHorizontal: spacing.lg },
+    container: { flex: 1, backgroundColor: colors.screenRoot },
+    scroll: { paddingBottom: 32 },
+    topBanner: {
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.lg,
+    },
+    section: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      gap: spacing.sm,
+    },
+    numBadge: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      flexShrink: 0,
+    },
+    sectionContent: { lineHeight: 26 },
+    contactRow: {
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    footer: { marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   });
 }

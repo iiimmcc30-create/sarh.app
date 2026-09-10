@@ -3,15 +3,14 @@ import { PromotionStatsSheet } from '@/components/listing/PromotionStatsSheet';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { SIDEBAR_MENU_ITEM } from '@/components/ui/SidebarMenuItem';
-import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppUser } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { rtlForwardIcon } from '@/lib/rtl';
-
 import { searchAllSellerListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -20,12 +19,12 @@ import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppScrollView } from '@/components/ui/AppScrollView';
 import { usePaidServices } from '@/hooks/usePaidServices';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { AppText, SarhButton } from '@/design-system/components';
 
 const CATEGORY_ICONS: Record<Listing['category'], string> = {
   camels: '🐪',
@@ -90,22 +89,16 @@ export default function PromoteHubScreen() {
   };
 
   return (
-    <ScreenScaffold edges={['top']}>
-      <View style={styles.screen}>
-        <View style={styles.header}>
-          <View style={styles.headerSpacer} />
-          <Text style={styles.headerTitle}>تعزيز سرح</Text>
-          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        </View>
-
-        <AppScrollView contentContainerStyle={styles.scroll}>
+    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+      <ScreenHeader title="تعزيز سرح" showBack />
+      <AppScrollView contentContainerStyle={styles.scroll}>
           {!hasAnyBoostService ? (
             <View style={styles.hero}>
               <View style={styles.heroIconWrap}>
                 <AppIcon name="rocket-outline" size={28} color={colors.textMuted} />
               </View>
-              <Text style={styles.heroTitle}>خدمات الترقية غير مفعّلة حالياً</Text>
-              <Text style={styles.heroSub}>يمكنك العودة لاحقاً عند تفعيلها من الإدارة.</Text>
+              <AppText variant="heading3" color="textPrimary" align="center">خدمات الترقية غير مفعّلة حالياً</AppText>
+              <AppText variant="caption" color="textMuted" align="center">يمكنك العودة لاحقاً عند تفعيلها من الإدارة.</AppText>
             </View>
           ) : null}
 
@@ -115,10 +108,10 @@ export default function PromoteHubScreen() {
                 <View style={styles.heroIconWrap}>
                   <AppIcon name="rocket-outline" size={28} color={colors.electric} />
                 </View>
-                <Text style={styles.heroTitle}>اختر إعلاناً لبدء الترويج</Text>
-                <Text style={styles.heroSub}>
+                <AppText variant="heading3" color="textPrimary" align="center">اختر إعلاناً لبدء الترويج</AppText>
+                <AppText variant="caption" color="textMuted" align="center" style={styles.heroSub}>
                   زِد ظهور إعلانك، ثبّته في الأعلى، أو أضف نجمة مميزة — كل خيار له تأثير مختلف
-                </Text>
+                </AppText>
               </View>
 
               {loadingListings ? (
@@ -128,8 +121,8 @@ export default function PromoteHubScreen() {
                   <View style={styles.emptyIconWrap}>
                     <AppIcon name="megaphone-outline" size={36} color={colors.textMuted} />
                   </View>
-                  <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
-                  <Text style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</Text>
+                  <AppText variant="label" color="textPrimary" align="center">لا توجد إعلانات بعد</AppText>
+                  <AppText variant="caption" color="textMuted" align="center" style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</AppText>
                   <SarhButton
                     title="إنشاء إعلان"
                     onPress={() => void navigateToCreateListing()}
@@ -188,17 +181,17 @@ export default function PromoteHubScreen() {
                                 pinned={listing.pinned}
                                 featured={listing.featured}
                               />
-                              <Text style={styles.listingTitle} numberOfLines={2}>
+                              <AppText variant="label" color="textPrimary" numberOfLines={2} style={{ flexShrink: 1 }}>
                                 {title}
-                              </Text>
+                              </AppText>
                             </View>
                             {metaParts.length > 0 ? (
-                              <Text style={styles.listingMeta} numberOfLines={1}>
+                              <AppText variant="caption" color="textMuted" numberOfLines={1}>
                                 {metaParts.join(' · ')}
-                              </Text>
+                              </AppText>
                             ) : null}
                             {listing.promoted ? (
-                              <Text style={styles.reachText}>ترويج نشط — زيادة ظهور</Text>
+                              <AppText variant="micro" style={styles.reachText}>ترويج نشط — زيادة ظهور</AppText>
                             ) : null}
                           </View>
 
@@ -207,9 +200,9 @@ export default function PromoteHubScreen() {
                               <Image source={uriSource(thumb)} style={styles.thumb} contentFit="cover" />
                             ) : (
                               <View style={styles.thumbPlaceholder}>
-                                <Text style={styles.thumbEmoji}>
+                                <AppText style={styles.thumbEmoji}>
                                   {CATEGORY_ICONS[listing.category] || '📦'}
-                                </Text>
+                                </AppText>
                               </View>
                             )}
                           </View>
@@ -232,40 +225,13 @@ export default function PromoteHubScreen() {
           }
           onClose={() => setStatsListingId(null)}
         />
-      </View>
-    </ScreenScaffold>
+    </SafeAreaView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1 },
-    header: {
-      flexDirection: 'row',
-            alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.sm,
-    },
-    backBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.bgSurface,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    headerSpacer: { width: 40 },
-    headerTitle: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      fontWeight: '600',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      flex: 1,
-    },
+    screen: { flex: 1, backgroundColor: colors.screenRoot },
     scroll: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.xs,
@@ -286,19 +252,8 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       marginBottom: spacing.xs,
     },
-    heroTitle: {
-      ...typography.h3,
-      color: colors.textPrimary,
-      fontWeight: '600',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
     heroSub: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'center',
       lineHeight: 20,
-      writingDirection: 'rtl',
       paddingHorizontal: spacing.md,
     },
     emptyBox: {
@@ -319,31 +274,18 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       marginBottom: spacing.xs,
     },
-    emptyTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      textAlign: 'center',
-    },
     emptySub: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'center',
       lineHeight: 20,
     },
     createBtn: {
       flexDirection: 'row',
-            alignItems: 'center',
+      alignItems: 'center',
       gap: 8,
       marginTop: spacing.sm,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       borderRadius: 999,
       backgroundColor: colors.electric,
-    },
-    createBtnText: {
-      ...typography.bodyStrong,
-      color: '#fff',
-      writingDirection: 'rtl',
     },
     listingsList: {
       borderRadius: radius.xl,
@@ -389,22 +331,9 @@ function createStyles(colors: ThemeColors) {
       gap: 6,
       justifyContent: 'flex-end',
     },
-    listingTitle: {
-      ...typography.cardHeading,
-      color: colors.textPrimary,
-            writingDirection: 'rtl',
-      flexShrink: 1,
-    },
-    listingMeta: {
-      ...typography.caption,
-      color: colors.textMuted,
-            writingDirection: 'rtl',
-    },
     reachText: {
-      ...typography.micro,
       color: '#7C3AED',
       fontWeight: '600',
-            writingDirection: 'rtl',
     },
     thumbWrap: {
       width: 48,
