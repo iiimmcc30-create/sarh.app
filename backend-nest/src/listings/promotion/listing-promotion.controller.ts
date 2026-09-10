@@ -36,7 +36,7 @@ import {
 
 class InitiatePromotionDto {
   @IsOptional()
-  @IsIn([1, 3, 7])
+  @IsIn([1, 2])
   durationDays?: number;
 
   @IsOptional()
@@ -45,7 +45,7 @@ class InitiatePromotionDto {
   @Max(PROMOTE_DURATION_HOURS_MAX)
   durationHours?: number;
 
-  /** Optional: user may pay more than the computed minimum for higher reach. */
+  /** Ignored — server looks up the official catalog amount. */
   @IsOptional()
   @IsNumber()
   @Min(PROMOTE_AMOUNT_MIN)

@@ -33,8 +33,14 @@ async function main() {
 
   const health = await req('GET', '/health').catch(() => ({ ok: false }));
   if (!health.ok) {
-    const ping = await fetch(`${BASE.replace(/\/api$/, '')}/api/health`).catch(() => null);
-    assert('backend reachable', ping?.ok, 'Start backend first: npm run start:dev');
+    const ping = await fetch(`${BASE.replace(/\/api$/, '')}/api/health`).catch(
+      () => null,
+    );
+    assert(
+      'backend reachable',
+      ping?.ok,
+      'Start backend first: npm run start:dev',
+    );
   } else {
     assert('backend reachable', true);
   }
@@ -49,13 +55,20 @@ async function main() {
 
   const quoteVis = await req(
     'GET',
-    '/listings/promote/quote?goal=visibility&amount=20&durationHours=6',
+    '/listings/promote/quote?goal=visibility&durationHours=24',
   );
-  assert('visibility quote', quoteVis.ok && quoteVis.json.success, quoteVis.json);
+  assert(
+    'visibility quote',
+    quoteVis.ok && quoteVis.json.success,
+    quoteVis.json,
+  );
   const reach = quoteVis.json.data?.reachEstimate;
   console.log('  reach estimate:', reach?.min, '-', reach?.max);
 
-  const quotePin = await req('GET', '/listings/promote/quote?goal=pinned&durationHours=24');
+  const quotePin = await req(
+    'GET',
+    '/listings/promote/quote?goal=pinned&durationHours=24',
+  );
   assert('pinned quote', quotePin.ok && quotePin.json.success, quotePin.json);
   console.log('  pinned 24h price:', quotePin.json.data?.amount, 'SAR');
 
@@ -90,22 +103,44 @@ async function main() {
     token,
     body: {
       method: 'mada',
-      amount: 20,
-      durationHours: 6,
+      durationHours: 24,
       promotionGoal: 'visibility',
     },
   });
-  assert('initiate visibility promotion', promo.ok && promo.json.success, promo.json);
+  assert(
+    'initiate visibility promotion',
+    promo.ok && promo.json.success,
+    promo.json,
+  );
   const promoPaymentId = promo.json.data?.paymentId;
   const promoDevMode = promo.json.data?.devMode;
-  console.log('  promotion paymentId:', promoPaymentId, 'devMode:', promoDevMode);
+  console.log(
+    '  promotion paymentId:',
+    promoPaymentId,
+    'devMode:',
+    promoDevMode,
+  );
 
   if (promoDevMode) {
-    const complete = await req('POST', `/payments/${promoPaymentId}/dev-complete`, { token });
-    assert('dev-complete promotion payment', complete.ok && complete.json.success, complete.json);
+    const complete = await req(
+      'POST',
+      `/payments/${promoPaymentId}/dev-complete`,
+      { token },
+    );
+    assert(
+      'dev-complete promotion payment',
+      complete.ok && complete.json.success,
+      complete.json,
+    );
 
-    const stats = await req('GET', `/listings/${listingId}/promotion/stats`, { token });
-    assert('promotion stats after pay', stats.ok && stats.json.data?.isPromoted, stats.json.data);
+    const stats = await req('GET', `/listings/${listingId}/promotion/stats`, {
+      token,
+    });
+    assert(
+      'promotion stats after pay',
+      stats.ok && stats.json.data?.isPromoted,
+      stats.json.data,
+    );
     console.log('  promoted until:', stats.json.data?.expiresAt);
   } else {
     console.log('SKIP: dev-complete (NI keys configured — real gateway mode)');
@@ -127,11 +162,23 @@ async function main() {
   console.log('  boost paymentId:', boostPaymentId, 'amount:', boostAmount);
 
   if (boost.json.data?.devMode) {
-    const completeBoost = await req('POST', `/payments/${boostPaymentId}/dev-complete`, { token });
-    assert('dev-complete boost payment', completeBoost.ok && completeBoost.json.success, completeBoost.json);
+    const completeBoost = await req(
+      'POST',
+      `/payments/${boostPaymentId}/dev-complete`,
+      { token },
+    );
+    assert(
+      'dev-complete boost payment',
+      completeBoost.ok && completeBoost.json.success,
+      completeBoost.json,
+    );
 
     const listing = await req('GET', `/listings/${listingId}`, { token });
-    assert('listing pinned after pay', listing.json.data?.pinned === true, listing.json.data);
+    assert(
+      'listing pinned after pay',
+      listing.json.data?.pinned === true,
+      listing.json.data,
+    );
     console.log('  pinnedUntil:', listing.json.data?.pinnedUntil);
   } else {
     console.log('SKIP: boost dev-complete (real NI mode)');

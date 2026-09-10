@@ -1,17 +1,13 @@
-// Powered by OnSpace.AI
-// SAFAT — Privacy Policy (سياسة الخصوصية)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
-import { useRouter } from 'expo-router';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-
 import { PRIVACY_POLICY_URL } from '@/constants/legal';
-import { SarhBackButton } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { AppText, SarhDivider } from '@/design-system/components';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SECTIONS = [
   {
@@ -47,54 +43,59 @@ const SECTIONS = [
 export default function PrivacyScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>سياسة الخصوصية</Text>
-        <View style={{ width: 38 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScreenHeader title="سياسة الخصوصية" showBack />
+      <AppScrollView contentContainerStyle={styles.scroll}>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {/* Banner */}
         <View style={styles.topBanner}>
-          <AppIcon name="shield-checkmark" size={28} color={colors.electricBright} />
-          <Text style={styles.bannerTitle}>خصوصيتك تهمّنا</Text>
-          <Text style={styles.bannerDate}>آخر تحديث: يناير 2024</Text>
+          <AppIcon name="shield-checkmark" size={26} color={colors.electricBright} />
+          <AppText variant="heading3" color="textPrimary">خصوصيتك تهمّنا</AppText>
+          <AppText variant="caption" color="textMuted">آخر تحديث: يناير 2024</AppText>
         </View>
 
+        <SarhDivider />
+
         {SECTIONS.map((sec, i) => (
-          <View key={i} style={styles.section}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionTitle}>{sec.title}</AppText>
+          <View key={i}>
+            <View style={styles.section}>
+              <AppText variant="label" color="textPrimary">{sec.title}</AppText>
+              <AppText variant="body" color="textSecondary" style={styles.sectionContent}>
+                {sec.content}
+              </AppText>
             </View>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionContent}>{sec.content}</AppText>
-            </View>
+            {i < SECTIONS.length - 1 ? <SarhDivider /> : null}
           </View>
         ))}
 
-        <View style={styles.contactSection}>
-          <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionTitle}>تواصل معنا</AppText>
-          </View>
-          <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionContent}>لأي استفسار حول سياسة الخصوصية:</AppText>
-          </View>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('mailto:sarh@sarhsa.online')}>
-            <AppIcon name="mail-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.contactLink}>sarh@sarhsa.online</Text>
-          </Pressable>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL('tel:+966591298136')}>
-            <AppIcon name="call-outline" size={18} color={colors.electricBright} />
-            <Text style={styles.contactLink}>+966 591 298 136</Text>
-          </Pressable>
+        <SarhDivider />
+
+        {/* Contact */}
+        <View style={styles.section}>
+          <AppText variant="label" color="textPrimary">تواصل معنا</AppText>
+          <AppText variant="body" color="textSecondary">لأي استفسار حول سياسة الخصوصية:</AppText>
+          {[
+            { icon: 'mail-outline', href: 'mailto:sarh@sarhsa.online', text: 'sarh@sarhsa.online' },
+            { icon: 'call-outline', href: 'tel:+966591298136', text: '+966 591 298 136' },
+          ].map((item) => (
+            <Pressable
+              key={item.href}
+              style={({ pressed }) => [styles.contactRow, { opacity: pressed ? 0.7 : 1 }]}
+              onPress={() => Linking.openURL(item.href)}
+            >
+              <AppIcon name={item.icon} size={16} color={colors.electricBright} />
+              <AppText variant="body" color="primary">{item.text}</AppText>
+            </Pressable>
+          ))}
         </View>
 
-        <Text style={styles.footer}>© 2024 مؤسسة ماد يونيت للتجارة · سرح · جميع الحقوق محفوظة</Text>
-        <View style={{ height: 40 }} />
-      </ScrollView>
+        <AppText variant="micro" color="textMuted" align="center" style={styles.footer}>
+          © 2024 مؤسسة ماد يونيت للتجارة · سرح · جميع الحقوق محفوظة
+        </AppText>
+        <View style={{ height: 32 }} />
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -102,70 +103,26 @@ export default function PrivacyScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
-    },
-    backBtn: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor: colors.bgGlass,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-    },
-    headerTitle: { ...typography.h3, color: colors.textPrimary },
-    scroll: { paddingBottom: 40 },
+    scroll: { paddingBottom: 32 },
     topBanner: {
       alignItems: 'center',
       gap: spacing.sm,
       paddingVertical: spacing.xxl,
       paddingHorizontal: spacing.lg,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
-      backgroundColor: `${colors.electric}08`,
     },
-    bannerTitle: { ...typography.h2, color: colors.textPrimary },
-    bannerDate: { ...typography.caption, color: colors.textMuted },
     section: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.lg,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
       gap: spacing.sm,
     },
-    sectionTitle: {
-      ...typography.bodyStrong,
-      color: colors.textBrandStrong,
-    },
-    sectionContent: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 26,
-    },
-    contactSection: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.lg,
-      gap: spacing.sm,
-    },
+    sectionContent: { lineHeight: 26 },
     contactRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.md,
+      gap: spacing.sm,
       paddingVertical: spacing.sm,
     },
-    contactLink: { ...typography.body, color: colors.textBrandStrong },
     footer: {
-      ...typography.micro,
-      color: colors.textSubtle,
-      textAlign: 'center',
       marginTop: spacing.xl,
       paddingHorizontal: spacing.lg,
     },

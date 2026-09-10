@@ -34,3 +34,9 @@ export type { SarhDividerProps } from './SarhDivider';
 
 export { SURFACE_TONE, SarhSurface } from './SarhSurface';
 export type { SarhSurfaceProps, SarhSurfaceTone } from './SarhSurface';
+
+export { SETTINGS_ROW, SarhSettingsRow } from './SarhSettingsRow';
+export type { SarhSettingsRowProps } from './SarhSettingsRow';
+
+export { SarhSettingsSection } from './SarhSettingsSection';
+export type { SarhSettingsSectionProps } from './SarhSettingsSection';

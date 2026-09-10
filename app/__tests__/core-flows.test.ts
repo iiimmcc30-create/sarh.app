@@ -83,6 +83,9 @@ describe('listingBoost helpers', () => {
   it('exposes boost types and fallback prices', () => {
     expect(BOOST_TYPE_ORDER).toEqual(['pinned', 'featured', 'promotion']);
     expect(FALLBACK_BOOST_PLANS.pinned[0].amount).toBe(12);
+    expect(FALLBACK_BOOST_PLANS.featured[0].amount).toBe(9);
+    expect(FALLBACK_BOOST_PLANS.featured[1].amount).toBe(25);
+    expect(FALLBACK_BOOST_PLANS.pinned[1].amount).toBe(29);
     expect(boostTypeLabel('featured')).toContain('تمييز');
   });
 

@@ -12,18 +12,9 @@ import {
 } from '../../payments/ni-client';
 import { IntegrationCheckoutService } from '../../integrations/services/integration-checkout.service';
 import { BOOST_PLANS } from './boost-plans.config';
-import {
-  boostPriceForHours,
-  BOOST_AMOUNT_MIN,
-  BOOST_RATE_PER_12H,
-  type BoostPlanType,
-} from './boost-pricing.util';
-import {
-  PROMOTE_AMOUNT_MAX,
-  PROMOTE_DURATION_HOURS_MAX,
-  PROMOTE_DURATION_HOURS_MIN,
-  durationDaysFromHours,
-} from '../promotion/promotion-limits.config';
+import { BOOST_AMOUNT_MIN } from './boost-pricing.util';
+import { lookupPromotePrice } from '../promote-catalog';
+import { PROMOTE_AMOUNT_MAX } from '../promotion/promotion-limits.config';
 import { PaidServicesService } from '../../settings/paid-services.service';
 
 export { BOOST_PLANS } from './boost-plans.config';
@@ -94,43 +85,9 @@ export class ListingBoostService {
     };
   }
 
-  private async getRateFromSettings(boostType: BoostType): Promise<number> {
-    if (boostType === 'both') {
-      const [pin, ftr] = await Promise.all([
-        this.prisma.appSetting.findUnique({
-          where: { key: 'pricing.boost.pin.per12h' },
-        }),
-        this.prisma.appSetting.findUnique({
-          where: { key: 'pricing.boost.feature.per12h' },
-        }),
-      ]);
-      const pinRate =
-        typeof pin?.value === 'number' && pin.value > 0
-          ? pin.value
-          : BOOST_RATE_PER_12H.pinned;
-      const ftrRate =
-        typeof ftr?.value === 'number' && ftr.value > 0
-          ? ftr.value
-          : BOOST_RATE_PER_12H.featured;
-      return pinRate + ftrRate;
-    }
-    const key =
-      boostType === 'pinned'
-        ? 'pricing.boost.pin.per12h'
-        : 'pricing.boost.feature.per12h';
-    const setting = await this.prisma.appSetting.findUnique({ where: { key } });
-    const fallback =
-      boostType === 'pinned'
-        ? BOOST_RATE_PER_12H.pinned
-        : BOOST_RATE_PER_12H.featured;
-    return typeof setting?.value === 'number' && setting.value > 0
-      ? setting.value
-      : fallback;
-  }
-
   /**
    * Initiate a boost payment for a listing.
-   * Price is always computed server-side; client-supplied amount is ignored.
+   * Price is always looked up from the official catalog; client amount is ignored.
    */
   async initiateBoost(
     user: JwtPayload,
@@ -146,41 +103,21 @@ export class ListingBoostService {
     });
     if (!listing) throwApi(404, 'listing_not_found', 'الإعلان غير موجود');
 
-    const plans = BOOST_PLANS[boostType as keyof typeof BOOST_PLANS];
-    if (!plans) throwApi(400, 'invalid_boost_type', 'نوع الترقية غير صالح');
+    if (!BOOST_PLANS[boostType as keyof typeof BOOST_PLANS]) {
+      throwApi(400, 'invalid_boost_type', 'نوع الترقية غير صالح');
+    }
 
-    // Resolve duration
-    let durationHours: number;
-    if (options.durationHours != null) {
-      durationHours = Math.min(
-        PROMOTE_DURATION_HOURS_MAX,
-        Math.max(PROMOTE_DURATION_HOURS_MIN, Math.round(options.durationHours)),
-      );
-    } else if (options.durationDays != null && options.durationDays > 0) {
-      durationHours = Math.min(
-        PROMOTE_DURATION_HOURS_MAX,
-        options.durationDays * 24,
-      );
-    } else {
+    const priced = lookupPromotePrice(boostType, {
+      durationHours: options.durationHours,
+      durationDays: options.durationDays,
+    });
+    if (!priced) {
       throwApi(400, 'invalid_duration', 'مدة الترقية غير صالحة');
     }
 
-    if (
-      durationHours < PROMOTE_DURATION_HOURS_MIN ||
-      durationHours > PROMOTE_DURATION_HOURS_MAX
-    ) {
-      throwApi(400, 'invalid_duration', 'مدة الترقية خارج النطاق المسموح');
-    }
-
-    const durationDays = durationDaysFromHours(durationHours);
-
-    // Server-side price calculation (slab formula)
-    const rate = await this.getRateFromSettings(boostType);
-    const amount = boostPriceForHours(
-      boostType as BoostPlanType,
-      durationHours,
-      rate,
-    );
+    const durationHours = priced.durationHours;
+    const durationDays = priced.durationDays;
+    const amount = priced.amount;
 
     if (amount < BOOST_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
       throwApi(400, 'invalid_amount', 'المبلغ المحسوب غير صالح');
@@ -261,7 +198,7 @@ export class ListingBoostService {
             startTime: startTime.toISOString(),
             endTime: endTime.toISOString(),
             referenceType,
-            pricingFormula: `ceil(${durationHours}/12) × ${rate} = ${amount}`,
+            pricingFormula: `catalog:${boostType}:${durationHours}h=${amount}`,
           } as Prisma.InputJsonValue,
         },
       });

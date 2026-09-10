@@ -40,8 +40,6 @@ export default function PoliciesHubScreen() {
   return (
     <SettingsMenuScreen
       title="السياسات والشروط"
-      description="اطّلع على شروط استخدام منصة سرح وسياسات الخصوصية والمحتوى والدفع."
-      heroIcon="file-document-outline"
       items={items}
     />
   );

@@ -54,34 +54,29 @@ describe('§14–§15 Payments & Promotion', () => {
   });
 
   // ── Promotion pricing table (§15) ───────────────────────────
-  t(
-    'boost plans expose exact pin/feature/both pricing for 1/3/7 days',
-    async () => {
-      const res = await request(API).get('/api/listings/boost/plans');
-      expect(res.status).toBe(200);
-      const { featured, pinned, both } = res.body.data;
+  t('boost plans expose official pin/feature/both catalog prices', async () => {
+    const res = await request(API).get('/api/listings/boost/plans');
+    expect(res.status).toBe(200);
+    const { featured, pinned, both } = res.body.data;
 
-      const byDays = (arr: { durationDays: number; amount: number }[]) =>
-        Object.fromEntries(arr.map((p) => [p.durationDays, p.amount]));
+    const byDays = (arr: { durationDays: number; amount: number }[]) =>
+      Object.fromEntries(arr.map((p) => [p.durationDays, p.amount]));
 
-      const f = byDays(featured);
-      const p = byDays(pinned);
-      const bth = byDays(both);
+    const f = byDays(featured);
+    const p = byDays(pinned);
+    const bth = byDays(both);
 
-      // Featured (تمييز)
-      expect(f[3]).toBe(30);
-      expect(f[7]).toBe(70);
-      // Pinned (تثبيت)
-      expect(p[3]).toBe(36);
-      expect(p[7]).toBe(84);
-      // Both (تثبيت + تمييز)
-      expect(bth[3]).toBe(66);
-      expect(bth[7]).toBe(154);
-      // both == pinned + featured
-      expect(bth[3]).toBe(p[3] + f[3]);
-      expect(bth[7]).toBe(p[7] + f[7]);
-    },
-  );
+    expect(f[1]).toBe(9);
+    expect(f[3]).toBe(25);
+    expect(f[7]).toBeUndefined();
+    expect(p[1]).toBe(12);
+    expect(p[3]).toBe(29);
+    expect(p[7]).toBeUndefined();
+    expect(bth[1]).toBe(21);
+    expect(bth[3]).toBe(54);
+    expect(bth[1]).toBe(p[1] + f[1]);
+    expect(bth[3]).toBe(p[3] + f[3]);
+  });
 
   t('promotion plans (visibility tiers) are public', async () => {
     const res = await request(API).get('/api/listings/promotion/plans');

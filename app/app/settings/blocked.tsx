@@ -1,24 +1,18 @@
-import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlDirection } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { confirmDestructive, alertMessage } from '@/lib/actionSheet';
 import { showToast } from '@/lib/toast';
 import { fetchBlockedUsers, setBlockUser, type BlockedUser } from '@/services/users';
+import { AppText, SarhDivider } from '@/design-system/components';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BlockedUsersScreen() {
@@ -63,53 +57,58 @@ export default function BlockedUsersScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScreenHeader title="المحظورين" showBack />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
-      >
-        <Text style={styles.description}>
+      <AppScrollView contentContainerStyle={styles.content}>
+
+        <AppText variant="caption" color="textMuted" style={styles.description}>
           الحسابات المحظورة لن تظهر منشوراتها وإعلاناتها في خلاصتك، ولا يمكنها التواصل معك.
-        </Text>
+        </AppText>
 
         {loading ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
         ) : users.length === 0 ? (
           <View style={styles.emptyBox}>
             <AppIcon name="block" size={32} color={colors.textMuted} />
-            <Text style={styles.empty}>لا يوجد حسابات محظورة</Text>
+            <AppText variant="body" color="textMuted">لا يوجد حسابات محظورة</AppText>
           </View>
         ) : (
-          users.map((user) => (
-            <View key={user.id} style={[styles.row, menuCardStyle(colors)]}>
-              <UserIdentityRow
-                avatarUri={user.avatar}
-                displayName={user.arabicName || user.displayName}
-                username={user.username}
-                verified={user.verified}
-                avatarSize={USER_IDENTITY.listAvatarSize}
-                avatarRadius={USER_IDENTITY.listAvatarRadius}
-                avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
-                colors={colors}
-                nameLines={2}
-                style={styles.identity}
-                trailing={
+          <View style={styles.listCard}>
+            {users.map((user, idx) => (
+              <View key={user.id}>
+                <View style={[styles.row, getRtlRow()]}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <UserIdentityRow
+                      avatarUri={user.avatar}
+                      displayName={user.arabicName || user.displayName}
+                      username={user.username}
+                      verified={user.verified}
+                      avatarSize={USER_IDENTITY.listAvatarSize}
+                      avatarRadius={USER_IDENTITY.listAvatarRadius}
+                      avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+                      colors={colors}
+                      nameLines={2}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
                   <Pressable
-                    style={styles.unblockBtn}
+                    style={({ pressed }) => [styles.unblockBtn, { opacity: pressed ? 0.7 : 1 }]}
                     onPress={() => void handleUnblock(user)}
                     disabled={actionId === user.id}
                   >
                     {actionId === user.id ? (
                       <ActivityIndicator size="small" color={colors.textPrimary} />
                     ) : (
-                      <Text style={styles.unblockText}>إلغاء الحظر</Text>
+                      <AppText variant="caption" color="textPrimary" style={styles.unblockText}>
+                        إلغاء الحظر
+                      </AppText>
                     )}
                   </Pressable>
-                }
-              />
-            </View>
-          ))
+                </View>
+                {idx < users.length - 1 ? <SarhDivider inset /> : null}
+              </View>
+            ))}
+          </View>
         )}
-      </ScrollView>
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -119,15 +118,11 @@ function createStyles(colors: ThemeColors) {
     container: { flex: 1, backgroundColor: colors.screenRoot },
     content: {
       padding: spacing.lg,
-      paddingBottom: spacing.huge,
-      gap: spacing.md,
+      paddingBottom: 48,
+      gap: spacing.lg,
     },
     description: {
-      ...typography.caption,
-      color: colors.textSecondary,
       lineHeight: 20,
-      writingDirection: 'rtl',
-      ...getRtlText(),
     },
     loader: { marginTop: spacing.xl },
     emptyBox: {
@@ -135,30 +130,31 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       paddingVertical: spacing.xxl,
     },
-    empty: {
-      ...typography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
+    listCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      overflow: 'hidden',
     },
     row: {
-      padding: spacing.md,
-    },
-    identity: {
-      width: '100%',
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     },
     unblockBtn: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
+      borderRadius: radius.pill ?? 999,
       borderWidth: 1,
       borderColor: colors.borderMid,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgElevated,
       minWidth: 96,
       alignItems: 'center',
+      flexShrink: 0,
     },
     unblockText: {
-      ...typography.caption,
-      color: colors.textPrimary,
       fontWeight: '600',
     },
   });

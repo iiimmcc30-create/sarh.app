@@ -2,25 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { throwApi } from '../../common/exceptions/api.exception';
 import {
-  boostPriceForHours,
-  promotionPriceForHours,
-  PROMOTION_DEFAULT_BASE_PER_24H,
-  BOOST_RATE_PER_12H,
-} from '../boost/boost-pricing.util';
-import type { BoostPlanType } from '../boost/boost-pricing.util';
-import { clampPromoteDurationHours } from './promotion-limits.config';
+  lookupPromotePrice,
+  type PromoteCatalogGoal,
+} from '../promote-catalog';
 import {
   estimatePromotionReach,
   DEFAULT_REACH_FACTORS,
   type ReachFactors,
 } from './reach-estimate.util';
 
-export type PromoteGoal = 'visibility' | 'pinned' | 'featured';
+export type PromoteGoal = PromoteCatalogGoal;
 
 export type PromoteQuoteInput = {
   goal: PromoteGoal;
   durationHours: number;
-  /** Ignored for visibility (price is fully computed server-side). Kept for API compatibility. */
+  /** Ignored. Kept for API compatibility. */
   amount?: number;
 };
 
@@ -31,7 +27,7 @@ export type PromoteQuoteResult = {
   minimumAmount: number;
   currency: 'SAR';
   reachEstimate?: { min: number; max: number };
-  pricingMode: 'duration_based';
+  pricingMode: 'catalog';
 };
 
 @Injectable()
@@ -49,32 +45,6 @@ export class PromoteQuoteService {
       /* fall through */
     }
     return fallback;
-  }
-
-  async getBoostRate(boostType: BoostPlanType): Promise<number> {
-    if (boostType === 'both') {
-      const pin = await this.getNumberSetting(
-        'pricing.boost.pin.per12h',
-        BOOST_RATE_PER_12H.pinned,
-      );
-      const ftr = await this.getNumberSetting(
-        'pricing.boost.feature.per12h',
-        BOOST_RATE_PER_12H.featured,
-      );
-      return pin + ftr;
-    }
-    const key =
-      boostType === 'pinned'
-        ? 'pricing.boost.pin.per12h'
-        : 'pricing.boost.feature.per12h';
-    return this.getNumberSetting(key, BOOST_RATE_PER_12H[boostType]);
-  }
-
-  async getPromotionBase(): Promise<number> {
-    return this.getNumberSetting(
-      'pricing.promotion.per24h',
-      PROMOTION_DEFAULT_BASE_PER_24H,
-    );
   }
 
   async getReachFactors(): Promise<ReachFactors> {
@@ -101,46 +71,32 @@ export class PromoteQuoteService {
   }
 
   async quote(input: PromoteQuoteInput): Promise<PromoteQuoteResult> {
-    const goal = input.goal;
-    const durationHours = clampPromoteDurationHours(input.durationHours);
+    const priced = lookupPromotePrice(input.goal, {
+      durationHours: input.durationHours,
+    });
+    if (!priced || priced.goal === 'both') {
+      throwApi(400, 'invalid_duration', 'مدة أو هدف الترويج غير صالح');
+    }
 
-    if (goal === 'visibility') {
-      const base = await this.getPromotionBase();
-      const amount = promotionPriceForHours(durationHours, base);
+    const amount = priced.amount;
+    const result: PromoteQuoteResult = {
+      goal: priced.goal,
+      durationHours: priced.durationHours,
+      amount,
+      minimumAmount: amount,
+      currency: 'SAR',
+      pricingMode: 'catalog',
+    };
+
+    if (priced.goal === 'visibility') {
       const factors = await this.getReachFactors();
-      const reachEstimate = estimatePromotionReach(
+      result.reachEstimate = estimatePromotionReach(
         amount,
-        durationHours,
+        priced.durationHours,
         factors,
       );
-      return {
-        goal,
-        durationHours,
-        amount,
-        minimumAmount: amount,
-        currency: 'SAR',
-        reachEstimate,
-        pricingMode: 'duration_based',
-      };
     }
 
-    if (goal === 'pinned' || goal === 'featured') {
-      const rate = await this.getBoostRate(goal as BoostPlanType);
-      const amount = boostPriceForHours(
-        goal as BoostPlanType,
-        durationHours,
-        rate,
-      );
-      return {
-        goal,
-        durationHours,
-        amount,
-        minimumAmount: amount,
-        currency: 'SAR',
-        pricingMode: 'duration_based',
-      };
-    }
-
-    throwApi(400, 'invalid_goal', 'هدف الترويج غير صالح');
+    return result;
   }
 }

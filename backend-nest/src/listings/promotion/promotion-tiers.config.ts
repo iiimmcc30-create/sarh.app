@@ -1,3 +1,5 @@
+import { promotionPlansFromCatalog } from '../promote-catalog';
+
 /** Extensible promotion tiers — add new keys without schema changes. */
 export type PromotionTierKey = 'standard';
 
@@ -20,16 +22,14 @@ export const PROMOTION_TIERS: Record<PromotionTierKey, PromotionTierConfig> = {
 
 export type PromotionPlanOption = {
   durationDays: number;
+  durationHours?: number;
   amount: number;
   labelAr: string;
 };
 
-/** Paid promotion pricing (independent from pin/feature). */
-export const PROMOTION_PLANS: PromotionPlanOption[] = [
-  { durationDays: 1, amount: 15, labelAr: 'يوم واحد' },
-  { durationDays: 3, amount: 39, labelAr: '٣ أيام' },
-  { durationDays: 7, amount: 79, labelAr: '٧ أيام' },
-];
+/** Paid promotion pricing — official catalog (visibility). */
+export const PROMOTION_PLANS: PromotionPlanOption[] =
+  promotionPlansFromCatalog();
 
 export const PROMOTION_INTERVAL_MIN = 6;
 export const PROMOTION_INTERVAL_MAX = 8;

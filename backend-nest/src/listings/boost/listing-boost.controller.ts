@@ -35,7 +35,7 @@ class InitiateBoostDto {
   boostType: BoostType;
 
   @IsOptional()
-  @IsIn([1, 3, 7])
+  @IsIn([1, 3])
   durationDays?: number;
 
   @IsOptional()

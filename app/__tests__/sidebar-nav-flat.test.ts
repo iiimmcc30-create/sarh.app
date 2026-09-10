@@ -53,6 +53,9 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
 
   it('uses flat settings sections', () => {
     const settings = src('components/feature/ProfileSettingsMenuScreen.tsx');
-    expect(settings).toContain('variant="flat"');
+    expect(settings).toContain('SarhSettingsSection');
+    expect(settings).toContain('SarhSettingsRow');
+    expect(settings).not.toContain('menuCardStyle');
+    expect(settings).not.toContain('variant="card"');
   });
 });

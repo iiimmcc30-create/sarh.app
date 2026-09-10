@@ -110,8 +110,10 @@ describe('promotion tiers', () => {
   });
 
   it('finds plan by duration days', () => {
-    expect(promotionPlanForDays(3)?.amount).toBe(39);
+    expect(promotionPlanForDays(1)?.amount).toBe(19);
+    expect(promotionPlanForDays(2)?.amount).toBe(35);
+    expect(promotionPlanForDays(3)).toBeUndefined();
     expect(promotionPlanForDays(99)).toBeUndefined();
-    expect(PROMOTION_PLANS).toHaveLength(3);
+    expect(PROMOTION_PLANS).toHaveLength(2);
   });
 });

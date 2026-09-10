@@ -1,103 +1,91 @@
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { ScreenScaffold } from '@/components/ui/ScreenScaffold';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
+import { getRtlRow } from '@/lib/rtl';
 import { launchPaymentCheckout } from '@/services/payments';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import type { Listing } from '@/services/types';
 import {
-  PROMOTE_AMOUNT_DEFAULT,
-  PROMOTE_AMOUNT_MAX,
-  PROMOTE_AMOUNT_MIN,
-  PROMOTE_DURATION_HOURS_DEFAULT,
-  PROMOTE_DURATION_HOURS_MAX,
-  PROMOTE_DURATION_HOURS_MIN,
-  PROMOTE_GOAL_OPTIONS,
   buildPromoteCheckoutPayload,
-  clampPromoteAmount,
-  clampPromoteDurationHours,
-  estimatePromotionReach,
-  formatPromoteAmount,
-  formatPromoteHours,
-  formatReachEstimate,
+  fetchPromoteQuote,
   goalFromBoostType,
   initiatePromotePayment,
-  parsePromoteAmountInput,
-  parsePromoteDurationInput,
-  resolvePromoteAmount,
-  validatePromoteForm,
   type PromotionGoal,
-  type ReachEstimate,
-  computeVisibilityMinPrice,
 } from '@/services/listingPromote';
+import { listPromoteCatalogOptions } from '@/services/promoteCatalog';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import {
   firstEnabledPromoteGoal,
   isPromoteGoalEnabled,
 } from '@/services/paidServices';
-import Slider from '@react-native-community/slider';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Animated,
-  Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { AppText, SarhButton, SarhDivider } from '@/design-system/components';
 
-function goalAccentColor(
-  accent: 'electric' | 'gold' | 'promotion',
-  colors: ThemeColors,
-): string {
-  if (accent === 'gold') return colors.gold;
-  if (accent === 'promotion') return '#7C3AED';
-  return colors.electric;
-}
+type ServiceCopy = {
+  goal: PromotionGoal;
+  icon: string;
+  title: string;
+  desc: string;
+};
 
-function PromoteValueDisplay({
-  value,
-  styles,
-}: {
-  value: string;
-  styles: ReturnType<typeof createStyles>;
-}) {
+const SERVICE_COPY: ServiceCopy[] = [
+  {
+    goal: 'featured',
+    icon: 'star',
+    title: 'تمييز الإعلان',
+    desc: 'نجمة ذهبية بجانب العنوان في نتائج البحث',
+  },
+  {
+    goal: 'pinned',
+    icon: 'pin',
+    title: 'تثبيت الإعلان',
+    desc: 'يبقى الإعلان في أعلى القائمة مع دبوس صغير',
+  },
+  {
+    goal: 'visibility',
+    icon: 'rocket-outline',
+    title: 'ترويج الإعلان',
+    desc: 'زيادة قوة الظهور في الخوارزمية بدون تغيير بصري',
+  },
+];
+
+function PriceDisplay({ price, styles }: { price: number; styles: ReturnType<typeof createStyles> }) {
   const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.sequence([
-      Animated.timing(scale, { toValue: 1.04, duration: 90, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1.06, duration: 80, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 110, useNativeDriver: true }),
     ]).start();
-  }, [scale, value]);
+  }, [scale, price]);
 
   return (
-    <Animated.Text style={[styles.sliderValue, { transform: [{ scale }] }]}>
-      {value}
+    <Animated.Text style={[styles.priceValue, { transform: [{ scale }] }]}>
+      {price} ر.س
     </Animated.Text>
   );
 }
 
 export default function ListingPromoteScreen() {
   const { id, goal: goalParam } = useLocalSearchParams<{ id: string; goal?: string }>();
-  const router = useRouter();
   const { accessToken } = useAuth();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
@@ -106,29 +94,24 @@ export default function ListingPromoteScreen() {
   const initialGoal = goalFromBoostType(goalParam ?? null);
 
   const [goal, setGoal] = useState<PromotionGoal | null>(initialGoal);
-  const enabledGoals = useMemo(
-    () => PROMOTE_GOAL_OPTIONS.filter((option) => isPromoteGoalEnabled(option.key, paidFlags)),
-    [paidFlags],
-  );
+  const [selectedDurationIndex, setSelectedDurationIndex] = useState(0);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [quotedAmount, setQuotedAmount] = useState<number | null>(null);
+
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [listingLoading, setListingLoading] = useState(true);
 
   useEffect(() => {
     if (!hasAnyBoostService) return;
     if (goal && isPromoteGoalEnabled(goal, paidFlags)) return;
     setGoal(firstEnabledPromoteGoal(paidFlags));
   }, [goal, hasAnyBoostService, paidFlags]);
-  const [amount, setAmount] = useState(PROMOTE_AMOUNT_DEFAULT);
-  const [durationHours, setDurationHours] = useState(PROMOTE_DURATION_HOURS_DEFAULT);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const [customAmountOpen, setCustomAmountOpen] = useState(false);
-  const [customDurationOpen, setCustomDurationOpen] = useState(false);
-  const [customAmountDraft, setCustomAmountDraft] = useState(String(PROMOTE_AMOUNT_DEFAULT));
-  const [customDurationDraft, setCustomDurationDraft] = useState(
-    String(PROMOTE_DURATION_HOURS_DEFAULT),
-  );
-  const [listing, setListing] = useState<Listing | null>(null);
-  const [listingLoading, setListingLoading] = useState(true);
+  useEffect(() => {
+    setSelectedDurationIndex(0);
+    setError(null);
+  }, [goal]);
 
   useEffect(() => {
     if (!id) return;
@@ -180,46 +163,52 @@ export default function ListingPromoteScreen() {
   const listingTitle = listing?.arabicTitle || listing?.title || 'إعلانك';
   const listingThumb = listing?.images?.[0];
 
-  const isVisibility = goal === 'visibility';
-  const isDurationPriced = goal === 'pinned' || goal === 'featured';
-
-  // Compute the minimum required budget for visibility based on duration
-  const visibilityMinPrice = useMemo(() => {
-    if (!isVisibility) return PROMOTE_AMOUNT_MIN;
-    return computeVisibilityMinPrice(durationHours);
-  }, [isVisibility, durationHours]);
-
-  // Auto-bump budget to minimum when duration changes
-  useEffect(() => {
-    if (!isVisibility) return;
-    const minPrice = computeVisibilityMinPrice(durationHours);
-    setAmount((prev) => Math.max(prev, minPrice));
-  }, [isVisibility, durationHours]);
-
-  const totalAmount = useMemo(() => {
-    if (!goal) return 0;
-    return resolvePromoteAmount(goal, durationHours, amount);
-  }, [goal, durationHours, amount]);
-
-  const reachEstimate: ReachEstimate | null = useMemo(() => {
-    if (!isVisibility) return null;
-    return estimatePromotionReach(totalAmount, durationHours);
-  }, [isVisibility, totalAmount, durationHours]);
-
-  const validationError = useMemo(
-    () => validatePromoteForm(goal, amount, durationHours),
-    [goal, amount, durationHours],
+  const enabledServices = useMemo(
+    () =>
+      SERVICE_COPY.filter((s) => isPromoteGoalEnabled(s.goal, paidFlags)).map((s) => ({
+        ...s,
+        durations: listPromoteCatalogOptions(s.goal),
+      })),
+    [paidFlags],
   );
 
-  const checkoutPayload = useMemo(() => {
-    if (!id || !goal) return null;
-    return buildPromoteCheckoutPayload(id, goal, amount, durationHours);
-  }, [amount, durationHours, goal, id]);
+  const selectedService = useMemo(
+    () => enabledServices.find((s) => s.goal === goal) ?? null,
+    [enabledServices, goal],
+  );
 
-  const canPay = Boolean(accessToken && checkoutPayload && !validationError && !processing);
+  const selectedDuration = selectedService?.durations[selectedDurationIndex] ?? null;
+
+  useEffect(() => {
+    if (!goal || !selectedDuration) {
+      setQuotedAmount(null);
+      return;
+    }
+    let cancelled = false;
+    setQuotedAmount(null);
+    void fetchPromoteQuote(goal, selectedDuration.durationHours)
+      .then((quote) => {
+        if (!cancelled) setQuotedAmount(quote.amount);
+      })
+      .catch(() => {
+        if (!cancelled) setQuotedAmount(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [goal, selectedDuration]);
+
+  const displayPrice = quotedAmount ?? selectedDuration?.amount ?? null;
+
+  const checkoutPayload = useMemo(() => {
+    if (!id || !goal || !selectedDuration) return null;
+    return buildPromoteCheckoutPayload(id, goal, selectedDuration.durationHours);
+  }, [id, goal, selectedDuration]);
+
+  const canPay = Boolean(accessToken && checkoutPayload && !processing && hasAnyBoostService && goal);
 
   const handlePay = useCallback(async () => {
-    if (!accessToken || !checkoutPayload || validationError) return;
+    if (!accessToken || !checkoutPayload) return;
     setProcessing(true);
     setError(null);
     try {
@@ -234,7 +223,7 @@ export default function ListingPromoteScreen() {
           listingId: checkoutPayload.adId,
           boostType: checkoutPayload.promotionGoal,
           durationHours: String(checkoutPayload.promotionDurationHours),
-          promotionAmount: String(checkoutPayload.promotionAmount),
+          promotionAmount: String(result.amount),
         },
       });
     } catch (err) {
@@ -242,388 +231,219 @@ export default function ListingPromoteScreen() {
     } finally {
       setProcessing(false);
     }
-  }, [accessToken, checkoutPayload, validationError]);
-
-  const applyCustomAmount = () => {
-    const parsed = parsePromoteAmountInput(customAmountDraft);
-    if (parsed == null) {
-      Alert.alert('مبلغ غير صالح', `أدخل مبلغاً بين ${visibilityMinPrice} و ${PROMOTE_AMOUNT_MAX} ريال`);
-      return;
-    }
-    const enforced = Math.max(parsed, visibilityMinPrice);
-    setAmount(enforced);
-    setCustomAmountOpen(false);
-    Keyboard.dismiss();
-  };
-
-  const applyCustomDuration = () => {
-    const parsed = parsePromoteDurationInput(customDurationDraft);
-    if (parsed == null) {
-      Alert.alert(
-        'مدة غير صالحة',
-        `أدخل مدة بين ${PROMOTE_DURATION_HOURS_MIN} و ${PROMOTE_DURATION_HOURS_MAX} ساعة`,
-      );
-      return;
-    }
-    setDurationHours(parsed);
-    setCustomDurationOpen(false);
-    Keyboard.dismiss();
-  };
+  }, [accessToken, checkoutPayload]);
 
   if (!id) {
     return (
-      <ScreenScaffold>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ScreenHeader title="تعزيز سرح" showBack />
         <View style={styles.centered}>
-          <Text style={styles.errorText}>معرّف الإعلان غير متوفر</Text>
+          <AppText variant="body" color="textMuted">معرّف الإعلان غير متوفر</AppText>
         </View>
-      </ScreenScaffold>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScreenScaffold edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
-        style={[styles.flex, getRtlDirection()]}
+        style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[styles.header, getRtlRow()]}>
-          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-          <Text style={styles.pageTitle}>الترويج</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+        <ScreenHeader title="تعزيز سرح" showBack />
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.listingHero}>
-            <View style={styles.listingHeroThumb}>
+        <AppScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={[styles.listingRow, getRtlRow()]}>
+            <View style={styles.thumbWrap}>
               {listingThumb ? (
-                <Image source={uriSource(listingThumb)} style={styles.listingHeroImg} contentFit="cover" />
+                <Image source={uriSource(listingThumb)} style={styles.thumbImg} contentFit="cover" />
               ) : (
-                <View style={styles.listingHeroPlaceholder}>
-                  <AppIcon name="image-outline" size={24} color={colors.textMuted} />
+                <View style={styles.thumbPlaceholder}>
+                  <AppIcon name="image-outline" size={22} color={colors.textMuted} />
                 </View>
               )}
             </View>
-            <View style={styles.listingHeroBody}>
+            <View style={styles.listingBody}>
               {listingLoading ? (
-                <ActivityIndicator color={colors.electric} size="small" />
+                <ActivityIndicator color={colors.electricBright} size="small" />
               ) : (
                 <>
-                  <View style={[styles.listingHeroTitleRow, getRtlRow()]}>
-                    <Text style={styles.listingHeroTitle} numberOfLines={2}>
+                  <View style={[getRtlRow(), { alignItems: 'flex-start', gap: 6 }]}>
+                    <AppText variant="label" color="textPrimary" numberOfLines={2} style={{ flex: 1, lineHeight: 22 }}>
                       {listingTitle}
-                    </Text>
-                    <ListingBoostTitleIcons
-                      pinned={listing?.pinned}
-                      featured={listing?.featured}
-                    />
+                    </AppText>
+                    <ListingBoostTitleIcons pinned={listing?.pinned} featured={listing?.featured} />
                   </View>
                   {listing?.price && listing.price > 0 ? (
-                    <Text style={styles.listingHeroPrice}>
+                    <AppText variant="caption" style={styles.listingPrice}>
                       {listing.price.toLocaleString('ar-SA')} {listing.currency || 'SAR'}
-                    </Text>
+                    </AppText>
                   ) : null}
                 </>
               )}
             </View>
           </View>
 
+          {!hasAnyBoostService ? (
+            <View style={styles.disabledBanner}>
+              <AppIcon name="information-outline" size={18} color={colors.textMuted} />
+              <AppText variant="caption" color="textMuted" style={{ flex: 1 }}>
+                خدمات التعزيز غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
+              </AppText>
+            </View>
+          ) : null}
+
           <View style={styles.section}>
-            <View style={{ width: '100%' }}>
-              <AppText style={[styles.sectionTitle, styles.sectionTitleBlock]}>اختيار الهدف</AppText>
-            </View>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionHint}>حدّد ما تريد تحقيقه من الترويج</AppText>
-            </View>
-            <View style={styles.goalList}>
-              {!hasAnyBoostService ? (
-                <View style={{ width: '100%' }}>
-                  <AppText style={styles.sectionHint}>
-                    خدمات الترقية غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
-                  </AppText>
-                </View>
-              ) : null}
-              {enabledGoals.map((option) => {
-                const selected = goal === option.key;
-                const accent = goalAccentColor(option.accent, colors);
-                return (
+            <AppText variant="label" color="textSecondary" style={styles.sectionLabel}>
+              اختر الخدمة
+            </AppText>
+            {enabledServices.map((svc, idx) => {
+              const selected = goal === svc.goal;
+              return (
+                <View key={svc.goal}>
                   <Pressable
-                    key={option.key}
-                    onPress={() => {
-                      setGoal(option.key);
-                      setError(null);
-                    }}
-                    style={[
-                      styles.goalCard,
-                      selected && { borderColor: accent, backgroundColor: `${accent}10` },
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    onPress={() => setGoal(svc.goal)}
+                    style={({ pressed }) => [
+                      styles.serviceRow,
+                      selected && styles.serviceRowSelected,
+                      { opacity: pressed ? 0.75 : 1 },
                     ]}
                   >
-                    <View style={[styles.goalTop, getRtlRow()]}>
-                      <View
-                        style={[
-                          styles.radioOuter,
-                          selected && { borderColor: accent },
-                        ]}
-                      >
-                        {selected ? <View style={[styles.radioInner, { backgroundColor: accent }]} /> : null}
+                    <View style={[getRtlRow(), { alignItems: 'center', flex: 1, gap: spacing.md }]}>
+                      <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
+                        {selected ? <View style={styles.radioInner} /> : null}
                       </View>
-                      <View style={[styles.goalIconWrap, selected && { backgroundColor: `${accent}18` }]}>
-                        <AppIcon
-                          name={option.icon}
-                          size={20}
-                          color={selected ? accent : colors.textMuted}
-                        />
+                      <AppIcon
+                        name={svc.icon}
+                        size={18}
+                        color={selected ? colors.electricBright : colors.textMuted}
+                      />
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <AppText variant="label" color={selected ? 'textPrimary' : 'textSecondary'}>
+                          {svc.title}
+                        </AppText>
+                        <AppText variant="caption" color="textMuted" numberOfLines={1}>
+                          {svc.desc}
+                        </AppText>
                       </View>
-                      <View style={styles.goalTextWrap}>
-                        <View style={{ width: '100%' }}>
-                          <AppText style={[styles.goalTitle, selected && { color: accent }]}>
-                            {option.title}
-                          </AppText>
-                        </View>
-                        <View style={{ width: '100%' }}>
-                          <AppText style={styles.goalDesc}>{option.desc}</AppText>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={[styles.goalPreviewTag, getRtlRow()]}>
-                      {option.key === 'visibility' ? (
-                        <>
-                          <AppIcon name="trending-up-outline" size={13} color="#7C3AED" />
-                          <View style={styles.goalPreviewTextShell}>
-                            <Text style={styles.goalPreviewText}>بدون تغيير على شكل الإعلان</Text>
-                          </View>
-                        </>
-                      ) : option.key === 'pinned' ? (
-                        <>
-                          <View style={[styles.goalPreviewIcon, { backgroundColor: `${colors.electric}18` }]}>
-                            <AppIcon name="pin" size={11} color={colors.electric} />
-                          </View>
-                          <View style={styles.goalPreviewTextShell}>
-                            <Text style={styles.goalPreviewText}>دبوس بجانب العنوان</Text>
-                          </View>
-                        </>
-                      ) : (
-                        <>
-                          <View style={[styles.goalPreviewIcon, { backgroundColor: `${colors.gold}30` }]}>
-                            <AppIcon name="star" size={11} color="#1A1300" />
-                          </View>
-                          <View style={styles.goalPreviewTextShell}>
-                            <Text style={styles.goalPreviewText}>نجمة ذهبية بجانب العنوان</Text>
-                          </View>
-                        </>
-                      )}
                     </View>
                   </Pressable>
-                );
-              })}
-            </View>
+                  {idx < enabledServices.length - 1 ? <SarhDivider inset /> : null}
+                </View>
+              );
+            })}
           </View>
 
-          {isVisibility ? (
-            <View style={styles.sliderCard}>
-              <View style={[styles.sectionHeaderRow, getRtlRow()]}>
-                <Text style={styles.sectionTitle}>الميزانية</Text>
-                <Pressable
-                  onPress={() => {
-                    setCustomAmountDraft(String(amount));
-                    setCustomAmountOpen(true);
-                  }}
-                  hitSlop={8}
-                  style={[styles.customBtn, getRtlRow()]}
-                >
-                  <AppIcon name="create-outline" size={15} color={colors.electric} />
-                  <Text style={styles.customBtnText}>مبلغ مخصص</Text>
-                </Pressable>
-              </View>
-              <PromoteValueDisplay value={formatPromoteAmount(amount)} styles={styles} />
-              {visibilityMinPrice > PROMOTE_AMOUNT_MIN ? (
-                <Text style={styles.minBudgetHint}>
-                  الحد الأدنى للميزانية لهذه المدة: {formatPromoteAmount(visibilityMinPrice)}
-                </Text>
-              ) : null}
-              <Slider
-                style={styles.slider}
-                minimumValue={visibilityMinPrice}
-                maximumValue={PROMOTE_AMOUNT_MAX}
-                step={1}
-                value={Math.max(amount, visibilityMinPrice)}
-                onValueChange={(v) => setAmount(Math.max(visibilityMinPrice, Math.round(v)))}
-                minimumTrackTintColor="#7C3AED"
-                maximumTrackTintColor={colors.borderSoft}
-                thumbTintColor="#7C3AED"
-              />
-              <View style={[styles.sliderBounds, getRtlRow()]}>
-                <Text style={styles.sliderBoundText}>{formatPromoteAmount(visibilityMinPrice)}</Text>
-                <Text style={styles.sliderBoundText}>{PROMOTE_AMOUNT_MAX} ر.س</Text>
-              </View>
-            </View>
-          ) : null}
-
-          {goal ? (
-            <View style={styles.sliderCard}>
-              <View style={[styles.sectionHeaderRow, getRtlRow()]}>
-                <Text style={styles.sectionTitle}>المدة</Text>
-                <Pressable
-                  onPress={() => {
-                    setCustomDurationDraft(String(durationHours));
-                    setCustomDurationOpen(true);
-                  }}
-                  hitSlop={8}
-                  style={[styles.customBtn, getRtlRow()]}
-                >
-                  <AppIcon name="create-outline" size={15} color={colors.electric} />
-                  <Text style={styles.customBtnText}>مدة مخصصة</Text>
-                </Pressable>
-              </View>
-              <PromoteValueDisplay value={formatPromoteHours(durationHours)} styles={styles} />
-              <Slider
-                style={styles.slider}
-                minimumValue={PROMOTE_DURATION_HOURS_MIN}
-                maximumValue={PROMOTE_DURATION_HOURS_MAX}
-                step={1}
-                value={durationHours}
-                onValueChange={(v) => setDurationHours(clampPromoteDurationHours(v))}
-                minimumTrackTintColor={colors.electric}
-                maximumTrackTintColor={colors.borderSoft}
-                thumbTintColor={colors.electricBright}
-              />
-              <View style={[styles.sliderBounds, getRtlRow()]}>
-                <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MIN} ساعة</Text>
-                <Text style={styles.sliderBoundText}>{PROMOTE_DURATION_HOURS_MAX} ساعة</Text>
+          {selectedService ? (
+            <View style={styles.section}>
+              <AppText variant="label" color="textSecondary" style={styles.sectionLabel}>
+                اختر المدة
+              </AppText>
+              <View style={[getRtlRow(), { gap: spacing.sm }]}>
+                {selectedService.durations.map((dur, i) => {
+                  const active = selectedDurationIndex === i;
+                  return (
+                    <Pressable
+                      key={dur.durationHours}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      onPress={() => setSelectedDurationIndex(i)}
+                      style={({ pressed }) => [
+                        styles.durationChip,
+                        active && styles.durationChipActive,
+                        { opacity: pressed ? 0.75 : 1, flex: 1 },
+                      ]}
+                    >
+                      <AppText
+                        variant="label"
+                        color={active ? 'textPrimary' : 'textSecondary'}
+                        style={{ textAlign: 'center' }}
+                      >
+                        {dur.labelAr}
+                      </AppText>
+                      <AppText
+                        variant="caption"
+                        color={active ? 'textPrimary' : 'textMuted'}
+                        style={{ textAlign: 'center', fontWeight: '700' }}
+                      >
+                        {dur.amount} ر.س
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           ) : null}
 
-          {isVisibility && reachEstimate ? (
-            <View style={styles.reachCard}>
-              <View style={[styles.reachHeader, getRtlRow()]}>
-                <AppIcon name="trending-up-outline" size={18} color="#7C3AED" />
-                <Text style={styles.reachTitle}>تقدير الوصول</Text>
+          {selectedService && selectedDuration && displayPrice != null ? (
+            <View style={styles.summarySection}>
+              <View style={[getRtlRow(), styles.summaryRow]}>
+                <AppText variant="caption" color="textMuted">الخدمة</AppText>
+                <AppText variant="label" color="textPrimary">{selectedService.title}</AppText>
               </View>
-              <Text style={styles.reachValue}>
-                متوقع وصول إعلانك إلى {formatReachEstimate(reachEstimate)}
-              </Text>
-              <Text style={styles.reachHint}>
-                تقدير تقريبي يعتمد على الميزانية والمدة — قد يختلف حسب نشاط السوق
-              </Text>
+              <SarhDivider />
+              <View style={[getRtlRow(), styles.summaryRow]}>
+                <AppText variant="caption" color="textMuted">المدة</AppText>
+                <AppText variant="label" color="textPrimary">{selectedDuration.labelAr}</AppText>
+              </View>
+              <SarhDivider />
+              <View style={[getRtlRow(), styles.summaryRow]}>
+                <AppText variant="caption" color="textMuted">السعر</AppText>
+                <PriceDisplay price={displayPrice} styles={styles} />
+              </View>
+              <View style={styles.serverNote}>
+                <AppText variant="micro" color="textMuted" style={{ textAlign: 'center' }}>
+                  السعر النهائي يُحدَّد من الخادم عند بدء الدفع
+                </AppText>
+              </View>
             </View>
           ) : null}
 
-          {isDurationPriced && goal ? (
-            <View style={styles.priceCard}>
-              <Text style={styles.priceCardLabel}>السعر حسب المدة</Text>
-              <Text style={styles.priceCardValue}>{formatPromoteAmount(totalAmount)}</Text>
-              <Text style={styles.priceCardHint}>
-                يُحسب السعر تلقائياً من النظام — لا حاجة لتحديد المبلغ
-              </Text>
+          {error ? (
+            <View style={[styles.errorRow, getRtlRow()]}>
+              <AppIcon name="alert-circle-outline" size={16} color={colors.danger} />
+              <AppText variant="caption" color="danger" style={{ flex: 1 }}>{error}</AppText>
             </View>
           ) : null}
-
-          {validationError ? (
-            <Text style={styles.validationText}>{validationError}</Text>
-          ) : null}
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        </ScrollView>
+        </AppScrollView>
 
         <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
-          <View style={[styles.bottomInner, getRtlRow()]}>
-            <View style={styles.totalBlock}>
-              <View style={{ width: '100%' }}>
-                <AppText style={styles.totalLabel}>الإجمالي</AppText>
-              </View>
-              <View style={{ width: '100%' }}>
-                <AppText style={styles.totalValue}>{formatPromoteAmount(totalAmount)}</AppText>
-              </View>
+          <View style={[getRtlRow(), styles.bottomInner]}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText variant="caption" color="textMuted">الإجمالي</AppText>
+              <AppText variant="heading3" color="textPrimary" style={{ fontWeight: '700' }}>
+                {displayPrice != null ? `${displayPrice} ر.س` : '—'}
+              </AppText>
             </View>
-            <View style={styles.payBtnWrap}>
+            <View style={{ flex: 1.2 }}>
               <SarhButton
                 title="الدفع"
                 onPress={handlePay}
-                disabled={!canPay || !hasAnyBoostService || !goal}
+                disabled={!canPay}
                 loading={processing}
                 fullWidth
               />
             </View>
           </View>
         </SafeAreaView>
-
-        <Modal visible={customAmountOpen} transparent animationType="fade" onRequestClose={() => setCustomAmountOpen(false)}>
-          <Pressable style={styles.modalOverlay} onPress={() => setCustomAmountOpen(false)}>
-            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.modalTitle}>مبلغ مخصص</Text>
-              <TextInput
-                value={customAmountDraft}
-                onChangeText={setCustomAmountDraft}
-                keyboardType="number-pad"
-                style={[styles.modalInput, getRtlText()]}
-                placeholder={`${PROMOTE_AMOUNT_MIN} - ${PROMOTE_AMOUNT_MAX}`}
-                placeholderTextColor={colors.textMuted}
-              />
-              <SarhButton title="تطبيق" onPress={applyCustomAmount} fullWidth />
-            </Pressable>
-          </Pressable>
-        </Modal>
-
-        <Modal
-          visible={customDurationOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setCustomDurationOpen(false)}
-        >
-          <Pressable style={styles.modalOverlay} onPress={() => setCustomDurationOpen(false)}>
-            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.modalTitle}>مدة مخصصة (ساعات)</Text>
-              <TextInput
-                value={customDurationDraft}
-                onChangeText={setCustomDurationDraft}
-                keyboardType="number-pad"
-                style={[styles.modalInput, getRtlText()]}
-                placeholder={`${PROMOTE_DURATION_HOURS_MIN} - ${PROMOTE_DURATION_HOURS_MAX}`}
-                placeholderTextColor={colors.textMuted}
-              />
-              <SarhButton title="تطبيق" onPress={applyCustomDuration} fullWidth />
-            </Pressable>
-          </Pressable>
-        </Modal>
       </KeyboardAvoidingView>
-    </ScreenScaffold>
+    </SafeAreaView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
-    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    header: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.sm,
-    },
-    backBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerSpacer: { width: 40 },
-    pageTitle: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      fontWeight: '600',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
     scrollContent: {
-      paddingHorizontal: spacing.lg,
+      padding: spacing.lg,
       paddingBottom: 140,
       gap: spacing.lg,
     },
-    listingHero: {
-      ...getRtlRow(),
+    listingRow: {
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.md,
@@ -632,180 +452,109 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    listingHeroThumb: {
-      width: 64,
-      height: 64,
-      borderRadius: radius.lg,
-      overflow: 'hidden',
-      flexShrink: 0,
-    },
-    listingHeroImg: {
-      width: '100%',
-      height: '100%',
-    },
-    listingHeroPlaceholder: {
+    thumbWrap: { width: 64, height: 64, borderRadius: radius.lg, overflow: 'hidden', flexShrink: 0 },
+    thumbImg: { width: '100%', height: '100%' },
+    thumbPlaceholder: {
       flex: 1,
       backgroundColor: colors.bgDeep,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    listingHeroBody: {
-      flex: 1,
-      gap: 4,
-      minWidth: 0,
-    },
-    listingHeroTitleRow: {
-      alignItems: 'flex-start',
-      gap: 6,
-    },
-    listingHeroTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      ...getRtlText(),
-      ...getRtlText(),
-      flex: 1,
-      lineHeight: 22,
-    },
-    listingHeroPrice: {
-      ...typography.caption,
+    listingBody: { flex: 1, gap: 4, minWidth: 0 },
+    listingPrice: {
       color: colors.textBrandStrong,
       fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
     },
-    section: {
-      gap: spacing.sm,
-    },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    sectionHint: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    sliderCard: {
+    disabledBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
       gap: spacing.sm,
       padding: spacing.md,
-      borderRadius: radius.xl,
+      borderRadius: radius.lg,
       backgroundColor: colors.bgSurface,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    sectionHeaderRow: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    sectionTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      fontWeight: '600',
-    },
-    sectionTitleBlock: {
-      width: '100%',
-    },
-    customBtn: {
-      alignItems: 'center',
-      gap: 4,
-    },
-    customBtnText: {
-      ...typography.caption,
-      color: colors.electric,
-      fontWeight: '600',
-    },
-    goalList: { gap: spacing.sm },
-    goalCard: {
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      padding: spacing.md,
-    },
-    goalTop: {
-      alignItems: 'center',
+    section: {
       gap: spacing.sm,
     },
+    sectionLabel: {
+      paddingHorizontal: 2,
+    },
+    serviceRow: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgSurface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+    },
+    serviceRowSelected: {
+      borderColor: colors.electricBright,
+      backgroundColor: colors.bgElevated,
+    },
     radioOuter: {
-      width: 22,
-      height: 22,
-      borderRadius: 12,
-      borderWidth: 2,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 1.5,
       borderColor: colors.borderMid,
       alignItems: 'center',
       justifyContent: 'center',
+      flexShrink: 0,
     },
+    radioOuterSelected: { borderColor: colors.electricBright },
     radioInner: {
       width: 10,
       height: 10,
       borderRadius: 5,
+      backgroundColor: colors.electricBright,
     },
-    goalIconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+    durationChip: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgSurface,
+      alignItems: 'center',
+      gap: 4,
+    },
+    durationChipActive: {
+      borderColor: colors.electricBright,
       backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
-    goalTextWrap: { flex: 1, gap: 4, minWidth: 0 },
-    goalTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
+    summarySection: {
+      borderRadius: radius.xl,
+      backgroundColor: colors.bgSurface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSoft,
+      overflow: 'hidden',
     },
-    goalDesc: {
-      ...typography.caption,
-      color: colors.textMuted,
-      lineHeight: 18,
-    },
-    goalPreviewTag: {
-      alignItems: 'center',
-      gap: 6,
-      marginTop: spacing.xs,
-      paddingTop: spacing.sm,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderHairline,
-    },
-    goalPreviewIcon: {
-      width: 20,
-      height: 20,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    goalPreviewTextShell: {
-      flex: 1,
-      minWidth: 0,
-          },
-    goalPreviewText: {
-      ...typography.micro,
-      color: colors.textMuted,
-      fontWeight: '600',
-    },
-    sliderValue: {
-      ...typography.display,
-      color: colors.textBrandStrong,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    slider: {
-      width: '100%',
-      height: 40,
-    },
-    sliderBounds: {
+    summaryRow: {
       justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     },
-    sliderBoundText: {
-      ...typography.micro,
-      color: colors.textMuted,
+    priceValue: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.textBrandStrong,
     },
-    validationText: {
-      ...typography.caption,
-      color: colors.warning,
-      ...getRtlText(),
-      ...getRtlText(),
+    serverNote: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+      paddingTop: spacing.xs,
     },
-    errorText: {
-      ...typography.caption,
-      color: colors.danger,
-      ...getRtlText(),
-      ...getRtlText(),
+    errorRow: {
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.lg,
+      backgroundColor: `${colors.danger}12`,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: `${colors.danger}40`,
     },
     bottomBar: {
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -818,118 +567,6 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       gap: spacing.md,
-    },
-    totalBlock: {
-      flex: 1,
-      gap: 2,
-    },
-    totalLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    totalValue: {
-      ...typography.h3,
-      color: colors.textBrandStrong,
-      fontWeight: '600',
-    },
-    payBtnWrap: {
-      flex: 1.2,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: colors.bgOverlay,
-      justifyContent: 'center',
-      padding: spacing.lg,
-    },
-    modalCard: {
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgSurface,
-      padding: spacing.lg,
-      gap: spacing.md,
-    },
-    modalTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    modalInput: {
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      borderRadius: radius.lg,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      color: colors.textPrimary,
-      backgroundColor: colors.bgElevated,
-      ...typography.valueLarge,
-    },
-    minBudgetHint: {
-      ...typography.caption,
-      color: '#7C3AED',
-      fontWeight: '600' as const,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    reachCard: {
-      gap: spacing.sm,
-      padding: spacing.md,
-      borderRadius: radius.xl,
-      backgroundColor: '#7C3AED12',
-      borderWidth: 1,
-      borderColor: '#7C3AED40',
-    },
-    reachHeader: {
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    reachTitle: {
-      ...typography.bodyStrong,
-      color: '#7C3AED',
-      fontWeight: '600',
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    reachValue: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      fontWeight: '600',
-      lineHeight: 24,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    reachHint: {
-      ...typography.micro,
-      color: colors.textMuted,
-      lineHeight: 18,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    priceCard: {
-      gap: spacing.xs,
-      padding: spacing.md,
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      alignItems: 'center',
-    },
-    priceCardLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    priceCardValue: {
-      ...typography.display,
-      color: colors.textBrandStrong,
-      ...getRtlText(),
-      ...getRtlText(),
-    },
-    priceCardHint: {
-      ...typography.micro,
-      color: colors.textMuted,
-      ...getRtlText(),
-      ...getRtlText(),
     },
   });
 }
