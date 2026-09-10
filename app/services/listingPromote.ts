@@ -1,39 +1,16 @@
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
+import { lookupPromoteCatalogOption } from '@/services/promoteCatalog';
 
 export type PromotionGoal = 'visibility' | 'pinned' | 'featured';
 
 export const PROMOTE_AMOUNT_MIN = 10;
 export const PROMOTE_AMOUNT_MAX = 500;
-export const PROMOTE_AMOUNT_DEFAULT = 20;
+export const PROMOTE_AMOUNT_DEFAULT = 19;
 
 export const PROMOTE_DURATION_HOURS_MIN = 1;
 export const PROMOTE_DURATION_HOURS_MAX = 168;
-export const PROMOTE_DURATION_HOURS_DEFAULT = 6;
-
-/**
- * Default base rate for visibility promotion per 24h.
- * Mirrors AppSettings default `pricing.promotion.per24h`.
- */
-export const PROMOTION_BASE_PER_24H = 10;
-
-/**
- * Boost price formula: ceil(hours / 12) × rate_per_12h
- * PIN:     rate = 6 SAR / 12h
- * FEATURE: rate = 5 SAR / 12h
- *
- * Examples (PIN):
- *   1h  → ceil(1/12)×6  = 1×6 = 6
- *  12h  → ceil(12/12)×6 = 1×6 = 6
- *  13h  → ceil(13/12)×6 = 2×6 = 12
- *  24h  → ceil(24/12)×6 = 2×6 = 12
- *  25h  → ceil(25/12)×6 = 3×6 = 18
- *  48h  → ceil(48/12)×6 = 4×6 = 24
- */
-const BOOST_RATE_PER_12H: Record<'pinned' | 'featured', number> = {
-  pinned: 6,
-  featured: 5,
-};
+export const PROMOTE_DURATION_HOURS_DEFAULT = 24;
 
 export type PromoteGoalOption = {
   key: PromotionGoal;
@@ -76,7 +53,7 @@ export type PromoteQuote = {
   minimumAmount: number;
   currency: 'SAR';
   reachEstimate?: ReachEstimate;
-  pricingMode: 'duration_based';
+  pricingMode: 'catalog' | 'duration_based';
 };
 
 export type PromoteCheckoutPayload = {
@@ -90,26 +67,14 @@ export type PromoteCheckoutPayload = {
   reachEstimate?: ReachEstimate;
 };
 
-/**
- * Client-side boost price (mirrors server formula exactly).
- * Server is always authoritative; this is for live UI preview only.
- */
+/** Display preview only — server catalog is authoritative for charge. */
 export function computeBoostPrice(goal: 'pinned' | 'featured', durationHours: number): number {
-  const hours = Math.max(1, Math.round(durationHours));
-  const rate = BOOST_RATE_PER_12H[goal];
-  return Math.ceil(hours / 12) * rate;
+  return lookupPromoteCatalogOption(goal, { durationHours })?.amount ?? 0;
 }
 
-/**
- * Client-side visibility promotion price (minimum based on duration).
- * Formula: ceil(hours / 24) × basePer24h
- * 
- * Examples (base=10):
- *  1h  → 10, 24h → 10, 25h → 20, 48h → 20, 49h → 30, 72h → 30
- */
-export function computeVisibilityMinPrice(durationHours: number, basePer24h = PROMOTION_BASE_PER_24H): number {
-  const hours = Math.max(1, Math.round(durationHours));
-  return Math.ceil(hours / 24) * basePer24h;
+/** Display preview only — catalog amount for a visibility duration. */
+export function computeVisibilityMinPrice(durationHours: number): number {
+  return lookupPromoteCatalogOption('visibility', { durationHours })?.amount ?? 0;
 }
 
 /** Estimated reach range for visibility promotion. */
@@ -124,13 +89,9 @@ export function estimatePromotionReach(amount: number, durationHours: number): R
 export function resolvePromoteAmount(
   goal: PromotionGoal,
   durationHours: number,
-  userBudget: number,
+  _userBudget?: number,
 ): number {
-  if (goal === 'visibility') {
-    const minPrice = computeVisibilityMinPrice(durationHours);
-    return Math.max(minPrice, Math.min(PROMOTE_AMOUNT_MAX, Math.round(userBudget)));
-  }
-  return computeBoostPrice(goal as 'pinned' | 'featured', durationHours);
+  return lookupPromoteCatalogOption(goal, { durationHours })?.amount ?? 0;
 }
 
 export function clampPromoteAmount(value: number): number {
@@ -163,20 +124,24 @@ export function parsePromoteDurationInput(raw: string): number | null {
 export function buildPromoteCheckoutPayload(
   adId: string,
   promotionGoal: PromotionGoal,
-  promotionAmount: number,
   promotionDurationHours: number,
-): PromoteCheckoutPayload {
-  const hours = clampPromoteDurationHours(promotionDurationHours);
-  const amount = resolvePromoteAmount(promotionGoal, hours, promotionAmount);
+  _ignoredAmount?: number,
+): PromoteCheckoutPayload | null {
+  const option = lookupPromoteCatalogOption(promotionGoal, {
+    durationHours: promotionDurationHours,
+  });
+  if (!option) return null;
   const startTime = new Date();
-  const endTime = new Date(startTime.getTime() + hours * 60 * 60 * 1000);
+  const endTime = new Date(startTime.getTime() + option.durationHours * 60 * 60 * 1000);
   const reachEstimate =
-    promotionGoal === 'visibility' ? estimatePromotionReach(amount, hours) : undefined;
+    promotionGoal === 'visibility'
+      ? estimatePromotionReach(option.amount, option.durationHours)
+      : undefined;
   return {
     promotionGoal,
-    promotionAmount: amount,
-    promotionDurationHours: hours,
-    totalAmount: amount,
+    promotionAmount: option.amount,
+    promotionDurationHours: option.durationHours,
+    totalAmount: option.amount,
     adId,
     startTime: startTime.toISOString(),
     endTime: endTime.toISOString(),
@@ -186,22 +151,12 @@ export function buildPromoteCheckoutPayload(
 
 export function validatePromoteForm(
   goal: PromotionGoal | null,
-  amount: number,
+  _amount: number,
   durationHours: number,
 ): string | null {
   if (!goal) return 'اختر هدف الترويج';
-  if (durationHours < PROMOTE_DURATION_HOURS_MIN || durationHours > PROMOTE_DURATION_HOURS_MAX) {
-    return `المدة يجب أن تكون بين ${PROMOTE_DURATION_HOURS_MIN} و ${PROMOTE_DURATION_HOURS_MAX} ساعة`;
-  }
-  if (goal === 'visibility') {
-    const minRequired = computeVisibilityMinPrice(durationHours);
-    if (amount < minRequired) {
-      return `الحد الأدنى للميزانية لهذه المدة: ${minRequired} ريال`;
-    }
-    if (amount > PROMOTE_AMOUNT_MAX) {
-      return `الميزانية يجب أن تكون أقل من ${PROMOTE_AMOUNT_MAX} ريال`;
-    }
-  }
+  const option = lookupPromoteCatalogOption(goal, { durationHours });
+  if (!option) return 'اختر مدة صالحة من الكتالوج';
   return null;
 }
 
@@ -223,15 +178,11 @@ export type InitiatePromotePaymentResult = {
 export async function fetchPromoteQuote(
   goal: PromotionGoal,
   durationHours: number,
-  amount?: number,
 ): Promise<PromoteQuote> {
   const params = new URLSearchParams({
     goal,
     durationHours: String(durationHours),
   });
-  if (goal === 'visibility' && amount != null) {
-    params.set('amount', String(amount));
-  }
   const res = await fetch(`${API_BASE}/api/listings/promote/quote?${params.toString()}`);
   const json = await res.json().catch(() => ({}));
   if (!res.ok || !json.success) {
@@ -252,10 +203,6 @@ export async function initiatePromotePayment(
     durationHours: payload.promotionDurationHours,
     promotionGoal: payload.promotionGoal,
   };
-
-  if (payload.promotionGoal === 'visibility') {
-    body.amount = payload.promotionAmount;
-  }
 
   const endpoint = isBoost
     ? `${API_BASE}/api/listings/${payload.adId}/boost`

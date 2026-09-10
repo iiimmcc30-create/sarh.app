@@ -14,11 +14,6 @@ import { IntegrationCheckoutService } from '../../integrations/services/integrat
 import {
   PROMOTE_AMOUNT_MAX,
   PROMOTE_AMOUNT_MIN,
-  PROMOTE_DURATION_HOURS_MAX,
-  PROMOTE_DURATION_HOURS_MIN,
-  clampPromoteAmount,
-  clampPromoteDurationHours,
-  durationDaysFromHours,
 } from './promotion-limits.config';
 
 import {
@@ -27,11 +22,7 @@ import {
   promotionTierWeight,
   type PromotionTierKey,
 } from './promotion-tiers.config';
-
-import {
-  promotionPriceForHours,
-  PROMOTION_DEFAULT_BASE_PER_24H,
-} from '../boost/boost-pricing.util';
+import { lookupPromotePrice } from '../promote-catalog';
 import { PaidServicesService } from '../../settings/paid-services.service';
 
 type InitiatePromotionOptions = {
@@ -66,18 +57,6 @@ export class ListingPromotionService {
       tiers: Object.values(PROMOTION_TIERS),
       plans: PROMOTION_PLANS,
     };
-  }
-
-  private async getPromotionBase(): Promise<number> {
-    try {
-      const s = await this.prisma.appSetting.findUnique({
-        where: { key: 'pricing.promotion.per24h' },
-      });
-      if (s && typeof s.value === 'number' && s.value > 0) return s.value;
-    } catch {
-      /* fall through */
-    }
-    return PROMOTION_DEFAULT_BASE_PER_24H;
   }
 
   private lastExpireAt = 0;
@@ -138,38 +117,20 @@ export class ListingPromotionService {
     const tier = options.tier ?? 'standard';
     const tierConfig = PROMOTION_TIERS[tier] ?? PROMOTION_TIERS.standard;
 
-    let durationHours: number;
-    let durationDays: number;
-    let amount: number;
-
-    if (options.durationHours != null) {
-      durationHours = clampPromoteDurationHours(options.durationHours);
-      durationDays = durationDaysFromHours(durationHours);
-      // Server computes price — user-supplied amount is validated as minimum but ignored for final charge
-      const base = await this.getPromotionBase();
-      amount = promotionPriceForHours(durationHours, base);
-    } else if (options.durationDays != null && options.durationDays > 0) {
-      durationDays = options.durationDays;
-      durationHours = durationDays * 24;
-      const base = await this.getPromotionBase();
-      amount = promotionPriceForHours(durationHours, base);
-    } else {
+    const priced = lookupPromotePrice('visibility', {
+      durationHours: options.durationHours,
+      durationDays: options.durationDays,
+    });
+    if (!priced) {
       throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
     }
 
-    // Allow user to pay more than the minimum (higher budget = more reach)
-    if (options.amount != null && options.amount > amount) {
-      amount = clampPromoteAmount(options.amount);
-    }
+    const durationHours = priced.durationHours;
+    const durationDays = priced.durationDays;
+    const amount = priced.amount;
 
     if (amount < PROMOTE_AMOUNT_MIN || amount > PROMOTE_AMOUNT_MAX) {
       throwApi(400, 'invalid_amount', 'المبلغ غير صالح');
-    }
-    if (
-      durationHours < PROMOTE_DURATION_HOURS_MIN ||
-      durationHours > PROMOTE_DURATION_HOURS_MAX
-    ) {
-      throwApi(400, 'invalid_duration', 'مدة الترويج غير صالحة');
     }
 
     const currency = 'SAR';

@@ -20,10 +20,12 @@ const SECTIONS = [
   {
     title: 'مركز المعلومات',
     items: [
+      { icon: 'information-outline', label: 'مركز المعلومات', route: '/settings/info' },
       { icon: 'information-outline', label: 'من نحن', route: '/info/about' },
       { icon: 'file-document-outline', label: 'الشروط والأحكام', route: '/info/terms' },
       { icon: 'lock-outline', label: 'سياسة الخصوصية', route: '/info/privacy' },
       { icon: 'receipt-outline', label: 'سياسة الاسترداد', route: '/info/refund' },
+      { icon: 'file-document-outline', label: 'السياسات والشروط', route: '/info/policies' },
     ],
   },
   {

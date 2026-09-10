@@ -98,14 +98,15 @@ describe('commissions', () => {
 });
 
 describe('listingPromote', () => {
-  it('computes boost and visibility prices', () => {
-    expect(computeBoostPrice('pinned', 12)).toBeGreaterThan(0);
-    expect(computeBoostPrice('featured', 24)).toBeGreaterThan(
-      computeBoostPrice('featured', 12),
-    );
-    expect(computeVisibilityMinPrice(1)).toBe(10);
-    expect(computeVisibilityMinPrice(24)).toBe(10);
-    expect(computeVisibilityMinPrice(25)).toBe(20);
+  it('computes boost and visibility prices from the official catalog', () => {
+    expect(computeBoostPrice('featured', 24)).toBe(9);
+    expect(computeBoostPrice('featured', 72)).toBe(25);
+    expect(computeBoostPrice('pinned', 24)).toBe(12);
+    expect(computeBoostPrice('pinned', 72)).toBe(29);
+    expect(computeBoostPrice('featured', 12)).toBe(0);
+    expect(computeVisibilityMinPrice(24)).toBe(19);
+    expect(computeVisibilityMinPrice(48)).toBe(35);
+    expect(computeVisibilityMinPrice(1)).toBe(0);
   });
 
   it('clamps and parses amount/duration inputs', () => {
@@ -121,22 +122,26 @@ describe('listingPromote', () => {
   it('estimates reach and resolves amount by goal', () => {
     const reach = estimatePromotionReach(20, 6);
     expect(reach.max).toBeGreaterThan(reach.min);
-    expect(resolvePromoteAmount('visibility', 24, 5)).toBe(10);
-    expect(resolvePromoteAmount('pinned', 12, 999)).toBe(computeBoostPrice('pinned', 12));
+    expect(resolvePromoteAmount('visibility', 24, 5)).toBe(19);
+    expect(resolvePromoteAmount('visibility', 24, 999)).toBe(19);
+    expect(resolvePromoteAmount('pinned', 72, 999)).toBe(computeBoostPrice('pinned', 72));
+    expect(resolvePromoteAmount('pinned', 12, 999)).toBe(0);
   });
 
   it('validates form and builds checkout payload', () => {
     expect(validatePromoteForm(null, 20, 6)).toMatch(/هدف/);
-    expect(validatePromoteForm('visibility', 5, 24)).toMatch(/الحد الأدنى/);
-    expect(validatePromoteForm('visibility', 20, 24)).toBeNull();
+    expect(validatePromoteForm('visibility', 5, 6)).toMatch(/مدة/);
+    expect(validatePromoteForm('visibility', 999, 24)).toBeNull();
 
-    const payload = buildPromoteCheckoutPayload('ad-1', 'visibility', 20, 6);
-    expect(payload.adId).toBe('ad-1');
-    expect(payload.promotionGoal).toBe('visibility');
-    expect(payload.promotionDurationHours).toBe(6);
-    expect(payload.reachEstimate).toBeDefined();
-    expect(new Date(payload.endTime).getTime()).toBeGreaterThan(
-      new Date(payload.startTime).getTime(),
+    const payload = buildPromoteCheckoutPayload('ad-1', 'visibility', 24);
+    expect(payload?.adId).toBe('ad-1');
+    expect(payload?.promotionGoal).toBe('visibility');
+    expect(payload?.promotionDurationHours).toBe(24);
+    expect(payload?.promotionAmount).toBe(19);
+    expect(payload?.reachEstimate).toBeDefined();
+    expect(payload).toBeTruthy();
+    expect(new Date(payload!.endTime).getTime()).toBeGreaterThan(
+      new Date(payload!.startTime).getTime(),
     );
   });
 

@@ -1,5 +1,6 @@
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
+import { promotionPlansFromCatalog } from '@/services/promoteCatalog';
 
 export type PromotionPlanOption = {
   durationDays: number;
@@ -27,15 +28,8 @@ export type PromotionStats = {
   startsAt: string | null;
 };
 
-/**
- * Fallback promotion plans used when API fetch fails.
- * Amounts computed via slab formula: ceil(days×24/24) × 10 (base)
- */
-export const FALLBACK_PROMOTION_PLANS: PromotionPlanOption[] = [
-  { durationDays: 1, amount: 10, labelAr: 'يوم واحد' },
-  { durationDays: 3, amount: 30, labelAr: '٣ أيام' },
-  { durationDays: 7, amount: 70, labelAr: '٧ أيام' },
-];
+/** Fallback promotion plans when the plans API is unreachable — official catalog. */
+export const FALLBACK_PROMOTION_PLANS: PromotionPlanOption[] = promotionPlansFromCatalog();
 
 export const PROMOTION_META = {
   icon: 'rocket-outline',

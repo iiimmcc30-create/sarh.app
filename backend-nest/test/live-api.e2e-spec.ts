@@ -179,7 +179,7 @@ describe('LIVE API journeys (real backend)', () => {
 
     const quote = await request(API)
       .get('/api/listings/promote/quote')
-      .query({ goal: 'visibility', durationHours: 6, amount: 20 });
+      .query({ goal: 'visibility', durationHours: 24 });
     // May require listingId — accept 200 or validation 400, never 5xx
     expect([200, 400]).toContain(quote.status);
   });
