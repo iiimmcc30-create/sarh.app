@@ -1,23 +1,20 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppScrollView } from '@/components/ui/AppScrollView';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { getPolicyBySlug, POLICY_LAST_UPDATED_PLACEHOLDER } from '@/constants/sarhPolicies';
 import { fetchPublicPolicy } from '@/services/content';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhBackButton } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { AppText, SarhDivider } from '@/design-system/components';
 
 export default function PolicyDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles((theme) => createStyles(theme.colors));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const fallback = slug ? getPolicyBySlug(String(slug)) : undefined;
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState(fallback?.titleAr ?? 'السياسة');
@@ -48,34 +45,32 @@ export default function PolicyDetailScreen() {
   }, [slug]);
 
   return (
-    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top', 'bottom']}>
-      <View style={[styles.header, getRtlRow()]}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {title}
-        </Text>
-        <View style={styles.backBtn} />
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScreenHeader title={title} showBack />
 
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color={colors.electric} />
+          <ActivityIndicator color={colors.electricBright} />
         </View>
       ) : (
-        <AppScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
+        <AppScrollView contentContainerStyle={styles.content}>
           {sections.map((section, i) => (
-            <View key={`${section.title}-${i}`} style={styles.section}>
-              {section.title ? (
-                <View style={{ width: '100%' }}>
-                  <AppText style={styles.sectionTitle}>{section.title}</AppText>
-                </View>
-              ) : null}
-              <View style={{ width: '100%' }}>
-                <AppText style={styles.sectionBody}>{section.body}</AppText>
+            <View key={`${section.title}-${i}`}>
+              <View style={styles.section}>
+                {section.title ? (
+                  <AppText variant="label" color="textPrimary">{section.title}</AppText>
+                ) : null}
+                <AppText variant="body" color="textSecondary" style={styles.body}>
+                  {section.body}
+                </AppText>
               </View>
+              {i < sections.length - 1 ? <SarhDivider /> : null}
             </View>
           ))}
-          <Text style={styles.updated}>آخر تحديث: {updatedLabel}</Text>
+          <AppText variant="micro" color="textMuted" align="center" style={styles.updated}>
+            آخر تحديث: {updatedLabel}
+          </AppText>
+          <View style={{ height: 32 }} />
         </AppScrollView>
       )}
     </SafeAreaView>
@@ -85,38 +80,14 @@ export default function PolicyDetailScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
-    header: {
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    backBtn: { width: 36, alignItems: 'center' },
-    headerTitle: {
-      ...typography.h3,
-      color: colors.textPrimary,
-      flex: 1,
-      textAlign: 'center',
-    },
     loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    content: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.huge },
-    section: { gap: spacing.xs },
-    /** Physical LTR shell — same as SidebarMenuItem / listing title. */
-    sectionTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
+    content: { paddingBottom: 32 },
+    section: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      gap: spacing.sm,
     },
-    sectionBody: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 24,
-    },
-    updated: {
-      ...typography.micro,
-      color: colors.textSubtle,
-      textAlign: 'center',
-      marginTop: spacing.md,
-    },
+    body: { lineHeight: 24 },
+    updated: { marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   });
 }

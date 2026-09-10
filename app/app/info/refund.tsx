@@ -1,14 +1,10 @@
-// Powered by OnSpace.AI
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppScrollView } from '@/components/ui/AppScrollView';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { SarhBackButton } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { AppText, SarhDivider } from '@/design-system/components';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const REFUND_SECTIONS = [
   {
@@ -42,44 +38,38 @@ const REFUND_SECTIONS = [
 ];
 
 export default function RefundScreen() {
-  const router = useRouter();
-  const { colors } = useTheme();
-  const styles = useThemedStyles((theme) => createStyles(theme.colors));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={[styles.header, getRtlRow()]}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>سياسة الاسترداد</Text>
-        <View style={styles.backBtn} />
-      </View>
+      <ScreenHeader title="سياسة الاسترداد" showBack />
+      <AppScrollView contentContainerStyle={styles.scroll}>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, getRtlDirection()]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={{ width: '100%' }}>
-          <AppText style={styles.intro}>
+        <View style={styles.section}>
+          <AppText variant="caption" color="textMuted">
             آخر تحديث: يوليو ٢٠٢٥ · هذه السياسة جزء من شروط وأحكام منصة سرح وتنظّم حالات استرداد المبالغ المدفوعة.
           </AppText>
         </View>
 
+        <SarhDivider />
+
         {REFUND_SECTIONS.map((section, i) => (
-          <View key={i} style={styles.section}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionTitle}>{section.title}</AppText>
+          <View key={i}>
+            <View style={styles.section}>
+              <AppText variant="label" color="textPrimary">{section.title}</AppText>
+              <AppText variant="body" color="textSecondary" style={styles.body}>
+                {section.content}
+              </AppText>
             </View>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionBody}>{section.content}</AppText>
-            </View>
+            {i < REFUND_SECTIONS.length - 1 ? <SarhDivider /> : null}
           </View>
         ))}
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>سرح · جميع الحقوق محفوظة</Text>
-        </View>
-      </ScrollView>
+        <AppText variant="micro" color="textMuted" align="center" style={styles.footer}>
+          سرح · جميع الحقوق محفوظة
+        </AppText>
+        <View style={{ height: 32 }} />
+      </AppScrollView>
     </SafeAreaView>
   );
 }
@@ -87,33 +77,13 @@ export default function RefundScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.screenRoot },
-    header: {
-      alignItems: 'center',
+    scroll: { paddingBottom: 32 },
+    section: {
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
+      paddingVertical: spacing.lg,
+      gap: spacing.sm,
     },
-    backBtn: { width: 36, alignItems: 'center' },
-    headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, textAlign: 'center' },
-    scroll: { flex: 1 },
-    content: { padding: spacing.xl, gap: spacing.lg },
-    intro: {
-      ...typography.body,
-      color: colors.textMuted,
-      lineHeight: 22,
-    },
-    section: { gap: spacing.xs },
-    sectionTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-    },
-    sectionBody: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 24,
-    },
-    footer: { alignItems: 'center', marginTop: spacing.xl },
-    footerText: { ...typography.micro, color: colors.textSubtle },
+    body: { lineHeight: 24 },
+    footer: { marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   });
 }
