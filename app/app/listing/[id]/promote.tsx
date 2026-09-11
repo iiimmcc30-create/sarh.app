@@ -2,12 +2,10 @@ import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIc
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppScrollView } from '@/components/ui/AppScrollView';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow } from '@/lib/rtl';
 import { launchPaymentCheckout } from '@/services/payments';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -27,17 +25,17 @@ import {
 } from '@/services/paidServices';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { AppText, SarhButton, SarhCard, SarhDivider } from '@/design-system/components';
 import {
-  ActivityIndicator,
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppText, SarhButton, SarhDivider } from '@/design-system/components';
+  BottomAction,
+  Row,
+  Screen,
+  ScreenBody,
+  Section,
+  Stack,
+} from '@/design-system/layout';
+import { duration } from '@/design-system/tokens';
 
 type ServiceCopy = {
   goal: PromotionGoal;
@@ -67,20 +65,30 @@ const SERVICE_COPY: ServiceCopy[] = [
   },
 ];
 
-function PriceDisplay({ price, styles }: { price: number; styles: ReturnType<typeof createStyles> }) {
+function PriceDisplay({ price, color }: { price: number; color: string }) {
   const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.sequence([
-      Animated.timing(scale, { toValue: 1.06, duration: 80, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 110, useNativeDriver: true }),
+      Animated.timing(scale, {
+        toValue: 1.06,
+        duration: duration.fast,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: duration.fast,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [scale, price]);
 
   return (
-    <Animated.Text style={[styles.priceValue, { transform: [{ scale }] }]}>
-      {price} ر.س
-    </Animated.Text>
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <AppText variant="screenTitle" style={{ color }}>
+        {price} ر.س
+      </AppText>
+    </Animated.View>
   );
 }
 
@@ -235,25 +243,22 @@ export default function ListingPromoteScreen() {
 
   if (!id) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <ScreenHeader title="تعزيز سرح" showBack />
-        <View style={styles.centered}>
+      <Screen>
+        <ScreenHeader variant="screen" title="تعزيز سرح" showBack />
+        <ScreenBody scroll={false} padTop="lg" style={styles.centered}>
           <AppText variant="body" color="textMuted">معرّف الإعلان غير متوفر</AppText>
-        </View>
-      </SafeAreaView>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScreenHeader title="تعزيز سرح" showBack />
+    <Screen keyboard>
+      <ScreenHeader variant="screen" title="تعزيز سرح" showBack />
 
-        <AppScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={[styles.listingRow, getRtlRow()]}>
+      <ScreenBody padTop="lg" gap="section" bottomInset="action">
+        <SarhCard level="card" padding="md">
+          <Row gap="md">
             <View style={styles.thumbWrap}>
               {listingThumb ? (
                 <Image source={uriSource(listingThumb)} style={styles.thumbImg} contentFit="cover" />
@@ -263,17 +268,17 @@ export default function ListingPromoteScreen() {
                 </View>
               )}
             </View>
-            <View style={styles.listingBody}>
+            <Stack gap="xs" style={styles.listingBody}>
               {listingLoading ? (
                 <ActivityIndicator color={colors.electricBright} size="small" />
               ) : (
                 <>
-                  <View style={[getRtlRow(), { alignItems: 'flex-start', gap: 6 }]}>
-                    <AppText variant="label" color="textPrimary" numberOfLines={2} style={{ flex: 1, lineHeight: 22 }}>
+                  <Row gap="xs" align="start">
+                    <AppText variant="bodyMedium" color="textPrimary" numberOfLines={2} style={styles.fill}>
                       {listingTitle}
                     </AppText>
                     <ListingBoostTitleIcons pinned={listing?.pinned} featured={listing?.featured} />
-                  </View>
+                  </Row>
                   {listing?.price && listing.price > 0 ? (
                     <AppText variant="caption" style={styles.listingPrice}>
                       {listing.price.toLocaleString('ar-SA')} {listing.currency || 'SAR'}
@@ -281,22 +286,21 @@ export default function ListingPromoteScreen() {
                   ) : null}
                 </>
               )}
-            </View>
-          </View>
+            </Stack>
+          </Row>
+        </SarhCard>
 
-          {!hasAnyBoostService ? (
-            <View style={styles.disabledBanner}>
-              <AppIcon name="information-outline" size={18} color={colors.textMuted} />
-              <AppText variant="caption" color="textMuted" style={{ flex: 1 }}>
-                خدمات التعزيز غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
-              </AppText>
-            </View>
-          ) : null}
-
-          <View style={styles.section}>
-            <AppText variant="label" color="textSecondary" style={styles.sectionLabel}>
-              اختر الخدمة
+        {!hasAnyBoostService ? (
+          <Row gap="sm" style={styles.disabledBanner}>
+            <AppIcon name="information-outline" size={18} color={colors.textMuted} />
+            <AppText variant="caption" color="textMuted" style={styles.fill}>
+              خدمات التعزيز غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
             </AppText>
+          </Row>
+        ) : null}
+
+        <Section title="اختر الخدمة">
+          <Stack gap="sm">
             {enabledServices.map((svc, idx) => {
               const selected = goal === svc.goal;
               return (
@@ -311,7 +315,7 @@ export default function ListingPromoteScreen() {
                       { opacity: pressed ? 0.75 : 1 },
                     ]}
                   >
-                    <View style={[getRtlRow(), { alignItems: 'center', flex: 1, gap: spacing.md }]}>
+                    <Row gap="md" fill>
                       <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
                         {selected ? <View style={styles.radioInner} /> : null}
                       </View>
@@ -320,138 +324,115 @@ export default function ListingPromoteScreen() {
                         size={18}
                         color={selected ? colors.electricBright : colors.textMuted}
                       />
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <AppText variant="label" color={selected ? 'textPrimary' : 'textSecondary'}>
+                      <Stack gap="none" style={styles.fill}>
+                        <AppText variant="bodyMedium" color={selected ? 'textPrimary' : 'textSecondary'}>
                           {svc.title}
                         </AppText>
                         <AppText variant="caption" color="textMuted" numberOfLines={1}>
                           {svc.desc}
                         </AppText>
-                      </View>
-                    </View>
+                      </Stack>
+                    </Row>
                   </Pressable>
                   {idx < enabledServices.length - 1 ? <SarhDivider inset /> : null}
                 </View>
               );
             })}
-          </View>
+          </Stack>
+        </Section>
 
-          {selectedService ? (
-            <View style={styles.section}>
-              <AppText variant="label" color="textSecondary" style={styles.sectionLabel}>
-                اختر المدة
-              </AppText>
-              <View style={[getRtlRow(), { gap: spacing.sm }]}>
-                {selectedService.durations.map((dur, i) => {
-                  const active = selectedDurationIndex === i;
-                  return (
-                    <Pressable
-                      key={dur.durationHours}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      onPress={() => setSelectedDurationIndex(i)}
-                      style={({ pressed }) => [
-                        styles.durationChip,
-                        active && styles.durationChipActive,
-                        { opacity: pressed ? 0.75 : 1, flex: 1 },
-                      ]}
+        {selectedService ? (
+          <Section title="اختر المدة">
+            <Row gap="sm" align="stretch">
+              {selectedService.durations.map((dur, i) => {
+                const active = selectedDurationIndex === i;
+                return (
+                  <Pressable
+                    key={dur.durationHours}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => setSelectedDurationIndex(i)}
+                    style={({ pressed }) => [
+                      styles.durationChip,
+                      active && styles.durationChipActive,
+                      { opacity: pressed ? 0.75 : 1 },
+                    ]}
+                  >
+                    <AppText
+                      variant="bodyMedium"
+                      color={active ? 'textPrimary' : 'textSecondary'}
+                      align="center"
                     >
-                      <AppText
-                        variant="label"
-                        color={active ? 'textPrimary' : 'textSecondary'}
-                        style={{ textAlign: 'center' }}
-                      >
-                        {dur.labelAr}
-                      </AppText>
-                      <AppText
-                        variant="caption"
-                        color={active ? 'textPrimary' : 'textMuted'}
-                        style={{ textAlign: 'center', fontWeight: '700' }}
-                      >
-                        {dur.amount} ر.س
-                      </AppText>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          ) : null}
+                      {dur.labelAr}
+                    </AppText>
+                    <AppText
+                      variant="price"
+                      color={active ? 'textPrimary' : 'textMuted'}
+                      align="center"
+                    >
+                      {dur.amount} ر.س
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </Row>
+          </Section>
+        ) : null}
 
-          {selectedService && selectedDuration && displayPrice != null ? (
-            <View style={styles.summarySection}>
-              <View style={[getRtlRow(), styles.summaryRow]}>
-                <AppText variant="caption" color="textMuted">الخدمة</AppText>
-                <AppText variant="label" color="textPrimary">{selectedService.title}</AppText>
-              </View>
-              <SarhDivider />
-              <View style={[getRtlRow(), styles.summaryRow]}>
-                <AppText variant="caption" color="textMuted">المدة</AppText>
-                <AppText variant="label" color="textPrimary">{selectedDuration.labelAr}</AppText>
-              </View>
-              <SarhDivider />
-              <View style={[getRtlRow(), styles.summaryRow]}>
-                <AppText variant="caption" color="textMuted">السعر</AppText>
-                <PriceDisplay price={displayPrice} styles={styles} />
-              </View>
-              <View style={styles.serverNote}>
-                <AppText variant="micro" color="textMuted" style={{ textAlign: 'center' }}>
-                  السعر النهائي يُحدَّد من الخادم عند بدء الدفع
-                </AppText>
-              </View>
-            </View>
-          ) : null}
-
-          {error ? (
-            <View style={[styles.errorRow, getRtlRow()]}>
-              <AppIcon name="alert-circle-outline" size={16} color={colors.danger} />
-              <AppText variant="caption" color="danger" style={{ flex: 1 }}>{error}</AppText>
-            </View>
-          ) : null}
-        </AppScrollView>
-
-        <SafeAreaView edges={['bottom']} style={styles.bottomBar}>
-          <View style={[getRtlRow(), styles.bottomInner]}>
-            <View style={{ flex: 1, gap: 2 }}>
-              <AppText variant="caption" color="textMuted">الإجمالي</AppText>
-              <AppText variant="heading3" color="textPrimary" style={{ fontWeight: '700' }}>
-                {displayPrice != null ? `${displayPrice} ر.س` : '—'}
+        {selectedService && selectedDuration && displayPrice != null ? (
+          <SarhCard level="card" padding="none">
+            <Row gap="md" justify="between" style={styles.summaryRow}>
+              <AppText variant="caption" color="textMuted">الخدمة</AppText>
+              <AppText variant="bodyMedium" color="textPrimary">{selectedService.title}</AppText>
+            </Row>
+            <SarhDivider />
+            <Row gap="md" justify="between" style={styles.summaryRow}>
+              <AppText variant="caption" color="textMuted">المدة</AppText>
+              <AppText variant="bodyMedium" color="textPrimary">{selectedDuration.labelAr}</AppText>
+            </Row>
+            <SarhDivider />
+            <Row gap="md" justify="between" style={styles.summaryRow}>
+              <AppText variant="caption" color="textMuted">السعر</AppText>
+              <PriceDisplay price={displayPrice} color={colors.textBrandStrong} />
+            </Row>
+            <View style={styles.serverNote}>
+              <AppText variant="meta" color="textMuted" align="center">
+                السعر النهائي يُحدَّد من الخادم عند بدء الدفع
               </AppText>
             </View>
-            <View style={{ flex: 1.2 }}>
-              <SarhButton
-                title="الدفع"
-                onPress={handlePay}
-                disabled={!canPay}
-                loading={processing}
-                fullWidth
-              />
-            </View>
-          </View>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </SarhCard>
+        ) : null}
+
+        {error ? (
+          <Row gap="sm" align="start" style={styles.errorRow}>
+            <AppIcon name="alert-circle-outline" size={16} color={colors.danger} />
+            <AppText variant="caption" color="danger" style={styles.fill}>{error}</AppText>
+          </Row>
+        ) : null}
+      </ScreenBody>
+
+      <BottomAction
+        summary={{
+          label: 'الإجمالي',
+          value: displayPrice != null ? `${displayPrice} ر.س` : '—',
+        }}
+      >
+        <SarhButton
+          title="الدفع"
+          onPress={handlePay}
+          disabled={!canPay}
+          loading={processing}
+          fullWidth
+        />
+      </BottomAction>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-    scrollContent: {
-      padding: spacing.lg,
-      paddingBottom: 140,
-      gap: spacing.lg,
-    },
-    listingRow: {
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
+    centered: { alignItems: 'center', justifyContent: 'center' },
+    fill: { flex: 1, minWidth: 0 },
     thumbWrap: { width: 64, height: 64, borderRadius: radius.lg, overflow: 'hidden', flexShrink: 0 },
     thumbImg: { width: '100%', height: '100%' },
     thumbPlaceholder: {
@@ -460,26 +441,14 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    listingBody: { flex: 1, gap: 4, minWidth: 0 },
-    listingPrice: {
-      color: colors.textBrandStrong,
-      fontWeight: '600',
-    },
+    listingBody: { flex: 1, minWidth: 0 },
+    listingPrice: { color: colors.textBrandStrong },
     disabledBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
       padding: spacing.md,
       borderRadius: radius.lg,
       backgroundColor: colors.bgSurface,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
-    },
-    section: {
-      gap: spacing.sm,
-    },
-    sectionLabel: {
-      paddingHorizontal: 2,
     },
     serviceRow: {
       paddingVertical: spacing.md,
@@ -511,6 +480,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electricBright,
     },
     durationChip: {
+      flex: 1,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.sm,
       borderRadius: radius.lg,
@@ -518,29 +488,15 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       backgroundColor: colors.bgSurface,
       alignItems: 'center',
-      gap: 4,
+      gap: spacing.xs,
     },
     durationChipActive: {
       borderColor: colors.electricBright,
       backgroundColor: colors.bgElevated,
     },
-    summarySection: {
-      borderRadius: radius.xl,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      overflow: 'hidden',
-    },
     summaryRow: {
-      justifyContent: 'space-between',
-      alignItems: 'center',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
-    },
-    priceValue: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: colors.textBrandStrong,
     },
     serverNote: {
       paddingHorizontal: spacing.lg,
@@ -548,25 +504,11 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.xs,
     },
     errorRow: {
-      alignItems: 'flex-start',
-      gap: spacing.sm,
       padding: spacing.md,
       borderRadius: radius.lg,
       backgroundColor: `${colors.danger}12`,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: `${colors.danger}40`,
-    },
-    bottomBar: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderSoft,
-      backgroundColor: colors.bgPrimary,
-    },
-    bottomInner: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      gap: spacing.md,
     },
   });
 }

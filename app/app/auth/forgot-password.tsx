@@ -1,39 +1,34 @@
 // SAFAT — Forgot Password via OTP (نسيت كلمة المرور)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, ltrInputText, rtlForwardIcon } from '@/lib/rtl';
-
-import { SarhButton } from '@/design-system/components';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { AppLogo } from '@/components/ui/AppLogo';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppText, SarhButton, SarhInput, resolveAppTextStyle } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { ltrInputText } from '@/lib/rtl';
+import { type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   Animated,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
-  Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
-import { AppLogo } from '@/components/ui/AppLogo';
-import { useAuth } from '@/contexts/AuthContext';
 
 const COUNTRY_CODES = [
   { flag: '🇸🇦', code: '+966', label: 'السعودية' },
 ];
 
 type Step = 'phone' | 'otp' | 'password' | 'done';
+const AUTH_FORM_WIDTH = { maxWidth: 440, width: '100%', alignSelf: 'center' } as const;
 
 export default function ForgotPasswordScreen() {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const { sendOtp, verifyOtp, resetPassword } = useAuth();
 
@@ -52,6 +47,11 @@ export default function ForgotPasswordScreen() {
 
   const inputs = useRef<(TextInput | null)[]>([]);
   const shakeAnim = useRef(new Animated.Value(0)).current;
+  const otpDigitStyle = resolveAppTextStyle({
+    variant: 'heading2',
+    color: 'textPrimary',
+    align: 'center',
+  });
 
   const currentCountry = COUNTRY_CODES[countryIdx];
   const cleanPhoneDigits = phone.trim()
@@ -148,255 +148,254 @@ export default function ForgotPasswordScreen() {
     setStep('done');
   };
 
+  const subtitle =
+    step === 'phone'
+      ? 'أدخل رقم جوالك المسجّل لإرسال رمز التحقق'
+      : step === 'otp'
+        ? 'أدخل رمز التحقق المرسل إلى جوالك'
+        : step === 'password'
+          ? 'اختر كلمة مرور جديدة لحسابك'
+          : 'تم تحديث كلمة المرور بنجاح';
+
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <AppIcon name={rtlForwardIcon()} size={24} color="#ffffff" />
-          </Pressable>
+    <Screen edges={['top', 'bottom']} keyboard pattern={false} style={styles.root}>
+      <ScreenHeader variant="screen" title="استعادة كلمة المرور" showBack />
+      <ScreenBody padTop="lg" padBottom="xxxl" gap="section" contentContainerStyle={AUTH_FORM_WIDTH}>
+        <Stack gap="sm" align="center">
+          <AppLogo size={90} showRing={false} shape="square" />
+          <AppText variant="bodySmall" color="textMuted" align="center">
+            {subtitle}
+          </AppText>
+        </Stack>
 
-          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.header}>
-              <AppLogo size={90} showRing={false} shape="square" />
-              <Text style={styles.title}>استعادة كلمة المرور</Text>
-              <Text style={styles.sub}>
-                {step === 'phone' && 'أدخل رقم جوالك المسجّل لإرسال رمز التحقق'}
-                {step === 'otp' && 'أدخل رمز التحقق المرسل إلى جوالك'}
-                {step === 'password' && 'اختر كلمة مرور جديدة لحسابك'}
-                {step === 'done' && 'تم تحديث كلمة المرور بنجاح'}
-              </Text>
-            </View>
-
-            <View style={styles.card}>
-              {step === 'phone' && (
-                <>
-                  <Text style={styles.fieldLabel}>رقم الجوال *</Text>
-                  <Animated.View style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}>
-                    <Pressable
-                      style={styles.countryBtn}
-                      onPress={() => setShowPicker((v) => !v)}
-                      accessibilityRole="button"
-                      accessibilityLabel="اختيار رمز الدولة"
-                    >
+        <Stack gap="md" style={styles.card}>
+          {step === 'phone' ? (
+            <Stack gap="sm">
+              <AppText variant="label">رقم الجوال *</AppText>
+              <Animated.View style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}>
+                <Row gap="xs" align="center">
+                  <Pressable
+                    style={styles.countryBtn}
+                    onPress={() => setShowPicker((v) => !v)}
+                    accessibilityRole="button"
+                    accessibilityLabel="اختيار رمز الدولة"
+                  >
+                    <Row gap="xs" align="center">
                       <AppIcon name={showPicker ? 'chevron-up' : 'chevron-down'} size={14} color={colors.textMuted} />
-                      <Text style={styles.countryCode}>{currentCountry.code}</Text>
-                      <Text style={styles.countryFlag}>{currentCountry.flag}</Text>
-                    </Pressable>
-                    <View style={styles.inputDivider} />
-                    <TextInput
-                      style={[styles.phoneInput, ltrInputText]}
-                      value={phone}
-                      onChangeText={(t) => { setPhone(t); setError(''); }}
-                      placeholder="05xxxxxxxx"
-                      placeholderTextColor={colors.textSubtle}
-                      keyboardType="phone-pad"
-                    />
-                  </Animated.View>
-
-                  {showPicker && (
-                    <View style={styles.pickerDropdown}>
-                      {COUNTRY_CODES.map((c, i) => (
-                        <Pressable
-                          key={c.code}
-                          style={[styles.pickerItem, i === countryIdx && styles.pickerItemActive]}
-                          onPress={() => { setCountryIdx(i); setShowPicker(false); }}
-                        >
-                          <Text style={styles.pickerFlag}>{c.flag}</Text>
-                          <Text style={styles.pickerLabel}>{c.label}</Text>
-                          <Text style={styles.pickerCode}>{c.code}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  )}
-                </>
-              )}
-
-              {step === 'otp' && (
-                <>
-                  <Text style={styles.otpHint}>تم الإرسال إلى {fullPhone}</Text>
-                  {devMode && <Text style={styles.devHint}>وضع التطوير: استخدم 123456</Text>}
-                  <View style={styles.otpRow}>
-                    {otp.map((digit, idx) => (
-                      <View key={idx} style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}>
-                        <TextInput
-                          ref={(r) => { inputs.current[idx] = r; }}
-                          style={[styles.otpInput, ltrInputText]}
-                          value={digit}
-                          onChangeText={(t) => handleOtpChange(t, idx)}
-                          keyboardType="number-pad"
-                          maxLength={1}
-                          textAlign="center"
-                          autoFocus={idx === 0}
-                        />
-                      </View>
-                    ))}
-                  </View>
-                  <Pressable onPress={handleSendOtp} disabled={loading}>
-                    <Text style={styles.resendText}>إعادة إرسال الرمز</Text>
+                      <AppText variant="label">{currentCountry.code}</AppText>
+                      <AppText variant="body">{currentCountry.flag}</AppText>
+                    </Row>
                   </Pressable>
-                </>
-              )}
+                  <View style={styles.inputDivider} />
+                  <TextInput
+                    style={[styles.phoneInput, ltrInputText]}
+                    value={phone}
+                    onChangeText={(t) => { setPhone(t); setError(''); }}
+                    placeholder="05xxxxxxxx"
+                    placeholderTextColor={colors.textSubtle}
+                    keyboardType="phone-pad"
+                  />
+                </Row>
+              </Animated.View>
 
-              {step === 'password' && (
-                <>
-                  <Text style={styles.fieldLabel}>كلمة المرور الجديدة *</Text>
-                  <View style={styles.inputWrap}>
+              {showPicker ? (
+                <View style={styles.pickerDropdown}>
+                  {COUNTRY_CODES.map((c, i) => (
                     <Pressable
-                      onPress={() => setShowPassword(!showPassword)}
-                      hitSlop={10}
-                      accessibilityRole="button"
-                      accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                      key={c.code}
+                      style={[styles.pickerItem, i === countryIdx && styles.pickerItemActive]}
+                      onPress={() => { setCountryIdx(i); setShowPicker(false); }}
                     >
-                      <AppIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />
+                      <Row justify="between" align="center" fill>
+                        <AppText variant="body">{c.flag}</AppText>
+                        <AppText variant="bodySmall" style={styles.pickerLabel}>{c.label}</AppText>
+                        <AppText variant="bodySmall" color="textMuted">{c.code}</AppText>
+                      </Row>
                     </Pressable>
-                    <TextInput
-                      style={[styles.textInput, ltrInputText]}
-                      value={newPassword}
-                      onChangeText={setNewPassword}
-                      placeholder="........"
-                      placeholderTextColor={colors.textSubtle}
-                      secureTextEntry={!showPassword}
-                    />
-                  </View>
-
-                  <Text style={styles.fieldLabel}>تأكيد كلمة المرور *</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={[styles.textInput, ltrInputText]}
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
-                      placeholder="........"
-                      placeholderTextColor={colors.textSubtle}
-                      secureTextEntry={!showPassword}
-                    />
-                  </View>
-                </>
-              )}
-
-              {step === 'done' && (
-                <View style={styles.doneWrap}>
-                  <AppIcon name="checkmark-circle" size={64} color={colors.success} />
-                  <Text style={styles.doneText}>يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة</Text>
-                </View>
-              )}
-
-              {error ? (
-                <View style={styles.errorContainer}>
-                  <AppIcon name="alert-circle-outline" size={15} color={colors.danger} />
-                  <Text style={styles.errorText}>{error}</Text>
+                  ))}
                 </View>
               ) : null}
+            </Stack>
+          ) : null}
 
-              {step !== 'done' && (
-                <SarhButton
-                  title={
-                    step === 'phone'
-                      ? 'إرسال رمز التحقق'
-                      : step === 'otp'
-                        ? 'تحقق من الرمز'
-                        : 'حفظ كلمة المرور'
-                  }
-                  fullWidth
-                  loading={loading}
-                  onPress={
-                    step === 'phone'
-                      ? handleSendOtp
-                      : step === 'otp'
-                        ? () => handleVerifyOtp(otp.join(''))
-                        : handleResetPassword
-                  }
-                />
-              )}
+          {step === 'otp' ? (
+            <Stack gap="md" align="center">
+              <AppText variant="bodySmall" color="textMuted" align="center">
+                تم الإرسال إلى {fullPhone}
+              </AppText>
+              {devMode ? (
+                <AppText variant="caption" color="warning" align="center">
+                  وضع التطوير: استخدم 123456
+                </AppText>
+              ) : null}
+              <Row justify="center" gap="sm">
+                {otp.map((digit, idx) => (
+                  <View key={idx} style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}>
+                    <TextInput
+                      ref={(r) => { inputs.current[idx] = r; }}
+                      style={[styles.otpInput, otpDigitStyle, ltrInputText]}
+                      value={digit}
+                      onChangeText={(t) => handleOtpChange(t, idx)}
+                      keyboardType="number-pad"
+                      maxLength={1}
+                      autoFocus={idx === 0}
+                    />
+                  </View>
+                ))}
+              </Row>
+              <Pressable onPress={handleSendOtp} disabled={loading}>
+                <AppText variant="label" color="primary" align="center">
+                  إعادة إرسال الرمز
+                </AppText>
+              </Pressable>
+            </Stack>
+          ) : null}
 
-              {step === 'done' && (
-                <SarhButton
-                  title="تسجيل الدخول"
-                  fullWidth
-                  onPress={() => router.replace('/auth/phone')}
-                />
-              )}
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+          {step === 'password' ? (
+            <Stack gap="lg">
+              <SarhInput
+                label="كلمة المرور الجديدة *"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="........"
+                secureTextEntry={!showPassword}
+                ltr
+                trailingIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                onTrailingPress={() => setShowPassword(!showPassword)}
+                accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+              />
+              <SarhInput
+                label="تأكيد كلمة المرور *"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="........"
+                secureTextEntry={!showPassword}
+                ltr
+              />
+            </Stack>
+          ) : null}
+
+          {step === 'done' ? (
+            <Stack gap="md" align="center" style={styles.doneWrap}>
+              <AppIcon name="checkmark-circle" size={64} color={colors.success} />
+              <AppText variant="bodySmall" color="textMuted" align="center">
+                يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة
+              </AppText>
+            </Stack>
+          ) : null}
+
+          {error ? (
+            <Row gap="xs" align="center" style={styles.errorContainer}>
+              <AppIcon name="alert-circle-outline" size={15} color={colors.danger} />
+              <AppText variant="caption" color="danger" style={styles.errorText}>
+                {error}
+              </AppText>
+            </Row>
+          ) : null}
+
+          {step !== 'done' ? (
+            <SarhButton
+              title={
+                step === 'phone'
+                  ? 'إرسال رمز التحقق'
+                  : step === 'otp'
+                    ? 'تحقق من الرمز'
+                    : 'حفظ كلمة المرور'
+              }
+              fullWidth
+              loading={loading}
+              onPress={
+                step === 'phone'
+                  ? handleSendOtp
+                  : step === 'otp'
+                    ? () => handleVerifyOtp(otp.join(''))
+                    : handleResetPassword
+              }
+            />
+          ) : (
+            <SarhButton
+              title="تسجيل الدخول"
+              fullWidth
+              onPress={() => router.replace('/auth/phone')}
+            />
+          )}
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.screenRoot },
-  safe: { flex: 1 },
-  kav: { flex: 1 },
-  backBtn: {
-    position: 'absolute', top: 16, ...inlineEnd(spacing.xl), zIndex: 10,
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.bgElevated, borderWidth: 1, borderColor: colors.borderHairline,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  scroll: {
-    width: '100%',
-    maxWidth: 440,
-    alignSelf: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingTop: 60,
-    paddingBottom: 30,
-  },
-  header: { alignItems: 'center', marginBottom: 24, gap: 10 },
-  title: { ...typography.sectionHeading, color: colors.textPrimary, textAlign: 'center' },
-  sub: { ...typography.secondary, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 12 },
-  card: {
-    width: '100%', borderRadius: 20, padding: spacing.xl,
-    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderHairline, gap: spacing.md,
-  },
-  fieldLabel: { ...typography.smallHeading, color: colors.textPrimary,  },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1.2, borderColor: colors.borderHairline,
-    paddingHorizontal: spacing.md, height: 50,
-  },
-  countryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  countryCode: { ...typography.smallHeading, color: '#fff' },
-  countryFlag: { fontSize: 16 },
-  inputDivider: { width: 1, height: 20, backgroundColor: colors.borderHairline, marginHorizontal: 8 },
-  phoneInput: { flex: 1, ...typography.secondary, color: '#fff',  },
-  textInput: { flex: 1, ...typography.secondary, color: '#fff',  },
-  pickerDropdown: {
-    backgroundColor: colors.bgDeep, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.borderHairline, overflow: 'hidden',
-  },
-  pickerItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.md, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)',
-  },
-  pickerItemActive: { backgroundColor: 'rgba(30,111,241,0.1)' },
-  pickerFlag: { fontSize: 16 },
-  pickerLabel: { flex: 1, ...typography.secondary, color: '#fff', ...getRtlText(), marginHorizontal: 10 },
-  pickerCode: { ...typography.secondary, color: colors.textMuted },
-  otpHint: { ...typography.secondary, color: colors.textMuted, textAlign: 'center' },
-  devHint: { ...typography.caption, color: '#f59e0b', textAlign: 'center' },
-  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
-  otpBox: {
-    width: 42, height: 50, borderRadius: 12,
-    backgroundColor: colors.bgDeep, borderWidth: 1.5, borderColor: colors.borderHairline,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  otpBoxFilled: { borderColor: colors.electric, backgroundColor: 'rgba(30,111,241,0.1)' },
-  otpInput: { ...typography.sectionHeading, color: '#fff', width: '100%', height: '100%', textAlign: 'center' },
-  resendText: { ...typography.button, color: colors.textBrandStrong, textAlign: 'center' },
-  errorContainer: {
-    ...getRtlRow(), alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
-    borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
-  },
-  errorText: { ...typography.caption, color: colors.danger, flex: 1,  },
-  submitBtn: { borderRadius: 20, overflow: 'hidden', marginTop: 4 },
-  submitGrad: { height: 50, alignItems: 'center', justifyContent: 'center' },
-  submitText: { ...typography.button, color: '#fff' },
-  doneWrap: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg },
-  doneText: { ...typography.secondary, color: colors.textMuted, textAlign: 'center' },
+    root: { backgroundColor: colors.screenRoot },
+    card: {
+      width: '100%',
+      borderRadius: 20,
+      padding: 20,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderHairline,
+    },
+    inputWrap: {
+      backgroundColor: colors.bgDeep,
+      borderRadius: 12,
+      borderWidth: 1.2,
+      borderColor: colors.borderHairline,
+      paddingHorizontal: 12,
+      height: 50,
+      justifyContent: 'center',
+    },
+    countryBtn: {},
+    inputDivider: {
+      width: 1,
+      height: 20,
+      backgroundColor: colors.borderHairline,
+    },
+    phoneInput: {
+      flex: 1,
+      color: colors.textPrimary,
+    },
+    pickerDropdown: {
+      backgroundColor: colors.bgDeep,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderHairline,
+      overflow: 'hidden',
+    },
+    pickerItem: {
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: `${colors.textPrimary}08`,
+    },
+    pickerItemActive: { backgroundColor: `${colors.electric}1A` },
+    pickerLabel: { flex: 1 },
+    otpBox: {
+      width: 42,
+      height: 50,
+      borderRadius: 12,
+      backgroundColor: colors.bgDeep,
+      borderWidth: 1.5,
+      borderColor: colors.borderHairline,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    otpBoxFilled: {
+      borderColor: colors.electric,
+      backgroundColor: `${colors.electric}1A`,
+    },
+    otpInput: {
+      width: '100%',
+      height: '100%',
+    },
+    errorContainer: {
+      backgroundColor: `${colors.danger}1A`,
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: `${colors.danger}33`,
+    },
+    errorText: { flex: 1 },
+    doneWrap: { paddingVertical: 16 },
   });
 }

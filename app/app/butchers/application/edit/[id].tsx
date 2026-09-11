@@ -3,7 +3,9 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { SarhBackButton, SarhButton, SarhInput } from '@/design-system/components';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody } from '@/design-system/layout';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import {
   useCallback,
   useEffect,
@@ -16,18 +18,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { DocumentsStep } from '@/components/butcherApplication/DocumentsStep';
 import { WizardStepBar } from '@/components/butcherApplication/WizardStepBar';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { presentActionSheet } from '@/lib/actionSheet';
@@ -47,7 +46,6 @@ import {
   validateWizardStep3,
 } from '@/lib/butcherApplicationValidation';
 import { hasValidCoords } from '@/lib/butcherLocation';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
 import type {
   ApplicationDetail,
   ApplicationSnapshotInput,
@@ -55,6 +53,9 @@ import type {
 } from '@/services/butcherApplicationTypes';
 import { toApiError } from '@/services/butcherApplications';
 import type { Country } from '@/services/types';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
+import { useLayout } from '@/hooks/useLayout';
 
 type WizardForm = {
   nameAr: string;
@@ -190,10 +191,11 @@ function mapCountryForMap(): Country {
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
+  const rv = useThemedStyles(({ colors }) => createReviewStyles(colors));
   return (
     <View style={rv.row}>
-      <Text style={rv.label}>{label}</Text>
-      <Text style={rv.value}>{value || '—'}</Text>
+      <AppText variant="caption" color="textMuted">{label}</AppText>
+      <AppText variant="body">{value || '—'}</AppText>
     </View>
   );
 }
@@ -207,20 +209,24 @@ function CheckboxRow({
   onToggle: () => void;
   label: string;
 }) {
+  const rv = useThemedStyles(({ colors }) => createReviewStyles(colors));
   return (
-    <Pressable
-      onPress={onToggle}
-      style={[rv.checkboxRow, checked && rv.checkboxRowActive]}
-    >
-      <View style={[rv.checkbox, checked && rv.checkboxChecked]}>
-        {checked ? <AppIcon name="checkmark" size={14} color="#fff" /> : null}
-      </View>
-      <Text style={rv.checkboxText}>{label}</Text>
+    <Pressable onPress={onToggle}>
+      <Row align="start" gap="md" style={[rv.checkboxRow, checked && rv.checkboxRowActive]}>
+        <View style={[rv.checkbox, checked && rv.checkboxChecked]}>
+          {checked ? <AppIcon name="checkmark" size={14} color="#fff" /> : null}
+        </View>
+        <AppText variant="body" color="textSecondary" style={rv.checkboxText}>{label}</AppText>
+      </Row>
     </Pressable>
   );
 }
 
 export default function ButcherApplicationEditScreen() {
+  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
+  const rv = useThemedStyles(({ colors }) => createReviewStyles(colors));
+  const { colors, gradients } = useTheme();
+  const { gutter } = useLayout();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -542,19 +548,19 @@ export default function ButcherApplicationEditScreen() {
 
   if (authLoading || initialLoad) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false} style={s.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <LoadingState message="جاري تحميل المسودة..." />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   if (!applicationId || !application) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false} style={s.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <LoadingState message={error ?? 'تعذّر تحميل الطلب'} />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
@@ -563,8 +569,8 @@ export default function ButcherApplicationEditScreen() {
   if (step === 0) {
     stepContent = (
       <View style={s.stepBody}>
-        <Text style={s.stepTitle}>معلومات المحل</Text>
-        <Text style={s.stepSub}>أدخل بيانات ملحمتك الأساسية كما ستظهر للعملاء</Text>
+        <AppText variant="sectionTitle" style={s.stepTitle}>معلومات المحل</AppText>
+        <AppText variant="body" color="textMuted" style={s.stepSub}>أدخل بيانات ملحمتك الأساسية كما ستظهر للعملاء</AppText>
 
         <SarhInput appearance="theme"
           label="اسم المحل *"
@@ -597,9 +603,9 @@ export default function ButcherApplicationEditScreen() {
           error={fieldErrors.commercialReg}
         />
 
-        <Text style={s.fieldLabel}>الدولة</Text>
+        <AppText variant="label" color="textSecondary">الدولة</AppText>
         <View style={s.countryFixed}>
-          <Text style={s.countryFixedText}>🇸🇦 السعودية</Text>
+          <AppText variant="body">🇸🇦 السعودية</AppText>
         </View>
 
         <SarhInput appearance="theme"
@@ -620,8 +626,8 @@ export default function ButcherApplicationEditScreen() {
   } else if (step === 1) {
     stepContent = (
       <View style={s.stepBody}>
-        <Text style={s.stepTitle}>موقع المحل</Text>
-        <Text style={s.stepSub}>حدد إحداثيات موقع ملحمتك على الخريطة</Text>
+        <AppText variant="sectionTitle" style={s.stepTitle}>موقع المحل</AppText>
+        <AppText variant="body" color="textMuted" style={s.stepSub}>حدد إحداثيات موقع ملحمتك على الخريطة</AppText>
 
         {canUseMap ? (
           <ButcherLocationPicker
@@ -653,15 +659,15 @@ export default function ButcherApplicationEditScreen() {
             />
           </>
         )}
-        {fieldErrors.lat ? <Text style={s.inlineError}>{fieldErrors.lat}</Text> : null}
-        {fieldErrors.lng ? <Text style={s.inlineError}>{fieldErrors.lng}</Text> : null}
+        {fieldErrors.lat ? <AppText variant="caption" color="danger">{fieldErrors.lat}</AppText> : null}
+        {fieldErrors.lng ? <AppText variant="caption" color="danger">{fieldErrors.lng}</AppText> : null}
       </View>
     );
   } else if (step === 2) {
     stepContent = (
       <View style={s.stepBody}>
-        <Text style={s.stepTitle}>تفاصيل العمل</Text>
-        <Text style={s.stepSub}>نبذة عن ملحمتك وساعات العمل</Text>
+        <AppText variant="sectionTitle" style={s.stepTitle}>تفاصيل العمل</AppText>
+        <AppText variant="body" color="textMuted" style={s.stepSub}>نبذة عن ملحمتك وساعات العمل</AppText>
 
         <SarhInput appearance="theme"
           label="نبذة"
@@ -712,13 +718,13 @@ export default function ButcherApplicationEditScreen() {
     const snap = { ...step1Snapshot(form), ...step2Snapshot(form), ...step3Snapshot(form) };
     stepContent = (
       <View style={s.stepBody}>
-        <Text style={s.stepTitle}>مراجعة الطلب</Text>
-        <Text style={s.stepSub}>تأكد من صحة البيانات قبل التقديم</Text>
+        <AppText variant="sectionTitle" style={s.stepTitle}>مراجعة الطلب</AppText>
+        <AppText variant="body" color="textMuted" style={s.stepSub}>تأكد من صحة البيانات قبل التقديم</AppText>
 
         <View style={rv.card}>
-          <Text style={rv.cardTitle}>
+          <AppText variant="cardTitle" style={rv.cardTitle}>
             {applicationDisplayName(snap.nameAr ?? null, snap.nameEn ?? null)}
-          </Text>
+          </AppText>
           <ReviewRow label="الهاتف" value={snap.shopPhone ?? ''} />
           <ReviewRow label="السجل التجاري" value={snap.commercialReg ?? ''} />
           <ReviewRow label="الدولة" value={countryLabel(snap.country ?? null)} />
@@ -751,31 +757,33 @@ export default function ButcherApplicationEditScreen() {
           label="أؤكد صحة البيانات"
         />
 
-        {syncNotice ? <Text style={s.syncNotice}>{syncNotice}</Text> : null}
-        {submitError ? <Text style={s.inlineError}>{submitError}</Text> : null}
-        {error ? <Text style={s.inlineError}>{error}</Text> : null}
+        {syncNotice ? <AppText variant="caption" style={s.syncNotice}>{syncNotice}</AppText> : null}
+        {submitError ? <AppText variant="caption" color="danger">{submitError}</AppText> : null}
+        {error ? <AppText variant="caption" color="danger">{error}</AppText> : null}
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false} style={s.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
-      <View style={s.header}>
-        <SarhBackButton onPress={goBack} color={colors.textPrimary} style={s.backBtn} />
-        <View style={s.headerCenter}>
-          <Text style={s.headerTitle}>إكمال الطلب</Text>
-          <Text style={s.headerSub}>#{application.applicationNumber}</Text>
-        </View>
-        <View style={s.backBtn}>
-          {(saving || loading) && !initialLoad ? (
-            <Text style={s.savingText}>حفظ...</Text>
-          ) : dirty ? (
-            <View style={s.unsavedDot} />
-          ) : null}
-        </View>
-      </View>
+      <ScreenHeader
+        variant="screen"
+        title="إكمال الطلب"
+        arabic={`#${application.applicationNumber}`}
+        showBack
+        onBackPress={goBack}
+      />
+      {(saving || loading) && !initialLoad ? (
+        <AppText variant="micro" color="primary" align="center" style={s.savingText}>
+          حفظ...
+        </AppText>
+      ) : dirty ? (
+        <Row justify="end" style={[s.statusSlot, { paddingHorizontal: gutter }]}>
+          <View style={s.unsavedDot} />
+        </Row>
+      ) : null}
 
       <WizardStepBar current={step} />
 
@@ -783,13 +791,9 @@ export default function ButcherApplicationEditScreen() {
         style={s.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={s.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+        <ScreenBody gutter={false} width="full" contentContainerStyle={s.scroll}>
           {stepContent}
-        </ScrollView>
+        </ScreenBody>
 
         <View
           style={[
@@ -798,7 +802,7 @@ export default function ButcherApplicationEditScreen() {
           ]}
         >
           {submitError || error ? (
-            <Text style={s.inlineError}>{submitError || error}</Text>
+            <AppText variant="caption" color="danger">{submitError || error}</AppText>
           ) : null}
           {step < 4 ? (
             <SarhButton
@@ -825,40 +829,20 @@ export default function ButcherApplicationEditScreen() {
           ) : null}
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
-const s = StyleSheet.create({
+function createScreenStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 48,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
-  },
-  headerSub: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
   savingText: {
-    ...butcherTypography.meta,
     color: colors.textBrand,
+    paddingBottom: spacing.xs,
+  },
+  statusSlot: {
+    paddingBottom: spacing.xs,
   },
   unsavedDot: {
     width: 8,
@@ -874,19 +858,12 @@ const s = StyleSheet.create({
     gap: spacing.md,
   },
   stepTitle: {
-    ...butcherTypography.titleLarge,
     color: colors.textPrimary,
   },
   stepSub: {
-    ...butcherTypography.body,
     color: colors.textMuted,
     marginBottom: spacing.sm,
     lineHeight: 22,
-  },
-  fieldLabel: {
-    ...butcherTypography.emphasis,
-    color: colors.textSecondary,
-    ...getRtlText(),
   },
   countryFixed: {
     alignSelf: 'flex-start',
@@ -898,19 +875,8 @@ const s = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     marginBottom: spacing.sm,
   },
-  countryFixedText: {
-    ...butcherTypography.primary,
-    color: colors.textPrimary,
-  },
-  inlineError: {
-    ...butcherTypography.secondary,
-    color: colors.danger,
-    ...getRtlText(),
-  },
   syncNotice: {
-    ...butcherTypography.secondary,
     color: colors.textBrandSuccess,
-    ...getRtlText(),
   },
   footer: {
     padding: spacing.lg,
@@ -924,8 +890,11 @@ const s = StyleSheet.create({
     marginTop: spacing.xs,
   },
 });
+}
 
-const rv = StyleSheet.create({
+
+function createReviewStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.bgSurface,
     borderRadius: radius.lg,
@@ -936,26 +905,13 @@ const rv = StyleSheet.create({
     marginBottom: spacing.md,
   },
   cardTitle: {
-    ...butcherTypography.title,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   row: {
     gap: spacing.xs,
   },
-  label: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  value: {
-    ...butcherTypography.body,
-    color: colors.textPrimary,
-    lineHeight: 22,
-  },
   checkboxRow: {
-    ...getRtlRow(),
-    alignItems: 'flex-start',
-    gap: spacing.md,
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -983,9 +939,7 @@ const rv = StyleSheet.create({
   },
   checkboxText: {
     flex: 1,
-    ...butcherTypography.body,
-    color: colors.textSecondary,
     lineHeight: 22,
-    ...getRtlText(),
   },
 });
+}

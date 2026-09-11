@@ -1,28 +1,20 @@
 // SAFAT — Followers / Following lists
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet } from 'react-native';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { openUserProfile } from '@/lib/openUserProfile';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { AppText, SarhButton, SarhDivider } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import {
   fetchUserConnectionsWithMeta,
   setFollowUser,
@@ -36,6 +28,7 @@ export default function ProfileConnectionsScreen() {
   const { me } = useAppUser();
   const { accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
   const { colors } = useTheme();
+  const { gutter } = useLayout();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const params = useLocalSearchParams<{
     userId?: string;
@@ -124,28 +117,29 @@ export default function ProfileConnectionsScreen() {
       ? `@${params.username}`
       : 'المتابعات';
 
-  const renderItem = ({ item }: { item: ConnectionUser }) => {
+  const renderItem = ({ item, index }: { item: ConnectionUser; index: number }) => {
     const showFollowBtn = item.id !== me.id;
 
     return (
-      <Pressable
-        style={styles.userRow}
-        onPress={() => openUserProfile(router, item.id)}
-      >
-        <UserIdentityRow
-          avatarUri={item.avatar}
-          displayName={item.arabicName || item.displayName || item.username}
-          username={item.username}
-          verified={item.verified}
-          avatarSize={USER_IDENTITY.listAvatarSize}
-          avatarRadius={USER_IDENTITY.listAvatarRadius}
-          avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
-          avatarSide="end"
-          nameLines={2}
-          colors={colors}
-          style={styles.identity}
-          trailing={
-            showFollowBtn ? (
+      <>
+        <Pressable
+          style={[styles.userRow, { paddingHorizontal: gutter }]}
+          onPress={() => openUserProfile(router, item.id)}
+        >
+          <UserIdentityRow
+            avatarUri={item.avatar}
+            displayName={item.arabicName || item.displayName || item.username}
+            username={item.username}
+            verified={item.verified}
+            avatarSize={USER_IDENTITY.listAvatarSize}
+            avatarRadius={USER_IDENTITY.listAvatarRadius}
+            avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+            avatarSide="end"
+            nameLines={2}
+            colors={colors}
+            style={styles.identity}
+            trailing={
+              showFollowBtn ? (
                 <SarhButton
                   title={item.isFollowing ? 'متابَع' : 'متابعة'}
                   variant={item.isFollowing ? 'secondary' : 'primary'}
@@ -153,154 +147,112 @@ export default function ProfileConnectionsScreen() {
                   loading={followLoadingId === item.id}
                   onPress={() => handleFollowToggle(item)}
                 />
-            ) : null
-          }
-        />
-      </Pressable>
+              ) : null
+            }
+          />
+        </Pressable>
+        {index < users.length - 1 ? <SarhDivider /> : null}
+      </>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>{title}</Text>
-        <View style={{ width: 38 }} />
-      </View>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title={title} showBack />
+      <ScreenBody scroll={false} gutter={false} padTop="md">
+        <Row gap="xs" align="center" style={[styles.tabs, { marginHorizontal: gutter }]}>
+          {(
+            [
+              { id: 'followers' as const, label: 'متابعون' },
+              { id: 'following' as const, label: 'يتابع' },
+            ]
+          ).map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <Pressable
+                key={tab.id}
+                style={[styles.tabBtn, active ? styles.tabBtnActive : null]}
+                onPress={() => handleTabChange(tab.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <AppText
+                  variant="label"
+                  color={active ? 'textPrimary' : 'textMuted'}
+                  align="center"
+                  style={active ? styles.tabTextActive : undefined}
+                >
+                  {tab.label}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </Row>
 
-      <View style={styles.tabs}>
-        {([
-          { id: 'followers' as const, label: 'متابعون' },
-          { id: 'following' as const, label: 'يتابع' },
-        ]).map((tab) => {
-          const active = activeTab === tab.id;
-          return (
-            <Pressable
-              key={tab.id}
-              style={[styles.tabBtn, active && styles.tabBtnActive]}
-              onPress={() => handleTabChange(tab.id)}
-            >
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.electricBright} />
-        </View>
-      ) : (
-        <FlatList
-          key={activeTab}
-          data={users}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={users.length === 0 ? styles.emptyList : styles.list}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>
-                {listHidden ? '🔒' : activeTab === 'followers' ? '👥' : '🔍'}
-              </Text>
-              <Text style={styles.emptyText}>
-                {listHidden
-                  ? 'قائمة «يتابع» خاصة بهذا الحساب'
-                  : activeTab === 'followers'
-                    ? 'لا يوجد متابعون بعد'
-                    : 'لا تتابع أحداً بعد'}
-              </Text>
-            </View>
-          }
-        />
-      )}
-    </SafeAreaView>
+        {loading ? (
+          <Stack gap="none" align="center" fill style={styles.centered}>
+            <ActivityIndicator size="large" color={colors.electricBright} />
+          </Stack>
+        ) : (
+          <FlatList
+            key={activeTab}
+            data={users}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={users.length === 0 ? styles.emptyList : styles.list}
+            ListEmptyComponent={
+              <Stack gap="md" align="center" fill style={styles.empty}>
+                <AppText variant="display">
+                  {listHidden ? '🔒' : activeTab === 'followers' ? '👥' : '🔍'}
+                </AppText>
+                <AppText variant="body" color="textMuted" align="center">
+                  {listHidden
+                    ? 'قائمة «يتابع» خاصة بهذا الحساب'
+                    : activeTab === 'followers'
+                      ? 'لا يوجد متابعون بعد'
+                      : 'لا تتابع أحداً بعد'}
+                </AppText>
+              </Stack>
+            }
+          />
+        )}
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
-    },
-    backBtn: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor: colors.bgGlass,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-    },
-    headerTitle: { ...typography.h3, color: colors.textPrimary },
-    verifiedColor: { color: colors.electricBright },
+    centered: { justifyContent: 'center' },
+    /** Segmented control: a real selection affordance, not a decorative card. */
     tabs: {
-      flexDirection: 'row',
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.md,
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
       backgroundColor: colors.bgSurface,
       borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      padding: 4,
-      gap: 4,
+      padding: spacing.xs,
     },
     tabBtn: {
       flex: 1,
-      alignItems: 'center',
       paddingVertical: spacing.sm,
       borderRadius: radius.md,
     },
     tabBtnActive: {
-      backgroundColor: colors.electricBright,
-      borderWidth: 0,
+      backgroundColor: colors.bgElevated,
     },
-    tabText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-    tabTextActive: { color: '#FFFFFF', fontWeight: '600' },
+    tabTextActive: {
+      color: colors.textBrandStrong,
+    },
     list: { paddingBottom: spacing.xl },
     emptyList: { flexGrow: 1 },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     userRow: {
-      paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
     },
     identity: {
       width: '100%',
     },
-    followBtn: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 7,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electricBright,
-      borderWidth: 1,
-      borderColor: colors.electric,
-      minWidth: 78,
-      alignItems: 'center',
-    },
-    followingBtn: {
-      backgroundColor: colors.bgDeep,
-      borderColor: colors.electricBright,
-    },
-    followBtnText: { ...typography.caption, color: '#FFFFFF', fontWeight: '600' },
-    followingText: { color: colors.electricBright },
     empty: {
-      flex: 1,
-      alignItems: 'center',
       justifyContent: 'center',
       padding: spacing.xxxl,
-      gap: spacing.md,
     },
-    emptyIcon: { fontSize: 40 },
-    emptyText: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
   });
 }

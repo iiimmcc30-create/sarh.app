@@ -1,11 +1,8 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   DEFAULT_PRIVACY_SETTINGS,
   fetchPrivacySettings,
@@ -13,16 +10,10 @@ import {
   type PrivacySettings,
 } from '@/services/users';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhButton } from '@/design-system/components';
+import { ActivityIndicator, StyleSheet, Switch } from 'react-native';
+import { AppText, SarhButton, SarhDivider } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 
 type PrivacyToggleKey = {
   [Key in keyof PrivacySettings]: PrivacySettings[Key] extends boolean ? Key : never;
@@ -50,11 +41,17 @@ const TOGGLES: Array<{
   },
 ];
 
+/** Layout only — theme colors are read at render. */
+const styles = StyleSheet.create({
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  row: { paddingVertical: space[16] },
+  description: { lineHeight: 20 },
+});
+
 export default function PrivacySettingsScreen() {
   const { me } = useAppUser();
   const { accessToken, isLoading: authLoading } = useAuth();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -94,7 +91,7 @@ export default function PrivacySettingsScreen() {
       const result = await updatePrivacySettings({ [key]: value }, me.id, settings);
       if (!result.settings) {
         setSettings({ ...settings, [key]: previous });
-        await alertMessage('تعذّr الحفظ', result.message ?? 'لم نتمكن من تحديث إعداد الخصوصية. تحقق من الاتصال وحاول مجدداً.');
+        await alertMessage('تعذّر الحفظ', result.message ?? 'لم نتمكن من تحديث إعداد الخصوصية. تحقق من الاتصال وحاول مجدداً.');
         return;
       }
       setSettings(result.settings);
@@ -107,57 +104,72 @@ export default function PrivacySettingsScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="الخصوصية" showBack />
-      {loading || authLoading ? (
-        <View style={styles.center}>
+  const header = <ScreenHeader variant="screen" title="الخصوصية" showBack />;
+
+  if (loading || authLoading) {
+    return (
+      <Screen edges={['top', 'bottom']}>
+        {header}
+        <ScreenBody scroll={false} style={styles.centered}>
           <ActivityIndicator size="large" color={colors.electricBright} />
-        </View>
-      ) : !accessToken ? (
-        <View style={styles.center}>
-          <Text style={styles.errorText}>يجب تسجيل الدخول لعرض إعدادات الخصوصية</Text>
-        </View>
-      ) : !settings ? (
-        <View style={styles.center}>
-          <Text style={styles.errorText}>تعذّر تحميل إعدادات الخصوصية</Text>
-          <SarhButton title="إعادة المحاولة" onPress={() => void loadSettings()} />
-        </View>
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.content, getRtlDirection()]}
-        >
-          {loadError ? (
-            <View style={styles.notice}>
-              <Text style={styles.noticeText}>
-                عُرضت الإعدادات الافتراضية. قد تحتاج تحديث التطبيق أو الخادم لمزامنة تفضيلاتك.
-              </Text>
-              <SarhButton
-                title="إعادة المحاولة"
-                onPress={() => void loadSettings()}
-                variant="secondary"
-              />
-            </View>
-          ) : null}
+        </ScreenBody>
+      </Screen>
+    );
+  }
 
-          <Text style={styles.intro}>
-            اختر ما تريد مشاركته مع الآخرين في سرح. يمكنك تغيير هذه الإعدادات في أي وقت.
-          </Text>
+  if (!accessToken || !settings) {
+    return (
+      <Screen edges={['top', 'bottom']}>
+        {header}
+        <ScreenBody scroll={false} width="form" style={styles.centered}>
+          <Stack gap="md" align="center">
+            <AppText variant="body" color="textMuted" align="center">
+              {accessToken
+                ? 'تعذّر تحميل إعدادات الخصوصية'
+                : 'يجب تسجيل الدخول لعرض إعدادات الخصوصية'}
+            </AppText>
+            {accessToken ? (
+              <SarhButton title="إعادة المحاولة" onPress={() => void loadSettings()} />
+            ) : null}
+          </Stack>
+        </ScreenBody>
+      </Screen>
+    );
+  }
 
-          <View style={styles.card}>
-            {TOGGLES.map((item, index) => (
-              <View
-                key={item.key}
-                style={[
-                  styles.row, getRtlRow(),
-                  index < TOGGLES.length - 1 && styles.rowDivider,
-                ]}
-              >
-                <View style={styles.textWrap}>
-                  <Text style={[styles.label, getRtlText()]}>{item.label}</Text>
-                  <Text style={[styles.description, getRtlText()]}>{item.description}</Text>
-                </View>
+  return (
+    <Screen edges={['top', 'bottom']}>
+      {header}
+      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxl">
+        {loadError ? (
+          <Stack gap="sm">
+            <AppText variant="caption" color="warning">
+              عُرضت الإعدادات الافتراضية. قد تحتاج تحديث التطبيق أو الخادم لمزامنة تفضيلاتك.
+            </AppText>
+            <SarhButton
+              title="إعادة المحاولة"
+              onPress={() => void loadSettings()}
+              variant="secondary"
+            />
+          </Stack>
+        ) : null}
+
+        <AppText variant="bodySmall" color="textSecondary">
+          اختر ما تريد مشاركته مع الآخرين في سرح. يمكنك تغيير هذه الإعدادات في أي وقت.
+        </AppText>
+
+        <Stack gap="none">
+          {TOGGLES.map((item, index) => (
+            <Stack key={item.key} gap="none">
+              <Row gap="md" align="center" style={styles.row}>
+                <Stack gap="xs" fill>
+                  <AppText variant="bodyMedium" color="textPrimary">
+                    {item.label}
+                  </AppText>
+                  <AppText variant="caption" color="textMuted" style={styles.description}>
+                    {item.description}
+                  </AppText>
+                </Stack>
                 <Switch
                   value={settings[item.key]}
                   onValueChange={(value) => void handleToggle(item.key, value)}
@@ -169,91 +181,12 @@ export default function PrivacySettingsScreen() {
                   thumbColor="#fff"
                   ios_backgroundColor={colors.bgDeep}
                 />
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      )}
-    </SafeAreaView>
+              </Row>
+              {index < TOGGLES.length - 1 ? <SarhDivider /> : null}
+            </Stack>
+          ))}
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.bgDeep,
-    },
-    content: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.xxl,
-      gap: spacing.md,
-    },
-    center: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: spacing.xl,
-      gap: spacing.md,
-    },
-    errorText: {
-      ...typography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    notice: {
-      gap: spacing.sm,
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: `${colors.amber}14`,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: `${colors.amber}40`,
-    },
-    noticeText: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      ...getRtlText(),
-      ...getRtlText(),
-      lineHeight: 20,
-    },
-    intro: {
-      ...typography.body,
-      color: colors.textSecondary,
-      ...getRtlText(),
-      ...getRtlText(),
-      lineHeight: 24,
-    },
-    card: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: radius.xl,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      overflow: 'hidden',
-    },
-    row: {
-      alignItems: 'center',
-      gap: spacing.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.lg,
-    },
-    rowDivider: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    textWrap: {
-      flex: 1,
-      gap: 4,
-    },
-    label: {
-      ...typography.cardHeading,
-      color: colors.textPrimary,
-          },
-    description: {
-      ...typography.caption,
-      color: colors.textMuted,
-      lineHeight: 20,
-          },
-  });
 }

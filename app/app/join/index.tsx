@@ -1,9 +1,10 @@
-import { SarhButton } from '@/design-system/components';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ButcherLocationPicker } from '@/components/feature/ButcherLocationPicker';
 import { API_BASE } from '@/services/api';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
@@ -21,19 +22,14 @@ import {
   type PickedApplicationFile,
 } from '@/lib/pickApplicationDocument';
 import { hasValidCoords } from '@/lib/butcherLocation';
-import { ltrInputText, rtlInputText } from '@/lib/rtl';
 import type { ButcherApplicationDocumentType } from '@/services/butcherApplicationTypes';
 import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SAUDI_DIAL = '+966';
 
@@ -287,52 +283,50 @@ export default function ButcherJoinScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <Screen edges={['top', 'bottom']} keyboard pattern={false} style={styles.screen}>
       <LinearGradient
-        colors={['#07131C', '#0C1C27', '#07131C']}
+        colors={[colors.bgDeep, colors.bgPrimary, colors.bgDeep]}
         style={StyleSheet.absoluteFill}
       />
       <LinearGradient
-        colors={['rgba(32,182,111,0.18)', 'transparent']}
+        colors={[`${colors.emerald}2E`, 'transparent']}
         style={styles.glow}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.5 }}
       />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.hero}>
-          <SarhLogoMark size={64} color="#F4F7F9" />
-          <Text style={styles.kicker}>سرح للمنشآت</Text>
-          <Text style={styles.title}>انضمام الملاحم</Text>
-          <Text style={styles.lead}>
+      <ScreenBody width="form" padTop="lg" padBottom="xxxl" gap="section">
+        <Stack gap="sm" align="center">
+          <SarhLogoMark size={64} color={colors.textPrimary} />
+          <AppText variant="caption" style={styles.kicker}>سرح للمنشآت</AppText>
+          <AppText variant="display" align="center">انضمام الملاحم</AppText>
+          <AppText variant="body" color="textSecondary" align="center" style={styles.lead}>
             قدّم طلب انضمام رسمي إلى منصة سرح بنفس متطلبات نموذج الملاحم داخل التطبيق.
-          </Text>
-        </View>
+          </AppText>
+        </Stack>
 
-        <View style={styles.card}>
-          <Text style={styles.section}>1. التحقق من الجوال</Text>
-          <Text style={styles.label}>رقم الجوال</Text>
-          <View style={styles.phoneRow}>
-            <Text style={styles.dial}>{SAUDI_DIAL}</Text>
-            <TextInput
-              style={[styles.inputFlex, ltrInputText]}
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">1. التحقق من الجوال</AppText>
+          <Row gap="sm" align="center">
+            <AppText variant="body" color="textSecondary">{SAUDI_DIAL}</AppText>
+            <SarhInput
               value={phoneDigits}
               onChangeText={setPhoneDigits}
               keyboardType="phone-pad"
               placeholder="5xxxxxxxx"
-              placeholderTextColor={colors.textMuted}
+              ltr
+              containerStyle={styles.inputFlex}
             />
-          </View>
+          </Row>
           {otpSent ? (
-            <>
-              <Text style={styles.label}>رمز التحقق</Text>
-              <TextInput
-                style={[styles.input, ltrInputText, { textAlign: 'center' }]}
+            <Stack gap="md">
+              <SarhInput
+                label="رمز التحقق"
                 value={otp}
                 onChangeText={setOtp}
                 keyboardType="number-pad"
                 maxLength={6}
                 placeholder="000000"
-                placeholderTextColor={colors.textMuted}
+                ltr
               />
               <SarhButton
                 title="تأكيد الرمز"
@@ -340,7 +334,7 @@ export default function ButcherJoinScreen() {
                 loading={loading}
                 onPress={verifyOtp}
               />
-            </>
+            </Stack>
           ) : (
             <SarhButton
               title="إرسال رمز التحقق"
@@ -349,90 +343,80 @@ export default function ButcherJoinScreen() {
               onPress={sendOtp}
             />
           )}
-          {phoneToken ? <Text style={styles.ok}>تم التحقق من الجوال</Text> : null}
-        </View>
+          {phoneToken ? (
+            <AppText variant="caption" color="success">تم التحقق من الجوال</AppText>
+          ) : null}
+        </Stack>
 
-        <View style={styles.card}>
-          <Text style={styles.section}>2. بيانات صاحب الطلب</Text>
-          <Text style={styles.label}>الاسم</Text>
-          <TextInput
-            style={[styles.input, rtlInputText]}
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">2. بيانات صاحب الطلب</AppText>
+          <SarhInput
+            label="الاسم"
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="الاسم الكامل"
-            placeholderTextColor={colors.textMuted}
           />
-          <Text style={styles.label}>البريد الإلكتروني (اختياري)</Text>
-          <TextInput
-            style={[styles.input, ltrInputText]}
+          <SarhInput
+            label="البريد الإلكتروني (اختياري)"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
             placeholder="name@example.com"
-            placeholderTextColor={colors.textMuted}
+            ltr
           />
           {isNewUser ? (
             <>
-              <Text style={styles.label}>اسم المستخدم</Text>
-              <TextInput
-                style={[styles.input, ltrInputText]}
+              <SarhInput
+                label="اسم المستخدم"
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 placeholder="latin_username"
-                placeholderTextColor={colors.textMuted}
+                ltr
               />
-              <Text style={styles.label}>كلمة المرور (اختياري)</Text>
-              <TextInput
-                style={[styles.input, ltrInputText]}
+              <SarhInput
+                label="كلمة المرور (اختياري)"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
                 placeholder="••••••••"
-                placeholderTextColor={colors.textMuted}
+                ltr
               />
             </>
           ) : null}
-        </View>
+        </Stack>
 
-        <View style={styles.card}>
-          <Text style={styles.section}>3. بيانات الملحمة</Text>
-          <Text style={styles.label}>اسم الملحمة (عربي)</Text>
-          <TextInput style={[styles.input, rtlInputText]} value={nameAr} onChangeText={setNameAr} />
-          <Text style={styles.label}>اسم الملحمة (إنجليزي)</Text>
-          <TextInput style={[styles.input, ltrInputText]} value={nameEn} onChangeText={setNameEn} />
-          <Text style={styles.label}>هاتف المحل</Text>
-          <TextInput
-            style={[styles.input, ltrInputText]}
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">3. بيانات الملحمة</AppText>
+          <SarhInput label="اسم الملحمة (عربي)" value={nameAr} onChangeText={setNameAr} />
+          <SarhInput label="اسم الملحمة (إنجليزي)" value={nameEn} onChangeText={setNameEn} ltr />
+          <SarhInput
+            label="هاتف المحل"
             value={shopPhone}
             onChangeText={setShopPhone}
             keyboardType="phone-pad"
+            ltr
           />
-          <Text style={styles.label}>السجل التجاري</Text>
-          <TextInput
-            style={[styles.input, ltrInputText]}
+          <SarhInput
+            label="السجل التجاري"
             value={commercialReg}
             onChangeText={setCommercialReg}
+            ltr
           />
-          <Text style={styles.label}>المدينة</Text>
-          <TextInput style={[styles.input, rtlInputText]} value={cityAr} onChangeText={setCityAr} />
-          <Text style={styles.label}>المدينة (إنجليزي)</Text>
-          <TextInput style={[styles.input, ltrInputText]} value={city} onChangeText={setCity} />
-          <Text style={styles.label}>العنوان</Text>
-          <TextInput
-            style={[styles.input, rtlInputText]}
+          <SarhInput label="المدينة" value={cityAr} onChangeText={setCityAr} />
+          <SarhInput label="المدينة (إنجليزي)" value={city} onChangeText={setCity} ltr />
+          <SarhInput
+            label="العنوان"
             value={addressAr}
             onChangeText={setAddressAr}
             placeholder="الحي، الشارع"
-            placeholderTextColor={colors.textMuted}
           />
-          <Text style={styles.label}>العنوان (إنجليزي)</Text>
-          <TextInput style={[styles.input, ltrInputText]} value={address} onChangeText={setAddress} />
-        </View>
+          <SarhInput label="العنوان (إنجليزي)" value={address} onChangeText={setAddress} ltr />
+        </Stack>
 
-        <View style={styles.card}>
-          <Text style={styles.section}>4. بيانات الموقع</Text>
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">4. بيانات الموقع</AppText>
           <ButcherLocationPicker
             lat={hasValidCoords(lat, lng) ? lat : null}
             lng={hasValidCoords(lat, lng) ? lng : null}
@@ -441,55 +425,44 @@ export default function ButcherJoinScreen() {
               setLng(nextLng);
             }}
           />
-        </View>
+        </Stack>
 
-        <View style={styles.card}>
-          <Text style={styles.section}>5. النشاط وأوقات العمل</Text>
-          <Text style={styles.label}>نبذة عربية (اختياري)</Text>
-          <TextInput
-            style={[styles.input, styles.multiline, rtlInputText]}
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">5. النشاط وأوقات العمل</AppText>
+          <SarhInput
+            label="نبذة عربية (اختياري)"
             value={bioAr}
             onChangeText={setBioAr}
             multiline
+            style={styles.multiline}
           />
-          <Text style={styles.label}>نبذة إنجليزية (اختياري)</Text>
-          <TextInput
-            style={[styles.input, styles.multiline, ltrInputText]}
+          <SarhInput
+            label="نبذة إنجليزية (اختياري)"
             value={bioEn}
             onChangeText={setBioEn}
             multiline
+            ltr
+            style={styles.multiline}
           />
-          <Text style={styles.label}>التخصصات (اختياري)</Text>
-          <TextInput
-            style={[styles.input, rtlInputText]}
+          <SarhInput
+            label="التخصصات (اختياري)"
             value={specialties}
             onChangeText={setSpecialties}
             placeholder="لحم بقري، غنم"
-            placeholderTextColor={colors.textMuted}
           />
-          <View style={styles.row}>
+          <Row gap="md">
             <View style={styles.col}>
-              <Text style={styles.label}>الفتح</Text>
-              <TextInput
-                style={[styles.input, ltrInputText, { textAlign: 'center' }]}
-                value={openTime}
-                onChangeText={setOpenTime}
-              />
+              <SarhInput label="الفتح" value={openTime} onChangeText={setOpenTime} ltr />
             </View>
             <View style={styles.col}>
-              <Text style={styles.label}>الإغلاق</Text>
-              <TextInput
-                style={[styles.input, ltrInputText, { textAlign: 'center' }]}
-                value={closeTime}
-                onChangeText={setCloseTime}
-              />
+              <SarhInput label="الإغلاق" value={closeTime} onChangeText={setCloseTime} ltr />
             </View>
-          </View>
-        </View>
+          </Row>
+        </Stack>
 
-        <View style={styles.card}>
-          <Text style={styles.section}>6. المستندات المطلوبة</Text>
-          <Text style={styles.hint}>المسموح: PDF أو JPG أو PNG أو WEBP.</Text>
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">6. المستندات المطلوبة</AppText>
+          <AppText variant="caption" color="textMuted">المسموح: PDF أو JPG أو PNG أو WEBP.</AppText>
           {[...REQUIRED_DOCS, 'other' as const].map((type) => {
             const picked = docs[type];
             const required = type !== 'other';
@@ -501,30 +474,42 @@ export default function ButcherJoinScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`رفع ${DOCUMENT_TYPE_LABELS[type]}`}
               >
-                <Text style={styles.fileTitle}>
+                <AppText variant="label">
                   {DOCUMENT_TYPE_LABELS[type]}
                   {required ? ' *' : ' (اختياري)'}
-                </Text>
-                <Text style={styles.hint}>حتى {maxBytesLabelForDocumentType(type)}</Text>
-                <Text style={picked ? styles.ok : styles.hint}>
+                </AppText>
+                <AppText variant="caption" color="textMuted">حتى {maxBytesLabelForDocumentType(type)}</AppText>
+                <AppText variant="caption" color={picked ? 'success' : 'textMuted'}>
                   {picked ? picked.originalFileName : 'اختيار ملف'}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
-        </View>
+        </Stack>
 
-        <Pressable style={styles.checkRow} onPress={() => setAcceptedTerms((v) => !v)}>
-          <View style={[styles.checkbox, acceptedTerms && styles.checkboxOn]} />
-          <Text style={styles.checkText}>أوافق على الشروط ومراجعة الطلب من فريق سرح.</Text>
+        <Pressable onPress={() => setAcceptedTerms((v) => !v)}>
+          <Row gap="md" align="start">
+            <View style={[styles.checkbox, acceptedTerms && styles.checkboxOn]} />
+            <AppText variant="bodySmall" color="textSecondary" style={styles.checkText}>
+              أوافق على الشروط ومراجعة الطلب من فريق سرح.
+            </AppText>
+          </Row>
         </Pressable>
-        <Pressable style={styles.checkRow} onPress={() => setConfirmAccuracy((v) => !v)}>
-          <View style={[styles.checkbox, confirmAccuracy && styles.checkboxOn]} />
-          <Text style={styles.checkText}>أؤكد أن البيانات والمستندات صحيحة.</Text>
+        <Pressable onPress={() => setConfirmAccuracy((v) => !v)}>
+          <Row gap="md" align="start">
+            <View style={[styles.checkbox, confirmAccuracy && styles.checkboxOn]} />
+            <AppText variant="bodySmall" color="textSecondary" style={styles.checkText}>
+              أؤكد أن البيانات والمستندات صحيحة.
+            </AppText>
+          </Row>
         </Pressable>
 
-        {uploadStatus ? <Text style={styles.ok}>{uploadStatus}</Text> : null}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {uploadStatus ? (
+          <AppText variant="caption" color="success">{uploadStatus}</AppText>
+        ) : null}
+        {error ? (
+          <AppText variant="caption" color="danger" align="center">{error}</AppText>
+        ) : null}
 
         <SarhButton
           title="إرسال طلب الانضمام"
@@ -536,70 +521,33 @@ export default function ButcherJoinScreen() {
           onPress={() => void Linking.openURL(SARH_BUTCHER_LOGIN_URL)}
           accessibilityRole="link"
         >
-          <Text style={styles.loginLink}>لديك حساب ملحمة؟ تسجيل الدخول</Text>
+          <AppText variant="label" align="center" style={styles.loginLink}>
+            لديك حساب ملحمة؟ تسجيل الدخول
+          </AppText>
         </Pressable>
-        <Text style={styles.footnote}>لن يتم إنشاء حساب دفترة في هذه المرحلة.</Text>
-      </ScrollView>
-    </SafeAreaView>
+        <AppText variant="caption" color="textMuted" align="center">
+          لن يتم إنشاء حساب دفترة في هذه المرحلة.
+        </AppText>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: '#07131C' },
-    glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 280 },
-    scroll: {
-      width: '100%',
-      maxWidth: 560,
-      alignSelf: 'center',
-      padding: spacing.xl,
-      gap: spacing.lg,
-      paddingBottom: 48,
-    },
-    hero: { alignItems: 'center', gap: 10, paddingTop: spacing.md },
-    kicker: { ...typography.caption, color: colors.gold, letterSpacing: 1 },
-    title: { ...typography.display, color: colors.textPrimary, textAlign: 'center' },
-    lead: {
-      ...typography.body,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 24,
-      maxWidth: 520,
-    },
+    screen: { backgroundColor: colors.bgDeep },
+    glow: { position: 'absolute', top: 0, start: 0, end: 0, height: 280 },
+    kicker: { color: colors.gold, letterSpacing: 1 },
+    lead: { maxWidth: 520 },
     card: {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xxl,
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      padding: spacing.lg,
-      gap: 8,
+      padding: 16,
     },
-    section: { ...typography.cardHeading, color: colors.textPrimary, marginBottom: 8,  },
-    label: { ...typography.caption, color: colors.textMuted,  marginTop: 8 },
-    hint: { ...typography.caption, color: colors.textMuted,  },
-    input: {
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-      borderRadius: radius.lg,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      color: colors.textPrimary,
-      backgroundColor: colors.bgElevated,
-    },
-    multiline: { minHeight: 84, textAlignVertical: 'top' },
-    inputFlex: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-      borderRadius: radius.lg,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      color: colors.textPrimary,
-      backgroundColor: colors.bgElevated,
-    },
-    phoneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    dial: { color: colors.textSecondary, paddingHorizontal: 8 },
-    row: { flexDirection: 'row', gap: 12 },
+    inputFlex: { flex: 1 },
+    multiline: { minHeight: 84 },
     col: { flex: 1 },
     fileBtn: {
       borderWidth: 1,
@@ -609,18 +557,6 @@ function createStyles(colors: ThemeColors) {
       padding: 12,
       gap: 4,
     },
-    fileTitle: { color: colors.textPrimary,  fontWeight: '600' },
-    secondaryBtn: {
-      marginTop: 8,
-      borderWidth: 1,
-      borderColor: colors.emerald,
-      borderRadius: radius.lg,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    secondaryBtnText: { color: colors.emerald, fontWeight: '600' },
-    ok: { color: colors.success,  marginTop: 8 },
-    checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
     checkbox: {
       width: 22,
       height: 22,
@@ -630,21 +566,10 @@ function createStyles(colors: ThemeColors) {
       marginTop: 2,
     },
     checkboxOn: { backgroundColor: colors.emerald, borderColor: colors.emerald },
-    checkText: { flex: 1, color: colors.textSecondary,  lineHeight: 22 },
-    error: { color: colors.danger, textAlign: 'center' },
-    submit: {
-      backgroundColor: colors.emerald,
-      borderRadius: radius.xl,
-      paddingVertical: 16,
-      alignItems: 'center',
-    },
-    submitText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+    checkText: { flex: 1 },
     loginLink: {
       color: colors.gold,
-      textAlign: 'center',
-      fontWeight: '600',
       textDecorationLine: 'underline',
     },
-    footnote: { color: colors.textMuted, textAlign: 'center' },
   });
 }

@@ -3,7 +3,8 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
-import { AppScrollView } from '@/components/ui/AppScrollView';
+import { AppText } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
@@ -13,19 +14,14 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
-import { AppText } from '@/components/ui/AppText';
 
 const MAX_BUTCHERS = 24;
 
@@ -94,27 +90,35 @@ function OfferProductCard({
         <Image source={uriSource(offer.image)} style={styles.productImage} contentFit="cover" />
         {offer.discountPercent ? (
           <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>-{offer.discountPercent}%</Text>
+            <AppText variant="caption" style={styles.discountText}>
+              -{offer.discountPercent}%
+            </AppText>
           </View>
         ) : null}
       </View>
       <View style={styles.productBody}>
-        <Text style={styles.productName} numberOfLines={2}>
+        <AppText variant="cardTitle" numberOfLines={2}>
           {offer.titleAr}
-        </Text>
-        <View style={[styles.priceRow, getRtlRow()]}>
+        </AppText>
+        <Row align="baseline" gap="xs">
           {offer.offerPrice != null ? (
-            <Text style={styles.offerPrice}>{offer.offerPrice.toLocaleString('en-US')} ر.س</Text>
+            <AppText variant="price" style={styles.offerPrice}>
+              {offer.offerPrice.toLocaleString('en-US')} ر.س
+            </AppText>
           ) : null}
           {offer.originalPrice != null && offer.originalPrice !== offer.offerPrice ? (
-            <Text style={styles.originalPrice}>{offer.originalPrice.toLocaleString('en-US')}</Text>
+            <AppText variant="caption" style={styles.originalPrice}>
+              {offer.originalPrice.toLocaleString('en-US')}
+            </AppText>
           ) : null}
-        </View>
+        </Row>
         {validity ? (
-          <View style={[styles.validityRow, getRtlRow()]}>
+          <Row align="center" gap="xs">
             <AppIcon name="clock-outline" size={11} color={colors.textMuted} />
-            <Text style={styles.validityText}>{validity}</Text>
-          </View>
+            <AppText variant="caption" color="textMuted">
+              {validity}
+            </AppText>
+          </Row>
         ) : null}
       </View>
     </Pressable>
@@ -135,41 +139,51 @@ function ButcherOffersCard({
   return (
     <View style={styles.card}>
       <Pressable
-        style={[styles.cardHeader, getRtlRow()]}
+        style={styles.cardHeader}
         onPress={onOpen}
         accessibilityRole="button"
         accessibilityLabel={item.nameAr}
       >
-        <View style={[styles.headerMain, getRtlRow()]}>
-          <View style={styles.logoWrap}>
-            <Image source={uriSource(item.logo || item.cover)} style={styles.logo} contentFit="cover" />
-          </View>
-          <View style={styles.headerText}>
-            <View style={[styles.nameRow, getRtlRow()]}>
-              <Text style={styles.butcherName} numberOfLines={1}>
-                {item.nameAr}
-              </Text>
-              {item.subscriptionActive ? (
-                <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
-              ) : null}
+        <Row justify="between" align="center">
+          <Row align="center" gap="sm" fill>
+            <View style={styles.logoWrap}>
+              <Image source={uriSource(item.logo || item.cover)} style={styles.logo} contentFit="cover" />
             </View>
-            <View style={[styles.metaRow, getRtlRow()]}>
-              <AppIcon name="star" size={12} color={colors.gold} />
-              <Text style={styles.rating}>{item.rating.toFixed(1)}</Text>
-              {item.cityAr ? <Text style={styles.city}>· {item.cityAr}</Text> : null}
-            </View>
-          </View>
-        </View>
-        <View style={[styles.visitChip, getRtlRow()]}>
-          <Text style={styles.visitText}>زيارة</Text>
-          <AppIcon name="chevron-back" size={14} color={colors.electricBright} />
-        </View>
+            <Stack gap="xs" fill>
+              <Row align="center" gap="xs">
+                <AppText variant="body" numberOfLines={1} style={styles.butcherName}>
+                  {item.nameAr}
+                </AppText>
+                {item.subscriptionActive ? (
+                  <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
+                ) : null}
+              </Row>
+              <Row align="center" gap="xs">
+                <AppIcon name="star" size={12} color={colors.gold} />
+                <AppText variant="bodyMedium" style={styles.rating}>
+                  {item.rating.toFixed(1)}
+                </AppText>
+                {item.cityAr ? (
+                  <AppText variant="caption" color="textMuted">
+                    · {item.cityAr}
+                  </AppText>
+                ) : null}
+              </Row>
+            </Stack>
+          </Row>
+          <Row align="center" gap="xs" style={styles.visitChip}>
+            <AppText variant="bodyMedium" style={styles.visitText}>
+              زيارة
+            </AppText>
+            <AppIcon name="chevron-back" size={14} color={colors.electricBright} />
+          </Row>
+        </Row>
       </Pressable>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.productsRow, getRtlRow()]}
+        contentContainerStyle={styles.productsRow}
       >
         {item.offers.map((offer) => (
           <OfferProductCard
@@ -252,18 +266,23 @@ export default function ButcherOffersScreen() {
     safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader title="العروض" />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="العروض" />
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.electricBright} />
-          <Text style={styles.loadingText}>جاري تحميل العروض...</Text>
-        </View>
+        <ScreenBody scroll={false} gutter={false}>
+          <Stack fill align="center" style={styles.center}>
+            <ActivityIndicator size="large" color={colors.electricBright} />
+            <AppText variant="bodySmall" color="textMuted">
+              جاري تحميل العروض...
+            </AppText>
+          </Stack>
+        </ScreenBody>
       ) : (
-        <AppScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scroll}
+        <ScreenBody
+          gap="lg"
+          padTop="lg"
+          padBottom="lg"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -276,21 +295,25 @@ export default function ButcherOffersScreen() {
           }
         >
           {data.length === 0 ? (
-            <View style={styles.empty}>
+            <Stack align="center" gap="sm" style={styles.empty}>
               <View style={styles.emptyIconWrap}>
                 <AppIcon name="pricetag-outline" size={34} color={colors.electricBright} />
               </View>
-              <Text style={styles.emptyTitle}>لا توجد عروض حالياً</Text>
-              <Text style={styles.emptySub}>تابعنا لاحقاً لأحدث عروض الملاحم</Text>
-            </View>
+              <AppText variant="sectionTitle" align="center">
+                لا توجد عروض حالياً
+              </AppText>
+              <AppText variant="bodySmall" color="textMuted" align="center">
+                تابعنا لاحقاً لأحدث عروض الملاحم
+              </AppText>
+            </Stack>
           ) : (
             <>
-              <View style={styles.sectionLabelWrap}>
-                <View style={{ width: '100%' }}>
-                  <AppText style={styles.heroTitle}>عروض بالقرب منك</AppText>
-                  <AppText style={styles.heroSub}>أفضل عروض الملاحم على منتجاتها المختارة</AppText>
-                </View>
-              </View>
+              <Stack gap="none">
+                <AppText variant="body">عروض بالقرب منك</AppText>
+                <AppText variant="bodySmall" color="textMuted">
+                  أفضل عروض الملاحم على منتجاتها المختارة
+                </AppText>
+              </Stack>
               {data.map((item) => (
                 <ButcherOffersCard
                   key={item.butcherId}
@@ -302,41 +325,24 @@ export default function ButcherOffersScreen() {
               ))}
             </>
           )}
-        </AppScrollView>
+        </ScreenBody>
       )}
 
       <ButchersTabBar active="offers" />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.lg },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-    loadingText: { ...butcherTypography.secondary, color: colors.textMuted },
-    sectionLabelWrap: {
-      paddingHorizontal: 0,
-    },
-    heroTitle: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-    },
-    heroSub: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
+    center: { justifyContent: 'center' },
     card: {
       backgroundColor: colors.bgElevated,
       borderRadius: radius.xl,
       padding: spacing.md,
       gap: spacing.md,
     },
-    cardHeader: { alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
-    headerMain: { alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 },
+    cardHeader: { width: '100%' },
     logoWrap: {
       width: 46,
       height: 46,
@@ -345,26 +351,15 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
     },
     logo: { width: '100%', height: '100%' },
-    headerText: { flex: 1, minWidth: 0, gap: 3 },
-    nameRow: { alignItems: 'center', gap: 5 },
-    butcherName: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-      flexShrink: 1,
-      ...getRtlText(),
-    },
-    metaRow: { alignItems: 'center', gap: 4 },
-    rating: { ...butcherTypography.emphasis, color: colors.gold },
-    city: { ...butcherTypography.meta, color: colors.textMuted },
+    butcherName: { flexShrink: 1 },
+    rating: { color: colors.gold },
     visitChip: {
-      alignItems: 'center',
-      gap: 2,
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: radius.pill,
       backgroundColor: colors.electric + '16',
     },
-    visitText: { ...butcherTypography.emphasis, color: colors.electricBright },
+    visitText: { color: colors.electricBright },
     productsRow: { gap: spacing.sm, paddingVertical: 2 },
     product: {
       width: 150,
@@ -377,29 +372,20 @@ function createStyles(colors: ThemeColors) {
     discountBadge: {
       position: 'absolute',
       top: 8,
-      right: 8,
+      end: 8,
       backgroundColor: colors.rose,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    discountText: { ...butcherTypography.badge, color: '#fff' },
+    discountText: { color: '#fff' },
     productBody: { padding: spacing.sm, gap: 5 },
-    productName: {
-      ...typography.cardHeading,
-      color: colors.textPrimary,
-      ...getRtlText(),
-    },
-    priceRow: { alignItems: 'baseline', gap: 6 },
-    offerPrice: { ...typography.value, color: colors.electricBright },
+    offerPrice: { color: colors.electricBright },
     originalPrice: {
-      ...butcherTypography.meta,
       color: colors.textMuted,
       textDecorationLine: 'line-through',
     },
-    validityRow: { alignItems: 'center', gap: 4 },
-    validityText: { ...butcherTypography.meta, color: colors.textMuted, ...getRtlText() },
-    empty: { alignItems: 'center', paddingVertical: 90, gap: spacing.sm },
+    empty: { paddingVertical: 90 },
     emptyIconWrap: {
       width: 76,
       height: 76,
@@ -408,18 +394,6 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       backgroundColor: colors.electric + '14',
       marginBottom: spacing.xs,
-    },
-    emptyTitle: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    emptySub: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
     },
   });
 }

@@ -6,4 +6,9 @@ export const I18nManager = {
   allowRTL: jest.fn(),
   forceRTL: jest.fn(),
 };
-export default { Alert, Platform, Share, I18nManager };
+export const StyleSheet = {
+  create: <T extends Record<string, unknown>>(styles: T) => styles,
+  hairlineWidth: 1,
+  absoluteFillObject: { position: 'absolute' as const, left: 0, right: 0, top: 0, bottom: 0 },
+};
+export default { Alert, Platform, Share, I18nManager, StyleSheet };

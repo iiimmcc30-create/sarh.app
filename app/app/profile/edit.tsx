@@ -1,33 +1,21 @@
 // Powered by OnSpace.AI
 // SAFAT — Edit Profile Screen (تعديل الملف الشخصي)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type TextStyle,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { ltrInputText, marginEnd, rtlInputText } from '@/lib/rtl';
 import { useAppUser } from '@/hooks/useApp';
 import { Country } from '@/services/types';
 import { showToast } from '@/lib/toast';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { BottomAction, Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 
 const GCC_COUNTRIES: { code: Country; ar: string; flag: string }[] = [
   { code: 'SA', ar: 'السعودية', flag: '🇸🇦' },
@@ -106,254 +94,209 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-          <Text style={styles.headerTitle} numberOfLines={1}>تعديل الملف الشخصي</Text>
-          <SarhButton
-            title={saving ? 'جاري...' : 'حفظ'}
-            size="sm"
-            loading={saving}
-            onPress={handleSave}
-            accessibilityLabel="حفظ التعديلات"
-          />
-        </View>
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          {/* Cover section */}
-          <View style={styles.coverSection}>
-            <View style={styles.coverWrap}>
-              {coverUri || me.coverImage ? (
-                <Image
-                  source={{ uri: coverUri ?? me.coverImage }}
-                  style={styles.coverImage}
-                  contentFit="cover"
-                />
-              ) : (
-                <LinearGradient
-                  colors={gradients.royal}
-                  style={styles.coverPlaceholder}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-              )}
-              <LinearGradient
-                colors={['rgba(6,9,26,0.1)', 'rgba(6,9,26,0.5)']}
-                style={StyleSheet.absoluteFill}
+    <Screen edges={['top']} keyboard>
+      <ScreenHeader variant="screen" title="تعديل الملف الشخصي" showBack />
+      <ScreenBody padTop="lg" gap="section" width="form" bottomInset="action" padBottom="xl">
+        <Stack gap="sm">
+          <View style={styles.coverWrap}>
+            {coverUri || me.coverImage ? (
+              <Image
+                source={{ uri: coverUri ?? me.coverImage }}
+                style={styles.coverImage}
+                contentFit="cover"
               />
-              <Pressable
-                style={styles.coverCameraBtn}
-                onPress={handlePickCover}
-                accessibilityRole="button"
-                accessibilityLabel="تغيير صورة الغلاف"
-              >
-                <AppIcon name="camera-outline" size={16} color="#fff" />
-              </Pressable>
-            </View>
-            <Text style={styles.coverHint}>
-              {coverUri ? '✓ تم اختيار صورة الغلاف' : 'اضغط لتغيير صورة الغلاف'}
-            </Text>
+            ) : (
+              <LinearGradient
+                colors={gradients.royal}
+                style={styles.coverImage}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+            )}
+            <Pressable
+              style={styles.coverCameraBtn}
+              onPress={handlePickCover}
+              accessibilityRole="button"
+              accessibilityLabel="تغيير صورة الغلاف"
+            >
+              <AppIcon name="camera-outline" size={16} color="#fff" />
+            </Pressable>
           </View>
+          <AppText variant="meta" color="textMuted" align="center">
+            {coverUri ? '✓ تم اختيار صورة الغلاف' : 'اضغط لتغيير صورة الغلاف'}
+          </AppText>
+        </Stack>
 
-          {/* Avatar section */}
-          <View style={styles.avatarSection}>
-            <View style={styles.avatarWrap}>
-              <Image source={{ uri: avatarUri ?? me.avatar }} style={styles.avatar} contentFit="cover" />
-              <Pressable
-                style={styles.cameraBtn}
-                onPress={handlePickAvatar}
-                accessibilityRole="button"
-                accessibilityLabel="تغيير الصورة الشخصية"
-              >
-                <AppIcon name="camera" size={16} color="#fff" />
-              </Pressable>
-            </View>
-            <Text style={styles.avatarHint}>{avatarUri ? '✓ تم اختيار الصورة' : 'اضغط لتغيير الصورة'}</Text>
+        <Stack gap="sm" align="center">
+          <View style={styles.avatarWrap}>
+            <Image source={{ uri: avatarUri ?? me.avatar }} style={styles.avatar} contentFit="cover" />
+            <Pressable
+              style={styles.avatarCameraBtn}
+              onPress={handlePickAvatar}
+              accessibilityRole="button"
+              accessibilityLabel="تغيير الصورة الشخصية"
+            >
+              <AppIcon name="camera" size={16} color="#fff" />
+            </Pressable>
           </View>
+          <AppText variant="meta" color="textMuted">
+            {avatarUri ? '✓ تم اختيار الصورة' : 'اضغط لتغيير الصورة'}
+          </AppText>
+        </Stack>
 
-          {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>الاسم *</Text>
-              <View style={styles.inputWrap}>
-                <TextInput
-                  value={arabicName}
-                  onChangeText={setArabicName}
-                  placeholder="اسمك الكامل"
-                  placeholderTextColor={colors.textMuted}
-                  style={[styles.input, styles.inputRtl, rtlInputText]}
-                />
-              </View>
-            </View>
+        <Stack gap="lg">
+          <SarhInput
+            appearance="theme"
+            label="الاسم *"
+            value={arabicName}
+            onChangeText={setArabicName}
+            placeholder="اسمك الكامل"
+          />
 
-            {/* Username */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>اسم المستخدم *</Text>
-              <View style={styles.inputWrap}>
-                <Text style={styles.atSign}>@</Text>
-                <TextInput
-                  value={username}
-                  onChangeText={(t) => setUsername(t.replace(/\s/g, '').toLowerCase())}
-                  placeholder="اسم_المستخدم"
-                  placeholderTextColor={colors.textMuted}
-                  style={[styles.input, ltrInputText, { flex: 1 }]}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-              <Text style={styles.fieldHint}>sarhsa.online/@{username}</Text>
-            </View>
+          <Stack gap="xs">
+            <SarhInput
+              appearance="theme"
+              label="اسم المستخدم *"
+              value={username}
+              onChangeText={(t) => setUsername(t.replace(/\s/g, '').toLowerCase())}
+              placeholder="اسم_المستخدم"
+              autoCapitalize="none"
+              autoCorrect={false}
+              leadingIcon={
+                <AppText variant="body" color="textMuted">
+                  @
+                </AppText>
+              }
+              ltr
+            />
+            <AppText variant="meta" color="textMuted">
+              sarhsa.online/@{username}
+            </AppText>
+          </Stack>
 
-            {/* Bio */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>السيرة الذاتية</Text>
-              <View style={[styles.inputWrap, styles.inputMultiline]}>
-                <TextInput
-                  value={bio}
-                  onChangeText={setBio}
-                  placeholder="أخبرنا عن نفسك..."
-                  placeholderTextColor={colors.textMuted}
-                  style={[styles.input, styles.inputRtl, rtlInputText, { height: 80, textAlignVertical: 'top' }]}
-                  multiline
-                  maxLength={160}
-                />
-              </View>
-              <Text style={styles.charCount}>{bio.length}/160</Text>
-            </View>
+          <Stack gap="xs">
+            <SarhInput
+              appearance="theme"
+              label="السيرة الذاتية"
+              value={bio}
+              onChangeText={setBio}
+              placeholder="أخبرنا عن نفسك..."
+              multiline
+              numberOfLines={3}
+              maxLength={160}
+              style={styles.bioInput}
+            />
+            <AppText variant="meta" color="textMuted">
+              {bio.length}/160
+            </AppText>
+          </Stack>
 
-            {/* Country */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>الدولة</Text>
-              <View style={styles.countryRow}>
-                {GCC_COUNTRIES.map((c) => (
+          <Stack gap="sm">
+            <AppText variant="label" color="textSecondary">
+              الدولة
+            </AppText>
+            <Row gap="sm" wrap>
+              {GCC_COUNTRIES.map((c) => {
+                const selected = country === c.code;
+                return (
                   <Pressable
                     key={c.code}
                     onPress={() => setCountry(c.code)}
-                    style={[styles.countryChip, country === c.code && styles.countryChipActive]}
+                    style={[styles.countryChip, selected ? styles.countryChipActive : null]}
                     accessibilityRole="button"
-                    accessibilityState={{ selected: country === c.code }}
+                    accessibilityState={{ selected }}
                     accessibilityLabel={c.ar}
                   >
-                    <Text style={styles.countryFlag}>{c.flag}</Text>
-                    <Text style={[styles.countryLabel, country === c.code && styles.countryLabelActive]}>
-                      {c.ar}
-                    </Text>
+                    <Row gap="xs" align="center">
+                      <AppText variant="body">{c.flag}</AppText>
+                      <AppText variant="caption" color={selected ? 'primary' : 'textMuted'}>
+                        {c.ar}
+                      </AppText>
+                    </Row>
                   </Pressable>
-                ))}
-              </View>
-            </View>
-          </View>
+                );
+              })}
+            </Row>
+          </Stack>
+        </Stack>
+      </ScreenBody>
 
-          <View style={{ height: 60 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <BottomAction width="form">
+        <SarhButton
+          title="حفظ"
+          onPress={handleSave}
+          loading={saving}
+          fullWidth
+          accessibilityLabel="حفظ التعديلات"
+        />
+      </BottomAction>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.screenRoot },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
-  },
-  backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  headerTitle: { ...typography.h3, color: colors.textPrimary, flex: 1, minWidth: 0 },
-  saveBtn: { borderRadius: radius.pill, overflow: 'hidden' },
-  saveBtnLoading: { opacity: 0.7 },
-  saveBtnInner: {
-    paddingHorizontal: spacing.lg, paddingVertical: 8, borderRadius: radius.pill,
-  },
-  saveBtnText: { ...typography.bodyStrong, color: '#fff' },
-  scroll: { paddingBottom: 40 },
-  coverSection: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  coverWrap: {
-    width: '100%',
-    height: 120,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  coverImage: { width: '100%', height: '100%' },
-  coverPlaceholder: { width: '100%', height: '100%' },
-  coverCameraBtn: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    right: spacing.sm,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    zIndex: 2,
-  },
-  coverHint: { ...typography.micro, color: colors.textMuted, marginTop: spacing.sm },
-  avatarSection: { alignItems: 'center', paddingVertical: spacing.xl },
-  avatarWrap: { position: 'relative' },
-  avatar: {
-    width: 90, height: 90, borderRadius: 45,
-    borderWidth: 3, borderColor: colors.electric,
-  },
-  cameraBtn: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: 28, height: 28, borderRadius: 16,
-    backgroundColor: colors.electric, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: colors.bgDeep,
-  },
-  avatarHint: { ...typography.micro, color: colors.textMuted, marginTop: spacing.sm },
-  form: {
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.lg,
-  },
-  fieldGroup: { gap: spacing.sm },
-  fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.lg, paddingHorizontal: spacing.md,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  inputMultiline: { alignItems: 'flex-start', paddingVertical: spacing.sm },
-  atSign: { ...typography.body, color: colors.textMuted, ...marginEnd(4) } as TextStyle,
-  input: {
-    flex: 1, ...typography.body, color: colors.textPrimary,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-  },
-  inputRtl: {  },
-  fieldHint: { ...typography.micro, color: colors.textSubtle },
-  charCount: { ...typography.micro, color: colors.textSubtle, alignSelf: 'flex-start' },
-  countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  countryChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: spacing.md, paddingVertical: 7,
-    borderRadius: radius.pill, backgroundColor: colors.bgSurface,
-    borderWidth: 1, borderColor: colors.borderSoft,
-  },
-  countryChipActive: { borderColor: colors.electric, backgroundColor: `${colors.electric}20` },
-  countryFlag: { fontSize: 16 },
-  countryLabel: { ...typography.caption, color: colors.textMuted },
-  countryLabelActive: { color: colors.textBrandStrong },
+    coverWrap: {
+      width: '100%',
+      height: 120,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+      position: 'relative',
+      backgroundColor: colors.bgSurface,
+    },
+    coverImage: { width: '100%', height: '100%' },
+    /** Logical inset so the control keeps its corner in both directions. */
+    coverCameraBtn: {
+      position: 'absolute',
+      bottom: spacing.sm,
+      start: spacing.sm,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      zIndex: 2,
+    },
+    avatarWrap: { position: 'relative' },
+    avatar: {
+      width: 90,
+      height: 90,
+      borderRadius: 45,
+      borderWidth: 3,
+      borderColor: colors.electric,
+    },
+    /** Logical inset so the badge keeps its corner in both directions. */
+    avatarCameraBtn: {
+      position: 'absolute',
+      bottom: 0,
+      start: 0,
+      width: 28,
+      height: 28,
+      borderRadius: 16,
+      backgroundColor: colors.electric,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: colors.bgDeep,
+    },
+    bioInput: {
+      height: 80,
+      textAlignVertical: 'top',
+    },
+    countryChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 7,
+      borderRadius: radius.pill,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    countryChipActive: {
+      borderColor: colors.electric,
+      backgroundColor: `${colors.electric}20`,
+    },
   });
 }

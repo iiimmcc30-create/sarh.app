@@ -1,10 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { alertMessage, confirmDestructive } from '@/lib/actionSheet';
-import { getRtlRow, getRtlDirection } from '@/lib/rtl';
 import {
   deleteAccount,
   fetchAccountSettings,
@@ -13,17 +11,16 @@ import {
 } from '@/services/users';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhButton, SarhInput } from '@/design-system/components';
-import { AppText } from '@/components/ui/AppText';
+import { ActivityIndicator, StyleSheet } from 'react-native';
+import { AppText, SarhButton, SarhDivider, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
+
+/** Layout and writing direction only — theme colors are read at render. */
+const styles = StyleSheet.create({
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  fill: { flex: 1, minWidth: 0 },
+  latin: { writingDirection: 'ltr' },
+});
 
 function formatPhone(phone: string | null | undefined) {
   if (!phone) return 'غير مضاف';
@@ -40,7 +37,7 @@ function formatBirthDate(value: string | null | undefined) {
 export default function AccountInfoScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -126,232 +123,109 @@ export default function AccountInfoScreen() {
     router.replace('/auth/phone' as any);
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="معلومات الحساب" showBack />
-      {loading ? (
-        <View style={styles.center}>
+  if (loading) {
+    return (
+      <Screen edges={['top', 'bottom']}>
+        <ScreenHeader variant="screen" title="معلومات الحساب" showBack />
+        <ScreenBody scroll={false} style={styles.centered}>
           <ActivityIndicator size="large" />
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={[styles.content, getRtlDirection()]}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.card}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionLabel}>رقم الهاتف</AppText>
-            </View>
-            <View style={[styles.row, getRtlRow()]}>
-              <Pressable
-                style={styles.changeBtn}
-                onPress={() => router.push('/profile/settings/change-phone' as any)}
-              >
-                <Text style={styles.changeBtnText}>تغيير</Text>
-              </Pressable>
-              <View style={styles.valueShell}>
-                <Text style={styles.value}>{formatPhone(account?.phone)}</Text>
-              </View>
-            </View>
-          </View>
+        </ScreenBody>
+      </Screen>
+    );
+  }
 
-          <View style={styles.card}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionLabel}>البريد الإلكتروني</AppText>
-            </View>
-            <SarhInput appearance="theme"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="example@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              ltr
-            />
+  return (
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title="معلومات الحساب" showBack />
+      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxxl">
+        <Section title="رقم الهاتف">
+          <Row gap="sm" align="center" justify="between">
+            <AppText variant="body" color="textSecondary" style={[styles.fill, styles.latin]}>
+              {formatPhone(account?.phone)}
+            </AppText>
             <SarhButton
-              title="حفظ البريد"
-              onPress={() => void saveEmail()}
-              loading={saving}
-              fullWidth
-              leftIcon="mail-outline"
+              title="تغيير"
+              variant="secondary"
+              size="sm"
+              onPress={() => router.push('/profile/settings/change-phone' as any)}
             />
-          </View>
+          </Row>
+        </Section>
 
-          <View style={styles.card}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.sectionLabel}>تاريخ الميلاد</AppText>
-            </View>
-            <SarhInput appearance="theme"
-              value={birthDate}
-              onChangeText={setBirthDate}
-              placeholder="YYYY-MM-DD"
-              keyboardType="numbers-and-punctuation"
-              ltr
-            />
-            {account?.birthDate ? (
-              <View style={{ width: '100%' }}>
-                <AppText style={styles.hint}>
-                  المحفوظ: {formatBirthDate(account.birthDate)}
-                </AppText>
-              </View>
-            ) : null}
+        <SarhDivider />
+
+        <Section title="البريد الإلكتروني" gap="md">
+          <SarhInput
+            appearance="theme"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="example@email.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            ltr
+          />
+          <SarhButton
+            title="حفظ البريد"
+            onPress={() => void saveEmail()}
+            loading={saving}
+            fullWidth
+            leftIcon="mail-outline"
+          />
+        </Section>
+
+        <SarhDivider />
+
+        <Section title="تاريخ الميلاد" gap="md">
+          <SarhInput
+            appearance="theme"
+            value={birthDate}
+            onChangeText={setBirthDate}
+            placeholder="YYYY-MM-DD"
+            keyboardType="numbers-and-punctuation"
+            ltr
+          />
+          {account?.birthDate ? (
+            <AppText variant="caption" color="textMuted">
+              المحفوظ: {formatBirthDate(account.birthDate)}
+            </AppText>
+          ) : null}
+          <SarhButton
+            title="حفظ تاريخ الميلاد"
+            onPress={() => void saveBirthDate()}
+            loading={saving}
+            fullWidth
+            leftIcon="calendar-outline"
+          />
+        </Section>
+
+        <Row gap="sm" align="start">
+          <AppIcon name="information-circle-outline" size={20} color={colors.textBrandStrong} />
+          <AppText variant="caption" color="textMuted" style={styles.fill}>
+            لتغيير رقم الجوال ستحتاج إلى التحقق برمز OTP المرسل إلى الرقم الجديد.
+          </AppText>
+        </Row>
+
+        <SarhDivider />
+
+        <Section title="حذف الحساب">
+          <Stack gap="md">
+            <AppText variant="bodySmall" color="textSecondary">
+              عند حذف حسابك سيتم إلغاء تفعيله وإزالة بياناتك وإعلاناتك ومنشوراتك بشكل نهائي. لا
+              يمكن التراجع عن هذا الإجراء.
+            </AppText>
             <SarhButton
-              title="حفظ تاريخ الميلاد"
-              onPress={() => void saveBirthDate()}
-              loading={saving}
-              fullWidth
-              leftIcon="calendar-outline"
-            />
-          </View>
-
-          <View style={styles.noteCard}>
-            <AppIcon name="information-circle-outline" size={20} color={styles.noteIcon.color} />
-            <View style={styles.noteTextShell}>
-              <Text style={styles.noteText}>
-                لتغيير رقم الجوال ستحتاج إلى التحقق برمز OTP المرسل إلى الرقم الجديد.
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.dangerCard}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.dangerTitle}>حذف الحساب</AppText>
-            </View>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.dangerText}>
-                عند حذف حسابك سيتم إلغاء تفعيله وإزالة بياناتك وإعلاناتك ومنشوراتك بشكل
-                نهائي. لا يمكن التراجع عن هذا الإجراء.
-              </AppText>
-            </View>
-            <Pressable
-              style={[styles.deleteBtn, deleting && styles.deleteBtnDisabled]}
+              title="حذف حسابي نهائياً"
+              variant="danger"
               onPress={() => void handleDeleteAccount()}
-              disabled={deleting}
-              accessibilityRole="button"
+              loading={deleting}
+              fullWidth
+              leftIcon="trash-outline"
               accessibilityLabel="حذف الحساب نهائياً"
-            >
-              {deleting ? (
-                <ActivityIndicator size="small" color={styles.deleteBtnText.color} />
-              ) : (
-                <>
-                  <AppIcon name="trash-outline" size={18} color={styles.deleteBtnText.color} />
-                  <Text style={styles.deleteBtnText}>حذف حسابي نهائياً</Text>
-                </>
-              )}
-            </Pressable>
-          </View>
-        </ScrollView>
-      )}
-    </SafeAreaView>
+            />
+          </Stack>
+        </Section>
+      </ScreenBody>
+    </Screen>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    content: {
-      padding: spacing.lg,
-      gap: spacing.md,
-      paddingBottom: spacing.xxxl,
-    },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    card: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      padding: spacing.lg,
-      gap: spacing.md,
-    },
-    sectionLabel: {
-      ...typography.smallHeading,
-      color: colors.textPrimary,
-    },
-    row: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    valueShell: {
-      flex: 1,
-      minWidth: 0,
-          },
-    value: {
-      ...typography.body,
-      color: colors.textSecondary,
-      width: '100%',
-            writingDirection: 'ltr',
-    },
-    changeBtn: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
-      backgroundColor: `${colors.textBrandStrong}18`,
-    },
-    changeBtnText: {
-      ...typography.button,
-      color: colors.textBrandStrong,
-    },
-    hint: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    noteCard: {
-      ...getRtlRow(),
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-      padding: spacing.lg,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    noteIcon: { color: colors.textBrandStrong },
-    noteTextShell: {
-      flex: 1,
-      minWidth: 0,
-          },
-    noteText: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 22,
-    },
-    dangerCard: {
-      backgroundColor: `${colors.danger}12`,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: `${colors.danger}55`,
-      padding: spacing.lg,
-      gap: spacing.md,
-      marginTop: spacing.sm,
-    },
-    dangerTitle: {
-      ...typography.smallHeading,
-      color: colors.danger,
-    },
-    dangerText: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 22,
-    },
-    deleteBtn: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.md,
-      borderRadius: radius.md,
-      backgroundColor: colors.danger,
-    },
-    deleteBtnDisabled: {
-      opacity: 0.6,
-    },
-    deleteBtnText: {
-      ...typography.button,
-      color: '#fff',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-  });
 }

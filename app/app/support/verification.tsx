@@ -1,21 +1,11 @@
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Alert, Pressable, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 import {
   addVerificationDocument,
   fetchVerificationRequest,
@@ -26,7 +16,15 @@ import {
   type VerificationRequest,
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
-import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { AppText, SarhButton, SarhDivider, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
+
+const REQUIREMENTS = [
+  'الاسم الكامل كما في الهوية',
+  'رقم الهوية الوطنية',
+  'صورة واضحة للهوية',
+  'للحسابات التجارية: السجل التجاري',
+];
 
 export default function AccountVerificationScreen() {
   const { accessToken } = useAuth();
@@ -132,66 +130,70 @@ export default function AccountVerificationScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ScreenHeader title="طلب توثيق الحساب" showBack />
-        <ActivityIndicator style={styles.loader} />
-      </SafeAreaView>
+      <Screen edges={['top', 'bottom']}>
+        <ScreenHeader variant="screen" title="طلب توثيق الحساب" showBack />
+        <ScreenBody scroll={false} style={styles.centered}>
+          <ActivityIndicator />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="طلب توثيق الحساب" showBack />
-      <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
-        <GlassCard style={styles.statusCard}>
-          <AppText style={styles.statusLabel}>حالة الطلب</AppText>
-          <AppText style={styles.statusValue}>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title="طلب توثيق الحساب" showBack />
+      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxxl">
+        <Stack gap="xs">
+          <AppText variant="caption" color="textMuted">حالة الطلب</AppText>
+          <AppText variant="cardTitle" color="primary">
             {userVerified
               ? 'موثق'
               : VERIFICATION_STATUS_LABEL_AR[request?.status ?? 'DRAFT']}
           </AppText>
           {request?.reviewReason ? (
-            <AppText style={styles.reason}>{request.reviewReason}</AppText>
+            <AppText variant="body" color="danger" style={styles.reason}>
+              {request.reviewReason}
+            </AppText>
           ) : null}
-        </GlassCard>
+        </Stack>
 
-        <GlassCard style={styles.section}>
-          <AppText style={styles.sectionTitle}>المتطلبات</AppText>
-          {[
-            'الاسم الكامل كما في الهوية',
-            'رقم الهوية الوطنية',
-            'صورة واضحة للهوية',
-            'للحسابات التجارية: السجل التجاري',
-          ].map((item) => (
-            <AppText key={item} style={styles.requirement}>• {item}</AppText>
+        <SarhDivider />
+
+        <Section title="المتطلبات" gap="xs">
+          {REQUIREMENTS.map((item) => (
+            <AppText key={item} variant="caption" color="textSecondary" style={styles.requirement}>
+              • {item}
+            </AppText>
           ))}
-        </GlassCard>
+        </Section>
 
-        <SarhInput appearance="theme" label="الاسم الكامل" value={fullName} onChangeText={setFullName} editable={!!editable} />
-        <SarhInput appearance="theme" label="رقم الهوية" value={nationalId} onChangeText={setNationalId} editable={!!editable} />
-        <SarhInput appearance="theme" label="اسم المنشأة (اختياري)" value={businessName} onChangeText={setBusinessName} editable={!!editable} />
-        <SarhInput appearance="theme" label="نوع النشاط (اختياري)" value={businessType} onChangeText={setBusinessType} editable={!!editable} />
-        <SarhInput appearance="theme"
-          label="معلومات إضافية"
-          value={additionalInfo}
-          onChangeText={setAdditionalInfo}
-          multiline
-          numberOfLines={3}
-          editable={!!editable}
-        />
+        <Stack gap="lg">
+          <SarhInput appearance="theme" label="الاسم الكامل" value={fullName} onChangeText={setFullName} editable={!!editable} />
+          <SarhInput appearance="theme" label="رقم الهوية" value={nationalId} onChangeText={setNationalId} editable={!!editable} />
+          <SarhInput appearance="theme" label="اسم المنشأة (اختياري)" value={businessName} onChangeText={setBusinessName} editable={!!editable} />
+          <SarhInput appearance="theme" label="نوع النشاط (اختياري)" value={businessType} onChangeText={setBusinessType} editable={!!editable} />
+          <SarhInput
+            appearance="theme"
+            label="معلومات إضافية"
+            value={additionalInfo}
+            onChangeText={setAdditionalInfo}
+            multiline
+            numberOfLines={3}
+            editable={!!editable}
+          />
+        </Stack>
 
         {editable ? (
           <>
-            <GlassCard style={styles.section}>
-              <AppText style={styles.sectionTitle}>المستندات</AppText>
-              <View style={styles.docActions}>
+            <Section title="المستندات">
+              <Row gap="sm" wrap>
                 <Pressable
                   style={styles.docBtn}
                   onPress={() => void uploadDocument('NATIONAL_ID')}
                   accessibilityRole="button"
                   accessibilityLabel="رفع الهوية"
                 >
-                  <AppText style={styles.docBtnText}>رفع الهوية</AppText>
+                  <AppText variant="caption" color="primary">رفع الهوية</AppText>
                 </Pressable>
                 <Pressable
                   style={styles.docBtn}
@@ -199,56 +201,50 @@ export default function AccountVerificationScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="رفع السجل التجاري"
                 >
-                  <AppText style={styles.docBtnText}>رفع السجل التجاري</AppText>
+                  <AppText variant="caption" color="primary">رفع السجل التجاري</AppText>
                 </Pressable>
-              </View>
+              </Row>
               {(request?.documents ?? []).map((doc) => (
-                <View key={doc.id} style={styles.docRow}>
-                  <AppText style={styles.docName}>{doc.originalFileName ?? doc.type}</AppText>
+                <Row key={doc.id} gap="sm" justify="between">
+                  <AppText variant="caption" color="textSecondary" numberOfLines={1} style={styles.fill}>
+                    {doc.originalFileName ?? doc.type}
+                  </AppText>
                   <Pressable
                     onPress={() => void removeVerificationDocument(doc.id).then(load)}
                     accessibilityRole="button"
                     accessibilityLabel="حذف المستند"
+                    hitSlop={8}
                   >
-                    <AppText style={styles.remove}>حذف</AppText>
+                    <AppText variant="caption" color="danger">حذف</AppText>
                   </Pressable>
-                </View>
+                </Row>
               ))}
-            </GlassCard>
+            </Section>
 
-            <SarhButton title="حفظ المسودة" variant="secondary" fullWidth loading={saving} onPress={() => void saveDraft()} />
-            <SarhButton title="إرسال الطلب" fullWidth loading={saving} onPress={() => void submit()} />
+            <Stack gap="md">
+              <SarhButton title="حفظ المسودة" variant="secondary" fullWidth loading={saving} onPress={() => void saveDraft()} />
+              <SarhButton title="إرسال الطلب" fullWidth loading={saving} onPress={() => void submit()} />
+            </Stack>
           </>
         ) : null}
-      </ScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.huge },
-    loader: { marginTop: spacing.xxl },
-    statusCard: { gap: spacing.xs },
-    statusLabel: { ...typography.caption, color: colors.textMuted },
-    statusValue: { ...typography.h3, color: colors.electric },
-    reason: { ...typography.body, color: colors.danger, lineHeight: 22 },
-    section: { gap: spacing.sm },
-    sectionTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-    requirement: { ...typography.caption, color: colors.textSecondary, lineHeight: 20 },
-    docActions: { ...getRtlRow(), gap: spacing.sm, flexWrap: 'wrap' },
+    centered: { alignItems: 'center', justifyContent: 'center' },
+    fill: { flex: 1, minWidth: 0 },
+    reason: { lineHeight: 22 },
+    requirement: { lineHeight: 20 },
     docBtn: {
       backgroundColor: colors.bgSurface,
-      borderRadius: 12,
+      borderRadius: radius.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    docBtnText: { ...typography.caption, color: colors.electric },
-    docRow: { ...getRtlRow(), justifyContent: 'space-between', alignItems: 'center' },
-    docName: { ...typography.caption, color: colors.textSecondary, flex: 1 },
-    remove: { ...typography.caption, color: colors.danger },
   });
 }

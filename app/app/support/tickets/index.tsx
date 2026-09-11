@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection, getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { rtlForwardIcon } from '@/lib/rtl';
 import {
   fetchMyTickets,
   TICKET_CATEGORY_LABEL_AR,
@@ -15,10 +14,12 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { userFacingTicketStatus } from '@/lib/supportFlow';
-import { AppText, SarhButton } from '@/design-system/components';
+import { AppText, SarhButton, SarhCard } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 
 export default function SupportTicketsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [items, setItems] = useState<SupportTicketSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,9 +38,9 @@ export default function SupportTicketsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="تذاكر الدعم" showBack />
-      <View style={styles.body}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="تذاكر الدعم" showBack />
+      <ScreenBody scroll={false} padTop="lg" gap="lg">
         <SarhButton
           title="إنشاء تذكرة جديدة"
           fullWidth
@@ -49,16 +50,19 @@ export default function SupportTicketsScreen() {
         {loading ? (
           <ActivityIndicator style={styles.loader} />
         ) : items.length === 0 ? (
-          <GlassCard style={styles.empty}>
-            <AppIcon name="ticket" size={32} color={styles.mutedColor.color} />
-            <AppText style={styles.emptyTitle}>لا توجد تذاكر بعد</AppText>
-            <AppText style={styles.emptyText}>أنشئ تذكرة جديدة وسنرد عليك في أقرب وقت</AppText>
-          </GlassCard>
+          <Stack gap="sm" align="center" style={styles.empty}>
+            <AppIcon name="ticket" size={32} color={colors.textMuted} />
+            <AppText variant="cardTitle" color="textPrimary">لا توجد تذاكر بعد</AppText>
+            <AppText variant="caption" color="textMuted" align="center">
+              أنشئ تذكرة جديدة وسنرد عليك في أقرب وقت
+            </AppText>
+          </Stack>
         ) : (
           <FlatList
             data={items}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={[styles.list, getRtlDirection()]}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <Pressable
                 onPress={() =>
@@ -66,57 +70,49 @@ export default function SupportTicketsScreen() {
                 }
                 accessibilityRole="button"
                 accessibilityLabel={`تذكرة ${item.ticketNumber}`}
+                style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
               >
-                <GlassCard style={styles.card}>
-                  <View style={styles.cardTop}>
-                    <AppText style={styles.ticketNo}>{item.ticketNumber}</AppText>
-                    <View style={styles.statusPill}>
-                      <AppText style={styles.statusText}>
-                        {userFacingTicketStatus(item.status)}
-                      </AppText>
-                    </View>
-                  </View>
-                  <AppText style={styles.subject} numberOfLines={2}>
-                    {item.subject}
-                  </AppText>
-                  <View style={styles.cardBottom}>
-                    <AppText style={styles.meta}>
-                      {TICKET_CATEGORY_LABEL_AR[item.category as SupportTicketCategory] ?? item.category}
+                <SarhCard level="card" padding="md">
+                  <Stack gap="sm">
+                    <Row gap="sm" justify="between">
+                      <AppText variant="caption" color="primary">{item.ticketNumber}</AppText>
+                      <View style={styles.statusPill}>
+                        <AppText variant="caption" color="textSecondary">
+                          {userFacingTicketStatus(item.status)}
+                        </AppText>
+                      </View>
+                    </Row>
+                    <AppText variant="bodyMedium" color="textPrimary" numberOfLines={2}>
+                      {item.subject}
                     </AppText>
-                    <AppIcon name={rtlForwardIcon()} size={14} color={styles.mutedColor.color} />
-                  </View>
-                </GlassCard>
+                    <Row gap="sm" justify="between">
+                      <AppText variant="caption" color="textMuted">
+                        {TICKET_CATEGORY_LABEL_AR[item.category as SupportTicketCategory] ??
+                          item.category}
+                      </AppText>
+                      <AppIcon name={rtlForwardIcon()} size={14} color={colors.textMuted} />
+                    </Row>
+                  </Stack>
+                </SarhCard>
               </Pressable>
             )}
           />
         )}
-      </View>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    body: { flex: 1, padding: spacing.lg, gap: spacing.lg },
     loader: { marginTop: spacing.xl },
     list: { gap: spacing.md, paddingBottom: spacing.huge },
-    card: { gap: spacing.sm },
-    cardTop: { ...getRtlRow(), justifyContent: 'space-between', alignItems: 'center' },
-    ticketNo: { ...typography.caption, color: colors.textBrandStrong, fontWeight: '600' },
+    empty: { paddingVertical: spacing.xxl },
     statusPill: {
       backgroundColor: colors.bgSurface,
-      borderRadius: 999,
+      borderRadius: radius.pill,
       paddingHorizontal: spacing.sm,
-      paddingVertical: 4,
+      paddingVertical: spacing.xs,
     },
-    statusText: { ...typography.caption, color: colors.textSecondary },
-    subject: { ...typography.bodyStrong, color: colors.textPrimary },
-    cardBottom: { ...getRtlRow(), justifyContent: 'space-between', alignItems: 'center' },
-    meta: { ...typography.caption, color: colors.textMuted },
-    empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl },
-    emptyTitle: { ...typography.h3, color: colors.textPrimary },
-    emptyText: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
-    mutedColor: { color: colors.textMuted },
   });
 }

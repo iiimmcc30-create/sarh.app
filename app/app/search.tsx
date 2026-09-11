@@ -2,29 +2,14 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ds } from '@/constants/designSystem';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ListingCard } from '@/components/feature/ListingCard';
+import { AppText, SarhBackButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, marginAutoStart, getRtlRow, rtlInputText } from '@/lib/rtl';
-import { ListingCard } from '@/components/feature/ListingCard';
 import { ensureApiReachable } from '@/services/api';
-import { SarhBackButton, SarhChip, SarhChipRow } from '@/design-system/components';
 import {
   fetchSearchSuggestions,
   fetchTrendingTags,
@@ -34,6 +19,17 @@ import {
   type SearchGroup,
   type SearchResultItem,
 } from '@/services/unifiedSearch';
+import { ds } from '@/constants/designSystem';
+import { type ThemeColors } from '@/constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 const RECENT_KEY = 'safat_recent_searches';
 const MIN_QUERY = 2;
@@ -60,7 +56,8 @@ const GROUP_LABELS: Record<Exclude<SearchFilter, 'all'>, string> = {
 
 export default function SearchScreen() {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const { gutter } = useLayout();
+  const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
   const router = useRouter();
 
   const [query, setQuery] = useState('');
@@ -200,6 +197,7 @@ export default function SearchScreen() {
             style={styles.resultRow}
             onPress={() => router.push({ pathname: '/butchers/[id]', params: { id: item.id } } as never)}
           >
+            <Row gap="md" align="center">
             {item.imageUrl ? (
               <Image source={uriSource(item.imageUrl)} style={styles.resultThumb} contentFit="cover" />
             ) : (
@@ -207,12 +205,13 @@ export default function SearchScreen() {
                 <AppIcon name="store" size={20} color={colors.textMuted} />
               </View>
             )}
-            <View style={styles.resultBody}>
-              <Text style={styles.resultTitle} numberOfLines={2}>{item.title}</Text>
+            <Stack gap="xs" style={styles.resultBody}>
+              <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
               {item.subtitle ? (
-                <Text style={styles.resultSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+                <AppText variant="caption" color="textMuted" numberOfLines={1}>{item.subtitle}</AppText>
               ) : null}
-            </View>
+            </Stack>
+            </Row>
           </Pressable>
         );
       case 'news':
@@ -222,15 +221,17 @@ export default function SearchScreen() {
             style={styles.resultRow}
             onPress={() => router.push('/news' as never)}
           >
+            <Row gap="md" align="center">
             {item.imageUrl ? (
               <Image source={uriSource(item.imageUrl)} style={styles.resultThumb} contentFit="cover" />
             ) : null}
-            <View style={styles.resultBody}>
-              <Text style={styles.resultTitle} numberOfLines={2}>{item.title}</Text>
+            <Stack gap="xs" style={styles.resultBody}>
+              <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
               {item.subtitle ? (
-                <Text style={styles.resultSubtitle} numberOfLines={2}>{item.subtitle}</Text>
+                <AppText variant="caption" color="textMuted" numberOfLines={2}>{item.subtitle}</AppText>
               ) : null}
-            </View>
+            </Stack>
+            </Row>
           </Pressable>
         );
       case 'services':
@@ -242,15 +243,17 @@ export default function SearchScreen() {
               router.push({ pathname: '/ministry/services/[id]', params: { id: item.id } } as never)
             }
           >
+            <Row gap="md" align="center">
             <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
               <AppIcon name="briefcase" size={20} color={colors.textMuted} />
             </View>
-            <View style={styles.resultBody}>
-              <Text style={styles.resultTitle} numberOfLines={2}>{item.title}</Text>
+            <Stack gap="xs" style={styles.resultBody}>
+              <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
               {item.subtitle ? (
-                <Text style={styles.resultSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+                <AppText variant="caption" color="textMuted" numberOfLines={1}>{item.subtitle}</AppText>
               ) : null}
-            </View>
+            </Stack>
+            </Row>
           </Pressable>
         );
       case 'posts':
@@ -260,6 +263,7 @@ export default function SearchScreen() {
             style={styles.resultRow}
             onPress={() => router.push({ pathname: '/posts/[id]', params: { id: item.id } } as never)}
           >
+            <Row gap="md" align="center">
             {item.imageUrl ? (
               <Image source={uriSource(item.imageUrl)} style={styles.resultThumb} contentFit="cover" />
             ) : (
@@ -267,12 +271,13 @@ export default function SearchScreen() {
                 <AppIcon name="file-text" size={20} color={colors.textMuted} />
               </View>
             )}
-            <View style={styles.resultBody}>
-              <Text style={styles.resultTitle} numberOfLines={3}>{item.title}</Text>
+            <Stack gap="xs" style={styles.resultBody}>
+              <AppText variant="body" numberOfLines={3}>{item.title}</AppText>
               {item.subtitle ? (
-                <Text style={styles.resultSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+                <AppText variant="caption" color="textMuted" numberOfLines={1}>{item.subtitle}</AppText>
               ) : null}
-            </View>
+            </Stack>
+            </Row>
           </Pressable>
         );
       default:
@@ -281,44 +286,44 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.searchBar}>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <Row gap="sm" align="center" style={[styles.searchBar, { paddingHorizontal: gutter }]}>
         <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <View style={styles.inputWrap}>
-          <AppIcon name="search" size={16} color={colors.textPrimary} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="ابحث في سرح..."
-            placeholderTextColor={colors.textMuted}
-            style={[styles.input, rtlInputText]}
-            autoFocus
-            returnKeyType="search"
-            onSubmitEditing={() => addRecentSearch(query)}
-          />
-          {hasQuery ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="مسح البحث">
-              <AppIcon name="close-circle" size={16} color={colors.textPrimary} />
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
+        <SarhInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="ابحث في سرح..."
+          autoFocus
+          returnKeyType="search"
+          onSubmitEditing={() => addRecentSearch(query)}
+          leadingIcon="search"
+          trailingIcon={hasQuery ? 'close-circle' : undefined}
+          onTrailingPress={hasQuery ? () => setQuery('') : undefined}
+          accessibilityLabel={hasQuery ? 'مسح البحث' : 'ابحث في سرح...'}
+          containerStyle={styles.inputFlex}
+        />
+      </Row>
 
       {hasQuery && query.trim().length >= MIN_QUERY && suggestions.length > 0 && !loading ? (
-        <View style={styles.suggestBox}>
+        <Stack gap="none" style={[styles.suggestBox, { marginHorizontal: gutter }]}>
           {suggestions.map((s) => (
-            <Pressable key={`${s.kind}-${s.text}`} style={styles.suggestRow} onPress={() => applyQuery(s.text)}>
-              <AppIcon name="search" size={14} color={colors.textMuted} />
-              <Text style={styles.suggestText}>{s.text}</Text>
+            <Pressable key={`${s.kind}-${s.text}`} onPress={() => applyQuery(s.text)}>
+              <Row gap="sm" align="center" style={styles.suggestRow}>
+                <AppIcon name="search" size={14} color={colors.textMuted} />
+                <AppText variant="body" color="textSecondary" style={styles.flex}>
+                  {s.text}
+                </AppText>
+              </Row>
             </Pressable>
           ))}
-        </View>
+        </Stack>
       ) : null}
 
       {hasQuery ? (
-        <SarhChipRow contentPaddingHorizontal={spacing.lg} style={styles.filterRowWrap}>
+        <SarhChipRow contentPaddingHorizontal={gutter} style={styles.filterRowWrap}>
           {FILTERS.map((f) => (
-            <SarhChip appearance="filter"
+            <SarhChip
+              appearance="filter"
               key={f.id}
               label={f.label}
               selected={filter === f.id}
@@ -328,131 +333,130 @@ export default function SearchScreen() {
         </SarhChipRow>
       ) : null}
 
-      {!hasQuery ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          {recentSearches.length > 0 ? (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>البحث الأخير</Text>
-                <Pressable onPress={() => saveRecent([])}>
-                  <Text style={styles.clearText}>مسح الكل</Text>
-                </Pressable>
-              </View>
-              {recentSearches.map((term) => (
-                <Pressable key={term} style={styles.recentRow} onPress={() => applyQuery(term)}>
-                  <AppIcon name="time-outline" size={16} color={colors.textPrimary} />
-                  <Text style={styles.recentText}>{term}</Text>
-                  <Pressable
-                    onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
-                    hitSlop={8}
-                    style={marginAutoStart()}
-                  >
-                    <AppIcon name="close" size={14} color={colors.textPrimary} />
+      <ScreenBody padBottom="xxxl" gutter={false}>
+        {!hasQuery ? (
+          <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
+            {recentSearches.length > 0 ? (
+              <Stack gap="md" style={styles.section}>
+                <Row justify="between" align="center">
+                  <AppText variant="heading3">البحث الأخير</AppText>
+                  <Pressable onPress={() => saveRecent([])}>
+                    <AppText variant="caption" color="primary">مسح الكل</AppText>
                   </Pressable>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🔥 الأكثر تداولاً</Text>
-            {trendingTags.length === 0 ? (
-              <Text style={styles.mutedCaption}>لا توجد هاشتاقات رائجة حالياً</Text>
-            ) : (
-              <View style={styles.trendingGrid}>
-                {trendingTags.map((item) => (
-                  <Pressable key={item.tag} style={styles.trendingChip} onPress={() => applyQuery(item.tag)}>
-                    <Text style={styles.trendingText}>{item.tag}</Text>
+                </Row>
+                {recentSearches.map((term) => (
+                  <Pressable key={term} onPress={() => applyQuery(term)}>
+                    <Row gap="md" align="center" style={styles.recentRow}>
+                      <AppIcon name="time-outline" size={16} color={colors.textPrimary} />
+                      <AppText variant="body" color="textSecondary" style={styles.flex}>
+                        {term}
+                      </AppText>
+                      <Pressable
+                        onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
+                        hitSlop={8}
+                      >
+                        <AppIcon name="close" size={14} color={colors.textPrimary} />
+                      </Pressable>
+                    </Row>
                   </Pressable>
                 ))}
-              </View>
-            )}
-          </View>
+              </Stack>
+            ) : null}
 
-          {featuredUsers.length > 0 ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🏆 أبرز المربّين</Text>
-              {featuredUsers.map((user) => (
-                <UserIdentityRow
-                  key={user.id}
-                  avatarUri={user.avatar}
-                  displayName={user.arabicName || user.displayName || user.username}
-                  username={user.username}
-                  verified={user.verified}
-                  avatarSize={USER_IDENTITY.listAvatarSize}
-                  avatarRadius={USER_IDENTITY.listAvatarRadius}
-                  avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
-                  nameLines={2}
-                  onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as never)}
-                  style={styles.userRow}
-                />
-              ))}
-            </View>
-          ) : null}
-          <View style={{ height: 80 }} />
-        </ScrollView>
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
-            <View style={styles.hintBox}>
-              <Text style={styles.mutedCaption}>اكتب {MIN_QUERY} أحرف على الأقل للبحث</Text>
-            </View>
-          ) : null}
+            <Stack gap="md" style={styles.section}>
+              <AppText variant="heading3">🔥 الأكثر تداولاً</AppText>
+              {trendingTags.length === 0 ? (
+                <AppText variant="caption" color="textMuted">لا توجد هاشتاقات رائجة حالياً</AppText>
+              ) : (
+                <Row gap="sm" wrap>
+                  {trendingTags.map((item) => (
+                    <Pressable key={item.tag} style={styles.trendingChip} onPress={() => applyQuery(item.tag)}>
+                      <AppText variant="caption" color="textSecondary">{item.tag}</AppText>
+                    </Pressable>
+                  ))}
+                </Row>
+              )}
+            </Stack>
 
-          {loading ? (
-            <View style={styles.loadingBox}>
-              <ActivityIndicator color={colors.glow} />
-              <Text style={styles.mutedCaption}>جاري البحث...</Text>
-            </View>
-          ) : null}
+            {featuredUsers.length > 0 ? (
+              <Stack gap="sm" style={styles.section}>
+                <AppText variant="heading3">🏆 أبرز المربّين</AppText>
+                {featuredUsers.map((user) => (
+                  <UserIdentityRow
+                    key={user.id}
+                    avatarUri={user.avatar}
+                    displayName={user.arabicName || user.displayName || user.username}
+                    username={user.username}
+                    verified={user.verified}
+                    avatarSize={USER_IDENTITY.listAvatarSize}
+                    avatarRadius={USER_IDENTITY.listAvatarRadius}
+                    avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+                    nameLines={2}
+                    onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as never)}
+                    style={styles.userRow}
+                  />
+                ))}
+              </Stack>
+            ) : null}
+          </Stack>
+        ) : (
+          <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
+            {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
+              <Stack gap="sm" align="center" style={styles.hintBox}>
+                <AppText variant="caption" color="textMuted">
+                  اكتب {MIN_QUERY} أحرف على الأقل للبحث
+                </AppText>
+              </Stack>
+            ) : null}
 
-          {error ? (
-            <View style={styles.hintBox}>
-              <Text style={styles.errorText}>{error}</Text>
-              <Text style={styles.mutedCaption}>تحقق من الاتصال وحاول مرة أخرى</Text>
-            </View>
-          ) : null}
+            {loading ? (
+              <Stack gap="md" align="center" style={styles.loadingBox}>
+                <ActivityIndicator color={colors.glow} />
+                <AppText variant="caption" color="textMuted">جاري البحث...</AppText>
+              </Stack>
+            ) : null}
 
-          {!loading && !error && canSearch
-            ? visibleGroups.map((group) =>
-                group.items.length > 0 ? (
-                  <View key={group.type} style={styles.section}>
-                    <Text style={styles.sectionTitle}>
-                      {GROUP_LABELS[group.type]} ({group.items.length})
-                    </Text>
-                    <View style={group.type === 'listings' ? styles.listingsFeed : undefined}>
-                      {group.items.map((item) => renderResult(item))}
-                    </View>
-                  </View>
-                ) : null,
-              )
-            : null}
+            {error ? (
+              <Stack gap="sm" align="center" style={styles.hintBox}>
+                <AppText variant="body" color="danger" align="center">{error}</AppText>
+                <AppText variant="caption" color="textMuted">تحقق من الاتصال وحاول مرة أخرى</AppText>
+              </Stack>
+            ) : null}
 
-          {!loading && !error && canSearch && totalResults === 0 ? (
-            <View style={styles.noResults}>
-              <Text style={styles.noResultsIcon}>🔍</Text>
-              <Text style={styles.noResultsText}>لم نجد نتائج مطابقة لبحثك</Text>
-              <Text style={styles.noResultsSub}>جرّب كلمة مختلفة أو عدّل الفلاتر</Text>
-            </View>
-          ) : null}
+            {!loading && !error && canSearch
+              ? visibleGroups.map((group) =>
+                  group.items.length > 0 ? (
+                    <Stack key={group.type} gap="md" style={styles.section}>
+                      <AppText variant="heading3">
+                        {GROUP_LABELS[group.type]} ({group.items.length})
+                      </AppText>
+                      <Stack gap={group.type === 'listings' ? 'md' : 'none'}>
+                        {group.items.map((item) => renderResult(item))}
+                      </Stack>
+                    </Stack>
+                  ) : null,
+                )
+              : null}
 
-          <View style={{ height: 80 }} />
-        </ScrollView>
-      )}
-    </SafeAreaView>
+            {!loading && !error && canSearch && totalResults === 0 ? (
+              <Stack gap="md" align="center" style={styles.noResults}>
+                <AppText variant="display">🔍</AppText>
+                <AppText variant="heading3" align="center">لم نجد نتائج مطابقة لبحثك</AppText>
+                <AppText variant="body" color="textMuted" align="center">جرّب كلمة مختلفة أو عدّل الفلاتر</AppText>
+              </Stack>
+            ) : null}
+          </Stack>
+        )}
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
     searchBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
+      paddingVertical: 12,
       backgroundColor: colors.bgDeep,
     },
     backBtn: {
@@ -463,88 +467,49 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    inputWrap: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      minHeight: 44,
-      backgroundColor: colors.bgElevated,
-      borderRadius: 14,
-      paddingHorizontal: spacing.md,
-    },
-    input: {
-      flex: 1,
-      ...typography.body,
-      color: colors.textPrimary,
-      paddingVertical: Platform.OS === 'ios' ? 10 : 6,
-    },
+    inputFlex: { flex: 1 },
+    flex: { flex: 1 },
     filterRowWrap: {
       backgroundColor: colors.bgDeep,
-      paddingVertical: spacing.sm,
+      paddingVertical: 8,
     },
     suggestBox: {
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.sm,
+      marginTop: 8,
       borderRadius: 14,
       backgroundColor: colors.bgElevated,
       overflow: 'hidden',
     },
     suggestRow: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
-    suggestText: { ...typography.body, color: colors.textSecondary, flex: 1,  },
-    scroll: { paddingBottom: 20 },
     section: {
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.lg,
-      padding: spacing.lg,
+      padding: 16,
       borderRadius: 14,
       backgroundColor: colors.bgElevated,
     },
-    sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: spacing.md,
-    },
-    sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
-    clearText: { ...typography.caption, color: colors.textBrandStrong },
     recentRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
       minHeight: 52,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
-    recentText: { ...typography.body, color: colors.textSecondary, flex: 1,  },
-    trendingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     trendingChip: {
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: 12,
       paddingVertical: 7,
       borderRadius: ds.radius.pill,
       backgroundColor: tokens.primaryMuted,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderMid,
     },
-    trendingText: { ...typography.caption, color: colors.textSecondary },
     userRow: {
-      paddingVertical: spacing.md,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: colors.borderSoft,
     },
-    listingsFeed: { gap: spacing.md },
     resultRow: {
-      flexDirection: 'row',
-      gap: spacing.md,
-      paddingVertical: spacing.md,
+      paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
     },
@@ -554,16 +519,9 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       justifyContent: 'center',
       backgroundColor: colors.bgDeep,
     },
-    resultBody: { flex: 1, gap: 4, justifyContent: 'center' },
-    resultTitle: { ...typography.body, color: colors.textPrimary, ...getRtlText() },
-    resultSubtitle: { ...typography.caption, color: colors.textMuted, ...getRtlText() },
-    loadingBox: { alignItems: 'center', paddingVertical: spacing.xxl, gap: spacing.md },
-    hintBox: { alignItems: 'center', paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, gap: spacing.sm },
-    mutedCaption: { ...typography.caption, color: colors.textMuted,  },
-    errorText: { ...typography.body, color: colors.danger, textAlign: 'center' },
-    noResults: { alignItems: 'center', paddingVertical: 60, gap: spacing.md },
-    noResultsIcon: { fontSize: 48 },
-    noResultsText: { ...typography.h3, color: colors.textPrimary, textAlign: 'center' },
-    noResultsSub: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
+    resultBody: { flex: 1, justifyContent: 'center' },
+    loadingBox: { paddingVertical: 32 },
+    hintBox: { paddingVertical: 24 },
+    noResults: { paddingVertical: 60 },
   });
 }

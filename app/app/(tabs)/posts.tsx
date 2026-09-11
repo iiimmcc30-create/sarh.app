@@ -12,17 +12,16 @@ import {
   View,
 } from 'react-native';
 import { AppFlatList } from '@/components/ui/AppFlatList';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ds } from '@/constants/designSystem';
-import { sarhScreenStyles } from '@/constants/sarhScreen';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { type ThemeColors } from '@/constants/theme';
+import { space } from '@/design-system/tokens';
 import { AppText, SarhButton, SarhSurface } from '@/design-system/components';
-import { colors, radius, space } from '@/design-system';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRtlRow } from '@/lib/rtl';
 import { PostItem } from '@/components/feature/PostItem';
 import { CreatePostFab } from '@/components/feature/CreatePostFab';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
@@ -34,9 +33,8 @@ type FeedTab = 'for_you' | 'following';
 export default function PostsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors, scheme, sarh: screenStyles }) =>
-    createPostsStyles(colors, scheme, screenStyles),
-  );
+  const { gutter } = useLayout();
+  const styles = useThemedStyles(({ colors: c }) => createPostsStyles(c));
   const { postId, openComments } = useLocalSearchParams<{
     postId?: string;
     openComments?: string;
@@ -136,7 +134,7 @@ export default function PostsScreen() {
   const keyExtractor = useCallback((item: Post) => item.id, []);
 
   const ListEmpty = (
-    <View style={styles.empty}>
+    <Stack gap="md" align="center" style={styles.empty}>
       <AppText variant="heading2" align="center">
         {feedTab === 'following' ? '👥' : '📝'}
       </AppText>
@@ -148,38 +146,38 @@ export default function PostsScreen() {
       {feedTab === 'for_you' ? (
         <SarhButton title="أنشئ أول منشور" onPress={() => router.push('/create/post')} />
       ) : null}
-    </View>
+    </Stack>
   );
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <SarhSurface tone="background" style={styles.topBar}>
-          <View style={[styles.tabs, getRtlRow()]}>
-            {(['for_you', 'following'] as const).map((tab) => {
-              const active = feedTab === tab;
-              return (
-                <Pressable
-                  key={tab}
-                  onPress={() => switchTab(tab)}
-                  style={styles.tab}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: active }}
-                >
-                  <AppText variant="label" color={active ? 'textPrimary' : 'textMuted'}>
-                    {tab === 'for_you' ? 'لك' : 'متابعة'}
-                  </AppText>
-                  {active ? <View style={styles.tabIndicator} /> : null}
-                </Pressable>
-              );
-            })}
-          </View>
-        </SarhSurface>
+    <Screen edges={['top']}>
+      <SarhSurface tone="background" style={[styles.topBar, { paddingHorizontal: gutter }]}>
+        <Row gap="sm">
+          {(['for_you', 'following'] as const).map((tab) => {
+            const active = feedTab === tab;
+            return (
+              <Pressable
+                key={tab}
+                onPress={() => switchTab(tab)}
+                style={styles.tab}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <AppText variant="label" color={active ? 'textPrimary' : 'textMuted'}>
+                  {tab === 'for_you' ? 'لك' : 'متابعة'}
+                </AppText>
+                {active ? <View style={styles.tabIndicator} /> : null}
+              </Pressable>
+            );
+          })}
+        </Row>
+      </SarhSurface>
 
+      <ScreenBody scroll={false} gutter={false} bottomInset="tabBar">
         {loadingFeed && posts.length === 0 ? (
-          <View style={styles.empty}>
+          <Stack gap="md" align="center" fill style={styles.empty}>
             <ActivityIndicator color={colors.electricBright} />
-          </View>
+          </Stack>
         ) : (
           <AppFlatList
             data={posts}
@@ -187,7 +185,7 @@ export default function PostsScreen() {
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.scroll}
             ListEmptyComponent={ListEmpty}
-            ListFooterComponent={<View style={{ height: ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16 }} />}
+            ListFooterComponent={<View style={styles.listFooter} />}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -200,31 +198,20 @@ export default function PostsScreen() {
             windowSize={7}
           />
         )}
-      </SafeAreaView>
+      </ScreenBody>
 
       <CreatePostFab mode="fixed" />
-    </View>
+    </Screen>
   );
 }
 
-function createPostsStyles(
-  _themeColors: ThemeColors,
-  _scheme: 'light' | 'dark',
-  sarhStyles: ReturnType<typeof sarhScreenStyles>,
-) {
+function createPostsStyles(themeColors: ThemeColors) {
   return StyleSheet.create({
-    root: sarhStyles.screenRoot,
-    container: sarhStyles.screenRoot,
     topBar: {
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.border,
-      paddingHorizontal: space[16],
+      borderBottomColor: themeColors.borderHairline,
       paddingBottom: space[8],
       paddingTop: space[8],
-    },
-    tabs: {
-      flexDirection: 'row',
-      gap: space[8],
     },
     tab: {
       flex: 1,
@@ -239,14 +226,14 @@ function createPostsStyles(
       bottom: 0,
       width: space[20],
       height: 2,
-      borderRadius: radius[999],
-      backgroundColor: colors.primary,
+      borderRadius: 999,
+      backgroundColor: themeColors.electric,
     },
-    scroll: { paddingBottom: spacing.md, flexGrow: 1 },
+    scroll: { paddingBottom: space[12], flexGrow: 1 },
+    listFooter: { height: ds.tabBar.fabLift + space[32] },
     empty: {
-      alignItems: 'center',
+      justifyContent: 'center',
       paddingVertical: space[32],
-      gap: space[12],
     },
   });
 }

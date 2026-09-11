@@ -1,27 +1,23 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlRow } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhButton, SarhInput } from '@/design-system/components';
+import { StyleSheet } from 'react-native';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+
+/** Layout only — theme colors are read at render. */
+const styles = StyleSheet.create({
+  fill: { flex: 1, minWidth: 0 },
+});
 
 export default function ChangePasswordScreen() {
   const { accessToken } = useAuth();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { colors } = useTheme();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -79,23 +75,19 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="تغيير كلمة المرور" showBack />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.hintCard}>
-            <AppIcon name="lock-outline" size={22} color={styles.hintIcon.color} />
-            <View style={styles.hintTextShell}>
-              <Text style={styles.hintText}>
-                استخدم 8 أحرف على الأقل مع حرف كبير ورقم لحماية أفضل لحسابك.
-              </Text>
-            </View>
-          </View>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title="تغيير كلمة المرور" showBack />
+      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxxl">
+        <Row gap="md" align="center">
+          <AppIcon name="lock-outline" size={22} color={colors.textBrandStrong} />
+          <AppText variant="bodySmall" color="textSecondary" style={styles.fill}>
+            استخدم 8 أحرف على الأقل مع حرف كبير ورقم لحماية أفضل لحسابك.
+          </AppText>
+        </Row>
 
-          <SarhInput appearance="theme"
+        <Stack gap="lg">
+          <SarhInput
+            appearance="theme"
             label="كلمة المرور الحالية"
             value={currentPassword}
             onChangeText={setCurrentPassword}
@@ -103,7 +95,8 @@ export default function ChangePasswordScreen() {
             autoCapitalize="none"
             ltr
           />
-          <SarhInput appearance="theme"
+          <SarhInput
+            appearance="theme"
             label="كلمة المرور الجديدة"
             value={newPassword}
             onChangeText={setNewPassword}
@@ -111,7 +104,8 @@ export default function ChangePasswordScreen() {
             autoCapitalize="none"
             ltr
           />
-          <SarhInput appearance="theme"
+          <SarhInput
+            appearance="theme"
             label="تأكيد كلمة المرور الجديدة"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -127,43 +121,8 @@ export default function ChangePasswordScreen() {
             fullWidth
             leftIcon="checkmark-done-outline"
           />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    content: {
-      padding: spacing.lg,
-      gap: spacing.md,
-      paddingBottom: spacing.xxxl,
-    },
-    hintCard: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.lg,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    hintIcon: { color: colors.textBrandStrong },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    hintTextShell: {
-      flex: 1,
-      minWidth: 0,
-          },
-    hintText: {
-      ...typography.body,
-      color: colors.textSecondary,
-      width: '100%',
-            writingDirection: 'rtl',
-      lineHeight: 22,
-    },
-  });
 }

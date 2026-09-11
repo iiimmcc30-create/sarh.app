@@ -1,30 +1,19 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppLogo } from '@/components/ui/AppLogo';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlText, ltrInputText, marginStart, rtlForwardIcon } from '@/lib/rtl';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import {
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SarhButton } from '@/design-system/components';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Animated, Pressable, StyleSheet } from 'react-native';
 
 const SAUDI_DIAL = '+966';
+const AUTH_FORM_WIDTH = { maxWidth: 440, width: '100%', alignSelf: 'center' } as const;
 
 export default function PhoneLoginScreen() {
   const { colors } = useTheme();
@@ -78,206 +67,100 @@ export default function PhoneLoginScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <Screen edges={['top', 'bottom']} keyboard pattern={false} style={styles.root}>
       <LinearGradient
         colors={[colors.bgDeep, colors.bgPrimary, colors.bgDeep]}
         style={StyleSheet.absoluteFill}
       />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          style={styles.kav}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <Pressable
-            onPress={() => router.replace('/auth/welcome')}
-            style={styles.backBtn}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel={copy.back}
-          >
-            <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+      <ScreenHeader variant="screen" title={copy.loginTitle} showBack onBackPress={() => router.replace('/auth/welcome')} />
+      <ScreenBody
+        padTop="lg"
+        padBottom="xxxl"
+        gap="section"
+        contentContainerStyle={AUTH_FORM_WIDTH}
+      >
+        <Stack gap="sm" align="center">
+          <AppLogo size={72} showRing={false} shape="square" />
+          <AppText variant="heading3">{copy.brandName}</AppText>
+        </Stack>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scroll}
-          >
-            <View style={styles.header}>
-              <AppLogo size={72} showRing={false} shape="square" />
-              <Text style={styles.brand}>{copy.brandName}</Text>
-              <Text style={styles.title}>{copy.loginTitle}</Text>
-            </View>
+        <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
+          <Stack gap="lg">
+            <SarhInput
+              label={copy.phoneLabel}
+              value={phone}
+              onChangeText={(t) => {
+                setPhone(t.replace(/[^\d\s]/g, ''));
+                setError('');
+              }}
+              placeholder={copy.phonePlaceholder}
+              keyboardType="phone-pad"
+              maxLength={10}
+              autoComplete="tel"
+              ltr
+            />
 
-            <View style={styles.form}>
-              <Text style={styles.label}>{copy.phoneLabel}</Text>
-              <Animated.View
-                style={[styles.inputWrap, { transform: [{ translateX: shakeAnim }] }]}
-              >
-                <TextInput
-                  style={[styles.input, ltrInputText]}
-                  value={phone}
-                  onChangeText={(t) => {
-                    setPhone(t.replace(/[^\d\s]/g, ''));
-                    setError('');
-                  }}
-                  placeholder={copy.phonePlaceholder}
-                  placeholderTextColor={colors.textSubtle}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  autoComplete="tel"
-                />
-              </Animated.View>
+            <SarhInput
+              label={copy.passwordLabel}
+              value={password}
+              onChangeText={(t) => {
+                setPassword(t);
+                setError('');
+              }}
+              placeholder={copy.passwordPlaceholder}
+              secureTextEntry={!showPassword}
+              autoComplete="password"
+              ltr
+              trailingIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              onTrailingPress={() => setShowPassword((v) => !v)}
+              accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+            />
 
-              <Text style={[styles.label, styles.labelSpaced]}>
-                {copy.passwordLabel}
-              </Text>
-              <View style={styles.inputWrap}>
-                <Pressable
-                  onPress={() => setShowPassword((v) => !v)}
-                  hitSlop={8}
-                  style={styles.eye}
-                  accessibilityRole="button"
-                  accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-                >
-                  <AppIcon
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={18}
-                    color={colors.textMuted}
-                  />
-                </Pressable>
-                <TextInput
-                  style={[styles.input, ltrInputText]}
-                  value={password}
-                  onChangeText={(t) => {
-                    setPassword(t);
-                    setError('');
-                  }}
-                  placeholder={copy.passwordPlaceholder}
-                  placeholderTextColor={colors.textSubtle}
-                  secureTextEntry={!showPassword}
-                  autoComplete="password"
-                />
-              </View>
+            <Pressable
+              onPress={() => router.push('/auth/forgot-password')}
+              style={styles.forgot}
+            >
+              <AppText variant="label" color="primary">
+                {copy.forgotPassword}
+              </AppText>
+            </Pressable>
 
-              <Pressable
-                onPress={() => router.push('/auth/forgot-password')}
-                style={styles.forgot}
-              >
-                <Text style={styles.forgotText}>{copy.forgotPassword}</Text>
-              </Pressable>
+            {error ? (
+              <AppText variant="caption" color="danger">
+                {error}
+              </AppText>
+            ) : null}
 
-              {error ? <Text style={styles.error}>{error}</Text> : null}
+            <SarhButton
+              title={copy.loginCta}
+              fullWidth
+              loading={loading}
+              disabled={!isPhoneValid || password.length < 6}
+              onPress={handleLogin}
+            />
 
-              <SarhButton
-                title={copy.loginCta}
-                fullWidth
-                loading={loading}
-                disabled={!isPhoneValid || password.length < 6}
-                onPress={handleLogin}
-                style={styles.primaryCta}
-              />
-
-              <Pressable
-                onPress={() => router.push('/auth/register')}
-                style={styles.footerLink}
-              >
-                <Text style={styles.footerText}>{copy.createAccountLink}</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+            <Pressable
+              onPress={() => router.push('/auth/register')}
+              style={styles.footerLink}
+            >
+              <AppText variant="label" color="textMuted" align="center">
+                {copy.createAccountLink}
+              </AppText>
+            </Pressable>
+          </Stack>
+        </Animated.View>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bgDeep },
-    safe: { flex: 1 },
-    kav: { flex: 1 },
-    backBtn: {
-      alignSelf: 'flex-start',
-      padding: spacing.md,
-      ...marginStart(spacing.sm),
-    },
-    scroll: {
-      width: '100%',
-      maxWidth: 440,
-      alignSelf: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xxl,
-      flexGrow: 1,
-    },
-    header: {
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginBottom: spacing.xxl,
-      marginTop: spacing.lg,
-    },
-    brand: {
-      ...typography.cardHeading,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      ...getRtlText(),
-    },
-    title: {
-      ...typography.sectionHeading,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      ...getRtlText(),
-    },
-    form: { gap: spacing.xs },
-    label: {
-      ...typography.smallHeading,
-      color: colors.textSecondary,
-      marginBottom: spacing.xs,
-      ...getRtlText(),
-    },
-    labelSpaced: { marginTop: spacing.lg },
-    inputWrap: {
-      height: 54,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-      backgroundColor: colors.bgElevated,
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-    },
-    input: {
-      flex: 1,
-      ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      paddingVertical: 0,
-    },
-    eye: { padding: 4 },
-    forgot: { alignSelf: 'flex-start', marginTop: spacing.sm },
-    forgotText: {
-      ...typography.smallHeading,
-      color: colors.electricBright,
-      ...getRtlText(),
-    },
-    error: {
-      ...typography.caption,
-      color: colors.danger,
-      marginTop: spacing.md,
-      ...getRtlText(),
-    },
-    primaryCta: {
-      marginTop: spacing.xl,
-    },
+    root: { backgroundColor: colors.bgDeep },
+    forgot: { alignSelf: 'flex-start' },
     footerLink: {
       alignItems: 'center',
-      marginTop: spacing.xl,
-      paddingVertical: spacing.sm,
-    },
-    footerText: {
-      ...typography.smallHeading,
-      color: colors.textMuted,
-      ...getRtlText(),
+      paddingVertical: 8,
     },
   });
 }

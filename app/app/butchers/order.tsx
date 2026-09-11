@@ -1,7 +1,9 @@
 // SAFAT — Butcher Order Screen (صفحة الطلب + الدفع)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
-import { SarhButton } from '@/design-system/components';
+import { AppText, SarhButton, SarhChip } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { DeliveryMapAddressField } from '@/components/butchers/DeliveryMapAddressField';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,18 +13,16 @@ import {
   Alert,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlInputText } from '@/lib/rtl';
+import { rtlInputText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { launchPaymentCheckout } from '@/services/payments';
@@ -43,7 +43,6 @@ import {
 } from '@/services/butcherData';
 import { PAYMENT_METHODS, NIPaymentMethod } from '@/services/network_international';
 import { formatDeliveryAddressLine, loadDeliveryLocation } from '@/services/butcherDeliveryLocation';
-import { SarhBackButton, SarhChip } from '@/design-system/components';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -317,78 +316,81 @@ export default function ButcherOrderScreen() {
 
   if (loading || submitted) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <Screen edges={['top']} pattern={false} style={styles.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.electricBright} />
-          <Text style={styles.centeredText}>
-            {submitted ? 'جاري التحويل...' : 'جاري تحميل الطلب...'}
-          </Text>
-        </View>
-      </SafeAreaView>
+        <ScreenBody scroll={false} gutter={false} width="full">
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={colors.electricBright} />
+            <AppText variant="body" color="textMuted" align="center">
+              {submitted ? 'جاري التحويل...' : 'جاري تحميل الطلب...'}
+            </AppText>
+          </View>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (!butcher || loadError) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <Screen edges={['top']} pattern={false} style={styles.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <View style={styles.centered}>
-          <AppIcon name="alert-circle-outline" size={48} color={colors.textMuted} />
-          <Text style={styles.centeredText}>{loadError ?? 'الملحمة غير موجودة'}</Text>
-          <Pressable style={styles.secondaryBtn} onPress={() => router.back()}>
-            <Text style={styles.secondaryBtnText}>رجوع</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+        <ScreenBody scroll={false} gutter={false} width="full">
+          <View style={styles.centered}>
+            <AppIcon name="alert-circle-outline" size={48} color={colors.textMuted} />
+            <AppText variant="body" color="textMuted" align="center">
+              {loadError ?? 'الملحمة غير موجودة'}
+            </AppText>
+            <Pressable style={styles.secondaryBtn} onPress={() => router.back()}>
+              <AppText variant="body" style={styles.secondaryBtnText}>رجوع</AppText>
+            </Pressable>
+          </View>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false} style={styles.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.iconBtn} />
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>طلب جديد</Text>
-          <Text style={styles.headerSub} numberOfLines={1}>
-            {butcher.nameAr}
-          </Text>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
+      <ScreenHeader
+        variant="screen"
+        title="طلب جديد"
+        arabic={butcher.nameAr}
+        showBack
+      />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      <ScreenBody
+        gutter={false}
+        width="full"
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 130 }]}
       >
-        <View style={styles.butcherHero}>
+        <Row align="center" gap="md" style={styles.butcherHero}>
           <Image
             source={{ uri: resolveMediaUrl(butcher.logo) }}
             style={styles.butcherLogo}
             contentFit="cover"
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.butcherName}>{butcher.nameAr}</Text>
-            <Text style={styles.butcherMeta}>
+            <AppText variant="cardTitle">{butcher.nameAr}</AppText>
+            <AppText variant="caption" color="textMuted" style={styles.butcherMeta}>
               {butcher.cityAr} · {currency.symbol}
-            </Text>
+            </AppText>
           </View>
           {butcher.subscriptionActive ? (
-            <View style={styles.verifiedBadge}>
+            <Row align="center" gap="xs" style={styles.verifiedBadge}>
               <AppIcon name="shield-checkmark" size={13} color={colors.gold} />
-              <Text style={styles.verifiedText}>موثّق</Text>
-            </View>
+              <AppText variant="label" style={styles.verifiedText}>موثّق</AppText>
+            </Row>
           ) : null}
-        </View>
+        </Row>
 
         <Section title="اختر المنتج" styles={styles}>
           {products.length === 0 ? (
             <View style={styles.emptyBox}>
-              <Text style={styles.emptyEmoji}>🥩</Text>
-              <Text style={styles.emptyTitle}>لا منتجات متاحة</Text>
-              <Text style={styles.emptySub}>تواصل مع الملحمة أو عد لاحقاً</Text>
+              <AppText variant="heading2" align="center">🥩</AppText>
+              <AppText variant="body">لا منتجات متاحة</AppText>
+              <AppText variant="caption" color="textMuted">تواصل مع الملحمة أو عد لاحقاً</AppText>
             </View>
           ) : (
             products.map((p) => {
@@ -410,24 +412,24 @@ export default function ButcherOrderScreen() {
                     contentFit="cover"
                   />
                   <View style={styles.productBody}>
-                    <View style={styles.productTopRow}>
-                      <Text style={styles.productName} numberOfLines={1}>
+                    <Row align="center" justify="between" gap="sm" style={styles.productTopRow}>
+                      <AppText variant="body" numberOfLines={1} style={styles.productName}>
                         {p.nameAr}
-                      </Text>
+                      </AppText>
                       {active ? (
                         <View style={styles.selectedDot}>
                           <AppIcon name="checkmark" size={12} color="#fff" />
                         </View>
                       ) : null}
-                    </View>
-                    <Text style={styles.productCat}>
+                    </Row>
+                    <AppText variant="micro" color="textMuted">
                       {cat?.icon} {cat?.ar ?? p.category}
-                    </Text>
-                    <Text style={styles.productPrice}>
+                    </AppText>
+                    <AppText variant="label" style={styles.productPrice}>
                       {p.pricePerKg
                         ? `${p.pricePerKg} ${currency.symbol}/كغ`
                         : `${(p.priceFixed ?? 0).toLocaleString('en-US')} ${currency.symbol}`}
-                    </Text>
+                    </AppText>
                   </View>
                 </Pressable>
               );
@@ -437,7 +439,7 @@ export default function ButcherOrderScreen() {
 
         {availableCuts.length > 0 ? (
           <Section title="طريقة التقطيع" styles={styles}>
-            <View style={styles.chipsWrap}>
+            <Row wrap gap="sm" style={styles.chipsWrap}>
               {availableCuts.map((cut) => (
                 <SarhChip appearance="filter"
                   key={cut}
@@ -446,13 +448,13 @@ export default function ButcherOrderScreen() {
                   onPress={() => setSelectedCut(cut as CutType)}
                 />
               ))}
-            </View>
+            </Row>
           </Section>
         ) : null}
 
         {selectedProduct?.pricePerKg ? (
           <Section title="الوزن (كغ)" styles={styles}>
-            <View style={styles.weightCard}>
+            <Row align="center" gap="none" style={styles.weightCard}>
               <Pressable
                 style={styles.weightBtn}
                 onPress={() =>
@@ -474,17 +476,17 @@ export default function ButcherOrderScreen() {
               >
                 <AppIcon name="add" size={20} color={colors.textPrimary} />
               </Pressable>
-            </View>
+            </Row>
             {selectedProduct.weightRange ? (
-              <Text style={styles.hint}>
+              <AppText variant="micro" color="textMuted" align="center" style={styles.hint}>
                 من {selectedProduct.weightRange.min} إلى {selectedProduct.weightRange.max} كغ
-              </Text>
+              </AppText>
             ) : null}
           </Section>
         ) : null}
 
         <Section title="طريقة الاستلام" styles={styles}>
-          <View style={styles.deliveryRow}>
+          <Row gap="sm" style={styles.deliveryRow}>
             {(['pickup', 'delivery'] as DeliveryType[]).map((type) => {
               const active = deliveryType === type;
               return (
@@ -498,16 +500,19 @@ export default function ButcherOrderScreen() {
                     size={22}
                     color={active ? colors.electricBright : colors.textMuted}
                   />
-                  <Text style={[styles.deliveryLabel, active && styles.deliveryLabelActive]}>
+                  <AppText
+                    variant="caption"
+                    color={active ? 'primary' : 'textMuted'}
+                  >
                     {type === 'pickup' ? 'استلام' : 'توصيل'}
-                  </Text>
-                  <Text style={styles.deliverySub}>
+                  </AppText>
+                  <AppText variant="micro" color="textMuted" align="center">
                     {type === 'pickup' ? 'من الملحمة مباشرة' : 'إلى عنوانك'}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
-          </View>
+          </Row>
           {deliveryType === 'delivery' ? (
             <DeliveryMapAddressField onAddressChange={setAddress} />
           ) : null}
@@ -525,7 +530,7 @@ export default function ButcherOrderScreen() {
         </Section>
 
         <Section title="طريقة الدفع" styles={styles}>
-          <View style={styles.payRow}>
+          <Row wrap gap="sm">
             {PAYMENT_METHODS.map((method) => {
               const active = selectedMethod === method.id;
               return (
@@ -534,17 +539,20 @@ export default function ButcherOrderScreen() {
                   onPress={() => setSelectedMethod(method.id)}
                   style={[styles.payPill, active && styles.payPillActive]}
                 >
-                  <Text style={[styles.payPillText, active && styles.payPillTextActive]}>
+                  <AppText
+                    variant="label"
+                    color={active ? 'primary' : 'textMuted'}
+                  >
                     {method.arabic}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
-          </View>
+          </Row>
         </Section>
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>ملخص الطلب</Text>
+          <AppText variant="body" style={styles.summaryTitle}>ملخص الطلب</AppText>
           <SummaryRow label="المنتج" value={selectedProduct?.nameAr ?? '—'} styles={styles} />
           <SummaryRow label="التقطيع" value={cutLabelAr(selectedCut)} styles={styles} />
           {selectedProduct?.pricePerKg ? (
@@ -556,15 +564,15 @@ export default function ButcherOrderScreen() {
             styles={styles}
           />
           <View style={styles.summaryDivider} />
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>المبلغ</Text>
-            <Text style={styles.totalValue}>
+          <Row justify="between" align="center">
+            <AppText variant="body">المبلغ</AppText>
+            <AppText variant="cardTitle" style={styles.totalValue}>
               {computedTotal.toLocaleString('en-US', { maximumFractionDigits: 2 })}{' '}
               {currency.symbol}
-            </Text>
-          </View>
+            </AppText>
+          </Row>
         </View>
-      </ScrollView>
+      </ScreenBody>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <LinearGradient
@@ -572,14 +580,14 @@ export default function ButcherOrderScreen() {
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <View style={styles.footerInner}>
-          <View>
-            <Text style={styles.footerLabel}>الإجمالي</Text>
-            <Text style={styles.footerTotal}>
+        <Row align="center" justify="between" gap="md" style={styles.footerInner}>
+          <Stack gap="none">
+            <AppText variant="micro" color="textMuted">الإجمالي</AppText>
+            <AppText variant="price" style={styles.footerTotal}>
               {computedTotal.toLocaleString('en-US', { maximumFractionDigits: 2 })}{' '}
               {currency.symbol}
-            </Text>
-          </View>
+            </AppText>
+          </Stack>
           <SarhButton
             title="ادفع وأرسل الطلب"
             disabled={products.length === 0}
@@ -588,9 +596,9 @@ export default function ButcherOrderScreen() {
             onPress={() => void handleSubmit()}
             style={styles.submitCta}
           />
-        </View>
+        </Row>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -605,7 +613,7 @@ function Section({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <AppText variant="sectionTitle" style={styles.sectionTitle}>{title}</AppText>
       {children}
     </View>
   );
@@ -621,12 +629,12 @@ function SummaryRow({
   styles: ReturnType<typeof createStyles>;
 }) {
   return (
-    <View style={styles.summaryRow}>
-      <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={styles.summaryValue} numberOfLines={1}>
+    <Row justify="between" align="center" gap="md" style={styles.summaryRow}>
+      <AppText variant="caption" color="textMuted">{label}</AppText>
+      <AppText variant="label" color="textSecondary" numberOfLines={1} style={styles.summaryValue}>
         {value}
-      </Text>
-    </View>
+      </AppText>
+    </Row>
   );
 }
 
@@ -640,11 +648,6 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.xl,
       gap: spacing.md,
     },
-    centeredText: {
-      ...butcherTypography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
-    },
     secondaryBtn: {
       marginTop: spacing.sm,
       paddingHorizontal: spacing.lg,
@@ -654,34 +657,11 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
     },
-    secondaryBtnText: { ...butcherTypography.primary, color: colors.textBrandStrong },
-
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-    },
-    iconBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.bgGlass,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerCenter: { flex: 1, alignItems: 'center' },
-    headerTitle: { ...typography.cardHeading, color: colors.textPrimary },
-    headerSub: { ...butcherTypography.secondary, color: colors.textMuted, marginTop: 2 },
+    secondaryBtnText: { color: colors.textBrandStrong },
 
     scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
 
     butcherHero: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
       padding: spacing.md,
       marginBottom: spacing.lg,
       borderRadius: radius.xxl,
@@ -695,12 +675,8 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 26,
       backgroundColor: colors.bgElevated,
     },
-    butcherName: { ...butcherTypography.title, color: colors.textPrimary },
-    butcherMeta: { ...butcherTypography.secondary, color: colors.textMuted, marginTop: 2 },
+    butcherMeta: { marginTop: 2 },
     verifiedBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
       paddingHorizontal: 10,
       paddingVertical: 5,
       borderRadius: radius.pill,
@@ -708,19 +684,14 @@ function createStyles(colors: ThemeColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.gold + '44',
     },
-    verifiedText: { ...butcherTypography.emphasis, color: colors.gold },
+    verifiedText: { color: colors.gold },
 
     section: { marginBottom: spacing.lg },
     sectionTitle: {
-      ...typography.smallHeading,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      ...getRtlText(),
     },
     hint: {
-      ...butcherTypography.meta,
-      color: colors.textMuted,
-      textAlign: 'center',
       marginTop: spacing.xs,
     },
 
@@ -733,9 +704,6 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       gap: spacing.xs,
     },
-    emptyEmoji: { fontSize: 32 },
-    emptyTitle: { ...butcherTypography.primary, color: colors.textPrimary },
-    emptySub: { ...butcherTypography.secondary, color: colors.textMuted },
 
     productCard: {
       flexDirection: 'row',
@@ -760,22 +728,13 @@ function createStyles(colors: ThemeColors) {
     },
     productBody: { flex: 1, gap: 2 },
     productTopRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
+      width: '100%',
     },
     productName: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
       flex: 1,
-      ...getRtlText(),
     },
-    productCat: { ...butcherTypography.meta, color: colors.textMuted,  },
     productPrice: {
-      ...butcherTypography.emphasis,
       color: colors.gold,
-      ...getRtlText(),
       marginTop: 2,
     },
     selectedDot: {
@@ -787,11 +746,9 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
     },
 
-    chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    chipsWrap: {},
 
     weightCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
       borderRadius: radius.xl,
       overflow: 'hidden',
       backgroundColor: colors.bgSurface,
@@ -813,7 +770,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     },
 
-    deliveryRow: { flexDirection: 'row', gap: spacing.sm },
+    deliveryRow: {},
     deliveryCard: {
       flex: 1,
       alignItems: 'center',
@@ -829,9 +786,6 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
       backgroundColor: colors.electric + '10',
     },
-    deliveryLabel: { ...butcherTypography.secondary, color: colors.textMuted },
-    deliveryLabelActive: { color: colors.textBrandStrong },
-    deliverySub: { ...butcherTypography.meta, color: colors.textSubtle, textAlign: 'center' },
 
     textArea: {
       marginTop: spacing.sm,
@@ -846,7 +800,6 @@ function createStyles(colors: ThemeColors) {
       textAlignVertical: 'top',
     },
 
-    payRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     payPill: {
       paddingHorizontal: 14,
       paddingVertical: 10,
@@ -859,8 +812,6 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric,
       backgroundColor: colors.electric + '14',
     },
-    payPillText: { ...butcherTypography.emphasis, color: colors.textMuted },
-    payPillTextActive: { color: colors.textBrandStrong },
 
     summaryCard: {
       borderRadius: radius.xxl,
@@ -871,37 +822,21 @@ function createStyles(colors: ThemeColors) {
       marginBottom: spacing.md,
     },
     summaryTitle: {
-      ...butcherTypography.primary,
       color: colors.textPrimary,
       marginBottom: spacing.sm,
-      ...getRtlText(),
     },
     summaryRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: spacing.md,
       marginBottom: 6,
     },
-    summaryLabel: { ...butcherTypography.secondary, color: colors.textMuted },
     summaryValue: {
-      ...butcherTypography.emphasis,
-      color: colors.textSecondary,
       flex: 1,
-      writingDirection: 'rtl',
     },
     summaryDivider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderSoft,
       marginVertical: spacing.sm,
     },
-    totalRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    totalLabel: { ...butcherTypography.primary, color: colors.textPrimary },
-    totalValue: { ...butcherTypography.title, color: colors.gold },
+    totalValue: { color: colors.gold },
 
     footer: {
       position: 'absolute',
@@ -912,18 +847,13 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.lg,
     },
     footerInner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.md,
       backgroundColor: colors.bgDeep + 'EE',
       borderRadius: radius.xxl,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSoft,
       padding: spacing.md,
     },
-    footerLabel: { ...butcherTypography.meta, color: colors.textMuted },
-    footerTotal: { ...typography.valueLarge, color: colors.gold },
+    footerTotal: { color: colors.gold },
     submitCta: { flex: 1, maxWidth: 220 },
   });
 }

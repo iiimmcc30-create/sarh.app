@@ -2,24 +2,22 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
 import { TimelineItem } from '@/components/butcherApplication/TimelineItem';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import {
   applicationDisplayName,
@@ -31,27 +29,38 @@ import {
 } from '@/lib/butcherApplicationLabels';
 
 import type { ApplicationDetail } from '@/services/butcherApplicationTypes';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <View style={d.row}>
-      <Text style={d.label}>{label}</Text>
-      <Text style={d.value}>{value}</Text>
-    </View>
+    <Stack gap="xs">
+      <AppText variant="bodySmall" color="textMuted">
+        {label}
+      </AppText>
+      <AppText variant="body">{value}</AppText>
+    </Stack>
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function DetailSection({ title, children }: { title: string; children: ReactNode }) {
+  const d = useThemedStyles(({ colors }) => createDetailStyles(colors));
   return (
-    <View style={d.section}>
-      <Text style={d.sectionTitle}>{title}</Text>
-      <View style={d.sectionBody}>{children}</View>
-    </View>
+    <Stack gap="sm">
+      <AppText variant="heading2" color="textSecondary">
+        {title}
+      </AppText>
+      <Stack gap="md" style={d.sectionBody}>
+        {children}
+      </Stack>
+    </Stack>
   );
 }
 
 export default function ButcherApplicationDetailScreen() {
+  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
+  const d = useThemedStyles(({ colors }) => createDetailStyles(colors));
+  const { colors, gradients } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -123,16 +132,16 @@ export default function ButcherApplicationDetailScreen() {
 
   if (authLoading || initialLoad) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <LoadingState message="جاري تحميل الطلب..." />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   if (!applicationId) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <EmptyState
           title="طلب غير موجود"
@@ -140,13 +149,13 @@ export default function ButcherApplicationDetailScreen() {
           actionLabel="العودة"
           onAction={() => router.back()}
         />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   if (!application && !loading) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <EmptyState
           title="تعذّر تحميل الطلب"
@@ -155,58 +164,61 @@ export default function ButcherApplicationDetailScreen() {
           onAction={load}
           icon="alert-circle-outline"
         />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   if (!application) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <LoadingState />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   const title = applicationDisplayName(application.nameAr, application.nameEn);
 
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
-      <View style={s.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={s.backBtn} />
-        <Text style={s.headerTitle} numberOfLines={1}>
-          طلب #{application.applicationNumber}
-        </Text>
-        <View style={s.backBtn} />
-      </View>
+      <ScreenHeader
+        variant="screen"
+        title={`طلب #${application.applicationNumber}`}
+        showBack
+      />
 
-      <ScrollView
+      <ScreenBody
+        gap="lg"
+        padTop="lg"
         contentContainerStyle={s.content}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.glow} />
         }
-        showsVerticalScrollIndicator={false}
       >
-        <View style={s.hero}>
-          <Text style={s.title}>{title}</Text>
+        <Stack gap="md" align="start">
+          <AppText variant="heading1">{title}</AppText>
           <StatusBadge status={application.status} />
-          <Text style={s.meta}>
+          <AppText variant="bodySmall" color="textMuted">
             أُنشئ {formatApplicationDate(application.createdAt)}
             {application.submittedAt
               ? ` · قُدّم ${formatApplicationDate(application.submittedAt)}`
               : ''}
-          </Text>
-        </View>
+          </AppText>
+        </Stack>
 
         {application.status === 'APPROVED' && application.provisionedButcherId ? (
-          <View style={s.provisionCard}>
+          <Row gap="md" align="center" style={s.provisionCard}>
             <AppIcon name="checkmark-circle" size={22} color={colors.success} />
-            <View style={s.provisionText}>
-              <Text style={s.provisionTitle}>تم تفعيل ملحمتك</Text>
-              <Text style={s.provisionSub}>يمكنك زيارة صفحة الملحمة من الزر أدناه.</Text>
-            </View>
+            <Stack gap="xs" fill>
+              <AppText variant="body" style={s.provisionTitle}>
+                تم تفعيل ملحمتك
+              </AppText>
+              <AppText variant="bodySmall" color="textSecondary">
+                يمكنك زيارة صفحة الملحمة من الزر أدناه.
+              </AppText>
+            </Stack>
             <SarhButton
               title="زيارة الملحمة"
               size="sm"
@@ -218,16 +230,16 @@ export default function ButcherApplicationDetailScreen() {
                 })
               }
             />
-          </View>
+          </Row>
         ) : null}
 
-        <Section title="البيانات الأساسية">
+        <DetailSection title="البيانات الأساسية">
           <DetailRow label="اسم المحل" value={application.nameAr ?? application.nameEn ?? '—'} />
           <DetailRow label="هاتف المحل" value={application.shopPhone ?? '—'} />
           <DetailRow label="السجل التجاري" value={application.commercialReg ?? '—'} />
-        </Section>
+        </DetailSection>
 
-        <Section title="الموقع">
+        <DetailSection title="الموقع">
           <DetailRow label="الدولة" value={countryLabel(application.country)} />
           <DetailRow label="المدينة" value={application.city ?? '—'} />
           <DetailRow label="المدينة (عربي)" value={application.cityAr ?? '—'} />
@@ -241,62 +253,72 @@ export default function ButcherApplicationDetailScreen() {
                 : '—'
             }
           />
-        </Section>
+        </DetailSection>
 
-        <Section title="ساعات العمل">
+        <DetailSection title="ساعات العمل">
           <DetailRow label="وقت الفتح" value={application.openTime || '—'} />
           <DetailRow label="وقت الإغلاق" value={application.closeTime || '—'} />
-        </Section>
+        </DetailSection>
 
         {(application.bioAr || application.specialties.length > 0) && (
-          <Section title="نبذة وتخصصات">
+          <DetailSection title="نبذة وتخصصات">
             {application.bioAr ? <DetailRow label="نبذة" value={application.bioAr} /> : null}
             {application.specialties.length > 0 ? (
               <DetailRow label="التخصصات" value={application.specialties.join(' · ')} />
             ) : null}
-          </Section>
+          </DetailSection>
         )}
 
-        <Section title="المستندات">
+        <DetailSection title="المستندات">
           {application.documents.length === 0 ? (
-            <Text style={d.empty}>لا توجد مستندات مرفوعة بعد.</Text>
+            <AppText variant="body" color="textMuted" align="center">
+              لا توجد مستندات مرفوعة بعد.
+            </AppText>
           ) : (
             application.documents.map((doc) => (
-              <View key={doc.id} style={d.docRow}>
-                <View style={d.docMain}>
-                  <Text style={d.docTitle}>{DOCUMENT_TYPE_LABELS[doc.type]}</Text>
-                  <Text style={d.docSub}>
+              <Row key={doc.id} align="start" gap="md" style={d.docRow}>
+                <Stack gap="xs" fill>
+                  <AppText variant="body">{DOCUMENT_TYPE_LABELS[doc.type]}</AppText>
+                  <AppText variant="bodySmall" color="textMuted">
                     {doc.originalFileName ?? '—'}
                     {doc.fileSizeBytes
                       ? ` · ${(doc.fileSizeBytes / 1024).toFixed(0)} ك.ب`
                       : ''}
-                  </Text>
-                  {doc.notes ? <Text style={d.docNotes}>{doc.notes}</Text> : null}
-                </View>
+                  </AppText>
+                  {doc.notes ? (
+                    <AppText variant="bodySmall" style={d.docNotes}>
+                      {doc.notes}
+                    </AppText>
+                  ) : null}
+                </Stack>
                 <View style={d.docBadge}>
-                  <Text style={d.docBadgeText}>{DOCUMENT_STATUS_LABELS[doc.status]}</Text>
+                  <AppText variant="bodyMedium" style={d.docBadgeText}>
+                    {DOCUMENT_STATUS_LABELS[doc.status]}
+                  </AppText>
                 </View>
-              </View>
+              </Row>
             ))
           )}
-        </Section>
+        </DetailSection>
 
         {comments.length > 0 ? (
-          <Section title="التعليقات">
+          <DetailSection title="التعليقات">
             {comments.map((c) => (
-              <View key={c.id} style={d.commentRow}>
-                <Text style={d.commentText}>{c.text}</Text>
-                <Text style={d.commentMeta}>
+              <Stack key={c.id} gap="xs" style={d.commentRow}>
+                <AppText variant="body">{c.text}</AppText>
+                <AppText variant="bodySmall" color="textMuted">
                   {c.actor} · {formatApplicationDateTime(c.at)}
-                </Text>
-              </View>
+                </AppText>
+              </Stack>
             ))}
-          </Section>
+          </DetailSection>
         ) : null}
 
-        <Section title="السجل الزمني">
+        <DetailSection title="السجل الزمني">
           {application.timeline.length === 0 ? (
-            <Text style={d.empty}>لا توجد أحداث بعد.</Text>
+            <AppText variant="body" color="textMuted" align="center">
+              لا توجد أحداث بعد.
+            </AppText>
           ) : (
             application.timeline.map((event, index) => (
               <TimelineItem
@@ -306,9 +328,13 @@ export default function ButcherApplicationDetailScreen() {
               />
             ))
           )}
-        </Section>
+        </DetailSection>
 
-        {error ? <Text style={s.errorText}>{error}</Text> : null}
+        {error ? (
+          <AppText variant="bodySmall" color="danger" align="center">
+            {error}
+          </AppText>
+        ) : null}
 
         {application.status === 'DRAFT' ? (
           <SarhButton
@@ -329,161 +355,62 @@ export default function ButcherApplicationDetailScreen() {
           onPress={() => router.push('/butchers/my-application')}
           style={s.footerBtn}
         />
-      </ScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
-    flex: 1,
-    textAlign: 'center',
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.huge,
-    gap: spacing.lg,
-  },
-  hero: {
-    gap: spacing.md,
-    alignItems: 'flex-start',
-  },
-  title: {
-    ...butcherTypography.titleLarge,
-    color: colors.textPrimary,
-  },
-  meta: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  provisionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.35)',
-    padding: spacing.lg,
-  },
-  provisionText: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  provisionTitle: {
-    ...butcherTypography.primary,
-    color: colors.textBrandSuccess,
-  },
-  provisionSub: {
-    ...butcherTypography.secondary,
-    color: colors.textSecondary,
-  },
-  footerBtn: {
-    marginTop: spacing.md,
-  },
-  errorText: {
-    ...butcherTypography.secondary,
-    color: colors.danger,
-    textAlign: 'center',
-  },
-});
+function createScreenStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: {
+      paddingBottom: spacing.huge,
+    },
+    provisionCard: {
+      backgroundColor: 'rgba(16, 185, 129, 0.12)',
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: 'rgba(16, 185, 129, 0.35)',
+      padding: spacing.lg,
+    },
+    provisionTitle: {
+      color: colors.textBrandSuccess,
+    },
+    footerBtn: {
+      marginTop: spacing.md,
+    },
+  });
+}
 
-const d = StyleSheet.create({
-  section: {
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    ...butcherTypography.title,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  sectionBody: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  row: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  value: {
-    ...butcherTypography.body,
-    color: colors.textPrimary,
-    lineHeight: 22,
-  },
-  empty: {
-    ...butcherTypography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  docRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderHairline,
-  },
-  docMain: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  docTitle: {
-    ...butcherTypography.primary,
-    color: colors.textPrimary,
-  },
-  docSub: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  docNotes: {
-    ...butcherTypography.secondary,
-    color: colors.amber,
-  },
-  docBadge: {
-    backgroundColor: colors.bgElevated,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  docBadgeText: {
-    ...butcherTypography.emphasis,
-    color: colors.textBrand,
-  },
-  commentRow: {
-    gap: spacing.xs,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderHairline,
-  },
-  commentText: {
-    ...butcherTypography.body,
-    color: colors.textPrimary,
-    lineHeight: 22,
-  },
-  commentMeta: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-});
+function createDetailStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    sectionBody: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      padding: spacing.lg,
+    },
+    docRow: {
+      paddingBottom: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderHairline,
+    },
+    docNotes: {
+      color: colors.amber,
+    },
+    docBadge: {
+      backgroundColor: colors.bgElevated,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    docBadgeText: {
+      color: colors.textBrand,
+    },
+    commentRow: {
+      paddingBottom: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderHairline,
+    },
+  });
+}

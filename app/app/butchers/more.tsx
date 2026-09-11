@@ -4,9 +4,10 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { SidebarMenuItem } from '@/components/ui/SidebarMenuItem';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
-import { AppScrollView } from '@/components/ui/AppScrollView';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { spacing, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
+import { type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppUser } from '@/hooks/useApp';
@@ -14,9 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
 import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { AppText } from '@/components/ui/AppText';
 
 function formatPhone(phone?: string): string {
   if (!phone) return 'لم يتم إضافة رقم جوال';
@@ -38,18 +37,18 @@ export default function ButchersMoreScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader title="المزيد" />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="المزيد" />
 
-      <AppScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
+      <ScreenBody gutter={false} padTop="md" padBottom="lg" gap="md">
         <View>
           <View style={styles.userRow}>
             <CoverTrailRow justify="flex-end" gap={10} style={styles.coverTrail}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <AppText style={styles.userName} numberOfLines={1}>
+                <AppText variant="heading3" numberOfLines={1}>
                   {displayName}
                 </AppText>
-                <AppText style={styles.userPhone} numberOfLines={1}>
+                <AppText variant="caption" color="textMuted" numberOfLines={1} style={styles.userPhone}>
                   {formatPhone(phone)}
                 </AppText>
               </View>
@@ -66,7 +65,7 @@ export default function ButchersMoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionLabel}>حسابي</AppText>
+            <AppText variant="label">حسابي</AppText>
           </View>
         </View>
         <View>
@@ -90,7 +89,7 @@ export default function ButchersMoreScreen() {
 
         <View style={styles.sectionLabelWrap}>
           <View style={{ width: '100%' }}>
-            <AppText style={styles.sectionLabel}>الخدمات والدعم</AppText>
+            <AppText variant="label">الخدمات والدعم</AppText>
           </View>
         </View>
         <View>
@@ -117,25 +116,17 @@ export default function ButchersMoreScreen() {
             onPress={() => safePush('/info/privacy', undefined, router)}
           />
         </View>
-      </AppScrollView>
+      </ScreenBody>
 
       <ButchersTabBar active="more" />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    scroll: {
-      paddingHorizontal: 0,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.lg,
-      gap: spacing.md,
-    },
     userRow: {
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: space[16],
       paddingVertical: 14,
     },
     coverTrail: {
@@ -152,22 +143,12 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     avatar: { width: '100%', height: '100%' },
-    userName: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-    },
     userPhone: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
       marginTop: 2,
     },
     sectionLabelWrap: {
-      marginTop: spacing.xs,
-      paddingHorizontal: spacing.lg,
-    },
-    sectionLabel: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
+      marginTop: space[4],
+      paddingHorizontal: space[16],
     },
   });
 }

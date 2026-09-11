@@ -1,12 +1,8 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppScrollView } from '@/components/ui/AppScrollView';
-import { colors, space } from '@/design-system';
 import { SarhSettingsRow, SarhSettingsSection } from '@/design-system/components';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { Screen, ScreenBody } from '@/design-system/layout';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SECTIONS = [
   {
@@ -45,17 +41,12 @@ const SECTIONS = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(() =>
-    StyleSheet.create({
-      container: { flex: 1, backgroundColor: colors.background },
-      content: { paddingBottom: space[48] },
-    }),
-  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="الإعدادات" showBack />
-      <AppScrollView contentContainerStyle={styles.content}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="الإعدادات" showBack />
+      {/* Rows are full-width tap targets, so the row pattern owns its own inset. */}
+      <ScreenBody gutter={false} padBottom="xxxl">
         {SECTIONS.map((section) => (
           <SarhSettingsSection key={section.title} title={section.title}>
             {section.items.map((item, index) => (
@@ -69,7 +60,7 @@ export default function SettingsScreen() {
             ))}
           </SarhSettingsSection>
         ))}
-      </AppScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }

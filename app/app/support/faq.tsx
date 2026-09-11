@@ -4,20 +4,17 @@ import {
   LayoutAnimation,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   UIManager,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { GlassCard } from '@/components/ui/GlassCard';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
-import { AppText, SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { AppText, SarhButton, SarhChip, SarhChipRow, SarhDivider, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
 import {
   fetchFaqs,
   FAQ_CATEGORY_LABEL_AR,
@@ -31,7 +28,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 export default function SupportFaqScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { colors } = useTheme();
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [categories, setCategories] = useState<{ value: string; labelAr: string }[]>([]);
   const [search, setSearch] = useState('');
@@ -58,92 +55,99 @@ export default function SupportFaqScreen() {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  const categoryChips = useMemo(() => {
-    const all = [{ value: '', labelAr: 'الكل' }, ...categories];
-    return all;
-  }, [categories]);
+  const categoryChips = useMemo(
+    () => [{ value: '', labelAr: 'الكل' }, ...categories],
+    [categories],
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="الأسئلة الشائعة" showBack />
-      <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
-        <SarhInput appearance="theme"
-          label="بحث"
-          value={search}
-          onChangeText={setSearch}
-          placeholder="ابحث عن سؤال..."
-          onSubmitEditing={() => void load()}
-        />
-
-        <SarhChipRow contentPaddingHorizontal={0} style={styles.chipsWrap}>
-          {categoryChips.map((cat) => (
-            <SarhChip appearance="filter"
-              key={cat.value || 'all'}
-              label={cat.labelAr}
-              selected={(category ?? '') === cat.value}
-              onPress={() => setCategory(cat.value || undefined)}
-            />
-          ))}
-        </SarhChipRow>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="الأسئلة الشائعة" showBack />
+      <ScreenBody padTop="lg" gap="section" padBottom="xxxl">
+        <Stack gap="md">
+          <SarhInput
+            appearance="theme"
+            label="بحث"
+            value={search}
+            onChangeText={setSearch}
+            placeholder="ابحث عن سؤال..."
+            onSubmitEditing={() => void load()}
+          />
+          <SarhChipRow contentPaddingHorizontal={0}>
+            {categoryChips.map((cat) => (
+              <SarhChip
+                appearance="filter"
+                key={cat.value || 'all'}
+                label={cat.labelAr}
+                selected={(category ?? '') === cat.value}
+                onPress={() => setCategory(cat.value || undefined)}
+              />
+            ))}
+          </SarhChipRow>
+        </Stack>
 
         {loading ? (
-          <ActivityIndicator style={styles.loader} />
+          <ActivityIndicator />
         ) : faqs.length === 0 ? (
-          <AppText style={styles.empty}>لا توجد أسئلة مطابقة</AppText>
+          <AppText variant="body" color="textMuted" align="center">
+            لا توجد أسئلة مطابقة
+          </AppText>
         ) : (
-          faqs.map((faq) => {
-            const open = expandedId === faq.id;
-            return (
-              <GlassCard key={faq.id} style={styles.faqCard}>
-                <Pressable
-                  onPress={() => toggle(faq.id)}
-                  style={styles.faqHeader}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: open }}
-                  accessibilityLabel={faq.questionAr}
-                >
-                  <View style={styles.faqTitleWrap}>
-                    <AppText style={styles.faqCategory}>
-                      {FAQ_CATEGORY_LABEL_AR[faq.category as FaqCategory] ?? faq.category}
-                    </AppText>
-                    <AppText style={styles.faqQuestion}>{faq.questionAr}</AppText>
-                  </View>
-                  <AppIcon name={open ? 'chevron-up' : 'chevron-down'} size={18} color={styles.muted.color} />
-                </Pressable>
-                {open ? <AppText style={styles.faqAnswer}>{faq.answerAr}</AppText> : null}
-              </GlassCard>
-            );
-          })
+          <Stack gap="none">
+            {faqs.map((faq, i) => {
+              const open = expandedId === faq.id;
+              return (
+                <View key={faq.id}>
+                  <Pressable
+                    onPress={() => toggle(faq.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: open }}
+                    accessibilityLabel={faq.questionAr}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                  >
+                    <Stack gap="sm" style={styles.faqRow}>
+                      <Row gap="md" align="start">
+                        <Stack gap="xs" style={styles.fill}>
+                          <AppText variant="meta" color="primary">
+                            {FAQ_CATEGORY_LABEL_AR[faq.category as FaqCategory] ?? faq.category}
+                          </AppText>
+                          <AppText variant="cardTitle" color="textPrimary">
+                            {faq.questionAr}
+                          </AppText>
+                        </Stack>
+                        <AppIcon
+                          name={open ? 'chevron-up' : 'chevron-down'}
+                          size={18}
+                          color={colors.textMuted}
+                        />
+                      </Row>
+                      {open ? (
+                        <AppText variant="body" color="textSecondary">
+                          {faq.answerAr}
+                        </AppText>
+                      ) : null}
+                    </Stack>
+                  </Pressable>
+                  {i < faqs.length - 1 ? <SarhDivider /> : null}
+                </View>
+              );
+            })}
+          </Stack>
         )}
 
-        <View style={styles.footer}>
-          <AppText style={styles.footerTitle}>لم تجد إجابة لسؤالك؟</AppText>
+        <Section title="لم تجد إجابة لسؤالك؟" gap="md">
           <SarhButton
             title="إنشاء تذكرة دعم"
             fullWidth
             onPress={() => router.push('/support/tickets/create' as never)}
           />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </Section>
+      </ScreenBody>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.huge },
-    chipsWrap: { marginHorizontal: 0 },
-    loader: { marginTop: spacing.lg },
-    empty: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
-    faqCard: { gap: spacing.sm },
-    faqHeader: { ...getRtlRow(), alignItems: 'flex-start', gap: spacing.md },
-    faqTitleWrap: { flex: 1, gap: 4 },
-    faqCategory: { ...typography.micro, color: colors.textBrandStrong },
-    faqQuestion: { ...typography.cardHeading, color: colors.textPrimary },
-    faqAnswer: { ...typography.body, color: colors.textSecondary },
-    footer: { gap: spacing.md, marginTop: spacing.lg, alignItems: 'center' },
-    footerTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-    muted: { color: colors.textMuted },
-  });
-}
+const styles = StyleSheet.create({
+  fill: { flex: 1, minWidth: 0 },
+  faqRow: { paddingVertical: spacing.lg },
+});

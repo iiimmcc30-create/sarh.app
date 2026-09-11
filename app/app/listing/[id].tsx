@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { SarhButton, SarhBackButton } from '@/design-system/components';
+import { AppText, SarhButton } from '@/design-system/components';
+import { BottomAction, Row, Screen, ScreenBody } from '@/design-system/layout';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { sarhListingShareUrl } from '@/constants/sarhOfficial';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
-import { getRtlDirection, getRtlRow, getRtlText } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { type Listing } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,10 +25,8 @@ import {
   Alert,
   Linking,
   Pressable,
-  ScrollView,
   Share,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -47,8 +46,6 @@ import {
 } from '@/lib/listingLimits';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { firstEnabledPromoteGoal, isPromoteGoalEnabled } from '@/services/paidServices';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppText } from '@/components/ui/AppText';
 
 const CATEGORY_LABELS: Record<string, string> = {
   camels: 'إبل',
@@ -272,17 +269,25 @@ export default function ListingDetailScreen() {
 
   if (loading && !listing) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <ActivityIndicator style={{ marginTop: 80 }} color={colors.electricBright} />
-      </SafeAreaView>
+      <Screen edges={['top']}>
+        <ScreenHeader variant="screen" title="" showBack />
+        <ScreenBody scroll={false}>
+          <ActivityIndicator style={{ marginTop: 80 }} color={colors.electricBright} />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (!listing) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <Text style={styles.notFound}>لم يتم العثور على الإعلان</Text>
-      </SafeAreaView>
+      <Screen edges={['top']}>
+        <ScreenHeader variant="screen" title="" showBack />
+        <ScreenBody scroll={false}>
+          <AppText variant="body" color="textMuted" align="center" style={styles.notFound}>
+            لم يتم العثور على الإعلان
+          </AppText>
+        </ScreenBody>
+      </Screen>
     );
   }
 
@@ -441,87 +446,82 @@ export default function ListingDetailScreen() {
   };
 
   return (
-    <View style={[styles.screen, getRtlDirection()]}>
-      <SafeAreaView edges={['top']} style={styles.topSafe}>
-        <View style={[styles.topBar, getRtlRow()]}>
-          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.topBarBtn} />
-          <Pressable
-            hitSlop={8}
-            style={styles.topBarBtn}
-            onPress={() => {
-              if (isOwner) {
-                void showOwnerMenu();
-                return;
-              }
-              void showVisitorMenu();
-            }}
-            accessibilityLabel="المزيد"
-          >
-            <AppIcon name="ellipsis-vertical" size={20} color={colors.textPrimary} />
-          </Pressable>
-        </View>
-      </SafeAreaView>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+    <Screen edges={['top']}>
+      <ScreenHeader
+        variant="screen"
+        title=""
+        showBack
+        rightIcon="ellipsis-vertical"
+        onRightPress={() => (isOwner ? void showOwnerMenu() : void showVisitorMenu())}
+        rightAccessibilityLabel="المزيد"
+      />
+      <ScreenBody
+        gutter={false}
+        width="full"
+        padBottom="xl"
+        bottomInset={isOwner ? 'none' : 'action'}
+      >
         <View style={styles.headerSection}>
           <View style={styles.titleBlock}>
             {!isOwner ? (
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
-                style={[styles.sellerTitleCluster, getRtlRow()]}
+                style={styles.sellerTitleCluster}
                 accessibilityRole="button"
                 accessibilityLabel={
                   listing.seller.arabicName || listing.seller.displayName || listing.seller.username
                 }
               >
-                <Image
-                  source={uriSource(listing.seller.avatar)}
-                  style={styles.sellerInlineAvatar}
-                  contentFit="cover"
-                />
-                {listing.seller.verified ? <VerificationBadge size={16} /> : null}
-                <AppText style={styles.sellerInlineName} numberOfLines={1}>
-                  {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
-                </AppText>
+                <Row gap="sm" align="center">
+                  <Image
+                    source={uriSource(listing.seller.avatar)}
+                    style={styles.sellerInlineAvatar}
+                    contentFit="cover"
+                  />
+                  {listing.seller.verified ? <VerificationBadge size={16} /> : null}
+                  <AppText variant="cardTitle" color="textSecondary" style={styles.sellerInlineName} numberOfLines={1}>
+                    {listing.seller.arabicName || listing.seller.displayName || listing.seller.username}
+                  </AppText>
+                </Row>
               </Pressable>
             ) : null}
-            <AppText style={styles.title} numberOfLines={3} ellipsizeMode="tail">
+            <AppText variant="sectionTitle" style={styles.title} numberOfLines={3} ellipsizeMode="tail">
               {listing.arabicTitle || listing.title}
             </AppText>
           </View>
 
-          <View style={[styles.headerMetaRow, getRtlRow()]}>
-            <View style={[styles.headerMetaChip, getRtlRow()]}>
-              <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+          <Row wrap gap="sm" align="center" style={styles.headerMetaRow}>
+            <Row gap="xs" align="center" style={styles.headerMetaChip}>
+              <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
                 {listing.arabicLocation || listing.location}
-              </Text>
+              </AppText>
               <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-            </View>
+            </Row>
             {listing.weightKg != null && listing.weightKg > 0 ? (
               <View style={styles.headerMetaChip}>
-                <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+                <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
                   {`الوزن: ${listing.weightKg.toLocaleString('ar-SA')} كجم`}
-                </Text>
+                </AppText>
               </View>
             ) : null}
-            <View style={[styles.headerMetaChip, getRtlRow()]}>
-              <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+            <Row gap="xs" align="center" style={styles.headerMetaChip}>
+              <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
                 {timeLabel || 'الآن'}
-              </Text>
+              </AppText>
               <AppIcon name="time-outline" size={13} color={colors.textMuted} />
-            </View>
+            </Row>
             {listing.seller.rating != null && (listing.seller.reviewCount ?? 0) > 0 ? (
-              <View style={[styles.headerMetaChip, getRtlRow()]}>
-                <Text style={[styles.headerMetaText, getRtlText()]} numberOfLines={1}>
+              <Row gap="xs" align="center" style={styles.headerMetaChip}>
+                <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
                   {`${listing.seller.rating.toFixed(1)} (${listing.seller.reviewCount} تقييم)`}
-                </Text>
+                </AppText>
                 <AppIcon name="star" size={13} color={colors.gold} />
-              </View>
+              </Row>
             ) : null}
-          </View>
+          </Row>
 
           {!isOwner ? (
-            <View style={[styles.sellerRow, getRtlRow()]}>
+            <Row gap="sm" align="center" justify="start" style={styles.sellerRow}>
               <SarhButton
                 title={isFollowing ? 'متابَع' : 'متابعة'}
                 variant={isFollowing ? 'secondary' : 'primary'}
@@ -529,18 +529,20 @@ export default function ListingDetailScreen() {
                 onPress={handleFollowSeller}
                 loading={followLoading || (isFollowing === null && isAuthenticated)}
               />
-            </View>
+            </Row>
           ) : null}
 
           {listing.contactPhone ? (
             <Pressable
               onPress={() => void openSellerCall()}
-              style={[styles.contactPhoneRow, getRtlRow()]}
+              style={styles.contactPhoneRow}
             >
-              <Text style={[styles.contactPhoneText, getRtlText()]} numberOfLines={1}>
-                {listing.contactPhone}
-              </Text>
-              <AppIcon name="call-outline" size={14} color={colors.electricBright} />
+              <Row gap="xs" align="center">
+                <AppText variant="caption" color="textMuted" style={styles.contactPhoneText} numberOfLines={1}>
+                  {listing.contactPhone}
+                </AppText>
+                <AppIcon name="call-outline" size={14} color={colors.electricBright} />
+              </Row>
             </Pressable>
           ) : null}
         </View>
@@ -556,27 +558,27 @@ export default function ListingDetailScreen() {
           <View style={styles.descriptionSection}>
             {categoryLabel || listing.breed || listing.age ? (
               <View style={{ width: '100%' }}>
-                <View style={[styles.specMetaLine, getRtlRow()]}>
+                <Row wrap gap="sm" style={styles.specMetaLine}>
                   {categoryLabel ? (
-                    <Text style={[styles.specMetaText, getRtlText()]}>{categoryLabel}</Text>
+                    <AppText variant="caption" color="textMuted">{categoryLabel}</AppText>
                   ) : null}
                   {listing.breed ? (
-                    <Text style={[styles.specMetaText, getRtlText()]}>{listing.breed}</Text>
+                    <AppText variant="caption" color="textMuted">{listing.breed}</AppText>
                   ) : null}
                   {listing.age ? (
-                    <Text style={[styles.specMetaText, getRtlText()]}>{listing.age}</Text>
+                    <AppText variant="caption" color="textMuted">{listing.age}</AppText>
                   ) : null}
-                </View>
+                </Row>
               </View>
             ) : null}
             {listing.arabicDescription ? (
               <View style={{ width: '100%' }}>
-                <AppText style={styles.descArabic}>{listing.arabicDescription}</AppText>
+                <AppText variant="body" style={styles.descArabic}>{listing.arabicDescription}</AppText>
               </View>
             ) : null}
             {listing.description && listing.description !== listing.arabicDescription ? (
               <View style={{ width: '100%' }}>
-                <AppText style={styles.desc}>{listing.description}</AppText>
+                <AppText variant="body" color="textSecondary">{listing.description}</AppText>
               </View>
             ) : null}
           </View>
@@ -586,7 +588,7 @@ export default function ListingDetailScreen() {
           <View style={styles.mediaSection}>
             <View style={styles.mediaLabelWrap}>
               <View style={{ width: '100%' }}>
-                <AppText style={styles.mediaHeading}>الفيديو</AppText>
+                <AppText variant="bodySmall" color="textMuted">الفيديو</AppText>
               </View>
             </View>
             <View style={styles.mediaBleed}>
@@ -604,7 +606,7 @@ export default function ListingDetailScreen() {
           <View style={styles.mediaSection}>
             <View style={styles.mediaLabelWrap}>
               <View style={{ width: '100%' }}>
-                <AppText style={styles.mediaHeading}>
+                <AppText variant="bodySmall" color="textMuted">
                   الصور ({images.length.toLocaleString('ar-SA')})
                 </AppText>
               </View>
@@ -632,35 +634,35 @@ export default function ListingDetailScreen() {
         <View style={styles.priceSection}>
           {listing.price > 0 ? (
             <View style={{ width: '100%' }}>
-              <AppText style={styles.price}>
+              <AppText variant="price" style={styles.price}>
                 {`السعر: ${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
               </AppText>
             </View>
           ) : (
             <View style={{ width: '100%' }}>
-              <AppText style={styles.priceOnRequest}>السعر عند الطلب</AppText>
+              <AppText variant="price" style={styles.priceOnRequest}>السعر عند الطلب</AppText>
             </View>
           )}
           {(listing.pinned || listing.featured) ? (
-            <View style={styles.priceBadges}>
+            <Row wrap gap="sm" justify="end">
               {listing.pinned ? (
-                <View style={[styles.pinned, getRtlRow()]}>
+                <Row gap="xs" align="center" style={styles.pinned}>
                   <AppIcon name="pin" size={11} color="#fff" />
-                  <Text style={styles.pinnedText}>مثبّت</Text>
-                </View>
+                  <AppText variant="caption" style={styles.pinnedText}>مثبّت</AppText>
+                </Row>
               ) : null}
               {listing.featured ? (
-                <View style={[styles.featured, getRtlRow()]}>
+                <Row gap="xs" align="center" style={styles.featured}>
                   <AppIcon name="star" size={11} color="#1A1300" />
-                  <Text style={styles.featuredText}>مميز</Text>
-                </View>
+                  <AppText variant="caption" style={styles.featuredText}>مميز</AppText>
+                </Row>
               ) : null}
-            </View>
+            </Row>
           ) : null}
         </View>
 
         {isOwner ? (
-          <View style={[styles.ownerToolsSection, getRtlRow()]}>
+          <Row wrap gap="sm" style={styles.ownerToolsSection}>
             {ownerActions.map((a) => (
               <Pressable
                 key={a.key}
@@ -671,39 +673,38 @@ export default function ListingDetailScreen() {
                   pressed && styles.ownerActionPressed,
                 ]}
               >
-                <AppIcon
-                  name={a.icon}
-                  size={18}
-                  color={a.danger ? colors.rose : colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.ownerToolLabel,
-                    getRtlText(),
-                    a.danger && styles.ownerActionTextDanger,
-                  ]}
-                >
-                  {a.label}
-                </Text>
+                <Row gap="xs" align="center">
+                  <AppIcon
+                    name={a.icon}
+                    size={18}
+                    color={a.danger ? colors.rose : colors.textSecondary}
+                  />
+                  <AppText
+                    variant="bodySmall"
+                    color="textSecondary"
+                    style={a.danger ? styles.ownerActionTextDanger : undefined}
+                  >
+                    {a.label}
+                  </AppText>
+                </Row>
               </Pressable>
             ))}
-          </View>
+          </Row>
         ) : null}
 
         <ListingCommentsSection listingId={listing.id} layout="edge" />
-      </ScrollView>
+      </ScreenBody>
 
-      {/* Bottom CTA for buyers */}
       {!isOwner ? (
-        <SafeAreaView edges={['bottom']} style={styles.ctaBar}>
+        <BottomAction>
           <SarhButton
             title="تواصل"
             variant="primary"
             leftIcon="chatbubbles"
             onPress={() => openSellerChat()}
-            style={{ flex: 1 }}
+            fullWidth
           />
-        </SafeAreaView>
+        </BottomAction>
       ) : null}
 
       {listing ? (
@@ -719,39 +720,13 @@ export default function ListingDetailScreen() {
         onClose={() => setDeleteDialogVisible(false)}
         onConfirm={(choice) => void confirmDeleteListing(choice)}
       />
-    </View>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    notFound: { ...typography.feedBody, color: colors.textMuted, textAlign: 'center', marginTop: 80 },
-    scrollContent: {
-      paddingBottom: 140,
-    },
-    topSafe: {
-      backgroundColor: colors.bgDeep,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderSoft,
-    },
-    topBar: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      minHeight: 48,
-    },
-    topBarActions: {
-      alignItems: 'center',
-      gap: 2,
-    },
-    topBarBtn: {
-      width: 44,
-      height: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+    notFound: { marginTop: 80 },
     headerSection: {
       gap: spacing.sm,
       paddingHorizontal: spacing.lg,
@@ -760,21 +735,14 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
     },
     headerMetaRow: {
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
       width: '100%',
     },
     headerMetaChip: {
       flexGrow: 0,
       flexShrink: 1,
-      alignItems: 'center',
-      gap: 4,
       maxWidth: '100%',
     },
     headerMetaText: {
-      ...typography.caption,
-      color: colors.textMuted,
       flexShrink: 1,
     },
     descriptionSection: {
@@ -786,13 +754,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
     },
     specMetaLine: {
-      flexWrap: 'wrap',
-      gap: spacing.sm,
       width: '100%',
-    },
-    specMetaText: {
-      ...typography.caption,
-      color: colors.textMuted,
     },
     mediaSection: {
       gap: spacing.sm,
@@ -800,10 +762,6 @@ function createStyles(colors: ThemeColors) {
     },
     mediaLabelWrap: {
       paddingHorizontal: spacing.lg,
-    },
-    mediaHeading: {
-      ...typography.smallHeading,
-      color: colors.textMuted,
     },
     mediaBleed: {
       width: '100%',
@@ -822,56 +780,38 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.screenRoot,
     },
     price: {
-      ...typography.valueLarge,
       color: colors.electricBright,
     },
     priceOnRequest: {
-      ...typography.valueLarge,
       color: colors.textBrandStrong,
     },
-    priceBadges: {
-      flexDirection: 'row',
-            justifyContent: 'flex-end',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
     featured: {
-      alignItems: 'center',
-      gap: 4,
       backgroundColor: colors.gold,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    featuredText: { ...typography.badge, color: '#1A1300' },
+    featuredText: { color: '#1A1300' },
     pinned: {
-      alignItems: 'center',
-      gap: 4,
       backgroundColor: colors.electric,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    pinnedText: { ...typography.badge, color: '#fff' },
+    pinnedText: { color: '#fff' },
     titleBlock: {
       width: '100%',
       gap: spacing.sm,
     },
     title: {
-      ...typography.sectionHeading,
       color: colors.electricBright,
     },
     sellerTitleCluster: {
-      alignItems: 'center',
-      gap: 8,
       alignSelf: 'flex-start',
       maxWidth: '100%',
     },
     sellerRow: {
       width: '100%',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      gap: spacing.sm,
       paddingTop: spacing.xs,
     },
     sellerInlineAvatar: {
@@ -884,24 +824,16 @@ function createStyles(colors: ThemeColors) {
       flexShrink: 0,
     },
     sellerInlineName: {
-      ...typography.feedTitle,
-      color: colors.textSecondary,
       flexShrink: 1,
       minWidth: 0,
     },
     contactPhoneRow: {
-      alignItems: 'center',
-      gap: 6,
       paddingTop: spacing.xs,
     },
     contactPhoneText: {
-      ...typography.caption,
-      color: colors.textMuted,
       flexShrink: 1,
     },
     ownerToolsSection: {
-      flexWrap: 'wrap',
-      gap: spacing.sm,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -910,9 +842,6 @@ function createStyles(colors: ThemeColors) {
       width: '100%',
     },
     ownerToolChip: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 6,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
@@ -922,86 +851,14 @@ function createStyles(colors: ThemeColors) {
     ownerToolChipDanger: {
       backgroundColor: `${colors.rose}10`,
     },
-    ownerToolLabel: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-    },
     ownerActionPressed: {
       opacity: 0.82,
     },
     ownerActionTextDanger: {
       color: colors.rose,
     },
-    followPill: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electricBright,
-      flexShrink: 0,
-    },
-    followingPill: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-    },
-    followPillText: {
-      ...typography.button,
-      color: '#fff',
-    },
-    followingPillText: { color: colors.textMuted },
-    desc: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 24,
-    },
     descArabic: {
-      ...typography.body,
       color: colors.textPrimary,
-      lineHeight: 24,
-    },
-    ctaBar: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      gap: spacing.sm,
-      backgroundColor: colors.bgPrimary,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderSoft,
-    },
-    ctaBtnApp: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: radius.lg,
-      backgroundColor: colors.electric,
-    },
-    ctaBtnAppText: {
-      ...typography.button,
-      color: '#fff',
-    },
-    ctaBtnCall: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 1,
-      borderColor: colors.electricBright,
-    },
-    ctaBtnCallText: {
-      ...typography.button,
-      color: colors.electricBright,
     },
   });
 }

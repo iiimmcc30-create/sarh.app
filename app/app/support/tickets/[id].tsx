@@ -1,22 +1,14 @@
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhSurface, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { showToast } from '@/lib/toast';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useSupportTicketSocket } from '@/hooks/useSupportTicketSocket';
 import { useAuth } from '@/contexts/AuthContext';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { getRtlRow } from '@/lib/rtl';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { messageAuthorLabel } from '@/lib/supportRealtime';
 import { SUPPORT_CUSTOMER_SERVICE } from '@/constants/supportIdentity';
 import { userFacingTicketStatus } from '@/lib/supportFlow';
@@ -78,156 +70,141 @@ export default function SupportTicketDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
-        <ActivityIndicator style={styles.loader} />
-      </SafeAreaView>
+      <Screen edges={['top', 'bottom']}>
+        <ScreenHeader variant="screen" title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
+        <ScreenBody scroll={false} style={styles.centered}>
+          <ActivityIndicator />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (!ticket) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
-        <AppText variant="body" color="textMuted" align="center" style={styles.notFound}>
-          المحادثة غير موجودة
-        </AppText>
-      </SafeAreaView>
+      <Screen edges={['top', 'bottom']}>
+        <ScreenHeader variant="screen" title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
+        <ScreenBody scroll={false} padTop="xxl">
+          <AppText variant="body" color="textMuted" align="center">
+            المحادثة غير موجودة
+          </AppText>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   const closed = ticket.status === 'CLOSED' || ticket.status === 'RESOLVED';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
-      <View style={[styles.identity, getRtlRow()]}>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title={SUPPORT_CUSTOMER_SERVICE.name} showBack />
+
+      <Row gap="md" style={styles.identity}>
         <SarhAvatar
           source={SUPPORT_CUSTOMER_SERVICE.avatarSource}
           name={SUPPORT_CUSTOMER_SERVICE.assistantName}
           size="md"
           accessibilityLabel={SUPPORT_CUSTOMER_SERVICE.assistantName}
         />
-        <View style={styles.identityCopy}>
-          <AppText variant="label">{SUPPORT_CUSTOMER_SERVICE.name}</AppText>
+        <Stack gap="none" style={styles.fill}>
+          <AppText variant="bodyMedium">{SUPPORT_CUSTOMER_SERVICE.name}</AppText>
           <AppText variant="caption" color="textMuted">
             {SUPPORT_CUSTOMER_SERVICE.assistantName} · {userFacingTicketStatus(ticket.status)}
           </AppText>
-        </View>
-      </View>
+        </Stack>
+      </Row>
       <SarhDivider />
 
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {(ticket.messages ?? []).map((msg) => {
-            const mine = msg.authorKind === 'CUSTOMER' && !msg.isStaffReply;
-            const system = isSystemHandoff(msg);
-            return (
-              <View
-                key={msg.id}
-                style={[
-                  styles.bubbleWrap,
-                  mine ? styles.bubbleMineWrap : styles.bubbleOtherWrap,
-                ]}
-              >
-                {system ? (
-                  <SarhSurface tone="surfaceAlt" style={styles.systemBubble}>
-                    <AppText variant="caption" color="textSecondary">
-                      {msg.body}
-                    </AppText>
-                  </SarhSurface>
-                ) : (
-                  <View
-                    style={[
-                      styles.msgRow,
-                      getRtlRow(),
-                      mine ? styles.msgRowMine : styles.msgRowOther,
-                    ]}
+      <ScreenBody padTop="lg" gap="sm" padBottom="xxxl">
+        {(ticket.messages ?? []).map((msg) => {
+          const mine = msg.authorKind === 'CUSTOMER' && !msg.isStaffReply;
+          const system = isSystemHandoff(msg);
+          return (
+            <View
+              key={msg.id}
+              style={[styles.bubbleWrap, mine ? styles.bubbleMineWrap : styles.bubbleOtherWrap]}
+            >
+              {system ? (
+                <SarhSurface tone="surfaceAlt" style={styles.systemBubble}>
+                  <AppText variant="caption" color="textSecondary">
+                    {msg.body}
+                  </AppText>
+                </SarhSurface>
+              ) : (
+                <Row gap="sm" align="end" style={styles.msgRow}>
+                  {!mine ? (
+                    <SarhAvatar
+                      source={
+                        msg.authorKind === 'SARHAN'
+                          ? SUPPORT_CUSTOMER_SERVICE.avatarSource
+                          : undefined
+                      }
+                      name={messageAuthorLabel(msg)}
+                      size="sm"
+                      accessibilityLabel={messageAuthorLabel(msg)}
+                    />
+                  ) : null}
+                  <Stack
+                    gap="xs"
+                    style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}
                   >
                     {!mine ? (
-                      <SarhAvatar
-                        source={
-                          msg.authorKind === 'SARHAN'
-                            ? SUPPORT_CUSTOMER_SERVICE.avatarSource
-                            : undefined
-                        }
-                        name={messageAuthorLabel(msg)}
-                        size="sm"
-                        accessibilityLabel={messageAuthorLabel(msg)}
-                      />
+                      <AppText variant="meta" color="textMuted">
+                        {messageAuthorLabel(msg)}
+                      </AppText>
                     ) : null}
-                    <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
-                      {!mine ? (
-                        <AppText variant="micro" color="textMuted">
-                          {messageAuthorLabel(msg)}
-                        </AppText>
-                      ) : null}
-                      <AppText variant="body">{msg.body}</AppText>
-                    </View>
-                  </View>
-                )}
-              </View>
-            );
-          })}
-
-          {!closed ? (
-            <View style={styles.replyBox}>
-              <SarhInput appearance="theme"
-                label="اكتب رسالة"
-                value={reply}
-                onChangeText={setReply}
-                multiline
-                numberOfLines={3}
-              />
-              <SarhButton
-                title="إرسال"
-                fullWidth
-                loading={sending}
-                disabled={!reply.trim() || sending}
-                onPress={() => void handleReply()}
-              />
+                    <AppText variant="body">{msg.body}</AppText>
+                  </Stack>
+                </Row>
+              )}
             </View>
-          ) : (
-            <AppText variant="caption" color="textMuted" align="center">
-              هذه المحادثة مغلقة.
-            </AppText>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          );
+        })}
+
+        {!closed ? (
+          <Stack gap="md" style={styles.replyBox}>
+            <SarhInput
+              appearance="theme"
+              label="اكتب رسالة"
+              value={reply}
+              onChangeText={setReply}
+              multiline
+              numberOfLines={3}
+            />
+            <SarhButton
+              title="إرسال"
+              fullWidth
+              loading={sending}
+              disabled={!reply.trim() || sending}
+              onPress={() => void handleReply()}
+            />
+          </Stack>
+        ) : (
+          <AppText variant="caption" color="textMuted" align="center">
+            هذه المحادثة مغلقة.
+          </AppText>
+        )}
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    loader: { marginTop: spacing.xxl },
-    notFound: { marginTop: spacing.xxl },
+    centered: { alignItems: 'center', justifyContent: 'center' },
+    fill: { flex: 1, minWidth: 0 },
     identity: {
-      alignItems: 'center',
-      gap: spacing.md,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
     },
-    identityCopy: { flex: 1, gap: 2 },
-    content: { padding: spacing.lg, gap: spacing.sm, paddingBottom: spacing.huge },
     bubbleWrap: { width: '100%' },
     bubbleMineWrap: { alignItems: 'flex-start' },
     bubbleOtherWrap: { alignItems: 'flex-end' },
-    msgRow: {
-      alignItems: 'flex-end',
-      gap: spacing.sm,
-      maxWidth: '100%',
-    },
-    msgRowMine: { justifyContent: 'flex-start' },
-    msgRowOther: { justifyContent: 'flex-start' },
+    msgRow: { maxWidth: '100%' },
     bubble: {
       maxWidth: '86%',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      borderRadius: 16,
-      gap: 4,
+      borderRadius: radius.lg,
     },
     bubbleMine: {
       backgroundColor: colors.bgElevated,
@@ -240,8 +217,8 @@ function createStyles(colors: ThemeColors) {
     systemBubble: {
       width: '100%',
       padding: spacing.md,
-      borderRadius: 12,
+      borderRadius: radius.md,
     },
-    replyBox: { gap: spacing.md, marginTop: spacing.md },
+    replyBox: { marginTop: spacing.md },
   });
 }

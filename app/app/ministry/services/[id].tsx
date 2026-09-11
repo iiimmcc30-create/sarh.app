@@ -1,11 +1,10 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { AppText } from '@/components/ui/AppText';
-import { SarhButton } from '@/design-system/components';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlForwardIcon } from '@/lib/rtl';
+import { rtlForwardIcon } from '@/lib/rtl';
 import {
   OFFICIAL_SERVICE_CATEGORY_META,
   fetchOfficialService,
@@ -25,8 +24,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { AppScrollView } from '@/components/ui/AppScrollView';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type DetailTab = 'steps' | 'conditions' | 'documents';
 
@@ -39,7 +36,7 @@ const DETAIL_TABS: Array<{ key: DetailTab; label: string }> = [
 export default function MinistryServiceDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const [service, setService] = useState<OfficialService | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<DetailTab>('steps');
@@ -89,25 +86,35 @@ export default function MinistryServiceDetailsScreen() {
     tabLines.length > 0 ? tabLines.join('\n') : 'لا توجد بيانات لهذه الخانة في النظام حالياً.';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScreenHeader title="تفاصيل الخدمة" showBack />
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="تفاصيل الخدمة" showBack />
       {loading ? (
-        <ActivityIndicator color={colors.electricBright} style={styles.loader} />
+        <ScreenBody scroll={false}>
+          <ActivityIndicator color={colors.electricBright} style={styles.loader} />
+        </ScreenBody>
       ) : !service ? (
-        <View style={styles.empty}>
-          <AppText style={styles.emptyText}>تعذّر العثور على الخدمة</AppText>
-        </View>
+        <ScreenBody scroll={false}>
+          <Stack fill align="center" style={styles.empty}>
+            <AppText variant="body" color="textMuted" align="center">
+              تعذّر العثور على الخدمة
+            </AppText>
+          </Stack>
+        </ScreenBody>
       ) : (
-        <AppScrollView contentContainerStyle={styles.content}>
+        <ScreenBody padBottom="xxxl" gap="md">
           <View style={styles.heroCard}>
-            <AppText style={styles.title}>{service.title}</AppText>
+            <AppText variant="heading2">{service.title}</AppText>
             {categoryLabel ? (
-              <View style={[styles.catBadge, getRtlRow()]}>
-                <AppText style={styles.catText}>{categoryLabel}</AppText>
-              </View>
+              <Row style={styles.catBadge}>
+                <AppText variant="caption" color="primary">
+                  {categoryLabel}
+                </AppText>
+              </Row>
             ) : null}
             {service.description ? (
-              <AppText style={styles.desc}>{service.description}</AppText>
+              <AppText variant="bodySmall" color="textMuted">
+                {service.description}
+              </AppText>
             ) : null}
             {service.externalUrl ? (
               <SarhButton
@@ -122,14 +129,14 @@ export default function MinistryServiceDetailsScreen() {
           </View>
 
           <View style={styles.metaCard}>
-            {feeLabel ? <MetaRow styles={styles} label="رسوم الخدمة" value={feeLabel} /> : null}
-            {channel ? <MetaRow styles={styles} label="قناة تقديم الخدمة" value={channel} /> : null}
+            {feeLabel ? <MetaRow label="رسوم الخدمة" value={feeLabel} /> : null}
+            {channel ? <MetaRow label="قناة تقديم الخدمة" value={channel} /> : null}
           </View>
 
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.tabStrip, getRtlRow()]}
+            contentContainerStyle={styles.tabStrip}
           >
             {DETAIL_TABS.map((item) => {
               const active = tab === item.key;
@@ -141,7 +148,7 @@ export default function MinistryServiceDetailsScreen() {
                   accessibilityRole="tab"
                   accessibilityState={{ selected: active }}
                 >
-                  <AppText style={[styles.tabLabel, active && styles.tabLabelOn]}>
+                  <AppText variant="caption" color={active ? 'primary' : 'textMuted'}>
                     {item.label}
                   </AppText>
                   {active ? <View style={styles.tabLine} /> : <View style={styles.tabLineOff} />}
@@ -151,82 +158,43 @@ export default function MinistryServiceDetailsScreen() {
           </ScrollView>
 
           <View style={styles.tabCard}>
-            <AppText style={styles.tabBody}>{tabBody}</AppText>
+            <AppText variant="bodySmall" color="textMuted">
+              {tabBody}
+            </AppText>
           </View>
-        </AppScrollView>
+        </ScreenBody>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
-function MetaRow({
-  styles,
-  label,
-  value,
-}: {
-  styles: ReturnType<typeof createStyles>;
-  label: string;
-  value: string;
-}) {
+function MetaRow({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.metaRow}>
-      <AppText style={styles.metaLabel}>{label}</AppText>
-      <AppText style={styles.metaValue}>{value}</AppText>
-    </View>
+    <Stack gap="xs">
+      <AppText variant="caption" color="textMuted">
+        {label}
+      </AppText>
+      <AppText variant="body">{value}</AppText>
+    </Stack>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
     loader: { marginTop: spacing.xxl },
-    empty: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: spacing.lg,
-    },
-    emptyText: {
-      ...typography.body,
-      color: colors.textMuted,
-    },
-    content: {
-      padding: spacing.lg,
-      paddingBottom: spacing.huge,
-      gap: spacing.md,
-    },
+    empty: { justifyContent: 'center' },
     heroCard: {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.lg,
       padding: spacing.lg,
       gap: spacing.sm,
-      shadowColor: '#07131C',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 3,
-    },
-    title: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      fontWeight: '700',
     },
     catBadge: {
       alignSelf: 'flex-start',
-      backgroundColor: 'rgba(32, 182, 111, 0.12)',
+      backgroundColor: `${colors.electric}1F`,
       borderRadius: radius.pill,
       paddingHorizontal: 10,
       paddingVertical: 5,
-    },
-    catText: {
-      ...typography.caption,
-      color: colors.electric,
-      fontWeight: '600',
-    },
-    desc: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-      lineHeight: 24,
     },
     startCta: {
       marginTop: spacing.sm,
@@ -237,18 +205,6 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.lg,
       gap: spacing.md,
     },
-    metaRow: {
-      gap: 4,
-    },
-    metaLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    metaValue: {
-      ...typography.body,
-      color: colors.textPrimary,
-      fontWeight: '600',
-    },
     tabStrip: {
       gap: spacing.lg,
       paddingHorizontal: 2,
@@ -256,14 +212,6 @@ function createStyles(colors: ThemeColors) {
     tabChip: {
       alignItems: 'center',
       paddingTop: 4,
-    },
-    tabLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-      fontWeight: '600',
-    },
-    tabLabelOn: {
-      color: colors.electric,
     },
     tabLine: {
       marginTop: 8,
@@ -280,14 +228,6 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.lg,
       padding: spacing.lg,
-    },
-    tabBody: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-      lineHeight: 24,
-    },
-    pressed: {
-      opacity: 0.92,
     },
   });
 }

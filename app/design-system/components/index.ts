@@ -11,8 +11,18 @@ export type { SarhIconButtonProps, SarhIconButtonSize, SarhIconButtonState } fro
 export { SarhBackButton } from './SarhBackButton';
 export type { SarhBackButtonProps } from './SarhBackButton';
 
-export { CARD_PADDING, SarhCard, resolveSarhCardStyle } from './SarhCard';
-export type { SarhCardPadding, SarhCardProps, SarhCardVariant } from './SarhCard';
+export {
+  CARD_PADDING,
+  SarhCard,
+  resolveSarhCardStyle,
+  resolveSurfaceLevelStyle,
+} from './SarhCard';
+export type {
+  SarhCardPadding,
+  SarhCardProps,
+  SarhCardVariant,
+  SarhSurfaceLevel,
+} from './SarhCard';
 
 export { SarhInput, resolveSarhInputBorder } from './SarhInput';
 export type { SarhInputAppearance, SarhInputProps, SarhInputState } from './SarhInput';

@@ -23,13 +23,14 @@ import { AgoraVideoView } from '@/components/live/AgoraVideoView';
 import { LiveBroadcastPledgeModal } from '@/components/live/LiveBroadcastPledgeModal';
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { colors, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { FILTER_CHIP } from '@/components/ui/filterChipTokens';
 import { getRtlText, rtlInputText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { showLiveBroadcastComingSoonAlert, showLiveStreamEligibilityDeniedAlert } from '@/lib/liveStreamAccess';
 import { SarhBackButton, SarhChip } from '@/design-system/components';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 const AGORA_APP_ID = process.env.EXPO_PUBLIC_AGORA_APP_ID ?? '';
 /** Disabled until app launch — see liveStreamAccess.ts */
@@ -53,6 +54,7 @@ function mapCategory(id: string): string {
 }
 
 export default function CreateStreamScreen() {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router = useRouter();
   const params = useLocalSearchParams<{ listingId?: string; listingTitle?: string }>();
   const { accessToken } = useAuth();
@@ -430,6 +432,7 @@ export default function CreateStreamScreen() {
 }
 
 function StatusPill({ label, ok }: { label: string; ok: boolean }) {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   return (
     <View style={[styles.statusPill, ok && styles.statusPillOk]}>
       <Text style={[styles.statusPillText, ok && styles.statusPillTextOk]}>{label}</Text>
@@ -437,7 +440,8 @@ function StatusPill({ label, ok }: { label: string; ok: boolean }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   centered: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },
   muted: { ...typography.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
@@ -599,3 +603,4 @@ const styles = StyleSheet.create({
   },
   startBtnText: { ...typography.button, color: '#fff' },
 });
+}

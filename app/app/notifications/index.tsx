@@ -1,33 +1,30 @@
 // SAFAT — Notification Center (مركز الإشعارات)
-import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { EmptyState } from '@/components/butcherApplication/EmptyState';
+import { LoadingState } from '@/components/butcherApplication/LoadingState';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { NotificationCard } from '@/components/notifications/NotificationCard';
+import { useAuth } from '@/contexts/AuthContext';
+import { SarhButton } from '@/design-system/components';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { useNotificationsList } from '@/hooks/useNotificationsList';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
+import { handleNotificationNavigation } from '@/lib/notifications';
+import type { AppNotification } from '@/services/notifications';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { EmptyState } from '@/components/butcherApplication/EmptyState';
-import { LoadingState } from '@/components/butcherApplication/LoadingState';
-import { NotificationCard } from '@/components/notifications/NotificationCard';
-import { ambientShadow, ds } from '@/constants/designSystem';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNotificationsList } from '@/hooks/useNotificationsList';
-import { handleNotificationNavigation } from '@/lib/notifications';
-
-import type { AppNotification } from '@/services/notifications';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { type ThemeColors } from '@/constants/theme';
 
 export default function NotificationsScreen() {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const { user } = useAuth();
   const {
@@ -70,43 +67,27 @@ export default function NotificationsScreen() {
 
   if (loading && notifications.length === 0) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <LoadingState message="جاري تحميل الإشعارات..." />
-      </SafeAreaView>
+      <Screen edges={['top', 'bottom']}>
+        <ScreenHeader variant="screen" title="الإشعارات" showBack />
+        <ScreenBody scroll={false}>
+          <LoadingState message="جاري تحميل الإشعارات..." />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.iconBtn} />
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>الإشعارات</Text>
-          {unreadCount > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {unreadCount > 99 ? '٩٩+' : unreadCount}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-        <Pressable
-          onPress={unreadCount > 0 ? markAllAsRead : undefined}
-          hitSlop={12}
-          style={styles.iconBtn}
-          disabled={unreadCount === 0}
-        >
-          <AppIcon
-            name="checkmark-done-outline"
-            size={ds.icon.md}
-            color={unreadCount > 0 ? colors.glow : colors.textSubtle}
-          />
-        </Pressable>
-      </View>
-
-      {unreadCount > 0 ? (
-        <View style={styles.markAllRow}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader
+        variant="screen"
+        title="الإشعارات"
+        showBack
+        rightIcon="checkmark-done-outline"
+        onRightPress={unreadCount > 0 ? markAllAsRead : undefined}
+        rightAccessibilityLabel="تعليم الكل كمقروء"
+      />
+      <ScreenBody scroll={false} padTop="sm" gap="sm">
+        {unreadCount > 0 ? (
           <SarhButton
             title="تعليم الكل كمقروء"
             variant="secondary"
@@ -114,11 +95,9 @@ export default function NotificationsScreen() {
             onPress={markAllAsRead}
             style={styles.markAllBtn}
           />
-        </View>
-      ) : null}
+        ) : null}
 
-      {error && notifications.length === 0 ? (
-        <View style={styles.errorWrap}>
+        {error && notifications.length === 0 ? (
           <EmptyState
             title="تعذّر تحميل الإشعارات"
             description={error}
@@ -126,125 +105,68 @@ export default function NotificationsScreen() {
             onAction={retry}
             icon="alert-circle-outline"
           />
-        </View>
-      ) : (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <NotificationCard notification={item} onPress={() => handlePress(item)} />
-          )}
-          contentContainerStyle={[
-            styles.list,
-            notifications.length === 0 && styles.listEmpty,
-          ]}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.glow} />
-          }
-          onEndReached={() => loadMore()}
-          onEndReachedThreshold={0.35}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={
-            <EmptyState
-              title="لا توجد إشعارات"
-              description="ستظهر هنا إشعارات نشاطك وطلباتك."
-              icon="notifications-outline"
-            />
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+        ) : (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <NotificationCard notification={item} onPress={() => handlePress(item)} />
+            )}
+            style={styles.listFill}
+            contentContainerStyle={[
+              styles.list,
+              notifications.length === 0 && styles.listEmpty,
+            ]}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.glow} />
+            }
+            onEndReached={() => loadMore()}
+            onEndReachedThreshold={0.35}
+            ListFooterComponent={renderFooter}
+            ListEmptyComponent={
+              <EmptyState
+                title="لا توجد إشعارات"
+                description="ستظهر هنا إشعارات نشاطك وطلباتك."
+                icon="notifications-outline"
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
 
-      {error && notifications.length > 0 ? (
-        <View style={styles.inlineError}>
-          <Text style={styles.inlineErrorText}>{error}</Text>
-        </View>
-      ) : null}
-    </SafeAreaView>
+        {error && notifications.length > 0 ? (
+          <View style={styles.inlineError}>
+            <AppText variant="caption" color="danger" align="center">
+              {error}
+            </AppText>
+          </View>
+        ) : null}
+      </ScreenBody>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
-  const tokens = scheme === 'light' ? ds.light : ds.dark;
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.bgDeep,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  iconBtn: {
-    width: ds.iconBtn.md,
-    height: ds.iconBtn.md,
-    borderRadius: ds.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.glass,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.stroke,
-    ...ambientShadow(scheme, 'soft'),
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  headerTitle: {
-    ...typography.h2,
-    color: colors.textPrimary,
-  },
-  badge: {
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: spacing.xs,
-    borderRadius: 12,
-    backgroundColor: colors.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    ...typography.micro,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  markAllRow: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  markAllBtn: {
-    alignSelf: 'flex-start',
-  },
-  list: {
-    padding: spacing.lg,
-    paddingBottom: spacing.huge,
-  },
-  listEmpty: {
-    flexGrow: 1,
-  },
-  footerLoader: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-  errorWrap: {
-    flex: 1,
-  },
-  inlineError: {
-    padding: spacing.md,
-    backgroundColor: 'rgba(244, 63, 94, 0.12)',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    borderRadius: ds.radius.md,
-  },
-  inlineErrorText: {
-    ...typography.caption,
-    color: colors.danger,
-    textAlign: 'center',
-  },
+    markAllBtn: {
+      alignSelf: 'flex-start',
+    },
+    listFill: { flex: 1 },
+    list: {
+      paddingBottom: 48,
+      gap: 12,
+    },
+    listEmpty: {
+      flexGrow: 1,
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    inlineError: {
+      padding: 12,
+      backgroundColor: `${colors.danger}1F`,
+      borderRadius: 10,
+    },
   });
 }

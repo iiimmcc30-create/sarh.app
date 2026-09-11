@@ -21,7 +21,9 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlText, rtlInputText } from '@/lib/rtl';
+import { rtlInputText } from '@/lib/rtl';
+import { AppText } from '@/design-system/components';
+import { Row, Screen } from '@/design-system/layout';
 import { butcherMarket, butcherSearchFill } from '@/constants/butcherMarket';
 import {
   fetchButcherFavoriteStatus,
@@ -62,7 +64,6 @@ import {
   butcherMinOrderLabel,
   butcherPickupLabel,
 } from '@/lib/butcherStoreMeta';
-import { AppText } from '@/components/ui/AppText';
 
 // ─── Products list (filter owned by parent unified nav) ───────────────────────
 function StoreProductsList({
@@ -835,17 +836,21 @@ export default function ButcherProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <Text style={{ color: '#fff', textAlign: 'center', marginTop: 80 }}>جاري تحميل تفاصيل الملحمة...</Text>
-      </SafeAreaView>
+      <Screen edges={['top']} pattern={false} style={styles.screen}>
+        <AppText variant="body" align="center" style={{ color: '#fff', marginTop: 80 }}>
+          جاري تحميل تفاصيل الملحمة...
+        </AppText>
+      </Screen>
     );
   }
 
   if (!butcher) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <Text style={{ color: '#fff', textAlign: 'center', marginTop: 80 }}>الملحمة غير موجودة</Text>
-      </SafeAreaView>
+      <Screen edges={['top']} pattern={false} style={styles.screen}>
+        <AppText variant="body" align="center" style={{ color: '#fff', marginTop: 80 }}>
+          الملحمة غير موجودة
+        </AppText>
+      </Screen>
     );
   }
 
@@ -861,7 +866,7 @@ export default function ButcherProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false} style={styles.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <ScrollView
@@ -877,27 +882,27 @@ export default function ButcherProfileScreen() {
         />
 
         <View style={styles.profileHeader}>
-          <Text style={styles.name}>{butcher.nameAr}</Text>
+          <AppText variant="sectionTitle" style={styles.name}>{butcher.nameAr}</AppText>
           <View style={styles.serviceRow}>
             <View style={styles.serviceItem}>
               <AppIcon name="map-marker-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.serviceText}>{butcher.cityAr || butcher.city}</Text>
+              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcher.cityAr || butcher.city}</AppText>
             </View>
             <View style={styles.serviceItem}>
               <AppIcon name="bicycle-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.serviceText}>{butcherFeeLabel(butcher)}</Text>
+              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherFeeLabel(butcher)}</AppText>
             </View>
             <View style={styles.serviceItem}>
               <AppIcon name="clock-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.serviceText}>{butcherEtaLabel(butcher)}</Text>
+              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherEtaLabel(butcher)}</AppText>
             </View>
             <View style={styles.serviceItem}>
               <AppIcon name="receipt-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.serviceText}>{butcherMinOrderLabel(butcher)}</Text>
+              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherMinOrderLabel(butcher)}</AppText>
             </View>
             <View style={styles.serviceItem}>
               <AppIcon name="storefront-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.serviceText}>{butcherPickupLabel(butcher)}</Text>
+              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherPickupLabel(butcher)}</AppText>
             </View>
           </View>
           {chatAccess?.allowed ? (
@@ -906,13 +911,13 @@ export default function ButcherProfileScreen() {
               onPress={onOpenChat}
             >
               <AppIcon name="chatbubble-outline" size={18} color={colors.electricBright} />
-              <Text style={styles.chatCtaText}>محادثة</Text>
+              <AppText variant="body" style={styles.chatCtaText}>محادثة</AppText>
             </Pressable>
           ) : null}
         </View>
 
         <View style={styles.searchWrap}>
-          <View style={[styles.searchPill, getRtlRow()]}>
+          <Row align="center" gap="sm" style={styles.searchPill}>
             <AppIcon name="search-outline" size={18} color={colors.textMuted} />
             <TextInput
               value={searchQuery}
@@ -922,7 +927,7 @@ export default function ButcherProfileScreen() {
               style={[styles.searchInput, rtlInputText]}
               returnKeyType="search"
             />
-          </View>
+          </Row>
         </View>
 
         {searching ? (
@@ -970,19 +975,19 @@ export default function ButcherProfileScreen() {
         onRequestClose={() => setInfoOpen(false)}
       >
         <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-          <View style={[styles.infoHeader, getRtlRow()]}>
-            <Text style={styles.infoTitle}>عن الملحمة</Text>
+          <Row align="center" justify="between" style={styles.infoHeader}>
+            <AppText variant="cardTitle" style={styles.infoTitle}>عن الملحمة</AppText>
             <Pressable onPress={() => setInfoOpen(false)} accessibilityLabel="إغلاق">
               <AppIcon name="close" size={22} color={colors.textPrimary} />
             </Pressable>
-          </View>
+          </Row>
           <ScrollView showsVerticalScrollIndicator={false}>
             <AboutTab butcher={butcher} />
             <View style={{ marginTop: spacing.xl }}>
               <View style={{ paddingHorizontal: spacing.lg, width: '100%' }}>
-                <Text style={styles.sectionTitle}>
+                <AppText variant="cardTitle" style={styles.sectionTitle}>
                   آراء العملاء ({butcher.reviewCount})
-                </Text>
+                </AppText>
               </View>
               <RatingDistribution
                 average={butcher.rating}
@@ -991,7 +996,7 @@ export default function ButcherProfileScreen() {
               />
               {accessToken ? (
                 <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm, marginBottom: spacing.md }}>
-                  <View style={[getRtlRow(), { gap: 6 }]}>
+                  <Row gap="sm">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Pressable key={star} onPress={() => setReviewDraft((d) => ({ ...d, rating: star }))}>
                         <AppIcon
@@ -1001,7 +1006,7 @@ export default function ButcherProfileScreen() {
                         />
                       </Pressable>
                     ))}
-                  </View>
+                  </Row>
                   <TextInput
                     style={{
                       borderWidth: 1,
@@ -1009,7 +1014,7 @@ export default function ButcherProfileScreen() {
                       borderRadius: radius.lg,
                       padding: spacing.md,
                       color: colors.textPrimary,
-                      ...getRtlText(),
+                      ...rtlInputText,
                       minHeight: 80,
                     }}
                     placeholder="تعليق اختياري..."
@@ -1028,9 +1033,9 @@ export default function ButcherProfileScreen() {
                       alignItems: 'center',
                     }}
                   >
-                    <Text style={{ ...butcherTypography.primary, color: '#fff' }}>
+                    <AppText variant="body" style={{ color: '#fff' }}>
                       {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 </View>
               ) : null}
@@ -1060,7 +1065,7 @@ export default function ButcherProfileScreen() {
           })
         }
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -1136,10 +1141,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderHairline,
   },
-  infoTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
-  },
+  infoTitle: {},
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1172,9 +1174,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   nameBlock: { flex: 1, minWidth: 0 },
   name: {
-    ...butcherTypography.titleLarge,
-    color: colors.textPrimary,
-    writingDirection: 'rtl',
     width: '100%',
     marginBottom: 6,
   },
@@ -1196,11 +1195,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
         alignItems: 'center',
     gap: 4,
   },
-  serviceText: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-    writingDirection: 'rtl',
-  },
+  serviceText: {},
 
   ctaRow: {
     flexDirection: 'row',
@@ -1220,7 +1215,7 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     backgroundColor: colors.electric + '11',
   },
   chatCtaFull: { flex: 1 },
-  chatCtaText: { ...butcherTypography.primary, color: colors.textBrandStrong },
+  chatCtaText: { color: colors.textBrandStrong },
   chatCtaActive: {
     borderColor: colors.electricBright,
     backgroundColor: colors.electric + '22',
@@ -1261,8 +1256,6 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   tabContent: { paddingTop: spacing.lg },
   sectionTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
     marginBottom: spacing.md,
   },
   });

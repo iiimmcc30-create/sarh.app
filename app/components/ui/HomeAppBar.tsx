@@ -1,12 +1,14 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
 import { ds } from '@/constants/designSystem';
-import { colors, radius, space } from '@/design-system';
+import { type ThemeColors } from '@/constants/theme';
+import { radius, space } from '@/design-system';
 import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
+import { Row } from '@/design-system/layout';
+import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
 const BAR_H = HOME_APP_BAR_H;
@@ -30,20 +32,13 @@ export function HomeAppBar({
   avatarUri,
 }: HomeAppBarProps) {
   const { colors: themeColors } = useTheme();
-  const colorStyles = useThemedStyles(() =>
-    StyleSheet.create({
-      shell: { borderBottomColor: colors.border },
-      avatar: {
-        borderColor: colors.primary,
-        backgroundColor: colors.surfaceElevated,
-      },
-    }),
-  );
+  const { gutter } = useLayout();
+  const colorStyles = useThemedStyles(({ colors }) => createColorStyles(colors));
 
   return (
     <SarhSurface tone="background" style={[styles.shell, colorStyles.shell]}>
-      <View style={[styles.bar, getRtlRow()]}>
-        <View style={[styles.profileCluster, getRtlRow()]}>
+      <Row justify="between" align="center" style={[styles.bar, { paddingHorizontal: gutter }]}>
+        <Row align="center" gap="md" style={styles.profileCluster}>
           <Pressable
             onPress={onAvatarPress}
             style={styles.avatarBtn}
@@ -71,9 +66,9 @@ export function HomeAppBar({
               {displayName}
             </AppText>
           </Pressable>
-        </View>
+        </Row>
 
-        <View style={[styles.toolsCluster, getRtlRow()]}>
+        <Row align="center" gap="xs" style={styles.toolsCluster}>
           <SarhIconButton
             chrome="ghost"
             size="sm"
@@ -91,10 +86,20 @@ export function HomeAppBar({
             iconColor={themeColors.textPrimary}
             badgeBorderColor={themeColors.screenRoot}
           />
-        </View>
-      </View>
+        </Row>
+      </Row>
     </SarhSurface>
   );
+}
+
+function createColorStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    shell: { borderBottomColor: colors.borderHairline },
+    avatar: {
+      borderColor: colors.electric,
+      backgroundColor: colors.bgElevated,
+    },
+  });
 }
 
 const styles = StyleSheet.create({
@@ -108,7 +113,6 @@ const styles = StyleSheet.create({
     minHeight: BAR_H,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: space[16],
     paddingVertical: space[12],
   },
   toolsCluster: {

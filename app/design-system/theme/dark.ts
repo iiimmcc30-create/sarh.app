@@ -11,36 +11,71 @@ import {
 } from '../tokens';
 
 /**
- * Nested semantic layer — future components should read these names,
- * never raw hex. Values equal the extracted Sarh Dark tokens.
+ * Live nested aliases of the runtime `colors` object.
+ *
+ * These are getters, not an `as const` snapshot. `applyThemeScheme` mutates
+ * `colors` in place; reading `semantic.background` after a Light/Dark toggle
+ * must return the new value. Do not freeze this object.
  */
 export const semantic = {
-  background: colors.background,
-  surface: colors.surface,
-  surfaceElevated: colors.surfaceElevated,
-  surfaceAlt: colors.surfaceAlt,
+  get background() {
+    return colors.background;
+  },
+  get surface() {
+    return colors.surface;
+  },
+  get surfaceElevated() {
+    return colors.surfaceElevated;
+  },
+  get surfaceAlt() {
+    return colors.surfaceAlt;
+  },
   text: {
-    primary: colors.textPrimary,
-    secondary: colors.textSecondary,
-    muted: colors.textMuted,
+    get primary() {
+      return colors.textPrimary;
+    },
+    get secondary() {
+      return colors.textSecondary;
+    },
+    get muted() {
+      return colors.textMuted;
+    },
   },
   action: {
-    primary: colors.primary,
-    primaryPressed: colors.primaryPressed,
+    get primary() {
+      return colors.primary;
+    },
+    get primaryPressed() {
+      return colors.primaryPressed;
+    },
   },
   border: {
-    default: colors.border,
-    strong: colors.borderStrong,
+    get default() {
+      return colors.border;
+    },
+    get strong() {
+      return colors.borderStrong;
+    },
   },
   status: {
-    success: colors.success,
-    warning: colors.warning,
-    danger: colors.danger,
+    get success() {
+      return colors.success;
+    },
+    get warning() {
+      return colors.warning;
+    },
+    get danger() {
+      return colors.danger;
+    },
   },
-} as const;
+};
 
-export const darkTheme = {
-  scheme: 'dark' as const,
+/**
+ * Live theme bag — `scheme` is not stored here. Read
+ * `getActiveScheme()` from `@/constants/theme` for the current scheme.
+ * `colors` / `functional` / `semantic` all follow `applyThemeScheme`.
+ */
+export const theme = {
   colors,
   semantic,
   functional,
@@ -53,4 +88,4 @@ export const darkTheme = {
   duration,
 };
 
-export type DarkTheme = typeof darkTheme;
+export type Theme = typeof theme;

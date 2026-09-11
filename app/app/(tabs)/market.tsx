@@ -14,23 +14,19 @@ import {
   Alert,
   FlatList,
   StyleSheet,
-  Text,
   View,
   ListRenderItemInfo,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
-import { ds } from '@/constants/designSystem';
 import type { RegionSelection } from '@/constants/saudiRegions';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { sarhScreenStyles } from '@/constants/sarhScreen';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
+import { spacing } from '@/constants/theme';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
 import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { listingMatchesRegionSelection } from '@/lib/saudiRegionSearch';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { AppFlatList } from '@/components/ui/AppFlatList';
+import { AppText } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { safePush } from '@/lib/safeNavigate';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,16 +38,12 @@ import {
 } from '@/services/listings';
 import { Listing } from '@/services/types';
 
-const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 const MARKET_FOCUS_TTL_MS = 60_000;
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
 export default function MarketScreen() {
   const router = useRouter();
-  const { styles } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
-    styles: createMarketStyles(colors, scheme, screenStyles),
-  }));
   const { accessToken } = useAuth();
   const { colors } = useTheme();
   const { categories, reload: reloadCategories } = useMarketCategories();
@@ -252,21 +244,21 @@ export default function MarketScreen() {
   const ListHeader = useCallback(
     () => (
       <View style={styles.listingsHead}>
-        <View style={[styles.listingsHeadRow, getRtlRow()]}>
-          <View style={styles.listingsTitleShell}>
-            <Text style={styles.listingsTitle}>أحدث الإعلانات</Text>
-          </View>
-          <View style={styles.listingsCountShell}>
-            <Text style={styles.listingsCount}>{filtered.length} إعلان</Text>
-          </View>
-        </View>
+        <Row justify="between" gap="sm">
+          <AppText variant="heading3" color="textPrimary" style={styles.listingsTitle}>
+            أحدث الإعلانات
+          </AppText>
+          <AppText variant="caption" color="textMuted">
+            {filtered.length} إعلان
+          </AppText>
+        </Row>
       </View>
     ),
-    [filtered.length, styles],
+    [filtered.length],
   );
 
   return (
-    <SafeAreaView style={[styles.container, getRtlDirection()]} edges={['top']}>
+    <Screen edges={['top']}>
       {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
       <View style={styles.stickyChrome}>
         <MarketAppBar
@@ -288,34 +280,40 @@ export default function MarketScreen() {
         />
       </View>
 
-      <AppFlatList
-        ref={listRef}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        data={filtered}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🔍</Text>
-            <Text style={styles.emptyText}>لا توجد إعلانات مطابقة</Text>
-          </View>
-        }
-        ListFooterComponent={
-          <View style={{ height: TAB_BAR_CLEARANCE, alignItems: 'center', paddingTop: spacing.sm }}>
-            {loadingMore ? <ActivityIndicator color={colors.electric} /> : null}
-          </View>
-        }
-        onEndReachedThreshold={0.4}
-        onEndReached={() => {
-          void loadNextPage();
-        }}
-        removeClippedSubviews={false}
-        initialNumToRender={12}
-        maxToRenderPerBatch={10}
-        windowSize={8}
-      />
+      <ScreenBody scroll={false} gutter={false} bottomInset="tabBar">
+        <AppFlatList
+          ref={listRef}
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          data={filtered}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={
+            <Stack gap="md" align="center" style={styles.empty}>
+              <AppText variant="heading2" align="center">
+                🔍
+              </AppText>
+              <AppText variant="body" color="textMuted" align="center">
+                لا توجد إعلانات مطابقة
+              </AppText>
+            </Stack>
+          }
+          ListFooterComponent={
+            <View style={styles.listFooter}>
+              {loadingMore ? <ActivityIndicator color={colors.electric} /> : null}
+            </View>
+          }
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            void loadNextPage();
+          }}
+          removeClippedSubviews={false}
+          initialNumToRender={12}
+          maxToRenderPerBatch={10}
+          windowSize={8}
+        />
+      </ScreenBody>
 
       <RegionCityPicker
         visible={regionPickerOpen}
@@ -331,72 +329,39 @@ export default function MarketScreen() {
         onClose={() => setCategoryPickerOpen(false)}
         onSelect={onApplyCategory}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
-function createMarketStyles(
-  colors: ThemeColors,
-  _scheme: 'light' | 'dark',
-  screenStyles: ReturnType<typeof sarhScreenStyles>,
-) {
-  return StyleSheet.create({
-    container: screenStyles.screenRoot,
-    stickyChrome: {
-      flexGrow: 0,
-      flexShrink: 0,
-      zIndex: 2,
-    },
-    list: {
-      flex: 1,
-      flexGrow: 1,
-      flexShrink: 1,
-      minHeight: 0,
-    },
-    listContent: {
-      flexGrow: 0,
-    },
-    listingsHead: {
-      width: '100%',
-            paddingHorizontal: spacing.md,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-    },
-    listingsHeadRow: {
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    listingsTitleShell: {
-      flex: 1,
-      minWidth: 0,
-          },
-    listingsTitle: {
-      ...typography.feedTitle,
-      color: colors.textPrimary,
-      width: '100%',
-            writingDirection: 'rtl',
-    },
-    listingsCountShell: {
-            flexShrink: 0,
-    },
-    listingsCount: {
-      ...typography.feedBody,
-      color: colors.textMuted,
-            writingDirection: 'rtl',
-    },
-    categoriesLoading: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-    },
-    categoriesLoadingText: {
-      ...typography.caption,
-      color: colors.textMuted,
-            writingDirection: 'rtl',
-    },
-    empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
-    emptyIcon: { fontSize: 40 },
-    emptyText: { ...typography.feedBody, color: colors.textMuted },
-  });
-}
+const styles = StyleSheet.create({
+  stickyChrome: {
+    flexGrow: 0,
+    flexShrink: 0,
+    zIndex: 2,
+  },
+  list: {
+    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+  },
+  listContent: {
+    flexGrow: 0,
+  },
+  listingsHead: {
+    width: '100%',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  listingsTitle: {
+    flex: 1,
+    minWidth: 0,
+  },
+  listFooter: {
+    alignItems: 'center',
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  empty: { paddingVertical: spacing.xxxl },
+});

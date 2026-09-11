@@ -40,11 +40,17 @@ describe('P2-B UI/UX finalization', () => {
       expect(text).not.toContain('textAlign="right"');
       expect(text).not.toContain('textAlign={isAppRtl()');
     }
-    expect(src('app/auth/phone.tsx')).toContain('ltrInputText');
-    expect(src('app/auth/register.tsx')).toContain('rtlInputText');
-    expect(src('app/auth/register.tsx')).toContain('ltrInputText');
-    expect(src('app/join/index.tsx')).toContain('ltrInputText');
-    expect(src('app/profile/edit.tsx')).toContain('rtlInputText');
+    expect(src('app/auth/phone.tsx')).toContain('SarhInput');
+    expect(src('app/auth/register.tsx')).toContain('SarhInput');
+    expect(src('app/join/index.tsx')).toContain('SarhInput');
+    // OTP digit boxes are not a SarhInput primitive — they keep ltrInputText locally.
+    expect(src('app/auth/otp.tsx')).toContain('ltrInputText');
+    expect(src('app/auth/forgot-password.tsx')).toContain('ltrInputText');
+    // Auth/join labeled fields now compose SarhInput, which applies
+    // rtlInputText/ltrInputText internally, so the guarantee moved to the primitive.
+    expect(src('app/profile/edit.tsx')).toContain('SarhInput');
+    expect(src('design-system/components/SarhInput.tsx')).toContain('rtlInputText');
+    expect(src('design-system/components/SarhInput.tsx')).toContain('ltrInputText');
   });
 
   it('constrains auth and join forms on tablet without full-bleed stretch', () => {
@@ -52,8 +58,10 @@ describe('P2-B UI/UX finalization', () => {
     expect(src('app/auth/register.tsx')).toContain('maxWidth: 440');
     expect(src('app/auth/forgot-password.tsx')).toContain('maxWidth: 440');
     expect(src('app/auth/otp.tsx')).toContain('maxWidth: 440');
-    expect(src('app/join/index.tsx')).toContain('maxWidth: 560');
-    expect(src('app/profile/edit.tsx')).toContain('maxWidth: 560');
+    expect(src('app/join/index.tsx')).toContain('width="form"');
+    // Profile edit takes the same 560 cap from the responsive layer instead of
+    // hard-coding it — CONTENT_MAX_WIDTH.form is asserted in useLayout's tests.
+    expect(src('app/profile/edit.tsx')).toContain('width="form"');
   });
 
   it('adds map load/error retry and password a11y on auth', () => {

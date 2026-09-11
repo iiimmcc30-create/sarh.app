@@ -1,14 +1,15 @@
 // Legacy route — redirects to governed butcher application flow.
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { LoadingState } from '@/components/butcherApplication/LoadingState';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LoadingState } from '@/components/butcherApplication/LoadingState';
-import { colors, gradients } from '@/constants/theme';
 
 export default function ButcherRegisterRedirectScreen() {
+  const { gradients } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,13 +17,11 @@ export default function ButcherRegisterRedirectScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-      <LoadingState message="جاري التحويل إلى بوابة التسجيل..." />
-    </SafeAreaView>
+      <ScreenBody scroll={false}>
+        <LoadingState message="جاري التحويل إلى بوابة التسجيل..." />
+      </ScreenBody>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-});

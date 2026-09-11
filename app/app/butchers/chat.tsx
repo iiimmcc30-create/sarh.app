@@ -12,16 +12,16 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
   Alert,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { sarhListingShareUrl } from '@/constants/sarhOfficial';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhBackButton, resolveAppTextStyle } from '@/design-system/components';
+import { Row, Screen } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlForwardIcon, rtlInputText } from '@/lib/rtl';
@@ -48,7 +48,6 @@ import {
   parseOfferMessage,
 } from '@/lib/messageOffers';
 import * as Location from 'expo-location';
-import { SarhBackButton } from '@/design-system/components';
 
 function mapApiMessage(m: {
   id: string;
@@ -148,6 +147,7 @@ export default function ButcherChatScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const messageStyles = useThemedStyles(({ colors }) => createMessageStyles(colors));
+  const composerTextStyle = resolveAppTextStyle({ variant: 'body', color: 'textPrimary' });
   const { me } = useAppUser();
   const { accessToken } = useAuth();
   const MY_ID = me?.id || 'anonymous';
@@ -771,37 +771,37 @@ export default function ButcherChatScreen() {
           ]}
         >
           <View style={[messageStyles.offerCard, isMe && messageStyles.offerCardMe]}>
-            <Text style={messageStyles.offerLabel}>عرض سعر</Text>
-            <Text style={messageStyles.offerAmount}>
+            <AppText variant="caption" color="textMuted">عرض سعر</AppText>
+            <AppText variant="heading3" style={messageStyles.offerAmount}>
               {offer.amount.toLocaleString('en-US')} {offer.currencyLabel}
-            </Text>
-            <Text style={messageStyles.offerStatus}>
+            </AppText>
+            <AppText variant="micro" color="textSecondary" style={messageStyles.offerStatus}>
               {isMe ? 'تم إرسال العرض' : 'عرض وارد'}
-            </Text>
+            </AppText>
             {!isMe ? (
               <View style={messageStyles.offerActions}>
                 <Pressable
                   style={messageStyles.offerAccept}
                   onPress={() => respondToOffer(true)}
                 >
-                  <Text style={messageStyles.offerAcceptText}>قبول</Text>
+                  <AppText variant="label" style={messageStyles.offerAcceptText}>قبول</AppText>
                 </Pressable>
                 <Pressable
                   style={messageStyles.offerReject}
                   onPress={() => respondToOffer(false)}
                 >
-                  <Text style={messageStyles.offerRejectText}>رفض</Text>
+                  <AppText variant="label" color="textSecondary">رفض</AppText>
                 </Pressable>
               </View>
             ) : null}
-            <Text style={[messageStyles.timeText, messageStyles.timeTextThem]}>
+            <AppText variant="caption" style={[messageStyles.timeText, messageStyles.timeTextThem]}>
               {timeLabel}
               {isMe ? (
-                <Text style={{ color: item.read ? colors.electricBright : colors.textSubtle }}>
+                <AppText variant="caption" style={{ color: item.read ? colors.electricBright : colors.textSubtle }}>
                   {' '}✓✓
-                </Text>
+                </AppText>
               ) : null}
-            </Text>
+            </AppText>
           </View>
         </View>
       );
@@ -811,9 +811,9 @@ export default function ButcherChatScreen() {
       <View style={[messageStyles.bubbleWrap, isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem]}>
         <View style={[messageStyles.bubble, isMe ? messageStyles.bubbleMe : messageStyles.bubbleThem]}>
           {item.text ? (
-            <Text style={[messageStyles.bubbleText, isMe ? messageStyles.textMe : messageStyles.textThem]}>
+            <AppText variant="body" style={[messageStyles.bubbleText, isMe ? messageStyles.textMe : messageStyles.textThem]}>
               {item.text}
-            </Text>
+            </AppText>
           ) : null}
           {item.image ? (
             <Image
@@ -832,34 +832,34 @@ export default function ButcherChatScreen() {
               nativeControls
             />
           ) : null}
-          <Text style={[messageStyles.timeText, isMe ? messageStyles.timeTextMe : messageStyles.timeTextThem]}>
+          <AppText variant="caption" style={[messageStyles.timeText, isMe ? messageStyles.timeTextMe : messageStyles.timeTextThem]}>
             {timeLabel}
             {isMe && (
-              <Text style={{ color: item.read ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)' }}>
+              <AppText variant="caption" style={{ color: item.read ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)' }}>
                 {' '}✓✓
-              </Text>
+              </AppText>
             )}
-          </Text>
+          </AppText>
         </View>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 12}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Row style={styles.header} gap="sm">
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
           <UserProfileLink userId={receiverUserId} style={styles.headerCenter}>
             <Image source={uriSource(headerAvatar)} style={styles.headerAvatar} contentFit="cover" />
             <View style={{ flex: 1 }}>
               <View style={styles.headerNameRow}>
-                <Text style={styles.headerName} numberOfLines={1}>{headerName}</Text>
+                <AppText variant="label" style={styles.headerName} numberOfLines={1}>{headerName}</AppText>
                 {butcher?.subscriptionActive && (
                   <AppIcon name="shield-checkmark" size={14} color={colors.gold} />
                 )}
@@ -878,24 +878,24 @@ export default function ButcherChatScreen() {
                     },
                   ]}
                 />
-                <Text style={styles.onlineText}>
+                <AppText variant="caption" color="textMuted">
                   {chatUiKind === 'butcher'
                     ? butcher?.workingHours?.isOpen
                       ? 'متصل الآن'
                       : 'غير متاح'
                     : 'متصل الآن'}
-                </Text>
+                </AppText>
               </View>
             </View>
           </UserProfileLink>
           <Pressable style={styles.moreBtn} hitSlop={8}>
             <AppIcon name="ellipsis-vertical" size={18} color={colors.textSecondary} />
           </Pressable>
-        </View>
+        </Row>
 
         {listingContext ? (
           <View style={styles.listingCard}>
-            <View style={styles.listingCardTop}>
+            <Row style={styles.listingCardTop} gap="md">
               {listingContext.image ? (
                 <Image
                   source={{ uri: listingContext.image }}
@@ -908,36 +908,36 @@ export default function ButcherChatScreen() {
                 </View>
               )}
               <View style={styles.listingCardMeta}>
-                <Text style={styles.listingCardTitle} numberOfLines={1}>
+                <AppText variant="label" style={styles.listingCardTitle} numberOfLines={1}>
                   {listingContext.title}
-                </Text>
-                <Text style={styles.listingCardPrice}>
+                </AppText>
+                <AppText variant="label" style={styles.listingCardPrice}>
                   {formatListingPrice(listingContext.price, listingContext.currency)}
-                </Text>
+                </AppText>
                 {listingContext.location ? (
-                  <Text style={styles.listingCardLocation} numberOfLines={1}>
+                  <AppText variant="micro" color="textMuted" style={styles.listingCardLocation} numberOfLines={1}>
                     {listingContext.location}
-                  </Text>
+                  </AppText>
                 ) : null}
               </View>
-            </View>
+            </Row>
             <Pressable
               style={styles.listingCardBtn}
               onPress={() =>
                 router.push(`/listing/${listingContext.listingId}` as never)
               }
             >
-              <Text style={styles.listingCardBtnText}>عرض الإعلان</Text>
+              <AppText variant="label" style={styles.listingCardBtnText}>عرض الإعلان</AppText>
               <AppIcon name={rtlForwardIcon()} size={16} color={colors.electricBright} />
             </Pressable>
           </View>
         ) : chatUiKind === 'butcher' ? (
-          <View style={styles.orderStrip}>
+          <Row style={styles.orderStrip} gap="sm">
             <AppIcon name="clipboard-list-outline" size={16} color={colors.glow} />
-            <Text style={styles.orderStripText}>
+            <AppText variant="caption" color="textMuted" style={styles.orderStripText}>
               التواصل المباشر مع الملحمة غير متاح
-            </Text>
-          </View>
+            </AppText>
+          </Row>
         ) : null}
 
         <FlatList
@@ -951,7 +951,7 @@ export default function ButcherChatScreen() {
           ListHeaderComponent={
             messages.length > 0 ? (
               <View style={styles.datePillWrap}>
-                <Text style={styles.datePill}>اليوم</Text>
+                <AppText variant="micro" color="textMuted" style={styles.datePill}>اليوم</AppText>
               </View>
             ) : null
           }
@@ -968,7 +968,7 @@ export default function ButcherChatScreen() {
                   onPress={() => sendMessage(item)}
                   style={styles.quickReply}
                 >
-                  <Text style={styles.quickReplyText}>{item}</Text>
+                  <AppText variant="caption" style={styles.quickReplyText}>{item}</AppText>
                 </Pressable>
               )}
               contentContainerStyle={styles.quickRepliesRow}
@@ -992,25 +992,29 @@ export default function ButcherChatScreen() {
                 <View style={styles.attachActionIcon}>
                   <AppIcon name={action.icon} size={20} color={colors.textPrimary} />
                 </View>
-                <Text style={styles.attachActionLabel}>{action.label}</Text>
+                <AppText variant="micro" color="textSecondary" align="center">{action.label}</AppText>
               </Pressable>
             ))}
           </View>
         ) : null}
 
         {chatUiKind === 'butcher' ? (
-          <View
+          <Row
+            align="end"
+            gap="sm"
             style={[
               styles.inputBar,
               { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
             ]}
           >
-            <Text style={{ flex: 1,  color: colors.textMuted }}>
+            <AppText variant="caption" color="textMuted" style={{ flex: 1 }}>
               التواصل المباشر مع الملحمة غير متاح
-            </Text>
-          </View>
+            </AppText>
+          </Row>
         ) : (
-        <View
+        <Row
+          align="end"
+          gap="sm"
           style={[
             styles.inputBar,
             { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
@@ -1032,7 +1036,7 @@ export default function ButcherChatScreen() {
           </Pressable>
 
           <TextInput
-            style={[styles.input, rtlInputText]}
+            style={[styles.input, composerTextStyle, rtlInputText]}
             placeholder="اكتب رسالة..."
             placeholderTextColor={colors.textSubtle}
             value={inputText}
@@ -1065,17 +1069,15 @@ export default function ButcherChatScreen() {
               />
             )}
           </Pressable>
-        </View>
+        </Row>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1105,10 +1107,9 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.borderMid,
   },
   headerNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  headerName: { ...butcherTypography.primary, color: colors.textPrimary, flexShrink: 1 },
+  headerName: { color: colors.textPrimary, flexShrink: 1 },
   onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot: { width: 7, height: 7, borderRadius: 4 },
-  onlineText: { ...butcherTypography.meta, color: colors.textMuted },
   moreBtn: {
     width: 38, height: 38, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
@@ -1142,20 +1143,15 @@ function createStyles(colors: ThemeColors) {
   },
   listingCardMeta: { flex: 1, minWidth: 0 },
   listingCardTitle: {
-    ...typography.bodyStrong,
     color: colors.textPrimary,
-      },
+  },
   listingCardPrice: {
-    ...typography.caption,
     color: colors.electricBright,
     marginTop: 2,
-        fontWeight: '600',
   },
   listingCardLocation: {
-    ...typography.micro,
-    color: colors.textMuted,
     marginTop: 2,
-      },
+  },
   listingCardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1166,9 +1162,7 @@ function createStyles(colors: ThemeColors) {
     backgroundColor: 'rgba(32, 182, 111, 0.12)',
   },
   listingCardBtnText: {
-    ...typography.caption,
     color: colors.electricBright,
-    fontWeight: '600',
   },
 
   orderStrip: {
@@ -1181,7 +1175,7 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: spacing.lg,
     paddingVertical: 8,
   },
-  orderStripText: { ...butcherTypography.secondary, color: colors.textMuted, flex: 1,  },
+  orderStripText: { flex: 1 },
 
   messagesList: {
     paddingHorizontal: spacing.lg,
@@ -1190,8 +1184,6 @@ function createStyles(colors: ThemeColors) {
   },
   datePillWrap: { alignItems: 'center', marginBottom: spacing.md },
   datePill: {
-    ...typography.micro,
-    color: colors.textMuted,
     backgroundColor: colors.bgSurface,
     overflow: 'hidden',
     paddingHorizontal: 12,
@@ -1219,7 +1211,7 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderMid,
   },
-  quickReplyText: { ...butcherTypography.secondary, color: colors.textBrand },
+  quickReplyText: { color: colors.textBrand },
 
   attachSheet: {
     flexDirection: 'row',
@@ -1248,11 +1240,6 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  attachActionLabel: {
-    ...typography.micro,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
 
   inputBar: {
     flexDirection: 'row',
@@ -1275,8 +1262,6 @@ function createStyles(colors: ThemeColors) {
     flex: 1,
     paddingHorizontal: spacing.sm,
     paddingVertical: 10,
-    ...butcherTypography.body,
-    color: colors.textPrimary,
     maxHeight: 100,
     textAlignVertical: 'center',
   },
@@ -1320,7 +1305,7 @@ function createMessageStyles(colors: ThemeColors) {
     borderColor: colors.borderSoft,
     borderBottomRightRadius: 6,
   },
-  bubbleText: { ...butcherTypography.body, lineHeight: 22 },
+  bubbleText: { lineHeight: 22 },
   textMe: { color: '#fff' },
   textThem: { color: colors.textPrimary },
   bubbleImg: {
@@ -1335,9 +1320,9 @@ function createMessageStyles(colors: ThemeColors) {
     marginBottom: 4,
     overflow: 'hidden',
   },
-  timeText: { ...butcherTypography.meta, marginTop: 4 },
-  timeTextMe: { color: 'rgba(255,255,255,0.7)', textAlign: 'left' },
-  timeTextThem: { color: colors.textSubtle,  },
+  timeText: { marginTop: 4 },
+  timeTextMe: { color: 'rgba(255,255,255,0.7)' },
+  timeTextThem: { color: colors.textSubtle },
   offerCard: {
     maxWidth: '82%',
     borderRadius: 18,
@@ -1350,18 +1335,11 @@ function createMessageStyles(colors: ThemeColors) {
   offerCardMe: {
     borderColor: 'rgba(32, 182, 111, 0.35)',
   },
-  offerLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-      },
   offerAmount: {
-    ...typography.h3,
     color: colors.electricBright,
-      },
+  },
   offerStatus: {
-    ...typography.micro,
-    color: colors.textSecondary,
-        marginBottom: 4,
+    marginBottom: 4,
   },
   offerActions: {
     flexDirection: 'row',
@@ -1375,7 +1353,7 @@ function createMessageStyles(colors: ThemeColors) {
     borderRadius: radius.md,
     backgroundColor: colors.electricBright,
   },
-  offerAcceptText: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  offerAcceptText: { color: '#fff' },
   offerReject: {
     flex: 1,
     alignItems: 'center',
@@ -1385,6 +1363,5 @@ function createMessageStyles(colors: ThemeColors) {
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  offerRejectText: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
   });
 }

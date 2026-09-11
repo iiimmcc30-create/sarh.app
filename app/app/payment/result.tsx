@@ -1,12 +1,8 @@
 // Payment result screen — single NI sync after gateway redirect (no auto-polling).
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { SarhButton } from '@/design-system/components';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -18,6 +14,10 @@ import {
   type PaymentSyncResult,
 } from '@/services/payments';
 import { boostSuccessMessage } from '@/services/listingBoost';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { type ThemeColors } from '@/constants/theme';
 
 type SyncState = 'syncing' | 'paid' | 'pending' | 'cancelled';
 
@@ -109,7 +109,7 @@ function mapSyncToState(result: PaymentSyncResult): SyncState {
 
 export default function PaymentResultScreen() {
   const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const params = useLocalSearchParams<{
     paymentId?: string;
@@ -277,144 +277,112 @@ export default function PaymentResultScreen() {
     router.replace('/promote' as never);
   }, [context, router]);
 
-  if (syncState === 'syncing') {
-    return (
-      <View style={styles.screen}>
-        <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
+  const iconTint =
+    syncState === 'paid'
+      ? colors.emerald
+      : syncState === 'cancelled'
+        ? colors.rose
+        : colors.amber;
+
+  const body = (() => {
+    if (syncState === 'syncing') {
+      return (
+        <>
           <ActivityIndicator size="large" color={colors.electricBright} />
-          <Text style={styles.title}>جارٍ التحقق من N-Genius...</Text>
-          <Text style={styles.subtitle}>
+          <AppText variant="heading2" align="center">جارٍ التحقق من N-Genius...</AppText>
+          <AppText variant="body" color="textSecondary" align="center">
             لا يُفعَّل الاشتراك قبل تأكيد بوابة الدفع
-          </Text>
-        </SafeAreaView>
-      </View>
-    );
-  }
+          </AppText>
+        </>
+      );
+    }
 
-  if (syncState === 'paid') {
-    const effectiveBoostType = resolvedBoostType ?? paramBoostType ?? 'pinned';
-    const boostSubtitle =
-      context === 'boost'
-        ? boostSuccessMessage(effectiveBoostType, boostExpiry ?? undefined)
-        : copy.successSubtitle;
-
-    return (
-      <View style={styles.screen}>
-        <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
+    if (syncState === 'paid') {
+      const effectiveBoostType = resolvedBoostType ?? paramBoostType ?? 'pinned';
+      const boostSubtitle =
+        context === 'boost'
+          ? boostSuccessMessage(effectiveBoostType, boostExpiry ?? undefined)
+          : copy.successSubtitle;
+      return (
+        <>
           <View style={[styles.iconWrap, { backgroundColor: `${colors.emerald}22` }]}>
-            <AppIcon name="checkmark-circle" size={52} color={colors.emerald} />
+            <AppIcon name="checkmark-circle" size={52} color={iconTint} />
           </View>
-          <Text style={styles.title}>{copy.successTitle}</Text>
-          <Text style={styles.subtitle}>{boostSubtitle}</Text>
+          <AppText variant="heading2" align="center">{copy.successTitle}</AppText>
+          <AppText variant="body" color="textSecondary" align="center">{boostSubtitle}</AppText>
           {context === 'boost' && paramDurationDays ? (
-            <Text style={styles.metaLine}>
+            <AppText variant="caption" color="textMuted" align="center">
               مدة الترقية: {paramDurationDays === '7' ? '٧ أيام' : '٣ أيام'}
-            </Text>
+            </AppText>
           ) : null}
           <SarhButton title={copy.primaryLabel} fullWidth onPress={goPrimary} />
           {copy.secondaryLabel ? (
-            <Pressable style={styles.secondaryBtn} onPress={goSecondary}>
-              <Text style={styles.secondaryBtnText}>{copy.secondaryLabel}</Text>
-            </Pressable>
+            <SarhButton title={copy.secondaryLabel} variant="ghost" fullWidth onPress={goSecondary} />
           ) : null}
-        </SafeAreaView>
-      </View>
-    );
-  }
+        </>
+      );
+    }
 
-  if (syncState === 'cancelled') {
-    return (
-      <View style={styles.screen}>
-        <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
+    if (syncState === 'cancelled') {
+      return (
+        <>
           <View style={[styles.iconWrap, { backgroundColor: `${colors.rose}22` }]}>
-            <AppIcon name="close-circle" size={52} color={colors.rose} />
+            <AppIcon name="close-circle" size={52} color={iconTint} />
           </View>
-          <Text style={styles.title}>تم إلغاء عملية الدفع</Text>
-          <Text style={styles.subtitle}>
+          <AppText variant="heading2" align="center">تم إلغاء عملية الدفع</AppText>
+          <AppText variant="body" color="textSecondary" align="center">
             {statusMessage ?? 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
-          </Text>
+          </AppText>
           <SarhButton title={copy.primaryLabel} fullWidth onPress={goPrimary} />
-        </SafeAreaView>
-      </View>
-    );
-  }
+        </>
+      );
+    }
 
-  return (
-    <View style={styles.screen}>
-      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-      <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
+    return (
+      <>
         <View style={[styles.iconWrap, { backgroundColor: `${colors.amber}22` }]}>
-          <AppIcon name="time-outline" size={52} color={colors.amber} />
+          <AppIcon name="time-outline" size={52} color={iconTint} />
         </View>
-        <Text style={styles.title}>العملية قيد المعالجة</Text>
-        <Text style={styles.subtitle}>
+        <AppText variant="heading2" align="center">العملية قيد المعالجة</AppText>
+        <AppText variant="body" color="textSecondary" align="center">
           {statusMessage ?? copy.pendingSubtitle}
-        </Text>
+        </AppText>
         <SarhButton
           title={retrying ? 'جارٍ التحقق...' : 'إعادة التحقق'}
           fullWidth
           loading={retrying}
           onPress={retrySync}
         />
-        <Pressable style={styles.secondaryBtn} onPress={goPrimary}>
-          <Text style={styles.secondaryBtnText}>{copy.primaryLabel}</Text>
-        </Pressable>
+        <SarhButton title={copy.primaryLabel} variant="ghost" fullWidth onPress={goPrimary} />
         {copy.secondaryLabel ? (
-          <Pressable style={styles.secondaryBtn} onPress={goSecondary}>
-            <Text style={styles.secondaryBtnText}>{copy.secondaryLabel}</Text>
-          </Pressable>
+          <SarhButton title={copy.secondaryLabel} variant="ghost" fullWidth onPress={goSecondary} />
         ) : null}
-      </SafeAreaView>
-    </View>
+      </>
+    );
+  })();
+
+  return (
+    <Screen edges={['top', 'bottom']} pattern={false} style={styles.screen}>
+      <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
+      <ScreenBody scroll={false} padTop="xl" padBottom="xl">
+        <Stack gap="lg" align="center" fill style={styles.wrap}>
+          {body}
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(_colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1 },
-    wrap: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.xl,
-      gap: spacing.lg,
-    },
+    wrap: { justifyContent: 'center' },
     iconWrap: {
       width: 96,
       height: 96,
       borderRadius: 48,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: spacing.sm,
     },
-    title: { ...typography.h2, color: colors.textPrimary, textAlign: 'center' },
-    subtitle: {
-      ...typography.body,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 24,
-      marginBottom: spacing.md,
-    },
-    metaLine: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'center',
-      marginBottom: spacing.sm,
-    },
-    primaryBtn: {
-      backgroundColor: colors.electricBright,
-      borderRadius: radius.xl,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.xl,
-      minWidth: 220,
-      alignItems: 'center',
-    },
-    primaryBtnDisabled: { opacity: 0.6 },
-    primaryBtnText: { ...typography.bodyStrong, color: '#fff' },
-    secondaryBtn: { paddingVertical: spacing.sm },
-    secondaryBtnText: { ...typography.body, color: colors.textMuted },
   });
 }

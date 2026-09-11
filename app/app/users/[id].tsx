@@ -2,17 +2,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { ActivityIndicator, Alert, Share, StyleSheet } from 'react-native';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +25,12 @@ import { openPostDetail } from '@/lib/openPost';
 import { presentActionSheet, confirmDestructive, alertMessage } from '@/lib/actionSheet';
 import { showToast } from '@/lib/toast';
 
+/** Layout only — an empty tab still needs vertical presence in the feed. */
+const styles = StyleSheet.create({
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  emptyState: { paddingVertical: space[48] },
+});
+
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -45,7 +44,6 @@ export default function UserProfileScreen() {
   } = useApp();
   const { accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
   const { colors: themeColors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
@@ -150,9 +148,11 @@ export default function UserProfileScreen() {
   const renderPosts = () => {
     if (userPosts.length === 0) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>لا توجد منشورات بعد</Text>
-        </View>
+        <Stack gap="none" align="center" style={styles.emptyState}>
+          <AppText variant="body" color="textMuted">
+            لا توجد منشورات بعد
+          </AppText>
+        </Stack>
       );
     }
 
@@ -178,9 +178,11 @@ export default function UserProfileScreen() {
   const renderAds = () => {
     if (userListings.length === 0) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
-        </View>
+        <Stack gap="none" align="center" style={styles.emptyState}>
+          <AppText variant="body" color="textMuted">
+            لا توجد إعلانات بعد
+          </AppText>
+        </Stack>
       );
     }
 
@@ -197,11 +199,11 @@ export default function UserProfileScreen() {
 
   if (loading || !profile) {
     return (
-      <SafeAreaView style={styles.root} edges={['top']}>
-        <View style={styles.center}>
+      <Screen edges={['top']} pattern={false}>
+        <ScreenBody scroll={false} style={styles.centered}>
           <ActivityIndicator size="large" color={themeColors.electricBright} />
-        </View>
-      </SafeAreaView>
+        </ScreenBody>
+      </Screen>
     );
   }
 
@@ -348,20 +350,4 @@ export default function UserProfileScreen() {
       />
     </>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.screenRoot },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    empty: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 48,
-    },
-    emptyTitle: {
-      ...typography.body,
-      color: colors.textMuted,
-    },
-  });
 }

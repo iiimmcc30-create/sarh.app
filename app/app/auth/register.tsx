@@ -1,39 +1,34 @@
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppLogo } from '@/components/ui/AppLogo';
+import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { SarhButton } from '@/design-system/components';
-import { updateAccountSettings } from '@/services/users';
 import { interpretOtpVerifyResult } from '@/lib/otpVerifyOutcome';
-import { getRtlText, ltrInputText, marginStart, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { updateAccountSettings } from '@/services/users';
 import { BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { type ThemeColors } from '@/constants/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
-  KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   UIManager,
   View,
-  type TextStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SAUDI_DIAL = '+966';
 type Step = 'phone' | 'name' | 'identity' | 'password' | 'otp';
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 const DOB_RE = /^\d{4}-\d{2}-\d{2}$/;
+const AUTH_FORM_WIDTH = { maxWidth: 440, width: '100%', alignSelf: 'center' } as const;
 
 if (
   Platform.OS === 'android' &&
@@ -229,320 +224,241 @@ export default function RegisterScreen() {
             ? copy.stepPasswordTitle
             : copy.otpTitle;
 
+  const usernameHintColor =
+    username.length === 0 ? undefined : usernameOk ? 'success' : 'danger';
+
   return (
-    <View style={styles.root}>
+    <Screen edges={['top', 'bottom']} keyboard pattern={false} style={styles.root}>
       <LinearGradient
         colors={[colors.bgDeep, colors.bgPrimary, colors.bgDeep]}
         style={StyleSheet.absoluteFill}
       />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          style={styles.kav}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View style={styles.topBar}>
-            <Pressable onPress={goBack} hitSlop={12} style={styles.backBtn}>
-              <AppIcon
-                name={rtlForwardIcon()}
-                size={22}
-                color={colors.textPrimary}
+      <ScreenHeader variant="screen" title={titleForStep} showBack onBackPress={goBack} />
+      <ScreenBody
+        padTop="lg"
+        padBottom="xxxl"
+        gap="section"
+        contentContainerStyle={AUTH_FORM_WIDTH}
+      >
+        <Row justify="center" gap="xs">
+          {(['phone', 'name', 'identity', 'password'] as Step[]).map((s, i) => (
+            <View
+              key={s}
+              style={[styles.dot, i <= Math.min(stepIndex, 3) && styles.dotActive]}
+            />
+          ))}
+        </Row>
+
+        <Stack gap="sm" align="center">
+          <AppLogo size={56} showRing={false} shape="square" />
+        </Stack>
+
+        <Stack gap="lg">
+          {step === 'otp' ? (
+            <AppText variant="body" color="textMuted">
+              {copy.otpSubtitle}
+            </AppText>
+          ) : null}
+
+          {step === 'phone' ? (
+            <Stack gap="lg">
+              <SarhInput
+                value={phone}
+                onChangeText={(t) => {
+                  setPhone(t.replace(/[^\d\s]/g, ''));
+                  setError('');
+                }}
+                placeholder={copy.phonePlaceholder}
+                keyboardType="phone-pad"
+                maxLength={10}
+                autoFocus
+                ltr
               />
-            </Pressable>
-            <View style={styles.dots}>
-              {(['phone', 'name', 'identity', 'password'] as Step[]).map(
-                (s, i) => (
-                  <View
-                    key={s}
-                    style={[
-                      styles.dot,
-                      i <= Math.min(stepIndex, 3) && styles.dotActive,
-                    ]}
-                  />
-                ),
-              )}
-            </View>
-            <View style={styles.backBtn} />
-          </View>
+              <SarhButton
+                title={copy.continueCta}
+                fullWidth
+                disabled={!isPhoneValid}
+                onPress={advanceFromPhone}
+              />
+            </Stack>
+          ) : null}
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scroll}
-          >
-            <View style={styles.header}>
-              <AppLogo size={56} showRing={false} shape="square" />
-            </View>
+          {step === 'name' ? (
+            <Stack gap="lg">
+              <SarhInput
+                value={displayName}
+                onChangeText={(t) => {
+                  setDisplayName(t);
+                  setError('');
+                }}
+                placeholder={copy.namePlaceholder}
+                maxLength={45}
+                autoFocus
+              />
+              <SarhButton
+                title={copy.continueCta}
+                fullWidth
+                disabled={displayName.trim().length < 2}
+                onPress={advanceFromName}
+              />
+            </Stack>
+          ) : null}
 
-            <View>
-              <Text style={styles.stepTitle}>{titleForStep}</Text>
-              {step === 'otp' ? (
-                <Text style={styles.stepSub}>{copy.otpSubtitle}</Text>
-              ) : null}
+          {step === 'identity' ? (
+            <Stack gap="lg">
+              <SarhInput
+                value={username}
+                onChangeText={(t) => {
+                  setUsername(t.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+                  setError('');
+                }}
+                placeholder={copy.usernamePlaceholder}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={20}
+                autoFocus
+                ltr
+                leadingIcon={
+                  <AppText variant="body" color="textMuted">
+                    @
+                  </AppText>
+                }
+              />
+              <AppText variant="caption" color={usernameHintColor ?? 'textMuted'}>
+                {username.length === 0
+                  ? copy.usernameHint
+                  : usernameOk
+                    ? copy.usernameFormatOk
+                    : copy.usernameFormatBad}
+              </AppText>
 
-              {step === 'phone' ? (
-                <View style={styles.block}>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={[styles.input, ltrInputText]}
-                      value={phone}
-                      onChangeText={(t) => {
-                        setPhone(t.replace(/[^\d\s]/g, ''));
-                        setError('');
-                      }}
-                      placeholder={copy.phonePlaceholder}
-                      placeholderTextColor={colors.textSubtle}
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                      autoFocus
-                    />
+              <SarhInput
+                label={copy.stepDobTitle}
+                value={birthDate}
+                onChangeText={(t) => {
+                  setBirthDate(t.replace(/[^\d-]/g, ''));
+                  setError('');
+                }}
+                placeholder={copy.dobPlaceholder}
+                keyboardType="numbers-and-punctuation"
+                maxLength={10}
+                ltr
+              />
+
+              <SarhButton
+                title={copy.continueCta}
+                fullWidth
+                disabled={!usernameOk || !dobOk}
+                onPress={advanceFromIdentity}
+              />
+            </Stack>
+          ) : null}
+
+          {step === 'password' ? (
+            <Stack gap="lg">
+              <SarhInput
+                value={password}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  setError('');
+                }}
+                placeholder={copy.passwordPlaceholder}
+                secureTextEntry={!showPassword}
+                autoFocus
+                ltr
+                trailingIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                onTrailingPress={() => setShowPassword((v) => !v)}
+                accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+              />
+
+              <SarhInput
+                label={copy.stepConfirmPasswordTitle}
+                value={confirmPassword}
+                onChangeText={(t) => {
+                  setConfirmPassword(t);
+                  setError('');
+                }}
+                placeholder={copy.confirmPasswordPlaceholder}
+                secureTextEntry={!showConfirm}
+                ltr
+                trailingIcon={showConfirm ? 'eye-off-outline' : 'eye-outline'}
+                onTrailingPress={() => setShowConfirm((v) => !v)}
+                accessibilityLabel={showConfirm ? 'إخفاء تأكيد كلمة المرور' : 'إظهار تأكيد كلمة المرور'}
+              />
+
+              <Pressable
+                onPress={() => setAgreed((v) => !v)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: agreed }}
+                accessibilityLabel="الموافقة على الشروط والأحكام وسياسة الخصوصية"
+              >
+                <Row gap="sm" align="center">
+                  <View style={[styles.check, agreed && styles.checkOn]}>
+                    {agreed ? (
+                      <AppIcon name="checkmark" size={14} color={colors.textPrimary} />
+                    ) : null}
                   </View>
-                  <SarhButton
-                    title={copy.continueCta}
-                    fullWidth
-                    disabled={!isPhoneValid}
-                    onPress={advanceFromPhone}
-                    style={styles.primaryCta}
-                  />
-                </View>
-              ) : null}
+                  <AppText variant="caption" color="textSecondary" style={styles.termsText}>
+                    {copy.termsAgree}
+                    {' · '}
+                    {BRAND_TERMS_SHORT_AR}
+                  </AppText>
+                </Row>
+              </Pressable>
 
-              {step === 'name' ? (
-                <View style={styles.block}>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={[styles.input, rtlInputText]}
-                      value={displayName}
-                      onChangeText={(t) => {
-                        setDisplayName(t);
-                        setError('');
-                      }}
-                      placeholder={copy.namePlaceholder}
-                      placeholderTextColor={colors.textSubtle}
-                      maxLength={45}
-                      autoFocus
-                    />
-                  </View>
-                  <SarhButton
-                    title={copy.continueCta}
-                    fullWidth
-                    disabled={displayName.trim().length < 2}
-                    onPress={advanceFromName}
-                    style={styles.primaryCta}
-                  />
-                </View>
-              ) : null}
+              <SarhButton
+                title={copy.registerCta}
+                fullWidth
+                loading={loading}
+                disabled={password.length < 6 || password !== confirmPassword || !agreed}
+                onPress={startRegister}
+              />
+            </Stack>
+          ) : null}
 
-              {step === 'identity' ? (
-                <View style={styles.block}>
-                  <View style={styles.inputWrap}>
-                    <Text style={styles.at}>@</Text>
-                    <TextInput
-                      style={[styles.input, ltrInputText]}
-                      value={username}
-                      onChangeText={(t) => {
-                        setUsername(t.toLowerCase().replace(/[^a-z0-9_]/g, ''));
-                        setError('');
-                      }}
-                      placeholder={copy.usernamePlaceholder}
-                      placeholderTextColor={colors.textSubtle}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      maxLength={20}
-                      autoFocus
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.hint,
-                      username.length > 0 &&
-                        (usernameOk ? styles.hintOk : styles.hintBad),
-                    ]}
-                  >
-                    {username.length === 0
-                      ? copy.usernameHint
-                      : usernameOk
-                        ? copy.usernameFormatOk
-                        : copy.usernameFormatBad}
-                  </Text>
+          {step === 'otp' ? (
+            <Stack gap="lg">
+              <SarhInput
+                value={otpCode}
+                onChangeText={(t) => {
+                  setOtpCode(t.replace(/\D/g, '').slice(0, 6));
+                  setError('');
+                }}
+                placeholder="••••••"
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus
+                ltr
+              />
+              <SarhButton
+                title={copy.otpConfirm}
+                fullWidth
+                loading={loading}
+                disabled={otpCode.length !== 6}
+                onPress={verifyAndCreate}
+              />
+              <Pressable onPress={() => goTo('password')} style={styles.editLink}>
+                <AppText variant="label" color="textMuted" align="center">
+                  {copy.otpEdit}
+                </AppText>
+              </Pressable>
+            </Stack>
+          ) : null}
 
-                  <Text style={[styles.label, styles.labelSpaced]}>
-                    {copy.stepDobTitle}
-                  </Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={[styles.input, ltrInputText]}
-                      value={birthDate}
-                      onChangeText={(t) => {
-                        setBirthDate(t.replace(/[^\d-]/g, ''));
-                        setError('');
-                      }}
-                      placeholder={copy.dobPlaceholder}
-                      placeholderTextColor={colors.textSubtle}
-                      keyboardType="numbers-and-punctuation"
-                      maxLength={10}
-                    />
-                  </View>
-
-                  <SarhButton
-                    title={copy.continueCta}
-                    fullWidth
-                    disabled={!usernameOk || !dobOk}
-                    onPress={advanceFromIdentity}
-                    style={styles.primaryCta}
-                  />
-                </View>
-              ) : null}
-
-              {step === 'password' ? (
-                <View style={styles.block}>
-                  <View style={styles.inputWrap}>
-                    <Pressable
-                      onPress={() => setShowPassword((v) => !v)}
-                      hitSlop={8}
-                      style={styles.eye}
-                      accessibilityRole="button"
-                      accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-                    >
-                      <AppIcon
-                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                        size={18}
-                        color={colors.textMuted}
-                      />
-                    </Pressable>
-                    <TextInput
-                      style={[styles.input, ltrInputText]}
-                      value={password}
-                      onChangeText={(t) => {
-                        setPassword(t);
-                        setError('');
-                      }}
-                      placeholder={copy.passwordPlaceholder}
-                      placeholderTextColor={colors.textSubtle}
-                      secureTextEntry={!showPassword}
-                      autoFocus
-                    />
-                  </View>
-
-                  <Text style={[styles.label, styles.labelSpaced]}>
-                    {copy.stepConfirmPasswordTitle}
-                  </Text>
-                  <View style={styles.inputWrap}>
-                    <Pressable
-                      onPress={() => setShowConfirm((v) => !v)}
-                      hitSlop={8}
-                      style={styles.eye}
-                      accessibilityRole="button"
-                      accessibilityLabel={showConfirm ? 'إخفاء تأكيد كلمة المرور' : 'إظهار تأكيد كلمة المرور'}
-                    >
-                      <AppIcon
-                        name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
-                        size={18}
-                        color={colors.textMuted}
-                      />
-                    </Pressable>
-                    <TextInput
-                      style={[styles.input, ltrInputText]}
-                      value={confirmPassword}
-                      onChangeText={(t) => {
-                        setConfirmPassword(t);
-                        setError('');
-                      }}
-                      placeholder={copy.confirmPasswordPlaceholder}
-                      placeholderTextColor={colors.textSubtle}
-                      secureTextEntry={!showConfirm}
-                    />
-                  </View>
-
-                  <Pressable
-                    onPress={() => setAgreed((v) => !v)}
-                    style={styles.termsRow}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: agreed }}
-                    accessibilityLabel="الموافقة على الشروط والأحكام وسياسة الخصوصية"
-                  >
-                    <View
-                      style={[styles.check, agreed && styles.checkOn]}
-                    >
-                      {agreed ? (
-                        <AppIcon name="checkmark" size={14} color="#fff" />
-                      ) : null}
-                    </View>
-                    <Text style={styles.termsText}>
-                      {copy.termsAgree}
-                      {' · '}
-                      {BRAND_TERMS_SHORT_AR}
-                    </Text>
-                  </Pressable>
-
-                  <SarhButton
-                    title={copy.registerCta}
-                    fullWidth
-                    loading={loading}
-                    disabled={password.length < 6 || password !== confirmPassword || !agreed}
-                    onPress={startRegister}
-                    style={styles.primaryCta}
-                  />
-                </View>
-              ) : null}
-
-              {step === 'otp' ? (
-                <View style={styles.block}>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={[styles.input, styles.otpInput, ltrInputText]}
-                      value={otpCode}
-                      onChangeText={(t) => {
-                        setOtpCode(t.replace(/\D/g, '').slice(0, 6));
-                        setError('');
-                      }}
-                      placeholder="••••••"
-                      placeholderTextColor={colors.textSubtle}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                      textAlign="center"
-                      autoFocus
-                    />
-                  </View>
-                  <SarhButton
-                    title={copy.otpConfirm}
-                    fullWidth
-                    loading={loading}
-                    disabled={otpCode.length !== 6}
-                    onPress={verifyAndCreate}
-                    style={styles.primaryCta}
-                  />
-                  <Pressable
-                    onPress={() => goTo('password')}
-                    style={styles.editLink}
-                  >
-                    <Text style={styles.editText}>{copy.otpEdit}</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+          {error ? (
+            <AppText variant="caption" color="danger">
+              {error}
+            </AppText>
+          ) : null}
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bgDeep },
-    safe: { flex: 1 },
-    kav: { flex: 1 },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.xs,
-    },
-    backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-    dots: { flexDirection: 'row', gap: 6 },
+    root: { backgroundColor: colors.bgDeep },
     dot: {
       width: 7,
       height: 7,
@@ -550,74 +466,6 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.borderMid,
     },
     dotActive: { backgroundColor: colors.electric, width: 18 },
-    scroll: {
-      width: '100%',
-      maxWidth: 440,
-      alignSelf: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xxl,
-      flexGrow: 1,
-    },
-    header: { alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.md },
-    stepTitle: {
-      ...typography.sectionHeading,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      marginBottom: spacing.lg,
-      ...getRtlText(),
-    },
-    stepSub: {
-      ...typography.body,
-      color: colors.textMuted,
-      marginTop: -spacing.md,
-      marginBottom: spacing.lg,
-      ...getRtlText(),
-    },
-    block: { gap: spacing.sm },
-    label: {
-      ...typography.smallHeading,
-      color: colors.textSecondary,
-      ...getRtlText(),
-    },
-    labelSpaced: { marginTop: spacing.lg, marginBottom: spacing.xs },
-    inputWrap: {
-      height: 54,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-      backgroundColor: colors.bgElevated,
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.md,
-    },
-    input: {
-      flex: 1,
-      ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      paddingVertical: 0,
-    },
-    otpInput: { letterSpacing: 8, textAlign: 'center' },
-    at: {
-      ...typography.body,
-      color: colors.textMuted,
-      ...marginStart(4),
-    } as TextStyle,
-    eye: { padding: 4 },
-    hint: {
-      ...typography.caption,
-      color: colors.textSubtle,
-      marginTop: spacing.xs,
-      ...getRtlText(),
-    },
-    hintOk: { color: colors.success },
-    hintBad: { color: colors.danger },
-    termsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginTop: spacing.lg,
-    },
     check: {
       width: 22,
       height: 22,
@@ -631,26 +479,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric,
       borderColor: colors.electric,
     },
-    termsText: {
-      flex: 1,
-      ...typography.caption,
-      color: colors.textSecondary,
-      ...getRtlText(),
-    },
-    primaryCta: {
-      marginTop: spacing.xl,
-    },
-    editLink: { alignItems: 'center', marginTop: spacing.md, padding: spacing.sm },
-    editText: {
-      ...typography.smallHeading,
-      color: colors.textMuted,
-      ...getRtlText(),
-    },
-    error: {
-      ...typography.caption,
-      color: colors.danger,
-      marginTop: spacing.md,
-      ...getRtlText(),
-    },
+    termsText: { flex: 1 },
+    editLink: { alignItems: 'center', padding: 8 },
   });
 }

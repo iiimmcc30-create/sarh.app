@@ -1,23 +1,10 @@
 import { useMemo, useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { showToast } from '@/lib/toast';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/contexts/AuthContext';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { getRtlDirection, getRtlRow } from '@/lib/rtl';
 import {
   createTicket,
   TICKET_CATEGORY_LABEL_AR,
@@ -25,6 +12,7 @@ import {
 } from '@/services/support';
 import { uploadSupportFileFromUri } from '@/services/upload';
 import { AppText, SarhButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
 
 const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCategory[]).filter(
   (c) => c !== 'ORDER_HELP' && c !== 'OTHER_HELP',
@@ -33,7 +21,6 @@ const CATEGORIES = (Object.keys(TICKET_CATEGORY_LABEL_AR) as SupportTicketCatego
 export default function CreateSupportTicketScreen() {
   const router = useRouter();
   const { accessToken } = useAuth();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [category, setCategory] = useState<SupportTicketCategory>('OTHER');
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
@@ -122,36 +109,36 @@ export default function CreateSupportTicketScreen() {
     }
   };
 
-  const categoryLabel = useMemo(
-    () => TICKET_CATEGORY_LABEL_AR[category],
-    [category],
-  );
+  const categoryLabel = useMemo(() => TICKET_CATEGORY_LABEL_AR[category], [category]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="تذكرة دعم جديدة" showBack />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={[styles.content, getRtlDirection()]}>
-          <GlassCard style={styles.section}>
-            <AppText style={styles.label}>تصنيف المشكلة</AppText>
-            <SarhChipRow contentPaddingHorizontal={0}>
-              {CATEGORIES.map((cat) => (
-                <SarhChip appearance="filter"
-                  key={cat}
-                  label={TICKET_CATEGORY_LABEL_AR[cat]}
-                  selected={category === cat}
-                  onPress={() => setCategory(cat)}
-                />
-              ))}
-            </SarhChipRow>
-            <AppText style={styles.selectedHint}>المحدد: {categoryLabel}</AppText>
-          </GlassCard>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title="تذكرة دعم جديدة" showBack />
+      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxxl">
+        <Section title="تصنيف المشكلة">
+          <SarhChipRow contentPaddingHorizontal={0}>
+            {CATEGORIES.map((cat) => (
+              <SarhChip
+                appearance="filter"
+                key={cat}
+                label={TICKET_CATEGORY_LABEL_AR[cat]}
+                selected={category === cat}
+                onPress={() => setCategory(cat)}
+              />
+            ))}
+          </SarhChipRow>
+          <AppText variant="meta" color="textMuted">المحدد: {categoryLabel}</AppText>
+        </Section>
 
-          <SarhInput appearance="theme" label="عنوان المشكلة" value={subject} onChangeText={setSubject} />
-          <SarhInput appearance="theme"
+        <Stack gap="lg">
+          <SarhInput
+            appearance="theme"
+            label="عنوان المشكلة"
+            value={subject}
+            onChangeText={setSubject}
+          />
+          <SarhInput
+            appearance="theme"
             label="وصف المشكلة بالتفصيل"
             value={description}
             onChangeText={setDescription}
@@ -159,65 +146,55 @@ export default function CreateSupportTicketScreen() {
             numberOfLines={6}
             style={styles.textArea}
           />
+        </Stack>
 
-          <GlassCard style={styles.section}>
-            <View style={styles.attachHeader}>
-              <AppText style={styles.label}>المرفقات (اختياري)</AppText>
-              <Pressable
-                onPress={() => void pickAttachments()}
-                accessibilityRole="button"
-                accessibilityLabel="إضافة مرفق"
-              >
-                <AppText style={styles.link}>إضافة</AppText>
-              </Pressable>
-            </View>
-            {attachments.length === 0 ? (
-              <AppText style={styles.hint}>صور أو فيديو — حتى 8 ملفات</AppText>
-            ) : (
-              attachments.map((item, index) => (
-                <View key={`${item.uri}-${index}`} style={styles.attachRow}>
-                  <AppText style={styles.attachName} numberOfLines={1}>
-                    {item.fileName ?? `مرفق ${index + 1}`}
-                  </AppText>
-                  <Pressable
-                    onPress={() => setAttachments((prev) => prev.filter((_, i) => i !== index))}
-                    accessibilityRole="button"
-                    accessibilityLabel="حذف المرفق"
-                  >
-                    <AppText style={styles.remove}>حذف</AppText>
-                  </Pressable>
-                </View>
-              ))
-            )}
-          </GlassCard>
+        <Section
+          title="المرفقات (اختياري)"
+          action={
+            <Pressable
+              onPress={() => void pickAttachments()}
+              accessibilityRole="button"
+              accessibilityLabel="إضافة مرفق"
+              hitSlop={8}
+            >
+              <AppText variant="caption" color="primary">إضافة</AppText>
+            </Pressable>
+          }
+        >
+          {attachments.length === 0 ? (
+            <AppText variant="caption" color="textMuted">صور أو فيديو — حتى 8 ملفات</AppText>
+          ) : (
+            attachments.map((item, index) => (
+              <Row key={`${item.uri}-${index}`} gap="sm" justify="between">
+                <AppText variant="caption" color="textSecondary" numberOfLines={1} style={styles.fill}>
+                  {item.fileName ?? `مرفق ${index + 1}`}
+                </AppText>
+                <Pressable
+                  onPress={() => setAttachments((prev) => prev.filter((_, i) => i !== index))}
+                  accessibilityRole="button"
+                  accessibilityLabel="حذف المرفق"
+                  hitSlop={8}
+                >
+                  <AppText variant="caption" color="danger">حذف</AppText>
+                </Pressable>
+              </Row>
+            ))
+          )}
+        </Section>
 
-          <SarhButton
-            title="إرسال التذكرة"
-            fullWidth
-            loading={submitting}
-            disabled={!canSubmit || submitting}
-            onPress={() => void handleSubmit()}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <SarhButton
+          title="إرسال التذكرة"
+          fullWidth
+          loading={submitting}
+          disabled={!canSubmit || submitting}
+          onPress={() => void handleSubmit()}
+        />
+      </ScreenBody>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.huge },
-    section: { gap: spacing.sm },
-    label: { ...typography.bodyStrong, color: colors.textPrimary },
-    selectedHint: { ...typography.micro, color: colors.textMuted },
-    textArea: { minHeight: 140, textAlignVertical: 'top' },
-    attachHeader: { ...getRtlRow(), justifyContent: 'space-between', alignItems: 'center' },
-    link: { ...typography.caption, color: colors.electric },
-    hint: { ...typography.caption, color: colors.textMuted },
-    attachRow: { ...getRtlRow(), justifyContent: 'space-between', gap: spacing.sm },
-    attachName: { ...typography.caption, color: colors.textSecondary, flex: 1 },
-    remove: { ...typography.caption, color: colors.danger },
-  });
-}
+const styles = StyleSheet.create({
+  fill: { flex: 1, minWidth: 0 },
+  textArea: { minHeight: 140, textAlignVertical: 'top' },
+});

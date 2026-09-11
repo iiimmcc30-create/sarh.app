@@ -3,24 +3,20 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import {
-  Animated,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Animated, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { ds } from '@/constants/designSystem';
-import { SarhBackButton, SarhButton, SarhIconButton } from '@/design-system/components';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import {
+  AppText,
+  SarhBackButton,
+  SarhButton,
+  SarhIconButton,
+} from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { duration } from '@/design-system/tokens';
+import { spacing, type ThemeColors } from '@/constants/theme';
+import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, getRtlText } from '@/lib/rtl';
-import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
-import { AppText } from '@/components/ui/AppText';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -103,13 +99,26 @@ function ProfileTabButton({
   return (
     <Pressable style={styles.tabItem} onPress={onPress}>
       <Animated.View style={{ transform: [{ scale }] }}>
-        <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
+        <AppText
+          variant="label"
+          color={active ? 'textPrimary' : 'textMuted'}
+          style={active ? styles.tabLabelActive : undefined}
+        >
+          {label}
+        </AppText>
       </Animated.View>
       {active ? <View style={styles.tabIndicator} /> : null}
     </Pressable>
   );
 }
 
+/**
+ * The shared profile shell for both the own-profile tab and a visitor profile.
+ *
+ * Flat and content-first: identity, stats, bio, actions, then tabbed content.
+ * No block here is a card — the only card language on a profile comes from
+ * `ListingCard` inside `adsContent`, which this component never styles.
+ */
 export function ProfileScreenLayout({
   mode,
   user,
@@ -134,8 +143,8 @@ export function ProfileScreenLayout({
   isFollowing = false,
   initialTab = 'posts',
 }: ProfileScreenLayoutProps) {
-  const insets = useSafeAreaInsets();
   const { colors: themeColors } = useTheme();
+  const { gutter } = useLayout();
   const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const [activeTab, setActiveTab] = useState<ProfileTabKey>(initialTab);
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -144,14 +153,22 @@ export function ProfileScreenLayout({
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(headerOpacity, { toValue: 1, duration: 420, useNativeDriver: true }),
+      Animated.timing(headerOpacity, {
+        toValue: 1,
+        duration: duration.slow,
+        useNativeDriver: true,
+      }),
       Animated.spring(headerTranslate, { toValue: 0, useNativeDriver: true, speed: 14, bounciness: 4 }),
     ]).start();
   }, [headerOpacity, headerTranslate]);
 
   useEffect(() => {
     tabOpacity.setValue(0);
-    Animated.timing(tabOpacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+    Animated.timing(tabOpacity, {
+      toValue: 1,
+      duration: duration.normal,
+      useNativeDriver: true,
+    }).start();
   }, [activeTab, tabOpacity]);
 
   const displayName = user.arabicName || user.displayName || user.username;
@@ -188,11 +205,16 @@ export function ProfileScreenLayout({
     ],
   );
 
+  /** The tab strip divider spans the full width, so the gutter lives inside. */
+  const inset = { paddingHorizontal: gutter };
+
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+    <Screen edges={['top']} pattern={false}>
+      <ScreenBody
+        gutter={false}
         stickyHeaderIndices={[1]}
+        bottomInset="tabBar"
+        padBottom="md"
         refreshControl={
           onRefresh ? (
             <RefreshControl
@@ -202,370 +224,277 @@ export function ProfileScreenLayout({
             />
           ) : undefined
         }
-        contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom, 12) + ds.tabBar.height + ds.tabBar.fabLift,
-        }}
       >
-        <View style={styles.headerBlock}>
-          <Animated.View
-            style={{
-              opacity: headerOpacity,
-              transform: [{ translateY: headerTranslate }],
-            }}
-          >
-            <View style={[styles.toolbar, getRtlRow()]}>
-              <View style={[styles.toolbarSide, getRtlRow()]}>
-                {mode === 'own' && onEditProfile ? (
-                  <SarhIconButton
-                    icon="pencil-outline"
-                    chrome="ghost"
-                    size="sm"
-                    onPress={onEditProfile}
-                    accessibilityLabel="تعديل الملف"
-                  />
-                ) : null}
-                {mode === 'visitor' && onBack ? (
-                  <SarhBackButton
-                    chrome="ghost"
-                    size="sm"
-                    onPress={onBack}
-                    accessibilityLabel="رجوع"
-                  />
-                ) : null}
-              </View>
+        <Animated.View
+          style={{
+            opacity: headerOpacity,
+            transform: [{ translateY: headerTranslate }],
+          }}
+        >
+          <Row align="center" justify="between" style={[styles.toolbar, inset]}>
+            <Row gap="xs" align="center" style={styles.toolbarSide}>
+              {mode === 'own' && onEditProfile ? (
+                <SarhIconButton
+                  icon="pencil-outline"
+                  chrome="ghost"
+                  size="sm"
+                  onPress={onEditProfile}
+                  accessibilityLabel="تعديل الملف"
+                />
+              ) : null}
+              {mode === 'visitor' && onBack ? (
+                <SarhBackButton
+                  chrome="ghost"
+                  size="sm"
+                  onPress={onBack}
+                  accessibilityLabel="رجوع"
+                />
+              ) : null}
+            </Row>
 
-              <View style={[styles.toolbarSide, getRtlRow()]}>
-                {mode === 'own' && onSettings ? (
-                  <SarhIconButton
-                    icon="settings-outline"
-                    chrome="ghost"
-                    size="sm"
-                    onPress={onSettings}
-                    accessibilityLabel="إعدادات الحساب"
-                  />
-                ) : null}
-                {mode === 'visitor' && onMenu ? (
-                  <SarhIconButton
-                    icon="menu-dots"
-                    chrome="ghost"
-                    size="sm"
-                    onPress={onMenu}
-                    accessibilityLabel="المزيد"
-                  />
-                ) : null}
-              </View>
-            </View>
+            <Row gap="xs" align="center" style={styles.toolbarSide}>
+              {mode === 'own' && onSettings ? (
+                <SarhIconButton
+                  icon="settings-outline"
+                  chrome="ghost"
+                  size="sm"
+                  onPress={onSettings}
+                  accessibilityLabel="إعدادات الحساب"
+                />
+              ) : null}
+              {mode === 'visitor' && onMenu ? (
+                <SarhIconButton
+                  icon="menu-dots"
+                  chrome="ghost"
+                  size="sm"
+                  onPress={onMenu}
+                  accessibilityLabel="المزيد"
+                />
+              ) : null}
+            </Row>
+          </Row>
 
-            <View style={[styles.identityRow, getRtlRow()]}>
-              <View style={styles.infoCol}>
-                <View style={styles.nameBlock}>
-                  <View style={[styles.nameWithBadge, getRtlRow()]}>
-                    <View style={styles.nameShell}>
-                      <AppText style={[styles.displayName, styles.displayNameInline]} numberOfLines={2}>
-                        {displayName}
+          <Row gap="md" align="start" style={inset}>
+            <Stack gap="sm" fill>
+              <Stack gap="xs">
+                <Row gap="xs" align="center" style={styles.nameRow}>
+                  <AppText
+                    variant="cardTitle"
+                    color="textPrimary"
+                    numberOfLines={2}
+                    style={styles.nameShell}
+                  >
+                    {displayName}
+                  </AppText>
+                  {user.verified ? <VerificationBadge size={18} /> : null}
+                </Row>
+
+                <AppText variant="caption" color="textMuted" numberOfLines={1}>
+                  @{user.username}
+                </AppText>
+
+                <Pressable
+                  onPress={onRatePress}
+                  disabled={!onRatePress}
+                  style={({ pressed }) => [
+                    styles.ratingRow,
+                    pressed && onRatePress ? styles.ratingRowPressed : null,
+                  ]}
+                >
+                  <Row gap="xs" align="center">
+                    <Row gap="none" align="center" style={styles.starsRow}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <AppIcon
+                          key={n}
+                          name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
+                          size={11}
+                          color={
+                            hasRating && n <= filledStars
+                              ? themeColors.gold
+                              : themeColors.textSubtle
+                          }
+                        />
+                      ))}
+                    </Row>
+                    {ratingLabel ? (
+                      <AppText variant="caption" color="textPrimary">
+                        {ratingLabel}
                       </AppText>
-                    </View>
-                    {user.verified ? <VerificationBadge size={18} /> : null}
-                  </View>
+                    ) : null}
+                    {(user.reviewCount ?? 0) > 0 ? (
+                      <AppText variant="caption" color="textMuted">
+                        ({user.reviewCount})
+                      </AppText>
+                    ) : null}
+                  </Row>
+                </Pressable>
+              </Stack>
 
-                  <View style={[{ width: '100%' }, styles.handleShell]}>
-                    <AppText style={styles.handleText} numberOfLines={1}>
-                      @{user.username}
-                    </AppText>
-                  </View>
+              <Row gap="none" align="stretch" style={styles.statsRow}>
+                {stats.map((stat, index) => {
+                  const body = (
+                    <Stack gap="xs" align="center" style={styles.statItem}>
+                      <AppText variant="cardTitle" color="textPrimary" align="center">
+                        {stat.value}
+                      </AppText>
+                      <AppText variant="caption" color="textMuted" align="center">
+                        {stat.label}
+                      </AppText>
+                    </Stack>
+                  );
 
-                  <Pressable
-                    onPress={onRatePress}
-                    disabled={!onRatePress}
-                    style={({ pressed }) => [
-                      styles.ratingRow,
-                      pressed && onRatePress && styles.ratingChipPressed,
-                    ]}
-                  >
-                    <CoverTrailRow justify="flex-start" gap={4}>
-                      <View style={styles.starsRow}>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <AppIcon
-                            key={n}
-                            name={hasRating && n <= filledStars ? 'star' : 'star-outline'}
-                            size={11}
-                            color={
-                              hasRating && n <= filledStars
-                                ? themeColors.gold
-                                : themeColors.textSubtle
-                            }
-                          />
-                        ))}
-                      </View>
-                      {ratingLabel ? (
-                        <Text style={styles.ratingText}>{ratingLabel}</Text>
-                      ) : null}
-                      {(user.reviewCount ?? 0) > 0 ? (
-                        <Text style={styles.ratingCount}>({user.reviewCount})</Text>
-                      ) : null}
-                    </CoverTrailRow>
-                  </Pressable>
-                </View>
+                  return (
+                    <Row key={stat.key} gap="none" align="stretch" fill>
+                      {index > 0 ? <View style={styles.statDivider} /> : null}
+                      {stat.onPress ? (
+                        <Pressable style={styles.statPress} onPress={stat.onPress}>
+                          {body}
+                        </Pressable>
+                      ) : (
+                        body
+                      )}
+                    </Row>
+                  );
+                })}
+              </Row>
 
-                <View style={styles.statsCard}>
-                  <View style={[styles.statsRow, getRtlRow()]}>
-                    {stats.map((stat, index) => (
-                      <View key={stat.key} style={[styles.statGroup, getRtlRow()]}>
-                        {index > 0 ? <View style={styles.statDivider} /> : null}
-                        {stat.onPress ? (
-                          <Pressable style={styles.statItem} onPress={stat.onPress}>
-                            <Text style={styles.statNum}>{stat.value}</Text>
-                            <Text style={styles.statLbl}>{stat.label}</Text>
-                          </Pressable>
-                        ) : (
-                          <View style={styles.statItem}>
-                            <Text style={styles.statNum}>{stat.value}</Text>
-                            <Text style={styles.statLbl}>{stat.label}</Text>
-                          </View>
-                        )}
-                      </View>
-                    ))}
-                  </View>
-                </View>
+              {user.bio ? (
+                <AppText variant="body" color="textSecondary" numberOfLines={4} style={styles.bio}>
+                  {user.bio}
+                </AppText>
+              ) : null}
+            </Stack>
 
-                {!!user.bio ? (
-                  <View style={[{ width: '100%' }, styles.bioShell]}>
-                    <AppText style={styles.bio} numberOfLines={4}>
-                      {user.bio}
-                    </AppText>
-                  </View>
-                ) : null}
-              </View>
-
-              <Pressable
-                onPress={onAvatarPress}
-                disabled={!onAvatarPress}
-                style={styles.avatarCol}
-              >
-                {hasStoryRing ? (
-                  <LinearGradient
-                    colors={[themeColors.electricBright, themeColors.cyan, '#34D399']}
-                    style={styles.avatarRing}
-                    start={{ x: 0, y: 1 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    <View style={styles.avatarClip}>
-                      <Image
-                        source={uriSource(user.avatar)}
-                        style={styles.avatarImg}
-                        contentFit="cover"
-                      />
-                    </View>
-                  </LinearGradient>
-                ) : (
-                  <View style={styles.avatarPlain}>
+            <Pressable onPress={onAvatarPress} disabled={!onAvatarPress} style={styles.avatarCol}>
+              {hasStoryRing ? (
+                <LinearGradient
+                  colors={[themeColors.electricBright, themeColors.cyan, '#34D399']}
+                  style={styles.avatarRing}
+                  start={{ x: 0, y: 1 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <View style={styles.avatarClip}>
                     <Image
                       source={uriSource(user.avatar)}
                       style={styles.avatarImg}
                       contentFit="cover"
                     />
                   </View>
-                )}
-                {mode === 'own' && onEditAvatar ? (
-                  <Pressable style={styles.cameraBtn} onPress={onEditAvatar} hitSlop={8}>
-                    <AppIcon name="camera-outline" size={14} color="#fff" />
-                  </Pressable>
-                ) : null}
-              </Pressable>
-            </View>
+                </LinearGradient>
+              ) : (
+                <View style={styles.avatarPlain}>
+                  <Image
+                    source={uriSource(user.avatar)}
+                    style={styles.avatarImg}
+                    contentFit="cover"
+                  />
+                </View>
+              )}
+              {mode === 'own' && onEditAvatar ? (
+                <Pressable style={styles.cameraBtn} onPress={onEditAvatar} hitSlop={8}>
+                  <AppIcon name="camera-outline" size={14} color="#fff" />
+                </Pressable>
+              ) : null}
+            </Pressable>
+          </Row>
 
-            {mode === 'visitor' && (onFollow || onMessage) ? (
-              <View style={[styles.actionsRow, getRtlRow()]}>
-                {onMessage ? (
-                  <SarhButton
-                    title="مراسلة"
-                    variant="secondary"
-                    leftIcon="chatbubble-outline"
-                    onPress={onMessage}
-                    style={styles.actionBtnFlex}
-                  />
-                ) : null}
-                {onFollow ? (
-                  <SarhButton
-                    title={isFollowing ? 'متابَع' : 'متابعة'}
-                    variant={isFollowing ? 'secondary' : 'primary'}
-                    leftIcon={isFollowing ? 'checkmark-circle-outline' : 'person-add-outline'}
-                    onPress={onFollow}
-                    loading={followLoading}
-                    style={styles.actionBtnFlex}
-                  />
-                ) : null}
-              </View>
-            ) : null}
-          </Animated.View>
+          {mode === 'visitor' && (onFollow || onMessage) ? (
+            <Row gap="sm" align="center" style={[styles.actionsRow, inset]}>
+              {onMessage ? (
+                <SarhButton
+                  title="مراسلة"
+                  variant="secondary"
+                  leftIcon="chatbubble-outline"
+                  onPress={onMessage}
+                  style={styles.actionBtnFlex}
+                />
+              ) : null}
+              {onFollow ? (
+                <SarhButton
+                  title={isFollowing ? 'متابَع' : 'متابعة'}
+                  variant={isFollowing ? 'secondary' : 'primary'}
+                  leftIcon={isFollowing ? 'checkmark-circle-outline' : 'person-add-outline'}
+                  onPress={onFollow}
+                  loading={followLoading}
+                  style={styles.actionBtnFlex}
+                />
+              ) : null}
+            </Row>
+          ) : null}
+        </Animated.View>
+
+        <View style={styles.tabsBar}>
+          <Row gap="none" align="stretch" style={inset}>
+            <ProfileTabButton
+              label="المنشورات"
+              active={activeTab === 'posts'}
+              onPress={() => setActiveTab('posts')}
+              styles={styles}
+            />
+            <ProfileTabButton
+              label="الإعلانات"
+              active={activeTab === 'ads'}
+              onPress={() => setActiveTab('ads')}
+              styles={styles}
+            />
+          </Row>
         </View>
 
-        <View style={styles.contentCardTop}>
-          <View style={styles.tabsBar}>
-            <View style={[styles.tabsRow, getRtlRow()]}>
-              <ProfileTabButton
-                label="المنشورات"
-                active={activeTab === 'posts'}
-                onPress={() => setActiveTab('posts')}
-                styles={styles}
-              />
-              <ProfileTabButton
-                label="الإعلانات"
-                active={activeTab === 'ads'}
-                onPress={() => setActiveTab('ads')}
-                styles={styles}
-              />
-            </View>
-          </View>
-        </View>
-
-        <Animated.View style={[styles.postsFeed, { opacity: tabOpacity }]}>
+        <Animated.View style={[styles.postsFeed, inset, { opacity: tabOpacity }]}>
           {activeTab === 'posts' ? postsContent : adsContent}
         </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: colors.screenRoot,
-    },
-    headerBlock: {
-      paddingBottom: spacing.md,
-    },
     toolbar: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
       paddingTop: spacing.xs,
       paddingBottom: spacing.sm,
       minHeight: 44,
     },
     toolbarSide: {
-      alignItems: 'center',
       minWidth: ds.iconBtn.md,
-      gap: 4,
     },
-    iconBtn: {
-      width: ds.iconBtn.md,
-      height: ds.iconBtn.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'transparent',
-    },
-    identityRow: {
-      alignItems: 'flex-start',
-      paddingHorizontal: spacing.lg,
-      gap: spacing.md,
-    },
-    infoCol: {
-      flex: 1,
-      minWidth: 0,
-      gap: 8,
-    },
-    nameBlock: {
-      gap: 4,
-      width: '100%',
-      alignItems: 'flex-start',
-    },
-    nameWithBadge: {
-      alignItems: 'center',
+    nameRow: {
       flexWrap: 'nowrap',
-      gap: 4,
       maxWidth: '100%',
     },
     nameShell: {
       flexShrink: 1,
       minWidth: 0,
     },
-    handleShell: {
-      alignSelf: 'stretch',
-      maxWidth: '100%',
-    },
     ratingRow: {
       paddingVertical: 2,
-      flexShrink: 0,
+      alignSelf: 'flex-start',
     },
-    starsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2,
-    },
-    displayName: {
-      ...typography.cardHeadingLarge,
-      color: colors.textPrimary,
-    },
-    displayNameInline: {
-      width: 'auto',
-      flexShrink: 1,
-            writingDirection: 'rtl',
-    },
-    ratingChipPressed: {
+    ratingRowPressed: {
       opacity: 0.75,
     },
-    ratingText: {
-      ...typography.badge,
-      color: colors.textPrimary,
-    },
-    ratingCount: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    handleText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      ...getRtlText(),
-    },
-    statsCard: {
-      marginTop: 6,
-      backgroundColor: 'transparent',
-      paddingVertical: spacing.sm,
-      paddingHorizontal: 0,
+    starsRow: {
+      gap: 2,
     },
     statsRow: {
-      alignItems: 'stretch',
       width: '100%',
-    },
-    statGroup: {
-      flex: 1,
-      alignItems: 'stretch',
+      paddingTop: spacing.xs,
     },
     statItem: {
       flex: 1,
-      alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 4,
-      paddingHorizontal: 4,
-      gap: 4,
+      paddingVertical: spacing.xs,
+    },
+    statPress: {
+      flex: 1,
     },
     statDivider: {
       width: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderMid,
-      marginVertical: 8,
+      marginVertical: spacing.sm,
       alignSelf: 'stretch',
-    },
-    statNum: {
-      ...typography.valueLarge,
-      color: colors.textPrimary,
-      textAlign: 'center',
-    },
-    statLbl: {
-      ...typography.caption,
-      color: colors.textMuted,
-      textAlign: 'center',
-      ...getRtlText(),
-    },
-    bioShell: {
-      alignSelf: 'stretch',
-      width: '100%',
-      marginTop: 4,
     },
     bio: {
-      ...typography.body,
-      color: colors.textSecondary,
       lineHeight: 22,
     },
     avatarCol: {
@@ -596,10 +525,11 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       width: '100%',
       height: '100%',
     },
+    /** Logical inset so the badge stays on the avatar's inner corner in both directions. */
     cameraBtn: {
       position: 'absolute',
       bottom: 0,
-      left: 0,
+      end: 0,
       width: 28,
       height: 28,
       borderRadius: 16,
@@ -610,35 +540,17 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderColor: colors.bgDeep,
     },
     actionsRow: {
-      alignSelf: 'stretch',
-      width: '100%',
-      paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
-      gap: spacing.sm,
     },
     actionBtnFlex: {
       flexGrow: 1,
       flexShrink: 0,
     },
-    contentCardTop: {
-      marginHorizontal: 0,
-      marginTop: spacing.sm,
-      backgroundColor: 'transparent',
-    },
-    postsFeed: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xl,
-      minHeight: 200,
-      gap: 4,
-    },
     tabsBar: {
       backgroundColor: 'transparent',
+      marginTop: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
-    },
-    tabsRow: {
-      paddingHorizontal: spacing.lg,
     },
     tabItem: {
       flex: 1,
@@ -647,22 +559,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingBottom: 8,
       position: 'relative',
     },
-    tabLabel: {
-      ...typography.smallHeading,
-      color: colors.textMuted,
-      ...getRtlText(),
-    },
     tabLabelActive: {
       color: scheme === 'dark' ? colors.textPrimary : colors.electric,
     },
+    /** Symmetric inset under the active tab — direction-neutral. */
     tabIndicator: {
       position: 'absolute',
       bottom: 0,
-      left: spacing.lg,
-      right: spacing.lg,
+      start: spacing.lg,
+      end: spacing.lg,
       height: 3,
       borderRadius: 2,
       backgroundColor: colors.electric,
+    },
+    postsFeed: {
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xl,
+      minHeight: 200,
+      gap: spacing.xs,
     },
   });
 }

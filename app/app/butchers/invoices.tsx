@@ -1,21 +1,19 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppText } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { PAYMENT_STATUS_LABELS } from '@/services/butcherData';
 import {
@@ -60,16 +58,17 @@ export default function ButcherInvoicesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScreenHeader
-        title="الفواتير"
-        showBack
-      />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="الفواتير" showBack />
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.electricBright} style={{ marginTop: 60 }} />
+        <ScreenBody scroll={false} gutter={false}>
+          <ActivityIndicator size="large" color={colors.electricBright} style={styles.loader} />
+        </ScreenBody>
       ) : (
-        <ScrollView
+        <ScreenBody
+          gutter={false}
+          padBottom="lg"
           contentContainerStyle={styles.scroll}
           refreshControl={
             <RefreshControl
@@ -83,13 +82,13 @@ export default function ButcherInvoicesScreen() {
           }
         >
           {invoices.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🧾</Text>
-              <Text style={styles.emptyTitle}>لا توجد فواتير بعد</Text>
-              <Text style={styles.emptySub}>
+            <Stack gap="sm" align="center" style={styles.empty}>
+              <AppText variant="display">🧾</AppText>
+              <AppText variant="heading3">لا توجد فواتير بعد</AppText>
+              <AppText variant="caption" color="textMuted" align="center" style={styles.emptySub}>
                 تظهر هنا الفواتير الخاصة بالطلبات المكتملة والمدفوعة
-              </Text>
-            </View>
+              </AppText>
+            </Stack>
           ) : (
             invoices.map((invoice) => (
               <Pressable
@@ -99,65 +98,54 @@ export default function ButcherInvoicesScreen() {
                   router.push({ pathname: '/butchers/invoice/[id]', params: { id: invoice.id } })
                 }
               >
-                <View style={[styles.cardTop, getRtlRow()]}>
+                <Row align="start" gap="md">
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.invoiceNo}>فاتورة #{invoice.orderNumber}</Text>
-                    <Text style={styles.butcherName}>{invoice.butcher?.nameAr ?? 'ملحمة'}</Text>
-                    <Text style={styles.date}>{formatOrderDate(invoice.createdAt)}</Text>
+                    <AppText variant="label" style={{ color: colors.electricBright }}>
+                      فاتورة #{invoice.orderNumber}
+                    </AppText>
+                    <AppText variant="heading3">{invoice.butcher?.nameAr ?? 'ملحمة'}</AppText>
+                    <AppText variant="caption" color="textMuted">
+                      {formatOrderDate(invoice.createdAt)}
+                    </AppText>
                   </View>
                   <View style={styles.paidBadge}>
-                    <Text style={styles.paidText}>{PAYMENT_STATUS_LABELS.paid}</Text>
+                    <AppText variant="label" color="success">
+                      {PAYMENT_STATUS_LABELS.paid}
+                    </AppText>
                   </View>
-                </View>
+                </Row>
                 <View style={styles.divider} />
-                <Text style={styles.productLine} numberOfLines={1}>
+                <AppText variant="caption" color="textSecondary" numberOfLines={1}>
                   {invoice.product?.nameAr ?? 'منتج'} · {invoice.weightKg} كغ
-                </Text>
-                <View style={[styles.totalRow, getRtlRow()]}>
-                  <Text style={styles.totalLabel}>المبلغ المدفوع</Text>
-                  <Text style={styles.totalValue}>
+                </AppText>
+                <Row justify="between" gap="sm">
+                  <AppText variant="caption" color="textMuted">
+                    المبلغ المدفوع
+                  </AppText>
+                  <AppText variant="heading3">
                     {formatCurrency(invoice.totalPrice, invoice.currency)}
-                  </Text>
-                </View>
+                  </AppText>
+                </Row>
               </Pressable>
             ))
           )}
-        </ScrollView>
+        </ScreenBody>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: { padding: spacing.lg, paddingBottom: 40, gap: spacing.md },
+    loader: { marginTop: 60 },
+    scroll: { padding: space[16], paddingBottom: space[40], gap: space[12] },
     card: {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xl,
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      padding: spacing.lg,
-      gap: spacing.sm,
-    },
-    cardTop: { alignItems: 'flex-start', gap: spacing.md },
-    invoiceNo: {
-      ...butcherTypography.primary,
-      color: colors.electricBright,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-    },
-    butcherName: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-    },
-    date: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-      ...getRtlText(),
+      padding: space[16],
+      gap: space[8],
     },
     paidBadge: {
       paddingHorizontal: 10,
@@ -167,44 +155,15 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.success + '55',
     },
-    paidText: {
-      ...butcherTypography.emphasis,
-      color: colors.success,
-      writingDirection: 'rtl',
-    },
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: colors.borderHairline,
     },
-    productLine: {
-      ...butcherTypography.secondary,
-      color: colors.textSecondary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-    },
-    totalRow: { justifyContent: 'space-between', marginTop: spacing.xs },
-    totalLabel: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    totalValue: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-    },
     empty: {
-      alignItems: 'center',
       paddingVertical: 80,
-      gap: spacing.sm,
     },
-    emptyIcon: { fontSize: 48 },
-    emptyTitle: { ...butcherTypography.title, color: colors.textPrimary },
     emptySub: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      paddingHorizontal: spacing.xl,
+      paddingHorizontal: space[20],
     },
   });
 }

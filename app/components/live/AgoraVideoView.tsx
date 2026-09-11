@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { getAgoraModule, isExpoGoEnvironment, VideoSourceType } from '@/lib/agora';
-import { colors, typography } from '@/constants/theme';
+import { colors, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 interface AgoraVideoViewProps {
   canvas: { uid?: number; sourceType?: number };
@@ -10,6 +11,7 @@ interface AgoraVideoViewProps {
 }
 
 export function AgoraVideoView({ canvas, style, local }: AgoraVideoViewProps) {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   if (isExpoGoEnvironment()) {
     return (
       <View style={[styles.placeholder, style]}>
@@ -40,7 +42,8 @@ export function AgoraVideoView({ canvas, style, local }: AgoraVideoViewProps) {
   return <RtcSurfaceView canvas={viewCanvas} style={style} />;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -54,3 +57,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 });
+}
