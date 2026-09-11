@@ -2,9 +2,10 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { colors, elevation, functional, motion, radius, space } from '@/design-system';
 import { AppText, SarhAvatar, SarhButton, SarhCard } from '@/design-system/components';
+import { Row } from '@/design-system/layout';
+import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER } from '@/constants/branding';
-import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import {
   formatServiceCountLabel,
@@ -22,6 +23,7 @@ type Props = {
 export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { gutter } = useLayout();
   const styles = useThemedStyles(() => createStyles());
   const cardH = Math.round(Math.min(200, Math.max(172, width * 0.46)));
   const name = account?.arabicName || '';
@@ -33,7 +35,7 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.sectionHead}>
+      <View style={[styles.sectionHead, { paddingHorizontal: gutter }]}>
         <AppText variant="heading2" color="textPrimary">
           خدمات الوزارة
         </AppText>
@@ -44,14 +46,14 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
         onPress={openProfile}
         style={({ pressed }) => [pressed && styles.pressed]}
       >
-        <SarhCard variant="plain" padding="none" style={[styles.card, { height: cardH }]}>
+        <SarhCard variant="plain" padding="none" style={[styles.card, { height: cardH, marginHorizontal: gutter }]}>
           <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
           <LinearGradient
             colors={['transparent', functional.overlay]}
             locations={[0.28, 1]}
             style={StyleSheet.absoluteFill}
           />
-          <View style={[styles.bar, getRtlRow()]}>
+          <Row align="center" gap="md" style={styles.bar}>
             <SarhAvatar
               source={avatar}
               name={name}
@@ -84,7 +86,7 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
               accessibilityLabel="فتح"
               onPress={openProfile}
             />
-          </View>
+          </Row>
         </SarhCard>
       </Pressable>
     </View>
@@ -97,12 +99,10 @@ function createStyles() {
     paddingBottom: space[16],
   },
   sectionHead: {
-    paddingHorizontal: space[16],
     paddingTop: space[16],
     paddingBottom: space[12],
   },
   card: {
-    marginHorizontal: space[16],
     borderRadius: radius[20],
     overflow: 'hidden',
     justifyContent: 'flex-end',

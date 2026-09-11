@@ -1,25 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as Location from 'expo-location';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
 import { safePush } from '@/lib/safeNavigate';
-import { AppText } from '@/components/ui/AppText';
 
 export default function ButchersAllScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { accessToken } = useAuth();
   const [butchers, setButchers] = useState<ButcherProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,22 +63,22 @@ export default function ButchersAllScreen() {
   }, [load]);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader title="الملاحم" showBack />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="الملاحم" showBack />
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator color={colors.electric} />
-        </View>
+        <ScreenBody scroll={false} gutter={false}>
+          <View style={styles.loader}>
+            <ActivityIndicator color={colors.electric} />
+          </View>
+        </ScreenBody>
       ) : (
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScreenBody gutter={false} padTop="sm" padBottom="lg">
           {butchers.length === 0 ? (
             <View style={styles.empty}>
               <View style={{ width: '100%' }}>
-                <AppText style={styles.emptyTitle}>لا توجد ملاحم حالياً</AppText>
+                <AppText variant="body" color="textMuted">
+                  لا توجد ملاحم حالياً
+                </AppText>
               </View>
             </View>
           ) : (
@@ -96,23 +93,14 @@ export default function ButchersAllScreen() {
               />
             ))
           )}
-        </ScrollView>
+        </ScreenBody>
       )}
       <ButchersTabBar active="stores" />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    scroll: { paddingTop: spacing.sm, paddingBottom: spacing.xl },
-    loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    empty: { paddingVertical: 80, paddingHorizontal: spacing.lg },
-    emptyTitle: {
-      ...butcherTypography.body,
-      color: colors.textMuted,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  empty: { paddingVertical: 80, paddingHorizontal: space[16] },
+});

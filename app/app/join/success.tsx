@@ -2,12 +2,14 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing, typography } from '@/constants/theme';
+import { colors, gradients, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 export default function JoinSuccessScreen() {
+  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
   const router = useRouter();
   const { n, name } = useLocalSearchParams<{ n?: string; name?: string }>();
   const numberLabel = n ? `#${n}` : '—';
@@ -66,7 +68,8 @@ export default function JoinSuccessScreen() {
   );
 }
 
-const s = StyleSheet.create({
+function createScreenStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
   wrap: {
     flex: 1,
@@ -137,3 +140,4 @@ const s = StyleSheet.create({
   },
   backBtnText: { ...typography.button, color: colors.textMuted },
 });
+}

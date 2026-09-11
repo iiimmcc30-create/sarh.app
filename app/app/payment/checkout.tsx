@@ -2,26 +2,25 @@
  * In-app Network International hosted checkout (WebView).
  * Keeps the shopper inside سرح instead of opening an external browser.
  */
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView, type WebViewNavigation } from 'react-native-webview';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import {
   completeInAppPaymentCheckout,
   isPaymentReturnUrl,
 } from '@/services/paymentCheckout';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { type ThemeColors } from '@/constants/theme';
 
 function pickParam(value: string | string[] | undefined): string {
   if (Array.isArray(value)) return value[0] ?? '';
@@ -30,7 +29,7 @@ function pickParam(value: string | string[] | undefined): string {
 
 export default function PaymentCheckoutScreen() {
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const params = useLocalSearchParams<{
     checkoutUrl?: string | string[];
@@ -145,150 +144,99 @@ export default function PaymentCheckoutScreen() {
 
   if (!checkoutUrl) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-        <Text style={styles.errorTitle}>تعذّر فتح صفحة الدفع</Text>
-        <Pressable style={styles.closeBtn} onPress={handleClose}>
-          <Text style={styles.closeBtnText}>إغلاق</Text>
-        </Pressable>
-      </SafeAreaView>
+      <Screen edges={['top', 'bottom']}>
+        <ScreenHeader variant="screen" title="إتمام الدفع" showBack onBackPress={handleClose} />
+        <ScreenBody scroll={false}>
+          <Stack gap="md" align="center" fill style={styles.centered}>
+            <AppText variant="body" align="center">تعذّر فتح صفحة الدفع</AppText>
+            <SarhButton title="إغلاق" onPress={handleClose} />
+          </Stack>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleClose}
-          style={styles.headerBtn}
-          accessibilityRole="button"
-          accessibilityLabel="إغلاق الدفع"
-        >
-          <AppIcon name="close" size={22} color={colors.textPrimary} />
-        </Pressable>
-        <Text style={styles.headerTitle}>إتمام الدفع</Text>
-        <View style={styles.headerBtn} />
-      </View>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader
+        variant="screen"
+        title="إتمام الدفع"
+        showBack
+        onBackPress={handleClose}
+        rightAccessibilityLabel="إغلاق الدفع"
+      />
+      <ScreenBody scroll={false} gutter={false}>
+        <View style={styles.webWrap}>
+          {loading ? (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={colors.electricBright} />
+              <AppText variant="body" color="textSecondary">جارٍ تحميل بوابة الدفع...</AppText>
+            </View>
+          ) : null}
 
-      <View style={styles.webWrap}>
-        {loading ? (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={colors.electricBright} />
-            <Text style={styles.loadingText}>جارٍ تحميل بوابة الدفع...</Text>
-          </View>
-        ) : null}
-
-        {loadError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorTitle}>{loadError}</Text>
-            <Pressable style={styles.closeBtn} onPress={handleClose}>
-              <Text style={styles.closeBtnText}>إغلاق</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <WebView
-            source={{ uri: checkoutUrl }}
-            style={styles.webview}
-            onLoadStart={() => setLoading(true)}
-            onLoadEnd={() => setLoading(false)}
-            onError={() => {
-              setLoading(false);
-              setLoadError('تعذّر تحميل صفحة الدفع. حاول مرة أخرى.');
-            }}
-            onHttpError={(e) => {
-              if (e.nativeEvent.statusCode >= 400) {
+          {loadError ? (
+            <Stack gap="md" align="center" fill style={styles.centered}>
+              <AppText variant="body" align="center">{loadError}</AppText>
+              <SarhButton title="إغلاق" onPress={handleClose} />
+            </Stack>
+          ) : (
+            <WebView
+              source={{ uri: checkoutUrl }}
+              style={styles.webview}
+              onLoadStart={() => setLoading(true)}
+              onLoadEnd={() => setLoading(false)}
+              onError={() => {
                 setLoading(false);
                 setLoadError('تعذّر تحميل صفحة الدفع. حاول مرة أخرى.');
-              }
-            }}
-            onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
-            onNavigationStateChange={onNavigationStateChange}
-            startInLoadingState
-            javaScriptEnabled
-            domStorageEnabled
-            sharedCookiesEnabled
-            thirdPartyCookiesEnabled
-            setSupportMultipleWindows={false}
-            originWhitelist={['https://*', 'http://*', 'sarh://*']}
-            // iOS: allow NI paypage + 3DS redirects inside the same WebView.
-            allowsInlineMediaPlayback
-            {...(Platform.OS === 'android'
-              ? { mixedContentMode: 'always' as const }
-              : {})}
-          />
-        )}
-      </View>
-    </SafeAreaView>
+              }}
+              onHttpError={(e) => {
+                if (e.nativeEvent.statusCode >= 400) {
+                  setLoading(false);
+                  setLoadError('تعذّر تحميل صفحة الدفع. حاول مرة أخرى.');
+                }
+              }}
+              onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
+              onNavigationStateChange={onNavigationStateChange}
+              startInLoadingState
+              javaScriptEnabled
+              domStorageEnabled
+              sharedCookiesEnabled
+              thirdPartyCookiesEnabled
+              setSupportMultipleWindows={false}
+              originWhitelist={['https://*', 'http://*', 'sarh://*']}
+              allowsInlineMediaPlayback
+              {...(Platform.OS === 'android'
+                ? { mixedContentMode: 'always' as const }
+                : {})}
+            />
+          )}
+        </View>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: {
-      flex: 1,
-      backgroundColor: colors.bgDeep,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-    },
-    headerBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerTitle: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-    },
     webWrap: {
       flex: 1,
       position: 'relative',
     },
     webview: {
       flex: 1,
-      backgroundColor: '#fff',
+      backgroundColor: colors.bgSurface,
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
       zIndex: 2,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.md,
+      gap: 12,
       backgroundColor: colors.bgDeep,
     },
-    loadingText: {
-      ...typography.body,
-      color: colors.textSecondary,
-    },
-    errorBox: {
-      flex: 1,
-      alignItems: 'center',
+    centered: {
       justifyContent: 'center',
-      paddingHorizontal: spacing.xl,
-      gap: spacing.md,
-    },
-    errorTitle: {
-      ...typography.body,
-      color: colors.textPrimary,
-      textAlign: 'center',
-    },
-    closeBtn: {
-      backgroundColor: colors.electricBright,
-      borderRadius: radius.xl,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.xl,
-      minWidth: 160,
-      alignItems: 'center',
-    },
-    closeBtnText: {
-      ...typography.bodyStrong,
-      color: '#fff',
+      paddingHorizontal: 24,
     },
   });
 }

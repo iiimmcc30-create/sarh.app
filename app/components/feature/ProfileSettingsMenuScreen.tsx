@@ -1,15 +1,12 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { type SidebarNavItem } from '@/components/feature/SidebarMenu';
-import { AppScrollView } from '@/components/ui/AppScrollView';
-import { colors, space } from '@/design-system';
-import { SarhSettingsRow, SarhSettingsSection } from '@/design-system/components';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { AppText, SarhSettingsRow, SarhSettingsSection } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { motion, space } from '@/design-system';
+import { useTheme } from '@/hooks/useTheme';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppText } from '@/design-system/components';
-import { motion } from '@/design-system';
 
 type ProfileSettingsMenuScreenProps = {
   title?: string;
@@ -20,24 +17,24 @@ type ProfileSettingsMenuScreenProps = {
   onLogout: () => void;
 };
 
+/** Layout only — `colors` is mutated by `applyThemeScheme` and read at render. */
+const styles = StyleSheet.create({
+  logout: {
+    marginTop: space[32],
+    minHeight: space[48],
+    paddingHorizontal: space[16],
+    justifyContent: 'center',
+  },
+});
+
 export function ProfileSettingsMenuScreen({
   title = 'الإعدادات',
   sections,
   onLogout,
 }: ProfileSettingsMenuScreenProps) {
   const router = useRouter();
-  const styles = useThemedStyles(() =>
-    StyleSheet.create({
-      container: { flex: 1, backgroundColor: colors.background },
-      content: { paddingBottom: space[48] },
-      logout: {
-        marginTop: space[32],
-        minHeight: space[48],
-        paddingHorizontal: space[16],
-        justifyContent: 'center',
-      },
-    }),
-  );
+  // Subscribe so the logout label re-resolves its color after a scheme switch.
+  useTheme();
 
   const handleItemPress = (item: SidebarNavItem) => {
     if (item.onPress) {
@@ -50,9 +47,10 @@ export function ProfileSettingsMenuScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title={title} showBack />
-      <AppScrollView contentContainerStyle={styles.content}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title={title} showBack />
+      {/* Rows are full-width tap targets, so the row pattern owns its own inset. */}
+      <ScreenBody gutter={false} padBottom="xxxl">
         {sections.map((section) => (
           <SarhSettingsSection key={section.title} title={section.title}>
             {section.items.map((item, index) => (
@@ -80,7 +78,7 @@ export function ProfileSettingsMenuScreen({
             تسجيل الخروج
           </AppText>
         </Pressable>
-      </AppScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }

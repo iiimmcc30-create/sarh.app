@@ -100,18 +100,28 @@ export function StcPayLogo({ size = 32 }: { size?: number }) {
   );
 }
 
+export function MastercardLogo({ size = 32 }: { size?: number }) {
+  const r = size * 0.46;
+  return (
+    <View style={{ width: size * 1.9, height: size, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
+      <View style={{ width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#EB001B' }} />
+      <View style={{ width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#F79E1B', marginStart: -r * 0.72, opacity: 0.95 }} />
+    </View>
+  );
+}
+
 export function PaymentBrandLogo({ id, size = 32 }: { id: NIPaymentMethod; size?: number }) {
   switch (id) {
     case 'mada':
       return <MadaLogo size={size} />;
     case 'visa':
       return <VisaLogo size={size} />;
+    case 'mastercard':
+      return <MastercardLogo size={size} />;
     case 'apple_pay':
       return <ApplePayLogo size={size} />;
     case 'stc_pay':
       return <StcPayLogo size={size} />;
-    default:
-      return <VisaLogo size={size} />;
   }
 }
 

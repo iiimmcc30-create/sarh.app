@@ -1,23 +1,21 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { useAuth } from '@/contexts/AuthContext';
 import { ButcherProfile } from '@/services/butcherData';
@@ -77,16 +75,17 @@ export default function ButcherFavoritesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScreenHeader
-        title="تفضيلاتي"
-        showBack
-      />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="تفضيلاتي" showBack />
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.electricBright} style={{ marginTop: 60 }} />
+        <ScreenBody scroll={false} gutter={false}>
+          <ActivityIndicator size="large" color={colors.electricBright} style={styles.loader} />
+        </ScreenBody>
       ) : (
-        <ScrollView
+        <ScreenBody
+          gutter={false}
+          padBottom="lg"
           contentContainerStyle={styles.scroll}
           refreshControl={
             <RefreshControl
@@ -100,19 +99,23 @@ export default function ButcherFavoritesScreen() {
           }
         >
           {favorites.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>❤️</Text>
-              <Text style={styles.emptyTitle}>لا توجد ملاحم مفضلة</Text>
-              <Text style={styles.emptySub}>أضف ملاحمك المفضلة من قائمة الملاحم</Text>
-              <Pressable style={styles.emptyBtn} onPress={() => safePush('/butchers', undefined, router)}>
-                <Text style={styles.emptyBtnText}>تصفح الملاحم</Text>
-              </Pressable>
-            </View>
+            <Stack gap="sm" align="center" style={styles.empty}>
+              <AppText variant="display">❤️</AppText>
+              <AppText variant="heading3">لا توجد ملاحم مفضلة</AppText>
+              <AppText variant="caption" color="textMuted" align="center" style={styles.emptySub}>
+                أضف ملاحمك المفضلة من قائمة الملاحم
+              </AppText>
+              <SarhButton
+                title="تصفح الملاحم"
+                shape="pill"
+                onPress={() => safePush('/butchers', undefined, router)}
+              />
+            </Stack>
           ) : (
             favorites.map((butcher) => {
               const isOpen = butcher.workingHours.isOpen;
               return (
-                <View key={butcher.id} style={styles.card}>
+                <Row key={butcher.id} gap="none" align="stretch" style={styles.card}>
                   <View style={styles.thumbWrap}>
                     <Image
                       source={{
@@ -126,60 +129,62 @@ export default function ButcherFavoritesScreen() {
                     />
                   </View>
                   <View style={styles.cardBody}>
-                    <Text style={styles.name} numberOfLines={1}>
+                    <AppText variant="label" numberOfLines={1}>
                       {butcher.nameAr}
-                    </Text>
-                    <View style={[styles.ratingRow, getRtlRow()]}>
+                    </AppText>
+                    <Row gap="xs" align="center">
                       <AppIcon name="star" size={14} color={colors.gold} />
-                      <Text style={styles.rating}>{butcher.rating.toFixed(1)}</Text>
-                      <Text style={styles.reviews}>({butcher.reviewCount})</Text>
-                    </View>
+                      <AppText variant="label" style={{ color: colors.gold }}>
+                        {butcher.rating.toFixed(1)}
+                      </AppText>
+                      <AppText variant="caption" color="textMuted">
+                        ({butcher.reviewCount})
+                      </AppText>
+                    </Row>
                     <View
                       style={[
                         styles.openBadge,
                         { backgroundColor: isOpen ? colors.success + '22' : colors.danger + '22' },
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.openText,
-                          { color: isOpen ? colors.success : colors.danger },
-                        ]}
+                      <AppText
+                        variant="label"
+                        style={{ color: isOpen ? colors.success : colors.danger }}
                       >
                         {isOpen ? 'مفتوح الآن' : 'مغلق حالياً'}
-                      </Text>
+                      </AppText>
                     </View>
-                    <View style={[styles.actions, getRtlRow()]}>
+                    <Row gap="sm" align="center" style={styles.actions}>
                       <Pressable
                         style={styles.visitBtn}
                         onPress={() =>
                           safePush({ pathname: '/butchers/[id]', params: { id: butcher.id } }, undefined, router)
                         }
                       >
-                        <Text style={styles.visitBtnText}>زيارة الملحمة</Text>
+                        <AppText variant="label" style={{ color: colors.electricBright }}>
+                          زيارة الملحمة
+                        </AppText>
                       </Pressable>
                       <Pressable style={styles.removeBtn} onPress={() => void handleRemove(butcher)}>
                         <AppIcon name="heart" size={18} color={colors.rose} />
                       </Pressable>
-                    </View>
+                    </Row>
                   </View>
-                </View>
+                </Row>
               );
             })
           )}
-        </ScrollView>
+        </ScreenBody>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: { padding: spacing.lg, paddingBottom: 40, gap: spacing.md },
+    loader: { marginTop: 60 },
+    scroll: { padding: space[16], paddingBottom: space[40], gap: space[12] },
     card: {
-      ...getRtlRow(),
-      alignItems: 'stretch',
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xl,
       borderWidth: 1,
@@ -199,27 +204,17 @@ function createStyles(colors: ThemeColors) {
     },
     cardBody: {
       flex: 1,
-      padding: spacing.md,
+      padding: space[12],
       gap: 6,
       justifyContent: 'center',
     },
-    name: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-    },
-    ratingRow: { alignItems: 'center', gap: 4 },
-    rating: { ...butcherTypography.emphasis, color: colors.gold },
-    reviews: { ...butcherTypography.secondary, color: colors.textMuted },
     openBadge: {
       alignSelf: 'flex-start',
-      paddingHorizontal: 8,
+      paddingHorizontal: space[8],
       paddingVertical: 3,
       borderRadius: radius.pill,
     },
-    openText: { ...butcherTypography.emphasis, writingDirection: 'rtl' },
-    actions: { marginTop: spacing.sm, gap: spacing.sm, alignItems: 'center' },
+    actions: { marginTop: space[8] },
     visitBtn: {
       flex: 1,
       paddingVertical: 10,
@@ -229,15 +224,10 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electric + '44',
       alignItems: 'center',
     },
-    visitBtnText: {
-      ...butcherTypography.emphasis,
-      color: colors.electricBright,
-      writingDirection: 'rtl',
-    },
     removeBtn: {
       width: 40,
       height: 40,
-      borderRadius: 12,
+      borderRadius: radius.md,
       backgroundColor: colors.bgElevated,
       alignItems: 'center',
       justifyContent: 'center',
@@ -245,30 +235,10 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     empty: {
-      alignItems: 'center',
       paddingVertical: 80,
-      gap: spacing.sm,
     },
-    emptyIcon: { fontSize: 48 },
-    emptyTitle: { ...butcherTypography.title, color: colors.textPrimary },
     emptySub: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      paddingHorizontal: spacing.xl,
-    },
-    emptyBtn: {
-      marginTop: spacing.md,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: 12,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electric,
-    },
-    emptyBtnText: {
-      ...butcherTypography.primary,
-      color: '#fff',
-      writingDirection: 'rtl',
+      paddingHorizontal: space[20],
     },
   });
 }

@@ -42,6 +42,7 @@ describe('P2 UI/UX consistency — frozen visuals', () => {
     expect(src('app/butchers/location.tsx')).not.toContain('textAlign="right"');
     expect(src('app/payment.tsx')).not.toContain('textAlign="right"');
     expect(src('components/market/MarketCategoryPicker.tsx')).not.toContain('paddingRight:');
-    expect(src('app/payment.tsx')).toContain('rtlInputText');
+    expect(src('app/payment.tsx')).toContain('SarhInput');
+    expect(src('design-system/components/SarhInput.tsx')).toContain('rtlInputText');
   });
 });

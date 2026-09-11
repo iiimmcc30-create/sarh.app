@@ -1,15 +1,13 @@
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlText } from '@/lib/rtl';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { type ThemeColors } from '@/constants/theme';
 import { useRouter } from 'expo-router';
-import { SarhButton } from '@/design-system/components';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
 const WELCOME_GREETING = 'أهلاً وسهلاً بك في';
 const WELCOME_TAGLINE =
@@ -22,7 +20,7 @@ export default function AuthWelcomeScreen() {
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
 
   return (
-    <View style={styles.root}>
+    <Screen edges={['top', 'bottom']} pattern={false} style={styles.root}>
       <LinearGradient
         colors={[colors.bgDeep, colors.bgPrimary, colors.bgDeep]}
         style={StyleSheet.absoluteFill}
@@ -33,69 +31,50 @@ export default function AuthWelcomeScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.55 }}
       />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.body}>
-          <View style={styles.hero}>
-            <SarhLogoMark size={72} color={colors.textPrimary} />
-            <Text style={styles.brand}>{WELCOME_GREETING}</Text>
-            <Text style={styles.subtitle}>{WELCOME_TAGLINE}</Text>
-          </View>
+      <ScreenBody scroll={false} padTop="xxl" padBottom="xl" style={styles.body}>
+        <Stack gap="md" align="center" style={styles.hero}>
+          <SarhLogoMark size={72} color={colors.textPrimary} />
+          <AppText variant="display" align="center">
+            {WELCOME_GREETING}
+          </AppText>
+          <AppText variant="body" color="textMuted" align="center" style={styles.tagline}>
+            {WELCOME_TAGLINE}
+          </AppText>
+        </Stack>
 
-          <View style={styles.actions}>
-            <SarhButton title={copy.startCta} fullWidth onPress={() => router.push('/auth/register')} />
-            <SarhButton
-              title={copy.haveAccount}
-              variant="secondary"
-              fullWidth
-              onPress={() => router.push('/auth/phone')}
-            />
-          </View>
-        </View>
-      </SafeAreaView>
-    </View>
+        <Stack gap="md">
+          <SarhButton title={copy.startCta} fullWidth onPress={() => router.push('/auth/register')} />
+          <SarhButton
+            title={copy.haveAccount}
+            variant="secondary"
+            fullWidth
+            onPress={() => router.push('/auth/phone')}
+          />
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bgDeep },
+    root: { backgroundColor: colors.bgDeep },
     glow: {
       position: 'absolute',
       top: 0,
-      left: 0,
-      right: 0,
+      start: 0,
+      end: 0,
       height: 280,
     },
-    safe: { flex: 1 },
     body: {
-      flex: 1,
-      paddingHorizontal: spacing.xl,
       justifyContent: 'space-between',
-      paddingBottom: spacing.xl,
     },
     hero: {
       flex: 1,
-      alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.md,
-      paddingTop: spacing.xxl,
     },
-    brand: {
-      ...typography.display,
-      fontFamily: OFFICIAL_APP_FONT,
-      color: colors.textPrimary,
-      ...getRtlText(),
-      marginTop: spacing.sm,
-      textAlign: 'center',
-    },
-    subtitle: {
-      ...typography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
-      lineHeight: 24,
+    tagline: {
       maxWidth: 320,
-      ...getRtlText(),
     },
-    actions: { gap: spacing.md },
   });
 }

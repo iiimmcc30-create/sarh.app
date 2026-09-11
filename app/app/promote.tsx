@@ -21,10 +21,9 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppScrollView } from '@/components/ui/AppScrollView';
 import { usePaidServices } from '@/hooks/usePaidServices';
 import { AppText, SarhButton } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
 
 const CATEGORY_ICONS: Record<Listing['category'], string> = {
   camels: '🐪',
@@ -89,49 +88,49 @@ export default function PromoteHubScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+    <Screen edges={['top', 'bottom']}>
       <ScreenHeader title="تعزيز سرح" showBack />
-      <AppScrollView contentContainerStyle={styles.scroll}>
-          {!hasAnyBoostService ? (
+      <ScreenBody padTop="xs" padBottom="xxl" gap="lg">
+        {!hasAnyBoostService ? (
+          <View style={styles.hero}>
+            <View style={styles.heroIconWrap}>
+              <AppIcon name="rocket-outline" size={28} color={colors.textMuted} />
+            </View>
+            <AppText variant="heading3" color="textPrimary" align="center">خدمات الترقية غير مفعّلة حالياً</AppText>
+            <AppText variant="caption" color="textMuted" align="center">يمكنك العودة لاحقاً عند تفعيلها من الإدارة.</AppText>
+          </View>
+        ) : null}
+
+        {hasAnyBoostService ? (
+          <>
             <View style={styles.hero}>
               <View style={styles.heroIconWrap}>
-                <AppIcon name="rocket-outline" size={28} color={colors.textMuted} />
+                <AppIcon name="rocket-outline" size={28} color={colors.electric} />
               </View>
-              <AppText variant="heading3" color="textPrimary" align="center">خدمات الترقية غير مفعّلة حالياً</AppText>
-              <AppText variant="caption" color="textMuted" align="center">يمكنك العودة لاحقاً عند تفعيلها من الإدارة.</AppText>
+              <AppText variant="heading3" color="textPrimary" align="center">اختر إعلاناً لبدء الترويج</AppText>
+              <AppText variant="caption" color="textMuted" align="center" style={styles.heroSub}>
+                زِد ظهور إعلانك، ثبّته في الأعلى، أو أضف نجمة مميزة — كل خيار له تأثير مختلف
+              </AppText>
             </View>
-          ) : null}
 
-          {hasAnyBoostService ? (
-            <>
-              <View style={styles.hero}>
-                <View style={styles.heroIconWrap}>
-                  <AppIcon name="rocket-outline" size={28} color={colors.electric} />
+            {loadingListings ? (
+              <ActivityIndicator color={colors.electric} style={{ marginVertical: spacing.xl }} />
+            ) : myListings.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <View style={styles.emptyIconWrap}>
+                  <AppIcon name="megaphone-outline" size={36} color={colors.textMuted} />
                 </View>
-                <AppText variant="heading3" color="textPrimary" align="center">اختر إعلاناً لبدء الترويج</AppText>
-                <AppText variant="caption" color="textMuted" align="center" style={styles.heroSub}>
-                  زِد ظهور إعلانك، ثبّته في الأعلى، أو أضف نجمة مميزة — كل خيار له تأثير مختلف
-                </AppText>
+                <AppText variant="label" color="textPrimary" align="center">لا توجد إعلانات بعد</AppText>
+                <AppText variant="caption" color="textMuted" align="center" style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</AppText>
+                <SarhButton
+                  title="إنشاء إعلان"
+                  onPress={() => void navigateToCreateListing()}
+                  leftIcon="add-circle-outline"
+                />
               </View>
-
-              {loadingListings ? (
-                <ActivityIndicator color={colors.electric} style={{ marginVertical: spacing.xl }} />
-              ) : myListings.length === 0 ? (
-                <View style={styles.emptyBox}>
-                  <View style={styles.emptyIconWrap}>
-                    <AppIcon name="megaphone-outline" size={36} color={colors.textMuted} />
-                  </View>
-                  <AppText variant="label" color="textPrimary" align="center">لا توجد إعلانات بعد</AppText>
-                  <AppText variant="caption" color="textMuted" align="center" style={styles.emptySub}>انشر إعلاناً في السوق ثم عد لترويجه ورفع مشاهداته</AppText>
-                  <SarhButton
-                    title="إنشاء إعلان"
-                    onPress={() => void navigateToCreateListing()}
-                    leftIcon="add-circle-outline"
-                  />
-                </View>
-              ) : (
-                <View style={styles.listingsList}>
-                  {myListings.map((listing, index) => {
+            ) : (
+              <View style={styles.listingsList}>
+                {myListings.map((listing, index) => {
                     const thumb = listingThumb(listing);
                     const title = listing.arabicTitle || listing.title;
                     const location = listing.arabicLocation || listing.location;
@@ -200,7 +199,7 @@ export default function PromoteHubScreen() {
                               <Image source={uriSource(thumb)} style={styles.thumb} contentFit="cover" />
                             ) : (
                               <View style={styles.thumbPlaceholder}>
-                                <AppText style={styles.thumbEmoji}>
+                                <AppText variant="heading2">
                                   {CATEGORY_ICONS[listing.category] || '📦'}
                                 </AppText>
                               </View>
@@ -209,35 +208,28 @@ export default function PromoteHubScreen() {
                         </View>
                       </Pressable>
                     );
-                  })}
-                </View>
-              )}
-            </>
-          ) : null}
-        </AppScrollView>
+                })}
+              </View>
+            )}
+          </>
+        ) : null}
+      </ScreenBody>
 
-        <PromotionStatsSheet
-          visible={!!statsListingId}
-          listingId={statsListingId}
-          listingTitle={
-            myListings.find((l) => l.id === statsListingId)?.arabicTitle ??
-            myListings.find((l) => l.id === statsListingId)?.title
-          }
-          onClose={() => setStatsListingId(null)}
-        />
-    </SafeAreaView>
+      <PromotionStatsSheet
+        visible={!!statsListingId}
+        listingId={statsListingId}
+        listingTitle={
+          myListings.find((l) => l.id === statsListingId)?.arabicTitle ??
+          myListings.find((l) => l.id === statsListingId)?.title
+        }
+        onClose={() => setStatsListingId(null)}
+      />
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.xxl,
-      gap: spacing.lg,
-    },
     hero: {
       alignItems: 'center',
       gap: spacing.sm,
@@ -333,7 +325,6 @@ function createStyles(colors: ThemeColors) {
     },
     reachText: {
       color: '#7C3AED',
-      fontWeight: '600',
     },
     thumbWrap: {
       width: 48,
@@ -352,7 +343,6 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    thumbEmoji: { fontSize: 22 },
     statsBtn: {
       width: 32,
       height: 32,

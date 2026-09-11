@@ -1,13 +1,11 @@
-import { SarhChip, SarhButton } from '@/design-system/components';
 // SAFAT — Butchers delivery location picker (خريطة ذكية لموقع التوصيل)
-import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LocationMapPreview } from '@/components/feature/LocationMapPreview';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhButton, SarhChip, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, ltrInputText, rtlInputText } from '@/lib/rtl';
 import { reverseGeocodeToAddress } from '@/lib/formatAddress';
 import {
   loadDeliveryLocation,
@@ -21,15 +19,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppText } from '@/components/ui/AppText';
 
 const LABEL_OPTIONS = ['المنزل', 'العمل', 'آخر'];
 
@@ -115,23 +107,17 @@ export default function ButcherLocationScreen() {
   const canSave = Boolean(address.trim() || cityAr.trim() || coords);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScreenHeader title="موقع التوصيل" showBack />
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="موقع التوصيل" showBack />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={{ width: '100%' }}>
-            <AppText style={styles.hint}>
-              اضغط على الخريطة لتحديد موقعك، أو استخدم «موقعي الحالي».
-            </AppText>
-          </View>
+        <ScreenBody gap="lg" padTop="lg" padBottom="xxl">
+          <AppText variant="body">
+            اضغط على الخريطة لتحديد موقعك، أو استخدم «موقعي الحالي».
+          </AppText>
 
           <LocationMapPreview
             country="SA"
@@ -152,53 +138,40 @@ export default function ButcherLocationScreen() {
             <ActivityIndicator color={colors.electricBright} style={{ marginTop: spacing.lg }} />
           ) : null}
 
-          {/* Label chips */}
-          <View style={styles.field}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.fieldLabel}>نوع العنوان</AppText>
-            </View>
-            <View style={styles.chipsRow}>
+          <Stack gap="sm">
+            <AppText variant="bodyMedium">نوع العنوان</AppText>
+            <Row wrap gap="sm">
               {LABEL_OPTIONS.map((opt) => (
-                <SarhChip appearance="filter"
+                <SarhChip
+                  appearance="filter"
                   key={opt}
                   label={opt}
                   selected={label === opt}
                   onPress={() => setLabel(opt)}
                 />
               ))}
-            </View>
-          </View>
+            </Row>
+          </Stack>
 
-          {/* House number */}
-          <View style={styles.field}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.fieldLabel}>رقم المنزل / المبنى</AppText>
-            </View>
-            <TextInput
-              style={[styles.input, ltrInputText]}
-              value={houseNumber}
-              onChangeText={setHouseNumber}
-              placeholder="مثال: 5243"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="numbers-and-punctuation"
-            />
-          </View>
+          <SarhInput
+            appearance="theme"
+            label="رقم المنزل / المبنى"
+            value={houseNumber}
+            onChangeText={setHouseNumber}
+            placeholder="مثال: 5243"
+            keyboardType="numbers-and-punctuation"
+            ltr
+          />
 
-          {/* Address */}
-          <View style={styles.field}>
-            <View style={{ width: '100%' }}>
-              <AppText style={styles.fieldLabel}>العنوان / الحي</AppText>
-            </View>
-            <TextInput
-              style={[styles.input, styles.inputMultiline, rtlInputText]}
-              value={address}
-              onChangeText={setAddress}
-              placeholder="اسم الحي أو وصف مختصر للعنوان"
-              placeholderTextColor={colors.textMuted}
-              multiline
-            />
-          </View>
-        </ScrollView>
+          <SarhInput
+            appearance="theme"
+            label="العنوان / الحي"
+            value={address}
+            onChangeText={setAddress}
+            placeholder="اسم الحي أو وصف مختصر للعنوان"
+            multiline
+          />
+        </ScreenBody>
 
         <View style={styles.footer}>
           <SarhButton
@@ -211,36 +184,13 @@ export default function ButcherLocationScreen() {
           />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
-    scroll: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
-    hint: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-      lineHeight: 22,
-    },
-    field: { gap: spacing.sm },
-    fieldLabel: {
-      ...typography.smallHeading,
-      color: colors.textPrimary,
-    },
-    chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-    input: {
-      ...butcherTypography.body,
-      backgroundColor: colors.bgElevated,
-      borderRadius: radius.lg,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 12,
-      color: colors.textPrimary,
-      ...getRtlText(),
-    },
-    inputMultiline: { minHeight: 72, textAlignVertical: 'top' },
     footer: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
@@ -248,21 +198,6 @@ function createStyles(colors: ThemeColors) {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.borderSoft,
       backgroundColor: colors.screenRoot,
-    },
-    saveBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      paddingVertical: 15,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electric,
-    },
-    saveBtnDisabled: { opacity: 0.5 },
-    saveBtnText: {
-      ...butcherTypography.primary,
-      color: '#fff',
-      writingDirection: 'rtl',
     },
   });
 }

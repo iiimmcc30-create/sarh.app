@@ -22,5 +22,18 @@ export { radius, radiusAlias } from './radius';
 export type { RadiusToken } from './radius';
 export { space, spaceAlias } from './spacing';
 export type { SpaceToken } from './spacing';
-export { fontFamily, fontWeight, typography } from './typography';
-export type { TypeRole, TypeToken } from './typography';
+export {
+  SEMANTIC_TYPE_ROLE,
+  TYPE_ROLE_ALIAS,
+  fontFamily,
+  fontWeight,
+  resolveTypeRole,
+  typography,
+} from './typography';
+export type {
+  SemanticTypeRole,
+  TypeRole,
+  TypeRoleAlias,
+  TypeToken,
+  TypeVariant,
+} from './typography';

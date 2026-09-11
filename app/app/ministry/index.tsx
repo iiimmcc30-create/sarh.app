@@ -1,19 +1,19 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { AppText } from '@/components/ui/AppText';
 import { MinistryServiceCard } from '@/components/feature/MinistryServiceCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { MEWA_FALLBACK_AVATAR, MEWA_FALLBACK_COVER, MEWA_USERNAME } from '@/constants/branding';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { spacing, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Row, Screen, ScreenBody } from '@/design-system/layout';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useApp } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { openPostDetail } from '@/lib/openPost';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
-import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchUserPosts } from '@/services/posts';
 import {
@@ -23,7 +23,6 @@ import {
   type OfficialService,
 } from '@/services/officialServices';
 import { setFollowUser } from '@/services/users';
-import { SarhButton, SarhBackButton } from '@/design-system/components';
 import { showToast } from '@/lib/toast';
 import type { Post } from '@/services/types';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -38,8 +37,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { AppScrollView } from '@/components/ui/AppScrollView';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type MinistryTab = 'info' | 'posts' | 'services';
 
@@ -168,9 +165,15 @@ export default function MinistryProfileScreen() {
 
   const renderInfo = () => (
     <View style={styles.block}>
-      <AppText style={styles.sectionTitle}>الوصف</AppText>
-      {account?.about ? <AppText style={styles.body}>{account.about}</AppText> : null}
-      <AppText style={[styles.sectionTitle, styles.sectionSpaced]}>المعلومات</AppText>
+      <AppText variant="heading3">الوصف</AppText>
+      {account?.about ? (
+        <AppText variant="bodySmall" color="textMuted">
+          {account.about}
+        </AppText>
+      ) : null}
+      <AppText variant="heading3" style={styles.sectionSpaced}>
+        المعلومات
+      </AppText>
       {account?.website ? (
         <InfoRow
           styles={styles}
@@ -203,7 +206,7 @@ export default function MinistryProfileScreen() {
     if (posts.length === 0) {
       return (
         <View style={styles.empty}>
-          <AppText style={styles.emptyTitle}>لا توجد منشورات بعد</AppText>
+          <AppText variant="body" color="textMuted">لا توجد منشورات بعد</AppText>
         </View>
       );
     }
@@ -230,7 +233,7 @@ export default function MinistryProfileScreen() {
     if (services.length === 0) {
       return (
         <View style={styles.empty}>
-          <AppText style={styles.emptyTitle}>لا توجد خدمات متاحة حالياً</AppText>
+          <AppText variant="body" color="textMuted">لا توجد خدمات متاحة حالياً</AppText>
         </View>
       );
     }
@@ -248,24 +251,19 @@ export default function MinistryProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={[styles.nav, getRtlRow()]}>
-        <SarhBackButton onPress={() => router.back()} accessibilityLabel="رجوع" color={colors.textPrimary} style={styles.navBtn} />
-        <AppText style={styles.navTitle} numberOfLines={1}>
-          {account?.arabicName || ''}
-        </AppText>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="مشاركة"
-          onPress={() => void handleShare()}
-          style={styles.navBtn}
-        >
-          <AppIcon name="share-outline" size={18} color={colors.textPrimary} />
-        </Pressable>
-      </View>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader
+        variant="screen"
+        title=""
+        showBack
+        rightIcon="share-outline"
+        onRightPress={() => void handleShare()}
+        rightAccessibilityLabel="مشاركة"
+      />
 
-      <AppScrollView
-        contentContainerStyle={styles.scroll}
+      <ScreenBody
+        gutter={false}
+        padBottom="xxxl"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -293,12 +291,20 @@ export default function MinistryProfileScreen() {
         </View>
 
         <View style={styles.identity}>
-          <View style={[styles.nameRow, getRtlRow()]}>
-            <AppText style={styles.name}>{account?.arabicName || ''}</AppText>
+          <Row justify="center" align="center" gap="sm" style={styles.nameRow}>
+            <AppText variant="heading2" align="center">
+              {account?.arabicName || ''}
+            </AppText>
             {account?.verified ? <VerificationBadge size={18} /> : null}
-          </View>
-          <AppText style={styles.followers}>{followersLabel}</AppText>
-          {account?.bio ? <AppText style={styles.bio}>{account.bio}</AppText> : null}
+          </Row>
+          <AppText variant="caption" color="primary">
+            {followersLabel}
+          </AppText>
+          {account?.bio ? (
+            <AppText variant="bodySmall" color="textMuted" align="center">
+              {account.bio}
+            </AppText>
+          ) : null}
           <SarhButton
             title={account?.isFollowing ? 'متابَع' : 'متابعة'}
             variant={account?.isFollowing ? 'secondary' : 'primary'}
@@ -309,7 +315,7 @@ export default function MinistryProfileScreen() {
           />
         </View>
 
-        <View style={[styles.tabs, getRtlRow()]}>
+        <Row style={styles.tabs}>
           {TABS.map((item) => {
             const active = tab === item.key;
             return (
@@ -320,14 +326,14 @@ export default function MinistryProfileScreen() {
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
               >
-                <AppText style={[styles.tabLabel, active && styles.tabLabelOn]}>
+                <AppText variant="caption" color={active ? 'primary' : 'textMuted'}>
                   {item.label}
                 </AppText>
                 {active ? <View style={styles.tabLine} /> : <View style={styles.tabLineOff} />}
               </Pressable>
             );
           })}
-        </View>
+        </Row>
 
         {loading ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
@@ -338,8 +344,8 @@ export default function MinistryProfileScreen() {
         ) : (
           renderServices()
         )}
-      </AppScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
@@ -358,37 +364,18 @@ function InfoRow({
 }) {
   return (
     <Pressable onPress={onPress} style={styles.infoRow} accessibilityRole="link">
-      <AppText style={styles.infoLabel}>{label}</AppText>
-      <AppText style={[styles.infoValue, link && styles.infoLink]}>{value}</AppText>
+      <AppText variant="caption" color="textMuted">
+        {label}
+      </AppText>
+      <AppText variant="body" color={link ? 'primary' : 'textPrimary'}>
+        {value}
+      </AppText>
     </Pressable>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    nav: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-    },
-    navBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    navTitle: {
-      ...typography.caption,
-      color: colors.textPrimary,
-      fontWeight: '700',
-      flex: 1,
-      textAlign: 'center',
-    },
-    scroll: {
-      paddingBottom: spacing.huge,
-    },
     coverWrap: {
       height: 148,
       backgroundColor: colors.bgDeep,
@@ -405,17 +392,12 @@ function createStyles(colors: ThemeColors) {
       width: 96,
       height: 96,
       borderRadius: 48,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.bgSurface,
       borderWidth: 4,
       borderColor: colors.screenRoot,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      shadowColor: '#07131C',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.16,
-      shadowRadius: 10,
-      elevation: 6,
     },
     avatar: {
       width: 78,
@@ -428,48 +410,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
     },
     nameRow: {
-      alignItems: 'center',
-      gap: 8,
       justifyContent: 'center',
-    },
-    name: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      fontWeight: '700',
-      textAlign: 'center',
-    },
-    followers: {
-      ...typography.caption,
-      color: colors.electric,
-      fontWeight: '600',
-    },
-    bio: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 22,
-    },
-    followBtn: {
-      marginTop: spacing.xs,
-      width: '100%',
-      borderRadius: radius.md,
-      backgroundColor: colors.textPrimary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: 48,
-    },
-    followBtnOn: {
-      backgroundColor: colors.bgElevated,
-      borderWidth: 1,
-      borderColor: colors.borderMid,
-    },
-    followText: {
-      ...typography.body,
-      color: colors.screenRoot,
-      fontWeight: '700',
-    },
-    followTextOn: {
-      color: colors.textPrimary,
     },
     tabs: {
       marginTop: spacing.lg,
@@ -481,14 +422,6 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       alignItems: 'center',
       paddingTop: spacing.sm,
-    },
-    tabLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-      fontWeight: '600',
-    },
-    tabLabelOn: {
-      color: colors.electric,
     },
     tabLine: {
       marginTop: 8,
@@ -507,49 +440,21 @@ function createStyles(colors: ThemeColors) {
       paddingTop: spacing.lg,
       gap: spacing.sm,
     },
-    sectionTitle: {
-      ...typography.smallHeading,
-      color: colors.textPrimary,
-      fontWeight: '700',
-    },
     sectionSpaced: {
       marginTop: spacing.md,
-    },
-    body: {
-      ...typography.feedBody,
-      color: colors.textSecondary,
-      lineHeight: 24,
     },
     infoRow: {
       paddingVertical: spacing.sm,
       gap: 4,
     },
-    infoLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-    },
-    infoValue: {
-      ...typography.body,
-      color: colors.textPrimary,
-    },
-    infoLink: {
-      color: colors.electric,
-    },
     empty: {
       paddingVertical: spacing.xxl,
       alignItems: 'center',
-    },
-    emptyTitle: {
-      ...typography.body,
-      color: colors.textMuted,
     },
     serviceList: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.lg,
       gap: spacing.md,
-    },
-    pressed: {
-      opacity: 0.9,
     },
   });
 }

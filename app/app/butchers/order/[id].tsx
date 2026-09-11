@@ -1,6 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { AppText, SarhBackButton } from '@/design-system/components';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppText } from '@/design-system/components';
+import { Row, Screen, ScreenBody } from '@/design-system/layout';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrderSocket } from '@/hooks/useOrderSocket';
@@ -17,7 +19,6 @@ import {
   orderMoneySummary,
   timelineStamp,
 } from '@/lib/customerOrders';
-import { getRtlRow } from '@/lib/rtl';
 import { safePush } from '@/lib/safeNavigate';
 import { showToast } from '@/lib/toast';
 import { API_BASE } from '@/services/api';
@@ -34,11 +35,9 @@ import {
   ActivityIndicator,
   Linking,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OrderDetailsScreen() {
   const params = useLocalSearchParams<{ id?: string | string[]; fresh?: string | string[] }>();
@@ -95,20 +94,24 @@ export default function OrderDetailsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
-        <ActivityIndicator size="large" color={colors.electricBright} style={{ marginTop: 80 }} />
-      </SafeAreaView>
+      <Screen edges={['top']} style={s.screen}>
+        <ScreenBody scroll={false} gutter={false} width="full">
+          <ActivityIndicator size="large" color={colors.electricBright} style={{ marginTop: 80 }} />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (!order) {
     return (
-      <SafeAreaView style={s.screen} edges={['top']}>
-        <SarhBackButton onPress={() => router.back()} accessibilityLabel="رجوع" color={colors.textPrimary} style={s.backBtn} />
-        <AppText variant="body" color="textMuted" align="center" style={s.errorText}>
-          تعذر تحميل تفاصيل الطلب
-        </AppText>
-      </SafeAreaView>
+      <Screen edges={['top']} style={s.screen}>
+        <ScreenHeader variant="screen" title="تفاصيل الطلب" showBack />
+        <ScreenBody>
+          <AppText variant="body" color="textMuted" align="center" style={s.errorText}>
+            تعذر تحميل تفاصيل الطلب
+          </AppText>
+        </ScreenBody>
+      </Screen>
     );
   }
 
@@ -161,18 +164,12 @@ export default function OrderDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
-      <View style={[s.navRow, getRtlRow()]}>
-        <SarhBackButton onPress={() => router.back()} accessibilityLabel="رجوع" color={colors.textPrimary} style={s.backBtn} />
-        <AppText variant="heading3" numberOfLines={1} style={s.pageTitle}>
-          {pageTitle}
-        </AppText>
-        <View style={s.navSpacer} />
-      </View>
+    <Screen edges={['top']} style={s.screen}>
+      <ScreenHeader variant="screen" title={pageTitle} showBack />
 
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+      <ScreenBody contentContainerStyle={s.scroll}>
         {!delivered ? (
-          <View style={[s.statusRow, getRtlRow()]}>
+          <Row gap="md" align="center" style={s.statusRow}>
             <View style={s.statusBadge}>
               <AppText variant="micro" color="primary">
                 {statusText}
@@ -184,7 +181,7 @@ export default function OrderDetailsScreen() {
                 {formatOrderStamp(order.createdAt)}
               </AppText>
             </View>
-          </View>
+          </Row>
         ) : null}
 
         {headline.awaitingPayment ? (
@@ -272,21 +269,22 @@ export default function OrderDetailsScreen() {
         <View style={s.block}>
           <Pressable
             onPress={() => setDetailsOpen((open) => !open)}
-            style={[s.collapseHead, getRtlRow()]}
             accessibilityRole="button"
             accessibilityLabel="تفاصيل الطلب"
           >
-            <AppText variant="label">تفاصيل الطلب</AppText>
-            <AppIcon
-              name={detailsOpen ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color={colors.textMuted}
-            />
+            <Row justify="between" align="center" style={s.collapseHead}>
+              <AppText variant="label">تفاصيل الطلب</AppText>
+              <AppIcon
+                name={detailsOpen ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={colors.textMuted}
+              />
+            </Row>
           </Pressable>
           {detailsOpen ? (
             <>
               {locationValue ? (
-                <View style={[s.detailRow, getRtlRow()]}>
+                <Row gap="md" align="start" style={s.detailRow}>
                   <View style={s.iconCircle}>
                     <AppIcon name="location-outline" size={16} color={colors.textPrimary} />
                   </View>
@@ -296,25 +294,26 @@ export default function OrderDetailsScreen() {
                       {locationValue}
                     </AppText>
                   </View>
-                </View>
+                </Row>
               ) : null}
               {customerPhone ? (
                 <Pressable
                   onPress={() => void Linking.openURL(`tel:${customerPhone}`)}
-                  style={[s.detailRow, getRtlRow()]}
                 >
-                  <View style={s.iconCircle}>
-                    <AppIcon name="call-outline" size={16} color={colors.textPrimary} />
-                  </View>
-                  <View style={s.detailCopy}>
-                    <AppText variant="caption" color="textMuted">
-                      رقم الجوال
-                    </AppText>
-                    <AppText variant="bodySmall">{customerPhone}</AppText>
-                  </View>
+                  <Row gap="md" align="start" style={s.detailRow}>
+                    <View style={s.iconCircle}>
+                      <AppIcon name="call-outline" size={16} color={colors.textPrimary} />
+                    </View>
+                    <View style={s.detailCopy}>
+                      <AppText variant="caption" color="textMuted">
+                        رقم الجوال
+                      </AppText>
+                      <AppText variant="bodySmall">{customerPhone}</AppText>
+                    </View>
+                  </Row>
                 </Pressable>
               ) : null}
-              <View style={[s.detailRow, getRtlRow(), s.detailRowLast]}>
+              <Row gap="md" align="start" style={[s.detailRow, s.detailRowLast]}>
                 <View style={s.iconCircle}>
                   <AppIcon name="card-outline" size={16} color={colors.textPrimary} />
                 </View>
@@ -326,12 +325,12 @@ export default function OrderDetailsScreen() {
                     {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? (isPickup ? 'استلام' : 'توصيل')}
                   </AppText>
                 </View>
-              </View>
+              </Row>
             </>
           ) : null}
         </View>
 
-        <View style={[s.merchantRow, getRtlRow()]}>
+        <Row gap="md" align="center" style={s.merchantRow}>
           <View style={s.merchantLogo}>
             {uriSource(order.butcher?.logo) ? (
               <Image source={uriSource(order.butcher?.logo)} style={s.logoImg} contentFit="cover" />
@@ -341,11 +340,13 @@ export default function OrderDetailsScreen() {
           </View>
           <View style={s.merchantCopy}>
             <AppText variant="label">{order.butcher?.nameAr ?? 'ملحمة'}</AppText>
-            <Pressable onPress={copyOrderNumber} style={[s.orderIdRow, getRtlRow()]}>
-              <AppText variant="caption" color="textMuted">
-                #{order.orderNumber}
-              </AppText>
-              <AppIcon name="copy-outline" size={14} color={colors.textMuted} />
+            <Pressable onPress={copyOrderNumber}>
+              <Row gap="xs" align="center" style={s.orderIdRow}>
+                <AppText variant="caption" color="textMuted">
+                  #{order.orderNumber}
+                </AppText>
+                <AppIcon name="copy-outline" size={14} color={colors.textMuted} />
+              </Row>
             </Pressable>
           </View>
           {isInvoiceOrder(order) ? (
@@ -353,44 +354,45 @@ export default function OrderDetailsScreen() {
               onPress={() =>
                 safePush({ pathname: '/butchers/invoice/[id]', params: { id: order.id } }, undefined, router)
               }
-              style={[s.downloadBtn, getRtlRow()]}
               accessibilityLabel="تحميل الفاتورة"
             >
-              <AppIcon name="download-outline" size={16} color={colors.textPrimary} />
-              <AppText variant="caption">تحميل</AppText>
+              <Row gap="xs" align="center" style={s.downloadBtn}>
+                <AppIcon name="download-outline" size={16} color={colors.textPrimary} />
+                <AppText variant="caption">تحميل</AppText>
+              </Row>
             </Pressable>
           ) : null}
-        </View>
+        </Row>
 
         <View style={s.block}>
           <AppText variant="label">ملخص الطلب | {summaryCount}</AppText>
           {lines.map((item) => (
-            <View key={item.id} style={[s.summaryLine, getRtlRow()]}>
+            <Row key={item.id} justify="between" align="center" gap="md" style={s.summaryLine}>
               <AppText variant="bodySmall" numberOfLines={2} style={s.itemName}>
                 {item.quantity}x {item.name}
               </AppText>
               <AppText variant="bodySmall">{formatCurrency(item.linePrice, order.currency)}</AppText>
-            </View>
+            </Row>
           ))}
           <View style={s.totalsDivider} />
-          <View style={[s.summaryLine, getRtlRow()]}>
+          <Row justify="between" align="center" gap="md" style={s.summaryLine}>
             <AppText variant="bodySmall" color="textMuted">
               مجموع الطلب
             </AppText>
             <AppText variant="bodySmall">{formatCurrency(money.subtotal, order.currency)}</AppText>
-          </View>
-          <View style={[s.summaryLine, getRtlRow()]}>
+          </Row>
+          <Row justify="between" align="center" gap="md" style={s.summaryLine}>
             <AppText variant="bodySmall" color="textMuted">
               رسوم التوصيل
             </AppText>
             <AppText variant="bodySmall">
               {money.deliveryFee == null ? '—' : formatCurrency(money.deliveryFee, order.currency)}
             </AppText>
-          </View>
-          <View style={[s.summaryLine, getRtlRow()]}>
+          </Row>
+          <Row justify="between" align="center" gap="md" style={s.summaryLine}>
             <AppText variant="label">الإجمالي</AppText>
             <AppText variant="label">{formatCurrency(money.total, order.currency)}</AppText>
-          </View>
+          </Row>
           {order.notes ? (
             <AppText variant="caption" color="textMuted">
               ملاحظات: {order.notes}
@@ -413,7 +415,6 @@ export default function OrderDetailsScreen() {
         ) : null}
 
         <Pressable
-          style={[s.helpRow, getRtlRow()]}
           onPress={() =>
             router.push(
               {
@@ -423,49 +424,34 @@ export default function OrderDetailsScreen() {
             )
           }
         >
-          <AppIcon name="headset" size={18} color={colors.electricBright} />
-          <AppText variant="bodySmall" color="primary">
-            المساعدة
-          </AppText>
+          <Row gap="sm" align="center" style={s.helpRow}>
+            <AppIcon name="headset" size={18} color={colors.electricBright} />
+            <AppText variant="bodySmall" color="primary">
+              المساعدة
+            </AppText>
+          </Row>
         </Pressable>
         <Pressable
-          style={[s.helpRow, getRtlRow()]}
           onPress={() => {
             if (butcherPhone) void Linking.openURL(`tel:${butcherPhone}`);
           }}
         >
-          <AppIcon name="call-outline" size={18} color={colors.electricBright} />
-          <AppText variant="bodySmall" color="primary">
-            {butcherPhone ? 'اتصل بالملحمة' : 'رقم الملحمة غير متوفر'}
-          </AppText>
+          <Row gap="sm" align="center" style={s.helpRow}>
+            <AppIcon name="call-outline" size={18} color={colors.electricBright} />
+            <AppText variant="bodySmall" color="primary">
+              {butcherPhone ? 'اتصل بالملحمة' : 'رقم الملحمة غير متوفر'}
+            </AppText>
+          </Row>
         </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
-    navRow: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-    },
-    backBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'transparent',
-    },
-    navSpacer: { width: 40 },
-    pageTitle: {
-      flex: 1,
-      textAlign: 'center',
-    },
-    scroll: { paddingHorizontal: spacing.lg, gap: 0, paddingBottom: 40 },
+    scroll: { gap: 0, paddingBottom: 40 },
     statusRow: {
       alignItems: 'center',
       gap: spacing.md,

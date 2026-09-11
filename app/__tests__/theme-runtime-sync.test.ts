@@ -1,10 +1,12 @@
-import { applyThemeScheme } from '@/constants/theme';
-import { colors, functional } from '@/design-system';
+import { applyThemeScheme, colors as liveTheme } from '@/constants/theme';
+import { createCommonStyles } from '@/constants/styles';
+import { colors, functional, semantic } from '@/design-system';
 import {
   SURFACE_TONE,
   resolveAppTextStyle,
   resolveSarhButtonColors,
   resolveSarhCardStyle,
+  resolveSurfaceLevelStyle,
 } from '@/design-system/components/resolvers';
 
 describe('theme runtime Light ↔ Dark sync', () => {
@@ -45,5 +47,34 @@ describe('theme runtime Light ↔ Dark sync', () => {
     applyThemeScheme('dark');
     expect(colors.background).toBe('#07131C');
     expect(resolveSarhCardStyle('elevated', 'none').backgroundColor).toBe('#102633');
+  });
+
+  it('keeps semantic aliases and surface levels on the live Dark → Light → Dark path', () => {
+    applyThemeScheme('dark');
+    const darkPage = resolveSurfaceLevelStyle('page').backgroundColor;
+    const darkCard = resolveSurfaceLevelStyle('card').backgroundColor;
+    const darkSemantic = semantic.background;
+    const darkCommon = createCommonStyles().screen.backgroundColor;
+
+    expect(darkPage).toBe(colors.background);
+    expect(darkSemantic).toBe(colors.background);
+    expect(darkCommon).toBe(liveTheme.bgDeep);
+
+    applyThemeScheme('light');
+    expect(semantic.background).toBe(colors.background);
+    expect(semantic.background).toBe('#F5F7F9');
+    expect(semantic.text.primary).toBe(colors.textPrimary);
+    expect(resolveSurfaceLevelStyle('page').backgroundColor).toBe(colors.background);
+    expect(resolveSurfaceLevelStyle('card').backgroundColor).toBe(colors.surface);
+    expect(resolveSurfaceLevelStyle('page').backgroundColor).not.toBe(darkPage);
+    expect(resolveSurfaceLevelStyle('card').backgroundColor).not.toBe(darkCard);
+    expect(createCommonStyles().screen.backgroundColor).not.toBe(darkCommon);
+    expect(createCommonStyles().screen.backgroundColor).toBe(liveTheme.bgDeep);
+
+    applyThemeScheme('dark');
+    expect(semantic.background).toBe(darkSemantic);
+    expect(resolveSurfaceLevelStyle('page').backgroundColor).toBe(darkPage);
+    expect(resolveSurfaceLevelStyle('card').backgroundColor).toBe(darkCard);
+    expect(createCommonStyles().screen.backgroundColor).toBe(darkCommon);
   });
 });

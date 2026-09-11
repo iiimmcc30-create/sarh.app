@@ -1,18 +1,19 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppScrollView } from '@/components/ui/AppScrollView';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { functional } from '@/design-system';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { type ThemeColors } from '@/constants/theme';
 
 export default function NewsScreen() {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const [stories, setStories] = useState<EditorialStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -33,14 +34,18 @@ export default function NewsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      <ScreenHeader title="الأخبار" showBack />
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="الأخبار" showBack />
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 48 }} />
+        <ScreenBody scroll={false}>
+          <ActivityIndicator style={styles.loader} />
+        </ScreenBody>
       ) : (
-        <AppScrollView contentContainerStyle={styles.content}>
+        <ScreenBody padTop="lg" padBottom="xxxl" gap="md">
           {stories.length === 0 ? (
-            <Text style={styles.empty}>لا توجد أخبار حالياً</Text>
+            <AppText variant="bodySmall" color="textMuted" align="center">
+              لا توجد أخبار حالياً
+            </AppText>
           ) : (
             stories.map((story, index) => (
               <Pressable
@@ -53,13 +58,17 @@ export default function NewsScreen() {
                   colors={['transparent', 'rgba(0,0,0,0.72)']}
                   style={styles.gradient}
                 />
-                <Text style={styles.title} numberOfLines={2}>
+                <AppText
+                  variant="heading3"
+                  numberOfLines={2}
+                  style={[styles.title, { color: functional.onPrimary }]}
+                >
                   {story.titleAr}
-                </Text>
+                </AppText>
               </Pressable>
             ))
           )}
-        </AppScrollView>
+        </ScreenBody>
       )}
       {viewerIndex != null ? (
         <EditorialStoryViewer
@@ -68,14 +77,13 @@ export default function NewsScreen() {
           onClose={() => setViewerIndex(null)}
         />
       ) : null}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.screenRoot },
-    content: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
+    loader: { marginTop: 48 },
     card: {
       height: 168,
       borderRadius: 18,
@@ -86,17 +94,8 @@ function createStyles(colors: ThemeColors) {
     image: { ...StyleSheet.absoluteFillObject },
     gradient: { ...StyleSheet.absoluteFillObject },
     title: {
-      ...typography.cardHeading,
-      color: '#fff',
-      padding: spacing.md,
-            writingDirection: 'rtl',
+      padding: 12,
       zIndex: 1,
-    },
-    empty: {
-      ...typography.feedBody,
-      color: colors.textMuted,
-      textAlign: 'center',
-      marginTop: 48,
     },
   });
 }

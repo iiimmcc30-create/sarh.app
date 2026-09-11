@@ -1,27 +1,12 @@
 // SARH — Payment Screen (Network International)
-// Modern, professional payment UI:
-//   • Visual credit-card preview with live typing
-//   • Payment method grid with real brand logos (pure RN — no extra deps)
-//   • Step indicator: Method → Card Details → Processing → Success
-//   • Trust badges, NI branding, PCI-DSS notice
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { PaymentBrandLogo } from '@/components/payment/PaymentBrandLogos';
+import { functional } from '@/design-system';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { BottomAction, Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { launchPaymentCheckout } from '@/services/payments';
@@ -29,70 +14,21 @@ import { NIPaymentMethod, PAYMENT_METHODS } from '@/services/network_internation
 import { normalizeSlug, planGradientColors } from '@/services/subscriptionPlans';
 import { usePlans } from '@/hooks/usePlans';
 import { useSubscriptionAudience } from '@/hooks/useSubscriptionAudience';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
-import { SarhBackButton } from '@/design-system/components';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { type ThemeColors } from '@/constants/theme';
 
 type Step = 'method' | 'card_details' | 'processing' | 'success';
-
-// ─── Payment method brand logos ───────────────────────────────────────────────
-
-function MadaLogo({ size = 32 }: { size?: number }) {
-  return (
-    <View style={{ width: size * 1.9, height: size, borderRadius: size * 0.25, backgroundColor: '#005BAA', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontWeight: '600', fontSize: size * 0.45, letterSpacing: 1 }}>mada</Text>
-    </View>
-  );
-}
-
-function VisaLogo({ size = 32 }: { size?: number }) {
-  return (
-    <View style={{ width: size * 1.9, height: size, borderRadius: size * 0.25, backgroundColor: '#1A1F71', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontStyle: 'italic', fontWeight: '600', fontSize: size * 0.55, letterSpacing: -1 }}>VISA</Text>
-    </View>
-  );
-}
-
-function MastercardLogo({ size = 32 }: { size?: number }) {
-  const r = size * 0.46;
-  return (
-    <View style={{ width: size * 1.9, height: size, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
-      <View style={{ width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#EB001B' }} />
-      <View style={{ width: r * 2, height: r * 2, borderRadius: r, backgroundColor: '#F79E1B', marginLeft: -r * 0.72, opacity: 0.95 }} />
-    </View>
-  );
-}
-
-function ApplePayLogo({ size = 32 }: { size?: number }) {
-  return (
-    <View style={{ width: size * 2.4, height: size, borderRadius: size * 0.25, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 3 }}>
-      <Text style={{ color: '#fff', fontSize: size * 0.52, marginBottom: 2 }}></Text>
-      <Text style={{ color: '#fff', fontWeight: '600', fontSize: size * 0.4 }}>Pay</Text>
-    </View>
-  );
-}
-
-function StcPayLogo({ size = 32 }: { size?: number }) {
-  return (
-    <View style={{ width: size * 2.2, height: size, borderRadius: size * 0.25, backgroundColor: '#4F008C', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontWeight: '600', fontSize: size * 0.4, letterSpacing: 0.5 }}>stc pay</Text>
-    </View>
-  );
-}
-
-function MethodLogo({ id, size = 32 }: { id: NIPaymentMethod; size?: number }) {
-  switch (id) {
-    case 'mada':       return <MadaLogo size={size} />;
-    case 'visa':       return <VisaLogo size={size} />;
-    case 'mastercard': return <MastercardLogo size={size} />;
-    case 'apple_pay':  return <ApplePayLogo size={size} />;
-    case 'stc_pay':    return <StcPayLogo size={size} />;
-  }
-}
-
-// ─── Virtual card preview ─────────────────────────────────────────────────────
 
 function formatCardDisplay(num: string): string {
   const n = num.replace(/\D/g, '');
@@ -114,86 +50,80 @@ function VirtualCard({
   cardName,
   expiry,
   methodId,
-  colors,
 }: {
   cardNumber: string;
   cardName: string;
   expiry: string;
   methodId: NIPaymentMethod | null;
-  colors: ThemeColors;
 }) {
-  const cardColor = methodId === 'mada' ? ['#005BAA', '#003F80']
-    : methodId === 'visa' ? ['#1A1F71', '#333A99']
-    : methodId === 'mastercard' ? ['#1a1a1a', '#2d2d2d']
-    : ['#1a1a2e', '#16213e'];
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createVirtualCardStyles(c));
+  const brand = PAYMENT_METHODS.find((m) => m.id === methodId)?.color ?? colors.bgElevated;
+  const cardColor: [string, string] = [brand, brand];
 
   return (
-    <LinearGradient colors={cardColor as [string, string]} style={virtualCardStyles.card} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-      <View style={virtualCardStyles.topRow}>
-        <View style={virtualCardStyles.chip}>
-          <View style={virtualCardStyles.chipLine} />
-          <View style={virtualCardStyles.chipLine} />
+    <LinearGradient colors={cardColor} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+      <Row justify="between" align="start">
+        <View style={styles.chip}>
+          <View style={styles.chipLine} />
+          <View style={styles.chipLine} />
         </View>
-        {methodId ? <MethodLogo id={methodId} size={22} /> : null}
-      </View>
-      <Text style={virtualCardStyles.cardNumber}>{formatCardDisplay(cardNumber)}</Text>
-      <View style={virtualCardStyles.bottomRow}>
-        <View>
-          <Text style={virtualCardStyles.cardLabel}>اسم حامل البطاقة</Text>
-          <Text style={virtualCardStyles.cardValue} numberOfLines={1}>
+        {methodId ? <PaymentBrandLogo id={methodId} size={22} /> : null}
+      </Row>
+        <AppText variant="heading3" align="center" style={{ color: functional.onPrimary, letterSpacing: 2.5 }}>
+        {formatCardDisplay(cardNumber)}
+      </AppText>
+      <Row justify="between" align="end">
+        <Stack gap="xs">
+          <AppText variant="caption" style={{ color: functional.onPrimary }}>اسم حامل البطاقة</AppText>
+          <AppText variant="label" numberOfLines={1} style={{ color: functional.onPrimary }}>
             {cardName.toUpperCase() || '· · · · · · · · · ·'}
-          </Text>
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={virtualCardStyles.cardLabel}>صالحة حتى</Text>
-          <Text style={virtualCardStyles.cardValue}>{formatExpiryDisplay(expiry)}</Text>
-        </View>
-      </View>
-      {/* Decorative circles */}
-      <View style={[virtualCardStyles.circle, { top: -40, right: -40, width: 130, height: 130, opacity: 0.12 }]} />
-      <View style={[virtualCardStyles.circle, { bottom: -30, left: -20, width: 100, height: 100, opacity: 0.08 }]} />
+          </AppText>
+        </Stack>
+        <Stack gap="xs" align="end">
+          <AppText variant="caption" style={{ color: functional.onPrimary }}>صالحة حتى</AppText>
+          <AppText variant="label" style={{ color: functional.onPrimary }}>{formatExpiryDisplay(expiry)}</AppText>
+        </Stack>
+      </Row>
     </LinearGradient>
   );
 }
 
-const virtualCardStyles = StyleSheet.create({
-  card: {
-    borderRadius: 20,
-    padding: 24,
-    marginHorizontal: spacing.lg,
-    marginBottom: 24,
-    height: 200,
-    justifyContent: 'space-between',
-    overflow: 'hidden',
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-  },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  chip: {
-    width: 42, height: 32, borderRadius: 6, backgroundColor: '#F5C56A',
-    justifyContent: 'space-around', alignItems: 'center', paddingVertical: 4,
-  },
-  chipLine: { width: '80%', height: 3, backgroundColor: '#C8A000', borderRadius: 2 },
-  cardNumber: { color: '#fff', fontSize: 18, letterSpacing: 2.5, fontFamily: 'monospace', fontWeight: '600', textAlign: 'center' },
-  bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  cardLabel: { ...typography.caption, color: 'rgba(255,255,255,0.55)', letterSpacing: 1, marginBottom: 3, textTransform: 'uppercase' },
-  cardValue: { ...typography.badge, color: '#fff', letterSpacing: 1 },
-  circle: { position: 'absolute', borderRadius: 999, backgroundColor: '#fff' },
-});
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+function createVirtualCardStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      borderRadius: 20,
+      padding: 24,
+      marginBottom: 24,
+      height: 200,
+      justifyContent: 'space-between',
+      overflow: 'hidden',
+    },
+    chip: {
+      width: 42,
+      height: 32,
+      borderRadius: 6,
+      backgroundColor: colors.gold,
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      paddingVertical: 4,
+    },
+    chipLine: {
+      width: '80%',
+      height: 3,
+      backgroundColor: colors.amber,
+      borderRadius: 2,
+    },
+  });
+}
 
 export default function PaymentScreen() {
   const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
   const router = useRouter();
   const { planId, cycle } = useLocalSearchParams<{ planId: string; cycle: 'monthly' | 'yearly' }>();
-  const { me } = useAppUser();
-  const { user: authUser, accessToken } = useAuth();
-  const { upgradePlan, subscription, refetchSubscription } = useSubscription();
+  const { accessToken } = useAuth();
+  const { subscription, refetchSubscription } = useSubscription();
   const planAudience = useSubscriptionAudience();
   const { plans, getPlanBySlug } = usePlans(planAudience);
   const paidFallback = planAudience === 'BUTCHER' ? 'nom-pro' : 'sarh-pro';
@@ -210,7 +140,6 @@ export default function PaymentScreen() {
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardName, setCardName] = useState('');
-  const [cvvFocused, setCvvFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [transactionId, setTransactionId] = useState('');
 
@@ -320,555 +249,386 @@ export default function PaymentScreen() {
     }
   };
 
-  // ── Success ──────────────────────────────────────────────────────────────────
+  const ctaTitle =
+    step === 'method' && needsCardForm
+      ? 'التالي · إدخال بيانات البطاقة'
+      : step === 'method' && isWallet
+        ? `ادفع ${amount} ريال`
+        : `ادفع ${amount} ريال الآن`;
+
   if (step === 'success') {
     return (
-      <View style={styles.screen}>
+      <Screen edges={['top', 'bottom']} pattern={false} style={styles.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <SafeAreaView style={styles.successWrap} edges={['top', 'bottom']}>
-          <Animated.View style={{ transform: [{ scale: successScale }], opacity: successOpacity, alignItems: 'center', gap: spacing.lg, width: '100%' }}>
-            <LinearGradient colors={[planColor, planColorEnd]} style={styles.successIcon}>
-              <AppIcon name="check-bold" size={52} color="#fff" />
-            </LinearGradient>
-            <Text style={styles.successTitle}>تمّ الاشتراك بنجاح 🎉</Text>
-            <Text style={styles.successSub}>أهلاً بك في باقة <Text style={{ color: planColorEnd, fontWeight: '600' }}>{plan.name}</Text></Text>
-
-            <View style={styles.receiptCard}>
-              <View style={styles.receiptHeader}>
-                <AppIcon name="receipt-outline" size={16} color={colors.textMuted} />
-                <Text style={styles.receiptHeaderText}>تفاصيل العملية</Text>
-              </View>
-              <View style={styles.receiptDivider} />
-              <ReceiptRow label="الباقة"         value={plan.name} />
-              <ReceiptRow label="دورة الفوترة"   value={billingCycle === 'yearly' ? 'سنوي' : 'شهري'} />
-              <ReceiptRow label="المبلغ المدفوع"  value={`${amount} ريال`} highlight />
-              <ReceiptRow label="طريقة الدفع"    value={PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.arabic ?? ''} />
-              {transactionId ? <ReceiptRow label="رقم العملية" value={transactionId} small /> : null}
-            </View>
-
-            <Pressable
-              onPress={() => { router.dismissAll(); router.replace('/(tabs)/profile'); }}
-              style={({ pressed }) => [styles.successBtn, pressed && { opacity: 0.88 }]}
-            >
-              <LinearGradient colors={[planColor, planColorEnd]} style={styles.successBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                <Text style={styles.successBtnText}>ابدأ الاستخدام</Text>
-                <AppIcon name={rtlForwardIcon()} size={20} color="#fff" />
+        <ScreenBody scroll={false}>
+          <Animated.View style={[styles.successCenter, { transform: [{ scale: successScale }], opacity: successOpacity }]}>
+            <Stack gap="lg" align="center">
+              <LinearGradient colors={[planColor, planColorEnd]} style={styles.successIcon}>
+                <AppIcon name="check-bold" size={52} color={functional.onPrimary} />
               </LinearGradient>
-            </Pressable>
+              <AppText variant="heading1" align="center">تمّ الاشتراك بنجاح 🎉</AppText>
+              <AppText variant="body" color="textSecondary" align="center">
+                أهلاً بك في باقة {plan.name}
+              </AppText>
+              <Stack gap="sm" style={styles.receiptCard}>
+                <Row gap="xs" align="center">
+                  <AppIcon name="receipt-outline" size={16} color={colors.textMuted} />
+                  <AppText variant="label" color="textMuted">تفاصيل العملية</AppText>
+                </Row>
+                <ReceiptRow label="الباقة" value={plan.name} />
+                <ReceiptRow label="دورة الفوترة" value={billingCycle === 'yearly' ? 'سنوي' : 'شهري'} />
+                <ReceiptRow label="المبلغ المدفوع" value={`${amount} ريال`} highlight />
+                <ReceiptRow label="طريقة الدفع" value={PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.arabic ?? ''} />
+                {transactionId ? <ReceiptRow label="رقم العملية" value={transactionId} small /> : null}
+              </Stack>
+              <SarhButton
+                title="ابدأ الاستخدام"
+                fullWidth
+                onPress={() => { router.dismissAll(); router.replace('/(tabs)/profile'); }}
+              />
+            </Stack>
           </Animated.View>
-        </SafeAreaView>
-      </View>
+        </ScreenBody>
+      </Screen>
     );
   }
 
-  // ── Processing ───────────────────────────────────────────────────────────────
   if (step === 'processing') {
     return (
-      <View style={styles.screen}>
+      <Screen edges={['top', 'bottom']} pattern={false} style={styles.screen}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <View style={styles.processingWrap}>
-          <View style={styles.processingIconWrap}>
-            <ActivityIndicator size="large" color={planColorEnd} />
-          </View>
-          <Text style={styles.processingTitle}>جارٍ معالجة الدفع...</Text>
-          <Text style={styles.processingSubtitle}>يُرجى الانتظار، لا تغلق التطبيق</Text>
-          <View style={styles.processingBadge}>
-            <AppIcon name="shield-lock" size={14} color={colors.emerald} />
-            <Text style={styles.processingBadgeText}>محمي بـ Network International · PCI-DSS Level 1</Text>
-          </View>
-        </View>
-      </View>
+        <ScreenBody scroll={false}>
+          <Stack gap="lg" align="center" fill style={styles.processingWrap}>
+            <View style={styles.processingIconWrap}>
+              <ActivityIndicator size="large" color={planColorEnd} />
+            </View>
+            <AppText variant="heading2">جارٍ معالجة الدفع...</AppText>
+            <AppText variant="body" color="textMuted">يُرجى الانتظار، لا تغلق التطبيق</AppText>
+            <Row gap="xs" align="center" style={styles.processingBadge}>
+              <AppIcon name="shield-lock" size={14} color={colors.emerald} />
+              <AppText variant="caption" color="success">محمي بـ Network International · PCI-DSS Level 1</AppText>
+            </Row>
+          </Stack>
+        </ScreenBody>
+      </Screen>
     );
   }
 
-  // ── Step indicator ───────────────────────────────────────────────────────────
   const steps = ['طريقة الدفع', needsCardForm ? 'بيانات البطاقة' : null, 'الدفع'].filter(Boolean) as string[];
   const currentStepIdx = step === 'method' ? 0 : step === 'card_details' ? 1 : 2;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']} keyboard pattern={false} style={styles.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
+      <ScreenHeader
+        variant="screen"
+        title="الدفع الآمن"
+        showBack
+        onBackPress={() => (step === 'card_details' ? setStep('method') : router.back())}
+      />
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <SarhBackButton
-          onPress={() => (step === 'card_details' ? setStep('method') : router.back())}
-          color={colors.textPrimary}
-          style={styles.backBtn}
-        />
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>الدفع الآمن</Text>
-          <View style={styles.headerSecure}>
-            <AppIcon name="shield-lock" size={11} color={colors.emerald} />
-            <Text style={styles.headerSecureText}>Network International</Text>
-          </View>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
-
-      {/* ── Step indicator ── */}
-      <View style={styles.stepRow}>
+      <Row justify="center" gap="xs" style={styles.stepRow}>
         {steps.map((s, i) => (
-          <View key={s} style={styles.stepItem}>
+          <Row key={s} gap="xs" align="center">
             <View style={[styles.stepDot, i <= currentStepIdx && styles.stepDotActive]}>
               {i < currentStepIdx
-                ? <AppIcon name="checkmark" size={10} color="#fff" />
-                : <Text style={[styles.stepDotText, i <= currentStepIdx && { color: '#fff' }]}>{i + 1}</Text>
-              }
+                ? <AppIcon name="checkmark" size={10} color={functional.onPrimary} />
+                : (
+                  <AppText variant="caption" color={i <= currentStepIdx ? 'textPrimary' : 'textMuted'}>
+                    {i + 1}
+                  </AppText>
+                )}
             </View>
-            <Text style={[styles.stepLabel, i === currentStepIdx && styles.stepLabelActive]}>{s}</Text>
-            {i < steps.length - 1 ? <View style={[styles.stepLine, i < currentStepIdx && styles.stepLineActive]} /> : null}
-          </View>
+            <AppText variant="caption" color={i === currentStepIdx ? 'primary' : 'textMuted'}>{s}</AppText>
+          </Row>
         ))}
-      </View>
+      </Row>
 
       <Animated.View style={{ flex: 1, opacity: stepAnim }}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-
-          {/* ── Order summary ── */}
+        <ScreenBody padTop="sm" padBottom="xl" gap="md" bottomInset="action">
           <LinearGradient
             colors={[planColor, planColorEnd]}
             style={styles.orderCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <View style={styles.orderTopRow}>
-              <View>
-                <Text style={styles.orderLabel}>{billingCycle === 'yearly' ? 'اشتراك سنوي' : 'اشتراك شهري'}</Text>
-                <Text style={styles.orderPlanName}>باقة {plan.name}</Text>
-              </View>
-              <View style={styles.orderAmountWrap}>
-                <Text style={styles.orderAmount}>{amount}</Text>
-                <Text style={styles.orderCurrency}>ريال</Text>
-              </View>
-            </View>
+            <Row justify="between" align="start">
+              <Stack gap="xs">
+                <AppText variant="caption" style={{ color: functional.onPrimary }}>
+                  {billingCycle === 'yearly' ? 'اشتراك سنوي' : 'اشتراك شهري'}
+                </AppText>
+                <AppText variant="heading2" style={{ color: functional.onPrimary }}>باقة {plan.name}</AppText>
+              </Stack>
+              <Stack gap="xs" align="end">
+                <AppText variant="display" style={{ color: functional.onPrimary }}>{amount}</AppText>
+                <AppText variant="label" style={{ color: functional.onPrimary }}>ريال</AppText>
+              </Stack>
+            </Row>
             {billingCycle === 'yearly' && plan.monthlyPrice > 0 ? (
-              <View style={styles.savingsTag}>
-                <AppIcon name="tag" size={12} color="#fff" />
-                <Text style={styles.savingsText}>
+              <Row gap="xs" align="center" style={styles.savingsTag}>
+                <AppIcon name="tag" size={12} color={functional.onPrimary} />
+                <AppText variant="caption" style={{ color: functional.onPrimary }}>
                   وفّرت {Math.round(plan.monthlyPrice * 12 - plan.yearlyPrice)} ريال مقارنةً بالاشتراك الشهري
-                </Text>
-              </View>
+                </AppText>
+              </Row>
             ) : null}
           </LinearGradient>
 
-          {/* ── Method Selection ── */}
           {step === 'method' ? (
-            <>
-              <Text style={styles.sectionTitle}>اختر طريقة الدفع</Text>
-
-              {/* Card methods (mada, visa, mastercard) in 2-col grid */}
-              <View style={styles.methodGrid}>
+            <Stack gap="md">
+              <AppText variant="heading3">اختر طريقة الدفع</AppText>
+              <Row gap="md" wrap>
                 {PAYMENT_METHODS.filter((m) => ['mada', 'visa', 'mastercard'].includes(m.id)).map((method) => {
                   const chosen = selectedMethod === method.id;
                   return (
                     <Pressable
                       key={method.id}
                       onPress={() => handleSelectMethod(method.id)}
-                      style={({ pressed }) => [
+                      style={[
                         styles.methodCard,
                         chosen && [styles.methodCardActive, { borderColor: method.color }],
-                        pressed && { opacity: 0.8 },
                       ]}
                     >
-                      <MethodLogo id={method.id} size={24} />
-                      <Text style={styles.methodName}>{method.arabic}</Text>
-                      {chosen ? (
-                        <View style={[styles.methodCheck, { backgroundColor: method.color }]}>
-                          <AppIcon name="checkmark" size={10} color="#fff" />
-                        </View>
-                      ) : null}
+                      <PaymentBrandLogo id={method.id} size={24} />
+                      <AppText variant="caption" color="textSecondary">{method.arabic}</AppText>
                     </Pressable>
                   );
                 })}
-              </View>
+              </Row>
 
-              {/* Digital wallets (full width) */}
-              <Text style={styles.walletTitle}>المحافظ الرقمية</Text>
-              <View style={styles.walletList}>
+              <AppText variant="label" color="textMuted">المحافظ الرقمية</AppText>
+              <Stack gap="sm">
                 {PAYMENT_METHODS.filter((m) => ['apple_pay', 'stc_pay'].includes(m.id)).map((method) => {
                   const chosen = selectedMethod === method.id;
                   return (
                     <Pressable
                       key={method.id}
                       onPress={() => handleSelectMethod(method.id)}
-                      style={({ pressed }) => [
+                      style={[
                         styles.walletCard,
                         chosen && [styles.walletCardActive, { borderColor: method.color }],
-                        pressed && { opacity: 0.8 },
                       ]}
                     >
-                      <MethodLogo id={method.id} size={26} />
-                      <View style={{ flex: 1, marginHorizontal: spacing.md }}>
-                        <Text style={styles.walletName}>{method.arabic}</Text>
-                        <Text style={styles.walletSub}>دفع سريع وآمن</Text>
-                      </View>
-                      {chosen
-                        ? <View style={[styles.radioCircle, { backgroundColor: method.color, borderColor: method.color }]}><View style={styles.radioDot} /></View>
-                        : <View style={styles.radioCircle} />
-                      }
+                      <Row gap="md" align="center">
+                        <PaymentBrandLogo id={method.id} size={26} />
+                        <Stack gap="xs" style={styles.flex}>
+                          <AppText variant="heading3">{method.arabic}</AppText>
+                          <AppText variant="caption" color="textMuted">دفع سريع وآمن</AppText>
+                        </Stack>
+                        <View style={[styles.radioCircle, chosen && { backgroundColor: method.color, borderColor: method.color }]} />
+                      </Row>
                     </Pressable>
                   );
                 })}
-              </View>
-            </>
+              </Stack>
+            </Stack>
           ) : null}
 
-          {/* ── Card Details ── */}
           {step === 'card_details' ? (
-            <>
+            <Stack gap="md">
               <VirtualCard
                 cardNumber={cardNumber}
                 cardName={cardName}
                 expiry={expiry}
                 methodId={selectedMethod}
-                colors={colors}
               />
-
-              <Text style={styles.sectionTitle}>بيانات البطاقة</Text>
-
-              <View style={styles.formCard}>
-                {/* Card holder name */}
-                <FloatingField
-                  label="اسم حامل البطاقة"
-                  value={cardName}
-                  onChangeText={setCardName}
-                  placeholder="كما يظهر على البطاقة"
-                  autoCapitalize="characters"
-                  colors={colors}
-                />
-
-                {/* Card number */}
-                <FloatingField
-                  label="رقم البطاقة"
-                  value={cardNumber}
-                  onChangeText={(t) => setCardNumber(formatCardInput(t))}
-                  placeholder="0000  0000  0000  0000"
-                  keyboardType="number-pad"
-                  maxLength={19}
-                  icon="credit-card-outline"
-                  colors={colors}
-                />
-
-                {/* Expiry + CVV */}
-                <View style={styles.fieldRow}>
-                  <View style={{ flex: 1 }}>
-                    <FloatingField
-                      label="تاريخ الانتهاء"
-                      value={expiry}
-                      onChangeText={(t) => {
-                        const n = t.replace(/\D/g, '').slice(0, 4);
-                        setExpiry(n.length > 2 ? n.slice(0, 2) + '/' + n.slice(2) : n);
-                      }}
-                      placeholder="MM/YY"
-                      keyboardType="number-pad"
-                      maxLength={5}
-                      colors={colors}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <FloatingField
-                      label="رمز CVV"
-                      value={cvv}
-                      onChangeText={(t) => setCvv(t.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="•••"
-                      keyboardType="number-pad"
-                      secureTextEntry
-                      maxLength={4}
-                      icon="help-circle-outline"
-                      onFocus={() => setCvvFocused(true)}
-                      onBlur={() => setCvvFocused(false)}
-                      colors={colors}
-                    />
-                  </View>
+              <AppText variant="heading3">بيانات البطاقة</AppText>
+              <SarhInput
+                label="اسم حامل البطاقة"
+                value={cardName}
+                onChangeText={setCardName}
+                placeholder="كما يظهر على البطاقة"
+                autoCapitalize="characters"
+              />
+              <SarhInput
+                label="رقم البطاقة"
+                value={cardNumber}
+                onChangeText={(t) => setCardNumber(formatCardInput(t))}
+                placeholder="0000  0000  0000  0000"
+                keyboardType="number-pad"
+                maxLength={19}
+                leadingIcon="credit-card-outline"
+                ltr
+              />
+              <Row gap="md">
+                <View style={styles.flex}>
+                  <SarhInput
+                    label="تاريخ الانتهاء"
+                    value={expiry}
+                    onChangeText={(t) => {
+                      const n = t.replace(/\D/g, '').slice(0, 4);
+                      setExpiry(n.length > 2 ? n.slice(0, 2) + '/' + n.slice(2) : n);
+                    }}
+                    placeholder="MM/YY"
+                    keyboardType="number-pad"
+                    maxLength={5}
+                    ltr
+                  />
                 </View>
-              </View>
-
-              {/* 3DS / Secure notice */}
-              <View style={styles.secureRow}>
+                <View style={styles.flex}>
+                  <SarhInput
+                    label="رمز CVV"
+                    value={cvv}
+                    onChangeText={(t) => setCvv(t.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="•••"
+                    keyboardType="number-pad"
+                    secureTextEntry
+                    maxLength={4}
+                    ltr
+                  />
+                </View>
+              </Row>
+              <Row gap="sm" align="center" style={styles.secureRow}>
                 <AppIcon name="shield-lock" size={15} color={colors.emerald} />
-                <Text style={styles.secureText}>محمية بـ 3D Secure · TLS 1.3 · PCI-DSS Level 1</Text>
-              </View>
-            </>
+                <AppText variant="caption" color="textSecondary">محمية بـ 3D Secure · TLS 1.3 · PCI-DSS Level 1</AppText>
+              </Row>
+            </Stack>
           ) : null}
 
-          {/* ── Trust badges ── */}
-          <View style={styles.trustRow}>
+          <Row justify="center" gap="xl">
             {[
-              { icon: 'shield-lock',  label: 'دفع مشفّر' },
-              { icon: 'badge-check',  label: 'PCI-DSS' },
+              { icon: 'shield-lock', label: 'دفع مشفّر' },
+              { icon: 'badge-check', label: 'PCI-DSS' },
               { icon: 'lock-outline', label: '3D Secure' },
             ].map((b) => (
-              <View key={b.icon} style={styles.trustBadge}>
+              <Stack key={b.icon} gap="xs" align="center">
                 <AppIcon name={b.icon} size={16} color={colors.textMuted} />
-                <Text style={styles.trustLabel}>{b.label}</Text>
-              </View>
+                <AppText variant="caption" color="textMuted">{b.label}</AppText>
+              </Stack>
             ))}
-          </View>
+          </Row>
 
-          {/* NI branding */}
-          <View style={styles.niBrand}>
+          <Row justify="center" gap="xs" align="center">
             <AppIcon name="lock-outline" size={13} color={colors.textSubtle} />
-            <Text style={styles.niText}>
-              مدفوعات آمنة عبر{' '}
-              <Text style={{ color: colors.electricBright, fontWeight: '600' }}>Network International</Text>
-            </Text>
-          </View>
-
-          <View style={{ height: 130 }} />
-        </ScrollView>
+            <AppText variant="caption" color="textMuted">مدفوعات آمنة عبر Network International</AppText>
+          </Row>
+        </ScreenBody>
       </Animated.View>
 
-      {/* ── Pay CTA (fixed bottom) ── */}
-      <SafeAreaView edges={['bottom']} style={styles.ctaWrap}>
-        <Pressable
-          onPress={handlePay}
+      <BottomAction>
+        <SarhButton
+          title={loading ? '...' : ctaTitle}
+          fullWidth
+          loading={loading}
           disabled={!selectedMethod || loading}
-          style={({ pressed }) => [
-            styles.ctaBtn,
-            (!selectedMethod || loading) && { opacity: 0.45 },
-            pressed && { opacity: 0.82 },
-          ]}
-        >
-          <LinearGradient
-            colors={selectedMethod ? [planColor, planColorEnd] : [colors.bgSurface, colors.bgElevated]}
-            style={styles.ctaBtnGrad}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <AppIcon name="lock" size={18} color="#fff" />
-                <Text style={styles.ctaBtnText}>
-                  {step === 'method' && needsCardForm
-                    ? 'التالي · إدخال بيانات البطاقة'
-                    : step === 'method' && isWallet
-                    ? `ادفع ${amount} ريال`
-                    : `ادفع ${amount} ريال الآن`}
-                </Text>
-                <View style={styles.ctaAmountPill}>
-                  <Text style={styles.ctaAmountText}>{amount} ر.س</Text>
-                </View>
-              </>
-            )}
-          </LinearGradient>
-        </Pressable>
-      </SafeAreaView>
-    </SafeAreaView>
+          onPress={() => void handlePay()}
+        />
+      </BottomAction>
+    </Screen>
   );
 }
-
-// ─── Floating label field ──────────────────────────────────────────────────────
-
-interface FloatingFieldProps {
-  label: string;
-  value: string;
-  onChangeText: (t: string) => void;
-  placeholder: string;
-  keyboardType?: 'default' | 'number-pad' | 'email-address';
-  maxLength?: number;
-  secureTextEntry?: boolean;
-  autoCapitalize?: 'none' | 'words' | 'sentences' | 'characters';
-  icon?: string;
-  onFocus?: () => void;
-  onBlur?: () => void;
-  colors: ThemeColors;
-}
-
-function FloatingField({ label, value, onChangeText, placeholder, keyboardType, maxLength, secureTextEntry, autoCapitalize, icon, onFocus, onBlur, colors }: FloatingFieldProps) {
-  const [focused, setFocused] = useState(false);
-  const labelAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
-
-  const handleFocus = () => {
-    setFocused(true);
-    Animated.timing(labelAnim, { toValue: 1, duration: 180, useNativeDriver: false }).start();
-    onFocus?.();
-  };
-  const handleBlur = () => {
-    setFocused(false);
-    if (!value) Animated.timing(labelAnim, { toValue: 0, duration: 180, useNativeDriver: false }).start();
-    onBlur?.();
-  };
-
-  const labelTop = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 4] });
-  const labelSize = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [15, 12] });
-  const labelColor = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.textSubtle, colors.electricBright] });
-
-  return (
-    <View style={[floatStyles.wrap, focused && floatStyles.wrapFocused, { borderColor: focused ? colors.electricBright : colors.borderMid }]}>
-      <Animated.Text style={[floatStyles.label, { top: labelTop, fontSize: labelSize, color: focused ? colors.electricBright : colors.textMuted }]}>
-        {label}
-      </Animated.Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={focused ? placeholder : ''}
-        placeholderTextColor={colors.textSubtle}
-        style={[floatStyles.input, rtlInputText, { color: colors.textPrimary, paddingEnd: icon ? 42 : 16 }]}
-        keyboardType={keyboardType}
-        maxLength={maxLength}
-        secureTextEntry={secureTextEntry}
-        autoCapitalize={autoCapitalize}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-      />
-      {icon ? (
-        <View style={floatStyles.iconWrap}>
-          <AppIcon name={icon} size={18} color={colors.textSubtle} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-const floatStyles = StyleSheet.create({
-  wrap: {
-    height: 60,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    backgroundColor: 'transparent',
-    position: 'relative',
-    justifyContent: 'flex-end',
-    marginBottom: 14,
-  },
-  wrapFocused: {
-    borderWidth: 2,
-  },
-  label: {
-    position: 'absolute',
-    end: 16,
-    fontWeight: '500',
-  },
-  input: {
-    height: 38,
-    paddingHorizontal: 16,
-    paddingTop: 0,
-    ...typography.button,
-  },
-  iconWrap: {
-    position: 'absolute',
-    start: 14,
-    bottom: 14,
-  },
-});
-
-// ─── Receipt row ───────────────────────────────────────────────────────────────
 
 function ReceiptRow({ label, value, highlight, small }: { label: string; value: string; highlight?: boolean; small?: boolean }) {
-  const { colors } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
-      <Text style={{ ...typography.secondary, color: colors.textMuted }}>{label}</Text>
-      <Text style={{ ...(highlight ? typography.value : small ? typography.caption : typography.secondary), color: highlight ? colors.electricBright : small ? colors.textSubtle : colors.textSecondary, ...getRtlText(), flex: 1, marginStart: 8 }}>
+    <Row justify="between" align="center">
+      <AppText variant="bodySmall" color="textMuted">{label}</AppText>
+      <AppText
+        variant={highlight ? 'price' : small ? 'caption' : 'bodySmall'}
+        color={highlight ? 'primary' : small ? 'textMuted' : 'textSecondary'}
+        style={stylesFlex}
+      >
         {value}
-      </Text>
-    </View>
+      </AppText>
+    </Row>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+const stylesFlex = { flex: 1 };
 
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const cardBg = scheme === 'dark' ? colors.bgElevated : colors.bgSurface;
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.screenRoot },
-
-    // Header
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 12 },
-    backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.bgGlass, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderSoft },
-    headerCenter: { flex: 1, alignItems: 'center' },
-    headerTitle: { ...typography.h3, color: colors.textPrimary },
-    headerSecure: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
-    headerSecureText: { ...typography.badge, color: colors.emerald },
-
-    // Step indicator
-    stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, paddingBottom: 12, gap: 0 },
-    stepItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    stepDot: { width: 22, height: 22, borderRadius: 12, backgroundColor: colors.bgElevated, borderWidth: 1.5, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
+    stepRow: { paddingHorizontal: 24, paddingBottom: 12 },
+    stepDot: {
+      width: 22,
+      height: 22,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1.5,
+      borderColor: colors.borderMid,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     stepDotActive: { backgroundColor: colors.electric, borderColor: colors.electric },
-    stepDotText: { ...typography.badge, color: colors.textMuted },
-    stepLabel: { ...typography.caption, color: colors.textMuted, marginHorizontal: 4 },
-    stepLabelActive: { color: colors.electricBright, fontWeight: '600' },
-    stepLine: { width: 24, height: 1.5, backgroundColor: colors.borderSoft, marginHorizontal: 2 },
-    stepLineActive: { backgroundColor: colors.electric },
-
-    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
-
-    // Order card
-    orderCard: { borderRadius: 20, padding: spacing.xl, marginBottom: spacing.xl, gap: spacing.sm },
-    orderTopRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-    orderLabel: { ...typography.caption, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
-    orderPlanName: { ...typography.sectionHeading, color: '#fff' },
-    orderAmountWrap: { alignItems: 'flex-end' },
-    orderAmount: { ...typography.display, color: '#fff' },
-    orderCurrency: { ...typography.smallHeading, color: 'rgba(255,255,255,0.8)' },
-    savingsTag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.22)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99, alignSelf: 'flex-start', marginTop: 4 },
-    savingsText: { ...typography.badge, color: '#fff' },
-
-    sectionTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: 14 },
-
-    // Method grid (cards)
-    methodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
-    methodCard: { flex: 1, minWidth: '28%', aspectRatio: 1.4, backgroundColor: cardBg, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: colors.borderSoft, position: 'relative' },
+    orderCard: { borderRadius: 20, padding: 20, gap: 8 },
+    savingsTag: {
+      backgroundColor: `${colors.bgDeep}38`,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 99,
+      alignSelf: 'flex-start',
+    },
+    methodCard: {
+      flexGrow: 1,
+      minWidth: '28%',
+      aspectRatio: 1.4,
+      backgroundColor: cardBg,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1.5,
+      borderColor: colors.borderSoft,
+    },
     methodCardActive: { borderWidth: 2, backgroundColor: colors.bgDeep },
-    methodName: { ...typography.badge, color: colors.textSecondary },
-    methodCheck: { position: 'absolute', top: 8, left: 8, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-
-    // Wallet list
-    walletTitle: { ...typography.smallHeading, color: colors.textMuted, marginBottom: 10, letterSpacing: 0.5 },
-    walletList: { gap: 10, marginBottom: 20 },
-    walletCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: 16, backgroundColor: cardBg, borderWidth: 1.5, borderColor: colors.borderSoft },
+    walletCard: {
+      padding: 16,
+      borderRadius: 16,
+      backgroundColor: cardBg,
+      borderWidth: 1.5,
+      borderColor: colors.borderSoft,
+    },
     walletCardActive: { borderWidth: 2, backgroundColor: colors.bgDeep },
-    walletName: { ...typography.cardHeading, color: colors.textPrimary },
-    walletSub: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
-    radioCircle: { width: 22, height: 22, borderRadius: 12, borderWidth: 2, borderColor: colors.borderMid, alignItems: 'center', justifyContent: 'center' },
-    radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' },
-
-    // Card form
-    formCard: { backgroundColor: cardBg, borderRadius: 20, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.borderSoft },
-    fieldRow: { flexDirection: 'row', gap: 12 },
-
-    // Secure
-    secureRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.emerald + '12', borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: colors.emerald + '30', marginBottom: spacing.lg },
-    secureText: { ...typography.caption, color: colors.textSecondary },
-
-    // Trust
-    trustRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xl, marginVertical: spacing.lg },
-    trustBadge: { alignItems: 'center', gap: 5 },
-    trustLabel: { ...typography.badge, color: colors.textSubtle },
-
-    niBrand: { flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'center', paddingBottom: spacing.sm },
-    niText: { ...typography.caption, color: colors.textSubtle },
-
-    // CTA
-    ctaWrap: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.bgDeep + 'EE' },
-    ctaBtn: { borderRadius: 16, overflow: 'hidden', marginBottom: 4 },
-    ctaBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17, borderRadius: 16 },
-    ctaBtnText: { ...typography.button, color: '#fff' },
-    ctaAmountPill: { backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99 },
-    ctaAmountText: { ...typography.badge, color: '#fff' },
-
-    // Processing
-    processingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
-    processingIconWrap: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.bgSurface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderSoft },
-    processingTitle: { ...typography.h2, color: colors.textPrimary },
-    processingSubtitle: { ...typography.body, color: colors.textMuted },
-    processingBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99, backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSoft, marginTop: spacing.md },
-    processingBadgeText: { ...typography.badge, color: colors.emerald },
-
-    // Success
-    successWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.lg },
-    successIcon: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-    successTitle: { ...typography.h1, color: colors.textPrimary, textAlign: 'center' },
-    successSub: { ...typography.body, color: colors.textSecondary, textAlign: 'center' },
-    receiptCard: { width: '100%', backgroundColor: cardBg, borderRadius: 20, padding: spacing.lg, borderWidth: 1, borderColor: colors.borderMid },
-    receiptHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    receiptHeaderText: { ...typography.smallHeading, color: colors.textMuted, letterSpacing: 0.5 },
-    receiptDivider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 10 },
-    successBtn: { width: '100%', borderRadius: 16, overflow: 'hidden' },
-    successBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
-    successBtnText: { ...typography.button, color: '#fff' },
+    flex: { flex: 1 },
+    radioCircle: {
+      width: 22,
+      height: 22,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.borderMid,
+    },
+    secureRow: {
+      backgroundColor: `${colors.emerald}12`,
+      borderRadius: 12,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: `${colors.emerald}30`,
+    },
+    processingWrap: { justifyContent: 'center' },
+    processingIconWrap: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.bgSurface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    processingBadge: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 99,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+    },
+    successCenter: { flex: 1, justifyContent: 'center' },
+    successIcon: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    receiptCard: {
+      width: '100%',
+      backgroundColor: cardBg,
+      borderRadius: 20,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+    },
   });
 }

@@ -4,9 +4,21 @@ import { AppText, SarhBackButton } from '@/design-system/components';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ds } from '@/constants/designSystem';
-import { controls, layout, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { controls, layout, radius, spacing, type ThemeColors } from '@/constants/theme';
+import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { alignInlineEnd, getRtlRow } from '@/lib/rtl';
+
+/**
+ * Navigation chrome by context (Architecture V2):
+ *   screen — internal page: back + centered title + one action
+ *   tab    — root tab bar header: identity at the inline start, never a back
+ *   sheet  — bottom sheet: grabber + centered title + close
+ *   modal  — full-screen decision: cancel + centered title + confirm
+ *
+ * `screen` is the default and renders exactly like before this variant existed.
+ */
+export type ScreenHeaderVariant = 'screen' | 'tab' | 'sheet' | 'modal';
 
 interface ScreenHeaderProps {
   title: string;
@@ -18,6 +30,17 @@ interface ScreenHeaderProps {
   onSidebar?: () => void;
   onBackPress?: () => void;
   rightAccessibilityLabel?: string;
+  variant?: ScreenHeaderVariant;
+  /** `sheet` — dismiss control. */
+  onClose?: () => void;
+  closeAccessibilityLabel?: string;
+  /** `modal` — leading dismiss action. */
+  cancelLabel?: string;
+  onCancel?: () => void;
+  /** `modal` — trailing confirm action. */
+  confirmLabel?: string;
+  onConfirm?: () => void;
+  confirmDisabled?: boolean;
 }
 
 export function ScreenHeader({
@@ -30,59 +53,138 @@ export function ScreenHeader({
   onSidebar,
   onBackPress,
   rightAccessibilityLabel,
+  variant = 'screen',
+  onClose,
+  closeAccessibilityLabel,
+  cancelLabel = 'إلغاء',
+  onCancel,
+  confirmLabel,
+  onConfirm,
+  confirmDisabled = false,
 }: ScreenHeaderProps) {
   const router = useRouter();
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
   }));
+  const { gutter } = useLayout();
 
-  return (
-    <View style={[styles.container, getRtlRow()]}>
-      <View style={styles.side}>
-        {showBack ? (
-          <SarhBackButton
-            onPress={() => (onBackPress ? onBackPress() : router.back())}
-            color={colors.textPrimary}
-            style={styles.iconBtn}
-          />
-        ) : showSidebar ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="فتح القائمة"
-            onPress={onSidebar}
-            hitSlop={12}
-            style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
-          >
-            <AppIcon name="menu-burger" size={ds.icon.md} color={colors.textPrimary} />
-          </Pressable>
-        ) : null}
-      </View>
+  const isTab = variant === 'tab';
+  const isSheet = variant === 'sheet';
+  const isModal = variant === 'modal';
+  const canBack = Boolean(showBack) && variant === 'screen';
 
-      <View style={styles.titleWrap}>
-        <AppText variant="heading2" color="textPrimary" align="center" numberOfLines={1} style={styles.title}>
+  const leading = isModal ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={cancelLabel}
+      onPress={onCancel}
+      hitSlop={12}
+      style={({ pressed }) => [styles.textAction, pressed && styles.iconBtnPressed]}
+    >
+      <AppText variant="button" color="textSecondary" numberOfLines={1}>
+        {cancelLabel}
+      </AppText>
+    </Pressable>
+  ) : canBack ? (
+    <SarhBackButton
+      onPress={() => (onBackPress ? onBackPress() : router.back())}
+      color={colors.textPrimary}
+      style={styles.iconBtn}
+    />
+  ) : showSidebar && !isSheet && !isModal ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="فتح القائمة"
+      onPress={onSidebar}
+      hitSlop={12}
+      style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+    >
+      <AppIcon name="menu-burger" size={ds.icon.md} color={colors.textPrimary} />
+    </Pressable>
+  ) : null;
+
+  const trailing = isModal && confirmLabel ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={confirmLabel}
+      accessibilityState={{ disabled: confirmDisabled }}
+      disabled={confirmDisabled}
+      onPress={onConfirm}
+      hitSlop={12}
+      style={({ pressed }) => [styles.textAction, pressed && styles.iconBtnPressed]}
+    >
+      <AppText
+        variant="button"
+        color={confirmDisabled ? 'textMuted' : 'primary'}
+        numberOfLines={1}
+      >
+        {confirmLabel}
+      </AppText>
+    </Pressable>
+  ) : isSheet && onClose ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={closeAccessibilityLabel ?? 'إغلاق'}
+      onPress={onClose}
+      hitSlop={12}
+      style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+    >
+      <AppIcon name="close" size={ds.icon.md} color={colors.textPrimary} />
+    </Pressable>
+  ) : rightIcon ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={rightAccessibilityLabel ?? 'إجراء إضافي'}
+      onPress={onRightPress}
+      hitSlop={12}
+      style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+    >
+      <AppIcon name={rightIcon} size={ds.icon.md} color={colors.textPrimary} />
+    </Pressable>
+  ) : null;
+
+  const sideStyle = isModal ? styles.sideAuto : styles.side;
+
+  const bar = (
+    <View style={[styles.container, getRtlRow(), { paddingHorizontal: gutter }]}>
+      <View style={sideStyle}>{leading}</View>
+
+      <View style={[styles.titleWrap, isTab && styles.titleWrapStart]}>
+        <AppText
+          variant="heading2"
+          color="textPrimary"
+          align={isTab ? 'auto' : 'center'}
+          numberOfLines={1}
+          style={isTab ? styles.titleStart : styles.title}
+        >
           {title}
         </AppText>
         {arabic ? (
-          <AppText variant="caption" color="textMuted" align="center" numberOfLines={1} style={styles.arabic}>
+          <AppText
+            variant="caption"
+            color="textMuted"
+            align={isTab ? 'auto' : 'center'}
+            numberOfLines={1}
+            style={isTab ? styles.arabicStart : styles.arabic}
+          >
             {arabic}
           </AppText>
         ) : null}
       </View>
 
-      <View style={[styles.side, alignInlineEnd()]}>
-        {rightIcon ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={rightAccessibilityLabel ?? 'إجراء إضافي'}
-            onPress={onRightPress}
-            hitSlop={12}
-            style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
-          >
-            <AppIcon name={rightIcon} size={ds.icon.md} color={colors.textPrimary} />
-          </Pressable>
-        ) : null}
+      <View style={[sideStyle, alignInlineEnd()]}>{trailing}</View>
+    </View>
+  );
+
+  if (!isSheet) return bar;
+
+  return (
+    <View style={styles.sheetShell}>
+      <View style={styles.grabberWrap}>
+        <View style={styles.grabber} />
       </View>
+      {bar}
     </View>
   );
 }
@@ -92,12 +194,28 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     container: {
       ...getRtlRow(),
       alignItems: 'center',
-      paddingHorizontal: spacing.lg,
       minHeight: layout.headerHeight,
       backgroundColor: colors.screenRoot,
     },
+    sheetShell: {
+      backgroundColor: colors.screenRoot,
+    },
+    grabberWrap: {
+      alignItems: 'center',
+      paddingTop: spacing.sm,
+    },
+    grabber: {
+      width: 36,
+      height: 4,
+      borderRadius: radius.sm,
+      backgroundColor: colors.borderStrong,
+    },
     side: {
       width: controls.iconButton,
+    },
+    sideAuto: {
+      minWidth: controls.iconButton,
+      justifyContent: 'center',
     },
     /** Physical LTR shell — keeps centered Arabic titles visually correct under app RTL. */
     titleWrap: {
@@ -105,20 +223,32 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       minWidth: 0,
       alignItems: 'center',
     },
+    titleWrapStart: {
+      alignItems: 'flex-start',
+    },
     title: {
-      ...typography.sectionHeading,
-      color: colors.textPrimary,
       width: '100%',
       textAlign: 'center',
       writingDirection: 'rtl',
     },
+    titleStart: {
+      width: '100%',
+      writingDirection: 'rtl',
+    },
     arabic: {
-      ...typography.caption,
-      color: colors.textMuted,
       marginTop: 1,
       width: '100%',
       textAlign: 'center',
       writingDirection: 'rtl',
+    },
+    arabicStart: {
+      marginTop: 1,
+      width: '100%',
+      writingDirection: 'rtl',
+    },
+    textAction: {
+      minHeight: controls.iconButton,
+      justifyContent: 'center',
     },
     iconBtn: {
       width: controls.iconButton,

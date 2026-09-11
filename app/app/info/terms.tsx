@@ -1,13 +1,11 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppScrollView } from '@/components/ui/AppScrollView';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow } from '@/lib/rtl';
 import { AppText, SarhDivider } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TERMS = [
   {
@@ -44,85 +42,75 @@ const TERMS = [
   },
 ];
 
+const CONTACT = [
+  { icon: 'mail-outline', href: 'mailto:sarh@sarhsa.online', text: 'sarh@sarhsa.online' },
+  { icon: 'call-outline', href: 'tel:+966591298136', text: '+966 591 298 136' },
+];
+
 export default function TermsScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="الشروط والأحكام" showBack />
-      <AppScrollView contentContainerStyle={styles.scroll}>
-
-        {/* Banner */}
-        <View style={styles.topBanner}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="الشروط والأحكام" showBack />
+      <ScreenBody gap="section" padBottom="xxxl">
+        <Stack gap="sm" align="center" style={styles.banner}>
           <AppIcon name="document-text" size={26} color={colors.textSecondary} />
-          <AppText variant="heading3" color="textPrimary">شروط الاستخدام</AppText>
+          <AppText variant="cardTitle" color="textPrimary">شروط الاستخدام</AppText>
           <AppText variant="caption" color="textMuted">آخر تحديث: يناير 2024</AppText>
-        </View>
+        </Stack>
 
         <SarhDivider />
 
         {TERMS.map((item, i) => (
-          <View key={i}>
-            <View style={styles.section}>
-              <View style={[getRtlRow(), { alignItems: 'center', gap: spacing.sm }]}>
-                <View style={styles.numBadge}>
-                  <AppText variant="micro" color="textSecondary" align="center">{i + 1}</AppText>
-                </View>
-                <AppText variant="label" color="textPrimary">{item.title}</AppText>
+          <Stack key={item.title} gap="sm">
+            <Row gap="sm">
+              <View style={styles.numBadge}>
+                <AppText variant="meta" color="textSecondary" align="center">{i + 1}</AppText>
               </View>
-              <AppText variant="body" color="textSecondary" style={styles.sectionContent}>
-                {item.content}
+              <AppText variant="cardTitle" color="textPrimary" style={styles.fill}>
+                {item.title}
               </AppText>
-            </View>
-            {i < TERMS.length - 1 ? <SarhDivider /> : null}
-          </View>
+            </Row>
+            <AppText variant="body" color="textSecondary" style={styles.prose}>
+              {item.content}
+            </AppText>
+            {i < TERMS.length - 1 ? <SarhDivider style={styles.clauseRule} /> : null}
+          </Stack>
         ))}
 
         <SarhDivider />
 
-        {/* Contact */}
-        <View style={styles.section}>
-          <AppText variant="label" color="textPrimary">للاستفسار</AppText>
-          {[
-            { icon: 'mail-outline', href: 'mailto:sarh@sarhsa.online', text: 'sarh@sarhsa.online' },
-            { icon: 'call-outline', href: 'tel:+966591298136', text: '+966 591 298 136' },
-          ].map((item) => (
+        <Section title="للاستفسار" gap="xs">
+          {CONTACT.map((item) => (
             <Pressable
               key={item.href}
-              style={({ pressed }) => [styles.contactRow, getRtlRow(), { opacity: pressed ? 0.7 : 1 }]}
+              accessibilityRole="link"
+              accessibilityLabel={item.text}
               onPress={() => Linking.openURL(item.href)}
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
             >
-              <AppIcon name={item.icon} size={16} color={colors.electricBright} />
-              <AppText variant="body" color="primary">{item.text}</AppText>
+              <Row gap="sm" style={styles.contactRow}>
+                <AppIcon name={item.icon} size={16} color={colors.electricBright} />
+                <AppText variant="body" color="primary">{item.text}</AppText>
+              </Row>
             </Pressable>
           ))}
-        </View>
+        </Section>
 
-        <AppText variant="micro" color="textMuted" align="center" style={styles.footer}>
+        <AppText variant="meta" color="textMuted" align="center">
           © 2024 مؤسسة ماد يونيت للتجارة · سرح · جميع الحقوق محفوظة
         </AppText>
-        <View style={{ height: 32 }} />
-      </AppScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: { paddingBottom: 32 },
-    topBanner: {
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.xxl,
-      paddingHorizontal: spacing.lg,
-    },
-    section: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.lg,
-      gap: spacing.sm,
-    },
+    fill: { flex: 1, minWidth: 0 },
+    banner: { paddingVertical: spacing.xxl },
     numBadge: {
       width: 22,
       height: 22,
@@ -134,12 +122,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       flexShrink: 0,
     },
-    sectionContent: { lineHeight: 26 },
-    contactRow: {
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-    },
-    footer: { marginTop: spacing.xl, paddingHorizontal: spacing.lg },
+    prose: { lineHeight: 26 },
+    clauseRule: { marginTop: spacing.md },
+    contactRow: { paddingVertical: spacing.sm },
   });
 }

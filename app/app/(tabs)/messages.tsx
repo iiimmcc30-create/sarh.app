@@ -1,24 +1,17 @@
 // Powered by OnSpace.AI
 // SAFAT — Messages (bottom tab)
 
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native';
-import { type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { MessagesPanel } from '@/components/feature/MessagesPanel';
+import { Screen, ScreenBody } from '@/design-system/layout';
 
 export default function MessagesScreen() {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
-
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <MessagesPanel variant="standalone" />
-    </SafeAreaView>
+    <Screen edges={['top']}>
+      <ScreenHeader variant="tab" title="الرسائل" />
+      <ScreenBody scroll={false} gutter={false} bottomInset="tabBar">
+        <MessagesPanel variant="standalone" showHeader={false} />
+      </ScreenBody>
+    </Screen>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-  });
 }

@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { PostItem } from '@/components/feature/PostItem';
 import {
   PostCommentsComposer,
@@ -7,12 +7,12 @@ import {
   PostCommentsProvider,
   type PostCommentsSectionRef,
 } from '@/components/feature/PostCommentsSection';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRtlRow } from '@/lib/rtl';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
@@ -24,14 +24,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SarhBackButton } from '@/design-system/components';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function mapBackendPost(p: any): Post | null {
   if (!p?.id || !p?.author) return null;
@@ -77,7 +73,7 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const { isAuthenticated } = useAuth();
   const {
     me,
@@ -148,24 +144,22 @@ export default function PostDetailScreen() {
 
   if (loading && !enrichedPost) {
     return (
-      <SafeAreaView style={styles.root}>
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.electricBright} size="large" />
-        </View>
-      </SafeAreaView>
+      <Screen edges={['top']}>
+        <ScreenHeader variant="screen" title="منشور" showBack />
+        <ScreenBody scroll={false}>
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.electricBright} size="large" />
+          </View>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (!enrichedPost) return null;
 
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      <View style={[styles.topBar, getRtlRow()]}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.screenTitle}>منشور</Text>
-        <View style={styles.backBtn} />
-      </View>
-
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="منشور" showBack />
       <PostCommentsProvider
         ref={commentsRef}
         postId={enrichedPost.id}
@@ -178,13 +172,9 @@ export default function PostDetailScreen() {
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 48 : 0}
+          keyboardVerticalOffset={0}
         >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scroll}
-            keyboardShouldPersistTaps="handled"
-          >
+          <ScreenBody gutter={false} padBottom="xl">
             <PostItem
               post={enrichedPost}
               variant="detail"
@@ -199,22 +189,18 @@ export default function PostDetailScreen() {
               }
             />
             <PostCommentsList />
-          </ScrollView>
+          </ScreenBody>
           <View style={{ paddingBottom: insets.bottom }}>
             <PostCommentsComposer />
           </View>
         </KeyboardAvoidingView>
       </PostCommentsProvider>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles(_colors: ThemeColors) {
   return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: colors.bgDeep,
-    },
     flex: {
       flex: 1,
     },
@@ -222,28 +208,6 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    topBar: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderHairline,
-      backgroundColor: colors.bgGlassStrong,
-    },
-    backBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    screenTitle: {
-      ...typography.cardHeading,
-      color: colors.textPrimary,
-    },
-    scroll: {
-      paddingBottom: spacing.xxxl,
     },
   });
 }

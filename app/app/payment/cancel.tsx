@@ -1,12 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SarhButton } from '@/design-system/components';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+import { type ThemeColors } from '@/constants/theme';
 
 function pickParam(value: string | string[] | undefined): string {
   if (Array.isArray(value)) return value[0] ?? '';
@@ -16,7 +16,7 @@ function pickParam(value: string | string[] | undefined): string {
 /** Cancel URL from Network International when the shopper abandons checkout. */
 export default function PaymentCancelScreen() {
   const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const params = useLocalSearchParams<{
     context?: string | string[];
@@ -27,61 +27,55 @@ export default function PaymentCancelScreen() {
   const isButcherOrder = context === 'butcher_order' && Boolean(orderId);
 
   return (
-    <View style={styles.screen}>
+    <Screen edges={['top', 'bottom']} pattern={false} style={styles.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-      <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
-        <View style={styles.iconWrap}>
-          <AppIcon name="close-circle" size={48} color={colors.rose} />
-        </View>
-        <Text style={styles.title}>لم يكتمل الدفع</Text>
-        <Text style={styles.subtitle}>
-          {isButcherOrder
-            ? 'طلبك ما زال بانتظار الدفع. يمكنك إكمال الدفع من تفاصيل الطلب دون إنشاء طلب جديد.'
-            : 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
-        </Text>
-        <SarhButton
-          title={isButcherOrder ? 'إكمال الدفع' : 'إعادة المحاولة'}
-          fullWidth
-          onPress={() => {
-            if (isButcherOrder) {
-              router.replace({
-                pathname: '/butchers/order/[id]',
-                params: { id: orderId },
-              } as never);
-              return;
-            }
-            router.replace('/subscription' as never);
-          }}
-        />
-        <Pressable
-          style={styles.secondaryBtn}
-          onPress={() => {
-            if (isButcherOrder) {
-              router.replace('/butchers/my-orders' as never);
-              return;
-            }
-            router.replace('/(tabs)/profile' as never);
-          }}
-        >
-          <Text style={styles.secondaryBtnText}>
-            {isButcherOrder ? 'طلباتي' : 'العودة للملف'}
-          </Text>
-        </Pressable>
-      </SafeAreaView>
-    </View>
+      <ScreenBody scroll={false} padTop="xl" padBottom="xl">
+        <Stack gap="md" align="center" fill style={styles.wrap}>
+          <View style={styles.iconWrap}>
+            <AppIcon name="close-circle" size={48} color={colors.rose} />
+          </View>
+          <AppText variant="heading2" align="center">لم يكتمل الدفع</AppText>
+          <AppText variant="body" color="textSecondary" align="center">
+            {isButcherOrder
+              ? 'طلبك ما زال بانتظار الدفع. يمكنك إكمال الدفع من تفاصيل الطلب دون إنشاء طلب جديد.'
+              : 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
+          </AppText>
+          <SarhButton
+            title={isButcherOrder ? 'إكمال الدفع' : 'إعادة المحاولة'}
+            fullWidth
+            onPress={() => {
+              if (isButcherOrder) {
+                router.replace({
+                  pathname: '/butchers/order/[id]',
+                  params: { id: orderId },
+                } as never);
+                return;
+              }
+              router.replace('/subscription' as never);
+            }}
+          />
+          <SarhButton
+            title={isButcherOrder ? 'طلباتي' : 'العودة للملف'}
+            variant="ghost"
+            fullWidth
+            onPress={() => {
+              if (isButcherOrder) {
+                router.replace('/butchers/my-orders' as never);
+                return;
+              }
+              router.replace('/(tabs)/profile' as never);
+            }}
+          />
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: { flex: 1 },
-    wrap: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.xl,
-      gap: spacing.md,
-    },
+    wrap: { justifyContent: 'center' },
     iconWrap: {
       width: 88,
       height: 88,
@@ -89,38 +83,6 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: `${colors.rose}22`,
-      marginBottom: spacing.sm,
-    },
-    title: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      textAlign: 'center',
-    },
-    subtitle: {
-      ...typography.body,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: spacing.lg,
-      lineHeight: 22,
-    },
-    primaryBtn: {
-      backgroundColor: colors.electricBright,
-      borderRadius: radius.xl,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.xl,
-      minWidth: 220,
-      alignItems: 'center',
-    },
-    primaryBtnText: {
-      ...typography.bodyStrong,
-      color: '#fff',
-    },
-    secondaryBtn: {
-      paddingVertical: spacing.sm,
-    },
-    secondaryBtnText: {
-      ...typography.body,
-      color: colors.textMuted,
     },
   });
 }

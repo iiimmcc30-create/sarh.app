@@ -1,20 +1,18 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { AppText } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlText, getRtlRow } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import {
@@ -27,19 +25,25 @@ import { ButcherOrderRecord, formatCurrency, formatOrderDate } from '@/services/
 function InvoiceRow({
   label,
   value,
-  styles,
   highlight,
 }: {
   label: string;
   value: string;
-  styles: ReturnType<typeof createStyles>;
   highlight?: boolean;
 }) {
   return (
-    <View style={[styles.row, getRtlRow()]}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, highlight && styles.rowValueHighlight]}>{value}</Text>
-    </View>
+    <Row justify="between" gap="md" align="center">
+      <AppText variant="caption" color="textMuted">
+        {label}
+      </AppText>
+      <AppText
+        variant="label"
+        color={highlight ? 'success' : 'textPrimary'}
+        style={{ flex: 1 }}
+      >
+        {value}
+      </AppText>
+    </Row>
   );
 }
 
@@ -72,113 +76,126 @@ export default function InvoiceDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <ScreenHeader title="تفاصيل الفاتورة" showBack />
-        <ActivityIndicator size="large" color={colors.electricBright} style={{ marginTop: 60 }} />
-      </SafeAreaView>
+      <Screen edges={['top']}>
+        <ScreenHeader variant="screen" title="تفاصيل الفاتورة" showBack />
+        <ScreenBody scroll={false} gutter={false}>
+          <ActivityIndicator size="large" color={colors.electricBright} style={styles.loader} />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   if (!invoice) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <ScreenHeader title="تفاصيل الفاتورة" showBack />
-        <Text style={styles.error}>تعذر تحميل الفاتورة</Text>
-      </SafeAreaView>
+      <Screen edges={['top']}>
+        <ScreenHeader variant="screen" title="تفاصيل الفاتورة" showBack />
+        <ScreenBody gutter={false} padBottom="lg">
+          <AppText variant="body" color="textMuted" align="center" style={styles.error}>
+            تعذر تحميل الفاتورة
+          </AppText>
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScreenHeader title="تفاصيل الفاتورة" showBack />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="تفاصيل الفاتورة" showBack />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScreenBody gutter={false} padBottom="lg" contentContainerStyle={styles.scroll}>
         <View style={styles.paper}>
-          <View style={styles.paperHeader}>
+          <Stack gap="xs" align="center">
             <View style={styles.logoMark}>
               <AppIcon name="storefront-outline" size={28} color={colors.electricBright} />
             </View>
-            <Text style={styles.brand}>سرح · سوق الملاحم</Text>
-            <Text style={styles.invoiceTitle}>فاتورة ضريبية مبسطة</Text>
-            <Text style={styles.invoiceNo}>#{invoice.orderNumber}</Text>
-          </View>
+            <AppText variant="caption" color="textMuted" align="center">
+              سرح · سوق الملاحم
+            </AppText>
+            <AppText variant="heading3" align="center">
+              فاتورة ضريبية مبسطة
+            </AppText>
+            <AppText variant="label" style={{ color: colors.electricBright }}>
+              #{invoice.orderNumber}
+            </AppText>
+          </Stack>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>بيانات الفاتورة</Text>
-            <InvoiceRow label="رقم الطلب" value={invoice.orderNumber} styles={styles} />
+            <AppText variant="label" style={styles.sectionTitle}>
+              بيانات الفاتورة
+            </AppText>
+            <InvoiceRow label="رقم الطلب" value={invoice.orderNumber} />
             <InvoiceRow
               label="اسم الملحمة"
               value={invoice.butcher?.nameAr ?? '—'}
-              styles={styles}
             />
             <InvoiceRow
               label="تاريخ الشراء"
               value={formatOrderDate(invoice.createdAt)}
-              styles={styles}
             />
             <InvoiceRow
               label="حالة الدفع"
               value={PAYMENT_STATUS_LABELS[invoice.paymentStatus]}
-              styles={styles}
               highlight={invoice.paymentStatus === 'paid'}
             />
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>تفاصيل المنتجات</Text>
+            <AppText variant="label" style={styles.sectionTitle}>
+              تفاصيل المنتجات
+            </AppText>
             <InvoiceRow
               label="المنتج"
               value={invoice.product?.nameAr ?? '—'}
-              styles={styles}
             />
             <InvoiceRow
               label="التقطيع"
               value={CUT_LABELS[invoice.cutType as CutType]?.ar ?? invoice.cutType}
-              styles={styles}
             />
-            <InvoiceRow label="الكمية" value={`${invoice.weightKg} كغ`} styles={styles} />
+            <InvoiceRow label="الكمية" value={`${invoice.weightKg} كغ`} />
             <InvoiceRow
               label="سعر المنتج"
               value={formatCurrency(invoice.totalPrice, invoice.currency)}
-              styles={styles}
             />
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>الملخص المالي</Text>
-            <InvoiceRow label="رسوم التوصيل" value="—" styles={styles} />
-            <InvoiceRow label="الضريبة" value="—" styles={styles} />
-            <InvoiceRow label="الخصومات" value="—" styles={styles} />
-            <View style={styles.grandTotal}>
-              <Text style={styles.grandLabel}>المبلغ المدفوع</Text>
-              <Text style={styles.grandValue}>
+            <AppText variant="label" style={styles.sectionTitle}>
+              الملخص المالي
+            </AppText>
+            <InvoiceRow label="رسوم التوصيل" value="—" />
+            <InvoiceRow label="الضريبة" value="—" />
+            <InvoiceRow label="الخصومات" value="—" />
+            <Stack gap="xs" align="center" style={styles.grandTotal}>
+              <AppText variant="caption" color="textMuted">
+                المبلغ المدفوع
+              </AppText>
+              <AppText variant="heading2" style={{ color: colors.electricBright }}>
                 {formatCurrency(invoice.totalPrice, invoice.currency)}
-              </Text>
-            </View>
+              </AppText>
+            </Stack>
           </View>
 
-          <Text style={styles.footerNote}>
+          <AppText variant="caption" color="textMuted" align="center" style={styles.footerNote}>
             شكراً لتسوقك من سوق الملاحم في سرح
-          </Text>
+          </AppText>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: { padding: spacing.lg, paddingBottom: 40 },
+    loader: { marginTop: 60 },
+    scroll: { padding: space[16], paddingBottom: space[40] },
     paper: {
       backgroundColor: colors.bgSurface,
       borderRadius: radius.xxl,
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      padding: spacing.xl,
-      gap: spacing.lg,
+      padding: space[20],
+      gap: space[16],
     },
-    paperHeader: { alignItems: 'center', gap: spacing.xs },
     logoMark: {
       width: 56,
       height: 56,
@@ -186,79 +203,25 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.electric + '18',
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: spacing.sm,
+      marginBottom: space[8],
     },
-    brand: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    invoiceTitle: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-    },
-    invoiceNo: {
-      ...butcherTypography.primary,
-      color: colors.electricBright,
-    },
-    section: { gap: spacing.sm },
+    section: { gap: space[8] },
     sectionTitle: {
-      ...butcherTypography.primary,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      ...getRtlText(),
-      marginBottom: spacing.xs,
-      paddingBottom: spacing.xs,
+      marginBottom: space[4],
+      paddingBottom: space[4],
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
-    row: {
-      justifyContent: 'space-between',
-      gap: spacing.md,
-      paddingVertical: 4,
-    },
-    rowLabel: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    rowValue: {
-      ...butcherTypography.emphasis,
-      color: colors.textPrimary,
-      flex: 1,
-      textAlign: 'left',
-      writingDirection: 'rtl',
-    },
-    rowValueHighlight: { ...butcherTypography.emphasis, color: colors.success },
     grandTotal: {
-      marginTop: spacing.sm,
-      paddingTop: spacing.md,
+      marginTop: space[8],
+      paddingTop: space[12],
       borderTopWidth: 1,
       borderTopColor: colors.borderMid,
-      alignItems: 'center',
-      gap: 4,
-    },
-    grandLabel: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    grandValue: {
-      ...butcherTypography.titleLarge,
-      color: colors.electricBright,
     },
     footerNote: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      marginTop: spacing.sm,
+      marginTop: space[8],
     },
     error: {
-      ...butcherTypography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
       marginTop: 80,
     },
   });

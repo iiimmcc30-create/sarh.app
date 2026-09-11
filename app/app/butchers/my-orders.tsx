@@ -2,20 +2,17 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { CustomerOrderCard, CustomerOrderCardSkeleton } from '@/components/butchers/CustomerOrderCard';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useState } from 'react';
 import {
-  Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { radius, spacing } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +22,6 @@ import {
   isActiveOrder,
 } from '@/services/butcherOrders';
 import { butcherChatRouteParams, isOrderChatEligible } from '@/services/butcherChat';
-import { AppText } from '@/components/ui/AppText';
 
 export default function MyOrdersScreen() {
   const router = useRouter();
@@ -82,20 +78,20 @@ export default function MyOrdersScreen() {
     safePush({ pathname: '/butchers/order/[id]', params: { id: order.id } }, undefined, router);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader title="طلباتي" />
+    <Screen edges={['top']}>
+      <ScreenHeader variant="screen" title="طلباتي" />
 
       {loading ? (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScreenBody gutter={false} padBottom="lg" contentContainerStyle={styles.scroll}>
           {[0, 1, 2].map((i) => (
             <CustomerOrderCardSkeleton key={i} colors={colors} />
           ))}
-        </ScrollView>
+        </ScreenBody>
       ) : (
-        <ScrollView
-          style={styles.flex}
+        <ScreenBody
+          gutter={false}
+          padBottom="lg"
           contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -108,26 +104,32 @@ export default function MyOrdersScreen() {
           }
         >
           {orders.length === 0 ? (
-            <View style={styles.empty}>
+            <Stack gap="sm" align="center" style={styles.empty}>
               <View style={styles.emptyIconWrap}>
                 <AppIcon name="bag-outline" size={34} color={colors.electricBright} />
               </View>
               <View style={{ width: '100%' }}>
-                <AppText style={styles.emptyTitle}>لا توجد طلبات بعد</AppText>
+                <AppText variant="heading3" align="center">
+                  لا توجد طلبات بعد
+                </AppText>
               </View>
               <View style={{ width: '100%' }}>
-                <AppText style={styles.emptySub}>تصفّح الملاحم واطلب منتجاتك المفضلة</AppText>
+                <AppText variant="caption" color="textMuted" align="center" style={styles.emptySub}>
+                  تصفّح الملاحم واطلب منتجاتك المفضلة
+                </AppText>
               </View>
-              <Pressable style={styles.emptyBtn} onPress={() => router.replace('/butchers')}>
-                <Text style={styles.emptyBtnText}>تصفح الملاحم</Text>
-              </Pressable>
-            </View>
+              <SarhButton
+                title="تصفح الملاحم"
+                shape="pill"
+                onPress={() => router.replace('/butchers')}
+              />
+            </Stack>
           ) : (
             <>
               {activeOrders.length > 0 ? (
                 <View style={styles.section}>
                   <View style={{ width: '100%' }}>
-                    <AppText style={styles.sectionTitle}>الطلبات الحالية</AppText>
+                    <AppText variant="heading3">الطلبات الحالية</AppText>
                   </View>
                   {activeOrders.map((order) => (
                     <CustomerOrderCard
@@ -154,7 +156,7 @@ export default function MyOrdersScreen() {
               {pastOrders.length > 0 ? (
                 <View style={styles.section}>
                   <View style={{ width: '100%' }}>
-                    <AppText style={styles.sectionTitle}>الطلبات السابقة</AppText>
+                    <AppText variant="heading3">الطلبات السابقة</AppText>
                   </View>
                   {pastOrders.map((order) => (
                     <CustomerOrderCard
@@ -179,29 +181,21 @@ export default function MyOrdersScreen() {
               ) : null}
             </>
           )}
-          <View style={{ height: spacing.md }} />
-        </ScrollView>
+          <View style={{ height: space[12] }} />
+        </ScreenBody>
       )}
 
       <ButchersTabBar active="orders" />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    scroll: { padding: spacing.lg, paddingBottom: spacing.lg, gap: spacing.lg },
-    section: { gap: spacing.md },
-    sectionTitle: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-    },
+    scroll: { padding: space[16], paddingBottom: space[16], gap: space[16] },
+    section: { gap: space[12] },
     empty: {
-      alignItems: 'center',
       paddingVertical: 80,
-      gap: spacing.sm,
     },
     emptyIconWrap: {
       width: 76,
@@ -210,34 +204,10 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.electric + '14',
-      marginBottom: spacing.xs,
-    },
-    emptyTitle: {
-      ...butcherTypography.title,
-      color: colors.textPrimary,
-      width: '100%',
-      textAlign: 'center',
-      writingDirection: 'rtl',
+      marginBottom: space[4],
     },
     emptySub: {
-      ...butcherTypography.secondary,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      paddingHorizontal: spacing.xl,
-      width: '100%',
-    },
-    emptyBtn: {
-      marginTop: spacing.md,
-      paddingHorizontal: spacing.xxl,
-      paddingVertical: 13,
-      borderRadius: radius.pill,
-      backgroundColor: colors.electric,
-    },
-    emptyBtnText: {
-      ...butcherTypography.primary,
-      color: colors.bgDeep,
-      writingDirection: 'rtl',
+      paddingHorizontal: space[20],
     },
   });
 }

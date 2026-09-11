@@ -3,17 +3,13 @@
 
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ds } from '@/constants/designSystem';
-import { space } from '@/design-system';
-import { SarhSurface } from '@/design-system/components';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useAppUser } from '@/hooks/useApp';
-import { useAuth } from '@/contexts/AuthContext';
 import { EditorialStoriesBar } from '@/components/feature/EditorialStoriesBar';
 import { ExploreSarhSection } from '@/components/feature/ExploreSarhSection';
 import { HomeMinistryOrgCard } from '@/components/feature/HomeMinistryOrgCard';
+import { HomeAppBar } from '@/components/ui/HomeAppBar';
+import { Screen, ScreenBody } from '@/design-system/layout';
+import { useAppUser } from '@/hooks/useApp';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
 import {
   fetchMinistryAccount,
@@ -21,24 +17,12 @@ import {
   type MinistryAccount,
   type OfficialService,
 } from '@/services/officialServices';
-import { HomeAppBar } from '@/components/ui/HomeAppBar';
-import { AppScrollView } from '@/components/ui/AppScrollView';
 import { safePush } from '@/lib/safeNavigate';
 
 const HOME_REFRESH_TTL_MS = 60_000;
-const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + space[16];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(({ sarh }) =>
-    StyleSheet.create({
-      root: sarh.screenRoot,
-      container: sarh.screenRoot,
-      scrollContent: {
-        paddingBottom: space[16],
-      },
-    }),
-  );
   const { me } = useAppUser();
   const { isAuthenticated } = useAuth();
   const displayName = isAuthenticated
@@ -102,39 +86,36 @@ export default function HomeScreen() {
   );
 
   return (
-    <SarhSurface tone="background" style={styles.root}>
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <HomeAppBar
-          displayName={displayName}
-          avatarUri={me.avatar}
-          onSearch={() => safePush('/search', undefined, router)}
-          onProfilePress={() => {
-            if (!isAuthenticated) {
-              safePush('/auth/phone', undefined, router);
-              return;
-            }
-            safePush('/(tabs)/profile', undefined, router);
-          }}
-          onAvatarPress={() => {
-            if (!isAuthenticated) {
-              safePush('/auth/phone', undefined, router);
-              return;
-            }
-            safePush('/sidebar', undefined, router);
-          }}
-        />
+    <Screen edges={['top']}>
+      <HomeAppBar
+        displayName={displayName}
+        avatarUri={me.avatar}
+        onSearch={() => safePush('/search', undefined, router)}
+        onProfilePress={() => {
+          if (!isAuthenticated) {
+            safePush('/auth/phone', undefined, router);
+            return;
+          }
+          safePush('/(tabs)/profile', undefined, router);
+        }}
+        onAvatarPress={() => {
+          if (!isAuthenticated) {
+            safePush('/auth/phone', undefined, router);
+            return;
+          }
+          safePush('/sidebar', undefined, router);
+        }}
+      />
 
-        <AppScrollView contentContainerStyle={styles.scrollContent}>
-          <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
-          <ExploreSarhSection />
-          <HomeMinistryOrgCard
-            account={ministryAccount}
-            serviceCount={ministryServices.filter((item) => item.active !== false).length}
-            loading={ministryLoading}
-          />
-          <View style={{ height: TAB_BAR_CLEARANCE }} />
-        </AppScrollView>
-      </SafeAreaView>
-    </SarhSurface>
+      <ScreenBody gutter={false} bottomInset="tabBar" padBottom="md">
+        <EditorialStoriesBar stories={editorialStories} loading={storiesLoading} />
+        <ExploreSarhSection />
+        <HomeMinistryOrgCard
+          account={ministryAccount}
+          serviceCount={ministryServices.filter((item) => item.active !== false).length}
+          loading={ministryLoading}
+        />
+      </ScreenBody>
+    </Screen>
   );
 }

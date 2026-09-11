@@ -1,39 +1,36 @@
 // Powered by OnSpace.AI
 // SAFAT — OTP Verification Screen (شاشة التحقق من رمز OTP)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { getRtlRow, getRtlText, inlineEnd, ltrInputText, rtlForwardIcon } from '@/lib/rtl';
-
-import { SarhButton } from '@/design-system/components';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { AppText, SarhButton, resolveAppTextStyle } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { ltrInputText } from '@/lib/rtl';
+import { type ThemeColors } from '@/constants/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
-  ActivityIndicator,
-  Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/contexts/AuthContext';
 
 function formatDisplayPhone(phone: string): string {
   return phone.replace(/^(\+966)(\d)(\d{3})(\d{3})(\d{3})$/, '+966 $2$3 $4 $5');
 }
 
 const OTP_LENGTH = 6;
+const AUTH_FORM_WIDTH = { maxWidth: 440, width: '100%', alignSelf: 'center' } as const;
 
 export default function OtpScreen() {
-  const { colors, gradients } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { colors } = useTheme();
+  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const params = useLocalSearchParams<{
     phone: string;
@@ -44,17 +41,22 @@ export default function OtpScreen() {
 
   const { verifyOtp, sendOtp } = useAuth();
 
-  const totalSeconds   = parseInt(params.expiresIn ?? '120', 10);
-  const [otp, setOtp]              = useState(['', '', '', '', '', '']);
-  const [countdown, setCountdown]  = useState(totalSeconds);
-  const [loading, setLoading]      = useState(false);
-  const [error, setError]          = useState('');
-  const [success, setSuccess]      = useState(false);
+  const totalSeconds = parseInt(params.expiresIn ?? '120', 10);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [countdown, setCountdown] = useState(totalSeconds);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
   const inputs = useRef<(TextInput | null)[]>([]);
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const successScale = useRef(new Animated.Value(0)).current;
+  const otpDigitStyle = resolveAppTextStyle({
+    variant: 'heading2',
+    color: 'textPrimary',
+    align: 'center',
+  });
 
   // ── Countdown timer ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -169,51 +171,36 @@ export default function OtpScreen() {
 
   if (success) {
     return (
-      <View style={styles.root}>
-        <View style={styles.successCenter}>
+      <Screen edges={['top', 'bottom']} pattern={false} style={styles.root}>
+        <Stack gap="lg" align="center" fill style={styles.successCenter}>
           <Animated.View style={[styles.successRing, { transform: [{ scale: successScale }] }]}>
             <LinearGradient colors={[colors.electric, colors.electricBright]} style={styles.successInner}>
-              <AppIcon name="checkmark" size={52} color="#fff" />
+              <AppIcon name="checkmark" size={52} color={colors.textPrimary} />
             </LinearGradient>
           </Animated.View>
-          <Text style={styles.successTitle}>تم التحقق بنجاح</Text>
-          <Text style={styles.successSub}>جارٍ الدخول...</Text>
-        </View>
-      </View>
+          <AppText variant="display" align="center">تم التحقق بنجاح</AppText>
+          <AppText variant="bodySmall" color="textMuted">جارٍ الدخول...</AppText>
+        </Stack>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          style={styles.kav}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <Pressable
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
-          >
-            <AppIcon name={rtlForwardIcon()} size={22} color={colors.textPrimary} />
-          </Pressable>
+    <Screen edges={['top', 'bottom']} keyboard pattern={false} style={styles.root}>
+      <ScreenHeader variant="screen" title="رمز التحقق" showBack />
+      <ScreenBody padTop="lg" padBottom="xxxl" gap="section" contentContainerStyle={AUTH_FORM_WIDTH}>
+        <Stack gap="sm" align="center">
+          <AppText variant="body" color="textMuted" align="center">
+            أرسلنا رمزاً من {OTP_LENGTH} أرقام إلى
+          </AppText>
+          <AppText variant="label" align="center">
+            {formatDisplayPhone(params.phone || '')}
+          </AppText>
+        </Stack>
 
-          <View style={styles.header}>
-            <Text style={styles.largeTitle}>رمز التحقق</Text>
-            <Text style={styles.cardSub}>
-              أرسلنا رمزاً من {OTP_LENGTH} أرقام إلى{'\n'}
-              <Text style={styles.phoneHighlight}>
-                {formatDisplayPhone(params.phone || '')}
-              </Text>
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-
-            {/* OTP boxes */}
-            <Animated.View style={[styles.otpRow, { transform: [{ translateX: shakeAnim }] }]}>
+        <Stack gap="md">
+          <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
+            <Row justify="center" gap="sm">
               {otp.map((digit, idx) => (
                 <View
                   key={idx}
@@ -225,159 +212,126 @@ export default function OtpScreen() {
                 >
                   <TextInput
                     ref={(r) => { inputs.current[idx] = r; }}
-                    style={[styles.otpInput, ltrInputText]}
+                    style={[styles.otpInput, otpDigitStyle, ltrInputText]}
                     value={digit}
                     onChangeText={(t) => handleChange(t, idx)}
                     onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, idx)}
                     keyboardType="number-pad"
                     maxLength={1}
-                    textAlign="center"
                     selectTextOnFocus
                     autoFocus={idx === 0}
                     caretHidden
                   />
                 </View>
               ))}
-            </Animated.View>
+            </Row>
+          </Animated.View>
 
-            {/* Error message */}
-            {error ? (
-              <View style={styles.errorContainer}>
-                <AppIcon name="alert-circle-outline" size={15} color={colors.danger} />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
+          {error ? (
+            <Row gap="xs" align="center" style={styles.errorContainer}>
+              <AppIcon name="alert-circle-outline" size={15} color={colors.danger} />
+              <AppText variant="caption" color="danger" style={styles.errorText}>
+                {error}
+              </AppText>
+            </Row>
+          ) : null}
 
-            {/* Loading indicator */}
-            {loading && (
-              <ActivityIndicator size="small" color={colors.electricBright} style={{ marginTop: 10 }} />
-            )}
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.electricBright} />
+          ) : null}
 
-            {/* Countdown + Resend */}
-            <View style={styles.resendRow}>
-              {countdown > 0 ? (
-                <>
-                  <Text style={styles.countdownText}>ينتهي الرمز خلال</Text>
-                  <View style={styles.countdownBadge}>
-                    <Text style={styles.countdownValue}>{minutes}:{seconds}</Text>
-                  </View>
-                </>
-              ) : (
-                <Pressable
-                  onPress={handleResend}
-                  disabled={resendLoading}
-                  style={styles.resendActionBtn}
-                >
+          <Row justify="center" gap="sm">
+            {countdown > 0 ? (
+              <>
+                <AppText variant="bodySmall" color="textMuted">ينتهي الرمز خلال</AppText>
+                <View style={styles.countdownBadge}>
+                  <AppText variant="caption" color="warning">{minutes}:{seconds}</AppText>
+                </View>
+              </>
+            ) : (
+              <Pressable onPress={handleResend} disabled={resendLoading}>
+                <Row gap="xs" align="center">
                   <AppIcon name="refresh" size={15} color={colors.electricBright} />
-                  <Text style={styles.resendActionText}>
+                  <AppText variant="label" color="primary">
                     {resendLoading ? 'جارٍ الإرسال...' : 'إعادة إرسال الرمز'}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
+                  </AppText>
+                </Row>
+              </Pressable>
+            )}
+          </Row>
 
-            {/* Verify Button (Manual fallback) */}
-            <SarhButton
-              title="تأكيد"
-              fullWidth
-              loading={loading}
-              disabled={otp.join('').length < OTP_LENGTH}
-              onPress={() => handleVerify(otp.join(''))}
-              style={styles.verifyCta}
-            />
-
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+          <SarhButton
+            title="تأكيد"
+            fullWidth
+            loading={loading}
+            disabled={otp.join('').length < OTP_LENGTH}
+            onPress={() => handleVerify(otp.join(''))}
+          />
+        </Stack>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.screenRoot },
-  safe: { flex: 1 },
-  kav: {
-    flex: 1,
-    width: '100%',
-    maxWidth: 440,
-    alignSelf: 'center',
-    paddingHorizontal: 22,
-    paddingTop: 56,
-  },
-
-  backBtn: {
-    position: 'absolute', top: 8, ...inlineEnd(8),
-    width: 36, height: 36, borderRadius: 18,
-    alignItems: 'center', justifyContent: 'center', zIndex: 10,
-  },
-
-  header: { alignItems: 'center', marginBottom: 28, gap: 8 },
-  largeTitle: {
-    ...typography.h1,
-    fontSize: 32,
-    lineHeight: 40,
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-
-  card: {
-    width: '100%',
-    gap: spacing.md,
-  },
-  cardSub: { ...typography.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
-  phoneHighlight: { color: colors.textPrimary, fontWeight: '600' },
-
-  otpRow: {
-    flexDirection: 'row', justifyContent: 'center', gap: spacing.sm,
-    marginVertical: spacing.sm,
-  },
-  otpBox: {
-    width: 42, height: 50, borderRadius: 12,
-    backgroundColor: colors.bgDeep, borderWidth: 1.5, borderColor: colors.borderHairline,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  otpBoxFilled: {
-    borderColor: colors.electric,
-    backgroundColor: `${colors.electric}18`,
-  },
-  otpBoxError: { borderColor: colors.danger, backgroundColor: 'rgba(239, 68, 68, 0.1)' },
-  otpInput: {
-    ...typography.sectionHeading, color: colors.textPrimary,
-    width: '100%', height: '100%', textAlign: 'center',
-  },
-
-  errorContainer: {
-    ...getRtlRow(), alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 10,
-    borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
-    width: '100%',
-  },
-  errorText: { ...typography.caption, color: colors.danger, ...getRtlText(), flex: 1 },
-
-  resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: 5 },
-  countdownText: { ...typography.secondary, color: colors.textMuted },
-  countdownBadge: {
-    backgroundColor: colors.bgDeep, paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 6, borderWidth: 1, borderColor: colors.borderHairline,
-  },
-  countdownValue: { ...typography.badge, color: '#f59e0b' },
-  resendActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  resendActionText: { ...typography.button, color: colors.textBrandStrong },
-
-  verifyCta: {
-    marginTop: 10,
-  },
-
-  // Success screen
-  successCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
-  successRing: {
-    width: 120, height: 120, borderRadius: 60,
-    shadowColor: colors.electricBright, shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8, shadowRadius: 30, elevation: 16,
-  },
-  successInner: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center' },
-  successTitle: { ...typography.display, color: colors.textPrimary, textAlign: 'center' },
-  successSub: { ...typography.secondary, color: colors.textMuted },
+    root: { backgroundColor: colors.screenRoot },
+    otpBox: {
+      width: 42,
+      height: 50,
+      borderRadius: 12,
+      backgroundColor: colors.bgDeep,
+      borderWidth: 1.5,
+      borderColor: colors.borderHairline,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    otpBoxFilled: {
+      borderColor: colors.electric,
+      backgroundColor: `${colors.electric}18`,
+    },
+    otpBoxError: {
+      borderColor: colors.danger,
+      backgroundColor: `${colors.danger}1A`,
+    },
+    otpInput: {
+      width: '100%',
+      height: '100%',
+    },
+    errorContainer: {
+      backgroundColor: `${colors.danger}1A`,
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: `${colors.danger}33`,
+      width: '100%',
+    },
+    errorText: { flex: 1 },
+    countdownBadge: {
+      backgroundColor: colors.bgDeep,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.borderHairline,
+    },
+    successCenter: { justifyContent: 'center' },
+    successRing: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      shadowColor: colors.electricBright,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 30,
+      elevation: 16,
+    },
+    successInner: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 }

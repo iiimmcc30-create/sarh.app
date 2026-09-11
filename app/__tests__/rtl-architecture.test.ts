@@ -77,7 +77,8 @@ describe('Add listing — workarounds removed', () => {
   const file = src('app/create/listing.tsx');
 
   it('uses AppText and has no dual-system patches', () => {
-    expect(file).toContain("from '@/components/ui/AppText'");
+    expect(file).toContain("from '@/design-system/components'");
+    expect(file).toContain('AppText');
     expect(file).toContain('موقع العرض');
     expect(file).toContain('عنوان العرض');
     expect(file).toContain('إعادة الاقتراح');

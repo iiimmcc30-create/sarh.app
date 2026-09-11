@@ -74,7 +74,7 @@ describe('malahm home redesign', () => {
   it('keeps more rows on the page background', () => {
     const more = src('app/butchers/more.tsx');
     expect(more).not.toContain('menuCardStyle');
-    expect(more).toContain('screenRoot');
+    expect(more).toContain('<Screen');
     expect(more).toContain('SidebarMenuItem');
   });
 

@@ -86,7 +86,8 @@ describe('Explore Sarh logo mark', () => {
     expect(section).toContain('تصفح أفضل منتجات اللحوم بكل أمان وثقة');
     expect(section).toContain('تصفح الملاحم');
     expect(section).toContain("safePush('/butchers'");
-    expect(section).toContain('getRtlRow');
+    expect(section).toContain("from '@/design-system/layout'");
+    expect(section).toContain('<Row');
     expect(section).toContain("width: '100%'");
     expect(section).not.toContain('CARD_RADIUS');
     expect(section).not.toContain('partitionExploreSections');
@@ -101,13 +102,12 @@ describe('login screen layout', () => {
       path.join(__dirname, '../app/auth/phone.tsx'),
       'utf8',
     );
-    expect(src).toContain('getRtlText');
-    expect(src).toContain('ltrInputText');
+    expect(src).toContain('SarhInput');
+    expect(src).toContain('<Screen');
     expect(src).toContain('useAuthCopy');
     expect(src).toContain('shape="square"');
     expect(src).toContain('signInWithPassword');
     expect(src).toContain('forgot-password');
-    expect(src).toContain('OFFICIAL_APP_FONT');
     expect(src).not.toContain('countryBtn');
     expect(src).not.toContain('COUNTRY_CODES');
     expect(src).not.toContain('tabBar');
@@ -268,9 +268,9 @@ describe('Home design-system adoption', () => {
   );
 
   it('uses SarhSurface, AppText, and matching primitives on Home-owned files', () => {
-    expect(home).toContain("from '@/design-system/components'");
-    expect(home).toContain('SarhSurface');
-    expect(home).toContain('tone="background"');
+    expect(home).toContain("from '@/design-system/layout'");
+    expect(home).toContain('<Screen');
+    expect(home).toContain('<ScreenBody');
     expect(appBar).toContain('SarhAvatar');
     expect(appBar).toContain('SarhIconButton');
     expect(appBar).toContain('chrome="ghost"');
@@ -305,10 +305,14 @@ describe('Home design-system adoption', () => {
   });
 
   it('keeps Home RTL helpers and button labels', () => {
-    expect(appBar).toContain('getRtlRow');
-    expect(explore).toContain('getRtlRow');
-    expect(ministry).toContain('getRtlRow');
-    expect(stories).toContain('getRtlRow');
+    expect(appBar).toContain("from '@/design-system/layout'");
+    expect(explore).toContain("from '@/design-system/layout'");
+    expect(ministry).toContain("from '@/design-system/layout'");
+    expect(stories).toContain("from '@/design-system/layout'");
+    expect(appBar).toContain('<Row');
+    expect(explore).toContain('<Row');
+    expect(ministry).toContain('<Row');
+    expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
     expect(explore).toContain('accessibilityRole="button"');
     expect(ministry).toContain('accessibilityRole="button"');

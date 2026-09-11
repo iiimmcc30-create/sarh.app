@@ -1,13 +1,13 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppScrollView } from '@/components/ui/AppScrollView';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { getRtlRow, rtlForwardIcon, rtlInputText } from '@/lib/rtl';
-import { AppText, SarhDivider } from '@/design-system/components';
+import { rtlForwardIcon, rtlInputText } from '@/lib/rtl';
+import { AppText, SarhButton, SarhCard, SarhDivider } from '@/design-system/components';
+import { resolveAppTextStyle } from '@/design-system/components/resolvers';
+import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
 import { Alert, Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 const CHANNELS = [
@@ -57,43 +57,38 @@ export default function ContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="تواصل معنا" showBack />
-      <AppScrollView contentContainerStyle={styles.scroll}>
-
-        {/* Channels */}
-        <View style={styles.section}>
-          <AppText variant="label" color="textSecondary">قنوات التواصل</AppText>
-          <View style={styles.channelList}>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title="تواصل معنا" showBack />
+      <ScreenBody padTop="lg" gap="section" padBottom="xxxl">
+        <Section title="قنوات التواصل">
+          <SarhCard level="card" padding="none">
             {CHANNELS.map((ch, idx) => (
               <View key={ch.href}>
                 <Pressable
-                  style={({ pressed }) => [
-                    styles.channelRow,
-                    getRtlRow(),
-                    { opacity: pressed ? 0.7 : 1 },
-                  ]}
+                  accessibilityRole="link"
+                  accessibilityLabel={`${ch.label}: ${ch.value}`}
                   onPress={() => Linking.openURL(ch.href)}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
                 >
-                  <View style={styles.channelIconWrap}>
-                    <AppIcon name={ch.icon} size={18} color={colors.electricBright} />
-                  </View>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <AppText variant="caption" color="textMuted">{ch.label}</AppText>
-                    <AppText variant="label" color="textPrimary">{ch.value}</AppText>
-                  </View>
-                  <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
+                  <Row gap="md" style={styles.channelRow}>
+                    <View style={styles.channelIconWrap}>
+                      <AppIcon name={ch.icon} size={18} color={colors.electricBright} />
+                    </View>
+                    <Stack gap="none" style={styles.fill}>
+                      <AppText variant="caption" color="textMuted">{ch.label}</AppText>
+                      <AppText variant="bodyMedium" color="textPrimary">{ch.value}</AppText>
+                    </Stack>
+                    <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
+                  </Row>
                 </Pressable>
                 {idx < CHANNELS.length - 1 ? <SarhDivider inset /> : null}
               </View>
             ))}
-          </View>
-        </View>
+          </SarhCard>
+        </Section>
 
-        {/* Message form */}
-        <View style={styles.section}>
-          <AppText variant="label" color="textSecondary">أرسل رسالة مباشرة</AppText>
-          <View style={styles.formCard}>
+        <Section title="أرسل رسالة مباشرة" gap="md">
+          <SarhCard level="card" padding="none">
             <TextInput
               value={name}
               onChangeText={setName}
@@ -101,6 +96,7 @@ export default function ContactScreen() {
               placeholderTextColor={colors.textMuted}
               style={[styles.input, rtlInputText]}
               returnKeyType="next"
+              accessibilityLabel="اسمك"
             />
             <SarhDivider />
             <TextInput
@@ -113,59 +109,33 @@ export default function ContactScreen() {
               numberOfLines={4}
               returnKeyType="send"
               textAlignVertical="top"
+              accessibilityLabel="رسالتك"
             />
-          </View>
-          <Pressable
-            accessibilityRole="button"
+          </SarhCard>
+          <SarhButton
+            title={sending ? 'جارٍ الإرسال…' : 'إرسال عبر البريد'}
+            leftIcon="send"
+            fullWidth
+            loading={sending}
             disabled={sending}
-            onPress={handleSend}
-            style={({ pressed }) => [
-              styles.sendBtn,
-              { opacity: pressed || sending ? 0.7 : 1 },
-            ]}
-          >
-            <AppIcon name="send" size={16} color={colors.screenRoot} />
-            <AppText variant="label" style={{ color: colors.screenRoot }}>
-              {sending ? 'جارٍ الإرسال…' : 'إرسال عبر البريد'}
-            </AppText>
-          </Pressable>
-        </View>
+            onPress={() => void handleSend()}
+          />
+        </Section>
 
-        {/* Working hours */}
-        <View style={styles.section}>
-          <AppText variant="label" color="textSecondary">أوقات العمل</AppText>
+        <Section title="أوقات العمل">
           <AppText variant="body" color="textSecondary">
             الأحد — الخميس · ٩ص — ٦م (بتوقيت الرياض)
           </AppText>
-        </View>
-
-        <View style={{ height: 32 }} />
-      </AppScrollView>
-    </SafeAreaView>
+        </Section>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: { paddingBottom: 32 },
-
-    section: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.lg,
-      gap: spacing.sm,
-    },
-
-    channelList: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      overflow: 'hidden',
-    },
+    fill: { flex: 1, minWidth: 0 },
     channelRow: {
-      alignItems: 'center',
-      gap: spacing.md,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
@@ -180,35 +150,15 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       flexShrink: 0,
     },
-
-    formCard: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-      overflow: 'hidden',
-    },
+    /** Raw TextInput cannot host AppText, so it borrows the same type token. */
     input: {
+      ...resolveAppTextStyle({ variant: 'bodyMedium', color: 'textPrimary' }),
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
-      color: colors.textPrimary,
-      fontSize: 15,
       minHeight: 44,
     },
     inputMultiline: {
       minHeight: 100,
-    },
-
-    sendBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      backgroundColor: colors.electricBright,
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      minHeight: 48,
     },
   });
 }

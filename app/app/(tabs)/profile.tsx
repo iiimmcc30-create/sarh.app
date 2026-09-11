@@ -2,10 +2,12 @@
 // SAFAT — Profile Tab (حسابي)
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { Share, StyleSheet } from 'react-native';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Stack } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 import { useApp } from '@/hooks/useApp';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
 import { searchAllSellerListings } from '@/services/listings';
@@ -19,9 +21,15 @@ import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
 
+/** Layout only — an empty tab still needs vertical presence in the feed. */
+const EMPTY_STATE = StyleSheet.create({
+  block: { paddingVertical: space[48] },
+}).block;
+
 export default function ProfileScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  // Subscribe so the empty-state text re-resolves its color after a scheme switch.
+  useTheme();
 
   const {
     me,
@@ -133,12 +141,17 @@ export default function ProfileScreen() {
   const renderPosts = () => {
     if (myPosts.length === 0) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>لا توجد منشورات بعد</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => safePush('/create/post', undefined, router)}>
-            <Text style={styles.emptyBtnText}>+ أنشئ منشوراً</Text>
-          </Pressable>
-        </View>
+        <Stack gap="md" align="center" style={EMPTY_STATE}>
+          <AppText variant="body" color="textMuted">
+            لا توجد منشورات بعد
+          </AppText>
+          <SarhButton
+            title="أنشئ منشوراً"
+            size="sm"
+            leftIcon="plus"
+            onPress={() => safePush('/create/post', undefined, router)}
+          />
+        </Stack>
       );
     }
 
@@ -164,12 +177,17 @@ export default function ProfileScreen() {
   const renderAds = () => {
     if (myListings.length === 0) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>لا توجد إعلانات بعد</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => void navigateToCreateListing()}>
-            <Text style={styles.emptyBtnText}>+ أضف إعلاناً</Text>
-          </Pressable>
-        </View>
+        <Stack gap="md" align="center" style={EMPTY_STATE}>
+          <AppText variant="body" color="textMuted">
+            لا توجد إعلانات بعد
+          </AppText>
+          <SarhButton
+            title="أضف إعلاناً"
+            size="sm"
+            leftIcon="plus"
+            onPress={() => void navigateToCreateListing()}
+          />
+        </Stack>
       );
     }
 
@@ -213,32 +231,4 @@ export default function ProfileScreen() {
       adsContent={renderAds()}
     />
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    empty: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 48,
-      gap: 10,
-    },
-    emptyTitle: {
-      ...typography.feedBody,
-      color: colors.textMuted,
-    },
-    emptyBtn: {
-      marginTop: 4,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 10,
-      borderRadius: radius.pill,
-      backgroundColor: colors.royal,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.electric,
-    },
-    emptyBtnText: {
-      ...typography.feedTitle,
-      color: colors.textBrandStrong,
-    },
-  });
 }

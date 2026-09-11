@@ -1,2 +1,2 @@
-export { darkTheme, semantic } from './dark';
-export type { DarkTheme } from './dark';
+export { semantic, theme } from './dark';
+export type { Theme } from './dark';

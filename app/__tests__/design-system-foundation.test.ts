@@ -4,7 +4,6 @@ import { sarh } from '@/constants/sarhTokens';
 import { colors as liveThemeColors, typography as liveTypography, applyThemeScheme } from '@/constants/theme';
 import {
   colors,
-  darkTheme,
   duration,
   elevation,
   fontFamily,
@@ -15,6 +14,7 @@ import {
   palette,
   radius,
   semantic,
+  theme,
   space,
   typography,
 } from '@/design-system';
@@ -55,19 +55,25 @@ describe('Sarh design-system foundation', () => {
     expect(colors.success).toBe(colors.primary);
   });
 
-  it('exposes nested semantic aliases without new hex', () => {
+  it('exposes nested semantic aliases that follow applyThemeScheme', () => {
+    applyThemeScheme('light');
     expect(semantic.background).toBe(colors.background);
+    expect(semantic.background).toBe('#F5F7F9');
     expect(semantic.surface).toBe(colors.surface);
-    expect(semantic.surfaceElevated).toBe(colors.surfaceElevated);
     expect(semantic.text.primary).toBe(colors.textPrimary);
-    expect(semantic.text.secondary).toBe(colors.textSecondary);
-    expect(semantic.text.muted).toBe(colors.textMuted);
     expect(semantic.action.primary).toBe(colors.primary);
-    expect(semantic.action.primaryPressed).toBe(colors.primaryPressed);
     expect(semantic.border.default).toBe(colors.border);
+    expect(theme.semantic).toBe(semantic);
+    expect(theme.colors).toBe(colors);
+
+    applyThemeScheme('dark');
+    expect(semantic.background).toBe(colors.background);
+    expect(semantic.background).toBe(sarh.color.bg);
+    expect(semantic.surface).toBe(colors.surface);
+    expect(semantic.text.primary).toBe(colors.textPrimary);
+    expect(semantic.action.primaryPressed).toBe(colors.primaryPressed);
     expect(semantic.border.strong).toBe(colors.borderStrong);
-    expect(darkTheme.scheme).toBe('dark');
-    expect(darkTheme.semantic).toBe(semantic);
+    expect(semantic.status.success).toBe(colors.success);
   });
 
   it('maps IBM Plex weights to four distinct families', () => {

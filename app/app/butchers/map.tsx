@@ -16,9 +16,8 @@ import {
   Platform,
   type TextStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { marginAutoStart, rtlForwardIcon } from '@/lib/rtl';
 import {
   ButcherProfile,
@@ -33,7 +32,10 @@ import { hasValidCoords, COUNTRY_MAP_CENTER } from '@/lib/butcherLocation';
 import { isNativeMapsEnabled } from '@/lib/maps';
 import { NativeButchersMap } from '@/components/feature/NativeButchersMap';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
-import { SarhBackButton } from '@/design-system/components';
+import { AppText, SarhBackButton } from '@/design-system/components';
+import { Row, Screen } from '@/design-system/layout';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 
 // ─── Map pin layout coordinates (% of map container) ─────────────────────────────
 const GCC_COORDINATES: Partial<Record<Country, { x: number; y: number }>> = {
@@ -81,6 +83,8 @@ function MapPin({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const mp = useThemedStyles(({ colors }) => createPinStyles(colors));
   const pos = getPinPosition(butcher);
 
   return (
@@ -128,6 +132,8 @@ function BottomCard({
   onProfile: () => void;
   onOrder: () => void;
 }) {
+  const { colors } = useTheme();
+  const bc = useThemedStyles(({ colors }) => createCardStyles(colors));
   const currency = gccCurrencies[butcher.country];
   const country = countries[butcher.country];
 
@@ -221,6 +227,8 @@ function BottomCard({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ButchersMapScreen() {
+  const s = useThemedStyles(({ colors }) => createScreenStyles(colors));
+  const { colors, gradients } = useTheme();
   const router = useRouter();
   const { accessToken } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -322,15 +330,15 @@ export default function ButchersMapScreen() {
   }, [mappableButchers, selectedButcher]);
 
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false} style={s.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       {/* Header */}
-      <View style={s.header}>
+      <Row align="center" gap="sm" style={s.header}>
         <SarhBackButton onPress={() => router.replace('/(tabs)')} color={colors.textPrimary} style={s.backBtn} />
         <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }}>
-          <Text style={s.headerTitle} numberOfLines={1}>خريطة الملاحم</Text>
-          <Text style={s.headerSub}>{filtered.length} ملحمة متاحة</Text>
+          <AppText variant="cardTitle" numberOfLines={1} align="center">خريطة الملاحم</AppText>
+          <AppText variant="caption" style={s.headerSub}>{filtered.length} ملحمة متاحة</AppText>
         </View>
         <Pressable
           onPress={() => router.push('/butchers/cart')}
@@ -340,22 +348,23 @@ export default function ButchersMapScreen() {
         >
           <AppIcon name="cart-outline" size={20} color={colors.electricBright} />
         </Pressable>
-      </View>
+      </Row>
 
       {loadState === 'loading' && butchersList.length === 0 ? (
-        <View style={s.statusBanner}>
+        <Row align="center" justify="center" gap="sm" style={s.statusBanner}>
           <ActivityIndicator color={colors.electricBright} />
-          <Text style={s.statusText}>جاري تحميل الملاحم...</Text>
-        </View>
+          <AppText variant="caption" color="textMuted" style={s.statusText}>جاري تحميل الملاحم...</AppText>
+        </Row>
       ) : null}
       {loadState === 'error' ? (
         <Pressable
-          style={s.statusBanner}
           onPress={() => void fetchButchers()}
           accessibilityRole="button"
           accessibilityLabel="إعادة تحميل الملاحم"
         >
-          <Text style={s.statusText}>تعذر تحميل الملاحم. اضغط لإعادة المحاولة</Text>
+          <Row align="center" justify="center" gap="sm" style={s.statusBanner}>
+            <AppText variant="caption" color="textMuted" style={s.statusText}>تعذر تحميل الملاحم. اضغط لإعادة المحاولة</AppText>
+          </Row>
         </Pressable>
       ) : null}
 
@@ -385,7 +394,7 @@ export default function ButchersMapScreen() {
 
         {/* Region label */}
         <View style={s.regionLabel}>
-          <Text style={s.regionText}>المملكة العربية السعودية</Text>
+          <AppText variant="micro" color="textMuted">المملكة العربية السعودية</AppText>
         </View>
 
         {/* Map pins */}
@@ -404,11 +413,11 @@ export default function ButchersMapScreen() {
         <View style={s.legend}>
           <View style={s.legendItem}>
             <View style={[s.legendDot, { backgroundColor: colors.gold }]} />
-            <Text style={s.legendText}>موثّق</Text>
+            <AppText variant="micro" color="textMuted">موثّق</AppText>
           </View>
           <View style={s.legendItem}>
             <View style={[s.legendDot, { backgroundColor: colors.electric }]} />
-            <Text style={s.legendText}>عادي</Text>
+            <AppText variant="micro" color="textMuted">عادي</AppText>
           </View>
         </View>
 
@@ -416,7 +425,7 @@ export default function ButchersMapScreen() {
         {!selectedId && (
           <View style={s.tapHint}>
             <AppIcon name="gesture-tap" size={16} color={colors.textMuted} />
-            <Text style={s.tapHintText}>اضغط على أي دبوس لعرض تفاصيل الملحمة</Text>
+            <AppText variant="caption" color="textMuted">اضغط على أي دبوس لعرض تفاصيل الملحمة</AppText>
           </View>
         )}
       </View>
@@ -435,7 +444,7 @@ export default function ButchersMapScreen() {
       ) : (
         /* Mini list when nothing selected */
         <View style={s.miniList}>
-          <Text style={s.miniListTitle}>أقرب الملاحم</Text>
+          <AppText variant="caption" color="textMuted" style={s.miniListTitle}>أقرب الملاحم</AppText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -455,10 +464,10 @@ export default function ButchersMapScreen() {
                   />
                   <Image source={{ uri: b.logo }} style={s.miniLogo} contentFit="cover" />
                   <View style={{ flex: 1 }}>
-                    <Text style={s.miniName} numberOfLines={1}>{b.nameAr}</Text>
+                    <AppText variant="label" numberOfLines={1}>{b.nameAr}</AppText>
                     <View style={s.miniMeta}>
                       <Text style={s.miniFlag}>{ctr.flag}</Text>
-                      <Text style={s.miniCity}>{b.cityAr}</Text>
+                      <AppText variant="micro" color="textMuted">{b.cityAr}</AppText>
                       {b.subscriptionActive && (
                         <AppIcon name="shield-checkmark" size={11} color={colors.gold} />
                       )}
@@ -466,7 +475,7 @@ export default function ButchersMapScreen() {
                   </View>
                   <View style={s.miniRating}>
                     <AppIcon name="star" size={11} color={colors.gold} />
-                    <Text style={s.miniRatingText}>{b.rating.toFixed(1)}</Text>
+                    <AppText variant="label" style={s.miniRatingText}>{b.rating.toFixed(1)}</AppText>
                   </View>
                 </Pressable>
               );
@@ -476,13 +485,14 @@ export default function ButchersMapScreen() {
       )}
 
       <ButchersTabBar active="map" />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const s = StyleSheet.create({
+function createScreenStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screenRoot },
 
   header: {
@@ -497,17 +507,12 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { ...butcherTypography.title, color: colors.textPrimary },
   statusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },
-  statusText: { ...butcherTypography.secondary, color: colors.textMuted, flexShrink: 1 },
-  headerSub: { ...butcherTypography.secondary, color: colors.textBrand, marginTop: 1 },
+  statusText: { flexShrink: 1 },
+  headerSub: { color: colors.textBrand, marginTop: 1 },
   listBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.bgGlass,
@@ -543,7 +548,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  regionText: { ...butcherTypography.meta, color: colors.textMuted },
+  regionText: {},
   legend: {
     position: 'absolute',
     bottom: spacing.md,
@@ -559,7 +564,7 @@ const s = StyleSheet.create({
   },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { ...butcherTypography.meta, color: colors.textMuted },
+  legendText: {},
   tapHint: {
     position: 'absolute',
     bottom: spacing.xl,
@@ -574,11 +579,11 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  tapHintText: { ...butcherTypography.secondary, color: colors.textMuted },
+  tapHintText: {},
 
   // Mini list
   miniList: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  miniListTitle: { ...butcherTypography.secondary, color: colors.textMuted, marginBottom: spacing.sm },
+  miniListTitle: { marginBottom: spacing.sm },
   miniListRow: { flexDirection: 'row', gap: spacing.sm },
   miniCard: {
     flexDirection: 'row',
@@ -593,16 +598,19 @@ const s = StyleSheet.create({
     position: 'relative',
   },
   miniLogo: { width: 36, height: 36, borderRadius: 16, backgroundColor: colors.bgElevated },
-  miniName: { ...butcherTypography.emphasis, color: colors.textPrimary },
+  miniName: {},
   miniMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   miniFlag: { fontSize: 11 },
-  miniCity: { ...butcherTypography.meta, color: colors.textMuted },
+  miniCity: {},
   miniRating: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  miniRatingText: { ...butcherTypography.emphasis, color: colors.gold },
+  miniRatingText: { color: colors.gold },
 });
+}
+
 
 // Map pin styles
-const mp = StyleSheet.create({
+function createPinStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   pin: {
     position: 'absolute',
     alignItems: 'center',
@@ -648,9 +656,12 @@ const mp = StyleSheet.create({
   },
   pinLabelText: { ...butcherTypography.meta, color: colors.textPrimary },
 });
+}
+
 
 // Bottom card styles
-const bc = StyleSheet.create({
+function createCardStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
@@ -738,3 +749,4 @@ const bc = StyleSheet.create({
   },
   profileBtnText: { ...butcherTypography.meta, color: colors.textBrandStrong },
 });
+}

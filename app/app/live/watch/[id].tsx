@@ -22,11 +22,12 @@ import { AgoraVideoView } from '@/components/live/AgoraVideoView';
 import { VideoSourceType } from '@/lib/agora';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { useLiveSocket } from '@/hooks/useLiveSocket';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { colors, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ interface LiveComment {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function WatchScreen() {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const router  = useRouter();
   const { id }  = useLocalSearchParams<{ id: string }>();
   const { accessToken, user } = useAuth();
@@ -318,7 +320,8 @@ export default function WatchScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container:    { flex: 1, backgroundColor: '#000' },
   loadingScreen: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
   loadingDim:   { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
@@ -383,3 +386,4 @@ const styles = StyleSheet.create({
   likeBtn:    { alignItems: 'center' },
   likesText:  { ...typography.caption, color: '#fff', marginTop: 2 },
 });
+}

@@ -2,20 +2,21 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { gradients, radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 
 import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
-import { SarhBackButton, SarhButton } from '@/design-system/components';
+import { AppText, SarhButton } from '@/design-system/components';
+import { Row, Screen, ScreenBody } from '@/design-system/layout';
+import { space } from '@/design-system/tokens';
 
 function findActiveDraftOrSubmitted(apps: ApplicationSummary[]): ApplicationSummary | null {
   return (
@@ -111,35 +112,35 @@ export default function ButcherApplyScreen() {
 
   if (authLoading || bootstrapping) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
-        <LoadingState message="جاري التحقق من طلباتك..." />
-      </SafeAreaView>
+        <ScreenBody scroll={false}>
+          <LoadingState message="جاري التحقق من طلباتك..." />
+        </ScreenBody>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>تسجيل ملحمة</Text>
-        <View style={styles.backBtn} />
-      </View>
+      <ScreenHeader variant="screen" title="تسجيل ملحمة" showBack />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScreenBody gutter={false} contentContainerStyle={styles.content}>
         <View style={styles.heroIcon}>
           <LinearGradient colors={gradients.electric} style={styles.heroIconInner}>
             <AppIcon name="storefront" size={40} color="#fff" />
           </LinearGradient>
         </View>
 
-        <Text style={styles.title}>انضم كجزار في سرح</Text>
-        <Text style={styles.subtitle}>
+        <AppText variant="heading2" align="center" style={styles.title}>
+          انضم كجزار في سرح
+        </AppText>
+        <AppText variant="body" color="textSecondary" align="center" style={styles.subtitle}>
           قدّم طلب تسجيل ملحمتك عبر نظام الطلبات الجديد. سنراجع بياناتك ومستنداتك ثم نفعّل حسابك
           كجزار بعد الموافقة.
-        </Text>
+        </AppText>
 
         <View style={styles.stepsCard}>
           {[
@@ -147,20 +148,26 @@ export default function ButcherApplyScreen() {
             { n: '٢', t: 'إكمال البيانات والمستندات' },
             { n: '٣', t: 'مراجعة الإدارة والموافقة' },
           ].map((step) => (
-            <View key={step.n} style={styles.stepRow}>
+            <Row key={step.n} align="center" gap="md">
               <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>{step.n}</Text>
+                <AppText variant="label" style={{ color: colors.textBrand }}>
+                  {step.n}
+                </AppText>
               </View>
-              <Text style={styles.stepText}>{step.t}</Text>
-            </View>
+              <AppText variant="body" style={styles.stepText}>
+                {step.t}
+              </AppText>
+            </Row>
           ))}
         </View>
 
         {error ? (
-          <View style={styles.errorBox}>
+          <Row align="center" gap="sm" style={styles.errorBox}>
             <AppIcon name="alert-circle-outline" size={18} color={colors.danger} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
+            <AppText variant="caption" color="danger" style={styles.errorText}>
+              {error}
+            </AppText>
+          </Row>
         ) : null}
 
         {canStartNew ? (
@@ -172,124 +179,76 @@ export default function ButcherApplyScreen() {
           />
         ) : null}
 
-        <Pressable onPress={() => router.push('/butchers/my-application')} style={styles.linkBtn}>
-          <Text style={styles.linkText}>عرض طلباتي السابقة</Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+        <SarhButton
+          title="عرض طلباتي السابقة"
+          variant="ghost"
+          onPress={() => router.push('/butchers/my-application')}
+        />
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
-    flex: 1,
-    textAlign: 'center',
-  },
-  content: {
-    padding: spacing.xl,
-    paddingBottom: spacing.huge,
-    alignItems: 'center',
-  },
-  heroIcon: {
-    marginBottom: spacing.xl,
-    marginTop: spacing.lg,
-  },
-  heroIconInner: {
-    width: 88,
-    height: 88,
-    borderRadius: radius.xxl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    ...butcherTypography.titleLarge,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  subtitle: {
-    ...butcherTypography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: spacing.xxl,
-  },
-  stepsCard: {
-    width: '100%',
-    backgroundColor: colors.bgGlass,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.xxl,
-  },
-  stepRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  stepNum: {
-    width: 28,
-    height: 28,
-    borderRadius: 16,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNumText: {
-    ...butcherTypography.emphasis,
-    color: colors.textBrand,
-  },
-  stepText: {
-    ...butcherTypography.body,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(244, 63, 94, 0.12)',
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    width: '100%',
-  },
-  errorText: {
-    ...butcherTypography.secondary,
-    color: colors.danger,
-    flex: 1,
-  },
-  cta: {
-    width: '100%',
-    marginBottom: spacing.lg,
-  },
-  linkBtn: {
-    padding: spacing.md,
-  },
-  linkText: {
-    ...butcherTypography.primary,
-    color: colors.textBrand,
-    textAlign: 'center',
-  },
+    content: {
+      padding: space[20],
+      paddingBottom: space[48],
+      alignItems: 'center',
+    },
+    heroIcon: {
+      marginBottom: space[20],
+      marginTop: space[16],
+    },
+    heroIconInner: {
+      width: 88,
+      height: 88,
+      borderRadius: radius.xxl,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    title: {
+      marginBottom: space[12],
+    },
+    subtitle: {
+      marginBottom: space[24],
+    },
+    stepsCard: {
+      width: '100%',
+      backgroundColor: colors.bgGlass,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      padding: space[16],
+      gap: space[12],
+      marginBottom: space[24],
+    },
+    stepNum: {
+      width: 28,
+      height: 28,
+      borderRadius: 16,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1,
+      borderColor: colors.borderMid,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepText: {
+      flex: 1,
+    },
+    errorBox: {
+      backgroundColor: 'rgba(244, 63, 94, 0.12)',
+      borderRadius: radius.md,
+      padding: space[12],
+      marginBottom: space[16],
+      width: '100%',
+    },
+    errorText: {
+      flex: 1,
+    },
+    cta: {
+      width: '100%',
+      marginBottom: space[16],
+    },
   });
 }

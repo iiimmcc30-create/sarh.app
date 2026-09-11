@@ -1,29 +1,20 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
-import { getRtlDirection } from '@/lib/rtl';
 import { changeAccountPhone } from '@/services/users';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhButton, SarhInput } from '@/design-system/components';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 
 const COUNTRY_CODE = '+966';
 
 export default function ChangePhoneScreen() {
   const router = useRouter();
   const { sendOtp, verifyOtp, refreshSession } = useAuth();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  // Subscribe so the hint text re-resolves its color after a scheme switch.
+  useTheme();
   const [phoneDigits, setPhoneDigits] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -75,101 +66,65 @@ export default function ChangePhoneScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="تغيير رقم الجوال" showBack />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={[styles.content, getRtlDirection()]}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.hintShell}>
-            <Text style={styles.hint}>
-              {step === 'phone'
-                ? 'أدخل رقم الجوال الجديد. سنرسل إليه رمز تحقق.'
-                : `أدخل الرمز المرسل إلى ${fullPhone}`}
-            </Text>
-          </View>
+    <Screen edges={['top', 'bottom']} keyboard>
+      <ScreenHeader variant="screen" title="تغيير رقم الجوال" showBack />
+      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxxl">
+        <AppText variant="bodySmall" color="textSecondary">
+          {step === 'phone'
+            ? 'أدخل رقم الجوال الجديد. سنرسل إليه رمز تحقق.'
+            : `أدخل الرمز المرسل إلى ${fullPhone}`}
+        </AppText>
 
-          {step === 'phone' ? (
-            <>
-              <SarhInput appearance="theme"
-                label={`رقم الجوال (${COUNTRY_CODE})`}
-                value={phoneDigits}
-                onChangeText={setPhoneDigits}
-                placeholder="5XXXXXXXX"
-                keyboardType="phone-pad"
-                ltr
-              />
-              <SarhButton
-                title="إرسال رمز التحقق"
-                onPress={() => void handleSendOtp()}
-                loading={loading}
-                fullWidth
-                leftIcon="phone-portrait-outline"
-              />
-            </>
-          ) : (
-            <>
-              <SarhInput appearance="theme"
-                label="رمز التحقق"
-                value={code}
-                onChangeText={setCode}
-                placeholder="••••••"
-                keyboardType="number-pad"
-                maxLength={6}
-                ltr
-              />
-              <SarhButton
-                title="تأكيد وتغيير الرقم"
-                onPress={() => void handleVerifyAndSave()}
-                loading={loading}
-                fullWidth
-                leftIcon="checkmark-done-outline"
-              />
-              <SarhButton
-                title="تغيير الرقم"
-                onPress={() => {
-                  setStep('phone');
-                  setCode('');
-                }}
-                variant="secondary"
-                fullWidth
-              />
-            </>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        {step === 'phone' ? (
+          <Stack gap="lg">
+            <SarhInput
+              appearance="theme"
+              label={`رقم الجوال (${COUNTRY_CODE})`}
+              value={phoneDigits}
+              onChangeText={setPhoneDigits}
+              placeholder="5XXXXXXXX"
+              keyboardType="phone-pad"
+              ltr
+            />
+            <SarhButton
+              title="إرسال رمز التحقق"
+              onPress={() => void handleSendOtp()}
+              loading={loading}
+              fullWidth
+              leftIcon="phone-portrait-outline"
+            />
+          </Stack>
+        ) : (
+          <Stack gap="lg">
+            <SarhInput
+              appearance="theme"
+              label="رمز التحقق"
+              value={code}
+              onChangeText={setCode}
+              placeholder="••••••"
+              keyboardType="number-pad"
+              maxLength={6}
+              ltr
+            />
+            <SarhButton
+              title="تأكيد وتغيير الرقم"
+              onPress={() => void handleVerifyAndSave()}
+              loading={loading}
+              fullWidth
+              leftIcon="checkmark-done-outline"
+            />
+            <SarhButton
+              title="تغيير الرقم"
+              onPress={() => {
+                setStep('phone');
+                setCode('');
+              }}
+              variant="secondary"
+              fullWidth
+            />
+          </Stack>
+        )}
+      </ScreenBody>
+    </Screen>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    flex: { flex: 1 },
-    content: {
-      padding: spacing.lg,
-      gap: spacing.md,
-      paddingBottom: spacing.xxxl,
-    },
-    /** Physical LTR shell — same as listing title / SidebarMenuItem. */
-    hintShell: {
-      width: '100%',
-            padding: spacing.lg,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgElevated,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    hint: {
-      ...typography.body,
-      color: colors.textSecondary,
-      lineHeight: 22,
-      width: '100%',
-            writingDirection: 'rtl',
-    },
-  });
 }

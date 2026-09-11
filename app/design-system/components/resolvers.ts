@@ -8,12 +8,14 @@ import {
   functional,
   radius,
   resolveButtonTone,
+  resolveTypeRole,
   space,
   typography,
-  type TypeRole,
+  type TypeVariant,
 } from '../tokens';
 
-export type AppTextVariant = TypeRole;
+/** Physical roles plus the Architecture V2 semantic names. */
+export type AppTextVariant = TypeVariant;
 export type AppTextColor =
   | 'textPrimary'
   | 'textSecondary'
@@ -55,7 +57,7 @@ export function resolveAppTextStyle(options: {
 }): TextStyle {
   const variant = options.variant ?? 'body';
   const color = options.color ?? 'textPrimary';
-  const role = typography[variant];
+  const role = typography[resolveTypeRole(variant)];
   const align = options.align && options.align !== 'auto' ? { textAlign: options.align } : null;
   return {
     ...getRtlText(),
@@ -167,6 +169,54 @@ export function resolveSarhCardStyle(variant: SarhCardVariant, padding: SarhCard
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.card,
+  };
+}
+
+/**
+ * Surface hierarchy for Architecture V2.
+ *
+ * `section` is the default for content: no background, no radius, no border.
+ * `card` needs a UX reason (standalone tappable entity, list of like entities,
+ * cropped media, or a draggable/floating layer).
+ */
+export type SarhSurfaceLevel = 'page' | 'section' | 'surface' | 'card' | 'floating';
+
+export function resolveSurfaceLevelStyle(
+  level: SarhSurfaceLevel,
+  padding: SarhCardPadding = 'none',
+): ViewStyle {
+  const base: ViewStyle = {
+    padding: CARD_PADDING[padding],
+    ...getRtlDirection(),
+  };
+
+  if (level === 'section') {
+    return { ...base, backgroundColor: 'transparent', borderWidth: 0, ...elevation.none };
+  }
+  if (level === 'page') {
+    return { ...base, backgroundColor: colors.background, borderWidth: 0, ...elevation.none };
+  }
+  if (level === 'surface') {
+    return { ...base, backgroundColor: colors.surface, borderWidth: 0, ...elevation.none };
+  }
+  if (level === 'floating') {
+    return {
+      ...base,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: radius[16],
+      borderWidth: 0,
+      overflow: 'hidden',
+      ...elevation.overlay,
+    };
+  }
+  return {
+    ...base,
+    backgroundColor: colors.surface,
+    borderRadius: radius[16],
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    ...elevation.none,
   };
 }
 

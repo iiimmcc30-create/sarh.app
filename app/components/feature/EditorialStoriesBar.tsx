@@ -13,8 +13,8 @@ import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
 import { colors, functional, motion, radius, space } from '@/design-system';
 import { AppText, SarhCard } from '@/design-system/components';
+import { Row } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlRow } from '@/lib/rtl';
 import type { EditorialStory } from '@/services/editorialStories';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -57,7 +57,7 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.scroller}
-          contentContainerStyle={[styles.row, getRtlRow()]}
+          contentContainerStyle={styles.row}
           onScroll={onScroll}
           scrollEventThrottle={16}
           decelerationRate="fast"
@@ -108,11 +108,11 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
         </ScrollView>
 
         {stories.length > 1 ? (
-          <View style={[styles.dots, getRtlRow()]}>
+          <Row justify="center" align="center" gap="xs" style={styles.dots}>
             {stories.map((story, i) => (
               <View key={story.id} style={[styles.dot, i === activeDot && styles.dotActive]} />
             ))}
-          </View>
+          </Row>
         ) : null}
       </View>
 

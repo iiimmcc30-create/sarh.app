@@ -6,14 +6,13 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { butcherTypography } from '@/constants/butcherTypography';
 import { butcherMeatBg } from '@/constants/butcherMarket';
 import { spacing, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +26,6 @@ import { ButcherPickCard } from '@/components/butchers/ButcherPickCard';
 import { ButcherHomeOfferCard } from '@/components/butchers/ButcherHomeOfferCard';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
 import { ButcherSectionHeader } from '@/components/butchers/ButcherSectionHeader';
-import { getRtlText } from '@/lib/rtl';
 import { safePush, safeReplace } from '@/lib/safeNavigate';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import {
@@ -51,7 +49,7 @@ function filterButchers(list: ButcherProfile[], query: string): ButcherProfile[]
 }
 
 export default function ButchersScreen() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const s = useThemedStyles(({ colors, scheme }) => createScreenStyles(colors, scheme));
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
@@ -143,13 +141,16 @@ export default function ButchersScreen() {
     safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
 
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
-      <ScrollView
-        style={s.flex}
+    <Screen
+      edges={['top']}
+      pattern={false}
+      style={{ backgroundColor: butcherMeatBg(scheme) }}
+    >
+      <ScreenBody
         stickyHeaderIndices={[0]}
-        showsVerticalScrollIndicator={false}
+        gutter={false}
+        width="full"
         contentContainerStyle={s.scroll}
-        keyboardShouldPersistTaps="handled"
       >
         <View style={s.stickyHeader}>
           <ButchersAppBar
@@ -184,8 +185,10 @@ export default function ButchersScreen() {
         filteredNearby.length === 0 &&
         filteredOffers.length === 0 ? (
           <View style={s.emptyState}>
-            <Text style={s.emptyTitle}>لا توجد نتائج</Text>
-            <Text style={s.emptySub}>جرّب كلمة بحث أخرى</Text>
+            <AppText variant="sectionTitle">لا توجد نتائج</AppText>
+            <AppText variant="bodySmall" color="textMuted">
+              جرّب كلمة بحث أخرى
+            </AppText>
           </View>
         ) : (
           <>
@@ -256,17 +259,15 @@ export default function ButchersScreen() {
             ) : null}
           </>
         )}
-      </ScrollView>
+      </ScreenBody>
 
       <ButchersTabBar active="home" />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createScreenStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: butcherMeatBg(scheme) },
-    flex: { flex: 1 },
     scroll: { paddingBottom: 20, backgroundColor: colors.screenRoot },
     stickyHeader: { backgroundColor: butcherMeatBg(scheme) },
     offersRow: {
@@ -287,7 +288,5 @@ function createScreenStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       gap: spacing.sm,
       backgroundColor: colors.screenRoot,
     },
-    emptyTitle: { ...butcherTypography.title, color: colors.textPrimary, ...getRtlText() },
-    emptySub: { ...butcherTypography.secondary, color: colors.textMuted, ...getRtlText() },
   });
 }

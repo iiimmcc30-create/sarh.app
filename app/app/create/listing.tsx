@@ -3,7 +3,6 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingBoostSheet } from '@/components/listing/ListingBoostSheet';
 import { menuCardStyle } from '@/components/feature/SidebarMenu';
 import { Image } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,18 +16,16 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { AppText } from '@/components/ui/AppText';
-import { SarhButton } from '@/design-system/components';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { showToast } from '@/lib/toast';
-import { getRtlRow } from '@/lib/rtl';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
@@ -80,8 +77,9 @@ function normalizeContactPhone(value: string, country: Country): string {
 }
 
 export default function CreateListingScreen() {
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { editId } = useLocalSearchParams<{ editId?: string }>();
   const isEditing = typeof editId === 'string' && editId.length > 0;
@@ -501,358 +499,375 @@ export default function CreateListingScreen() {
 
   if (loadingListing) {
     return (
-      <SafeAreaView style={[styles.container, styles.center]} edges={['top', 'bottom']}>
-        <ActivityIndicator color={colors.electricBright} />
-        <Text style={styles.loadingText}>جاري تحميل الإعلان...</Text>
-      </SafeAreaView>
+      <Screen edges={['top']}>
+        <View style={[styles.flex, styles.center]}>
+          <ActivityIndicator color={colors.electricBright} />
+          <AppText variant="body" color="textMuted" style={styles.loadingText}>
+            جاري تحميل الإعلان...
+          </AppText>
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <Screen edges={['top']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[styles.header, getRtlRow()]}>
+        <Row justify="between" align="center" gap="none" style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={8} style={styles.cancelBtn}>
-            <Text style={styles.cancelText}>إلغاء</Text>
+            <AppText variant="body">إلغاء</AppText>
           </Pressable>
-          <Text style={styles.headerTitle}>{isEditing ? 'تعديل العرض' : 'إضافة عرض'}</Text>
+          <AppText variant="heading3" align="center">
+            {isEditing ? 'تعديل العرض' : 'إضافة عرض'}
+          </AppText>
           <AppLogo size={34} showRing={false} />
-        </View>
+        </Row>
 
-        <View style={styles.progressRow}>
+        <Row gap="none" style={styles.progressRow}>
           {STEPS.map((_, i) => (
             <View
               key={STEPS[i]}
               style={[styles.progressSeg, i <= step && styles.progressSegActive]}
             />
           ))}
-        </View>
+        </Row>
 
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-        >
-          {step === 0 && (
-            <View style={styles.stepContent}>
-              <View style={styles.mediaRow}>
-                <Pressable
-                  onPress={pickImages}
-                  style={({ pressed }) => [styles.mediaTile, pressed && styles.pressed]}
-                >
-                  <AppIcon name="images-outline" size={22} color={colors.electricBright} />
-                  <Text style={styles.mediaTitle}>صور</Text>
-                  <Text style={styles.mediaSub}>
-                    {imageUris.length > 0 ? `${imageUris.length} صور` : 'أضف صور العرض'}
-                  </Text>
-                </Pressable>
-                {videoState.status === 'idle' ? (
+        <ScreenBody scroll={false} gutter={false} width="full" padTop="none" padBottom="none">
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            {step === 0 && (
+              <Stack gap="md">
+                <Row align="stretch">
+                  <Pressable
+                    onPress={pickImages}
+                    style={({ pressed }) => [styles.mediaTile, pressed && styles.pressed]}
+                  >
+                    <AppIcon name="images-outline" size={22} color={colors.electricBright} />
+                    <AppText variant="body">صور</AppText>
+                    <AppText variant="caption" color="textMuted" align="center">
+                      {imageUris.length > 0 ? `${imageUris.length} صور` : 'أضف صور العرض'}
+                    </AppText>
+                  </Pressable>
+                  {videoState.status === 'idle' ? (
+                    <ListingVideoSection
+                      variant="tile"
+                      state={videoState}
+                      onChange={setVideoState}
+                      disabled={submitting}
+                      style={styles.mediaTileFlex}
+                    />
+                  ) : (
+                    <View style={styles.mediaTile}>
+                      <AppIcon name="videocam" size={22} color={colors.electricBright} />
+                      <AppText variant="body">فيديو</AppText>
+                      <AppText variant="caption" color="textMuted" align="center">
+                        تمت الإضافة ✓
+                      </AppText>
+                    </View>
+                  )}
+                </Row>
+
+                {imageUris.length > 0 ? (
+                  <Row wrap gap="sm">
+                    {imageUris.map((uri, idx) => (
+                      <View key={uri} style={styles.imageThumbWrap}>
+                        <Image source={{ uri }} style={styles.imageThumb} contentFit="cover" />
+                        <Pressable style={styles.imageRemove} onPress={() => removeImage(idx)} hitSlop={6}>
+                          <AppIcon name="close-circle" size={20} color={colors.rose} />
+                        </Pressable>
+                      </View>
+                    ))}
+                  </Row>
+                ) : null}
+
+                {videoState.status !== 'idle' ? (
                   <ListingVideoSection
-                    variant="tile"
                     state={videoState}
                     onChange={setVideoState}
                     disabled={submitting}
-                    style={styles.mediaTileFlex}
                   />
-                ) : (
-                  <View style={styles.mediaTile}>
-                    <AppIcon name="videocam" size={22} color={colors.electricBright} />
-                    <Text style={styles.mediaTitle}>فيديو</Text>
-                    <Text style={styles.mediaSub}>تمت الإضافة ✓</Text>
-                  </View>
-                )}
-              </View>
+                ) : null}
 
-              {imageUris.length > 0 ? (
-                <View style={styles.imageGrid}>
-                  {imageUris.map((uri, idx) => (
-                    <View key={uri} style={styles.imageThumbWrap}>
-                      <Image source={{ uri }} style={styles.imageThumb} contentFit="cover" />
-                      <Pressable style={styles.imageRemove} onPress={() => removeImage(idx)} hitSlop={6}>
-                        <AppIcon name="close-circle" size={20} color={colors.rose} />
+                <Stack gap="xs">
+                  <Row justify="between" align="center">
+                    <AppText variant="caption" color="textMuted">
+                      موقع العرض
+                    </AppText>
+                    {locating ? (
+                      <ActivityIndicator size="small" color={colors.electricBright} />
+                    ) : (
+                      <Pressable onPress={() => void detectLocation(true)} hitSlop={8}>
+                        <AppIcon name="refresh" size={16} color={colors.textMuted} />
                       </Pressable>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-
-              {videoState.status !== 'idle' ? (
-                <ListingVideoSection
-                  state={videoState}
-                  onChange={setVideoState}
-                  disabled={submitting}
-                />
-              ) : null}
-
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>موقع العرض</AppText>
-                <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
-                  <TextInput
+                    )}
+                  </Row>
+                  <SarhInput
+                    appearance="theme"
                     value={location}
                     onChangeText={setLocation}
                     placeholder="حدد موقع العرض يدوياً"
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
+                    icon="location-outline"
                   />
-                  {locating ? (
-                    <ActivityIndicator size="small" color={colors.electricBright} />
-                  ) : (
-                    <Pressable onPress={() => void detectLocation(true)} hitSlop={8}>
-                      <AppIcon name="refresh" size={16} color={colors.textMuted} />
-                    </Pressable>
-                  )}
-                  <AppIcon name="location-outline" size={18} color={colors.electricBright} />
-                </View>
-                <Pressable onPress={() => setShowMap((v) => !v)} style={styles.linkBtn}>
-                  <AppText style={styles.linkText}>{showMap ? 'إخفاء الخريطة' : 'اختيار من الخريطة'}</AppText>
-                </Pressable>
-                {showMap ? (
-                  <LocationMapPreview
-                    country={country}
-                    cityLabel={location.trim() || undefined}
-                    lat={lat}
-                    lng={lng}
-                    height={180}
-                    showLocateButton
-                    onLocate={() => void detectLocation(true)}
-                    locating={locating}
-                  />
-                ) : null}
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>عنوان العرض</AppText>
-                <View style={[styles.inputWrap, titleAr.trim() ? styles.inputFilled : null]}>
-                  <TextInput
-                    value={titleAr}
-                    onChangeText={(v) => {
-                      setTitleAr(v);
-                      setStepError(null);
-                    }}
-                    placeholder="مثال: أغنام حريات للبيع"
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                    maxLength={80}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.fieldGroup}>
-                <View style={styles.categoryLabelRow}>
-                  <AppText style={styles.fieldLabel}>التصنيف</AppText>
-                  {parentCategory ? (
-                    <Pressable onPress={reSuggest} hitSlop={6}>
-                      <AppText style={styles.linkText}>إعادة الاقتراح</AppText>
-                    </Pressable>
+                  <Pressable onPress={() => setShowMap((v) => !v)} style={styles.linkBtn}>
+                    <AppText variant="caption" color="primary">
+                      {showMap ? 'إخفاء الخريطة' : 'اختيار من الخريطة'}
+                    </AppText>
+                  </Pressable>
+                  {showMap ? (
+                    <LocationMapPreview
+                      country={country}
+                      cityLabel={location.trim() || undefined}
+                      lat={lat}
+                      lng={lng}
+                      height={180}
+                      showLocateButton
+                      onLocate={() => void detectLocation(true)}
+                      locating={locating}
+                    />
                   ) : null}
-                </View>
-                <Pressable
-                  onPress={() => setCategoryPickerOpen(true)}
-                  style={[
-                    styles.inputWrap,
-                    styles.categoryField,
-                    parentCategory ? styles.inputFilled : null,
-                    !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
-                  ]}
-                >
-                  <View style={styles.categoryValue}>
-                    <Text
-                      style={[
-                        styles.categoryValueText,
-                        !parentCategory && { color: colors.textMuted },
-                      ]}
-                    >
-                      {parentCategory
-                        ? `${parentCategory.nameAr}${subCategory ? ` · ${subCategory.nameAr}` : ''}${
-                            !categoryLocked && categoryMode === 'auto' ? ' ✓' : ''
-                          }`
-                        : 'اختر التصنيف'}
-                    </Text>
-                  </View>
-                  <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
-                </Pressable>
-                {categoriesLoading && parents.length === 0 ? (
-                  <ActivityIndicator size="small" color={colors.electricBright} />
-                ) : null}
-              </View>
-            </View>
-          )}
+                </Stack>
 
-          {step === 1 && (
-            <View style={styles.stepContent}>
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>موقع العرض</AppText>
-                <View style={[styles.inputWrap, location.trim() ? styles.inputFilled : null]}>
-                  <TextInput
-                    value={location}
-                    onChangeText={setLocation}
-                    placeholder="حدد موقع العرض يدوياً"
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                  />
-                  <AppIcon name="location-outline" size={18} color={colors.electricBright} />
-                </View>
-              </View>
+                <SarhInput
+                  appearance="theme"
+                  label="عنوان العرض"
+                  value={titleAr}
+                  onChangeText={(v) => {
+                    setTitleAr(v);
+                    setStepError(null);
+                  }}
+                  placeholder="مثال: أغنام حريات للبيع"
+                  maxLength={80}
+                />
 
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>عنوان العرض</AppText>
-                <View style={[styles.inputWrap, titleAr.trim() ? styles.inputFilled : null]}>
-                  <TextInput
-                    value={titleAr}
-                    onChangeText={(v) => {
-                      setTitleAr(v);
-                      setStepError(null);
-                    }}
-                    placeholder="مثال: أغنام حريات للبيع"
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                    maxLength={80}
-                  />
-                </View>
-              </View>
+                <Stack gap="xs">
+                  <Row justify="between" align="center">
+                    <AppText variant="caption" color="textMuted">
+                      التصنيف
+                    </AppText>
+                    {parentCategory ? (
+                      <Pressable onPress={reSuggest} hitSlop={6}>
+                        <AppText variant="caption" color="primary">
+                          إعادة الاقتراح
+                        </AppText>
+                      </Pressable>
+                    ) : null}
+                  </Row>
+                  <Pressable
+                    onPress={() => setCategoryPickerOpen(true)}
+                    style={[
+                      styles.categoryField,
+                      parentCategory ? styles.inputFilled : null,
+                      !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
+                    ]}
+                  >
+                    <Row fill justify="between" align="center">
+                      <AppText
+                        variant="body"
+                        color={parentCategory ? 'textPrimary' : 'textMuted'}
+                        style={styles.categoryValueText}
+                      >
+                        {parentCategory
+                          ? `${parentCategory.nameAr}${subCategory ? ` · ${subCategory.nameAr}` : ''}${
+                              !categoryLocked && categoryMode === 'auto' ? ' ✓' : ''
+                            }`
+                          : 'اختر التصنيف'}
+                      </AppText>
+                      <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
+                    </Row>
+                  </Pressable>
+                  {categoriesLoading && parents.length === 0 ? (
+                    <ActivityIndicator size="small" color={colors.electricBright} />
+                  ) : null}
+                </Stack>
+              </Stack>
+            )}
 
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>التصنيف</AppText>
-                <Pressable
-                  onPress={() => setCategoryPickerOpen(true)}
-                  style={[
-                    styles.inputWrap,
-                    styles.categoryField,
-                    parentCategory ? styles.inputFilled : null,
-                    !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
-                  ]}
-                >
-                  <View style={styles.categoryValue}>
-                    <Text
-                      style={[
-                        styles.categoryValueText,
-                        !parentCategory && { color: colors.textMuted },
-                      ]}
-                    >
-                      {parentCategory
-                        ? `${parentCategory.nameAr}${subCategory ? ` · ${subCategory.nameAr}` : ''}`
-                        : 'اختر التصنيف'}
-                    </Text>
-                  </View>
-                  <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
-                </Pressable>
-              </View>
+            {step === 1 && (
+              <Stack gap="md">
+                <SarhInput
+                  appearance="theme"
+                  label="موقع العرض"
+                  value={location}
+                  onChangeText={setLocation}
+                  placeholder="حدد موقع العرض يدوياً"
+                  icon="location-outline"
+                />
 
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>الوصف</AppText>
-                <View style={[styles.inputWrap, styles.textareaWrap]}>
-                  <TextInput
+                <SarhInput
+                  appearance="theme"
+                  label="عنوان العرض"
+                  value={titleAr}
+                  onChangeText={(v) => {
+                    setTitleAr(v);
+                    setStepError(null);
+                  }}
+                  placeholder="مثال: أغنام حريات للبيع"
+                  maxLength={80}
+                />
+
+                <Stack gap="xs">
+                  <AppText variant="caption" color="textMuted">
+                    التصنيف
+                  </AppText>
+                  <Pressable
+                    onPress={() => setCategoryPickerOpen(true)}
+                    style={[
+                      styles.categoryField,
+                      parentCategory ? styles.inputFilled : null,
+                      !categoryLocked && categoryMode === 'auto' ? styles.inputAuto : null,
+                    ]}
+                  >
+                    <Row fill justify="between" align="center">
+                      <AppText
+                        variant="body"
+                        color={parentCategory ? 'textPrimary' : 'textMuted'}
+                        style={styles.categoryValueText}
+                      >
+                        {parentCategory
+                          ? `${parentCategory.nameAr}${subCategory ? ` · ${subCategory.nameAr}` : ''}`
+                          : 'اختر التصنيف'}
+                      </AppText>
+                      <AppIcon name="chevron-down" size={16} color={colors.textMuted} />
+                    </Row>
+                  </Pressable>
+                </Stack>
+
+                <Stack gap="xs">
+                  <SarhInput
+                    appearance="theme"
+                    label="الوصف"
                     value={descAr}
                     onChangeText={setDescAr}
                     placeholder="اكتب وصف العرض بالتفصيل..."
-                    placeholderTextColor={colors.textMuted}
-                    style={[styles.input, styles.textarea]}
                     multiline
                     maxLength={1000}
+                    style={styles.textarea}
                   />
-                  <Text style={styles.charCount}>{descAr.length}/1000</Text>
-                </View>
-              </View>
+                  <AppText variant="meta" color="textMuted">
+                    {descAr.length}/1000
+                  </AppText>
+                </Stack>
 
-              <View style={styles.compactRow}>
-                <View style={styles.compactField}>
-                  <AppText style={styles.compactLabel}>السعر</AppText>
-                  <View style={styles.compactInput}>
-                    <TextInput
+                <Row align="start" gap="sm">
+                  <View style={styles.compactField}>
+                    <SarhInput
+                      appearance="theme"
+                      label="السعر"
                       value={price}
                       onChangeText={(t) => setPrice(t.replace(/[^0-9]/g, ''))}
                       placeholder="0"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.compactText}
                       keyboardType="numeric"
+                      ltr
+                      leadingIcon={
+                        <AppText variant="meta" color="textMuted">
+                          ر.س
+                        </AppText>
+                      }
                     />
-                    <Text style={styles.compactUnit}>ر.س</Text>
                   </View>
+                  <View style={styles.compactField}>
+                    <AppText variant="meta" color="textMuted">
+                      الوزن{needsWeight ? '' : ' (اختياري)'}
+                    </AppText>
+                    <Row gap="xs" style={styles.compactInput}>
+                      <TextInput
+                        value={weightKg}
+                        onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
+                        placeholder="0"
+                        placeholderTextColor={colors.textMuted}
+                        style={styles.compactText}
+                        keyboardType="decimal-pad"
+                      />
+                      <AppText variant="meta" color="textMuted">
+                        كجم
+                      </AppText>
+                    </Row>
+                  </View>
+                </Row>
+
+                <SarhInput
+                  appearance="theme"
+                  label="الجوال"
+                  value={contactPhone}
+                  onChangeText={(text) => setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))}
+                  placeholder="05XXXXXXXX"
+                  keyboardType="phone-pad"
+                  maxLength={20}
+                  icon="call-outline"
+                />
+              </Stack>
+            )}
+
+            {step === 2 && (
+              <Stack gap="md">
+                <View style={styles.reviewCard}>
+                  <Row justify="between" align="center" style={styles.reviewRow}>
+                    <AppText variant="caption" color="textMuted">
+                      التصنيف
+                    </AppText>
+                    <AppText variant="bodyMedium" style={styles.reviewValue}>
+                      {parentCategory?.nameAr || '—'}
+                      {subCategory ? ` · ${subCategory.nameAr}` : ''}
+                    </AppText>
+                  </Row>
+                  <Row justify="between" align="center" style={styles.reviewRow}>
+                    <AppText variant="caption" color="textMuted">
+                      العنوان
+                    </AppText>
+                    <AppText variant="bodyMedium" style={styles.reviewValue}>
+                      {titleAr || '—'}
+                    </AppText>
+                  </Row>
+                  <Row justify="between" align="center" style={styles.reviewRow}>
+                    <AppText variant="caption" color="textMuted">
+                      الموقع
+                    </AppText>
+                    <AppText variant="bodyMedium" style={styles.reviewValue}>
+                      {location || '—'}
+                    </AppText>
+                  </Row>
+                  <Row justify="between" align="center" style={styles.reviewRow}>
+                    <AppText variant="caption" color="textMuted">
+                      السعر
+                    </AppText>
+                    <AppText variant="bodyMedium" style={styles.reviewValue}>
+                      {price ? `${Number(price).toLocaleString()} ر.س` : '—'}
+                    </AppText>
+                  </Row>
+                  <Row justify="between" align="center" style={styles.reviewRow}>
+                    <AppText variant="caption" color="textMuted">
+                      الوسائط
+                    </AppText>
+                    <AppText variant="bodyMedium" style={styles.reviewValue}>
+                      {imageUris.length} صور
+                      {hasListingVideo ? ' · فيديو' : ''}
+                    </AppText>
+                  </Row>
                 </View>
-                <View style={styles.compactField}>
-                  <AppText style={styles.compactLabel}>
-                    الوزن{needsWeight ? '' : ' (اختياري)'}
+                <Row align="start" gap="sm" style={styles.termsBox}>
+                  <AppIcon name="information-circle-outline" size={16} color={colors.textMuted} />
+                  <AppText variant="caption" color="textMuted" style={styles.termsText}>
+                    بالنشر، تؤكد أن الإعلان صحيح ويتوافق مع شروط سرح. يمكن نشر إعلان واحد كل 24 ساعة، وتعديله مرة واحدة.
                   </AppText>
-                  <View style={styles.compactInput}>
-                    <TextInput
-                      value={weightKg}
-                      onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
-                      placeholder="0"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.compactText}
-                      keyboardType="decimal-pad"
-                    />
-                    <Text style={styles.compactUnit}>كجم</Text>
-                  </View>
-                </View>
-              </View>
+                </Row>
+              </Stack>
+            )}
+          </ScrollView>
+        </ScreenBody>
 
-              <View style={styles.fieldGroup}>
-                <AppText style={styles.fieldLabel}>الجوال</AppText>
-                <View style={[styles.inputWrap, styles.phoneField]}>
-                  <TextInput
-                    value={contactPhone}
-                    onChangeText={(text) => setContactPhone(text.replace(/[^0-9+\s()-]/g, ''))}
-                    placeholder="05XXXXXXXX"
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                    keyboardType="phone-pad"
-                    maxLength={20}
-                  />
-                  <AppIcon name="call-outline" size={18} color={colors.electricBright} />
-                </View>
-              </View>
-            </View>
-          )}
-
-          {step === 2 && (
-            <View style={styles.stepContent}>
-              <View style={styles.reviewCard}>
-                <View style={styles.reviewRow}>
-                  <AppText style={styles.reviewLabel}>التصنيف</AppText>
-                  <Text style={styles.reviewValue}>
-                    {parentCategory?.nameAr || '—'}
-                    {subCategory ? ` · ${subCategory.nameAr}` : ''}
-                  </Text>
-                </View>
-                <View style={styles.reviewRow}>
-                  <AppText style={styles.reviewLabel}>العنوان</AppText>
-                  <Text style={styles.reviewValue}>{titleAr || '—'}</Text>
-                </View>
-                <View style={styles.reviewRow}>
-                  <AppText style={styles.reviewLabel}>الموقع</AppText>
-                  <Text style={styles.reviewValue}>{location || '—'}</Text>
-                </View>
-                <View style={styles.reviewRow}>
-                  <AppText style={styles.reviewLabel}>السعر</AppText>
-                  <Text style={styles.reviewValue}>
-                    {price ? `${Number(price).toLocaleString()} ر.س` : '—'}
-                  </Text>
-                </View>
-                <View style={styles.reviewRow}>
-                  <AppText style={styles.reviewLabel}>الوسائط</AppText>
-                  <Text style={styles.reviewValue}>
-                    {imageUris.length} صور
-                    {hasListingVideo ? ' · فيديو' : ''}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.termsBox}>
-                <AppIcon name="information-circle-outline" size={16} color={colors.textMuted} />
-                <Text style={styles.termsText}>
-                  بالنشر، تؤكد أن الإعلان صحيح ويتوافق مع شروط سرح. يمكن نشر إعلان واحد كل 24 ساعة، وتعديله مرة واحدة.
-                </Text>
-              </View>
-            </View>
-          )}
-        </ScrollView>
-
-        <View style={styles.bottomBar}>
-          {stepError ? <Text style={styles.stepError}>{stepError}</Text> : null}
+        <View style={[styles.bottomBar, { paddingBottom: spacing.md + insets.bottom }]}>
+          {stepError ? (
+            <AppText variant="caption" color="danger" align="center" style={styles.stepError}>
+              {stepError}
+            </AppText>
+          ) : null}
           <SarhButton
             title={
               step === STEPS.length - 1
@@ -868,7 +883,9 @@ export default function CreateListingScreen() {
           />
           {step > 0 ? (
             <Pressable onPress={() => setStep((s) => s - 1)} style={styles.backStep}>
-              <Text style={styles.linkText}>رجوع</Text>
+              <AppText variant="caption" color="primary">
+                رجوع
+              </AppText>
             </Pressable>
           ) : null}
         </View>
@@ -881,7 +898,9 @@ export default function CreateListingScreen() {
         >
           <Pressable style={styles.modalBackdrop} onPress={() => setCategoryPickerOpen(false)}>
             <Pressable style={styles.modalSheet} onPress={() => undefined}>
-              <Text style={styles.modalTitle}>اختر التصنيف</Text>
+              <AppText variant="heading3" style={styles.modalTitle}>
+                اختر التصنيف
+              </AppText>
               <ScrollView style={styles.modalScroll}>
                 {parents.map((cat) => (
                   <View key={cat.id} style={styles.modalGroup}>
@@ -892,10 +911,10 @@ export default function CreateListingScreen() {
                         parentCategory?.id === cat.id && styles.modalParentActive,
                       ]}
                     >
-                      <Text style={styles.modalParentText}>{cat.nameAr}</Text>
+                      <AppText variant="bodyMedium">{cat.nameAr}</AppText>
                     </Pressable>
                     {parentCategory?.id === cat.id ? (
-                      <View style={styles.subList}>
+                      <Row wrap gap="sm" style={styles.subList}>
                         {subOptions.map((sub) => (
                           <Pressable
                             key={sub.id}
@@ -908,17 +927,15 @@ export default function CreateListingScreen() {
                               subCategory?.id === sub.id && styles.subChipActive,
                             ]}
                           >
-                            <Text
-                              style={[
-                                styles.subChipText,
-                                subCategory?.id === sub.id && styles.subChipTextActive,
-                              ]}
+                            <AppText
+                              variant="caption"
+                              color={subCategory?.id === sub.id ? 'primary' : 'textMuted'}
                             >
                               {sub.nameAr}
-                            </Text>
+                            </AppText>
                           </Pressable>
                         ))}
-                      </View>
+                      </Row>
                     ) : null}
                   </View>
                 ))}
@@ -943,31 +960,21 @@ export default function CreateListingScreen() {
           />
         ) : null}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
     flex: { flex: 1 },
     center: { alignItems: 'center', justifyContent: 'center' },
-    loadingText: { ...typography.body, color: colors.textMuted, marginTop: spacing.md },
+    loadingText: { marginTop: spacing.md },
     header: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       minHeight: 52,
     },
     cancelBtn: { minWidth: 52, paddingVertical: 8 },
-    cancelText: { ...typography.body, color: colors.textPrimary },
-    headerTitle: {
-      ...typography.h3,
-      color: colors.textPrimary,
-      textAlign: 'center',
-    },
     progressRow: {
-      flexDirection: 'row',
       gap: 6,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.md,
@@ -980,15 +987,10 @@ function createStyles(colors: ThemeColors) {
     },
     progressSegActive: { backgroundColor: colors.electric },
     scrollView: { flex: 1 },
-    scroll: { paddingBottom: spacing.lg },
-    stepContent: {
+    scroll: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
-      gap: spacing.md,
-    },
-    mediaRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
+      paddingBottom: spacing.lg,
     },
     mediaTile: {
       flex: 1,
@@ -1003,84 +1005,27 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.md,
     },
     mediaTileFlex: { flex: 1 },
-    mediaTitle: { ...typography.feedTitle, color: colors.textPrimary },
-    mediaSub: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
     pressed: { opacity: 0.82 },
-    fieldGroup: { gap: 6, width: '100%', alignItems: 'stretch' },
-    fieldLabel: {
-      ...typography.caption,
-      color: colors.textMuted,
-      fontWeight: '600',
-      width: '100%',
+    inputFilled: { borderColor: colors.borderMid },
+    inputAuto: { borderColor: `${colors.electric}66` },
+    textarea: {
+      textAlignVertical: 'top',
+      minHeight: 88,
     },
-    inputWrap: {
-      ...getRtlRow(),
+    linkBtn: { alignSelf: 'flex-start' },
+    categoryField: {
+      minHeight: 56,
       alignItems: 'center',
-      gap: 8,
       backgroundColor: colors.bgSurface,
       borderRadius: radius.lg,
       paddingHorizontal: spacing.md,
       borderWidth: 1,
       borderColor: colors.borderSoft,
-      minHeight: 48,
       width: '100%',
     },
-    inputFilled: { borderColor: colors.borderMid },
-    inputAuto: { borderColor: `${colors.electric}66` },
-    input: {
-      flex: 1,
-      minWidth: 0,
-      ...typography.body,
-      color: colors.textPrimary,
-      paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-    },
-    textareaWrap: {
-      flexDirection: 'column',
-      alignItems: 'stretch',
-      minHeight: 120,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
-    },
-    textarea: {
-      textAlignVertical: 'top',
-      minHeight: 88,
-      width: '100%',
-    },
-    charCount: {
-      ...typography.micro,
-      color: colors.textSubtle,
-      alignSelf: 'flex-start',
-    },
-    linkBtn: { alignSelf: 'flex-start' },
-    linkText: { ...typography.caption, color: colors.electricBright },
-    categoryLabelRow: {
-      ...getRtlRow(),
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      width: '100%',
-    },
-    categoryField: { minHeight: 56, alignItems: 'center' },
-    categoryValue: { flex: 1, minWidth: 0 },
-    categoryValueText: {
-      ...typography.body,
-      color: colors.textPrimary,
-      width: '100%',
-    },
-    compactRow: {
-      ...getRtlRow(),
-      gap: 8,
-      width: '100%',
-    },
+    categoryValueText: { flex: 1, minWidth: 0 },
     compactField: { flex: 1, gap: 4, minWidth: 0, alignItems: 'stretch' },
-    compactLabel: {
-      ...typography.micro,
-      color: colors.textMuted,
-      width: '100%',
-    },
     compactInput: {
-      ...getRtlRow(),
-      alignItems: 'center',
-      gap: 4,
       minHeight: 44,
       borderRadius: radius.md,
       backgroundColor: colors.bgSurface,
@@ -1095,11 +1040,6 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 0,
     },
-    compactUnit: { ...typography.micro, color: colors.textMuted, flexShrink: 0 },
-    phoneField: {
-      minHeight: 54,
-    },
-    imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     imageThumbWrap: {
       width: 72,
       height: 72,
@@ -1115,50 +1055,24 @@ function createStyles(colors: ThemeColors) {
     },
     reviewCard: { ...menuCardStyle(colors) },
     reviewRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
     },
-    reviewLabel: { ...typography.caption, color: colors.textMuted },
-    reviewValue: { ...typography.bodyStrong, color: colors.textPrimary, flex: 1 },
+    reviewValue: { flex: 1 },
     termsBox: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      alignItems: 'flex-start',
       padding: spacing.md,
       backgroundColor: `${colors.electric}10`,
       borderRadius: radius.lg,
     },
-    termsText: {
-      ...typography.caption,
-      color: colors.textMuted,
-      flex: 1,
-      lineHeight: 18,
-    },
+    termsText: { flex: 1 },
     bottomBar: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
       backgroundColor: colors.screenRoot,
     },
-    stepError: {
-      ...typography.caption,
-      color: colors.rose,
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    continueBtn: { borderRadius: radius.xl, overflow: 'hidden' },
-    continueBtnDisabled: { opacity: 0.5 },
-    continueBtnInner: {
-      paddingVertical: 14,
-      alignItems: 'center',
-      borderRadius: radius.xl,
-    },
-    continueBtnText: { ...typography.button, color: '#fff' },
+    stepError: { marginBottom: 8 },
     backStep: { alignItems: 'center', paddingTop: 10 },
     modalBackdrop: {
       flex: 1,
@@ -1172,7 +1086,7 @@ function createStyles(colors: ThemeColors) {
       padding: spacing.lg,
       maxHeight: '72%',
     },
-    modalTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.md },
+    modalTitle: { marginBottom: spacing.md },
     modalScroll: { maxHeight: 420 },
     modalGroup: { marginBottom: spacing.md },
     modalParent: {
@@ -1182,11 +1096,7 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgSurface,
     },
     modalParentActive: { backgroundColor: `${colors.electric}18` },
-    modalParentText: { ...typography.bodyStrong, color: colors.textPrimary },
     subList: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
       justifyContent: 'flex-start',
       marginTop: spacing.sm,
     },
@@ -1197,7 +1107,5 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.bgElevated,
     },
     subChipActive: { backgroundColor: `${colors.electric}22` },
-    subChipText: { ...typography.caption, color: colors.textMuted, fontWeight: '600' },
-    subChipTextActive: { color: colors.electricBright },
   });
 }

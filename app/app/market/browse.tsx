@@ -1,13 +1,14 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppFlatList } from '@/components/ui/AppFlatList';
 import { ds } from '@/constants/designSystem';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { sarhScreenStyles } from '@/constants/sarhScreen';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppText, SarhChip, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
-import { getRtlRow } from '@/lib/rtl';
 import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchMarketCategories } from '@/services/categories';
@@ -24,16 +25,11 @@ import {
   ListRenderItemInfo,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhBackButton, SarhChip } from '@/design-system/components';
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
-const TAB_BAR_CLEARANCE = ds.tabBar.height + ds.tabBar.fabLift + ds.space.xxl + 16;
 const LISTING_ROW_HEIGHT = 122;
 
 export default function MarketBrowseScreen() {
@@ -47,8 +43,8 @@ export default function MarketBrowseScreen() {
   }>();
   const router = useRouter();
   const { accessToken } = useAuth();
-  const { styles, colors } = useThemedStyles(({ colors, scheme, sarh: screenStyles }) => ({
-    styles: createStyles(colors, scheme, screenStyles),
+  const { styles, colors } = useThemedStyles(({ colors }) => ({
+    styles: createStyles(colors),
     colors,
   }));
 
@@ -59,6 +55,7 @@ export default function MarketBrowseScreen() {
   const parentEmoji = typeof params.parentEmoji === 'string' ? params.parentEmoji : '';
   const subName = typeof params.subName === 'string' ? params.subName : '';
   const subEmoji = typeof params.subEmoji === 'string' ? params.subEmoji : '';
+  const headerTitle = subName || parentName || 'السوق';
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -216,21 +213,22 @@ export default function MarketBrowseScreen() {
     [router],
   );
 
+  const crumb =
+    `السوق` +
+    (parentName ? ` / ${parentEmoji ? `${parentEmoji} ` : ''}${parentName}` : '') +
+    (subName ? ` / ${subEmoji ? `${subEmoji} ` : ''}${subName}` : '');
+
   const ListHeader = (
     <View>
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
+      {parentName || subName ? (
         <View style={styles.crumbShell}>
-          <Text style={styles.crumb} numberOfLines={2}>
-            السوق
-            {parentName ? ` / ${parentEmoji ? `${parentEmoji} ` : ''}${parentName}` : ''}
-            {subName ? ` / ${subEmoji ? `${subEmoji} ` : ''}${subName}` : ''}
-          </Text>
+          <AppText variant="caption" color="textMuted" numberOfLines={2}>
+            {crumb}
+          </AppText>
         </View>
-        <View style={{ width: 38 }} />
-      </View>
+      ) : null}
 
-      <View style={[styles.searchRow, getRtlRow()]}>
+      <Row gap="sm" style={styles.searchRow}>
         <Pressable
           style={[styles.filterStarBtn, showFeaturedOnly && styles.filterStarBtnActive]}
           onPress={() => setShowFeaturedOnly(!showFeaturedOnly)}
@@ -242,165 +240,123 @@ export default function MarketBrowseScreen() {
             variant={showFeaturedOnly ? 'sr' : 'rr'}
           />
         </Pressable>
-        <View style={[styles.searchBox, getRtlRow()]}>
-          <AppIcon name="search" size={18} color={colors.textPrimary} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="ابحث ضمن هذا التصنيف..."
-            placeholderTextColor={colors.textMuted}
-            style={styles.searchInput}
-          />
-          {search.length > 0 ? (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
-              <AppIcon name="close-circle" size={16} color={colors.textPrimary} />
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
+        <SarhInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="ابحث ضمن هذا التصنيف..."
+          leadingIcon="search"
+          clearButtonMode="while-editing"
+          containerStyle={styles.searchInput}
+        />
+      </Row>
 
-      <View style={[styles.filterRow, getRtlRow()]}>
-        <SarhChip appearance="filter"
+      <Row gap="sm" style={styles.filterRow}>
+        <SarhChip
+          appearance="filter"
           label="السعودية"
           selected={activeCountry === 'SA'}
           onPress={() => setActiveCountry(activeCountry === 'SA' ? 'ALL' : 'SA')}
         />
         <SarhChip appearance="filter" label={sortLabel} icon="sort-alt" chevron onPress={cycleSort} />
-      </View>
+      </Row>
 
-      <View style={[styles.countRow, getRtlRow()]}>
-        <Text style={styles.count}>
+      <Row justify="end" style={styles.countRow}>
+        <AppText variant="caption" color="textMuted">
           {loading ? 'جاري التحميل...' : `${filtered.length} إعلان${hasMore ? '+' : ''}`}
-        </Text>
-      </View>
+        </AppText>
+      </Row>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {loading && items.length === 0 ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.electric} />
-        </View>
-      ) : (
-        <AppFlatList
-          data={filtered}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          getItemLayout={(_, index) => ({
-            length: LISTING_ROW_HEIGHT,
-            offset: LISTING_ROW_HEIGHT * index,
-            index,
-          })}
-          ListHeaderComponent={ListHeader}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🔍</Text>
-              <Text style={styles.emptyText}>لا توجد إعلانات في هذا التصنيف</Text>
-            </View>
-          }
-          ListFooterComponent={
-            <View style={{ height: TAB_BAR_CLEARANCE, alignItems: 'center', paddingTop: spacing.sm }}>
-              {loadingMore ? <ActivityIndicator color={colors.electric} /> : null}
-            </View>
-          }
-          onEndReachedThreshold={0.4}
-          onEndReached={() => {
-            void loadNextPage();
-          }}
-          initialNumToRender={12}
-          maxToRenderPerBatch={10}
-          windowSize={8}
-        />
-      )}
-    </SafeAreaView>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" showBack title={headerTitle} />
+      <ScreenBody scroll={false} gutter={false}>
+        {loading && items.length === 0 ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.electric} />
+          </View>
+        ) : (
+          <AppFlatList
+            data={filtered}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            getItemLayout={(_, index) => ({
+              length: LISTING_ROW_HEIGHT,
+              offset: LISTING_ROW_HEIGHT * index,
+              index,
+            })}
+            ListHeaderComponent={ListHeader}
+            ListEmptyComponent={
+              <Stack gap="md" align="center" style={styles.empty}>
+                <AppText variant="heading2" align="center">
+                  🔍
+                </AppText>
+                <AppText variant="body" color="textMuted" align="center">
+                  لا توجد إعلانات في هذا التصنيف
+                </AppText>
+              </Stack>
+            }
+            ListFooterComponent={
+              <View style={styles.listFooter}>
+                {loadingMore ? <ActivityIndicator color={colors.electric} /> : null}
+              </View>
+            }
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+              void loadNextPage();
+            }}
+            initialNumToRender={12}
+            maxToRenderPerBatch={10}
+            windowSize={8}
+          />
+        )}
+      </ScreenBody>
+    </Screen>
   );
 }
 
-function createStyles(
-  colors: ThemeColors,
-  scheme: 'light' | 'dark',
-  screenStyles: ReturnType<typeof sarhScreenStyles>,
-) {
-  const isDark = scheme === 'dark';
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: screenStyles.screenRoot,
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
-      gap: spacing.sm,
-    },
-    backBtn: {
-      width: 38,
-      height: 38,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     crumbShell: {
-      flex: 1,
-            minWidth: 0,
-    },
-    crumb: {
-      ...typography.cardHeading,
-      color: colors.textPrimary,
-      width: '100%',
-            writingDirection: 'rtl',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xs,
     },
     searchRow: {
-      gap: spacing.sm,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
-      alignItems: 'center',
     },
     filterStarBtn: {
-      ...screenStyles.iconBtn,
+      width: ds.iconBtn.md,
+      height: ds.iconBtn.md,
+      borderRadius: 12,
+      backgroundColor: colors.bgElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 0,
     },
     filterStarBtnActive: {
       borderColor: colors.gold,
       backgroundColor: `${colors.gold}12`,
     },
-    searchBox: {
-      flex: 1,
-      alignItems: 'center',
-      gap: spacing.sm,
-      backgroundColor: colors.bgElevated,
-      borderRadius: 14,
-      paddingHorizontal: spacing.md,
-      minHeight: 44,
-    },
     searchInput: {
       flex: 1,
-      ...typography.secondary,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-          },
+      minWidth: 0,
+    },
     filterRow: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
-      gap: spacing.sm,
-      alignItems: 'center',
     },
     countRow: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
-      justifyContent: 'flex-end',
     },
-    count: {
-      ...typography.caption,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-    },
-    empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
-    emptyIcon: { fontSize: 40 },
-    emptyText: {
-      ...typography.body,
-      color: colors.textMuted,
-      writingDirection: 'rtl',
-      textAlign: 'center',
+    empty: { paddingVertical: spacing.xxxl },
+    listFooter: {
+      alignItems: 'center',
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
     },
     center: {
       flex: 1,

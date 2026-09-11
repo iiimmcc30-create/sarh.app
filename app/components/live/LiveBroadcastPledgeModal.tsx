@@ -8,7 +8,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '@/constants/theme';
+import { colors, radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 type Props = {
   visible: boolean;
@@ -34,6 +35,7 @@ export function LiveBroadcastPledgeModal({
   onClose,
   confirming = false,
 }: Props) {
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -101,7 +103,8 @@ export function LiveBroadcastPledgeModal({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(6,9,26,0.85)',
@@ -220,3 +223,4 @@ const styles = StyleSheet.create({
   },
   cancelText: { ...typography.bodyStrong, color: colors.textSecondary },
 });
+}

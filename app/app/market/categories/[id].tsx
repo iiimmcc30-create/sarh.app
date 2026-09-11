@@ -1,6 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { menuCardStyle } from '@/components/feature/SidebarMenu';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { spacing, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 
 import { rtlForwardIcon } from '@/lib/rtl';
@@ -15,13 +17,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
-  Text,
-  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SarhBackButton } from '@/design-system/components';
 
 export default function MarketSubcategoriesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -83,157 +80,86 @@ export default function MarketSubcategoriesScreen() {
     );
   };
 
+  const headerTitle = parent
+    ? `${parent.emoji ? `${parent.emoji} ` : ''}${parent.nameAr}`
+    : 'التصنيف';
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <View style={styles.headerTitleShell}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {parent?.emoji ? `${parent.emoji} ` : ''}
-            {parent?.nameAr ?? 'التصنيف'}
-          </Text>
-        </View>
-        <View style={{ width: 38 }} />
-      </View>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" showBack title={headerTitle} />
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.electric} />
-        </View>
+        <ScreenBody scroll={false}>
+          <Stack fill align="center" style={styles.center}>
+            <ActivityIndicator color={colors.electric} />
+          </Stack>
+        </ScreenBody>
       ) : error ? (
-        <View style={styles.center}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable onPress={() => void load()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>إعادة المحاولة</Text>
-          </Pressable>
-        </View>
+        <ScreenBody scroll={false}>
+          <Stack fill gap="md" align="center" style={styles.center}>
+            <AppText variant="body" color="textMuted" align="center">
+              {error}
+            </AppText>
+            <Pressable onPress={() => void load()} style={styles.retryBtn}>
+              <AppText variant="caption" color="textPrimary">
+                إعادة المحاولة
+              </AppText>
+            </Pressable>
+          </Stack>
+        </ScreenBody>
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.subtitleShell}>
-            <Text style={styles.subtitle}>اختر النوع</Text>
-          </View>
-          <View style={styles.list}>
+        <ScreenBody padBottom="xxxl" gap="md">
+          <AppText variant="body" color="textMuted">
+            اختر النوع
+          </AppText>
+          <Stack gap="sm">
             {subs.map((sub) => (
               <Pressable
                 key={sub.id}
                 onPress={() => onSelectSub(sub)}
-                style={({ pressed }) => [
-                  styles.row,
-                  menuCardStyle(colors),
-                  pressed && styles.rowPressed,
-                ]}
+                style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
               >
-                <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
-                <View style={styles.rowLabelShell}>
-                  <Text style={styles.rowLabel} numberOfLines={1}>
+                <Row justify="end" gap="sm">
+                  <AppIcon name={rtlForwardIcon()} size={16} color={colors.textMuted} />
+                  <AppText variant="label" color="textPrimary" numberOfLines={1} style={styles.rowLabel}>
                     {sub.emoji ? `${sub.emoji} ` : ''}
                     {sub.nameAr}
-                  </Text>
-                </View>
+                  </AppText>
+                </Row>
               </Pressable>
             ))}
-          </View>
-        </ScrollView>
+          </Stack>
+        </ScreenBody>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.screenRoot,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      gap: spacing.sm,
-    },
-    backBtn: {
-      width: 38,
-      height: 38,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerTitleShell: {
-      flex: 1,
-            minWidth: 0,
-    },
-    headerTitle: {
-      ...typography.h2,
-      color: colors.textPrimary,
-      width: '100%',
-            writingDirection: 'rtl',
-    },
-    scroll: {
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.xxxl,
-      gap: spacing.md,
-    },
-    subtitleShell: {
-      width: '100%',
-          },
-    subtitle: {
-      ...typography.body,
-      color: colors.textMuted,
-      width: '100%',
-            writingDirection: 'rtl',
-    },
-    list: {
-      gap: spacing.sm,
-    },
     row: {
-      flexDirection: 'row',
-            alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: spacing.sm,
       paddingVertical: 14,
       paddingHorizontal: 14,
+      backgroundColor: colors.bgElevated,
+      borderRadius: 14,
+      overflow: 'hidden',
     },
     rowPressed: {
       opacity: 0.88,
     },
-    rowLabelShell: {
-      flex: 1,
-            minWidth: 0,
-    },
     rowLabel: {
-      ...typography.bodyStrong,
-      color: colors.textPrimary,
-      width: '100%',
-            writingDirection: 'rtl',
+      flex: 1,
+      minWidth: 0,
     },
     center: {
-      flex: 1,
-      alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.md,
       padding: spacing.xl,
-    },
-    errorText: {
-      ...typography.body,
-      color: colors.textMuted,
-      textAlign: 'center',
-      writingDirection: 'rtl',
     },
     retryBtn: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       borderRadius: 12,
       backgroundColor: colors.bgElevated,
-    },
-    retryText: {
-      ...typography.caption,
-      color: colors.textPrimary,
-      fontWeight: '600',
-      writingDirection: 'rtl',
     },
   });
 }

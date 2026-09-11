@@ -5,6 +5,8 @@
  * `@/components/ui/*`. New UI should prefer this module.
  */
 export {
+  SEMANTIC_TYPE_ROLE,
+  TYPE_ROLE_ALIAS,
   applyButtonTokens,
   buttonColors,
   buttonMetrics,
@@ -19,6 +21,7 @@ export {
   palette,
   radius,
   radiusAlias,
+  resolveTypeRole,
   space,
   spaceAlias,
   typography,
@@ -32,10 +35,13 @@ export type {
   ElevationName,
   ElevationToken,
   RadiusToken,
+  SemanticTypeRole,
   SpaceToken,
   TypeRole,
+  TypeRoleAlias,
   TypeToken,
+  TypeVariant,
 } from './tokens';
-export { darkTheme, semantic } from './theme';
-export type { DarkTheme } from './theme';
+export { semantic, theme } from './theme';
+export type { Theme } from './theme';
 export { FONT_WEIGHT_MIGRATION, HARDCODED_AUDIT, LEGACY_TOKEN_MAP, PHASE_2_SCOPE } from './migration';

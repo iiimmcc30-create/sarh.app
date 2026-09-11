@@ -1,10 +1,8 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { AppScrollView } from '@/components/ui/AppScrollView';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { spacing } from '@/constants/theme';
 import { AppText, SarhDivider } from '@/design-system/components';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { StyleSheet } from 'react-native';
 
 const REFUND_SECTIONS = [
   {
@@ -38,52 +36,38 @@ const REFUND_SECTIONS = [
 ];
 
 export default function RefundScreen() {
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
-
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScreenHeader title="سياسة الاسترداد" showBack />
-      <AppScrollView contentContainerStyle={styles.scroll}>
-
-        <View style={styles.section}>
-          <AppText variant="caption" color="textMuted">
-            آخر تحديث: يوليو ٢٠٢٥ · هذه السياسة جزء من شروط وأحكام منصة سرح وتنظّم حالات استرداد المبالغ المدفوعة.
-          </AppText>
-        </View>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="سياسة الاسترداد" showBack />
+      <ScreenBody padTop="lg" gap="section" padBottom="xxxl">
+        <AppText variant="caption" color="textMuted">
+          آخر تحديث: يوليو ٢٠٢٥ · هذه السياسة جزء من شروط وأحكام منصة سرح وتنظّم حالات استرداد
+          المبالغ المدفوعة.
+        </AppText>
 
         <SarhDivider />
 
         {REFUND_SECTIONS.map((section, i) => (
-          <View key={i}>
-            <View style={styles.section}>
-              <AppText variant="label" color="textPrimary">{section.title}</AppText>
-              <AppText variant="body" color="textSecondary" style={styles.body}>
-                {section.content}
-              </AppText>
-            </View>
-            {i < REFUND_SECTIONS.length - 1 ? <SarhDivider /> : null}
-          </View>
+          <Stack key={section.title} gap="sm">
+            <AppText variant="cardTitle" color="textPrimary">{section.title}</AppText>
+            <AppText variant="body" color="textSecondary" style={styles.prose}>
+              {section.content}
+            </AppText>
+            {i < REFUND_SECTIONS.length - 1 ? (
+              <SarhDivider style={styles.clauseRule} />
+            ) : null}
+          </Stack>
         ))}
 
-        <AppText variant="micro" color="textMuted" align="center" style={styles.footer}>
+        <AppText variant="meta" color="textMuted" align="center">
           سرح · جميع الحقوق محفوظة
         </AppText>
-        <View style={{ height: 32 }} />
-      </AppScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.screenRoot },
-    scroll: { paddingBottom: 32 },
-    section: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.lg,
-      gap: spacing.sm,
-    },
-    body: { lineHeight: 24 },
-    footer: { marginTop: spacing.xl, paddingHorizontal: spacing.lg },
-  });
-}
+const styles = StyleSheet.create({
+  prose: { lineHeight: 24 },
+  clauseRule: { marginTop: spacing.md },
+});

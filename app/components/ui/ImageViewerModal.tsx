@@ -4,7 +4,7 @@
  * Uses only React Native core APIs (no extra packages required).
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { typography } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
 import { resolveMediaUrl } from '@/services/media';
 import React, {
   useCallback,
@@ -20,7 +20,6 @@ import {
   Pressable,
   StatusBar,
   StyleSheet,
-  Text,
   View,
   Image,
   Platform,
@@ -263,7 +262,9 @@ export function ImageViewerModal({
         {/* Counter */}
         {images.length > 1 && (
           <View style={[styles.counter, { top: insets.top + 16 }]}>
-            <Text style={styles.counterText}>{currentIndex + 1} / {images.length}</Text>
+            <AppText variant="micro" style={styles.counterText}>
+              {currentIndex + 1} / {images.length}
+            </AppText>
           </View>
         )}
 
@@ -296,9 +297,13 @@ export function ImageViewerModal({
         )}
 
         {/* Hint */}
-        <Text style={[styles.hint, { bottom: insets.bottom + (images.length > 1 ? 40 : 16) }]}>
+        <AppText
+          variant="caption"
+          align="center"
+          style={[styles.hint, { bottom: insets.bottom + (images.length > 1 ? 40 : 16) }]}
+        >
           اضغط مرتين للتكبير · اسحب للإغلاق
-        </Text>
+        </AppText>
       </View>
     </Modal>
   );
@@ -344,7 +349,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    right: 16,
+    end: 16,
     zIndex: 100,
     width: 40,
     height: 40,
@@ -355,13 +360,12 @@ const styles = StyleSheet.create({
   },
   counter: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    start: 0,
+    end: 0,
     zIndex: 100,
     alignItems: 'center',
   },
   counterText: {
-    ...typography.badge,
     color: '#fff',
     backgroundColor: 'rgba(0,0,0,0.4)',
     paddingHorizontal: 10,
@@ -370,8 +374,8 @@ const styles = StyleSheet.create({
   },
   dotsRow: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    start: 0,
+    end: 0,
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 6,
@@ -390,11 +394,9 @@ const styles = StyleSheet.create({
   },
   hint: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
+    start: 0,
+    end: 0,
     color: 'rgba(255,255,255,0.4)',
-    ...typography.caption,
     zIndex: 100,
   },
 });

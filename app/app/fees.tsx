@@ -1,15 +1,14 @@
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { AppText } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { getRtlDirection } from '@/lib/rtl';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 import { useAuth } from '@/contexts/AuthContext';
-import { AppText } from '@/design-system/components';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { radius, type ThemeColors } from '@/constants/theme';
 
 type FeeRow = {
   id: string;
@@ -41,25 +40,25 @@ export default function FeesScreen() {
   }, [load]);
 
   return (
-    <SafeAreaView style={[styles.screen, getRtlDirection()]} edges={['top', 'bottom']}>
-      <ScreenHeader title="سداد الرسوم" showBack />
-      <ScrollView contentContainerStyle={styles.content}>
-        <AppText variant="bodySmall" color="textSecondary" style={styles.hint}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader variant="screen" title="سداد الرسوم" showBack />
+      <ScreenBody padTop="lg" padBottom="xxxl" gap="md" width="content">
+        <AppText variant="bodySmall" color="textSecondary">
           السداد اختياري. أدخل مبلغ البيع عند السداد لحساب عمولة 1%. فتح الصفحة لا يعني حدوث بيع.
         </AppText>
         {loaded && fees.length === 0 ? (
-          <View style={styles.empty}>
+          <Stack gap="sm" align="center" style={styles.empty}>
             <AppText variant="heading3" align="center">
               لا توجد رسوم مستحقة
             </AppText>
             <AppText variant="caption" color="textMuted" align="center">
               ستظهر هنا عمولات الإعلانات عند تسجيل عملية بيع.
             </AppText>
-          </View>
+          </Stack>
         ) : null}
         {fees.map((fee) => (
           <View key={fee.id} style={styles.card}>
-            <AppText variant="label" numberOfLines={2} style={styles.cardTitle}>
+            <AppText variant="label" numberOfLines={2}>
               {fee.listing?.arabicTitle ?? fee.listingId}
             </AppText>
             <AppText variant="caption" color="textMuted">
@@ -72,14 +71,14 @@ export default function FeesScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="سداد الرسوم"
               >
-                <AppText variant="label" color="primary" style={styles.payLinkText}>
+                <AppText variant="label" color="primary">
                   سداد الرسوم
                 </AppText>
               </Pressable>
             ) : null}
           </View>
         ))}
-      </ScrollView>
+      </ScreenBody>
       {payListingId ? (
         <ListingFeePaymentSheet
           visible
@@ -90,30 +89,19 @@ export default function FeesScreen() {
           }}
         />
       ) : null}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.screenRoot },
-    content: {
-      padding: spacing.lg,
-      gap: spacing.md,
-      width: '100%',
-      maxWidth: 720,
-      alignSelf: 'center',
-    },
-    hint: { ...typography.secondary, color: colors.textSecondary },
-    empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl },
+    empty: { paddingVertical: 32 },
     card: {
       backgroundColor: colors.bgElevated,
       borderRadius: radius.lg,
-      padding: spacing.lg,
-      gap: spacing.sm,
+      padding: 16,
+      gap: 8,
     },
-    cardTitle: { ...typography.bodyStrong, color: colors.textPrimary },
     payLink: { alignSelf: 'flex-start' },
-    payLinkText: { color: colors.textBrandStrong },
   });
 }

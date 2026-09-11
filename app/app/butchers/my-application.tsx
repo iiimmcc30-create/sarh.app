@@ -1,26 +1,21 @@
 // SAFAT — My Butcher Application (طلبي)
-import { AppIcon } from '@/components/ui/FlaticonIcon';
-
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
-  Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApplicationCard } from '@/components/butcherApplication/ApplicationCard';
 import { EmptyState } from '@/components/butcherApplication/EmptyState';
 import { LoadingState } from '@/components/butcherApplication/LoadingState';
 import { StatusBadge } from '@/components/butcherApplication/StatusBadge';
-import { butcherTypography } from '@/constants/butcherTypography';
-import { gradients, spacing, type ThemeColors } from '@/constants/theme';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppText, SarhButton, SarhInput } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useButcherApplication } from '@/hooks/useButcherApplication';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -31,7 +26,6 @@ import {
 import { confirmDestructive } from '@/lib/actionSheet';
 
 import type { ApplicationSummary } from '@/services/butcherApplicationTypes';
-import { SarhBackButton, SarhButton, SarhInput } from '@/design-system/components';
 
 function pickCurrentApplication(apps: ApplicationSummary[]): ApplicationSummary | null {
   if (apps.length === 0) return null;
@@ -152,7 +146,8 @@ export default function MyButcherApplicationScreen() {
               style={actionStyles.btn}
             />
             {showWithdrawInput ? (
-              <SarhInput appearance="theme"
+              <SarhInput
+                appearance="theme"
                 label="سبب السحب (اختياري)"
                 value={withdrawReason}
                 onChangeText={setWithdrawReason}
@@ -217,33 +212,32 @@ export default function MyButcherApplicationScreen() {
 
   if (authLoading || initialLoad) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
+      <Screen edges={['top']} pattern={false}>
         <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
         <LoadingState />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <Screen edges={['top']} pattern={false}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
-      <View style={styles.header}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        <Text style={styles.headerTitle}>طلب تسجيل الملحمة</Text>
-        <View style={styles.backBtn} />
-      </View>
+      <ScreenHeader variant="screen" title="طلب تسجيل الملحمة" showBack />
 
-      <ScrollView
+      <ScreenBody
+        gap="lg"
+        padTop="lg"
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.glow} />
         }
-        showsVerticalScrollIndicator={false}
       >
         {error ? (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
+            <AppText variant="bodySmall" color="danger" align="center">
+              {error}
+            </AppText>
           </View>
         ) : null}
 
@@ -257,32 +251,40 @@ export default function MyButcherApplicationScreen() {
           />
         ) : (
           <>
-            <View style={styles.summaryHeader}>
-              <Text style={styles.summaryTitle}>
+            <Stack gap="md">
+              <AppText variant="heading1">
                 {applicationDisplayName(current.nameAr, current.nameEn)}
-              </Text>
+              </AppText>
               <StatusBadge status={current.status} />
-            </View>
+            </Stack>
 
-            <View style={styles.datesCard}>
-              <View style={styles.dateRow}>
-                <Text style={styles.dateLabel}>تاريخ الإنشاء</Text>
-                <Text style={styles.dateValue}>{formatApplicationDate(current.createdAt)}</Text>
-              </View>
+            <Stack gap="md" style={styles.datesCard}>
+              <Row justify="between">
+                <AppText variant="bodySmall" color="textMuted">
+                  تاريخ الإنشاء
+                </AppText>
+                <AppText variant="body">{formatApplicationDate(current.createdAt)}</AppText>
+              </Row>
               <View style={styles.divider} />
-              <View style={styles.dateRow}>
-                <Text style={styles.dateLabel}>تاريخ التقديم</Text>
-                <Text style={styles.dateValue}>{formatApplicationDate(current.submittedAt)}</Text>
-              </View>
-            </View>
+              <Row justify="between">
+                <AppText variant="bodySmall" color="textMuted">
+                  تاريخ التقديم
+                </AppText>
+                <AppText variant="body">{formatApplicationDate(current.submittedAt)}</AppText>
+              </Row>
+            </Stack>
 
             <ApplicationCard application={current} onPress={() => openDetails(current.id)} />
 
-            <View style={styles.actions}>{renderActions()}</View>
+            <Stack gap="md" style={styles.actions}>
+              {renderActions()}
+            </Stack>
 
             {applications.length > 1 ? (
-              <View style={styles.history}>
-                <Text style={styles.historyTitle}>سجل الطلبات</Text>
+              <Stack gap="md" style={styles.history}>
+                <AppText variant="heading2" color="textSecondary">
+                  سجل الطلبات
+                </AppText>
                 {applications
                   .filter((a) => a.id !== current.id)
                   .map((app) => (
@@ -292,96 +294,43 @@ export default function MyButcherApplicationScreen() {
                       onPress={() => openDetails(app.id)}
                     />
                   ))}
-              </View>
+              </Stack>
             ) : null}
           </>
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </ScreenBody>
+    </Screen>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.screenRoot },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    ...butcherTypography.title,
-    color: colors.textPrimary,
-    flex: 1,
-    textAlign: 'center',
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.huge,
-    flexGrow: 1,
-    gap: spacing.lg,
-  },
-  errorBox: {
-    backgroundColor: 'rgba(244, 63, 94, 0.12)',
-    borderRadius: 12,
-    padding: spacing.md,
-  },
-  errorText: {
-    ...butcherTypography.secondary,
-    color: colors.danger,
-    textAlign: 'center',
-  },
-  summaryHeader: {
-    gap: spacing.md,
-  },
-  summaryTitle: {
-    ...butcherTypography.titleLarge,
-    color: colors.textPrimary,
-  },
-  datesCard: {
-    backgroundColor: colors.bgGlass,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dateLabel: {
-    ...butcherTypography.secondary,
-    color: colors.textMuted,
-  },
-  dateValue: {
-    ...butcherTypography.primary,
-    color: colors.textPrimary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.borderHairline,
-  },
-  actions: {
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  history: {
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  historyTitle: {
-    ...butcherTypography.title,
-    color: colors.textSecondary,
-  },
+    content: {
+      paddingBottom: spacing.huge,
+      flexGrow: 1,
+    },
+    errorBox: {
+      backgroundColor: 'rgba(244, 63, 94, 0.12)',
+      borderRadius: 12,
+      padding: spacing.md,
+    },
+    datesCard: {
+      backgroundColor: colors.bgGlass,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      padding: spacing.lg,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.borderHairline,
+    },
+    actions: {
+      marginTop: spacing.sm,
+    },
+    history: {
+      marginTop: spacing.lg,
+    },
   });
 }
 
