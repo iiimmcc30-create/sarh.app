@@ -6,6 +6,7 @@ export {
   buttonColors,
   buttonMetrics,
   resolveButtonTone,
+  resolveButtonToneForScheme,
 } from './button';
 export type {
   ButtonSizeMetrics,

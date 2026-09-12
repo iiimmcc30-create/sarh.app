@@ -11,11 +11,12 @@ import {
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText as UiAppText } from '@/components/ui/AppText';
 import { controls, radius as themeRadius, spacing, typography as themeTypography, type ThemeColors } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, ltrInputText, marginStart, rtlInputText } from '@/lib/rtl';
-import { colors, motion, radius, space, typography } from '../tokens';
+import { motion, radius, space, typography } from '../tokens';
 import { AppText } from './AppText';
-import { resolveSarhInputBorder, type SarhInputState } from './resolvers';
+import { type SarhInputState } from './resolvers';
 
 export type SarhInputAppearance = 'foundation' | 'theme';
 
@@ -68,6 +69,7 @@ function FoundationInput({
   ltr = false,
   ...rest
 }: SarhInputProps) {
+  const { colors: themeColors } = useTheme();
   const [focused, setFocused] = useState(false);
   const disabled = editable === false;
   const state: SarhInputState = disabled
@@ -77,8 +79,13 @@ function FoundationInput({
       : focused
         ? 'focused'
         : 'default';
-  const borderColor = resolveSarhInputBorder(state);
-  const iconColor = state === 'error' ? colors.danger : colors.textMuted;
+  const borderColor =
+    state === 'error'
+      ? themeColors.danger
+      : state === 'focused'
+        ? themeColors.electric
+        : themeColors.borderSoft;
+  const iconColor = state === 'error' ? themeColors.danger : themeColors.textMuted;
   const inputDir = ltr ? ltrInputText : rtlInputText;
 
   return (
@@ -99,7 +106,7 @@ function FoundationInput({
             borderRadius: radius[12],
             borderWidth: 1,
             borderColor,
-            backgroundColor: colors.surface,
+            backgroundColor: themeColors.bgSurface,
             opacity: disabled ? motion.opacity.disabled : 1,
           },
         ]}
@@ -110,7 +117,7 @@ function FoundationInput({
           editable={!disabled}
           secureTextEntry={secureTextEntry}
           placeholder={placeholder}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           accessibilityLabel={accessibilityLabel ?? label ?? placeholder}
           accessibilityState={{ disabled }}
           style={[
@@ -121,7 +128,7 @@ function FoundationInput({
               fontSize: typography.body.fontSize,
               lineHeight: typography.body.lineHeight,
               fontWeight: typography.body.fontWeight,
-              color: colors.textPrimary,
+              color: themeColors.textPrimary,
               paddingVertical: space[12],
             },
             style,

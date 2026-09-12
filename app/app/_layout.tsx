@@ -166,11 +166,7 @@ function RootNavigator() {
     </>
   );
 
-  if (isDark) {
-    return <SarhPatternBackground>{stack}</SarhPatternBackground>;
-  }
-
-  return stack;
+  return <SarhPatternBackground>{stack}</SarhPatternBackground>;
 }
 
 function RootLayoutBody() {

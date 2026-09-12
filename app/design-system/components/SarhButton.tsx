@@ -11,7 +11,7 @@ import { getRtlRow } from '@/lib/rtl';
 import { buttonMetrics, colors, motion } from '../tokens';
 import { AppText } from './AppText';
 import {
-  resolveSarhButtonColors,
+  resolveSarhButtonColorsForScheme,
   type SarhButtonShape,
   type SarhButtonSize,
   type SarhButtonState,
@@ -60,7 +60,7 @@ export function SarhButton({
   style,
   testID,
 }: SarhButtonProps) {
-  useTheme();
+  const { scheme } = useTheme();
   const blocked = disabled || loading;
   const metrics = buttonMetrics.size[size];
   const filled = variant === 'primary' || variant === 'danger' || variant === 'inverse';
@@ -80,7 +80,7 @@ export function SarhButton({
       disabled={blocked}
       onPress={blocked ? undefined : onPress}
       style={({ pressed }) => {
-        const palette = resolveSarhButtonColors(variant, visualState(pressed));
+        const palette = resolveSarhButtonColorsForScheme(scheme, variant, visualState(pressed));
         return [
           getRtlRow(),
           filled && !disabled ? buttonMetrics.elevation : null,
@@ -106,7 +106,7 @@ export function SarhButton({
       }}
     >
       {({ pressed }) => {
-        const palette = resolveSarhButtonColors(variant, visualState(pressed));
+        const palette = resolveSarhButtonColorsForScheme(scheme, variant, visualState(pressed));
         return (
           <>
             {loading ? (
