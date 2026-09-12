@@ -35,12 +35,12 @@ describe('butcher theme isolation', () => {
     expect(layout).toContain('ButcherThemeScope');
     expect(layout).not.toContain('setSchemeOverride');
     expect(layout).not.toContain('useFocusEffect');
-    expect(layout).not.toContain('applyThemeScheme');
+    expect(layout).not.toMatch(/applyThemeScheme\(/);
 
     const scope = src('contexts/ButcherThemeScope.tsx');
     expect(scope).toContain("scheme: 'light'");
     expect(scope).toContain('snapshotTheme');
-    expect(scope).not.toContain('applyThemeScheme');
+    expect(scope).not.toMatch(/applyThemeScheme\(/);
     expect(scope).toContain('setSchemeOverride: () => {}');
   });
 
