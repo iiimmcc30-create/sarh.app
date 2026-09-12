@@ -1,11 +1,15 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image, uriSource } from '@/components/ui/AppImage';
 import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { butcherMeatBg, butcherSearchFill } from '@/constants/butcherMarket';
+import {
+  butcherChromeBg,
+  butcherSearchFill,
+  type ButcherChromeTone,
+} from '@/constants/butcherMarket';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow, rtlInputText } from '@/lib/rtl';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -19,7 +23,7 @@ type ButchersAppBarProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
-  washUri?: string;
+  chromeTone?: ButcherChromeTone;
 };
 
 /**
@@ -33,10 +37,11 @@ export function ButchersAppBar({
   searchQuery,
   onSearchChange,
   searchPlaceholder = 'ابحث عن ملحمة أو منتج...',
-  washUri,
+  chromeTone = 'meat',
 }: ButchersAppBarProps) {
+  const { scheme } = useTheme();
   const { styles, colors } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors, theme.scheme),
+    styles: createStyles(theme.colors),
     colors: theme.colors,
   }));
   const [text, setText] = useState(searchQuery);
@@ -52,16 +57,7 @@ export function ButchersAppBar({
   }, [text, searchQuery]);
 
   return (
-    <View style={styles.shell}>
-      {washUri ? (
-        <Image
-          source={uriSource(washUri)}
-          style={styles.wash}
-          contentFit="cover"
-          contentPosition="top"
-          blurRadius={48}
-        />
-      ) : null}
+    <View style={[styles.shell, { backgroundColor: butcherChromeBg(scheme, chromeTone) }]}>
       <View style={[styles.top, getRtlRow()]}>
         <View style={styles.location}>
           <ButcherLocationBar compact />
@@ -84,7 +80,13 @@ export function ButchersAppBar({
           <AppIcon name="angle-left" size={ds.icon.md} color={colors.textPrimary} />
         </Pressable>
       </View>
-      <View style={[styles.searchPill, getRtlRow()]}>
+      <View
+        style={[
+          styles.searchPill,
+          getRtlRow(),
+          { backgroundColor: butcherSearchFill(scheme, chromeTone) },
+        ]}
+      >
         <AppIcon name="search" size={ds.icon.sm} color={colors.textMuted} />
         <TextInput
           style={[styles.searchInput, rtlInputText]}
@@ -100,18 +102,14 @@ export function ButchersAppBar({
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     shell: {
-      backgroundColor: butcherMeatBg(scheme),
       paddingHorizontal: spacing.md,
       paddingTop: spacing.sm,
       paddingBottom: spacing.md,
       gap: spacing.sm,
       overflow: 'hidden',
-    },
-    wash: {
-      ...StyleSheet.absoluteFillObject,
     },
     top: {
       alignItems: 'center',
@@ -155,7 +153,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderRadius: radius.pill,
       paddingHorizontal: spacing.md,
       gap: spacing.sm,
-      backgroundColor: butcherSearchFill(scheme),
     },
     searchInput: {
       ...butcherTypography.secondary,

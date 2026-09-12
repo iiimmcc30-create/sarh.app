@@ -50,12 +50,19 @@ describe('malahm home redesign', () => {
 
   it('uses a meat-wash header with search pill, cart, and a left exit arrow', () => {
     const bar = src('components/butchers/ButchersAppBar.tsx');
+    const home = src('app/butchers/index.tsx');
     expect(bar).toContain('ButcherLocationBar');
     expect(bar).toContain('accessibilityLabel="السلة"');
     expect(bar).toContain('accessibilityLabel="بحث"');
     expect(bar).toContain('searchPill');
     expect(bar).toContain('angle-left');
     expect(bar).toContain('رجوع للتطبيق');
+    expect(bar).toContain('butcherChromeBg');
+    expect(bar).not.toContain('washUri');
+    expect(home).toContain('butcherChromeTone');
+    expect(home).toContain('chromeTone={chromeTone}');
+    expect(home).not.toContain('washUri');
+    expect(home).not.toContain('chromeWash');
   });
 
   it('renders store products as divider rows without card chrome', () => {
