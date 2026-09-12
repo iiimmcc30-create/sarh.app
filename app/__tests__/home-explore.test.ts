@@ -76,22 +76,22 @@ describe('Explore Sarh logo mark', () => {
     expect(usesExploreSarhLogoMark('promote')).toBe(false);
   });
 
-  it('uses a full-bleed butchers hero instead of explore cards', () => {
+  it('uses a horizontal explore banner pager instead of stacked heroes', () => {
     const section = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(section).not.toContain('استكشف سرح');
+    expect(section).toContain('استكشف سرح');
     expect(section).toContain('ملاحم سرح');
-    expect(section).toContain('تصفح الملاحم');
-    expect(section).toContain('href="/butchers"');
-    expect(section).toContain("safePush(href");
-    expect(section).toContain('href="/feed-suppliers"');
-    expect(section).toContain('استكشف');
+    expect(section).toContain('href: \'/butchers\'');
+    expect(section).toContain("safePush(banner.href");
+    expect(section).toContain('href: \'/feed-suppliers\'');
     expect(section).toContain('موردو الأعلاف');
     expect(section).toContain('explore-sarh-feed-suppliers.jpg');
-    expect(section).toContain('SarhButton');
-    expect(section).toContain("width: '100%'");
+    expect(section).toContain('pagingEnabled');
+    expect(section).toContain('accessibilityRole="button"');
+    expect(section).not.toContain('SarhButton');
+    expect(section).not.toContain('تصفح الملاحم');
     expect(section).not.toContain('CARD_RADIUS');
     expect(section).not.toContain('partitionExploreSections');
     expect(section).not.toContain('gridRow');
@@ -222,12 +222,13 @@ describe('HomeAppBar chrome', () => {
     expect(chipSrc).toContain('const idleBorderWidth = compact ? 0');
   });
 
-  it('keeps the butchers hero edge-to-edge without card chrome', () => {
+  it('keeps explore banners aligned to the home gutter', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(src).toContain('backgroundColor: colors.background');
+    expect(src).toContain('paddingHorizontal: gutter');
+    expect(src).toContain('slideWidth - gutter * 2');
     expect(src).not.toContain('paddingHorizontal: SIDE_PAD');
     expect(src).not.toContain('CARD_RADIUS');
     expect(src).not.toContain('menuCardStyle');
@@ -278,9 +279,9 @@ describe('Home design-system adoption', () => {
     expect(appBar).toContain('SarhIconButton');
     expect(appBar).toContain('chrome="ghost"');
     expect(appBar).toContain('variant="heading3"');
-    expect(explore).toContain('SarhButton');
-    expect(explore).toContain('variant="primary"');
-    expect(explore).toContain('تصفح الملاحم');
+    expect(explore).toContain('AppText');
+    expect(explore).toContain('variant="heading2"');
+    expect(explore).toContain('استكشف سرح');
     expect(ministry).toContain('SarhCard');
     expect(ministry).toContain('SarhButton');
     expect(ministry).toContain('SarhAvatar');
@@ -315,8 +316,8 @@ describe('Home design-system adoption', () => {
     expect(ministry).toContain('<Row');
     expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
-    expect(explore).toContain('ctaTitle="تصفح الملاحم"');
-    expect(explore).toContain('accessibilityLabel={ctaTitle}');
+    expect(explore).toContain('accessibilityRole="button"');
+    expect(explore).toContain("accessibilityLabel: 'ملاحم سرح'");
     expect(ministry).toContain('title="فتح"');
     expect(ministry).toContain('accessibilityLabel="فتح"');
     expect(stories).toContain('accessibilityRole="button"');
@@ -339,12 +340,15 @@ describe('Home design-system adoption', () => {
     expect(ministryAt).toBeGreaterThan(exploreAt);
     expect(home).not.toContain('ListingCard');
     expect(home).not.toContain('Marketplace');
+    expect(explore).toContain('استكشف سرح');
     expect(explore).toContain('ملاحم سرح');
     expect(explore).toContain('explore-sarh-butchers.jpg');
-    expect(explore).toContain('href="/butchers"');
+    expect(explore).toContain("href: '/butchers'");
     expect(explore).toContain('موردو الأعلاف');
     expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
-    expect(explore.indexOf('href="/butchers"')).toBeLessThan(explore.indexOf('href="/feed-suppliers"'));
+    expect(explore.indexOf("href: '/butchers'")).toBeLessThan(
+      explore.indexOf("href: '/feed-suppliers'"),
+    );
     expect(ministry).toContain('formatServiceCountLabel');
   });
 });
