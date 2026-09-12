@@ -125,3 +125,13 @@ export function resolveButtonTone(
 ): ButtonTone {
   return buttonColors[variant][state];
 }
+
+/** Resolve tones for a scheme without mutating the live `buttonColors` singleton. */
+export function resolveButtonToneForScheme(
+  scheme: 'light' | 'dark',
+  variant: ButtonVariantName,
+  state: keyof ButtonStateTokens,
+): ButtonTone {
+  const variants = makeVariants(scheme === 'dark' ? darkPrimary() : lightPrimary());
+  return variants[variant][state];
+}

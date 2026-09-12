@@ -1,4 +1,5 @@
 import { Text, type StyleProp, type TextStyle } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
 import {
   resolveAppTextStyle,
   type AppTextAlign,
@@ -31,10 +32,25 @@ export function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const { colors } = useTheme();
+  const themeColor = {
+    textPrimary: colors.textPrimary,
+    textSecondary: colors.textSecondary,
+    textMuted: colors.textMuted,
+    primary: colors.electric,
+    danger: colors.danger,
+    warning: colors.warning,
+    success: colors.success,
+  }[color];
+
   return (
     <Text
       allowFontScaling={allowFontScaling}
-      style={[resolveAppTextStyle({ variant, color, align }), style as StyleProp<TextStyle>]}
+      style={[
+        resolveAppTextStyle({ variant, color, align }),
+        { color: themeColor },
+        style as StyleProp<TextStyle>,
+      ]}
       {...rest}
     />
   );

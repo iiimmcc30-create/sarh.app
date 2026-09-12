@@ -242,6 +242,23 @@ function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeC
   };
 }
 
+export type ThemeSnapshot = {
+  colors: ThemeColors;
+  gradients: ThemeGradients;
+  shadow: ReturnType<typeof createShadow>;
+};
+
+/** Copy of a palette. Does not mutate the live `colors` singleton or `activeScheme`. */
+export function snapshotTheme(scheme: ColorScheme): ThemeSnapshot {
+  const palette = scheme === 'dark' ? darkColors : lightColors;
+  const paletteGradients = scheme === 'dark' ? darkGradients : lightGradients;
+  return {
+    colors: enrichTextColors(palette, scheme),
+    gradients: { ...paletteGradients },
+    shadow: createShadow(palette),
+  };
+}
+
 export function applyThemeScheme(scheme: ColorScheme) {
   activeScheme = scheme;
   const palette = scheme === 'dark' ? darkColors : lightColors;

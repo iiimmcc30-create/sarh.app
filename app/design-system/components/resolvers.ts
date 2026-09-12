@@ -8,6 +8,7 @@ import {
   functional,
   radius,
   resolveButtonTone,
+  resolveButtonToneForScheme,
   resolveTypeRole,
   space,
   typography,
@@ -82,6 +83,14 @@ export function resolveSarhButtonColors(
   state: Exclude<SarhButtonState, 'loading'>,
 ) {
   return resolveButtonTone(variant, state);
+}
+
+export function resolveSarhButtonColorsForScheme(
+  scheme: 'light' | 'dark',
+  variant: SarhButtonVariant,
+  state: Exclude<SarhButtonState, 'loading'>,
+) {
+  return resolveButtonToneForScheme(scheme, variant, state);
 }
 
 export type SarhIconButtonSize = 'sm' | 'md' | 'lg';
