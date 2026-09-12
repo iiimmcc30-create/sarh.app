@@ -18,6 +18,7 @@ describe('market listing card height', () => {
   it('keeps the list thumb a fixed square so the row cannot grow with the text column', () => {
     const card = src('components/feature/ListingCard.tsx');
     expect(card).toContain('aspectRatio: 1');
+    expect(card).toContain('LIST_THUMB');
     expect(card).toContain("alignItems: 'flex-start'");
     expect(card).not.toContain('minHeight: 118');
     expect(card).not.toContain("alignSelf: 'stretch'");

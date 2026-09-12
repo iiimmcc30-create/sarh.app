@@ -1,5 +1,10 @@
 import { localeUsesRtl, normalizeAppLocale, DEFAULT_LOCALE } from '@/lib/locale';
-import { isLivestockCategory, LIVESTOCK_CATEGORIES } from '@/lib/listingCategories';
+import {
+  categoryRequiresWeight,
+  isLivestockCategory,
+  isSlaughterCategory,
+  LIVESTOCK_CATEGORIES,
+} from '@/lib/listingCategories';
 import {
   canDeleteComment,
   canManageAsOwner,
@@ -33,6 +38,17 @@ describe('listingCategories', () => {
     expect(isLivestockCategory('equipment')).toBe(false);
     expect(isLivestockCategory(null)).toBe(false);
     expect(isLivestockCategory(undefined)).toBe(false);
+  });
+
+  it('requires weight for ذبائح parents and carcass slugs', () => {
+    expect(isSlaughterCategory('slaughter')).toBe(true);
+    expect(isSlaughterCategory('sheep-carcass')).toBe(true);
+    expect(isSlaughterCategory('slaughter-other')).toBe(true);
+    expect(isSlaughterCategory('sheep')).toBe(false);
+    expect(categoryRequiresWeight({ category: 'slaughter' })).toBe(true);
+    expect(categoryRequiresWeight({ category: 'sheep-carcass' })).toBe(true);
+    expect(categoryRequiresWeight({ category: 'sheep' })).toBe(false);
+    expect(categoryRequiresWeight({ category: 'sheep', requiresWeight: true })).toBe(true);
   });
 });
 

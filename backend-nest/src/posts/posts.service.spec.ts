@@ -18,6 +18,7 @@ describe('PostsService feed cache isolation', () => {
     findLikesByUser: jest.fn(),
     findRepostsByUser: jest.fn(),
     findById: jest.fn(),
+    incrementViewsCount: jest.fn().mockResolvedValue({ viewsCount: 1 }),
     findLike: jest.fn(),
     findRepost: jest.fn(),
     findOwnerMeta: jest.fn(),
@@ -130,6 +131,23 @@ describe('PostsService feed cache isolation', () => {
         role: 'USER',
       }),
     ).rejects.toMatchObject({ status: 403, error: 'blocked' });
+    expect(repo.incrementViewsCount).not.toHaveBeenCalled();
+  });
+
+  it('increments views when a post is opened', async () => {
+    repo.findById.mockResolvedValue({ ...post('p1', 'author-1'), viewsCount: 4 });
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
+    repo.findLike.mockResolvedValue(null);
+    repo.findRepost.mockResolvedValue(null);
+
+    const result = await service.getPost('p1', {
+      userId: 'viewer-a',
+      username: 'a',
+      role: 'USER',
+    });
+
+    expect(repo.incrementViewsCount).toHaveBeenCalledWith('p1');
+    expect(result.viewsCount).toBe(5);
   });
 });
 

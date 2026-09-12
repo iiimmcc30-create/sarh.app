@@ -18,6 +18,7 @@ import {
 
 const BUTCHERS_IMAGE = require('../../assets/images/explore-sarh-butchers.jpg');
 const FEED_IMAGE = require('../../assets/images/explore-sarh-feed-suppliers.jpg');
+const MINISTRY_IMAGE = require('../../assets/images/mewa-cover.jpg');
 const BANNER_ASPECT = 1376 / 768;
 
 const BANNERS = [
@@ -32,6 +33,12 @@ const BANNERS = [
     image: FEED_IMAGE,
     accessibilityLabel: 'موردو الأعلاف',
     href: '/feed-suppliers',
+  },
+  {
+    key: 'ministry',
+    image: MINISTRY_IMAGE,
+    accessibilityLabel: 'خدمات وزارة البيئة والمياه والزراعة',
+    href: '/ministry',
   },
 ] as const;
 

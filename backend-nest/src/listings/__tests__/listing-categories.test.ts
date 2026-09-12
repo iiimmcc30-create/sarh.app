@@ -14,6 +14,9 @@ describe('listing category weight rules', () => {
     expect(categoryRequiresWeight('camels')).toBe(false);
     expect(categoryRequiresWeight('feed')).toBe(false);
     expect(categoryRequiresWeight('equipment')).toBe(false);
+    expect(isSlaughterCategory('sheep-carcass')).toBe(true);
+    expect(categoryRequiresWeight('sheep-carcass')).toBe(true);
+    expect(isSlaughterCategory('slaughter-other')).toBe(true);
   });
 
   it('requires weight when parent.requiresWeight is true', () => {

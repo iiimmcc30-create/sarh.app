@@ -15,11 +15,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText, SarhButton, SarhInput } from '@/design-system/components';
@@ -205,8 +204,13 @@ export default function CreateListingScreen() {
   }, [parents, pendingCategoryIds]);
 
   const needsWeight = categoryRequiresWeight({
-    category: parentCategory?.legacyCategory || parentCategory?.slug,
-    requiresWeight: parentCategory?.requiresWeight,
+    category:
+      parentCategory?.slug ||
+      subCategory?.slug ||
+      parentCategory?.legacyCategory ||
+      subCategory?.legacyCategory,
+    requiresWeight:
+      parentCategory?.requiresWeight === true || subCategory?.requiresWeight === true,
   });
 
   const applySuggestion = (next: CategorySuggestion | null) => {
@@ -772,22 +776,20 @@ export default function CreateListingScreen() {
                     />
                   </View>
                   <View style={styles.compactField}>
-                    <AppText variant="meta" color="textMuted">
-                      الوزن{needsWeight ? '' : ' (اختياري)'}
-                    </AppText>
-                    <Row gap="xs" style={styles.compactInput}>
-                      <TextInput
-                        value={weightKg}
-                        onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
-                        placeholder="0"
-                        placeholderTextColor={colors.textMuted}
-                        style={styles.compactText}
-                        keyboardType="decimal-pad"
-                      />
-                      <AppText variant="meta" color="textMuted">
-                        كجم
-                      </AppText>
-                    </Row>
+                    <SarhInput
+                      appearance="theme"
+                      label={needsWeight ? 'الوزن' : 'الوزن (اختياري)'}
+                      value={weightKg}
+                      onChangeText={(v) => setWeightKg(v.replace(/[^\d.]/g, ''))}
+                      placeholder="0"
+                      keyboardType="decimal-pad"
+                      ltr
+                      leadingIcon={
+                        <AppText variant="meta" color="textMuted">
+                          كجم
+                        </AppText>
+                      }
+                    />
                   </View>
                 </Row>
 
@@ -838,6 +840,14 @@ export default function CreateListingScreen() {
                     </AppText>
                     <AppText variant="bodyMedium" style={styles.reviewValue}>
                       {price ? `${Number(price).toLocaleString()} ر.س` : '—'}
+                    </AppText>
+                  </Row>
+                  <Row justify="between" align="center" style={styles.reviewRow}>
+                    <AppText variant="caption" color="textMuted">
+                      الوزن
+                    </AppText>
+                    <AppText variant="bodyMedium" style={styles.reviewValue}>
+                      {weightKg.trim() ? `${weightKg.trim()} كجم` : '—'}
                     </AppText>
                   </Row>
                   <Row justify="between" align="center" style={styles.reviewRow}>
@@ -1024,21 +1034,6 @@ function createStyles(colors: ThemeColors) {
     },
     categoryValueText: { flex: 1, minWidth: 0 },
     compactField: { flex: 1, gap: 4, minWidth: 0, alignItems: 'stretch' },
-    compactInput: {
-      minHeight: 44,
-      borderRadius: radius.md,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      paddingHorizontal: 8,
-      width: '100%',
-    },
-    compactText: {
-      ...typography.caption,
-      color: colors.textPrimary,
-      flex: 1,
-      minWidth: 0,
-    },
     imageThumbWrap: {
       width: 72,
       height: 72,

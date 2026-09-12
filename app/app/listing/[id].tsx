@@ -307,6 +307,10 @@ export default function ListingDetailScreen() {
   const timeLabel = listing.createdAt
     ? formatRelativeTimeAr(listing.createdAt)
     : listing.postedAt;
+  const weightLabel =
+    typeof listing.weightKg === 'number' && listing.weightKg > 0
+      ? `${(listing.weightKg % 1 === 0 ? Math.round(listing.weightKg) : listing.weightKg).toLocaleString('ar-SA')} كجم`
+      : null;
   const images = listingPhotoUris(listing);
   const videoUri = listingVideoUrl(listing);
   const categoryLabel = CATEGORY_LABELS[listing.category] ?? '';
@@ -481,10 +485,10 @@ export default function ListingDetailScreen() {
               </AppText>
               <AppIcon name="time-outline" size={13} color={colors.textMuted} />
             </Row>
-            {listing.price > 0 ? (
+            {weightLabel ? (
               <Row gap="xs" align="center" style={styles.headerMetaChip}>
                 <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
-                  {`${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
+                  {weightLabel}
                 </AppText>
               </Row>
             ) : null}
@@ -544,9 +548,9 @@ export default function ListingDetailScreen() {
           onClose={() => setImageViewerVisible(false)}
         />
 
-        {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age) ? (
+        {(listing.arabicDescription || listing.description || categoryLabel || listing.breed || listing.age || weightLabel) ? (
           <View style={styles.descriptionSection}>
-            {categoryLabel || listing.breed || listing.age ? (
+            {categoryLabel || listing.breed || listing.age || weightLabel ? (
               <View style={{ width: '100%' }}>
                 <Row wrap gap="sm" style={styles.specMetaLine}>
                   {categoryLabel ? (
@@ -557,6 +561,9 @@ export default function ListingDetailScreen() {
                   ) : null}
                   {listing.age ? (
                     <AppText variant="caption" color="textMuted">{listing.age}</AppText>
+                  ) : null}
+                  {weightLabel ? (
+                    <AppText variant="caption" color="textMuted">{weightLabel}</AppText>
                   ) : null}
                 </Row>
               </View>

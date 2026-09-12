@@ -88,6 +88,9 @@ describe('Explore Sarh logo mark', () => {
     expect(section).toContain('href: \'/feed-suppliers\'');
     expect(section).toContain('موردو الأعلاف');
     expect(section).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(section).toContain("href: '/ministry'");
+    expect(section).toContain('خدمات وزارة البيئة والمياه والزراعة');
+    expect(section).toContain('mewa-cover.jpg');
     expect(section).toContain('pagingEnabled');
     expect(section).toContain('accessibilityRole="button"');
     expect(section).not.toContain('SarhButton');
@@ -234,20 +237,18 @@ describe('HomeAppBar chrome', () => {
     expect(src).not.toContain('menuCardStyle');
   });
 
-  it('loads ministry services from the official API on home', () => {
+  it('opens ministry services from the explore banner pager', () => {
     const home = fs.readFileSync(path.join(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
-    const card = fs.readFileSync(
-      path.join(__dirname, '../components/feature/HomeMinistryOrgCard.tsx'),
+    const explore = fs.readFileSync(
+      path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(home).toContain('fetchOfficialServices');
-    expect(home).toContain('HomeMinistryOrgCard');
+    expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('أحدث المنشورات');
-    expect(card).toContain('خدمات الوزارة');
-    expect(card).toContain("safePush('/ministry'");
-    expect(home).toContain('fetchMinistryAccount');
-    expect(card).toContain('account?.arabicName');
-    expect(card).toContain('formatServiceCountLabel');
+    expect(home).toContain('HomeCommunityPosts');
+    expect(explore).toContain("href: '/ministry'");
+    expect(explore).toContain('خدمات وزارة البيئة والمياه والزراعة');
+    expect(explore).toContain('mewa-cover.jpg');
   });
 });
 
@@ -258,8 +259,8 @@ describe('Home design-system adoption', () => {
     path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
     'utf8',
   );
-  const ministry = fs.readFileSync(
-    path.join(__dirname, '../components/feature/HomeMinistryOrgCard.tsx'),
+  const community = fs.readFileSync(
+    path.join(__dirname, '../components/feature/HomeCommunityPosts.tsx'),
     'utf8',
   );
   const stories = fs.readFileSync(
@@ -282,18 +283,16 @@ describe('Home design-system adoption', () => {
     expect(explore).toContain('AppText');
     expect(explore).toContain('variant="heading2"');
     expect(explore).toContain('استكشف سرح');
-    expect(ministry).toContain('SarhCard');
-    expect(ministry).toContain('SarhButton');
-    expect(ministry).toContain('SarhAvatar');
-    expect(ministry).toContain('title="فتح"');
-    expect(ministry).toContain('variant="primary"');
+    expect(community).toContain('مجتمع سرح');
+    expect(community).toContain('pickHomeCommunityPosts');
+    expect(community).toContain('PostItem');
     expect(stories).toContain('SarhCard');
     expect(stories).toContain('variant="plain"');
     expect(stories).toContain('variant="caption"');
   });
 
   it('does not remap Home copy through the legacy Bold AppText path', () => {
-    for (const src of [appBar, explore, ministry, stories]) {
+    for (const src of [appBar, explore, community, stories]) {
       expect(src).not.toContain("from '@/components/ui/AppText'");
       expect(src).not.toContain('OFFICIAL_APP_FONT');
       expect(src).not.toContain('resolveAppFontFace');
@@ -310,16 +309,15 @@ describe('Home design-system adoption', () => {
 
   it('keeps Home RTL helpers and button labels', () => {
     expect(appBar).toContain("from '@/design-system/layout'");
-    expect(ministry).toContain("from '@/design-system/layout'");
+    expect(community).toContain("from '@/design-system/layout'");
     expect(stories).toContain("from '@/design-system/layout'");
     expect(appBar).toContain('<Row');
-    expect(ministry).toContain('<Row');
+    expect(community).toContain('<Row');
     expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
     expect(explore).toContain('accessibilityRole="button"');
     expect(explore).toContain("accessibilityLabel: 'ملاحم سرح'");
-    expect(ministry).toContain('title="فتح"');
-    expect(ministry).toContain('accessibilityLabel="فتح"');
+    expect(community).toContain('مجتمع سرح');
     expect(stories).toContain('accessibilityRole="button"');
     expect(appBar).toContain('accessibilityLabel="بحث"');
   });
@@ -328,28 +326,33 @@ describe('Home design-system adoption', () => {
     expect(home).not.toContain('HomeButton');
     expect(home).not.toContain('HomeCard');
     expect(explore).not.toContain('PrimaryButton');
-    expect(ministry).not.toContain('PrimaryButton');
+    expect(community).not.toContain('PrimaryButton');
   });
 
   it('keeps the existing Home section order and does not invent new sections', () => {
     const storiesAt = home.indexOf('<EditorialStoriesBar');
     const exploreAt = home.indexOf('<ExploreSarhSection');
-    const ministryAt = home.indexOf('<HomeMinistryOrgCard');
+    const communityAt = home.indexOf('<HomeCommunityPosts');
     expect(storiesAt).toBeGreaterThan(-1);
     expect(exploreAt).toBeGreaterThan(storiesAt);
-    expect(ministryAt).toBeGreaterThan(exploreAt);
+    expect(communityAt).toBeGreaterThan(exploreAt);
     expect(home).not.toContain('ListingCard');
     expect(home).not.toContain('Marketplace');
+    expect(home).not.toContain('HomeMinistryOrgCard');
     expect(explore).toContain('استكشف سرح');
     expect(explore).toContain('ملاحم سرح');
     expect(explore).toContain('explore-sarh-butchers.jpg');
     expect(explore).toContain("href: '/butchers'");
     expect(explore).toContain('موردو الأعلاف');
     expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(explore).toContain("href: '/ministry'");
     expect(explore.indexOf("href: '/butchers'")).toBeLessThan(
       explore.indexOf("href: '/feed-suppliers'"),
     );
-    expect(ministry).toContain('formatServiceCountLabel');
+    expect(explore.indexOf("href: '/feed-suppliers'")).toBeLessThan(
+      explore.indexOf("href: '/ministry'"),
+    );
+    expect(community).toContain('pickHomeCommunityPosts');
   });
 });
 

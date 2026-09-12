@@ -56,6 +56,9 @@ describe('feed supplier screens stay a public directory', () => {
     expect(explore.indexOf("href: '/butchers'")).toBeLessThan(
       explore.indexOf("href: '/feed-suppliers'"),
     );
+    expect(explore.indexOf("href: '/feed-suppliers'")).toBeLessThan(
+      explore.indexOf("href: '/ministry'"),
+    );
     expect(explore).toContain('استكشف سرح');
     expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
     expect(explore).not.toContain('تصفح واستكشف أبرز الموردين');
