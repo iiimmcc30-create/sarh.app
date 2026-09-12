@@ -89,6 +89,8 @@ function RootNavigator() {
       >
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen name="butchers" />
+        <Stack.Screen name="feed-suppliers/index" />
+        <Stack.Screen name="feed-suppliers/[id]" />
         <Stack.Screen name="listing/[id]" />
         <Stack.Screen name="market/categories/[id]" />
         <Stack.Screen name="market/browse" />

@@ -1730,6 +1730,62 @@ model EditorialStory {
   @@index([createdAt])
 }
 
+/// Admin-managed feed supplier directory (no user account).
+model FeedSupplier {
+  id          String        @id @default(uuid())
+  nameAr      String
+  logo        String?
+  cover       String?
+  description String?
+  cityAr      String
+  districtAr  String?
+  addressAr   String?
+  lat         Float?
+  lng         Float?
+  phone       String?
+  whatsapp    String?
+  hoursAr     String?
+  verified    Boolean       @default(false)
+  published   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  products    FeedProduct[]
+
+  @@index([deletedAt])
+  @@index([published, deletedAt])
+  @@index([cityAr])
+}
+
+model FeedProduct {
+  id          String              @id @default(uuid())
+  supplierId  String
+  supplier    FeedSupplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  nameAr      String
+  description String?
+  category    FeedProductCategory
+  imageUrl    String?
+  weightLabel String?
+  available   Boolean             @default(true)
+  published   Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+
+  @@index([supplierId, published])
+  @@index([deletedAt])
+  @@index([category])
+}
+
+enum FeedProductCategory {
+  livestock
+  sheep
+  camels
+  poultry
+  hay
+  barley
+}
+
 /// Admin-managed promotional banners on the butchers market home slider (3 slots).
 model ButcherMarketBanner {
   id         String   @id @default(uuid())
