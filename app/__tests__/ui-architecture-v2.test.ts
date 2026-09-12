@@ -87,6 +87,13 @@ describe('Architecture V2 — Screen and ScreenBody own the shell', () => {
     expect(screen).toContain('colors.screenRoot');
   });
 
+  it('uses padding keyboard avoidance because Android edge-to-edge does not resize', () => {
+    expect(src('app.json')).toContain('"edgeToEdgeEnabled": true');
+    const screen = src(`${LAYOUT_DIR}/Screen.tsx`);
+    expect(screen).toContain('behavior="padding"');
+    expect(screen).not.toMatch(/: undefined/);
+  });
+
   it('ScreenBody owns gutter, max width, bottom inset and scroll', () => {
     const body = src(`${LAYOUT_DIR}/ScreenBody.tsx`);
     expect(body).toContain('useLayout()');
@@ -927,7 +934,8 @@ describe('Architecture V2 — Wave 4C marketplace', () => {
   it('wraps ListingCard without taking ownership of the card', () => {
     expect(src('app/(tabs)/market.tsx')).toContain('variant="list"');
     expect(src('app/(tabs)/market.tsx')).toContain('listMode="market"');
-    expect(src('app/market/browse.tsx')).toContain('LISTING_ROW_HEIGHT');
+    expect(src('app/market/browse.tsx')).toContain('variant="list"');
+    expect(src('app/market/browse.tsx')).not.toContain('getItemLayout');
     expect(src('components/feature/ListingCard.tsx')).toContain('export const ListingCard');
     expect(src('components/feature/ListingCard.tsx')).not.toContain("from '@/design-system/layout'");
   });

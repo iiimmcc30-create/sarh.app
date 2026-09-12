@@ -285,6 +285,7 @@ describe('Home design-system adoption', () => {
     expect(ministry).toContain('SarhButton');
     expect(ministry).toContain('SarhAvatar');
     expect(ministry).toContain('title="فتح"');
+    expect(ministry).toContain('variant="primary"');
     expect(stories).toContain('SarhCard');
     expect(stories).toContain('variant="plain"');
     expect(stories).toContain('variant="caption"');
@@ -317,6 +318,7 @@ describe('Home design-system adoption', () => {
     expect(explore).toContain('ctaTitle="تصفح الملاحم"');
     expect(explore).toContain('accessibilityLabel={ctaTitle}');
     expect(ministry).toContain('title="فتح"');
+    expect(ministry).toContain('accessibilityLabel="فتح"');
     expect(stories).toContain('accessibilityRole="button"');
     expect(appBar).toContain('accessibilityLabel="بحث"');
   });

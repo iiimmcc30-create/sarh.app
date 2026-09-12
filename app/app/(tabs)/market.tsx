@@ -85,9 +85,7 @@ export default function MarketScreen() {
       setHasMore(page.hasMore);
     } catch {
       if (gen !== loadGenRef.current) return;
-      setItems([]);
-      setNextCursor(null);
-      setHasMore(false);
+      // Keep the last good page — a failed refetch must not wipe the list.
     } finally {
       if (gen === loadGenRef.current) setLoading(false);
     }
@@ -290,14 +288,20 @@ export default function MarketScreen() {
           keyExtractor={(item) => item.id}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={
-            <Stack gap="md" align="center" style={styles.empty}>
-              <AppText variant="heading2" align="center">
-                🔍
-              </AppText>
-              <AppText variant="body" color="textMuted" align="center">
-                لا توجد إعلانات مطابقة
-              </AppText>
-            </Stack>
+            loading ? (
+              <Stack gap="md" align="center" style={styles.empty}>
+                <ActivityIndicator color={colors.electric} />
+              </Stack>
+            ) : (
+              <Stack gap="md" align="center" style={styles.empty}>
+                <AppText variant="heading2" align="center">
+                  🔍
+                </AppText>
+                <AppText variant="body" color="textMuted" align="center">
+                  لا توجد إعلانات مطابقة
+                </AppText>
+              </Stack>
+            )
           }
           ListFooterComponent={
             <View style={styles.listFooter}>

@@ -105,7 +105,6 @@ export default function MinistryProfileScreen() {
     useCallback(() => {
       let active = true;
       void (async () => {
-        setLoading(true);
         await load();
         if (active) setLoading(false);
       })();
@@ -335,7 +334,7 @@ export default function MinistryProfileScreen() {
           })}
         </Row>
 
-        {loading ? (
+        {loading && !account ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
         ) : tab === 'info' ? (
           renderInfo()

@@ -14,6 +14,8 @@ import {
   hasButcherRating,
 } from '@/lib/butcherStoreMeta';
 import { getRtlRow } from '@/lib/rtl';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
+import { motion } from '@/design-system';
 import type { ButcherProfile } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -32,14 +34,14 @@ export function ButcherNearbyRow({ butcher, onPress, showDivider = true }: Props
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, showDivider && styles.divider, pressed && { opacity: 0.92 }]}
+      style={({ pressed }) => [styles.row, showDivider && styles.divider, pressed && { opacity: motion.press.opacityCard }]}
       accessibilityRole="button"
       accessibilityLabel={name}
     >
       <View style={[styles.body, getRtlRow()]}>
         <View style={styles.logoWrap}>
           <Image
-            source={uriSource(butcher.logo || butcher.cover)}
+            source={uriSource(cloudinaryFitUrl(butcher.logo || butcher.cover, 'row'))}
             style={styles.logo}
             contentFit="cover"
           />

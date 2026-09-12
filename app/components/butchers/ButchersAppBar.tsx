@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { ButcherLocationBar } from '@/components/butchers/ButcherLocationBar';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { butcherMeatBg, butcherSearchFill } from '@/constants/butcherMarket';
@@ -6,7 +7,10 @@ import { ds } from '@/constants/designSystem';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow, rtlInputText } from '@/lib/rtl';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+
+const HOME_SEARCH_DEBOUNCE_MS = 200;
 
 type ButchersAppBarProps = {
   onBack: () => void;
@@ -15,6 +19,7 @@ type ButchersAppBarProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  washUri?: string;
 };
 
 /**
@@ -28,14 +33,35 @@ export function ButchersAppBar({
   searchQuery,
   onSearchChange,
   searchPlaceholder = 'ابحث عن ملحمة أو منتج...',
+  washUri,
 }: ButchersAppBarProps) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
   }));
+  const [text, setText] = useState(searchQuery);
+  const onSearchChangeRef = useRef(onSearchChange);
+  onSearchChangeRef.current = onSearchChange;
+
+  useEffect(() => {
+    if (text === searchQuery) return;
+    const timer = setTimeout(() => {
+      onSearchChangeRef.current(text);
+    }, HOME_SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [text, searchQuery]);
 
   return (
     <View style={styles.shell}>
+      {washUri ? (
+        <Image
+          source={uriSource(washUri)}
+          style={styles.wash}
+          contentFit="cover"
+          contentPosition="top"
+          blurRadius={48}
+        />
+      ) : null}
       <View style={[styles.top, getRtlRow()]}>
         <View style={styles.location}>
           <ButcherLocationBar compact />
@@ -64,8 +90,8 @@ export function ButchersAppBar({
           style={[styles.searchInput, rtlInputText]}
           placeholder={searchPlaceholder}
           placeholderTextColor={colors.textMuted}
-          value={searchQuery}
-          onChangeText={onSearchChange}
+          value={text}
+          onChangeText={setText}
           returnKeyType="search"
           accessibilityLabel="بحث"
         />
@@ -82,6 +108,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingTop: spacing.sm,
       paddingBottom: spacing.md,
       gap: spacing.sm,
+      overflow: 'hidden',
+    },
+    wash: {
+      ...StyleSheet.absoluteFillObject,
     },
     top: {
       alignItems: 'center',
@@ -121,7 +151,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     searchPill: {
       alignItems: 'center',
-      minHeight: 46,
+      minHeight: 38,
       borderRadius: radius.pill,
       paddingHorizontal: spacing.md,
       gap: spacing.sm,

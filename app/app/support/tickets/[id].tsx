@@ -39,9 +39,8 @@ export default function SupportTicketDetailScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    setLoading(true);
     const data = await fetchTicket(String(id));
-    setTicket(data);
+    if (data) setTicket(data);
     setLoading(false);
   }, [id]);
 
@@ -68,7 +67,7 @@ export default function SupportTicketDetailScreen() {
     void load();
   };
 
-  if (loading) {
+  if (loading && !ticket) {
     return (
       <Screen edges={['top', 'bottom']}>
         <ScreenHeader variant="screen" title={SUPPORT_CUSTOMER_SERVICE.name} showBack />

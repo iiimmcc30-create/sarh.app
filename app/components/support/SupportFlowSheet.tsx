@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,7 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText, SarhAvatar, SarhButton, SarhDivider, SarhInput, SarhSurface } from '@/design-system/components';
-import { motion, radius, spacing, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppUser } from '@/hooks/useApp';
@@ -181,7 +181,7 @@ export function SupportFlowSheet({
         <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="إغلاق" />
         <KeyboardAvoidingView
           style={styles.sheetWrap}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
         >
           <SarhSurface
             tone="background"
@@ -400,7 +400,7 @@ function createStyles(colors: ThemeColors) {
       borderBottomColor: colors.borderHairline,
       gap: 2,
     },
-    pressed: { opacity: motion.pressScale },
+    pressed: { opacity: motion.press.opacity },
     textArea: { minHeight: 140, textAlignVertical: 'top' },
     footerRule: { marginVertical: spacing.md },
     handoff: {

@@ -29,6 +29,7 @@ export type ButcherOrderRecord = {
     id: string;
     nameAr?: string;
     logo?: string;
+    cover?: string;
     cityAr?: string;
     addressAr?: string;
     phone?: string;

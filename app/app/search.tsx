@@ -3,6 +3,7 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { AppText, SarhBackButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -132,7 +133,6 @@ export default function SearchScreen() {
       })
       .catch((err: unknown) => {
         if (seq !== searchSeq.current) return;
-        setGroups([]);
         setError(err instanceof Error ? err.message : 'تعذّر إكمال البحث');
       })
       .finally(() => {
@@ -199,7 +199,7 @@ export default function SearchScreen() {
           >
             <Row gap="md" align="center">
             {item.imageUrl ? (
-              <Image source={uriSource(item.imageUrl)} style={styles.resultThumb} contentFit="cover" />
+              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
             ) : (
               <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
                 <AppIcon name="store" size={20} color={colors.textMuted} />
@@ -223,7 +223,7 @@ export default function SearchScreen() {
           >
             <Row gap="md" align="center">
             {item.imageUrl ? (
-              <Image source={uriSource(item.imageUrl)} style={styles.resultThumb} contentFit="cover" />
+              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
             ) : null}
             <Stack gap="xs" style={styles.resultBody}>
               <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
@@ -265,7 +265,7 @@ export default function SearchScreen() {
           >
             <Row gap="md" align="center">
             {item.imageUrl ? (
-              <Image source={uriSource(item.imageUrl)} style={styles.resultThumb} contentFit="cover" />
+              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
             ) : (
               <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
                 <AppIcon name="file-text" size={20} color={colors.textMuted} />
@@ -409,21 +409,27 @@ export default function SearchScreen() {
               </Stack>
             ) : null}
 
-            {loading ? (
+            {loading && totalResults === 0 ? (
               <Stack gap="md" align="center" style={styles.loadingBox}>
                 <ActivityIndicator color={colors.glow} />
                 <AppText variant="caption" color="textMuted">جاري البحث...</AppText>
               </Stack>
             ) : null}
 
-            {error ? (
+            {error && totalResults === 0 ? (
               <Stack gap="sm" align="center" style={styles.hintBox}>
                 <AppText variant="body" color="danger" align="center">{error}</AppText>
                 <AppText variant="caption" color="textMuted">تحقق من الاتصال وحاول مرة أخرى</AppText>
               </Stack>
             ) : null}
 
-            {!loading && !error && canSearch
+            {error && totalResults > 0 ? (
+              <Stack gap="sm" align="center" style={styles.hintBox}>
+                <AppText variant="caption" color="danger" align="center">{error}</AppText>
+              </Stack>
+            ) : null}
+
+            {canSearch
               ? visibleGroups.map((group) =>
                   group.items.length > 0 ? (
                     <Stack key={group.type} gap="md" style={styles.section}>

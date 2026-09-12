@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ltrInputText } from '@/lib/rtl';
 import { type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -63,9 +64,9 @@ export default function ForgotPasswordScreen() {
 
   const shake = () => {
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: motion.duration.shake, useNativeDriver: true }),
     ]).start();
   };
 

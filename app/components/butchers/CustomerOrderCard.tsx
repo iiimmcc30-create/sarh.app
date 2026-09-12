@@ -3,6 +3,7 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppText } from '@/design-system/components';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { customerOrderHeadline, formatOrderDatePart } from '@/lib/customerOrders';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { getRtlRow } from '@/lib/rtl';
 import { orderStatusLabel } from '@/services/butcherData';
 import { ButcherOrderRecord, formatCurrency } from '@/services/butcherOrders';
@@ -28,7 +29,10 @@ export function CustomerOrderCard({
       ? orderStatusLabel(order.status, order.deliveryType)
       : headline.label;
   const delivered = order.status === 'delivered';
-  const logo = uriSource(order.butcher?.logo);
+  const butcherName = order.butcher?.nameAr?.trim() || 'ملحمة';
+  const logo = uriSource(
+    cloudinaryFitUrl(order.butcher?.logo || order.butcher?.cover, 'row'),
+  );
   const canReorder = delivered && Boolean(onReorder);
   const primaryLabel = headline.awaitingPayment
     ? 'إكمال الدفع'
@@ -57,7 +61,7 @@ export function CustomerOrderCard({
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.96 }]}
       accessibilityRole="button"
-      accessibilityLabel={`${order.butcher?.nameAr ?? 'ملحمة'} — ${statusText}`}
+      accessibilityLabel={`${butcherName} — ${statusText}`}
     >
       <View style={[styles.header, getRtlRow()]}>
         <AppText variant="bodySmall" color="textMuted">
@@ -83,7 +87,7 @@ export function CustomerOrderCard({
 
         <View style={styles.info}>
           <AppText variant="label" numberOfLines={1}>
-            {order.butcher?.nameAr ?? 'ملحمة'}
+            {butcherName}
           </AppText>
           <AppText variant="bodySmall">{formatCurrency(order.totalPrice, order.currency)}</AppText>
           <AppText variant="caption" color="textSecondary" style={styles.detailsLink}>
@@ -214,12 +218,14 @@ function createStyles(colors: ThemeColors) {
       textDecorationLine: 'underline',
     },
     cta: {
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 10,
       flexShrink: 0,
       alignItems: 'center',
       justifyContent: 'center',
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
     },
     ctaGold: {
       backgroundColor: colors.gold,

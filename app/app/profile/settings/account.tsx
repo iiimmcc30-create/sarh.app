@@ -46,7 +46,6 @@ export default function AccountInfoScreen() {
   const [birthDate, setBirthDate] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
     const data =
       (await fetchAccountSettings()) ?? {
         phone: user?.phone ?? null,
@@ -123,7 +122,7 @@ export default function AccountInfoScreen() {
     router.replace('/auth/phone' as any);
   };
 
-  if (loading) {
+  if (loading && !account) {
     return (
       <Screen edges={['top', 'bottom']}>
         <ScreenHeader variant="screen" title="معلومات الحساب" showBack />

@@ -2,7 +2,7 @@ import { radius, spacing, typography, type ThemeColors } from '@/constants/theme
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SarhButton } from '@/design-system/components';
 
 type ListingDeleteDialogProps = {
@@ -37,6 +37,7 @@ export function ListingDeleteDialog({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <View style={[styles.dialog, getRtlDirection()]}>
@@ -83,6 +84,7 @@ export function ListingDeleteDialog({
           )}
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

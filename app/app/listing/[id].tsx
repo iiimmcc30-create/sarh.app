@@ -463,7 +463,35 @@ export default function ListingDetailScreen() {
       >
         <View style={styles.headerSection}>
           <View style={styles.titleBlock}>
-            {!isOwner ? (
+            <AppText variant="sectionTitle" style={styles.title} numberOfLines={3} ellipsizeMode="tail">
+              {listing.arabicTitle || listing.title}
+            </AppText>
+          </View>
+
+          <Row gap="sm" align="center" style={styles.headerMetaRow}>
+            <Row gap="xs" align="center" style={styles.headerMetaChip}>
+              <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
+                {listing.arabicLocation || listing.location}
+              </AppText>
+              <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
+            </Row>
+            <Row gap="xs" align="center" style={styles.headerMetaChip}>
+              <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
+                {timeLabel || 'الآن'}
+              </AppText>
+              <AppIcon name="time-outline" size={13} color={colors.textMuted} />
+            </Row>
+            {listing.price > 0 ? (
+              <Row gap="xs" align="center" style={styles.headerMetaChip}>
+                <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
+                  {`${(listing.price % 1 === 0 ? Math.round(listing.price) : listing.price).toLocaleString('ar-SA')} ريال`}
+                </AppText>
+              </Row>
+            ) : null}
+          </Row>
+
+          {!isOwner ? (
+            <Row gap="sm" align="center" justify="between" style={styles.sellerRow}>
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
                 style={styles.sellerTitleCluster}
@@ -484,44 +512,6 @@ export default function ListingDetailScreen() {
                   </AppText>
                 </Row>
               </Pressable>
-            ) : null}
-            <AppText variant="sectionTitle" style={styles.title} numberOfLines={3} ellipsizeMode="tail">
-              {listing.arabicTitle || listing.title}
-            </AppText>
-          </View>
-
-          <Row wrap gap="sm" align="center" style={styles.headerMetaRow}>
-            <Row gap="xs" align="center" style={styles.headerMetaChip}>
-              <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
-                {listing.arabicLocation || listing.location}
-              </AppText>
-              <AppIcon name="map-marker-outline" size={13} color={colors.textMuted} />
-            </Row>
-            {listing.weightKg != null && listing.weightKg > 0 ? (
-              <View style={styles.headerMetaChip}>
-                <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
-                  {`الوزن: ${listing.weightKg.toLocaleString('ar-SA')} كجم`}
-                </AppText>
-              </View>
-            ) : null}
-            <Row gap="xs" align="center" style={styles.headerMetaChip}>
-              <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
-                {timeLabel || 'الآن'}
-              </AppText>
-              <AppIcon name="time-outline" size={13} color={colors.textMuted} />
-            </Row>
-            {listing.seller.rating != null && (listing.seller.reviewCount ?? 0) > 0 ? (
-              <Row gap="xs" align="center" style={styles.headerMetaChip}>
-                <AppText variant="caption" color="textMuted" style={styles.headerMetaText} numberOfLines={1}>
-                  {`${listing.seller.rating.toFixed(1)} (${listing.seller.reviewCount} تقييم)`}
-                </AppText>
-                <AppIcon name="star" size={13} color={colors.gold} />
-              </Row>
-            ) : null}
-          </Row>
-
-          {!isOwner ? (
-            <Row gap="sm" align="center" justify="start" style={styles.sellerRow}>
               <SarhButton
                 title={isFollowing ? 'متابَع' : 'متابعة'}
                 variant={isFollowing ? 'secondary' : 'primary'}
@@ -732,14 +722,16 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      backgroundColor: colors.screenRoot,
+      backgroundColor: colors.bgElevated,
     },
     headerMetaRow: {
       width: '100%',
+      flexWrap: 'nowrap',
     },
     headerMetaChip: {
       flexGrow: 0,
       flexShrink: 1,
+      minWidth: 0,
       maxWidth: '100%',
     },
     headerMetaText: {
@@ -807,7 +799,8 @@ function createStyles(colors: ThemeColors) {
       color: colors.electricBright,
     },
     sellerTitleCluster: {
-      alignSelf: 'flex-start',
+      flex: 1,
+      minWidth: 0,
       maxWidth: '100%',
     },
     sellerRow: {

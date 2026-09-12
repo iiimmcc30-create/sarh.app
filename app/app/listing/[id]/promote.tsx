@@ -13,6 +13,7 @@ import type { Listing } from '@/services/types';
 import {
   buildPromoteCheckoutPayload,
   fetchPromoteQuote,
+  formatPromoteAmount,
   goalFromBoostType,
   initiatePromotePayment,
   type PromotionGoal,
@@ -24,8 +25,8 @@ import {
   isPromoteGoalEnabled,
 } from '@/services/paidServices';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { AppText, SarhButton, SarhCard, SarhDivider } from '@/design-system/components';
 import {
   BottomAction,
@@ -35,7 +36,6 @@ import {
   Section,
   Stack,
 } from '@/design-system/layout';
-import { duration } from '@/design-system/tokens';
 
 type ServiceCopy = {
   goal: PromotionGoal;
@@ -65,33 +65,6 @@ const SERVICE_COPY: ServiceCopy[] = [
   },
 ];
 
-function PriceDisplay({ price, color }: { price: number; color: string }) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.timing(scale, {
-        toValue: 1.06,
-        duration: duration.fast,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: duration.fast,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [scale, price]);
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <AppText variant="screenTitle" style={{ color }}>
-        {price} ر.س
-      </AppText>
-    </Animated.View>
-  );
-}
-
 export default function ListingPromoteScreen() {
   const { id, goal: goalParam } = useLocalSearchParams<{ id: string; goal?: string }>();
   const { accessToken } = useAuth();
@@ -105,7 +78,6 @@ export default function ListingPromoteScreen() {
   const [selectedDurationIndex, setSelectedDurationIndex] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [quotedAmount, setQuotedAmount] = useState<number | null>(null);
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [listingLoading, setListingLoading] = useState(true);
@@ -188,25 +160,13 @@ export default function ListingPromoteScreen() {
   const selectedDuration = selectedService?.durations[selectedDurationIndex] ?? null;
 
   useEffect(() => {
-    if (!goal || !selectedDuration) {
-      setQuotedAmount(null);
-      return;
-    }
-    let cancelled = false;
-    setQuotedAmount(null);
-    void fetchPromoteQuote(goal, selectedDuration.durationHours)
-      .then((quote) => {
-        if (!cancelled) setQuotedAmount(quote.amount);
-      })
-      .catch(() => {
-        if (!cancelled) setQuotedAmount(null);
-      });
-    return () => {
-      cancelled = true;
-    };
+    if (!goal || !selectedDuration) return;
+    void fetchPromoteQuote(goal, selectedDuration.durationHours).catch(() => {
+      /* Catalog amount stays on screen; backend initiate also uses the catalog. */
+    });
   }, [goal, selectedDuration]);
 
-  const displayPrice = quotedAmount ?? selectedDuration?.amount ?? null;
+  const displayPrice = selectedDuration?.amount ?? null;
 
   const checkoutPayload = useMemo(() => {
     if (!id || !goal || !selectedDuration) return null;
@@ -370,7 +330,7 @@ export default function ListingPromoteScreen() {
                       color={active ? 'textPrimary' : 'textMuted'}
                       align="center"
                     >
-                      {dur.amount} ر.س
+                      {formatPromoteAmount(dur.amount)}
                     </AppText>
                   </Pressable>
                 );
@@ -380,27 +340,38 @@ export default function ListingPromoteScreen() {
         ) : null}
 
         {selectedService && selectedDuration && displayPrice != null ? (
-          <SarhCard level="card" padding="none">
-            <Row gap="md" justify="between" style={styles.summaryRow}>
-              <AppText variant="caption" color="textMuted">الخدمة</AppText>
-              <AppText variant="bodyMedium" color="textPrimary">{selectedService.title}</AppText>
-            </Row>
-            <SarhDivider />
-            <Row gap="md" justify="between" style={styles.summaryRow}>
-              <AppText variant="caption" color="textMuted">المدة</AppText>
-              <AppText variant="bodyMedium" color="textPrimary">{selectedDuration.labelAr}</AppText>
-            </Row>
-            <SarhDivider />
-            <Row gap="md" justify="between" style={styles.summaryRow}>
-              <AppText variant="caption" color="textMuted">السعر</AppText>
-              <PriceDisplay price={displayPrice} color={colors.textBrandStrong} />
-            </Row>
-            <View style={styles.serverNote}>
-              <AppText variant="meta" color="textMuted" align="center">
-                السعر النهائي يُحدَّد من الخادم عند بدء الدفع
-              </AppText>
-            </View>
-          </SarhCard>
+          <Section title="ملخص التعزيز">
+            <Stack gap="md">
+              <Stack gap="xs">
+                <AppText variant="caption" color="textMuted">
+                  الخدمة
+                </AppText>
+                <AppText variant="bodyMedium" color="textPrimary">
+                  {selectedService.title}
+                </AppText>
+                <AppText variant="caption" color="textSecondary">
+                  {formatPromoteAmount(displayPrice)} / {selectedDuration.labelAr}
+                </AppText>
+              </Stack>
+              <Stack gap="xs">
+                <AppText variant="caption" color="textMuted">
+                  المدة
+                </AppText>
+                <AppText variant="bodyMedium" color="textPrimary">
+                  {selectedDuration.labelAr}
+                </AppText>
+              </Stack>
+              <SarhDivider />
+              <Row justify="between" align="end">
+                <AppText variant="bodyMedium" color="textPrimary">
+                  الإجمالي
+                </AppText>
+                <AppText variant="price" color="textPrimary">
+                  {formatPromoteAmount(displayPrice)}
+                </AppText>
+              </Row>
+            </Stack>
+          </Section>
         ) : null}
 
         {error ? (
@@ -411,14 +382,9 @@ export default function ListingPromoteScreen() {
         ) : null}
       </ScreenBody>
 
-      <BottomAction
-        summary={{
-          label: 'الإجمالي',
-          value: displayPrice != null ? `${displayPrice} ر.س` : '—',
-        }}
-      >
+      <BottomAction>
         <SarhButton
-          title="الدفع"
+          title="المتابعة للدفع"
           onPress={handlePay}
           disabled={!canPay}
           loading={processing}
@@ -493,15 +459,6 @@ function createStyles(colors: ThemeColors) {
     durationChipActive: {
       borderColor: colors.electricBright,
       backgroundColor: colors.bgElevated,
-    },
-    summaryRow: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-    },
-    serverNote: {
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.md,
-      paddingTop: spacing.xs,
     },
     errorRow: {
       padding: spacing.md,

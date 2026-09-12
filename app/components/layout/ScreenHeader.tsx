@@ -1,5 +1,6 @@
 // Powered by OnSpace.AI
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { motion } from '@/design-system';
 import { AppText, SarhBackButton } from '@/design-system/components';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -260,8 +261,8 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       borderWidth: 0,
     },
     iconBtnPressed: {
-      transform: [{ scale: 0.94 }],
-      opacity: 0.82,
+      transform: [{ scale: motion.press.scale }],
+      opacity: motion.press.opacity,
     },
   });
 }

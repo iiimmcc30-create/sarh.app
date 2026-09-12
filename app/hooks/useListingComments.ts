@@ -14,7 +14,11 @@ export function useListingComments(listingId: string) {
   const applyResult = useCallback(
     (seq: number, result: Awaited<ReturnType<typeof fetchListingComments>>) => {
       if (seq !== requestSeq.current) return;
-      setComments(result.comments);
+      setComments((prev) =>
+        result.error && result.comments.length === 0 && prev.length > 0
+          ? prev
+          : result.comments,
+      );
       setLoadError(result.error);
       setRateLimited(!!result.rateLimited);
       setLoading(false);
@@ -34,7 +38,6 @@ export function useListingComments(listingId: string) {
       }
 
       const seq = ++requestSeq.current;
-      setLoading(true);
       const result = await fetchListingComments(listingKey, { force });
       applyResult(seq, result);
     },
@@ -53,6 +56,9 @@ export function useListingComments(listingId: string) {
       return;
     }
 
+    setComments([]);
+    setLoadError(null);
+    setRateLimited(false);
     setLoading(true);
     void fetchListingComments(listingKey).then((result) => {
       applyResult(seq, result);

@@ -12,7 +12,7 @@ import {
   type MinistryAccount,
 } from '@/services/officialServices';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 type Props = {
   account: MinistryAccount | null;
@@ -40,55 +40,49 @@ export function HomeMinistryOrgCard({ account, serviceCount, loading }: Props) {
           خدمات الوزارة
         </AppText>
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${name}. ${formatServiceCountLabel(count)}. فتح`}
-        onPress={openProfile}
-        style={({ pressed }) => [pressed && styles.pressed]}
-      >
-        <SarhCard variant="plain" padding="none" style={[styles.card, { height: cardH, marginHorizontal: gutter }]}>
-          <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" />
-          <LinearGradient
-            colors={['transparent', functional.overlay]}
-            locations={[0.28, 1]}
-            style={StyleSheet.absoluteFill}
+      <SarhCard variant="plain" padding="none" style={[styles.card, { height: cardH, marginHorizontal: gutter }]}>
+        <Image source={cover} style={StyleSheet.absoluteFill} contentFit="cover" pointerEvents="none" />
+        <LinearGradient
+          pointerEvents="none"
+          colors={['transparent', functional.overlay]}
+          locations={[0.28, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        <Row align="center" gap="md" style={styles.bar}>
+          <SarhAvatar
+            source={avatar}
+            name={name}
+            size="lg"
+            accessibilityLabel={name}
+            style={styles.logo}
           />
-          <Row align="center" gap="md" style={styles.bar}>
-            <SarhAvatar
-              source={avatar}
-              name={name}
-              size="lg"
-              accessibilityLabel={name}
-              style={styles.logo}
-            />
-            <View style={styles.copy}>
-              <AppText
-                variant="heading3"
-                numberOfLines={2}
-                ellipsizeMode="tail"
-                style={styles.title}
-              >
-                {name || (loading ? '…' : '')}
-              </AppText>
-              <AppText
-                variant="caption"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={styles.subtitle}
-              >
-                {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
-              </AppText>
-            </View>
-            <SarhButton
-              title="فتح"
-              variant="inverse"
-              size="sm"
-              accessibilityLabel="فتح"
-              onPress={openProfile}
-            />
-          </Row>
-        </SarhCard>
-      </Pressable>
+          <View style={styles.copy}>
+            <AppText
+              variant="heading3"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              style={styles.title}
+            >
+              {name || (loading ? '…' : '')}
+            </AppText>
+            <AppText
+              variant="caption"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.subtitle}
+            >
+              {loading && count === 0 ? '…' : formatServiceCountLabel(count)}
+            </AppText>
+          </View>
+          <SarhButton
+            title="فتح"
+            variant="primary"
+            size="sm"
+            accessibilityLabel="فتح"
+            onPress={openProfile}
+          />
+        </Row>
+      </SarhCard>
     </View>
   );
 }
@@ -134,9 +128,6 @@ function createStyles() {
   },
   subtitle: {
     color: functional.onPrimary,
-    opacity: motion.opacity.pressed,
-  },
-  pressed: {
     opacity: motion.opacity.pressed,
   },
 });

@@ -12,6 +12,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { spacing } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText, SarhButton, SarhChip, SarhChipRow, SarhDivider, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
@@ -37,10 +38,11 @@ export default function SupportFaqScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const data = await fetchFaqs({ search: search.trim() || undefined, category });
-    setFaqs(data?.faqs ?? []);
-    setCategories(data?.categories ?? []);
+    if (data) {
+      setFaqs(data.faqs ?? []);
+      setCategories(data.categories ?? []);
+    }
     setLoading(false);
   }, [search, category]);
 
@@ -51,7 +53,9 @@ export default function SupportFaqScreen() {
   );
 
   const toggle = (id: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    LayoutAnimation.configureNext(
+      LayoutAnimation.create(motion.duration.screen, 'easeInEaseOut', 'opacity'),
+    );
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
@@ -86,7 +90,7 @@ export default function SupportFaqScreen() {
           </SarhChipRow>
         </Stack>
 
-        {loading ? (
+        {loading && faqs.length === 0 ? (
           <ActivityIndicator />
         ) : faqs.length === 0 ? (
           <AppText variant="body" color="textMuted" align="center">
@@ -103,7 +107,7 @@ export default function SupportFaqScreen() {
                     accessibilityRole="button"
                     accessibilityState={{ expanded: open }}
                     accessibilityLabel={faq.questionAr}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                    style={({ pressed }) => [{ opacity: pressed ? motion.press.opacity : 1 }]}
                   >
                     <Stack gap="sm" style={styles.faqRow}>
                       <Row gap="md" align="start">

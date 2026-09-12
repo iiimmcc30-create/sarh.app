@@ -90,6 +90,7 @@ export function SarhChip({
       <AppText
         variant="caption"
         color={palette.text}
+        numberOfLines={1}
         style={palette.textOverride ? { color: palette.textOverride } : undefined}
       >
         {label}

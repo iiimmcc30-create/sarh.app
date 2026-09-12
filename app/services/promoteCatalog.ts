@@ -70,6 +70,11 @@ export const PROMOTE_CATALOG: readonly PromoteCatalogOption[] = [
   },
 ];
 
+/** Lowest official catalog amount — featured 1 day. */
+export const PROMOTE_CATALOG_AMOUNT_MIN = Math.min(
+  ...PROMOTE_CATALOG.map((row) => row.amount),
+);
+
 export function listPromoteCatalogOptions(
   goal: PromoteCatalogGoal,
 ): PromoteCatalogOption[] {

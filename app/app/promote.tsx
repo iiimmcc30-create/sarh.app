@@ -11,6 +11,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { rtlForwardIcon } from '@/lib/rtl';
+import { listingThumbUri } from '@/lib/listingMedia';
 import { searchAllSellerListings } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -40,8 +41,7 @@ const CATEGORY_ICONS: Record<Listing['category'], string> = {
 };
 
 function listingThumb(listing: Listing): string | undefined {
-  const first = listing.images?.[0];
-  return first && first.trim().length > 0 ? first : undefined;
+  return listingThumbUri(listing);
 }
 
 export default function PromoteHubScreen() {
@@ -70,7 +70,7 @@ export default function PromoteHubScreen() {
       const rows = await searchAllSellerListings(userId, accessToken);
       setMyListings(rows);
     } catch {
-      setMyListings([]);
+      /* keep current listings */
     } finally {
       setLoadingListings(false);
     }
@@ -113,7 +113,7 @@ export default function PromoteHubScreen() {
               </AppText>
             </View>
 
-            {loadingListings ? (
+            {loadingListings && myListings.length === 0 ? (
               <ActivityIndicator color={colors.electric} style={{ marginVertical: spacing.xl }} />
             ) : myListings.length === 0 ? (
               <View style={styles.emptyBox}>

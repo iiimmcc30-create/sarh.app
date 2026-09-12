@@ -6,6 +6,7 @@
  * from this file in existing screens; do not rewrite call sites in phase 1.
  */
 import { Platform, type ViewStyle } from 'react-native';
+import { motion as dsMotion } from '@/design-system/tokens/motion';
 import { sarh } from './sarhTokens';
 
 export const ds = {
@@ -91,8 +92,8 @@ export const ds = {
   },
 
   motion: {
-    duration: 220,
-    easing: 'ease-out' as const,
+    duration: dsMotion.duration.ui,
+    easing: dsMotion.easing.out,
   },
 
   listingThumb: 140,

@@ -1,6 +1,6 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppText, SarhButton } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { space } from '@/design-system/tokens';
@@ -16,6 +16,7 @@ import {
 import { radius, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { safePush } from '@/lib/safeNavigate';
 import { useAuth } from '@/contexts/AuthContext';
 import { ButcherProfile } from '@/services/butcherData';
@@ -24,7 +25,6 @@ import {
   removeFavoriteLocal,
   toggleButcherFavorite,
 } from '@/services/butcherFavorites';
-import { resolveMediaUrl } from '@/services/media';
 
 const COVER_FALLBACK =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=800&q=80';
@@ -50,7 +50,7 @@ export default function ButcherFavoritesScreen() {
       const data = await fetchFavoriteButchers(accessToken, userId);
       setFavorites(data);
     } catch {
-      setFavorites([]);
+      /* keep current favorites */
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -59,7 +59,6 @@ export default function ButcherFavoritesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
       void load();
     }, [load]),
   );
@@ -78,7 +77,7 @@ export default function ButcherFavoritesScreen() {
     <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="تفضيلاتي" showBack />
 
-      {loading ? (
+      {loading && favorites.length === 0 ? (
         <ScreenBody scroll={false} gutter={false}>
           <ActivityIndicator size="large" color={colors.electricBright} style={styles.loader} />
         </ScreenBody>
@@ -118,12 +117,9 @@ export default function ButcherFavoritesScreen() {
                 <Row key={butcher.id} gap="none" align="stretch" style={styles.card}>
                   <View style={styles.thumbWrap}>
                     <Image
-                      source={{
-                        uri:
-                          resolveMediaUrl(butcher.cover) ??
-                          resolveMediaUrl(butcher.logo) ??
-                          COVER_FALLBACK,
-                      }}
+                      source={uriSource(
+                        cloudinaryFitUrl(butcher.cover || butcher.logo, 'card') ?? COVER_FALLBACK,
+                      )}
                       style={styles.thumb}
                       contentFit="cover"
                     />

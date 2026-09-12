@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -115,7 +114,7 @@ export function ListingCommentsModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <View
           style={[
@@ -152,11 +151,11 @@ export function ListingCommentsModal({
             </Pressable>
           </View>
 
-          {loading ? (
+          {loading && comments.length === 0 ? (
             <View style={styles.center}>
               <ActivityIndicator color={colors.electricBright} />
             </View>
-          ) : loadError ? (
+          ) : loadError && comments.length === 0 ? (
             <View style={styles.center}>
               <Text style={styles.errorText}>{loadError}</Text>
               {!rateLimited ? (

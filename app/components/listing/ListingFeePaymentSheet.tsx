@@ -5,6 +5,7 @@ import {
   PaymentBrandLogo,
 } from '@/components/payment/PaymentBrandLogos';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -20,6 +21,7 @@ import { SarhButton } from '@/design-system/components';
 import {
   ActivityIndicator,
   Animated,
+  KeyboardAvoidingView,
   Modal,
   Pressable,
   ScrollView,
@@ -72,8 +74,7 @@ export function ListingFeePaymentSheet({
       Animated.spring(slideAnim, {
         toValue: 1,
         useNativeDriver: true,
-        tension: 68,
-        friction: 11,
+        ...motion.spring.sheet,
       }).start();
     }
   }, [visible, slideAnim]);
@@ -168,6 +169,7 @@ export function ListingFeePaymentSheet({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <Animated.View
@@ -302,6 +304,7 @@ export function ListingFeePaymentSheet({
           )}
         </Animated.View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -457,7 +460,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.sm,
       paddingVertical: spacing.md + 2,
     },
-    payBtnPressed: { opacity: 0.88 },
+    payBtnPressed: { opacity: motion.press.opacity },
     payBtnText: {
       ...typography.button,
       color: '#fff',

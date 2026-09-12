@@ -16,7 +16,6 @@ import {
 import {
   Alert,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -789,7 +788,7 @@ export default function ButcherApplicationEditScreen() {
 
       <KeyboardAvoidingView
         style={s.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScreenBody gutter={false} width="full" contentContainerStyle={s.scroll}>
           {stepContent}

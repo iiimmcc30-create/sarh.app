@@ -42,7 +42,7 @@ export default function MyOrdersScreen() {
       const data = await fetchMyButcherOrders(accessToken);
       setOrders(data);
     } catch {
-      setOrders([]);
+      /* keep current orders */
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -51,7 +51,6 @@ export default function MyOrdersScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
       void load();
     }, [load]),
   );
@@ -81,7 +80,7 @@ export default function MyOrdersScreen() {
     <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="طلباتي" />
 
-      {loading ? (
+      {loading && orders.length === 0 ? (
         <ScreenBody gutter={false} padBottom="lg" contentContainerStyle={styles.scroll}>
           {[0, 1, 2].map((i) => (
             <CustomerOrderCardSkeleton key={i} colors={colors} />

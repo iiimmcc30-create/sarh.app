@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   type StyleProp,
   type ViewStyle,
@@ -56,8 +55,8 @@ export function Screen({
   const content = keyboard ? (
     <KeyboardAvoidingView
       style={styles.fill}
-      // Platform branch is keyboard behaviour, not layout — layout uses useLayout().
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      // Edge-to-edge Android no longer resizes the window (`edgeToEdgeEnabled`).
+      behavior="padding"
     >
       {children}
     </KeyboardAvoidingView>

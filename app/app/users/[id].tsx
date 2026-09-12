@@ -48,7 +48,6 @@ export default function UserProfileScreen() {
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [userListings, setUserListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [ratingVisible, setRatingVisible] = useState(false);
@@ -59,29 +58,22 @@ export default function UserProfileScreen() {
     if (!isAuthenticated || !accessToken) return null;
     const targetId = id || me.id;
     const data = await fetchUserProfile(targetId);
-    setProfile(data);
+    if (data) setProfile(data);
     return data;
   }, [accessToken, id, isAuthenticated, me.id]);
 
   const loadProfile = useCallback(async () => {
-    setLoading(true);
-    try {
-      const targetId = id || me.id;
-      const data = await fetchAuthoritativeProfile();
-      if (!data) {
-        setUserPosts([]);
-        setUserListings([]);
-        return;
-      }
-      const [postsData, listingsData] = await Promise.all([
-        fetchUserPosts(targetId),
-        searchAllSellerListings(targetId, accessToken),
-      ]);
-      setUserPosts(postsData);
-      setUserListings(listingsData);
-    } finally {
-      setLoading(false);
+    const targetId = id || me.id;
+    const data = await fetchAuthoritativeProfile();
+    if (!data) {
+      return;
     }
+    const [postsData, listingsData] = await Promise.all([
+      fetchUserPosts(targetId),
+      searchAllSellerListings(targetId, accessToken),
+    ]);
+    setUserPosts(postsData);
+    setUserListings(listingsData);
   }, [accessToken, fetchAuthoritativeProfile, id, me.id]);
 
   useFocusEffect(
@@ -197,7 +189,7 @@ export default function UserProfileScreen() {
     ));
   };
 
-  if (loading || !profile) {
+  if (!profile) {
     return (
       <Screen edges={['top']} pattern={false}>
         <ScreenBody scroll={false} style={styles.centered}>

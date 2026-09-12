@@ -30,6 +30,7 @@ type ThemeContextValue = {
   gradients: typeof gradients;
   shadow: typeof shadow;
   setPreference: (preference: ThemePreference) => Promise<void>;
+  setSchemeOverride: (scheme: ColorScheme | null) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -99,6 +100,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setScheme(resolved);
   }, []);
 
+  const setSchemeOverride = useCallback((next: ColorScheme | null) => {
+    const resolved = next ?? resolveScheme(preference);
+    applyThemeScheme(resolved);
+    setScheme(resolved);
+  }, [preference]);
+
   const value = useMemo<ThemeContextValue>(
     () => ({
       preference,
@@ -108,8 +115,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       gradients,
       shadow,
       setPreference,
+      setSchemeOverride,
     }),
-    [preference, scheme],
+    [preference, scheme, setPreference, setSchemeOverride],
   );
 
   return <ThemeContext.Provider value={value}>{hydrated ? children : null}</ThemeContext.Provider>;
@@ -126,6 +134,7 @@ export function useTheme() {
       gradients,
       shadow,
       setPreference: async () => {},
+      setSchemeOverride: () => {},
     };
   }
   return ctx;

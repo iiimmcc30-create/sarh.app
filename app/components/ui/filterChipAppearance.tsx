@@ -5,6 +5,7 @@ import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { motion } from '@/design-system';
 import { FILTER_CHIP, MARKET_CHIP } from '@/components/ui/filterChipTokens';
 
 export type FilterChipAppearanceProps = {
@@ -103,7 +104,7 @@ export function createChipStyles(colors: ThemeColors, compact: boolean) {
       borderColor: colors.electricBright,
     },
     chipPressed: {
-      opacity: 0.88,
+      opacity: motion.press.opacity,
     },
     chipDisabled: {
       opacity: 0.45,

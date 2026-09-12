@@ -147,7 +147,17 @@ describe('Sarh design-system foundation', () => {
   });
 
   it('keeps motion durations centralized', () => {
-    expect(duration).toEqual({ instant: 0, fast: 120, normal: 200, slow: 300 });
+    expect(duration).toEqual({
+      instant: 0,
+      press: 120,
+      ui: 200,
+      screen: 280,
+      sheet: 320,
+      slow: 360,
+      shake: 50,
+      fast: 120,
+      normal: 200,
+    });
   });
 
   it('documents live dark elevation recipes', () => {

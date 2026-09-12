@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
 
 export type MessageThreadType = 'DIRECT' | 'BUTCHER';
 
 export type MessageThreadFilter = 'all' | 'unread' | 'transactions' | 'requests';
+
+/** Same window as Home — skip a focus refetch when the inbox is still fresh. */
+export const MESSAGES_REFRESH_TTL_MS = 60_000;
 
 export interface MessageThreadItem {
   id: string;
@@ -83,41 +86,78 @@ export function useMessageThreads(
   const [threads, setThreads] = useState<MessageThreadItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasDataRef = useRef(false);
+  const lastSuccessAtRef = useRef(0);
+  const inflightRef = useRef<Promise<void> | null>(null);
 
-  const fetchThreads = useCallback(async () => {
+  const fetchThreads = useCallback(async (force = false) => {
     if (!accessToken) {
       setThreads([]);
       setLoading(false);
+      setError(null);
+      hasDataRef.current = false;
+      lastSuccessAtRef.current = 0;
       return;
     }
-    setLoading(true);
+
+    const now = Date.now();
+    if (
+      !force &&
+      hasDataRef.current &&
+      now - lastSuccessAtRef.current < MESSAGES_REFRESH_TTL_MS
+    ) {
+      return;
+    }
+    if (inflightRef.current && !force) {
+      await inflightRef.current;
+      return;
+    }
+
+    const showSpinner = !hasDataRef.current;
+    if (showSpinner) setLoading(true);
     setError(null);
-    try {
-      if (type === 'ALL') {
-        const [direct, butcher] = await Promise.all([
-          fetchType(accessToken, 'DIRECT'),
-          fetchType(accessToken, 'BUTCHER'),
-        ]);
-        const merged = [...direct, ...butcher].sort(
-          (a, b) =>
-            new Date(b.lastMessageAt).getTime() -
-            new Date(a.lastMessageAt).getTime(),
-        );
-        setThreads(merged);
-      } else {
-        setThreads(await fetchType(accessToken, type));
+
+    const run = (async () => {
+      try {
+        const next =
+          type === 'ALL'
+            ? await (async () => {
+                const [direct, butcher] = await Promise.all([
+                  fetchType(accessToken, 'DIRECT'),
+                  fetchType(accessToken, 'BUTCHER'),
+                ]);
+                return [...direct, ...butcher].sort(
+                  (a, b) =>
+                    new Date(b.lastMessageAt).getTime() -
+                    new Date(a.lastMessageAt).getTime(),
+                );
+              })()
+            : await fetchType(accessToken, type);
+        setThreads(next);
+        hasDataRef.current = true;
+        lastSuccessAtRef.current = Date.now();
+      } catch (err) {
+        const code = err instanceof Error ? err.message : 'fetch_failed';
+        setError(code === 'unauthorized' ? 'unauthorized' : 'fetch_failed');
+        if (code === 'unauthorized' || !hasDataRef.current) {
+          setThreads([]);
+          hasDataRef.current = false;
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const code = err instanceof Error ? err.message : 'fetch_failed';
-      setError(code === 'unauthorized' ? 'unauthorized' : 'fetch_failed');
-      setThreads([]);
+    })();
+
+    inflightRef.current = run;
+    try {
+      await run;
     } finally {
-      setLoading(false);
+      if (inflightRef.current === run) inflightRef.current = null;
     }
   }, [accessToken, type]);
 
   useEffect(() => {
-    fetchThreads();
+    void fetchThreads();
   }, [fetchThreads]);
 
   return { threads, loading, error, refetch: fetchThreads };

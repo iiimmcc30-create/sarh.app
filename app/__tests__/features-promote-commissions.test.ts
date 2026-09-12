@@ -110,7 +110,8 @@ describe('listingPromote', () => {
   });
 
   it('clamps and parses amount/duration inputs', () => {
-    expect(clampPromoteAmount(1)).toBe(10);
+    expect(clampPromoteAmount(1)).toBe(9);
+    expect(clampPromoteAmount(9)).toBe(9);
     expect(clampPromoteAmount(999)).toBe(500);
     expect(clampPromoteDurationHours(0)).toBe(1);
     expect(clampPromoteDurationHours(999)).toBe(168);

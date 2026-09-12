@@ -8,6 +8,7 @@ import {
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
 import { isAppRtl } from '@/lib/rtl';
+import { motion } from '@/design-system';
 import { AppText } from '@/components/ui/AppText';
 
 /** Shared elevated surface — More tab / reference contrast style. */
@@ -265,7 +266,7 @@ export function SidebarLogoutButton({
       style={({ pressed }) => [
         logoutStyles.btn,
         variant === 'card' ? menuCardStyle(colors) : null,
-        pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
+        pressed && { opacity: motion.press.opacity, transform: [{ scale: motion.press.scale }] },
       ]}
     >
       <View style={logoutStyles.chevronSlot} />

@@ -13,6 +13,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { rtlForwardIcon } from '@/lib/rtl';
+import { motion } from '@/design-system';
 import { CoverTrailRow } from '@/components/ui/CoverTrailRow';
 import { AppText } from '@/components/ui/AppText';
 
@@ -83,7 +84,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 14,
       gap: spacing.sm,
     },
-    pressed: { opacity: 0.92 },
+    pressed: { opacity: motion.press.opacityCard },
     coverTrail: {
       width: '100%',
     },
