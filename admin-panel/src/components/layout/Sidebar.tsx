@@ -27,6 +27,7 @@ import {
   Activity,
   Wallet,
   Percent,
+  Wheat,
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '@/services/auth.service';
 import { BRAND_ADMIN_SUBTITLE_AR, BRAND_NAME_AR, BRAND_NAME_EN } from '@/constants/brandCopy';
@@ -51,6 +52,7 @@ const NAV_ICONS = {
   '/live': Radio,
   '/butchers': Store,
   '/butcher-banners': PanelsTopLeft,
+  '/feed-suppliers': Wheat,
   '/applications': ClipboardList,
   '/orders': ReceiptText,
   '/plans': CreditCard,

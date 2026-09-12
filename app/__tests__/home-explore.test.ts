@@ -81,13 +81,16 @@ describe('Explore Sarh logo mark', () => {
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
-    expect(section).toContain('استكشف سرح');
+    expect(section).not.toContain('استكشف سرح');
     expect(section).toContain('ملاحم سرح');
-    expect(section).toContain('تصفح أفضل منتجات اللحوم بكل أمان وثقة');
     expect(section).toContain('تصفح الملاحم');
-    expect(section).toContain("safePush('/butchers'");
-    expect(section).toContain("from '@/design-system/layout'");
-    expect(section).toContain('<Row');
+    expect(section).toContain('href="/butchers"');
+    expect(section).toContain("safePush(href");
+    expect(section).toContain('href="/feed-suppliers"');
+    expect(section).toContain('استكشف');
+    expect(section).toContain('موردو الأعلاف');
+    expect(section).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(section).toContain('SarhButton');
     expect(section).toContain("width: '100%'");
     expect(section).not.toContain('CARD_RADIUS');
     expect(section).not.toContain('partitionExploreSections');
@@ -275,14 +278,13 @@ describe('Home design-system adoption', () => {
     expect(appBar).toContain('SarhIconButton');
     expect(appBar).toContain('chrome="ghost"');
     expect(appBar).toContain('variant="heading3"');
-    expect(explore).toContain('variant="heading2"');
-    expect(explore).toContain('variant="heading1"');
-    expect(explore).toContain('variant="bodySmall"');
-    expect(explore).toContain('variant="label"');
+    expect(explore).toContain('SarhButton');
+    expect(explore).toContain('variant="primary"');
+    expect(explore).toContain('تصفح الملاحم');
     expect(ministry).toContain('SarhCard');
     expect(ministry).toContain('SarhButton');
     expect(ministry).toContain('SarhAvatar');
-    expect(ministry).toContain('variant="inverse"');
+    expect(ministry).toContain('title="فتح"');
     expect(stories).toContain('SarhCard');
     expect(stories).toContain('variant="plain"');
     expect(stories).toContain('variant="caption"');
@@ -306,16 +308,15 @@ describe('Home design-system adoption', () => {
 
   it('keeps Home RTL helpers and button labels', () => {
     expect(appBar).toContain("from '@/design-system/layout'");
-    expect(explore).toContain("from '@/design-system/layout'");
     expect(ministry).toContain("from '@/design-system/layout'");
     expect(stories).toContain("from '@/design-system/layout'");
     expect(appBar).toContain('<Row');
-    expect(explore).toContain('<Row');
     expect(ministry).toContain('<Row');
     expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
-    expect(explore).toContain('accessibilityRole="button"');
-    expect(ministry).toContain('accessibilityRole="button"');
+    expect(explore).toContain('ctaTitle="تصفح الملاحم"');
+    expect(explore).toContain('accessibilityLabel={ctaTitle}');
+    expect(ministry).toContain('title="فتح"');
     expect(stories).toContain('accessibilityRole="button"');
     expect(appBar).toContain('accessibilityLabel="بحث"');
   });
@@ -338,7 +339,10 @@ describe('Home design-system adoption', () => {
     expect(home).not.toContain('Marketplace');
     expect(explore).toContain('ملاحم سرح');
     expect(explore).toContain('explore-sarh-butchers.jpg');
-    expect(explore).toContain("safePush('/butchers'");
+    expect(explore).toContain('href="/butchers"');
+    expect(explore).toContain('موردو الأعلاف');
+    expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(explore.indexOf('href="/butchers"')).toBeLessThan(explore.indexOf('href="/feed-suppliers"'));
     expect(ministry).toContain('formatServiceCountLabel');
   });
 });

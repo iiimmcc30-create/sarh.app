@@ -31,6 +31,7 @@ import { SupportModule } from './support/support.module';
 import { ContentModule } from './content/content.module';
 import { EditorialStoriesModule } from './editorial-stories/editorial-stories.module';
 import { ButcherBannersModule } from './butcher-banners/butcher-banners.module';
+import { FeedSuppliersModule } from './feed-suppliers/feed-suppliers.module';
 import { MarketCategoriesModule } from './market-categories/market-categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { HomeExploreModule } from './home-explore/home-explore.module';
@@ -74,6 +75,7 @@ import { DaftraModule } from './integrations/daftra/daftra.module';
     ContentModule,
     EditorialStoriesModule,
     ButcherBannersModule,
+    FeedSuppliersModule,
   ],
 })
 export class AppModule {}
