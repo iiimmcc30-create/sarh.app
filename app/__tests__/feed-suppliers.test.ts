@@ -52,11 +52,11 @@ describe('feed supplier screens stay a public directory', () => {
     expect(sidebar).toContain("route: '/feed-suppliers'");
   });
 
-  it('opens the directory from the home explore CTA', () => {
-    expect(explore.indexOf('href="/butchers"')).toBeLessThan(
-      explore.indexOf('href="/feed-suppliers"'),
+  it('opens the directory from the home explore banner', () => {
+    expect(explore.indexOf("href: '/butchers'")).toBeLessThan(
+      explore.indexOf("href: '/feed-suppliers'"),
     );
-    expect(explore).toContain('استكشف');
+    expect(explore).toContain('استكشف سرح');
     expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
     expect(explore).not.toContain('تصفح واستكشف أبرز الموردين');
   });

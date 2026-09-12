@@ -1,83 +1,110 @@
 import { Image } from '@/components/ui/AppImage';
-import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { colors, space } from '@/design-system';
-import { SarhButton } from '@/design-system/components';
+import { colors, elevation, motion, radius, space } from '@/design-system';
+import { AppText } from '@/design-system/components';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 const BUTCHERS_IMAGE = require('../../assets/images/explore-sarh-butchers.jpg');
 const FEED_IMAGE = require('../../assets/images/explore-sarh-feed-suppliers.jpg');
-const HERO_ASPECT = 1024 / 617;
+const BANNER_ASPECT = 1376 / 768;
 
-type ExploreHeroProps = {
-  image: number;
-  accessibilityLabel: string;
-  ctaTitle: string;
-  href: string;
-};
-
-function ExploreHero({ image, accessibilityLabel, ctaTitle, href }: ExploreHeroProps) {
-  const router = useRouter();
-  const { gutter } = useLayout();
-  const styles = useThemedStyles(() => createStyles());
-
-  return (
-    <View
-      style={styles.hero}
-      accessibilityLabel={accessibilityLabel}
-    >
-      <Image
-        source={image}
-        style={styles.image}
-        contentFit="cover"
-        pointerEvents="none"
-      />
-      <LinearGradient
-        pointerEvents="none"
-        colors={[colors.background, 'transparent']}
-        style={styles.fadeTop}
-      />
-      <LinearGradient
-        pointerEvents="none"
-        colors={['transparent', colors.background]}
-        style={styles.fadeBottom}
-      />
-      <View
-        pointerEvents="box-none"
-        style={[styles.ctaDock, { paddingHorizontal: gutter }]}
-      >
-        <SarhButton
-          title={ctaTitle}
-          variant="primary"
-          size="md"
-          accessibilityLabel={ctaTitle}
-          onPress={() => safePush(href, undefined, router)}
-        />
-      </View>
-    </View>
-  );
-}
+const BANNERS = [
+  {
+    key: 'butchers',
+    image: BUTCHERS_IMAGE,
+    accessibilityLabel: 'ملاحم سرح',
+    href: '/butchers',
+  },
+  {
+    key: 'feed-suppliers',
+    image: FEED_IMAGE,
+    accessibilityLabel: 'موردو الأعلاف',
+    href: '/feed-suppliers',
+  },
+] as const;
 
 export function ExploreSarhSection() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const { gutter } = useLayout();
   const styles = useThemedStyles(() => createStyles());
+  const [index, setIndex] = useState(0);
+  const scroller = useRef<ScrollView>(null);
+  const slideWidth = width;
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
+    if (next !== index && next >= 0 && next < BANNERS.length) {
+      setIndex(next);
+    }
+  };
 
   return (
     <View style={styles.wrap}>
-      <ExploreHero
-        image={BUTCHERS_IMAGE}
-        accessibilityLabel="ملاحم سرح"
-        ctaTitle="تصفح الملاحم"
-        href="/butchers"
-      />
-      <ExploreHero
-        image={FEED_IMAGE}
-        accessibilityLabel="موردو الأعلاف"
-        ctaTitle="استكشف"
-        href="/feed-suppliers"
-      />
+      <View style={[styles.sectionHead, { paddingHorizontal: gutter }]}>
+        <AppText variant="heading2" color="textPrimary">
+          استكشف سرح
+        </AppText>
+      </View>
+
+      <ScrollView
+        ref={scroller}
+        horizontal
+        pagingEnabled
+        decelerationRate="fast"
+        showsHorizontalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
+        {BANNERS.map((banner) => (
+          <View key={banner.key} style={[styles.slide, { width: slideWidth }]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={banner.accessibilityLabel}
+              onPress={() => safePush(banner.href, undefined, router)}
+              style={({ pressed }) => [
+                styles.banner,
+                { width: slideWidth - gutter * 2 },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Image
+                source={banner.image}
+                style={styles.image}
+                contentFit="cover"
+                pointerEvents="none"
+              />
+            </Pressable>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.dots}>
+        {BANNERS.map((banner, i) => (
+          <Pressable
+            key={banner.key}
+            accessibilityRole="button"
+            accessibilityLabel={`بنر ${i + 1} من ${BANNERS.length}`}
+            onPress={() => {
+              setIndex(i);
+              scroller.current?.scrollTo({ x: i * slideWidth, animated: true });
+            }}
+            style={[styles.dot, i === index && styles.dotActive]}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -85,36 +112,44 @@ export function ExploreSarhSection() {
 function createStyles() {
   return StyleSheet.create({
     wrap: {
-      paddingBottom: space[8],
-      gap: space[8],
+      paddingBottom: space[16],
     },
-    hero: {
-      width: '100%',
-      aspectRatio: HERO_ASPECT,
+    sectionHead: {
+      paddingTop: space[16],
+      paddingBottom: space[12],
+    },
+    slide: {
+      alignItems: 'center',
+    },
+    banner: {
+      aspectRatio: BANNER_ASPECT,
+      borderRadius: radius[20],
       overflow: 'hidden',
-      backgroundColor: colors.background,
+      backgroundColor: colors.surfaceElevated,
+      ...elevation.raised,
     },
     image: {
       ...StyleSheet.absoluteFillObject,
     },
-    fadeTop: {
-      position: 'absolute',
-      top: 0,
-      start: 0,
-      end: 0,
-      height: space[32],
+    pressed: {
+      opacity: motion.opacity.pressed,
     },
-    fadeBottom: {
-      position: 'absolute',
-      bottom: 0,
-      start: 0,
-      end: 0,
-      height: space[32],
-    },
-    ctaDock: {
-      ...StyleSheet.absoluteFillObject,
+    dots: {
+      flexDirection: 'row',
       justifyContent: 'center',
-      alignItems: 'flex-end',
+      alignItems: 'center',
+      gap: space[8],
+      marginTop: space[12],
+    },
+    dot: {
+      width: space[8],
+      height: space[8],
+      borderRadius: radius[999],
+      backgroundColor: colors.border,
+    },
+    dotActive: {
+      width: space[16],
+      backgroundColor: colors.primary,
     },
   });
 }
