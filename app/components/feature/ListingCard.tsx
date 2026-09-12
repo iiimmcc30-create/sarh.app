@@ -124,15 +124,15 @@ function ListingCardInner({
                 {location}
               </Text>
             </View>
-            <View style={[styles.listMetaCluster, getRtlRow()]}>
+            <View style={[styles.listMetaClusterFixed, getRtlRow()]}>
               <AppIcon name="time-outline" size={12} color={colors.textPrimary} />
               <Text style={styles.listMetaText} numberOfLines={1}>
                 {displayTime}
               </Text>
             </View>
             {listing.price > 0 ? (
-              <View style={[styles.listMetaCluster, getRtlRow()]}>
-                <Text style={styles.listPriceAmount}>{formatEnNumber(listing.price)}</Text>
+              <View style={[styles.listMetaClusterFixed, getRtlRow()]}>
+                <Text style={styles.listPriceAmount} numberOfLines={1}>{formatEnNumber(listing.price)}</Text>
                 <Text style={styles.listRiyalText}>﷼</Text>
               </View>
             ) : null}
@@ -337,7 +337,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   // Elevated listing card — More-tab contrast (bgElevated, no border)
   listRow: {
     ...getRtlRow(),
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     flexGrow: 0,
     width: '100%',
     paddingVertical: 0,
@@ -358,7 +358,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     gap: 6,
     paddingVertical: 10,
     paddingEnd: spacing.xs,
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
   },
   listTitleRow: {
     alignItems: 'center',
@@ -377,15 +377,23 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   listMetaRow: {
     alignItems: 'center',
-    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    flexWrap: 'nowrap',
     gap: 10,
     width: '100%',
+    flexGrow: 1,
   },
   listMetaCluster: {
     alignItems: 'center',
     gap: 3,
     flexShrink: 1,
+    minWidth: 0,
     maxWidth: '100%',
+  },
+  listMetaClusterFixed: {
+    alignItems: 'center',
+    gap: 3,
+    flexShrink: 0,
   },
   listMetaText: {
     ...typography.caption,
@@ -412,6 +420,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-start',
+    alignSelf: 'stretch',
   },
   listSeller: {
     alignItems: 'center',
@@ -438,11 +447,14 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   listThumbWrap: {
     width: 118,
-    aspectRatio: 1,
+    minHeight: 118,
+    alignSelf: 'stretch',
     flexShrink: 0,
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
     position: 'relative',
+    borderTopEndRadius: 10,
+    borderBottomEndRadius: 10,
   },
   listThumb: {
     ...StyleSheet.absoluteFillObject,

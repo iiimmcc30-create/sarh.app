@@ -1,4 +1,5 @@
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { motion } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { space } from '@/design-system/tokens';
@@ -43,7 +44,7 @@ export default function ButcherInvoicesScreen() {
       const orders = await fetchMyButcherOrders(accessToken);
       setInvoices(orders.filter(isInvoiceOrder));
     } catch {
-      setInvoices([]);
+      /* keep current invoices */
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -52,7 +53,6 @@ export default function ButcherInvoicesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
       void load();
     }, [load]),
   );
@@ -61,7 +61,7 @@ export default function ButcherInvoicesScreen() {
     <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="الفواتير" showBack />
 
-      {loading ? (
+      {loading && invoices.length === 0 ? (
         <ScreenBody scroll={false} gutter={false}>
           <ActivityIndicator size="large" color={colors.electricBright} style={styles.loader} />
         </ScreenBody>
@@ -93,7 +93,7 @@ export default function ButcherInvoicesScreen() {
             invoices.map((invoice) => (
               <Pressable
                 key={invoice.id}
-                style={({ pressed }) => [styles.card, pressed && { opacity: 0.92 }]}
+                style={({ pressed }) => [styles.card, pressed && { opacity: motion.press.opacityCard }]}
                 onPress={() =>
                   router.push({ pathname: '/butchers/invoice/[id]', params: { id: invoice.id } })
                 }

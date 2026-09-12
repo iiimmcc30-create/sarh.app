@@ -69,6 +69,11 @@ describe('support flow sheet', () => {
     expect(help).toContain('presetOrderId');
   });
 
+  it('uses press opacity for option rows, not pressScale', () => {
+    expect(sheet).toContain('motion.press.opacity');
+    expect(sheet).not.toMatch(/opacity:\s*motion\.pressScale/);
+  });
+
   it('never shows internal bot-off copy to the user', () => {
     expect(sheet).not.toContain('سرحان لن يرد');
     expect(sheet).not.toContain('تم تعطيل البوت');

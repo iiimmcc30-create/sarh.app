@@ -1,6 +1,5 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { butcherTypography } from '@/constants/butcherTypography';
-import { butcherMeatBg } from '@/constants/butcherMarket';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import type { ButcherMarketBanner } from '@/services/butcherMarketBanners';
@@ -18,16 +17,19 @@ import {
 
 type Props = {
   banners: ButcherMarketBanner[];
+  onActiveIndexChange?: (index: number) => void;
 };
 
-export function ButcherMarketBannerSlider({ banners }: Props) {
+export function ButcherMarketBannerSlider({ banners, onActiveIndexChange }: Props) {
   const { width } = useWindowDimensions();
   const inset = spacing.lg;
   const slideWidth = width;
   const cardWidth = width - inset * 2;
-  const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
+  const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [index, setIndex] = useState(0);
   const scroller = useRef<ScrollView>(null);
+  const onActiveIndexChangeRef = useRef(onActiveIndexChange);
+  onActiveIndexChangeRef.current = onActiveIndexChange;
 
   useEffect(() => {
     if (banners.length < 2) return;
@@ -35,6 +37,7 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
       setIndex((prev) => {
         const next = (prev + 1) % banners.length;
         scroller.current?.scrollTo({ x: next * slideWidth, animated: true });
+        onActiveIndexChangeRef.current?.(next);
         return next;
       });
     }, 5000);
@@ -44,7 +47,10 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
     const next = Math.round(x / slideWidth);
-    if (next !== index && next >= 0 && next < banners.length) setIndex(next);
+    if (next !== index && next >= 0 && next < banners.length) {
+      setIndex(next);
+      onActiveIndexChangeRef.current?.(next);
+    }
   };
 
   if (banners.length === 0) return null;
@@ -64,15 +70,21 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
           <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
             <View style={[styles.card, { width: cardWidth }]}>
               <Image source={uriSource(banner.imageUrl)} style={styles.image} contentFit="cover" />
-              <View style={styles.veil} />
+              {banner.titleAr.trim() || banner.subtitleAr.trim() || banner.captionAr.trim() ? (
+                <View style={styles.veil} />
+              ) : null}
               <View style={styles.copy}>
-                <Text style={styles.title} numberOfLines={1}>
-                  {banner.titleAr}
-                </Text>
-                <Text style={styles.subtitle} numberOfLines={2}>
-                  {banner.subtitleAr}
-                </Text>
-                {banner.captionAr ? (
+                {banner.titleAr.trim() ? (
+                  <Text style={styles.title} numberOfLines={1}>
+                    {banner.titleAr}
+                  </Text>
+                ) : null}
+                {banner.subtitleAr.trim() ? (
+                  <Text style={styles.subtitle} numberOfLines={2}>
+                    {banner.subtitleAr}
+                  </Text>
+                ) : null}
+                {banner.captionAr.trim() ? (
                   <Text style={styles.caption} numberOfLines={1}>
                     {banner.captionAr}
                   </Text>
@@ -88,6 +100,7 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
             key={banner.id}
             onPress={() => {
               setIndex(i);
+              onActiveIndexChangeRef.current?.(i);
               scroller.current?.scrollTo({ x: i * slideWidth, animated: true });
             }}
             accessibilityLabel={`بنر ${i + 1}`}
@@ -99,11 +112,11 @@ export function ButcherMarketBannerSlider({ banners }: Props) {
   );
 }
 
-function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+function createStyles(colors: ThemeColors) {
   const overlayText = '#FBF6F2';
   return StyleSheet.create({
     wrap: {
-      backgroundColor: butcherMeatBg(scheme),
+      backgroundColor: 'transparent',
       paddingBottom: spacing.md,
     },
     slide: {

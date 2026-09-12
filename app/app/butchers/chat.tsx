@@ -4,7 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, memo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -31,7 +31,6 @@ import { ChatMessage, ButcherProfile } from '@/services/butcherData';
 import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
 import { uploadMediaFromUri } from '@/services/upload';
-import { useEffect } from 'react';
 import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchButcherChatAccess } from '@/services/butcherChat';
@@ -108,6 +107,243 @@ function resolveChatUiKind(params: {
   return 'direct';
 }
 
+type ChatMessageStyles = ReturnType<typeof createMessageStyles>;
+type ChatScreenStyles = ReturnType<typeof createStyles>;
+
+function chatMessagePropsEqual(
+  prev: {
+    item: ChatMessage;
+    myId: string;
+    onRespondToOffer: (accept: boolean) => void;
+    messageStyles: ChatMessageStyles;
+    colors: ThemeColors;
+  },
+  next: {
+    item: ChatMessage;
+    myId: string;
+    onRespondToOffer: (accept: boolean) => void;
+    messageStyles: ChatMessageStyles;
+    colors: ThemeColors;
+  },
+) {
+  const a = prev.item;
+  const b = next.item;
+  return (
+    a.id === b.id &&
+    a.text === b.text &&
+    a.image === b.image &&
+    a.video === b.video &&
+    a.read === b.read &&
+    a.senderId === b.senderId &&
+    a.createdAt === b.createdAt &&
+    prev.myId === next.myId &&
+    prev.onRespondToOffer === next.onRespondToOffer &&
+    prev.messageStyles === next.messageStyles &&
+    prev.colors === next.colors
+  );
+}
+
+const ChatMessageBubble = memo(function ChatMessageBubble({
+  item,
+  myId,
+  onRespondToOffer,
+  messageStyles,
+  colors,
+}: {
+  item: ChatMessage;
+  myId: string;
+  onRespondToOffer: (accept: boolean) => void;
+  messageStyles: ChatMessageStyles;
+  colors: ThemeColors;
+}) {
+  const isMe = item.senderId === myId;
+  const offer = parseOfferMessage(item.text);
+  const timeLabel = new Date(item.createdAt).toLocaleTimeString('ar-SA', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  if (offer) {
+    return (
+      <View
+        style={[
+          messageStyles.bubbleWrap,
+          isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem,
+        ]}
+      >
+        <View style={[messageStyles.offerCard, isMe && messageStyles.offerCardMe]}>
+          <AppText variant="caption" color="textMuted">عرض سعر</AppText>
+          <AppText variant="heading3" style={messageStyles.offerAmount}>
+            {offer.amount.toLocaleString('en-US')} {offer.currencyLabel}
+          </AppText>
+          <AppText variant="micro" color="textSecondary" style={messageStyles.offerStatus}>
+            {isMe ? 'تم إرسال العرض' : 'عرض وارد'}
+          </AppText>
+          {!isMe ? (
+            <View style={messageStyles.offerActions}>
+              <Pressable
+                style={messageStyles.offerAccept}
+                onPress={() => onRespondToOffer(true)}
+              >
+                <AppText variant="label" style={messageStyles.offerAcceptText}>قبول</AppText>
+              </Pressable>
+              <Pressable
+                style={messageStyles.offerReject}
+                onPress={() => onRespondToOffer(false)}
+              >
+                <AppText variant="label" color="textSecondary">رفض</AppText>
+              </Pressable>
+            </View>
+          ) : null}
+          <AppText variant="caption" style={[messageStyles.timeText, messageStyles.timeTextThem]}>
+            {timeLabel}
+            {isMe ? (
+              <AppText variant="caption" style={{ color: item.read ? colors.electricBright : colors.textSubtle }}>
+                {' '}✓✓
+              </AppText>
+            ) : null}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[messageStyles.bubbleWrap, isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem]}>
+      <View style={[messageStyles.bubble, isMe ? messageStyles.bubbleMe : messageStyles.bubbleThem]}>
+        {item.text ? (
+          <AppText variant="body" style={[messageStyles.bubbleText, isMe ? messageStyles.textMe : messageStyles.textThem]}>
+            {item.text}
+          </AppText>
+        ) : null}
+        {item.image ? (
+          <Image
+            source={{ uri: item.image }}
+            style={messageStyles.bubbleImg}
+            contentFit="cover"
+          />
+        ) : null}
+        {item.video ? (
+          <StoryVideoPlayer
+            uri={item.video}
+            style={messageStyles.bubbleVideo}
+            muted={false}
+            loop={false}
+            autoPlay={false}
+            nativeControls
+          />
+        ) : null}
+        <AppText variant="caption" style={[messageStyles.timeText, isMe ? messageStyles.timeTextMe : messageStyles.timeTextThem]}>
+          {timeLabel}
+          {isMe && (
+            <AppText variant="caption" style={{ color: item.read ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)' }}>
+              {' '}✓✓
+            </AppText>
+          )}
+        </AppText>
+      </View>
+    </View>
+  );
+}, chatMessagePropsEqual);
+
+function ChatComposer({
+  initialDraft,
+  sending,
+  attachOpen,
+  onToggleAttach,
+  onSend,
+  onInputFocus,
+  styles,
+  colors,
+  composerTextStyle,
+  bottomPad,
+}: {
+  initialDraft?: string;
+  sending: boolean;
+  attachOpen: boolean;
+  onToggleAttach: () => void;
+  onSend: (text: string) => void;
+  onInputFocus: () => void;
+  styles: ChatScreenStyles;
+  colors: ThemeColors;
+  composerTextStyle: object;
+  bottomPad: number;
+}) {
+  const [inputText, setInputText] = useState(initialDraft?.trim() ? initialDraft.trim() : '');
+
+  useEffect(() => {
+    if (typeof initialDraft === 'string' && initialDraft.trim()) {
+      setInputText(initialDraft.trim());
+    }
+  }, [initialDraft]);
+
+  const canSend = Boolean(inputText.trim()) && !sending;
+
+  return (
+    <Row
+      align="end"
+      gap="sm"
+      style={[
+        styles.inputBar,
+        { paddingBottom: bottomPad },
+      ]}
+    >
+      <Pressable
+        style={[styles.attachBtn, sending && { opacity: 0.4 }]}
+        onPress={onToggleAttach}
+        disabled={sending}
+        accessibilityRole="button"
+        accessibilityLabel={attachOpen ? 'إغلاق المرفقات' : 'إضافة مرفق'}
+        accessibilityState={{ disabled: sending }}
+      >
+        <AppIcon
+          name={attachOpen ? 'close' : 'add'}
+          size={22}
+          color={colors.textPrimary}
+        />
+      </Pressable>
+
+      <TextInput
+        style={[styles.input, composerTextStyle, rtlInputText]}
+        placeholder="اكتب رسالة..."
+        placeholderTextColor={colors.textSubtle}
+        value={inputText}
+        onChangeText={setInputText}
+        multiline
+        maxLength={500}
+        onFocus={onInputFocus}
+      />
+
+      <Pressable
+        style={[
+          styles.sendBtn,
+          !inputText.trim() && !sending ? styles.sendBtnIdle : null,
+        ]}
+        onPress={() => {
+          const text = inputText.trim();
+          if (!text || sending) return;
+          setInputText('');
+          onSend(text);
+        }}
+        disabled={!canSend}
+        accessibilityRole="button"
+        accessibilityLabel="إرسال الرسالة"
+        accessibilityState={{ disabled: !canSend, busy: sending }}
+      >
+        {sending ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <AppIcon
+            name={inputText.trim() ? 'paper-plane' : 'mic'}
+            size={18}
+            color="#fff"
+          />
+        )}
+      </Pressable>
+    </Row>
+  );
+}
+
 export default function ButcherChatScreen() {
   const {
     butcherId,
@@ -163,7 +399,6 @@ export default function ButcherChatScreen() {
 
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
   const [threadId, setThreadId] = useState<string | null>(threadIdParam ?? null);
   const [resolvedButcherId, setResolvedButcherId] = useState<string | null>(
     butcherId ?? null,
@@ -201,12 +436,6 @@ export default function ButcherChatScreen() {
         }
       : null,
   );
-
-  useEffect(() => {
-    if (typeof draftMessageParam === 'string' && draftMessageParam.trim()) {
-      setInputText(draftMessageParam.trim());
-    }
-  }, [draftMessageParam]);
 
   useEffect(() => {
     if (listingContext || !receiverId) return;
@@ -557,7 +786,6 @@ export default function ButcherChatScreen() {
       read: false,
     };
     setMessages((prev) => [...prev, optimisticMsg]);
-    if (bodyText) setInputText('');
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
 
     try {
@@ -621,6 +849,8 @@ export default function ButcherChatScreen() {
       setSending(false);
     }
   };
+  const sendMessageRef = useRef(sendMessage);
+  sendMessageRef.current = sendMessage;
 
   const pickAndSendMedia = async (source: 'library' | 'camera' = 'library') => {
     if (!receiverUserId || !accessToken || sending) return;
@@ -750,100 +980,22 @@ export default function ButcherChatScreen() {
     );
   };
 
-  const respondToOffer = (accept: boolean) => {
-    void sendMessage(accept ? 'أوافق على العرض' : 'أرفض العرض');
-  };
+  const respondToOffer = useCallback((accept: boolean) => {
+    void sendMessageRef.current(accept ? 'أوافق على العرض' : 'أرفض العرض');
+  }, []);
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => {
-    const isMe = item.senderId === MY_ID;
-    const offer = parseOfferMessage(item.text);
-    const timeLabel = new Date(item.createdAt).toLocaleTimeString('ar-SA', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    if (offer) {
-      return (
-        <View
-          style={[
-            messageStyles.bubbleWrap,
-            isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem,
-          ]}
-        >
-          <View style={[messageStyles.offerCard, isMe && messageStyles.offerCardMe]}>
-            <AppText variant="caption" color="textMuted">عرض سعر</AppText>
-            <AppText variant="heading3" style={messageStyles.offerAmount}>
-              {offer.amount.toLocaleString('en-US')} {offer.currencyLabel}
-            </AppText>
-            <AppText variant="micro" color="textSecondary" style={messageStyles.offerStatus}>
-              {isMe ? 'تم إرسال العرض' : 'عرض وارد'}
-            </AppText>
-            {!isMe ? (
-              <View style={messageStyles.offerActions}>
-                <Pressable
-                  style={messageStyles.offerAccept}
-                  onPress={() => respondToOffer(true)}
-                >
-                  <AppText variant="label" style={messageStyles.offerAcceptText}>قبول</AppText>
-                </Pressable>
-                <Pressable
-                  style={messageStyles.offerReject}
-                  onPress={() => respondToOffer(false)}
-                >
-                  <AppText variant="label" color="textSecondary">رفض</AppText>
-                </Pressable>
-              </View>
-            ) : null}
-            <AppText variant="caption" style={[messageStyles.timeText, messageStyles.timeTextThem]}>
-              {timeLabel}
-              {isMe ? (
-                <AppText variant="caption" style={{ color: item.read ? colors.electricBright : colors.textSubtle }}>
-                  {' '}✓✓
-                </AppText>
-              ) : null}
-            </AppText>
-          </View>
-        </View>
-      );
-    }
-
-    return (
-      <View style={[messageStyles.bubbleWrap, isMe ? messageStyles.bubbleWrapMe : messageStyles.bubbleWrapThem]}>
-        <View style={[messageStyles.bubble, isMe ? messageStyles.bubbleMe : messageStyles.bubbleThem]}>
-          {item.text ? (
-            <AppText variant="body" style={[messageStyles.bubbleText, isMe ? messageStyles.textMe : messageStyles.textThem]}>
-              {item.text}
-            </AppText>
-          ) : null}
-          {item.image ? (
-            <Image
-              source={{ uri: item.image }}
-              style={messageStyles.bubbleImg}
-              contentFit="cover"
-            />
-          ) : null}
-          {item.video ? (
-            <StoryVideoPlayer
-              uri={item.video}
-              style={messageStyles.bubbleVideo}
-              muted={false}
-              loop={false}
-              autoPlay={false}
-              nativeControls
-            />
-          ) : null}
-          <AppText variant="caption" style={[messageStyles.timeText, isMe ? messageStyles.timeTextMe : messageStyles.timeTextThem]}>
-            {timeLabel}
-            {isMe && (
-              <AppText variant="caption" style={{ color: item.read ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)' }}>
-                {' '}✓✓
-              </AppText>
-            )}
-          </AppText>
-        </View>
-      </View>
-    );
-  };
+  const renderMessage = useCallback(
+    ({ item }: { item: ChatMessage }) => (
+      <ChatMessageBubble
+        item={item}
+        myId={MY_ID}
+        onRespondToOffer={respondToOffer}
+        messageStyles={messageStyles}
+        colors={colors}
+      />
+    ),
+    [MY_ID, colors, messageStyles, respondToOffer],
+  );
 
   return (
     <Screen edges={['top']}>
@@ -946,7 +1098,7 @@ export default function ButcherChatScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
           contentContainerStyle={styles.messagesList}
-          onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             messages.length > 0 ? (
@@ -1012,64 +1164,22 @@ export default function ButcherChatScreen() {
             </AppText>
           </Row>
         ) : (
-        <Row
-          align="end"
-          gap="sm"
-          style={[
-            styles.inputBar,
-            { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
-          ]}
-        >
-          <Pressable
-            style={[styles.attachBtn, sending && { opacity: 0.4 }]}
-            onPress={() => setAttachOpen((v) => !v)}
-            disabled={sending}
-            accessibilityRole="button"
-            accessibilityLabel={attachOpen ? 'إغلاق المرفقات' : 'إضافة مرفق'}
-            accessibilityState={{ disabled: sending }}
-          >
-            <AppIcon
-              name={attachOpen ? 'close' : 'add'}
-              size={22}
-              color={colors.textPrimary}
-            />
-          </Pressable>
-
-          <TextInput
-            style={[styles.input, composerTextStyle, rtlInputText]}
-            placeholder="اكتب رسالة..."
-            placeholderTextColor={colors.textSubtle}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={500}
-            onFocus={() => setAttachOpen(false)}
-          />
-
-          <Pressable
-            style={[
-              styles.sendBtn,
-              !inputText.trim() && !sending ? styles.sendBtnIdle : null,
-            ]}
-            onPress={() => {
-              if (inputText.trim()) void sendMessage(inputText);
-            }}
-            disabled={!inputText.trim() || sending}
-            accessibilityRole="button"
-            accessibilityLabel="إرسال الرسالة"
-            accessibilityState={{ disabled: !inputText.trim() || sending, busy: sending }}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <AppIcon
-                name={inputText.trim() ? 'paper-plane' : 'mic'}
-                size={18}
-                color="#fff"
-              />
-            )}
-          </Pressable>
-        </Row>
+        <ChatComposer
+          initialDraft={
+            typeof draftMessageParam === 'string' ? draftMessageParam : undefined
+          }
+          sending={sending}
+          attachOpen={attachOpen}
+          onToggleAttach={() => setAttachOpen((v) => !v)}
+          onSend={(text) => {
+            void sendMessage(text);
+          }}
+          onInputFocus={() => setAttachOpen(false)}
+          styles={styles}
+          colors={colors}
+          composerTextStyle={composerTextStyle}
+          bottomPad={Math.max(insets.bottom, spacing.sm) + spacing.sm}
+        />
         )}
       </KeyboardAvoidingView>
     </Screen>

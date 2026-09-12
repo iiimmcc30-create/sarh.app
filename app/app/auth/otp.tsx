@@ -10,6 +10,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { ltrInputText } from '@/lib/rtl';
 import { type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -77,11 +78,11 @@ export default function OtpScreen() {
   // ── Shake animation ────────────────────────────────────────────────────────
   const shake = () => {
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 12, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -12, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -8, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 12, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -12, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: motion.duration.shake, useNativeDriver: true }),
     ]).start();
   };
 
@@ -89,7 +90,9 @@ export default function OtpScreen() {
   const playSuccess = () => {
     setSuccess(true);
     Animated.spring(successScale, {
-      toValue: 1, tension: 60, friction: 7, useNativeDriver: true,
+      toValue: 1,
+      useNativeDriver: true,
+      ...motion.spring.success,
     }).start();
   };
 

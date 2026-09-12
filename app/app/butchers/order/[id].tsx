@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { motion } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { Row, Screen, ScreenBody } from '@/design-system/layout';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
@@ -191,14 +192,14 @@ export default function OrderDetailsScreen() {
               يمكنك إكمال الدفع لهذا الطلب دون إنشاء طلب جديد. الملحمة لا تقبل الطلب قبل السداد.
             </AppText>
             <Pressable
-              style={({ pressed }) => [s.payBtn, (pressed || paying) && { opacity: 0.88 }]}
+              style={({ pressed }) => [s.payBtn, (pressed || paying) && { opacity: motion.press.opacity }]}
               onPress={() => void handleCompletePayment()}
               disabled={paying || !canPay}
             >
               {paying ? (
                 <ActivityIndicator color={colors.bgDeep} />
               ) : (
-                <AppText variant="label" style={s.payBtnText}>
+                <AppText variant="label" numberOfLines={1} style={s.payBtnText}>
                   إكمال الدفع
                 </AppText>
               )}
@@ -332,14 +333,20 @@ export default function OrderDetailsScreen() {
 
         <Row gap="md" align="center" style={s.merchantRow}>
           <View style={s.merchantLogo}>
-            {uriSource(order.butcher?.logo) ? (
-              <Image source={uriSource(order.butcher?.logo)} style={s.logoImg} contentFit="cover" />
+            {uriSource(order.butcher?.logo || order.butcher?.cover) ? (
+              <Image
+                source={uriSource(order.butcher?.logo || order.butcher?.cover)}
+                style={s.logoImg}
+                contentFit="cover"
+              />
             ) : (
               <AppIcon name="storefront-outline" size={18} color={colors.textMuted} />
             )}
           </View>
           <View style={s.merchantCopy}>
-            <AppText variant="label">{order.butcher?.nameAr ?? 'ملحمة'}</AppText>
+            <AppText variant="label" numberOfLines={1}>
+              {order.butcher?.nameAr?.trim() || 'ملحمة'}
+            </AppText>
             <Pressable onPress={copyOrderNumber}>
               <Row gap="xs" align="center" style={s.orderIdRow}>
                 <AppText variant="caption" color="textMuted">
@@ -408,7 +415,7 @@ export default function OrderDetailsScreen() {
             style={s.reorderBtn}
             accessibilityLabel="إعادة الطلب"
           >
-            <AppText variant="label" style={s.reorderText}>
+            <AppText variant="label" numberOfLines={1} style={s.reorderText}>
               إعادة الطلب
             </AppText>
           </Pressable>
@@ -480,6 +487,8 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.lg,
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
     },
     payBtnText: {
       color: colors.bgDeep,
@@ -555,9 +564,12 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.md,
       backgroundColor: colors.gold,
       borderRadius: 12,
-      minHeight: 48,
+      minHeight: 40,
+      paddingHorizontal: spacing.lg,
       alignItems: 'center',
       justifyContent: 'center',
+      flexDirection: 'row',
+      flexWrap: 'nowrap',
     },
     reorderText: {
       color: colors.textPrimary,

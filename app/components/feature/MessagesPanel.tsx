@@ -1,6 +1,6 @@
 // SAFAT — Messages inbox (Premium · RTL · Mobile-first)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { functional } from '@/design-system';
 import { AppText, SarhButton, SarhInput } from '@/design-system/components';
@@ -11,16 +11,17 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
 import { radius, type ThemeColors } from '@/constants/theme';
 import { space } from '@/design-system/tokens';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppFlatList } from '@/components/ui/AppFlatList';
 import {
   filterMessageThreads,
   useMessageThreads,
@@ -103,7 +104,7 @@ export function MessagesPanel({
     [threads, filter, search, listingTitlesByPeer],
   );
 
-  const openChat = (chat: MessageThreadItem) => {
+  const openChat = useCallback((chat: MessageThreadItem) => {
     const p = chat.participant;
     if (!p) return;
     const isButcher = chat.type === 'BUTCHER';
@@ -142,7 +143,7 @@ export function MessagesPanel({
           : {}),
       },
     } as never);
-  };
+  }, [listingByPeer, router]);
 
   const resolveListingPreview = (chat: MessageThreadItem) => {
     const peerId = chat.participant?.id;
@@ -160,6 +161,122 @@ export function MessagesPanel({
     return null;
   };
 
+  const listData = useMemo(
+    () => filteredChats.filter((chat) => Boolean(chat.participant)),
+    [filteredChats],
+  );
+
+  const renderThread = useCallback(
+    ({ item: chat }: { item: MessageThreadItem }) => {
+      const p = chat.participant;
+      if (!p) return null;
+      const isButcher = chat.type === 'BUTCHER';
+      const title = isButcher
+        ? chat.butcher?.nameAr || p.arabicName
+        : p.arabicName;
+      const avatarUri = isButcher
+        ? chat.butcher?.logo || p.avatar
+        : p.avatar;
+      const listing = resolveListingPreview(chat);
+      const showListingMeta =
+        listing &&
+        (listing.price > 0 || Boolean(listing.image) || Boolean(listing.title));
+
+      return (
+        <Pressable
+          onPress={() => openChat(chat)}
+          style={({ pressed }) => [
+            styles.chatRow,
+            { paddingHorizontal: gutter },
+            pressed && styles.chatRowPressed,
+          ]}
+        >
+          <Row gap="md" align="center">
+            <Row gap="sm" align="center">
+              {isButcher ? (
+                <View style={styles.avatarWrap}>
+                  <Image
+                    source={{ uri: avatarUri }}
+                    style={styles.avatar}
+                    contentFit="cover"
+                  />
+                </View>
+              ) : (
+                <UserProfileLink userId={p.id}>
+                  <View style={styles.avatarWrap}>
+                    <Image
+                      source={{ uri: avatarUri }}
+                      style={styles.avatar}
+                      contentFit="cover"
+                    />
+                    <View style={styles.onlineDot} />
+                  </View>
+                </UserProfileLink>
+              )}
+              {listing?.image ? (
+                <Image
+                  source={uriSource(cloudinaryFitUrl(listing.image, 'row'))}
+                  style={styles.listingThumb}
+                  contentFit="cover"
+                />
+              ) : null}
+            </Row>
+
+            <Stack gap="xs" style={styles.chatBody}>
+              <Row justify="between" align="center" gap="sm">
+                <Row gap="xs" align="center" fill>
+                  <AppText variant="label" numberOfLines={1} style={styles.flex}>
+                    {title}
+                  </AppText>
+                  {!isButcher && p.verified ? (
+                    <AppIcon
+                      name="checkmark-circle"
+                      size={14}
+                      color={colors.electricBright}
+                    />
+                  ) : null}
+                </Row>
+                <AppText variant="micro" color="textMuted">
+                  {formatThreadTime(chat.lastMessageAt)}
+                </AppText>
+              </Row>
+
+              {showListingMeta && listing.price > 0 ? (
+                <AppText variant="caption" color="success" numberOfLines={1}>
+                  {listing.title}
+                  {' · '}
+                  {formatListingPrice(listing.price, listing.currency)}
+                </AppText>
+              ) : showListingMeta && listing.title && isButcher ? (
+                <AppText variant="caption" color="success" numberOfLines={1}>
+                  {listing.title}
+                </AppText>
+              ) : null}
+
+              <Row justify="between" align="center" gap="sm">
+                <AppText variant="caption" color="textMuted" numberOfLines={1} style={styles.flex}>
+                  {chat.isMine ? 'أنت: ' : ''}
+                  {chat.lastMessage ?? '—'}
+                </AppText>
+                {chat.unread > 0 ? (
+                  <View style={styles.unreadBadge}>
+                    <AppText variant="caption" style={{ color: functional.onPrimary }}>
+                      {chat.unread > 99 ? '99+' : chat.unread}
+                    </AppText>
+                  </View>
+                ) : null}
+              </Row>
+            </Stack>
+          </Row>
+        </Pressable>
+      );
+    },
+    [colors.electricBright, gutter, listingByPeer, openChat, styles],
+  );
+
+  const showInitialSpinner = loading && threads.length === 0;
+  const showUnauthorized = error === 'unauthorized' && threads.length === 0;
+
   return (
     <View style={styles.root}>
       {showHeader ? <ScreenHeader variant="tab" title="الرسائل" /> : null}
@@ -175,149 +292,47 @@ export function MessagesPanel({
         />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: listBottomPadding }}
-      >
-        {loading ? (
-          <Stack gap="sm" align="center" style={styles.empty}>
-            <ActivityIndicator size="large" color={colors.electricBright} />
-            <AppText variant="caption" color="textMuted" align="center">
-              جاري تحميل المحادثات...
-            </AppText>
-          </Stack>
-        ) : error === 'unauthorized' ? (
-          <Stack gap="sm" align="center" style={styles.empty}>
-            <View style={styles.emptyIconWrap}>
-              <AppIcon name="lock-closed-outline" size={28} color={colors.electricBright} />
-            </View>
-            <AppText variant="heading3" align="center">سجّل الدخول</AppText>
-            <AppText variant="caption" color="textMuted" align="center">
-              عرض رسائلك يتطلب تسجيل الدخول
-            </AppText>
-          </Stack>
-        ) : filteredChats.length === 0 ? (
-          <Stack gap="sm" align="center" style={[styles.emptyCard, { marginHorizontal: gutter }]}>
-            <View style={styles.emptyIconWrap}>
-              <AppIcon name="chatbubbles-outline" size={28} color={colors.electricBright} />
-            </View>
-            <AppText variant="heading3" align="center">ابدأ محادثة جديدة</AppText>
-            <AppText variant="caption" color="textMuted" align="center">
-              تواصل مع البائعين عبر الإعلانات أو الملاحم
-            </AppText>
-            <SarhButton
-              title="استكشف الإعلانات"
-              onPress={() => router.push('/(tabs)/market' as never)}
-            />
-          </Stack>
-        ) : (
-          filteredChats.map((chat) => {
-            const p = chat.participant;
-            if (!p) return null;
-            const isButcher = chat.type === 'BUTCHER';
-            const title = isButcher
-              ? chat.butcher?.nameAr || p.arabicName
-              : p.arabicName;
-            const avatarUri = isButcher
-              ? chat.butcher?.logo || p.avatar
-              : p.avatar;
-            const listing = resolveListingPreview(chat);
-            const showListingMeta =
-              listing &&
-              (listing.price > 0 || Boolean(listing.image) || Boolean(listing.title));
-
-            return (
-              <Pressable
-                key={chat.id}
-                onPress={() => openChat(chat)}
-                style={({ pressed }) => [
-                  styles.chatRow,
-                  { paddingHorizontal: gutter },
-                  pressed && styles.chatRowPressed,
-                ]}
-              >
-                <Row gap="md" align="center">
-                  <Row gap="sm" align="center">
-                    {isButcher ? (
-                      <View style={styles.avatarWrap}>
-                        <Image
-                          source={{ uri: avatarUri }}
-                          style={styles.avatar}
-                          contentFit="cover"
-                        />
-                      </View>
-                    ) : (
-                      <UserProfileLink userId={p.id}>
-                        <View style={styles.avatarWrap}>
-                          <Image
-                            source={{ uri: avatarUri }}
-                            style={styles.avatar}
-                            contentFit="cover"
-                          />
-                          <View style={styles.onlineDot} />
-                        </View>
-                      </UserProfileLink>
-                    )}
-                    {listing?.image ? (
-                      <Image
-                        source={{ uri: listing.image }}
-                        style={styles.listingThumb}
-                        contentFit="cover"
-                      />
-                    ) : null}
-                  </Row>
-
-                  <Stack gap="xs" style={styles.chatBody}>
-                    <Row justify="between" align="center" gap="sm">
-                      <Row gap="xs" align="center" fill>
-                        <AppText variant="label" numberOfLines={1} style={styles.flex}>
-                          {title}
-                        </AppText>
-                        {!isButcher && p.verified ? (
-                          <AppIcon
-                            name="checkmark-circle"
-                            size={14}
-                            color={colors.electricBright}
-                          />
-                        ) : null}
-                      </Row>
-                      <AppText variant="micro" color="textMuted">
-                        {formatThreadTime(chat.lastMessageAt)}
-                      </AppText>
-                    </Row>
-
-                    {showListingMeta && listing.price > 0 ? (
-                      <AppText variant="caption" color="success" numberOfLines={1}>
-                        {listing.title}
-                        {' · '}
-                        {formatListingPrice(listing.price, listing.currency)}
-                      </AppText>
-                    ) : showListingMeta && listing.title && isButcher ? (
-                      <AppText variant="caption" color="success" numberOfLines={1}>
-                        {listing.title}
-                      </AppText>
-                    ) : null}
-
-                    <Row justify="between" align="center" gap="sm">
-                      <AppText variant="caption" color="textMuted" numberOfLines={1} style={styles.flex}>
-                        {chat.isMine ? 'أنت: ' : ''}
-                        {chat.lastMessage ?? '—'}
-                      </AppText>
-                      {chat.unread > 0 ? (
-                        <View style={styles.unreadBadge}>
-                          <AppText variant="caption" style={{ color: functional.onPrimary }}>
-                            {chat.unread > 99 ? '99+' : chat.unread}
-                          </AppText>
-                        </View>
-                      ) : null}
-                    </Row>
-                  </Stack>
-                </Row>
-              </Pressable>
-            );
-          })
-        )}
-      </ScrollView>
+      {showInitialSpinner ? (
+        <Stack gap="sm" align="center" style={styles.empty}>
+          <ActivityIndicator size="large" color={colors.electricBright} />
+          <AppText variant="caption" color="textMuted" align="center">
+            جاري تحميل المحادثات...
+          </AppText>
+        </Stack>
+      ) : showUnauthorized ? (
+        <Stack gap="sm" align="center" style={styles.empty}>
+          <View style={styles.emptyIconWrap}>
+            <AppIcon name="lock-closed-outline" size={28} color={colors.electricBright} />
+          </View>
+          <AppText variant="heading3" align="center">سجّل الدخول</AppText>
+          <AppText variant="caption" color="textMuted" align="center">
+            عرض رسائلك يتطلب تسجيل الدخول
+          </AppText>
+        </Stack>
+      ) : (
+        <AppFlatList
+          style={styles.list}
+          data={listData}
+          keyExtractor={(item) => item.id}
+          renderItem={renderThread}
+          contentContainerStyle={{ paddingBottom: listBottomPadding, flexGrow: 1 }}
+          ListEmptyComponent={
+            <Stack gap="sm" align="center" style={[styles.emptyCard, { marginHorizontal: gutter }]}>
+              <View style={styles.emptyIconWrap}>
+                <AppIcon name="chatbubbles-outline" size={28} color={colors.electricBright} />
+              </View>
+              <AppText variant="heading3" align="center">ابدأ محادثة جديدة</AppText>
+              <AppText variant="caption" color="textMuted" align="center">
+                تواصل مع البائعين عبر الإعلانات أو الملاحم
+              </AppText>
+              <SarhButton
+                title="استكشف الإعلانات"
+                onPress={() => router.push('/(tabs)/market' as never)}
+              />
+            </Stack>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -325,6 +340,7 @@ export function MessagesPanel({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     root: { flex: 1 },
+    list: { flex: 1 },
     searchWrap: {
       paddingBottom: space[12],
     },

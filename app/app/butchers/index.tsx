@@ -1,6 +1,6 @@
 // SAFAT — Butchers market home: banners · offers · picks · nearby
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Location from 'expo-location';
 import {
   ActivityIndicator,
@@ -9,6 +9,8 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { butcherMeatBg } from '@/constants/butcherMarket';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { AppText } from '@/design-system/components';
@@ -61,7 +63,11 @@ export default function ButchersScreen() {
   const [homeOffers, setHomeOffers] = useState<ButcherOfferPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [bannerIndex, setBannerIndex] = useState(0);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const hasHomeDataRef = useRef(false);
+  const insets = useSafeAreaInsets();
+  const washUri = banners[bannerIndex]?.imageUrl;
 
   const pickWidth = Math.round((screenWidth - spacing.lg * 2) * 0.72);
   const offerWidth = Math.round(Math.min(156, screenWidth * 0.38));
@@ -100,9 +106,13 @@ export default function ButchersScreen() {
   }, []);
 
   useEffect(() => {
+    hasHomeDataRef.current = picks.length > 0;
+  }, [picks.length]);
+
+  useEffect(() => {
     let cancelled = false;
     void (async () => {
-      setLoading(true);
+      if (!hasHomeDataRef.current) setLoading(true);
       try {
         const [rated, near, promo, offers] = await Promise.all([
           fetchSorted('rating'),
@@ -146,6 +156,15 @@ export default function ButchersScreen() {
       pattern={false}
       style={{ backgroundColor: butcherMeatBg(scheme) }}
     >
+      {washUri ? (
+        <Image
+          source={uriSource(washUri)}
+          style={[s.chromeWash, { top: -insets.top, height: insets.top + 280 }]}
+          contentFit="cover"
+          contentPosition="top"
+          blurRadius={56}
+        />
+      ) : null}
       <ScreenBody
         stickyHeaderIndices={[0]}
         gutter={false}
@@ -168,11 +187,13 @@ export default function ButchersScreen() {
             cartCount={itemCount}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            washUri={washUri}
           />
         </View>
 
-        <ButcherMarketBannerSlider banners={banners} />
+        <ButcherMarketBannerSlider banners={banners} onActiveIndexChange={setBannerIndex} />
 
+        <View style={s.pageBody}>
         {loading && picks.length === 0 ? (
           <View style={s.loader}>
             <ActivityIndicator color={colors.electricBright} />
@@ -259,6 +280,7 @@ export default function ButchersScreen() {
             ) : null}
           </>
         )}
+        </View>
       </ScreenBody>
 
       <ButchersTabBar active="home" />
@@ -268,8 +290,15 @@ export default function ButchersScreen() {
 
 function createScreenStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
-    scroll: { paddingBottom: 20, backgroundColor: colors.screenRoot },
-    stickyHeader: { backgroundColor: butcherMeatBg(scheme) },
+    scroll: { paddingBottom: 20, backgroundColor: 'transparent' },
+    stickyHeader: { backgroundColor: 'transparent' },
+    pageBody: { backgroundColor: colors.screenRoot },
+    chromeWash: {
+      position: 'absolute',
+      start: 0,
+      end: 0,
+      zIndex: 0,
+    },
     offersRow: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,

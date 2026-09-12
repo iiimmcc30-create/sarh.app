@@ -12,7 +12,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -514,7 +513,7 @@ export default function CreateListingScreen() {
     <Screen edges={['top']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <Row justify="between" align="center" gap="none" style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={8} style={styles.cancelBtn}>

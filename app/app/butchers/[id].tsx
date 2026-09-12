@@ -5,7 +5,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Alert,
   Modal,
@@ -21,7 +21,9 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { rtlInputText } from '@/lib/rtl';
+import { motion } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { Row, Screen } from '@/design-system/layout';
 import { butcherMarket, butcherSearchFill } from '@/constants/butcherMarket';
@@ -66,6 +68,49 @@ import {
 } from '@/lib/butcherStoreMeta';
 
 // ─── Products list (filter owned by parent unified nav) ───────────────────────
+const STORE_SEARCH_DEBOUNCE_MS = 200;
+
+function StoreSearchBar({
+  styles,
+  colors,
+  onQueryChange,
+}: {
+  styles: {
+    searchWrap: object;
+    searchPill: object;
+    searchInput: object;
+  };
+  colors: ThemeColors;
+  onQueryChange: (query: string) => void;
+}) {
+  const [text, setText] = useState('');
+  const onQueryChangeRef = useRef(onQueryChange);
+  onQueryChangeRef.current = onQueryChange;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onQueryChangeRef.current(text);
+    }, STORE_SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [text]);
+
+  return (
+    <View style={styles.searchWrap}>
+      <Row align="center" gap="sm" style={styles.searchPill}>
+        <AppIcon name="search-outline" size={18} color={colors.textMuted} />
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          placeholder="البحث في القائمة..."
+          placeholderTextColor={colors.textMuted}
+          style={[styles.searchInput, rtlInputText]}
+          returnKeyType="search"
+        />
+      </Row>
+    </View>
+  );
+}
+
 function StoreProductsList({
   products,
   currencySymbol,
@@ -134,7 +179,7 @@ function OffersTab({ offers, currencySymbol }: {
     <View>
       {offers.map((offer) => (
         <View key={offer.id} style={offersStyles.card}>
-          <Image source={{ uri: offer.image }} style={offersStyles.img} contentFit="cover" />
+          <Image source={{ uri: cloudinaryFitUrl(offer.image, 'wide') ?? offer.image }} style={offersStyles.img} contentFit="cover" />
           <LinearGradient
             colors={[colors.amber + '33', colors.gold + '22']}
             style={offersStyles.body}
@@ -196,7 +241,7 @@ function StoriesTab({ stories }: { stories: ButcherStory[] }) {
     <View style={storiesStyles.grid}>
       {stories.map((story) => (
         <Pressable key={story.id} style={storiesStyles.item}>
-          <Image source={{ uri: story.thumbnail }} style={storiesStyles.img} contentFit="cover" />
+          <Image source={{ uri: cloudinaryFitUrl(story.thumbnail, 'card') ?? story.thumbnail }} style={storiesStyles.img} contentFit="cover" />
           <LinearGradient
             colors={['transparent', 'rgba(6,9,26,0.9)']}
             style={StyleSheet.absoluteFill}
@@ -337,7 +382,7 @@ function ChatTab({
   return (
     <View style={chatStyles.wrap}>
       <Pressable
-        style={({ pressed }) => [chatStyles.openChatBtn, pressed && { opacity: 0.85 }]}
+        style={({ pressed }) => [chatStyles.openChatBtn, pressed && { opacity: motion.press.opacity }]}
         onPress={onOpenChat}
       >
         <LinearGradient
@@ -556,10 +601,6 @@ export default function ButcherProfileScreen() {
   }, [id, accessToken]);
 
   useEffect(() => {
-    void loadChatAccess();
-  }, [loadChatAccess]);
-
-  useEffect(() => {
     if (!id || !accessToken) {
       setFavorited(false);
       return;
@@ -587,7 +628,7 @@ export default function ButcherProfileScreen() {
     const fetchButcherDetails = async () => {
       if (!id) return;
       try {
-        setLoading(true);
+        if (!butcher || butcher.id !== id) setLoading(true);
         const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
         const [res, resS] = await Promise.all([
           fetch(`${API_BASE}/api/butchers/${id}`, { headers }),
@@ -834,7 +875,7 @@ export default function ButcherProfileScreen() {
     }
   };
 
-  if (loading) {
+  if (loading && (!butcher || butcher.id !== id)) {
     return (
       <Screen edges={['top']} pattern={false} style={styles.screen}>
         <AppText variant="body" align="center" style={{ color: '#fff', marginTop: 80 }}>
@@ -916,19 +957,11 @@ export default function ButcherProfileScreen() {
           ) : null}
         </View>
 
-        <View style={styles.searchWrap}>
-          <Row align="center" gap="sm" style={styles.searchPill}>
-            <AppIcon name="search-outline" size={18} color={colors.textMuted} />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="البحث في القائمة..."
-              placeholderTextColor={colors.textMuted}
-              style={[styles.searchInput, rtlInputText]}
-              returnKeyType="search"
-            />
-          </Row>
-        </View>
+        <StoreSearchBar
+          styles={styles}
+          colors={colors}
+          onQueryChange={setSearchQuery}
+        />
 
         {searching ? (
           <View style={styles.tabContent}>

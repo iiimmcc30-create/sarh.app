@@ -14,6 +14,7 @@ import {
   type SupportTicketCategory,
 } from '@/services/support';
 import { userFacingTicketStatus } from '@/lib/supportFlow';
+import { motion } from '@/design-system';
 import { AppText, SarhButton, SarhCard } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 
@@ -25,9 +26,8 @@ export default function SupportTicketsScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const data = await fetchMyTickets();
-    setItems(data?.items ?? []);
+    if (data) setItems(data.items);
     setLoading(false);
   }, []);
 
@@ -47,7 +47,7 @@ export default function SupportTicketsScreen() {
           onPress={() => router.push('/support' as never)}
         />
 
-        {loading ? (
+        {loading && items.length === 0 ? (
           <ActivityIndicator style={styles.loader} />
         ) : items.length === 0 ? (
           <Stack gap="sm" align="center" style={styles.empty}>
@@ -70,7 +70,7 @@ export default function SupportTicketsScreen() {
                 }
                 accessibilityRole="button"
                 accessibilityLabel={`تذكرة ${item.ticketNumber}`}
-                style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+                style={({ pressed }) => [{ opacity: pressed ? motion.press.opacity : 1 }]}
               >
                 <SarhCard level="card" padding="md">
                   <Stack gap="sm">

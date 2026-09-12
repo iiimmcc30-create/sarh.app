@@ -14,6 +14,7 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { motion } from '@/design-system';
 import { AppText } from '@/design-system/components';
 
 type Props = {
@@ -79,7 +80,7 @@ function createStyles(colors: ThemeColors) {
     compact: {
       paddingVertical: 0,
     },
-    pressed: { opacity: 0.85 },
+    pressed: { opacity: motion.press.opacity },
     cluster: {
       alignItems: 'center',
       gap: spacing.sm,

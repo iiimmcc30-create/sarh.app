@@ -9,6 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { motion } from '@/design-system';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -199,8 +200,8 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.xs,
     },
     itemPressed: {
-      opacity: 0.86,
-      transform: [{ scale: 0.99 }],
+      opacity: motion.press.opacity,
+      transform: [{ scale: motion.press.scale }],
     },
     itemIconWrap: {
       width: 38,

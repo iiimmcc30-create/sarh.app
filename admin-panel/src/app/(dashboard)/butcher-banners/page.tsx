@@ -79,8 +79,8 @@ export default function ButcherBannersAdminPage() {
   async function onSave(id: string, e: FormEvent) {
     e.preventDefault();
     const draft = drafts[id];
-    if (!draft?.imageUrl || !draft.titleAr.trim() || !draft.subtitleAr.trim()) {
-      setError('أدخل العنوان والنص الفرعي والصورة');
+    if (!draft?.imageUrl) {
+      setError('أدخل صورة البنر');
       return;
     }
     setSavingId(id);
@@ -105,7 +105,7 @@ export default function ButcherBannersAdminPage() {
     <div>
       <PageHeader
         title="بنرات سوق الملاحم"
-        description="ثلاثة بنرات ترويجية تظهر كسلايدر تحت البحث في سوق الملاحم — يمكن تغيير الصورة والنصوص لكل شريحة"
+        description="ثلاثة بنرات ترويجية تظهر كسلايدر تحت البحث في سوق الملاحم — الصورة مطلوبة، والعنوان والنص اختياريان"
         actions={
           <Button variant="ghost" onClick={() => void load()} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
@@ -153,18 +153,16 @@ export default function ButcherBannersAdminPage() {
                   />
                   <div className="space-y-3">
                     <input
-                      placeholder="العنوان الرئيسي"
+                      placeholder="العنوان الرئيسي (اختياري)"
                       value={draft.titleAr}
                       onChange={(e) => patchDraft(banner.id, { titleAr: e.target.value })}
                       className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                      required
                     />
                     <input
-                      placeholder="النص العريض"
+                      placeholder="النص العريض (اختياري)"
                       value={draft.subtitleAr}
                       onChange={(e) => patchDraft(banner.id, { subtitleAr: e.target.value })}
                       className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                      required
                     />
                     <input
                       placeholder="سطر إضافي (اختياري)"

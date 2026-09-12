@@ -8,6 +8,7 @@ import { useAuthCopy } from '@/hooks/useAuthCopy';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
@@ -36,10 +37,10 @@ export default function PhoneLoginScreen() {
 
   const shake = () => {
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 5, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 5, duration: motion.duration.shake, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: motion.duration.shake, useNativeDriver: true }),
     ]).start();
   };
 

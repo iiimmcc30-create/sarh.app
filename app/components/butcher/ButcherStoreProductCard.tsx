@@ -1,5 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppText } from '@/design-system/components';
 import { butcherMarket } from '@/constants/butcherMarket';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -7,7 +7,7 @@ import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
-import { resolveMediaUrl } from '@/services/media';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import type { ButcherProduct } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -53,7 +53,7 @@ export function ButcherStoreProductCard({
     product.pricingNoteAr?.trim() ||
     product.description?.trim() ||
     '';
-  const imageUri = resolveMediaUrl(product.images[0]);
+  const imageUri = cloudinaryFitUrl(product.images[0], 'row');
 
   return (
     <Pressable
@@ -63,7 +63,7 @@ export function ButcherStoreProductCard({
       <View style={[styles.row, getRtlRow()]}>
         <View style={styles.imageWrap}>
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.image} contentFit="cover" />
+            <Image source={uriSource(imageUri)} style={styles.image} contentFit="cover" />
           ) : (
             <View style={styles.imageFallback} />
           )}

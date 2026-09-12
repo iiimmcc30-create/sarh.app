@@ -3,7 +3,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { PaymentBrandLogo } from '@/components/payment/PaymentBrandLogos';
-import { functional } from '@/design-system';
+import { functional, motion } from '@/design-system';
 import { AppText, SarhButton, SarhInput } from '@/design-system/components';
 import { BottomAction, Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -158,15 +158,15 @@ export default function PaymentScreen() {
   }, [subscription.id, accessToken, refetchSubscription]);
 
   useEffect(() => {
-    Animated.timing(stepAnim, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+    Animated.timing(stepAnim, { toValue: 1, duration: motion.duration.screen, useNativeDriver: true }).start();
     return () => { stepAnim.setValue(0); };
   }, [step]);
 
   useEffect(() => {
     if (step === 'success') {
       Animated.parallel([
-        Animated.spring(successScale, { toValue: 1, useNativeDriver: true, tension: 80, friction: 6 }),
-        Animated.timing(successOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+        Animated.spring(successScale, { toValue: 1, useNativeDriver: true, ...motion.spring.success }),
+        Animated.timing(successOpacity, { toValue: 1, duration: motion.duration.slow, useNativeDriver: true }),
       ]).start();
     }
   }, [step]);

@@ -30,8 +30,6 @@ import {
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
-const LISTING_ROW_HEIGHT = 122;
-
 export default function MarketBrowseScreen() {
   const params = useLocalSearchParams<{
     categoryId?: string;
@@ -122,9 +120,7 @@ export default function MarketBrowseScreen() {
       setHasMore(page.hasMore);
     } catch {
       if (gen !== loadGenRef.current) return;
-      setItems([]);
-      setNextCursor(null);
-      setHasMore(false);
+      // Keep the last good page — a failed refetch must not wipe the list.
     } finally {
       if (gen === loadGenRef.current) setLoading(false);
     }
@@ -281,21 +277,22 @@ export default function MarketBrowseScreen() {
             data={filtered}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
-            getItemLayout={(_, index) => ({
-              length: LISTING_ROW_HEIGHT,
-              offset: LISTING_ROW_HEIGHT * index,
-              index,
-            })}
             ListHeaderComponent={ListHeader}
             ListEmptyComponent={
-              <Stack gap="md" align="center" style={styles.empty}>
-                <AppText variant="heading2" align="center">
-                  🔍
-                </AppText>
-                <AppText variant="body" color="textMuted" align="center">
-                  لا توجد إعلانات في هذا التصنيف
-                </AppText>
-              </Stack>
+              loading ? (
+                <Stack gap="md" align="center" style={styles.empty}>
+                  <ActivityIndicator color={colors.electric} />
+                </Stack>
+              ) : (
+                <Stack gap="md" align="center" style={styles.empty}>
+                  <AppText variant="heading2" align="center">
+                    🔍
+                  </AppText>
+                  <AppText variant="body" color="textMuted" align="center">
+                    لا توجد إعلانات في هذا التصنيف
+                  </AppText>
+                </Stack>
+              )
             }
             ListFooterComponent={
               <View style={styles.listFooter}>

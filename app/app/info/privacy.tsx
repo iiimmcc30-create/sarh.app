@@ -3,6 +3,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { motion } from '@/design-system';
 import { AppText, SarhDivider } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
 import { Linking, Pressable, StyleSheet } from 'react-native';
@@ -81,7 +82,7 @@ export default function PrivacyScreen() {
               accessibilityRole="link"
               accessibilityLabel={item.text}
               onPress={() => Linking.openURL(item.href)}
-              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+              style={({ pressed }) => [{ opacity: pressed ? motion.press.opacity : 1 }]}
             >
               <Row gap="sm" style={styles.contactRow}>
                 <AppIcon name={item.icon} size={16} color={colors.electricBright} />

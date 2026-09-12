@@ -3,6 +3,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
+import { motion } from '@/design-system';
 import { AppText, SarhButton } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -105,7 +106,7 @@ export default function OrderSuccessScreen() {
 
           {/* Actions */}
           <Pressable
-            style={({ pressed }) => [s.chatBtn, pressed && { opacity: 0.88 }]}
+            style={({ pressed }) => [s.chatBtn, pressed && { opacity: motion.press.opacity }]}
             onPress={() =>
               router.push({
                 pathname: '/butchers/order/[id]',
@@ -121,7 +122,7 @@ export default function OrderSuccessScreen() {
             >
               <Row align="center" justify="center" gap="sm">
                 <AppIcon name="receipt-outline" size={20} color="#fff" />
-                <AppText variant="label" style={s.chatBtnText}>
+                <AppText variant="label" numberOfLines={1} style={s.chatBtnText}>
                   {isPaid ? 'تتبع الطلب' : 'إكمال الدفع'}
                 </AppText>
               </Row>

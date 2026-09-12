@@ -9,6 +9,88 @@ function trimUri(uri?: string | null): string | undefined {
   return value.length > 0 ? value : undefined;
 }
 
+/** List-card delivery: ~118px CSS thumb × 2x DPR, crop-fill, auto format/quality. */
+export const LISTING_LIST_THUMB_TRANSFORM = 'w_240,c_fill,q_auto,f_auto';
+
+const CLOUDINARY_UPLOAD =
+  /^((?:https?:\/\/)?res\.cloudinary\.com\/[^/]+\/(?:image|video)\/upload\/)(.+)$/i;
+
+export const CLOUDINARY_FIT = {
+  /** 46–92px rows (search, nearby logo, product tile, map pin). */
+  row: ['w_200', 'c_fill', 'q_auto', 'f_auto'],
+  /** Listing cards (~118px CSS). */
+  list: ['w_240', 'c_fill', 'q_auto', 'f_auto'],
+  /** Medium cards (~130–160px). */
+  card: ['w_480', 'c_fill', 'q_auto', 'f_auto'],
+  /** Full-width banners / news list (~168px tall). */
+  wide: ['w_800', 'c_fill', 'q_auto', 'f_auto'],
+} as const;
+
+export type CloudinaryFit = keyof typeof CLOUDINARY_FIT;
+
+function cloudinaryTokenPrefix(token: string): string {
+  return token.split('_')[0] ?? token;
+}
+
+function isCloudinaryTransformSegment(segment: string): boolean {
+  if (!segment || segment.includes('.')) return false;
+  if (/^v\d+$/.test(segment)) return false;
+  return /[_:,]/.test(segment);
+}
+
+function mergeCloudinaryTransformTokens(existing: string, extras: readonly string[]): string {
+  const current = existing
+    .split(/[,/]/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+  const prefixes = new Set(current.map(cloudinaryTokenPrefix));
+  const toAdd = extras.filter((token) => !prefixes.has(cloudinaryTokenPrefix(token)));
+  return [...toAdd, ...current].join(',');
+}
+
+/**
+ * Resize Cloudinary delivery URLs for list/card thumbs. Leaves non-Cloudinary
+ * URLs, missing values, and already-width-transformed URLs unchanged (no duplicate w_/q_/f_).
+ * Does not rewrite stored media — callers keep the original on the model.
+ */
+export function cloudinaryFitUrl(
+  uri?: string | null,
+  fit: CloudinaryFit = 'list',
+): string | undefined {
+  const value = trimUri(uri);
+  if (!value) return undefined;
+  if (!/res\.cloudinary\.com/i.test(value)) return value;
+
+  const match = value.match(CLOUDINARY_UPLOAD);
+  if (!match) return value;
+
+  let rest = match[2];
+  let query = '';
+  const queryAt = rest.indexOf('?');
+  if (queryAt >= 0) {
+    query = rest.slice(queryAt);
+    rest = rest.slice(0, queryAt);
+  }
+
+  const parts = rest.split('/').filter(Boolean);
+  const transformSegs: string[] = [];
+  let index = 0;
+  for (; index < parts.length; index += 1) {
+    const part = parts[index];
+    if (/^v\d+$/.test(part) || !isCloudinaryTransformSegment(part)) break;
+    transformSegs.push(part);
+  }
+  const resource = parts.slice(index).join('/');
+  if (!resource) return value;
+
+  const merged = mergeCloudinaryTransformTokens(transformSegs.join(','), CLOUDINARY_FIT[fit]);
+  return `${match[1]}${merged}/${resource}${query}`;
+}
+
+export function cloudinaryListThumbUrl(uri?: string | null): string | undefined {
+  return cloudinaryFitUrl(uri, 'list');
+}
+
 /** Cloudinary (or derived) video still — image, not playable video. */
 export function isListingVideoStillUri(uri?: string | null): boolean {
   const value = trimUri(uri);
@@ -88,8 +170,7 @@ function firstDurableUri(uris: Array<string | undefined | null>): string | undef
   return undefined;
 }
 
-/** Cover for outer listing cards: durable photo → thumb → video frame → any photo. */
-export function listingThumbUri(
+function listingThumbSource(
   listing: Pick<Listing, 'images' | 'thumbnailUrl' | 'videoUrl'>,
 ): string | undefined {
   const photos = listingPhotoUris(listing);
@@ -105,4 +186,11 @@ export function listingThumbUri(
   if (photos[0] && !isEphemeralListingUploadUri(photos[0])) return photos[0];
   if (thumb && !isEphemeralListingUploadUri(thumb)) return thumb;
   return undefined;
+}
+
+/** Cover for outer listing cards: durable photo → thumb → video frame → any photo. */
+export function listingThumbUri(
+  listing: Pick<Listing, 'images' | 'thumbnailUrl' | 'videoUrl'>,
+): string | undefined {
+  return cloudinaryListThumbUrl(listingThumbSource(listing));
 }
