@@ -135,7 +135,10 @@ describe('PostsService feed cache isolation', () => {
   });
 
   it('increments views when a post is opened', async () => {
-    repo.findById.mockResolvedValue({ ...post('p1', 'author-1'), viewsCount: 4 });
+    repo.findById.mockResolvedValue({
+      ...post('p1', 'author-1'),
+      viewsCount: 4,
+    });
     usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
     repo.findLike.mockResolvedValue(null);
     repo.findRepost.mockResolvedValue(null);
