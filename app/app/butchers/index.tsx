@@ -9,9 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image, uriSource } from '@/components/ui/AppImage';
-import { butcherMeatBg } from '@/constants/butcherMarket';
+import { butcherChromeBg, butcherChromeTone } from '@/constants/butcherMarket';
 import { spacing, type ThemeColors } from '@/constants/theme';
 import { AppText } from '@/design-system/components';
 import { Screen, ScreenBody } from '@/design-system/layout';
@@ -66,8 +64,8 @@ export default function ButchersScreen() {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const hasHomeDataRef = useRef(false);
-  const insets = useSafeAreaInsets();
-  const washUri = banners[bannerIndex]?.imageUrl;
+  const chromeTone = butcherChromeTone(bannerIndex);
+  const chromeBg = butcherChromeBg(scheme, chromeTone);
 
   const pickWidth = Math.round((screenWidth - spacing.lg * 2) * 0.72);
   const offerWidth = Math.round(Math.min(156, screenWidth * 0.38));
@@ -154,17 +152,8 @@ export default function ButchersScreen() {
     <Screen
       edges={['top']}
       pattern={false}
-      style={{ backgroundColor: butcherMeatBg(scheme) }}
+      style={{ backgroundColor: chromeBg }}
     >
-      {washUri ? (
-        <Image
-          source={uriSource(washUri)}
-          style={[s.chromeWash, { top: -insets.top, height: insets.top + 280 }]}
-          contentFit="cover"
-          contentPosition="top"
-          blurRadius={56}
-        />
-      ) : null}
       <ScreenBody
         stickyHeaderIndices={[0]}
         gutter={false}
@@ -187,7 +176,7 @@ export default function ButchersScreen() {
             cartCount={itemCount}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            washUri={washUri}
+            chromeTone={chromeTone}
           />
         </View>
 
@@ -293,12 +282,6 @@ function createScreenStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     scroll: { paddingBottom: 20, backgroundColor: 'transparent' },
     stickyHeader: { backgroundColor: 'transparent' },
     pageBody: { backgroundColor: colors.screenRoot },
-    chromeWash: {
-      position: 'absolute',
-      start: 0,
-      end: 0,
-      zIndex: 0,
-    },
     offersRow: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
