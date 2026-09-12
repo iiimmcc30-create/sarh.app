@@ -1,10 +1,13 @@
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
-import { lookupPromoteCatalogOption } from '@/services/promoteCatalog';
+import {
+  lookupPromoteCatalogOption,
+  PROMOTE_CATALOG_AMOUNT_MIN,
+} from '@/services/promoteCatalog';
 
 export type PromotionGoal = 'visibility' | 'pinned' | 'featured';
 
-export const PROMOTE_AMOUNT_MIN = 10;
+export const PROMOTE_AMOUNT_MIN = PROMOTE_CATALOG_AMOUNT_MIN;
 export const PROMOTE_AMOUNT_MAX = 500;
 export const PROMOTE_AMOUNT_DEFAULT = 19;
 

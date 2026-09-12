@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import {
   PROMOTE_CATALOG,
+  PROMOTE_CATALOG_AMOUNT_MIN,
   lookupPromotePrice,
   boostPlansFromCatalog,
   promotionPlansFromCatalog,
@@ -9,7 +10,10 @@ import {
 import { FALLBACK_BOOST_PLANS } from '@/services/listingBoost';
 import { FALLBACK_PROMOTION_PLANS } from '@/services/listingPromotion';
 import {
+  PROMOTE_AMOUNT_MIN,
   buildPromoteCheckoutPayload,
+  clampPromoteAmount,
+  formatPromoteAmount,
   resolvePromoteAmount,
 } from '@/services/listingPromote';
 
@@ -63,5 +67,41 @@ describe('promote catalog SSOT', () => {
     const payload = buildPromoteCheckoutPayload('ad-1', 'featured', 24, 999);
     expect(payload?.promotionAmount).toBe(9);
     expect(payload?.totalAmount).toBe(9);
+  });
+
+  it('does not lift a 9 SAR catalog price to 10', () => {
+    expect(PROMOTE_CATALOG_AMOUNT_MIN).toBe(9);
+    expect(PROMOTE_AMOUNT_MIN).toBe(9);
+    expect(clampPromoteAmount(9)).toBe(9);
+    expect(clampPromoteAmount(1)).toBe(9);
+    expect(formatPromoteAmount(9)).toContain('ريال');
+  });
+
+  it('keeps selection, payload, and catalog aligned for every official option', () => {
+    for (const row of OFFICIAL) {
+      expect(
+        lookupPromotePrice(row.goal, { durationHours: row.durationHours })?.amount,
+      ).toBe(row.amount);
+      expect(resolvePromoteAmount(row.goal, row.durationHours)).toBe(row.amount);
+      const payload = buildPromoteCheckoutPayload('ad-1', row.goal, row.durationHours);
+      expect(payload?.promotionAmount).toBe(row.amount);
+      expect(payload?.totalAmount).toBe(row.amount);
+    }
+  });
+
+  it('renders the promote summary from the catalog amount, not a quote clamp', () => {
+    const screen = readFileSync(
+      path.join(__dirname, '../app/listing/[id]/promote.tsx'),
+      'utf8',
+    );
+    expect(screen).toContain('displayPrice = selectedDuration?.amount');
+    expect(screen).toContain('formatPromoteAmount');
+    expect(screen).toContain('ملخص التعزيز');
+    expect(screen).toContain('المتابعة للدفع');
+    expect(screen).toContain('<BottomAction>');
+    expect(screen).not.toContain('quotedAmount');
+    expect(screen).not.toContain('ر.س');
+    expect(screen).not.toContain('السعر النهائي يُحدَّد من الخادم');
+    expect(screen).not.toContain('summary={{');
   });
 });
