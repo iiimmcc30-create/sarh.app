@@ -34,6 +34,7 @@ describe('home community posts', () => {
     const postItem = src('components/feature/PostItem.tsx');
     const detail = src('app/post/[id].tsx');
     expect(home).toContain('<HomeCommunityPosts');
+    expect(home.indexOf('<ExploreSarhSection')).toBeLessThan(home.indexOf('<HomeCommunityPosts'));
     expect(section).toContain('مجتمع سرح');
     expect(section).toContain('pickHomeCommunityPosts');
     expect(postItem).toContain('formatCount(post.views ?? 0)');
