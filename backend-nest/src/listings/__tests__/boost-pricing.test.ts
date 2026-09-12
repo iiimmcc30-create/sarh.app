@@ -2,7 +2,12 @@ import {
   lookupPromotePrice,
   listPromoteCatalogOptions,
   PROMOTE_CATALOG,
+  PROMOTE_CATALOG_AMOUNT_MIN,
 } from '../promote-catalog';
+import {
+  PROMOTE_AMOUNT_MIN,
+  clampPromoteAmount,
+} from '../promotion/promotion-limits.config';
 import { BOOST_PLANS } from '../boost/boost-plans.config';
 import { PROMOTION_PLANS } from '../promotion/promotion-tiers.config';
 import {
@@ -55,5 +60,12 @@ describe('official promote catalog', () => {
     expect(PROMOTION_PLANS.map((row) => row.amount)).toEqual([19, 35]);
     expect(listPromoteCatalogOptions('visibility')).toHaveLength(2);
     expect(PROMOTE_CATALOG).toHaveLength(6);
+  });
+
+  it('does not raise a 9 SAR catalog charge to the old 10 SAR floor', () => {
+    expect(PROMOTE_CATALOG_AMOUNT_MIN).toBe(9);
+    expect(PROMOTE_AMOUNT_MIN).toBe(9);
+    expect(clampPromoteAmount(9)).toBe(9);
+    expect(clampPromoteAmount(1)).toBe(9);
   });
 });

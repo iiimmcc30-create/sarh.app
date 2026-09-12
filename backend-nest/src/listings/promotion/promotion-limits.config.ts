@@ -1,4 +1,7 @@
-export const PROMOTE_AMOUNT_MIN = 10;
+import { PROMOTE_CATALOG_AMOUNT_MIN } from '../promote-catalog';
+
+/** Lowest chargeable promote amount — official catalog floor, not a markup. */
+export const PROMOTE_AMOUNT_MIN = PROMOTE_CATALOG_AMOUNT_MIN;
 export const PROMOTE_AMOUNT_MAX = 500;
 export const PROMOTE_DURATION_HOURS_MIN = 1;
 export const PROMOTE_DURATION_HOURS_MAX = 168;
