@@ -1,24 +1,30 @@
 // Powered by OnSpace.AI
 // SAFAT — Butchers Section Layout
 
-import { Stack } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ButcherCartProvider } from '@/contexts/ButcherCartContext';
 import { ButcherThemeScope } from '@/contexts/ButcherThemeScope';
+import { useTheme } from '@/contexts/ThemeContext';
 import { snapshotTheme } from '@/constants/theme';
 import { getRtlDirection } from '@/lib/rtl';
 
 const butcherPageBg = snapshotTheme('light').colors.bgDeep;
 
 export default function ButchersLayout() {
+  const parent = useTheme();
+  const segments = useSegments() as readonly string[];
+  const isChat = segments.includes('chat');
+  const pageBg = isChat ? parent.colors.screenRoot : butcherPageBg;
+
   return (
-    <ButcherThemeScope>
-    <StatusBar style="dark" />
+    <ButcherThemeScope enabled={!isChat}>
+    <StatusBar style={isChat && parent.isDark ? 'light' : 'dark'} />
     <ButcherCartProvider>
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: butcherPageBg, ...getRtlDirection() },
+        contentStyle: { backgroundColor: pageBg, ...getRtlDirection() },
         animation: 'slide_from_left',
       }}
     >

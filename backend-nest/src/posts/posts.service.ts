@@ -191,6 +191,8 @@ export class PostsService {
       }
     }
 
+    this.repo.incrementViewsCount(id).catch(() => {});
+
     let liked = false;
     let reposted = false;
     if (user?.userId) {
@@ -202,7 +204,11 @@ export class PostsService {
       reposted = !!repostRow;
     }
 
-    return this.mapPost(post, liked, reposted);
+    return this.mapPost(
+      { ...post, viewsCount: (post.viewsCount ?? 0) + 1 },
+      liked,
+      reposted,
+    );
   }
 
   async updatePost(user: JwtPayload, id: string, dto: UpdatePostDto) {

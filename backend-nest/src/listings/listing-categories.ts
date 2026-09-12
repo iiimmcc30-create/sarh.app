@@ -33,7 +33,12 @@ export function isLivestockCategory(
 }
 
 export function isSlaughterCategory(category: string): boolean {
-  return category === 'slaughter';
+  const value = category.toLowerCase();
+  return (
+    value === 'slaughter' ||
+    value.startsWith('slaughter-') ||
+    value.endsWith('-carcass')
+  );
 }
 
 export function isValidListingCategory(

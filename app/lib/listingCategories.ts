@@ -18,10 +18,16 @@ export function isLivestockCategory(
 export function isSlaughterCategory(
   category?: Listing['category'] | string | null,
 ): boolean {
-  return category === 'slaughter';
+  if (!category) return false;
+  const value = category.toLowerCase();
+  return (
+    value === 'slaughter' ||
+    value.startsWith('slaughter-') ||
+    value.endsWith('-carcass')
+  );
 }
 
-/** Weight required only for ذبائح (slaughter) or parent.requiresWeight. */
+/** Weight required only for ذبائح (slaughter) or parent/child.requiresWeight. */
 export function categoryRequiresWeight(opts: {
   category?: string | null;
   requiresWeight?: boolean | null;

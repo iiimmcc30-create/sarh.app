@@ -18,6 +18,7 @@ describe('market listing card height', () => {
   it('keeps the list thumb a fixed square so the row cannot grow with the text column', () => {
     const card = src('components/feature/ListingCard.tsx');
     expect(card).toContain('aspectRatio: 1');
+    expect(card).toContain('LIST_THUMB');
     expect(card).toContain("alignItems: 'flex-start'");
     expect(card).not.toContain('minHeight: 118');
     expect(card).not.toContain("alignSelf: 'stretch'");
@@ -33,6 +34,8 @@ describe('butcher theme isolation', () => {
   it('scopes light butcher chrome without flipping the live app scheme', () => {
     const layout = src('app/butchers/_layout.tsx');
     expect(layout).toContain('ButcherThemeScope');
+    expect(layout).toContain('enabled={!isChat}');
+    expect(layout).toContain('useSegments');
     expect(layout).not.toContain('setSchemeOverride');
     expect(layout).not.toContain('useFocusEffect');
     expect(layout).not.toMatch(/applyThemeScheme\(/);
@@ -40,6 +43,8 @@ describe('butcher theme isolation', () => {
     const scope = src('contexts/ButcherThemeScope.tsx');
     expect(scope).toContain("scheme: 'light'");
     expect(scope).toContain('snapshotTheme');
+    expect(scope).toContain('enabled = true');
+    expect(scope).toContain('if (!enabled) return parent');
     expect(scope).not.toMatch(/applyThemeScheme\(/);
     expect(scope).toContain('setSchemeOverride: () => {}');
   });

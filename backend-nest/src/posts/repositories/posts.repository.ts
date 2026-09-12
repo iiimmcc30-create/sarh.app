@@ -86,6 +86,14 @@ export class PostsRepository {
     });
   }
 
+  incrementViewsCount(id: string) {
+    return this.prisma.post.update({
+      where: { id },
+      data: { viewsCount: { increment: 1 } },
+      select: { viewsCount: true },
+    });
+  }
+
   findOwnerMeta(id: string) {
     return this.prisma.post.findFirst({
       where: { id, ...notDeleted },

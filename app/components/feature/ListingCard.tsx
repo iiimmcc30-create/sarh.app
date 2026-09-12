@@ -47,6 +47,7 @@ const CATEGORY_ICONS: Record<Listing['category'], string> = {
 };
 
 const NEW_LISTING_MS = 24 * 60 * 60 * 1000;
+const LIST_THUMB = 148;
 
 function listingTimeLabel(listing: Listing): string {
   if (listing.createdAt) return formatRelativeTimeAr(listing.createdAt);
@@ -345,20 +346,20 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     paddingEnd: 0,
     gap: spacing.sm,
     backgroundColor: colors.bgSurface,
-    borderRadius: 10,
+    borderRadius: 12,
     marginHorizontal: spacing.md,
-    marginVertical: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.borderSoft,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
     overflow: 'hidden',
   },
   listContent: {
     flex: 1,
     minWidth: 0,
-    gap: 6,
-    paddingVertical: 10,
-    paddingEnd: spacing.xs,
-    justifyContent: 'flex-start',
+    height: LIST_THUMB,
+    paddingVertical: 12,
+    paddingEnd: spacing.sm,
+    justifyContent: 'space-between',
   },
   listTitleRow: {
     alignItems: 'center',
@@ -432,9 +433,9 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     minWidth: 0,
   },
   listAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.bgElevated,
     flexShrink: 0,
   },
@@ -444,14 +445,14 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
         writingDirection: 'rtl',
   },
   listThumbWrap: {
-    width: 118,
+    width: LIST_THUMB,
     aspectRatio: 1,
     flexShrink: 0,
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
     position: 'relative',
-    borderTopEndRadius: 10,
-    borderBottomEndRadius: 10,
+    borderTopEndRadius: 12,
+    borderBottomEndRadius: 12,
   },
   listThumb: {
     ...StyleSheet.absoluteFillObject,

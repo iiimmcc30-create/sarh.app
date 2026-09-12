@@ -948,6 +948,8 @@ describe('Architecture V2 — Wave 4C marketplace', () => {
     expect(detail).toContain('ListingFeePaymentSheet');
     expect(detail).toContain('ImageViewerModal');
     expect(detail).toContain('authFetch');
+    expect(detail).toContain('weightLabel');
+    expect(detail).toContain('كجم');
   });
 
   it('keeps create-listing field and submit contracts', () => {
@@ -959,6 +961,8 @@ describe('Architecture V2 — Wave 4C marketplace', () => {
     expect(create).toContain('pickImages');
     expect(create).toContain('<SarhButton');
     expect(create).toContain('SarhInput');
+    expect(create).toContain("label={needsWeight ? 'الوزن' : 'الوزن (اختياري)'}");
+    expect(create).toContain('كجم');
   });
 });
 
@@ -971,6 +975,7 @@ const WAVE_4D_SCREENS = [
 const WAVE_4D_CHROME = [
   'components/ui/HomeAppBar.tsx',
   'components/feature/ExploreSarhSection.tsx',
+  'components/feature/HomeCommunityPosts.tsx',
   'components/feature/HomeMinistryOrgCard.tsx',
   'components/feature/EditorialStoriesBar.tsx',
   'components/feature/MinistryServiceCard.tsx',
@@ -1006,17 +1011,17 @@ describe('Architecture V2 — Wave 4D home and explore', () => {
     expect(src('components/ui/HomeAppBar.tsx')).toContain('useLayout');
     expect(src('components/ui/HomeAppBar.tsx')).toContain('paddingHorizontal: gutter');
     expect(src('components/feature/ExploreSarhSection.tsx')).toContain('paddingHorizontal: gutter');
+    expect(src('components/feature/HomeCommunityPosts.tsx')).toContain('paddingHorizontal: gutter');
     expect(src('components/feature/HomeMinistryOrgCard.tsx')).toContain('marginHorizontal: gutter');
   });
 
   it('keeps Home fetch, section order, and official ministry routes', () => {
     const home = src('app/(tabs)/index.tsx');
     expect(home).toContain('fetchEditorialStories');
-    expect(home).toContain('fetchOfficialServices');
-    expect(home).toContain('fetchMinistryAccount');
     expect(home.indexOf('<EditorialStoriesBar')).toBeLessThan(home.indexOf('<ExploreSarhSection'));
-    expect(home.indexOf('<ExploreSarhSection')).toBeLessThan(home.indexOf('<HomeMinistryOrgCard'));
+    expect(home.indexOf('<ExploreSarhSection')).toBeLessThan(home.indexOf('<HomeCommunityPosts'));
     expect(home).not.toContain('ListingCard');
+    expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('PostItem');
     expect(src('app/ministry/index.tsx')).toContain('PostItem');
     expect(src('app/ministry/index.tsx')).not.toContain('مراسلة');
