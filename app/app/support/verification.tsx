@@ -40,7 +40,6 @@ export default function AccountVerificationScreen() {
   const [additionalInfo, setAdditionalInfo] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
     const data = await fetchVerificationRequest();
     if (data) {
       setRequest(data.request);
@@ -128,7 +127,7 @@ export default function AccountVerificationScreen() {
     }
   };
 
-  if (loading) {
+  if (loading && !request && !userVerified) {
     return (
       <Screen edges={['top', 'bottom']}>
         <ScreenHeader variant="screen" title="طلب توثيق الحساب" showBack />

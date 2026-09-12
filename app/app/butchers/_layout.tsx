@@ -1,13 +1,21 @@
 // Powered by OnSpace.AI
 // SAFAT — Butchers Section Layout
 
-import { Stack } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { ButcherCartProvider } from '@/contexts/ButcherCartContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlDirection } from '@/lib/rtl';
 
 export default function ButchersLayout() {
-  const { colors, scheme } = useTheme();
+  const { colors, scheme, setSchemeOverride } = useTheme();
+
+  useFocusEffect(
+    useCallback(() => {
+      setSchemeOverride('light');
+      return () => setSchemeOverride(null);
+    }, [setSchemeOverride]),
+  );
 
   return (
     <ButcherCartProvider>

@@ -40,6 +40,7 @@ export default function ProfileScreen() {
     toggleBookmark,
     deletePost,
     refetchData,
+    refetchUser,
   } = useApp();
   const { accessToken, isAuthenticated } = useAuth();
 
@@ -74,16 +75,16 @@ export default function ProfileScreen() {
     try {
       setMyListings(await searchAllSellerListings(me.id, accessToken));
     } catch {
-      setMyListings([]);
+      /* keep current listings */
     }
   }, [accessToken, me.id]);
 
   useFocusEffect(
     useCallback(() => {
       void loadStories();
-      void refetchData();
+      void refetchUser();
       void loadMyListings();
-    }, [loadMyListings, loadStories, refetchData]),
+    }, [loadMyListings, loadStories, refetchUser]),
   );
   const myPosts = useMemo(
     () =>

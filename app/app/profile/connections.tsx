@@ -3,7 +3,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet } from 'react-native';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useLayout } from '@/hooks/useLayout';
@@ -47,16 +47,22 @@ export default function ProfileConnectionsScreen() {
   const [listHidden, setListHidden] = useState(false);
   const [loading, setLoading] = useState(true);
   const [followLoadingId, setFollowLoadingId] = useState<string | null>(null);
+  const loadedQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
     setActiveTab(tabParam === 'following' ? 'following' : 'followers');
   }, [tabParam, targetUserId]);
 
   const loadConnections = useCallback(async () => {
-    setLoading(true);
-    setUsers([]);
-    setListHidden(false);
+    const queryKey = `${targetUserId}:${activeTab}`;
+    const isBackground = loadedQueryRef.current === queryKey;
+    if (!isBackground) {
+      setLoading(true);
+      setUsers([]);
+      setListHidden(false);
+    }
     const data = await fetchUserConnectionsWithMeta(targetUserId, activeTab);
+    loadedQueryRef.current = queryKey;
     setUsers(data.users);
     setListHidden(data.hidden === true);
     setLoading(false);
@@ -189,7 +195,7 @@ export default function ProfileConnectionsScreen() {
           })}
         </Row>
 
-        {loading ? (
+        {loading && users.length === 0 ? (
           <Stack gap="none" align="center" fill style={styles.centered}>
             <ActivityIndicator size="large" color={colors.electricBright} />
           </Stack>

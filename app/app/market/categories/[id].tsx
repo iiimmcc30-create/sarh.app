@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { spacing, type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -145,7 +146,7 @@ function createStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     rowPressed: {
-      opacity: 0.88,
+      opacity: motion.press.opacity,
     },
     rowLabel: {
       flex: 1,

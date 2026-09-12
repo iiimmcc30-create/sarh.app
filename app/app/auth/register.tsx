@@ -12,6 +12,7 @@ import { interpretOtpVerifyResult } from '@/lib/otpVerifyOutcome';
 import { updateAccountSettings } from '@/services/users';
 import { BRAND_TERMS_SHORT_AR } from '@/constants/brandCopy';
 import { type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -39,7 +40,7 @@ if (
 
 function animateStepChange() {
   LayoutAnimation.configureNext(
-    LayoutAnimation.create(220, 'easeInEaseOut', 'opacity'),
+    LayoutAnimation.create(motion.duration.ui, 'easeInEaseOut', 'opacity'),
   );
 }
 

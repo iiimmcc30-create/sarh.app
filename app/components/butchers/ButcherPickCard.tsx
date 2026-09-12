@@ -13,6 +13,7 @@ import {
   butcherReviewCountLabel,
   hasButcherRating,
 } from '@/lib/butcherStoreMeta';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { getRtlRow } from '@/lib/rtl';
 import type { ButcherProfile } from '@/services/butcherData';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -40,7 +41,7 @@ export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
     >
       <View style={styles.cover}>
         {cover ? (
-          <Image source={uriSource(cover)} style={styles.coverImg} contentFit="cover" />
+          <Image source={uriSource(cloudinaryFitUrl(cover, 'card'))} style={styles.coverImg} contentFit="cover" />
         ) : (
           <View style={styles.coverFallback} />
         )}
@@ -73,22 +74,22 @@ export function ButcherPickCard({ butcher, width, promoted, onPress }: Props) {
         </View>
         <View style={[styles.metaItem, getRtlRow()]}>
           <AppIcon name="bicycle-outline" size={12} color={colors.electricBright} />
-          <AppText variant="caption" color="textMuted">
+          <AppText variant="caption" color="textMuted" numberOfLines={1}>
             {butcherFeeLabel(butcher)}
           </AppText>
         </View>
         <View style={[styles.metaItem, getRtlRow()]}>
           <AppIcon name="clock-outline" size={12} color={colors.textMuted} />
-          <AppText variant="caption" color="textMuted">
+          <AppText variant="caption" color="textMuted" numberOfLines={1}>
             {butcherEtaLabel(butcher)}
           </AppText>
         </View>
-      </View>
-      <View style={[styles.metaRow, getRtlRow()]}>
-        <AppIcon name="receipt-outline" size={12} color={colors.electricBright} />
-        <AppText variant="caption" color="textMuted" numberOfLines={1}>
-          {butcherMinOrderLabel(butcher)}
-        </AppText>
+        <View style={[styles.metaItem, getRtlRow()]}>
+          <AppIcon name="receipt-outline" size={12} color={colors.electricBright} />
+          <AppText variant="caption" color="textMuted" numberOfLines={1}>
+            {butcherMinOrderLabel(butcher)}
+          </AppText>
+        </View>
       </View>
     </Pressable>
   );

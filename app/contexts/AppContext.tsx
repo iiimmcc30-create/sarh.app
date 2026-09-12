@@ -19,7 +19,7 @@ import {
 import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
-import { listingVideoUrl } from '@/lib/listingMedia';
+import { listingThumbUri, listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 import { prefetchRemoteImages } from '@/lib/prefetchRemoteImages';
 
@@ -111,6 +111,8 @@ interface AppContextValue {
     options: { sold: boolean; reason: string },
   ) => Promise<ActionResult>;
   refetchData: (force?: boolean) => Promise<void>;
+  /** Profile/header identity only — does not refetch posts or listings. */
+  refetchUser: (force?: boolean) => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);
@@ -305,7 +307,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             );
           setListingsState(market);
           prefetchRemoteImages(
-            market.map((l: Listing) => l.thumbnailUrl || l.images?.[0]),
+            market.map((l: Listing) => listingThumbUri(l)),
             8,
           );
           succeeded = true;
@@ -399,12 +401,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [accessToken, mapBackendPost]);
 
   const lastRefetchAtRef = useRef(0);
+  const lastUserRefetchAtRef = useRef(0);
   const refetchInflightRef = useRef<Promise<void> | null>(null);
   const bootstrapStartedRef = useRef(false);
   const fetchPostsRef = useRef(fetchPosts);
   const fetchListingsRef = useRef(fetchListings);
   fetchPostsRef.current = fetchPosts;
   fetchListingsRef.current = fetchListings;
+
+  const refetchUser = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastUserRefetchAtRef.current < REFETCH_TTL_MS) {
+      return;
+    }
+    lastUserRefetchAtRef.current = now;
+    await fetchUserData();
+  }, [fetchUserData]);
 
   const refetchData = useCallback(async (force = false) => {
     const now = Date.now();
@@ -419,6 +431,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
     lastRefetchAtRef.current = now;
+    lastUserRefetchAtRef.current = now;
     const promise = Promise.all([fetchUserData(), fetchListings(), fetchPosts()]).then(
       () => undefined,
     );
@@ -944,6 +957,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addComment,
       removeListing,
       refetchData,
+      refetchUser,
     }),
     [
       me,
@@ -966,6 +980,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addComment,
       removeListing,
       refetchData,
+      refetchUser,
     ],
   );
 

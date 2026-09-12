@@ -46,9 +46,9 @@ export function ListingCommentsSection({
           <AppText style={styles.sectionTitle}>عدد التعليقات ({comments.length})</AppText>
         </View>
 
-        {loading ? (
+        {loading && comments.length === 0 ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
-        ) : loadError ? (
+        ) : loadError && comments.length === 0 ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{loadError}</Text>
             {!rateLimited ? (

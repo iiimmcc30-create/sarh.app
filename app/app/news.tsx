@@ -7,21 +7,33 @@ import { Screen, ScreenBody } from '@/design-system/layout';
 import { functional } from '@/design-system';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
-import { useCallback, useState } from 'react';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { type ThemeColors } from '@/constants/theme';
+
+const NEWS_REFRESH_TTL_MS = 60_000;
 
 export default function NewsScreen() {
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const [stories, setStories] = useState<EditorialStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const lastAt = useRef(0);
+  const hasData = useRef(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastAt.current < NEWS_REFRESH_TTL_MS && hasData.current) {
+      return;
+    }
+    if (!hasData.current) setLoading(true);
     try {
-      setStories(await fetchEditorialStories());
+      const data = await fetchEditorialStories();
+      setStories(data);
+      hasData.current = true;
+      lastAt.current = Date.now();
     } finally {
       setLoading(false);
     }
@@ -33,10 +45,12 @@ export default function NewsScreen() {
     }, [load]),
   );
 
+  const showInitialSpinner = loading && stories.length === 0 && !hasData.current;
+
   return (
     <Screen edges={['top', 'bottom']}>
       <ScreenHeader variant="screen" title="الأخبار" showBack />
-      {loading ? (
+      {showInitialSpinner ? (
         <ScreenBody scroll={false}>
           <ActivityIndicator style={styles.loader} />
         </ScreenBody>
@@ -53,7 +67,7 @@ export default function NewsScreen() {
                 style={styles.card}
                 onPress={() => setViewerIndex(index)}
               >
-                <Image source={uriSource(story.imageUrl)} style={styles.image} contentFit="cover" />
+                <Image source={uriSource(cloudinaryFitUrl(story.imageUrl, 'wide'))} style={styles.image} contentFit="cover" />
                 <LinearGradient
                   colors={['transparent', 'rgba(0,0,0,0.72)']}
                   style={styles.gradient}

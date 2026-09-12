@@ -1,4 +1,5 @@
 import { Image, uriSource } from '@/components/ui/AppImage';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText, SarhAvatar } from '@/design-system/components';
 import { butcherTypography } from '@/constants/butcherTypography';
@@ -29,7 +30,7 @@ export function ButcherHomeOfferCard({ offer, width, onPress }: Props) {
     >
       <View style={[styles.imageWrap, { width, height: width }]}>
         {offer.image ? (
-          <Image source={uriSource(offer.image)} style={styles.image} contentFit="cover" />
+          <Image source={uriSource(cloudinaryFitUrl(offer.image, 'card'))} style={styles.image} contentFit="cover" />
         ) : (
           <View style={styles.imageFallback} />
         )}

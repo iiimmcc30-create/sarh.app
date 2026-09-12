@@ -9,6 +9,7 @@ import {
   ONBOARDING_SLIDES,
   ONBOARDING_START_LABEL,
 } from '@/constants/onboardingCopy';
+import { motion } from '@/design-system';
 import { layout, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -224,7 +225,7 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       paddingHorizontal: spacing.md,
     },
-    skipPressed: { opacity: 0.7 },
+    skipPressed: { opacity: motion.press.opacity },
     skipText: {
       ...typography.secondary,
       color: colors.textMuted,

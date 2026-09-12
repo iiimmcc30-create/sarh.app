@@ -4,6 +4,7 @@ import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlForwardIcon, rtlInputText } from '@/lib/rtl';
+import { motion } from '@/design-system';
 import { AppText, SarhButton, SarhCard, SarhDivider } from '@/design-system/components';
 import { resolveAppTextStyle } from '@/design-system/components/resolvers';
 import { Row, Screen, ScreenBody, Section, Stack } from '@/design-system/layout';
@@ -68,7 +69,7 @@ export default function ContactScreen() {
                   accessibilityRole="link"
                   accessibilityLabel={`${ch.label}: ${ch.value}`}
                   onPress={() => Linking.openURL(ch.href)}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [{ opacity: pressed ? motion.press.opacity : 1 }]}
                 >
                   <Row gap="md" style={styles.channelRow}>
                     <View style={styles.channelIconWrap}>

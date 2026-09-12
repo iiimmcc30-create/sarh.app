@@ -18,7 +18,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   View,
 } from 'react-native';
@@ -112,7 +111,7 @@ export default function ButcherLocationScreen() {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScreenBody gap="lg" padTop="lg" padBottom="xxl">
           <AppText variant="body">

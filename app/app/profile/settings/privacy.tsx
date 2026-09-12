@@ -67,7 +67,6 @@ export default function PrivacySettingsScreen() {
       return;
     }
 
-    setLoading(true);
     setLoadError(false);
 
     const data = await fetchPrivacySettings(me.id);
@@ -106,7 +105,7 @@ export default function PrivacySettingsScreen() {
 
   const header = <ScreenHeader variant="screen" title="الخصوصية" showBack />;
 
-  if (loading || authLoading) {
+  if (!settings && (loading || authLoading)) {
     return (
       <Screen edges={['top', 'bottom']}>
         {header}

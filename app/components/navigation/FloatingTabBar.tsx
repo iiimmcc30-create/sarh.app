@@ -56,8 +56,8 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
           styles.bar,
           { paddingBottom: bottomPad },
           {
-            backgroundColor: colors.bgElevated,
-            borderTopColor: colors.borderSoft,
+            backgroundColor: colors.screenRoot,
+            borderTopColor: colors.screenRoot,
           },
           ambientShadow(scheme, 'soft'),
         ]}

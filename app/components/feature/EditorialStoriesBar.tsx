@@ -11,6 +11,7 @@ import {
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { colors, functional, motion, radius, space } from '@/design-system';
 import { AppText, SarhCard } from '@/design-system/components';
 import { Row } from '@/design-system/layout';
@@ -83,7 +84,7 @@ export function EditorialStoriesBar({ stories, loading }: Props) {
                 >
                   <SarhCard variant="plain" padding="none" style={styles.card}>
                     <Image
-                      source={uriSource(story.imageUrl)}
+                      source={uriSource(cloudinaryFitUrl(story.imageUrl, 'card'))}
                       style={StyleSheet.absoluteFillObject}
                       contentFit="cover"
                     />

@@ -295,7 +295,7 @@ export default function CreateStoryScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
         >
           <View style={styles.topBar}>
             <Pressable onPress={() => router.back()} style={styles.topBtn} hitSlop={8}>

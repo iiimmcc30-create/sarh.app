@@ -32,9 +32,9 @@ describe('malahm home redesign', () => {
     const slider = src('components/butchers/ButcherMarketBannerSlider.tsx');
     expect(slider).toContain('pagingEnabled');
     expect(slider).toContain('useWindowDimensions');
-    expect(slider).toContain('butcherMeatBg');
     expect(slider).toContain('banner.titleAr');
     expect(slider).toContain('banner.imageUrl');
+    expect(slider).not.toContain('cloudinaryFitUrl');
   });
 
   it('puts the butcher avatar on offer photos and store meta on pick cards', () => {

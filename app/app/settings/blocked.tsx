@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { confirmDestructive, alertMessage } from '@/lib/actionSheet';
 import { showToast } from '@/lib/toast';
 import { fetchBlockedUsers, setBlockUser, type BlockedUser } from '@/services/users';
+import { motion } from '@/design-system';
 import { AppText, SarhDivider } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,7 +22,6 @@ export default function BlockedUsersScreen() {
   const [actionId, setActionId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const data = await fetchBlockedUsers();
     setUsers(data);
     setLoading(false);
@@ -60,7 +60,7 @@ export default function BlockedUsersScreen() {
           الحسابات المحظورة لن تظهر منشوراتها وإعلاناتها في خلاصتك، ولا يمكنها التواصل معك.
         </AppText>
 
-        {loading ? (
+        {loading && users.length === 0 ? (
           <ActivityIndicator color={colors.electricBright} style={styles.loader} />
         ) : users.length === 0 ? (
           <Stack gap="sm" align="center" style={styles.emptyBox}>
@@ -87,7 +87,10 @@ export default function BlockedUsersScreen() {
                     style={styles.identity}
                   />
                   <Pressable
-                    style={({ pressed }) => [styles.unblockBtn, { opacity: pressed ? 0.7 : 1 }]}
+                    style={({ pressed }) => [
+                      styles.unblockBtn,
+                      { opacity: pressed ? motion.press.opacity : 1 },
+                    ]}
                     onPress={() => void handleUnblock(user)}
                     disabled={actionId === user.id}
                     accessibilityRole="button"

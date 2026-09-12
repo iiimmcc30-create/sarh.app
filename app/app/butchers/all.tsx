@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as Location from 'expo-location';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type ListRenderItemInfo } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
+import { AppFlatList } from '@/components/ui/AppFlatList';
 import { AppText } from '@/design-system/components';
 import { Screen, ScreenBody } from '@/design-system/layout';
 import { space } from '@/design-system/tokens';
@@ -52,7 +53,7 @@ export default function ButchersAllScreen() {
         : [];
       setButchers(list);
     } catch {
-      setButchers([]);
+      /* keep current directory */
     } finally {
       setLoading(false);
     }
@@ -62,37 +63,53 @@ export default function ButchersAllScreen() {
     void load();
   }, [load]);
 
+  const openButcher = useCallback(
+    (id: string) => {
+      safePush({ pathname: '/butchers/[id]', params: { id } }, undefined, router);
+    },
+    [router],
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: ListRenderItemInfo<ButcherProfile>) => (
+      <ButcherNearbyRow
+        butcher={item}
+        onPress={() => openButcher(item.id)}
+        showDivider={index < butchers.length - 1}
+      />
+    ),
+    [openButcher, butchers.length],
+  );
+
+  const keyExtractor = useCallback((item: ButcherProfile) => item.id, []);
+
   return (
     <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="الملاحم" showBack />
-      {loading ? (
+      {loading && butchers.length === 0 ? (
         <ScreenBody scroll={false} gutter={false}>
           <View style={styles.loader}>
             <ActivityIndicator color={colors.electric} />
           </View>
         </ScreenBody>
       ) : (
-        <ScreenBody gutter={false} padTop="sm" padBottom="lg">
-          {butchers.length === 0 ? (
-            <View style={styles.empty}>
-              <View style={{ width: '100%' }}>
-                <AppText variant="body" color="textMuted">
-                  لا توجد ملاحم حالياً
-                </AppText>
+        <ScreenBody scroll={false} gutter={false}>
+          <AppFlatList
+            style={styles.list}
+            data={butchers}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <View style={{ width: '100%' }}>
+                  <AppText variant="body" color="textMuted">
+                    لا توجد ملاحم حالياً
+                  </AppText>
+                </View>
               </View>
-            </View>
-          ) : (
-            butchers.map((butcher, index) => (
-              <ButcherNearbyRow
-                key={butcher.id}
-                butcher={butcher}
-                onPress={() =>
-                  safePush({ pathname: '/butchers/[id]', params: { id: butcher.id } }, undefined, router)
-                }
-                showDivider={index < butchers.length - 1}
-              />
-            ))
-          )}
+            }
+          />
         </ScreenBody>
       )}
       <ButchersTabBar active="stores" />
@@ -102,5 +119,11 @@ export default function ButchersAllScreen() {
 
 const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  list: { flex: 1 },
+  listContent: {
+    paddingTop: space[8],
+    paddingBottom: space[16],
+    flexGrow: 1,
+  },
   empty: { paddingVertical: 80, paddingHorizontal: space[16] },
 });

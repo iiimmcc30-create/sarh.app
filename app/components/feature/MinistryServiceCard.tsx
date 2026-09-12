@@ -1,5 +1,6 @@
 import { AppText } from '@/design-system/components';
 import { Row } from '@/design-system/layout';
+import { motion } from '@/design-system';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import {
@@ -64,7 +65,7 @@ function createStyles(colors: ThemeColors) {
       marginTop: 4,
     },
     pressed: {
-      opacity: 0.92,
+      opacity: motion.press.opacityCard,
     },
   });
 }

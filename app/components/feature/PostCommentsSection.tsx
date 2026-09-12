@@ -149,7 +149,6 @@ export const PostCommentsProvider = forwardRef<PostCommentsSectionRef, PostComme
 
     const loadComments = useCallback(async () => {
       if (!postId) return;
-      setLoading(true);
       setLoadError(null);
       try {
         const res = await fetch(`${API_BASE}/api/posts/${postId}/comments`);
@@ -159,15 +158,19 @@ export const PostCommentsProvider = forwardRef<PostCommentsSectionRef, PostComme
           setComments(rows.map(mapComment));
           return;
         }
-        setComments([]);
         setLoadError(json.messageAr ?? json.message ?? 'تعذّر تحميل التعليقات');
       } catch (err) {
         console.warn('[PostComments] load failed:', err);
-        setComments([]);
         setLoadError('تعذّر تحميل التعليقات — تحقق من الاتصال');
       } finally {
         setLoading(false);
       }
+    }, [postId]);
+
+    useEffect(() => {
+      setComments([]);
+      setLoadError(null);
+      setLoading(true);
     }, [postId]);
 
     useEffect(() => {
@@ -269,11 +272,11 @@ export function PostCommentsList() {
     me,
   } = useCommentsApi();
 
-  if (loading) {
+  if (loading && comments.length === 0) {
     return <ActivityIndicator color={colors.electricBright} style={styles.loader} />;
   }
 
-  if (loadError) {
+  if (loadError && comments.length === 0) {
     return (
       <View style={styles.errorBox}>
         <AppText style={styles.errorText}>{loadError}</AppText>

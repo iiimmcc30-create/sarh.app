@@ -1,6 +1,7 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { motion } from '@/design-system';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -138,8 +139,7 @@ export function ListingBoostSheet({
       Animated.spring(slideAnim, {
         toValue: 1,
         useNativeDriver: true,
-        tension: 68,
-        friction: 11,
+        ...motion.spring.sheet,
       }).start();
     }
   }, [visible, slideAnim]);

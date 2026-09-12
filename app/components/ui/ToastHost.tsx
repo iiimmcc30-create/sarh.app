@@ -37,8 +37,8 @@ export function ToastHost() {
     opacity.setValue(0);
     translateY.setValue(-16);
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: motion.duration.fast, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 6 }),
+      Animated.timing(opacity, { toValue: 1, duration: motion.duration.press, useNativeDriver: true }),
+      Animated.spring(translateY, { toValue: 0, useNativeDriver: true, ...motion.spring.snappy }),
     ]).start();
   }, [state?.id, opacity, translateY, state]);
 

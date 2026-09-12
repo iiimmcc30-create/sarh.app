@@ -2,10 +2,10 @@
 // SAFAT — Butchers Map Screen (خريطة الملاحم)
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -19,6 +19,7 @@ import {
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { marginAutoStart, rtlForwardIcon } from '@/lib/rtl';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import {
   ButcherProfile,
   Country,
@@ -145,7 +146,7 @@ function BottomCard({
       />
       {/* Header row */}
       <View style={bc.header}>
-        <Image source={{ uri: butcher.logo }} style={bc.logo} contentFit="cover" />
+        <Image source={uriSource(cloudinaryFitUrl(butcher.logo, 'row'))} style={bc.logo} contentFit="cover" />
         <View style={{ flex: 1 }}>
           <View style={bc.nameRow}>
             <Text style={bc.name} numberOfLines={1}>{butcher.nameAr}</Text>
@@ -234,9 +235,14 @@ export default function ButchersMapScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [butchersList, setButchersList] = useState<ButcherProfile[]>([]);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const hasButchersRef = useRef(false);
+
+  useEffect(() => {
+    hasButchersRef.current = butchersList.length > 0;
+  }, [butchersList.length]);
 
   const fetchButchers = useCallback(async () => {
-    setLoadState('loading');
+    if (!hasButchersRef.current) setLoadState('loading');
     try {
       const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
       const res = await fetch(`${API_BASE}/api/butchers`, { headers });
@@ -462,7 +468,7 @@ export default function ButchersMapScreen() {
                     colors={[colors.bgSurface, colors.bgElevated]}
                     style={StyleSheet.absoluteFill}
                   />
-                  <Image source={{ uri: b.logo }} style={s.miniLogo} contentFit="cover" />
+                  <Image source={uriSource(cloudinaryFitUrl(b.logo, 'row'))} style={s.miniLogo} contentFit="cover" />
                   <View style={{ flex: 1 }}>
                     <AppText variant="label" numberOfLines={1}>{b.nameAr}</AppText>
                     <View style={s.miniMeta}>

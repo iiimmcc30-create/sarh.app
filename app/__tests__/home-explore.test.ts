@@ -282,7 +282,7 @@ describe('Home design-system adoption', () => {
     expect(ministry).toContain('SarhCard');
     expect(ministry).toContain('SarhButton');
     expect(ministry).toContain('SarhAvatar');
-    expect(ministry).toContain('variant="inverse"');
+    expect(ministry).toContain('variant="primary"');
     expect(stories).toContain('SarhCard');
     expect(stories).toContain('variant="plain"');
     expect(stories).toContain('variant="caption"');
@@ -315,7 +315,7 @@ describe('Home design-system adoption', () => {
     expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
     expect(explore).toContain('accessibilityRole="button"');
-    expect(ministry).toContain('accessibilityRole="button"');
+    expect(ministry).toContain('accessibilityLabel="فتح"');
     expect(stories).toContain('accessibilityRole="button"');
     expect(appBar).toContain('accessibilityLabel="بحث"');
   });

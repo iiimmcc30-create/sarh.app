@@ -3,10 +3,12 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
+import { motion } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -83,11 +85,11 @@ function OfferProductCard({
   const validity = formatValidity(offer.validUntil);
   return (
     <Pressable
-      style={({ pressed }) => [styles.product, pressed && { opacity: 0.92 }]}
+      style={({ pressed }) => [styles.product, pressed && { opacity: motion.press.opacityCard }]}
       onPress={onPress}
     >
       <View style={styles.productImageWrap}>
-        <Image source={uriSource(offer.image)} style={styles.productImage} contentFit="cover" />
+        <Image source={uriSource(cloudinaryFitUrl(offer.image, 'card'))} style={styles.productImage} contentFit="cover" />
         {offer.discountPercent ? (
           <View style={styles.discountBadge}>
             <AppText variant="caption" style={styles.discountText}>
@@ -147,7 +149,7 @@ function ButcherOffersCard({
         <Row justify="between" align="center">
           <Row align="center" gap="sm" fill>
             <View style={styles.logoWrap}>
-              <Image source={uriSource(item.logo || item.cover)} style={styles.logo} contentFit="cover" />
+              <Image source={uriSource(cloudinaryFitUrl(item.logo || item.cover, 'row'))} style={styles.logo} contentFit="cover" />
             </View>
             <Stack gap="xs" fill>
               <Row align="center" gap="xs">
@@ -248,7 +250,7 @@ export default function ButcherOffersScreen() {
 
       setData(details.filter((d): d is ButcherOffers => d != null));
     } catch {
-      setData([]);
+      /* keep current offers */
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -257,7 +259,6 @@ export default function ButcherOffersScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
       void load();
     }, [load]),
   );
@@ -269,7 +270,7 @@ export default function ButcherOffersScreen() {
     <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="العروض" />
 
-      {loading ? (
+      {loading && data.length === 0 ? (
         <ScreenBody scroll={false} gutter={false}>
           <Stack fill align="center" style={styles.center}>
             <ActivityIndicator size="large" color={colors.electricBright} />

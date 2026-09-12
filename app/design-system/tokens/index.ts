@@ -16,7 +16,7 @@ export type {
 } from './button';
 export { elevation } from './elevation';
 export type { ElevationName, ElevationToken } from './elevation';
-export { duration, motion, opacity } from './motion';
+export { duration, easing, motion, opacity, press, spring } from './motion';
 export type { DurationToken } from './motion';
 export { radius, radiusAlias } from './radius';
 export type { RadiusToken } from './radius';

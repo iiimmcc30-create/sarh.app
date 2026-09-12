@@ -13,6 +13,7 @@ import {
 } from '@/services/butcherData';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
   Pressable,
   ScrollView,
@@ -77,6 +78,7 @@ export function ButcherProductOptionsModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.handle} />
@@ -165,6 +167,7 @@ export function ButcherProductOptionsModal({
           onPress={handleAdd}
         />
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

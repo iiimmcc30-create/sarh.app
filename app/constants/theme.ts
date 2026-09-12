@@ -7,6 +7,7 @@ import { sarh } from './sarhTokens';
 import { OFFICIAL_APP_FONT } from './fonts';
 import { applyDesignSystemColors } from '@/design-system/tokens/colors';
 import { applyButtonTokens } from '@/design-system/tokens/button';
+import { motion as dsMotion } from '@/design-system/tokens/motion';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -524,17 +525,16 @@ export const controls = {
   minTouchTarget: 44,
 };
 
-/** Animation durations and spring values for shared interactive components. */
+/**
+ * Compatibility alias of `@/design-system` motion.
+ * Do not add independent durations/springs here — SSOT is `design-system/tokens/motion`.
+ */
 export const motion = {
-  fast: 140,
-  normal: 220,
-  slow: 360,
-  pressScale: 0.97,
-  spring: {
-    damping: 18,
-    stiffness: 240,
-    mass: 0.8,
-  },
+  fast: dsMotion.duration.press,
+  normal: dsMotion.duration.ui,
+  slow: dsMotion.duration.slow,
+  pressScale: dsMotion.press.scale,
+  spring: dsMotion.spring.snappy,
 };
 
 export const theme = {

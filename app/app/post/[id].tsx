@@ -23,7 +23,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   View,
 } from 'react-native';
@@ -97,7 +96,6 @@ export default function PostDetailScreen() {
 
   const loadPost = useCallback(async () => {
     if (!postId) return;
-    setLoading(true);
     try {
       const res = await authFetch(`${API_BASE}/api/posts/${postId}`);
       const json = await res.json().catch(() => ({}));
@@ -171,7 +169,7 @@ export default function PostDetailScreen() {
       >
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
           keyboardVerticalOffset={0}
         >
           <ScreenBody gutter={false} padBottom="xl">

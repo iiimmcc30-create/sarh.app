@@ -1,12 +1,12 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { Image } from '@/components/ui/AppImage';
+import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { resolveMediaUrl } from '@/services/media';
+import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { StoryGroup } from '@/services/stories';
 import { StoryViewer } from '@/components/feature/StoryViewer';
 
@@ -118,11 +118,7 @@ export function StoriesBar({
               scheme={scheme}
             >
               <Image
-                source={{
-                  uri: resolveMediaUrl(
-                    myStories?.latestThumbnail || myAvatar,
-                  ),
-                }}
+                source={uriSource(cloudinaryFitUrl(myStories?.latestThumbnail || myAvatar, 'row'))}
                 style={styles.avatar}
                 contentFit="cover"
               />
@@ -157,11 +153,10 @@ export function StoriesBar({
                   >
                     <StoryRing unseen={group.hasUnseen} scheme={scheme}>
                       <Image
-                        source={{
-                          uri: resolveMediaUrl(
-                            group.latestThumbnail || group.user.avatar,
-                          ),
-                        }}
+                        source={uriSource(cloudinaryFitUrl(
+                          group.latestThumbnail || group.user.avatar,
+                          'row',
+                        ))}
                         style={styles.avatar}
                         contentFit="cover"
                       />
