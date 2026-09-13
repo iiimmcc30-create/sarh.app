@@ -90,7 +90,7 @@ describe('Explore Sarh logo mark', () => {
     expect(section).toContain('explore-sarh-feed-suppliers.jpg');
     expect(section).toContain("href: '/ministry'");
     expect(section).toContain('خدمات وزارة البيئة والمياه والزراعة');
-    expect(section).toContain('mewa-cover.jpg');
+    expect(section).toContain('explore-sarh-ministry.jpg');
     expect(section).toContain('pagingEnabled');
     expect(section).toContain('accessibilityRole="button"');
     expect(section).not.toContain('SarhButton');
@@ -248,7 +248,7 @@ describe('HomeAppBar chrome', () => {
     expect(home).toContain('HomeCommunityPosts');
     expect(explore).toContain("href: '/ministry'");
     expect(explore).toContain('خدمات وزارة البيئة والمياه والزراعة');
-    expect(explore).toContain('mewa-cover.jpg');
+    expect(explore).toContain('explore-sarh-ministry.jpg');
   });
 });
 

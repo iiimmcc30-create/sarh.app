@@ -18,7 +18,7 @@ import {
 
 const BUTCHERS_IMAGE = require('../../assets/images/explore-sarh-butchers.jpg');
 const FEED_IMAGE = require('../../assets/images/explore-sarh-feed-suppliers.jpg');
-const MINISTRY_IMAGE = require('../../assets/images/mewa-cover.jpg');
+const MINISTRY_IMAGE = require('../../assets/images/explore-sarh-ministry.jpg');
 const BANNER_ASPECT = 1376 / 768;
 
 const BANNERS = [
