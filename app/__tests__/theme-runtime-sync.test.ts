@@ -16,13 +16,13 @@ describe('theme runtime Light ↔ Dark sync', () => {
 
   it('updates design-system surfaces and text through a full toggle cycle', () => {
     applyThemeScheme('light');
-    expect(colors.background).toBe('#F5F7F9');
+    expect(colors.background).toBe('#F8F9FA');
     expect(colors.surface).toBe('#FFFFFF');
     expect(colors.textPrimary).toBe('#101820');
-    expect(SURFACE_TONE.background).toBe('#F5F7F9');
+    expect(SURFACE_TONE.background).toBe('#F8F9FA');
     expect(resolveSarhCardStyle('default', 'none').backgroundColor).toBe('#FFFFFF');
     expect(resolveAppTextStyle({ color: 'textPrimary' }).color).toBe('#101820');
-    expect(functional.onPrimaryInverse).toBe('#F5F7F9');
+    expect(functional.onPrimaryInverse).toBe('#F8F9FA');
     expect(resolveSarhButtonColors('primary', 'default').backgroundColor).toBe('#20B66F');
     expect(resolveSarhButtonColors('primary', 'default').contentColor).toBe('#FFFFFF');
     expect(colors.primary).toBe('#20B66F');
@@ -41,7 +41,7 @@ describe('theme runtime Light ↔ Dark sync', () => {
     expect(colors.success).toBe('#20B66F');
 
     applyThemeScheme('light');
-    expect(colors.background).toBe('#F5F7F9');
+    expect(colors.background).toBe('#F8F9FA');
     expect(resolveSarhCardStyle('elevated', 'none').backgroundColor).toBe('#FFFFFF');
 
     applyThemeScheme('dark');
@@ -62,7 +62,7 @@ describe('theme runtime Light ↔ Dark sync', () => {
 
     applyThemeScheme('light');
     expect(semantic.background).toBe(colors.background);
-    expect(semantic.background).toBe('#F5F7F9');
+    expect(semantic.background).toBe('#F8F9FA');
     expect(semantic.text.primary).toBe(colors.textPrimary);
     expect(resolveSurfaceLevelStyle('page').backgroundColor).toBe(colors.background);
     expect(resolveSurfaceLevelStyle('card').backgroundColor).toBe(colors.surface);

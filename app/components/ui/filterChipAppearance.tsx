@@ -81,7 +81,7 @@ export function FilterChipAppearance({
 
 export function createChipStyles(colors: ThemeColors, compact: boolean) {
   const tokens = compact ? MARKET_CHIP : FILTER_CHIP;
-  const idleBackground = compact ? colors.bgElevated : colors.bgSurface || FILTER_CHIP.idleSurfaceFallback;
+  const idleBackground = colors.royal || FILTER_CHIP.idleSurfaceFallback;
   const idleBorderWidth = compact ? 0 : StyleSheet.hairlineWidth;
   return StyleSheet.create({
     chip: {

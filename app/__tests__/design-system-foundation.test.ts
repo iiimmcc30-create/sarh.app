@@ -58,7 +58,7 @@ describe('Sarh design-system foundation', () => {
   it('exposes nested semantic aliases that follow applyThemeScheme', () => {
     applyThemeScheme('light');
     expect(semantic.background).toBe(colors.background);
-    expect(semantic.background).toBe('#F5F7F9');
+    expect(semantic.background).toBe('#F8F9FA');
     expect(semantic.surface).toBe(colors.surface);
     expect(semantic.text.primary).toBe(colors.textPrimary);
     expect(semantic.action.primary).toBe(colors.primary);
@@ -184,7 +184,7 @@ describe('Sarh design-system foundation', () => {
 
   it('keeps design-system semantic colors in sync with applyThemeScheme', () => {
     applyThemeScheme('light');
-    expect(colors.background).toBe('#F5F7F9');
+    expect(colors.background).toBe('#F8F9FA');
     expect(colors.surface).toBe('#FFFFFF');
     expect(colors.textPrimary).toBe('#101820');
     applyThemeScheme('dark');
