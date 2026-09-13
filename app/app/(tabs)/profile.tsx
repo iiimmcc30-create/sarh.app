@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Profile Tab (حسابي)
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Share, StyleSheet } from 'react-native';
 import { AppText, SarhButton } from '@/design-system/components';
 import { Stack } from '@/design-system/layout';
@@ -20,6 +20,9 @@ import { openPostDetail } from '@/lib/openPost';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchStoriesFeed, type StoryGroup } from '@/services/stories';
+import { shouldReuseFreshResult } from '@/services/requestCoordination';
+
+const PROFILE_FOCUS_TTL_MS = 60_000;
 
 /** Layout only — an empty tab still needs vertical presence in the feed. */
 const EMPTY_STATE = StyleSheet.create({
@@ -48,12 +51,14 @@ export default function ProfileScreen() {
   const [myStoryGroup, setMyStoryGroup] = useState<StoryGroup | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [myListings, setMyListings] = useState<Listing[]>([]);
+  const lastListingsAt = useRef(0);
+  const listingsLoadedForUser = useRef<string | null>(null);
 
   const profileUrl = sarhProfileShareUrl(me.username);
 
-  const loadStories = useCallback(async () => {
+  const loadStories = useCallback(async (force = false) => {
     try {
-      const data = await fetchStoriesFeed(accessToken);
+      const data = await fetchStoriesFeed(accessToken, { force });
       const mine = data.myStories ?? null;
       setMyStoryGroup(mine);
       const now = Date.now();
@@ -67,13 +72,22 @@ export default function ProfileScreen() {
     }
   }, [accessToken]);
 
-  const loadMyListings = useCallback(async () => {
+  const loadMyListings = useCallback(async (force = false) => {
     if (!me.id) {
       setMyListings([]);
+      listingsLoadedForUser.current = null;
+      return;
+    }
+    if (
+      listingsLoadedForUser.current === me.id &&
+      shouldReuseFreshResult(lastListingsAt.current, PROFILE_FOCUS_TTL_MS, force)
+    ) {
       return;
     }
     try {
       setMyListings(await searchAllSellerListings(me.id, accessToken));
+      lastListingsAt.current = Date.now();
+      listingsLoadedForUser.current = me.id;
     } catch {
       /* keep current listings */
     }
@@ -135,7 +149,7 @@ export default function ProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadStories(), refetchData(true), loadMyListings()]);
+    await Promise.all([loadStories(true), refetchData(true), loadMyListings(true)]);
     setRefreshing(false);
   }, [loadMyListings, loadStories, refetchData]);
 

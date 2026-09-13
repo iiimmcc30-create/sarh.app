@@ -61,11 +61,11 @@ export default function PostsScreen() {
       else if (!loadedTabs.current.has(tab) && posts.length === 0) setLoadingFeed(true);
       try {
         if (tab === 'following' && !isAuthenticated) {
-          await fetchPosts('for_you');
+          await fetchPosts('for_you', { force: opts?.refresh });
           loadedTabs.current.add('for_you');
           return;
         }
-        await fetchPosts(tab);
+        await fetchPosts(tab, { force: opts?.refresh });
         loadedTabs.current.add(tab);
       } finally {
         setLoadingFeed(false);

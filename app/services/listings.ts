@@ -1,6 +1,7 @@
 import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 import { ensureApiReachable } from './api';
+import { fetchPublicFeed } from './fetchPublicFeed';
 import { countries, type Listing, type Country } from './types';
 
 type BackendListing = {
@@ -175,10 +176,8 @@ export async function searchListingsPage(
   if (params.sellerId) qs.set('sellerId', params.sellerId);
   if (params.featured) qs.set('featured', 'true');
 
-  const headers: HeadersInit = accessToken
-    ? { Authorization: `Bearer ${accessToken}` }
-    : {};
-  const res = await fetch(`${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`, { headers });
+  const url = `${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`;
+  const res = await fetchPublicFeed(url, accessToken);
   if (!res.ok) return empty;
 
   const json = await res.json();
