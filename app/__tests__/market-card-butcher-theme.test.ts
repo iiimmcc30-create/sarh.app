@@ -15,14 +15,23 @@ function src(rel: string) {
 }
 
 describe('market listing card height', () => {
-  it('keeps the list thumb a fixed square so the row cannot grow with the text column', () => {
+  it('keeps a fixed square thumb with rounded corners on both sides and no stretch', () => {
     const card = src('components/feature/ListingCard.tsx');
-    expect(card).toContain('aspectRatio: 1');
-    expect(card).toContain('LIST_THUMB');
-    expect(card).toContain("alignItems: 'flex-start'");
-    expect(card).not.toContain('minHeight: 118');
-    expect(card).not.toContain("alignSelf: 'stretch'");
-    expect(card).not.toContain('flexGrow: 1');
+    const listBlock = card.slice(card.indexOf('listRow:'), card.indexOf('listPhotoCountText:'));
+    expect(card).toContain('const LIST_THUMB = 120');
+    expect(card).toContain('LIST_THUMB_RADIUS');
+    expect(card).toContain('numberOfLines={2}');
+    expect(listBlock).toContain("alignItems: 'flex-start'");
+    expect(listBlock).toContain('aspectRatio: 1');
+    expect(listBlock).toContain('height: LIST_THUMB');
+    expect(listBlock).toContain('borderRadius: LIST_THUMB_RADIUS');
+    expect(listBlock).not.toContain('borderTopEndRadius');
+    expect(listBlock).not.toContain('borderBottomEndRadius');
+    expect(listBlock).not.toContain('minHeight: 118');
+    expect(listBlock).not.toContain("alignSelf: 'stretch'");
+    expect(listBlock).not.toContain('flexGrow: 1');
+    expect(listBlock).not.toContain('borderWidth');
+    expect(listBlock).not.toContain('marginHorizontal');
   });
 });
 

@@ -47,7 +47,9 @@ const CATEGORY_ICONS: Record<Listing['category'], string> = {
 };
 
 const NEW_LISTING_MS = 24 * 60 * 60 * 1000;
-const LIST_THUMB = 148;
+/** Square list thumb — matches the Haraj market row, never stretches. */
+const LIST_THUMB = 120;
+const LIST_THUMB_RADIUS = 14;
 
 function listingTimeLabel(listing: Listing): string {
   if (listing.createdAt) return formatRelativeTimeAr(listing.createdAt);
@@ -108,7 +110,7 @@ function ListingCardInner({
         <View style={styles.listContent}>
           <View style={[styles.listTitleRow, getRtlRow()]}>
             <View style={styles.listTitleShell}>
-              <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
+              <Text style={styles.listTitle} numberOfLines={2} ellipsizeMode="tail">
                 {title}
               </Text>
             </View>
@@ -335,34 +337,25 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     opacity: 0.92,
   },
 
-  // Elevated listing card — More-tab contrast (bgElevated, no border)
+  // Haraj market row — inset square thumb, rounded on both sides, no stretch.
   listRow: {
     ...getRtlRow(),
     alignItems: 'flex-start',
     flexGrow: 0,
     width: '100%',
-    paddingVertical: 0,
-    paddingStart: spacing.md,
-    paddingEnd: 0,
-    gap: spacing.sm,
-    backgroundColor: colors.bgSurface,
-    borderRadius: 12,
-    marginHorizontal: spacing.md,
-    marginVertical: 6,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    overflow: 'hidden',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    gap: 12,
+    backgroundColor: colors.bgDeep,
   },
   listContent: {
     flex: 1,
     minWidth: 0,
     height: LIST_THUMB,
-    paddingVertical: 12,
-    paddingEnd: spacing.sm,
     justifyContent: 'space-between',
   },
   listTitleRow: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 6,
     minWidth: 0,
   },
@@ -372,7 +365,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       },
   listTitle: {
     ...typography.cardHeading,
-    color: colors.electricBright,
+    color: colors.textPrimary,
     width: '100%',
     writingDirection: 'rtl',
   },
@@ -446,13 +439,13 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   },
   listThumbWrap: {
     width: LIST_THUMB,
+    height: LIST_THUMB,
     aspectRatio: 1,
     flexShrink: 0,
     overflow: 'hidden',
     backgroundColor: colors.bgElevated,
     position: 'relative',
-    borderTopEndRadius: 12,
-    borderBottomEndRadius: 12,
+    borderRadius: LIST_THUMB_RADIUS,
   },
   listThumb: {
     ...StyleSheet.absoluteFillObject,
