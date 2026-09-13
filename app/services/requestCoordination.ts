@@ -104,6 +104,31 @@ export async function dedupeGetResponse(
   });
 }
 
+/** True when a previous success is still within TTL and the caller did not force. */
+export function shouldReuseFreshResult(
+  lastSuccessAt: number | undefined,
+  ttlMs: number,
+  force = false,
+  now = Date.now(),
+): boolean {
+  if (force) return false;
+  return Boolean(lastSuccessAt && now - lastSuccessAt < ttlMs);
+}
+
+/** Monotonic token so an older in-flight response cannot apply after a newer one. */
+export function createRequestGeneration() {
+  let generation = 0;
+  return {
+    next() {
+      generation += 1;
+      return generation;
+    },
+    isCurrent(token: number) {
+      return token === generation;
+    },
+  };
+}
+
 /** Exponential backoff delay (ms), capped; respects active 429 window. */
 export function feedRetryDelayMs(attempt: number, baseMs = 3_000, capMs = 60_000): number {
   const exp = Math.min(capMs, baseMs * Math.pow(2, Math.max(0, attempt)));

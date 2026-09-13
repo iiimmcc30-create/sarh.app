@@ -121,6 +121,7 @@ describe('Wave 5B loading and skeleton consistency', () => {
   it('keeps market listings visible during a failed first-page refetch', () => {
     const market = src('app/(tabs)/market.tsx');
     expect(market).not.toContain('setItems([])');
+    expect(market).toContain('if (!hasItemsRef.current) setLoading(true)');
     expect(market).toContain('loading ? (');
     expect(market).toContain('loadingMore ? <ActivityIndicator');
   });

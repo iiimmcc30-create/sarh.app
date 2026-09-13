@@ -1,4 +1,5 @@
 import {
+  createRequestGeneration,
   dedupeGetResponse,
   dedupeInflight,
   feedRetryDelayMs,
@@ -7,6 +8,7 @@ import {
   resetRequestCoordination,
   isRateLimited,
   msUntilRateLimitClears,
+  shouldReuseFreshResult,
 } from '../services/requestCoordination';
 import { FEED_TIMEOUT_MS, fetchPublicFeed } from '../services/fetchPublicFeed';
 import { resetHomeExploreCache, fetchHomeExploreSections } from '../services/homeExplore';
@@ -164,5 +166,21 @@ describe('request storm coordination', () => {
     await fetchEditorialStories();
     await fetchEditorialStories();
     expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
+  });
+
+  it('reuses a fresh result until TTL expires or force is set', () => {
+    const now = 1_000_000;
+    expect(shouldReuseFreshResult(undefined, 60_000, false, now)).toBe(false);
+    expect(shouldReuseFreshResult(now - 10_000, 60_000, false, now)).toBe(true);
+    expect(shouldReuseFreshResult(now - 61_000, 60_000, false, now)).toBe(false);
+    expect(shouldReuseFreshResult(now - 10_000, 60_000, true, now)).toBe(false);
+  });
+
+  it('ignores an older generation after a newer request starts', () => {
+    const gen = createRequestGeneration();
+    const older = gen.next();
+    const newer = gen.next();
+    expect(gen.isCurrent(older)).toBe(false);
+    expect(gen.isCurrent(newer)).toBe(true);
   });
 });

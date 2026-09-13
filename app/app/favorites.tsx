@@ -44,7 +44,7 @@ export default function FavoritesScreen() {
       if (opts?.refresh) setRefreshing(true);
       else setLoading(true);
       try {
-        await fetchPosts('for_you');
+        await fetchPosts('for_you', { force: opts?.refresh });
       } finally {
         setLoading(false);
         setRefreshing(false);

@@ -1,6 +1,7 @@
 import { API_BASE } from './api';
 import { authFetch } from './authFetch';
 import { parseApiError } from './apiError';
+import { fetchPublicFeed } from './fetchPublicFeed';
 
 export type StoryReactionType = 'like' | 'love' | 'fire' | 'wow' | 'sad';
 
@@ -79,10 +80,7 @@ export async function fetchStoriesFeed(
     return storiesFeedCache.data;
   }
 
-  const headers: HeadersInit = accessToken
-    ? { Authorization: `Bearer ${accessToken}` }
-    : {};
-  const res = await fetch(`${API_BASE}/api/stories/feed`, { headers });
+  const res = await fetchPublicFeed(`${API_BASE}/api/stories/feed`, accessToken);
   const json = await parseJson(res);
   if (!res.ok || !json.success) {
     throw new Error(json.messageAr || 'فشل تحميل القصص');
