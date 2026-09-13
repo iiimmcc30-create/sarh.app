@@ -95,6 +95,14 @@ function presentSupplier<T extends { _count?: { products: number } }>(row: T) {
   return { ...rest, productCount: _count?.products ?? 0 };
 }
 
+function normalizeWebsite(value?: string | null): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 function toSupplierCreate(
   dto: CreateFeedSupplierDto,
 ): Prisma.FeedSupplierCreateInput {
@@ -110,6 +118,8 @@ function toSupplierCreate(
     lng: dto.lng,
     phone: dto.phone,
     whatsapp: dto.whatsapp,
+    email: dto.email,
+    website: normalizeWebsite(dto.website),
     hoursAr: dto.hoursAr,
     verified: dto.verified ?? false,
     published: dto.published ?? false,
@@ -131,6 +141,8 @@ function toSupplierUpdate(
     ...(dto.lng !== undefined ? { lng: dto.lng } : {}),
     ...(dto.phone !== undefined ? { phone: dto.phone } : {}),
     ...(dto.whatsapp !== undefined ? { whatsapp: dto.whatsapp } : {}),
+    ...(dto.email !== undefined ? { email: dto.email } : {}),
+    ...(dto.website !== undefined ? { website: normalizeWebsite(dto.website) } : {}),
     ...(dto.hoursAr !== undefined ? { hoursAr: dto.hoursAr } : {}),
     ...(dto.verified !== undefined ? { verified: dto.verified } : {}),
     ...(dto.published !== undefined ? { published: dto.published } : {}),

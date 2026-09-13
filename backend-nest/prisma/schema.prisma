@@ -1744,6 +1744,8 @@ model FeedSupplier {
   lng         Float?
   phone       String?
   whatsapp    String?
+  email       String?
+  website     String?
   hoursAr     String?
   verified    Boolean       @default(false)
   published   Boolean       @default(false)
