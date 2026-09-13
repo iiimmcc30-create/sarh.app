@@ -3,9 +3,14 @@ import { colors, elevation, motion, radius, space } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import {
+  EXPLORE_BANNER_AUTO_PLAY_MS,
+  nextExploreBannerIndex,
+  shouldAutoPlayExploreBanners,
+} from '@/lib/exploreSarhBanners';
 import { safePush } from '@/lib/safeNavigate';
-import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -51,6 +56,20 @@ export function ExploreSarhSection() {
   const scroller = useRef<ScrollView>(null);
   const slideWidth = width;
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!shouldAutoPlayExploreBanners(BANNERS.length)) return;
+      const timer = setInterval(() => {
+        setIndex((prev) => {
+          const next = nextExploreBannerIndex(prev, BANNERS.length);
+          scroller.current?.scrollTo({ x: next * slideWidth, animated: true });
+          return next;
+        });
+      }, EXPLORE_BANNER_AUTO_PLAY_MS);
+      return () => clearInterval(timer);
+    }, [index, slideWidth]),
+  );
+
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const next = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
     if (next !== index && next >= 0 && next < BANNERS.length) {
@@ -91,6 +110,7 @@ export function ExploreSarhSection() {
                 source={banner.image}
                 style={styles.image}
                 contentFit="cover"
+                contentPosition={banner.key === 'butchers' ? 'center' : undefined}
                 pointerEvents="none"
               />
             </Pressable>
