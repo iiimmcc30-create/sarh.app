@@ -16,13 +16,13 @@ export class FeedSuppliersService {
 
   async listPublic(q?: string, category?: FeedProductCategoryValue) {
     const rows = await this.repo.findPublic({ q, category });
-    return rows.map(presentSupplier);
+    return rows.map(presentPublicSupplier);
   }
 
   async getPublic(id: string) {
     const supplier = await this.repo.findPublicById(id);
     if (!supplier) throwApi(404, 'not_found', 'المورد غير موجود');
-    return presentSupplier(supplier);
+    return presentPublicSupplier(supplier);
   }
 
   listAdmin(q?: string) {
@@ -90,9 +90,13 @@ export class FeedSuppliersService {
   }
 }
 
-function presentSupplier<T extends { _count?: { products: number } }>(row: T) {
-  const { _count, ...rest } = row;
-  return { ...rest, productCount: _count?.products ?? 0 };
+function presentPublicSupplier<T extends object>(row: T) {
+  const { _count, products, productCount, ...rest } = row as T & {
+    _count?: unknown;
+    products?: unknown;
+    productCount?: unknown;
+  };
+  return rest;
 }
 
 function normalizeWebsite(value?: string | null): string | null | undefined {
