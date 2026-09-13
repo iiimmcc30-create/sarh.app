@@ -9,6 +9,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Alert,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -48,7 +50,6 @@ import {
 } from '@/services/butcherData';
 import { type ButcherStoreNavItem } from '@/components/butcher/ButcherCategoryBar';
 import { ButcherMenuCategoryBar } from '@/components/butcher/ButcherMenuCategoryBar';
-import { ButcherMenuPager, type MenuPagerPage } from '@/components/butcher/ButcherMenuPager';
 import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
 import { ButcherStickyCartBar } from '@/components/butcher/ButcherStickyCartBar';
 import { ButcherStoreHero } from '@/components/butcher/ButcherStoreHero';
@@ -518,6 +519,12 @@ export default function ButcherProfileScreen() {
   const [favorited, setFavorited] = useState(false);
   const [optionsProduct, setOptionsProduct] = useState<ButcherProduct | null>(null);
 
+  // Vertical scroll + section tracking
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sectionOffsetsRef = useRef<Record<string, number>>({});
+  const categoryBarOffsetRef = useRef<number>(0);
+  const isUserScrollingRef = useRef<boolean>(false);
+
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
   const [products, setProducts] = useState<ButcherProduct[]>([]);
   const [offers, setOffers] = useState<ButcherOffer[]>([]);
@@ -809,31 +816,41 @@ export default function ButcherProfileScreen() {
     ? gccCurrencies[butcher.country as Country] || gccCurrencies['SA']
     : gccCurrencies['SA'];
 
-  const menuPages = useMemo((): MenuPagerPage[] => {
-    return navItems.map((item) => ({
-      id: item.id,
-      render: () => {
-        if (item.kind === 'offers') {
-          return <OffersTab offers={offers} currencySymbol={currency.symbol} />;
+  // Scroll handler: update active category based on visible section
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isUserScrollingRef.current) return;
+      const scrollY = e.nativeEvent.contentOffset.y;
+      const threshold = categoryBarOffsetRef.current + 40;
+      const offsets = sectionOffsetsRef.current;
+      let bestId: string | null = null;
+      for (const [id, offset] of Object.entries(offsets)) {
+        if (scrollY + threshold >= offset) {
+          bestId = id;
         }
-        if (item.kind === 'stories') {
-          return <StoriesTab stories={stories} />;
-        }
-        const list =
-          item.id === 'menu'
-            ? products
-            : products.filter((p) => p.category === item.id);
-        return (
-          <StoreProductsList
-            heading={item.label}
-            products={list}
-            currencySymbol={currency.symbol}
-            onOpenOptions={handleOpenOptions}
-          />
-        );
-      },
-    }));
-  }, [navItems, offers, stories, products, currency.symbol, handleOpenOptions]);
+      }
+      if (bestId && bestId !== activeNavId) {
+        setActiveNavId(bestId);
+      }
+    },
+    [activeNavId],
+  );
+
+  // Category bar tap: update active id + scroll to section
+  const handleCategoryChange = useCallback(
+    (item: ButcherStoreNavItem) => {
+      setActiveNavId(item.id);
+      const offset = sectionOffsetsRef.current[item.id];
+      if (offset !== undefined && scrollViewRef.current) {
+        isUserScrollingRef.current = true;
+        scrollViewRef.current.scrollTo({ y: Math.max(0, offset - categoryBarOffsetRef.current), animated: true });
+        setTimeout(() => {
+          isUserScrollingRef.current = false;
+        }, 600);
+      }
+    },
+    [],
+  );
 
   const submitReview = async () => {
     if (!accessToken || !id) {
@@ -906,13 +923,23 @@ export default function ButcherProfileScreen() {
     }
   };
 
+  // Build compact inline meta line for the header
+  const metaLine = [
+    butcher.cityAr || butcher.city,
+    butcherMinOrderLabel(butcher),
+    butcherFeeLabel(butcher) !== '—' ? `توصيل ${butcherFeeLabel(butcher)}` : null,
+  ].filter(Boolean).join('  •  ');
+
   return (
     <Screen edges={['top']} pattern={false} style={styles.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={100}
       >
         <ButcherStoreHero
           butcher={butcher}
@@ -922,30 +949,14 @@ export default function ButcherProfileScreen() {
           onInfo={() => setInfoOpen(true)}
         />
 
+        {/* Compact header: name + inline meta line */}
         <View style={styles.profileHeader}>
           <AppText variant="sectionTitle" style={styles.name}>{butcher.nameAr}</AppText>
-          <View style={styles.serviceRow}>
-            <View style={styles.serviceItem}>
-              <AppIcon name="map-marker-outline" size={14} color={colors.textMuted} />
-              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcher.cityAr || butcher.city}</AppText>
-            </View>
-            <View style={styles.serviceItem}>
-              <AppIcon name="bicycle-outline" size={14} color={colors.textMuted} />
-              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherFeeLabel(butcher)}</AppText>
-            </View>
-            <View style={styles.serviceItem}>
-              <AppIcon name="clock-outline" size={14} color={colors.textMuted} />
-              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherEtaLabel(butcher)}</AppText>
-            </View>
-            <View style={styles.serviceItem}>
-              <AppIcon name="receipt-outline" size={14} color={colors.textMuted} />
-              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherMinOrderLabel(butcher)}</AppText>
-            </View>
-            <View style={styles.serviceItem}>
-              <AppIcon name="storefront-outline" size={14} color={colors.textMuted} />
-              <AppText variant="caption" color="textMuted" style={styles.serviceText}>{butcherPickupLabel(butcher)}</AppText>
-            </View>
-          </View>
+          {metaLine ? (
+            <AppText variant="caption" color="textMuted" style={styles.metaLine}>
+              {metaLine}
+            </AppText>
+          ) : null}
           {chatAccess?.allowed ? (
             <Pressable
               style={[styles.chatCta, styles.chatCtaActive]}
@@ -974,28 +985,66 @@ export default function ButcherProfileScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.stickyNav}>
+            {/* Horizontal category bar */}
+            <View
+              style={styles.stickyNav}
+              onLayout={(e) => {
+                categoryBarOffsetRef.current = e.nativeEvent.layout.y;
+              }}
+            >
               <ButcherMenuCategoryBar
                 items={navItems}
                 activeId={activeNav?.id ?? ''}
-                onChange={(item) => setActiveNavId(item.id)}
+                onChange={handleCategoryChange}
               />
             </View>
-            <View style={styles.tabContent}>
-              {menuPages.length ? (
-                <ButcherMenuPager
-                  pages={menuPages}
-                  activeId={activeNav?.id ?? menuPages[0].id}
-                  onActiveId={setActiveNavId}
-                />
-              ) : (
+
+            {/* Vertical product sections */}
+            {navItems.length ? (
+              navItems.map((item) => {
+                let sectionContent: React.ReactNode;
+                if (item.kind === 'offers') {
+                  sectionContent = <OffersTab offers={offers} currencySymbol={currency.symbol} />;
+                } else if (item.kind === 'stories') {
+                  sectionContent = <StoriesTab stories={stories} />;
+                } else {
+                  const list =
+                    item.id === 'menu'
+                      ? products
+                      : products.filter((p) => p.category === item.id);
+                  sectionContent = (
+                    <StoreProductsList
+                      products={list}
+                      currencySymbol={currency.symbol}
+                      onOpenOptions={handleOpenOptions}
+                    />
+                  );
+                }
+                return (
+                  <View
+                    key={item.id}
+                    onLayout={(e) => {
+                      sectionOffsetsRef.current[item.id] = e.nativeEvent.layout.y;
+                    }}
+                  >
+                    <View style={styles.sectionCategoryHeader}>
+                      <AppText variant="heading3" style={styles.sectionCategoryTitle}>
+                        {item.label}
+                      </AppText>
+                    </View>
+                    {sectionContent}
+                  </View>
+                );
+              })
+            ) : (
+              <View style={styles.tabContent}>
                 <StoreProductsList
                   products={[]}
                   currencySymbol={currency.symbol}
                   onOpenOptions={handleOpenOptions}
                 />
-              )}
-            </View>
+              </View>
+            )}
           </>
         )}
 
@@ -1140,7 +1189,21 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   profileHeader: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    gap: spacing.md,
+    paddingBottom: spacing.xs,
+    gap: spacing.sm,
+  },
+  metaLine: {
+    writingDirection: 'rtl',
+  },
+  sectionCategoryHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.borderHairline,
+  },
+  sectionCategoryTitle: {
+    color: colors.textPrimary,
   },
   searchWrap: {
     paddingHorizontal: spacing.lg,
@@ -1217,17 +1280,8 @@ function createMainStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   },
   ratingScore: { ...butcherTypography.primary, color: colors.textPrimary },
   ratingCount: { ...butcherTypography.secondary, color: colors.textMuted, writingDirection: 'rtl' },
-  serviceRow: {
-    flexDirection: 'row',
-        justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  serviceItem: {
-    flexDirection: 'row',
-        alignItems: 'center',
-    gap: 4,
-  },
+  serviceRow: {},
+  serviceItem: {},
   serviceText: {},
 
   ctaRow: {

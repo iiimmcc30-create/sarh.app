@@ -72,7 +72,7 @@ describe('malahm home redesign', () => {
     expect(card).toContain("backgroundColor: 'transparent'");
     expect(card).toContain('getRtlRow()');
     expect(store).toContain('ButcherStoreHero');
-    expect(store).toContain('ButcherMenuPager');
+    expect(store).toContain('ButcherMenuCategoryBar');
     expect(store).toContain('البحث في القائمة...');
     expect(store).not.toContain("label: 'الكل'");
     expect(store).toContain('CATEGORY_LABELS');

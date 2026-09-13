@@ -101,23 +101,7 @@ export function ButcherProductOptionsModal({
             />
           </View>
 
-          {product.availableCuts.length > 0 ? (
-            <View style={styles.section}>
-              <View style={{ width: '100%' }}>
-                <AppText style={styles.sectionTitle}>طريقة التقطيع</AppText>
-              </View>
-              <View style={styles.chips}>
-                {[...product.availableCuts].reverse().map((cut) => (
-                  <SarhChip appearance="filter"
-                    key={cut}
-                    label={cutLabelAr(cut)}
-                    selected={selectedCut === cut}
-                    onPress={() => setSelectedCut(cut)}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : null}
+          {/* طريقة التقطيع تُعرض في مرحلة تأكيد الطلب وليس هنا */}
 
           {product.pricePerKg ? (
             <View style={styles.section}>
