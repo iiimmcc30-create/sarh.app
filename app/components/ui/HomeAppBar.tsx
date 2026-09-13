@@ -97,7 +97,7 @@ function createColorStyles(colors: ThemeColors) {
     shell: { borderBottomColor: colors.borderHairline },
     avatar: {
       borderColor: colors.electric,
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgField,
     },
   });
 }

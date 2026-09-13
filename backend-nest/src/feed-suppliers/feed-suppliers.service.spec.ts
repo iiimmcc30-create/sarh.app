@@ -30,7 +30,20 @@ describe('FeedSuppliersService', () => {
       q: 'شعير',
       category: 'barley',
     });
-    expect(rows).toEqual([{ id: 's1', published: true, productCount: 2 }]);
+    expect(rows).toEqual([{ id: 's1', published: true }]);
+  });
+
+  it('omits products from the public supplier payload', async () => {
+    repo.findPublicById.mockResolvedValue({
+      id: 's1',
+      published: true,
+      products: [{ id: 'p1', nameAr: 'شعير' }],
+      _count: { products: 1 },
+    });
+    await expect(service.getPublic('s1')).resolves.toEqual({
+      id: 's1',
+      published: true,
+    });
   });
 
   it('rejects a missing public supplier', async () => {

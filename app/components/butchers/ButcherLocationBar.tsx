@@ -91,7 +91,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgField,
     },
     copy: {
       flex: 1,

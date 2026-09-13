@@ -1,51 +1,40 @@
+import { FeedSupplierContactActions } from '@/components/feed-suppliers/FeedSupplierContactActions';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { Image, uriSource } from '@/components/ui/AppImage';
+import { Image } from '@/components/ui/AppImage';
+import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
-import { spacing, type ThemeColors } from '@/constants/theme';
-import { AppText, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
-import { Row, Screen, ScreenBody } from '@/design-system/layout';
+import { colors, functional, motion, radius, space } from '@/design-system';
+import { AppText, SarhAvatar, SarhDivider } from '@/design-system/components';
+import { Row, Screen, ScreenBody, Section } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { FEED_CATEGORY_FILTERS, type FeedProductCategory } from '@/lib/feedSuppliers';
+import { supplierPlace } from '@/lib/feedSuppliers';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { safePush } from '@/lib/safeNavigate';
 import { showToast } from '@/lib/toast';
 import { fetchFeedSuppliers, type FeedSupplier } from '@/services/feedSuppliers';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+
+const HERO_IMAGE = require('../../assets/images/feed-suppliers-hero.jpg');
+const HERO_ASPECT = 1408 / 768;
 
 export default function FeedSuppliersScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors: c }) => createStyles(c));
+  const { colors: themeColors } = useTheme();
+  const styles = useThemedStyles(() => createStyles());
   const [suppliers, setSuppliers] = useState<FeedSupplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<FeedProductCategory | 'all'>('all');
   const [hasData, setHasData] = useState(false);
-  const queryRef = useRef(query);
-  const categoryRef = useRef(category);
   const hasDataRef = useRef(false);
-  const skipCategoryEffect = useRef(true);
-  queryRef.current = query;
-  categoryRef.current = category;
 
   const load = useCallback(async (opts?: { refresh?: boolean }) => {
     if (opts?.refresh) setRefreshing(true);
     else if (!hasDataRef.current) setLoading(true);
     try {
-      const rows = await fetchFeedSuppliers({
-        q: queryRef.current,
-        category: categoryRef.current,
-      });
+      const rows = await fetchFeedSuppliers();
       setSuppliers(rows);
       hasDataRef.current = true;
       setHasData(true);
@@ -63,141 +52,134 @@ export default function FeedSuppliersScreen() {
     }, [load]),
   );
 
-  useEffect(() => {
-    if (skipCategoryEffect.current) {
-      skipCategoryEffect.current = false;
-      return;
-    }
-    void load();
-  }, [category, load]);
-
   return (
-    <Screen edges={['top']} keyboard>
+    <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="موردو الأعلاف" showBack />
       <ScreenBody
         padTop="md"
         padBottom="xxxl"
-        gap="md"
+        gap="section"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => void load({ refresh: true })} />
         }
       >
-        <SarhInput
-          appearance="theme"
-          placeholder="ابحث عن مورد أو منتج..."
-          value={query}
-          onChangeText={setQuery}
-          icon="search"
-          returnKeyType="search"
-          onSubmitEditing={() => void load()}
-        />
-        <SarhChipRow contentPaddingHorizontal={0}>
-          {FEED_CATEGORY_FILTERS.map((item) => (
-            <SarhChip
-              key={item.value}
-              appearance="filter"
-              compact
-              label={item.label}
-              selected={category === item.value}
-              onPress={() => setCategory(item.value)}
-            />
-          ))}
-        </SarhChipRow>
+        <View style={styles.hero} accessibilityRole="image" accessibilityLabel="موردو الأعلاف">
+          <Image source={HERO_IMAGE} style={styles.heroImage} contentFit="cover" />
+          <LinearGradient
+            colors={['transparent', themeColors.bgOverlay]}
+            locations={[0.4, 1]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={styles.heroOverlay}
+          />
+          <View style={styles.heroCopy}>
+            <AppText variant="heading2" style={styles.heroTitle}>
+              موردو الأعلاف
+            </AppText>
+            <AppText variant="bodySmall" style={styles.heroSubtitle}>
+              تعرّف على موردي الأعلاف في سرح
+            </AppText>
+          </View>
+        </View>
 
-        {loading && !hasData ? (
-          <ActivityIndicator color={colors.electricBright} style={styles.loader} />
-        ) : suppliers.length === 0 ? (
-          <AppText variant="bodySmall" color="textMuted" align="center">
-            لا يوجد موردون متاحون حالياً
-          </AppText>
-        ) : (
-          suppliers.map((supplier) => (
-            <Pressable
-              key={supplier.id}
-              onPress={() =>
-                safePush(
-                  { pathname: '/feed-suppliers/[id]', params: { id: supplier.id } },
-                  undefined,
-                  router,
-                )
-              }
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel={supplier.nameAr}
-            >
-              <View style={styles.logoWrap}>
-                {uriSource(cloudinaryFitUrl(supplier.logo || supplier.cover, 'row')) ? (
-                  <Image
-                    source={uriSource(cloudinaryFitUrl(supplier.logo || supplier.cover, 'row'))}
-                    style={styles.logo}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <AppText variant="label">أعلاف</AppText>
-                )}
-              </View>
-              <View style={styles.copy}>
-                <Row gap="xs" align="center">
-                  <AppText variant="label" numberOfLines={1} style={styles.name}>
-                    {supplier.nameAr}
-                  </AppText>
-                  {supplier.verified ? (
-                    <>
-                      <VerificationBadge size={16} />
-                      <AppText variant="caption" color="primary">
-                        موثق
-                      </AppText>
-                    </>
-                  ) : null}
-                </Row>
-                <AppText variant="caption" color="textMuted" numberOfLines={1}>
-                  {supplier.cityAr}
-                </AppText>
-                {supplier.description ? (
-                  <AppText variant="caption" color="textSecondary" numberOfLines={2}>
-                    {supplier.description}
-                  </AppText>
-                ) : null}
-                <AppText variant="caption" color="textMuted" numberOfLines={1}>
-                  {supplier.productCount === 1
-                    ? 'منتج واحد'
-                    : `${supplier.productCount ?? 0} منتجات`}
-                </AppText>
-              </View>
-            </Pressable>
-          ))
-        )}
+        <Section title="الموردون">
+          {loading && !hasData ? (
+            <ActivityIndicator color={colors.primary} style={styles.loader} />
+          ) : suppliers.length === 0 ? (
+            <AppText variant="bodySmall" color="textMuted" align="center">
+              لا يوجد موردون متاحون حالياً
+            </AppText>
+          ) : (
+            suppliers.map((supplier, index) => {
+              const place = supplierPlace(supplier);
+              return (
+                <View key={supplier.id}>
+                  {index > 0 ? <SarhDivider /> : null}
+                  <Pressable
+                    onPress={() =>
+                      safePush(
+                        { pathname: '/feed-suppliers/[id]', params: { id: supplier.id } },
+                        undefined,
+                        router,
+                      )
+                    }
+                    style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel={supplier.nameAr}
+                  >
+                    <Row gap="md" align="start">
+                      <SarhAvatar
+                        uri={cloudinaryFitUrl(supplier.logo || supplier.cover, 'row')}
+                        name={supplier.nameAr}
+                        fallback="أعلاف"
+                        size="lg"
+                      />
+                      <View style={styles.copy}>
+                        <Row gap="xs" align="center">
+                          <AppText variant="label" numberOfLines={1} style={styles.name}>
+                            {supplier.nameAr}
+                          </AppText>
+                          {supplier.verified ? <VerificationBadge size={16} /> : null}
+                        </Row>
+                        {supplier.description ? (
+                          <AppText variant="caption" color="textSecondary" numberOfLines={2}>
+                            {supplier.description}
+                          </AppText>
+                        ) : null}
+                        {place ? (
+                          <AppText variant="caption" color="textMuted" numberOfLines={1}>
+                            {place}
+                          </AppText>
+                        ) : null}
+                        <FeedSupplierContactActions supplier={supplier} />
+                      </View>
+                    </Row>
+                  </Pressable>
+                </View>
+              );
+            })
+          )}
+        </Section>
       </ScreenBody>
     </Screen>
   );
 }
 
-function createStyles(colors: ThemeColors) {
+function createStyles() {
   return StyleSheet.create({
-    loader: { marginTop: spacing.xxl },
-    card: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-      borderRadius: 16,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    pressed: { opacity: 0.94 },
-    logoWrap: {
-      width: 64,
-      height: 64,
-      borderRadius: 12,
+    hero: {
+      width: '100%',
+      aspectRatio: HERO_ASPECT,
+      borderRadius: radius[16],
       overflow: 'hidden',
-      backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
+      backgroundColor: colors.surfaceElevated,
     },
-    logo: { width: '100%', height: '100%' },
-    copy: { flex: 1, minWidth: 0, gap: 4 },
+    heroImage: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    heroOverlay: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    heroCopy: {
+      position: 'absolute',
+      start: space[16],
+      end: space[16],
+      bottom: space[16],
+      gap: space[4],
+    },
+    heroTitle: {
+      color: functional.onPrimary,
+    },
+    heroSubtitle: {
+      color: functional.onPrimary,
+      opacity: 0.88,
+    },
+    loader: { marginTop: space[24] },
+    row: {
+      paddingVertical: space[12],
+    },
+    pressed: { opacity: motion.opacity.pressed },
+    copy: { flex: 1, minWidth: 0, gap: space[4] },
     name: { flexShrink: 1, minWidth: 0 },
   });
 }

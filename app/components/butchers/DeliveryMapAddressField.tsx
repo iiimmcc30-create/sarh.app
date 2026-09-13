@@ -78,7 +78,7 @@ export function DeliveryMapAddressField({ onAddressChange }: Props) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
-      backgroundColor: colors.bgElevated,
+      backgroundColor: colors.bgField,
       borderRadius: 14,
       paddingHorizontal: spacing.lg,
       paddingVertical: 14,
