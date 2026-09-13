@@ -1,6 +1,6 @@
 /**
  * Project-wide official typeface = listing price Bold
- * (`IBMPlexSansArabic_700Bold`).
+ * (`Tajawal_700Bold`).
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import { OFFICIAL_APP_FONT, resolveAppFontFace } from '@/constants/fonts';
@@ -38,7 +38,7 @@ function patchHost(
   };
 }
 
-/** Call once after IBM Plex faces are loaded (safe to call multiple times). */
+/** Call once after Tajawal faces are loaded (safe to call multiple times). */
 export function applyAppFonts() {
   if (applied) return;
   applied = true;

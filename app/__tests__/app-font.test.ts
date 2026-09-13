@@ -56,12 +56,12 @@ describe('resolveAppFontFace', () => {
     expect(resolveAppFontFace('600', 'monospace').fontFamily).toBe('monospace');
   });
 
-  it('remaps legacy Tajawal family names to the official Bold face', () => {
+  it('always returns the official Bold face regardless of incoming family', () => {
     expect(resolveAppFontFace('700', 'Tajawal_700Bold')).toEqual({
       fontFamily: OFFICIAL_APP_FONT,
       fontWeight: '700',
     });
-    expect(resolveAppFontFace(undefined, 'Tajawal-Regular')).toEqual({
+    expect(resolveAppFontFace(undefined, 'Tajawal_400Regular')).toEqual({
       fontFamily: OFFICIAL_APP_FONT,
       fontWeight: '700',
     });
@@ -90,24 +90,23 @@ describe('typography tokens', () => {
     expect(typography.tab).toMatchObject({ fontSize: 10, lineHeight: 13 });
   });
 
-  it('registers IBM Plex Sans Arabic faces', () => {
-    expect(APP_FONT_NAME).toBe('IBM Plex Sans Arabic');
+  it('registers Tajawal faces', () => {
+    expect(APP_FONT_NAME).toBe('Tajawal');
     expect(APP_FONT_FACES).toEqual([
-      'IBMPlexSansArabic_400Regular',
-      'IBMPlexSansArabic_500Medium',
-      'IBMPlexSansArabic_600SemiBold',
-      'IBMPlexSansArabic_700Bold',
+      'Tajawal_400Regular',
+      'Tajawal_500Medium',
+      'Tajawal_700Bold',
     ]);
   });
 });
 
 describe('package fonts', () => {
-  it('does not depend on Tajawal', () => {
+  it('depends on Tajawal and not on IBM Plex Sans Arabic', () => {
     const deps = {
       ...packageJson.dependencies,
       ...packageJson.devDependencies,
     };
-    expect(Object.keys(deps).some((name) => /tajawal/i.test(name))).toBe(false);
-    expect(deps['@expo-google-fonts/ibm-plex-sans-arabic']).toBeTruthy();
+    expect(deps['@expo-google-fonts/tajawal']).toBeTruthy();
+    expect(Object.keys(deps).some((k) => /ibm-plex/i.test(k))).toBe(false);
   });
 });

@@ -76,16 +76,16 @@ describe('Sarh design-system foundation', () => {
     expect(semantic.status.success).toBe(colors.success);
   });
 
-  it('maps IBM Plex weights to four distinct families', () => {
-    expect(fontFamily.regular).toBe('IBMPlexSansArabic_400Regular');
-    expect(fontFamily.medium).toBe('IBMPlexSansArabic_500Medium');
-    expect(fontFamily.semiBold).toBe('IBMPlexSansArabic_600SemiBold');
-    expect(fontFamily.bold).toBe('IBMPlexSansArabic_700Bold');
-    expect(new Set(Object.values(fontFamily)).size).toBe(4);
+  it('maps Tajawal weights to loaded families', () => {
+    expect(fontFamily.regular).toBe('Tajawal_400Regular');
+    expect(fontFamily.medium).toBe('Tajawal_500Medium');
+    expect(fontFamily.semiBold).toBe('Tajawal_700Bold');
+    expect(fontFamily.bold).toBe('Tajawal_700Bold');
+    // semiBold aliases to bold (Tajawal has no 600 face) → 3 distinct values
+    expect(new Set(Object.values(fontFamily)).size).toBe(3);
     expect(APP_FONT_FACES).toEqual([
       fontFamily.regular,
       fontFamily.medium,
-      fontFamily.semiBold,
       fontFamily.bold,
     ]);
     expect(fontWeight.regular).toBe('400');
