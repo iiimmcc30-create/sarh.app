@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+  EXPLORE_BANNER_AUTO_PLAY_MS,
+  nextExploreBannerIndex,
+  shouldAutoPlayExploreBanners,
+} from '../lib/exploreSarhBanners';
+import {
   FALLBACK_HOME_EXPLORE,
   partitionExploreSections,
   resolveExploreCard,
@@ -99,6 +104,35 @@ describe('Explore Sarh logo mark', () => {
     expect(section).not.toContain('partitionExploreSections');
     expect(section).not.toContain('gridRow');
     expect(section).not.toContain('featuredCard');
+  });
+
+  it('auto-plays the existing pager every 5000ms without fetching', () => {
+    expect(EXPLORE_BANNER_AUTO_PLAY_MS).toBe(5000);
+    expect(shouldAutoPlayExploreBanners(0)).toBe(false);
+    expect(shouldAutoPlayExploreBanners(1)).toBe(false);
+    expect(shouldAutoPlayExploreBanners(2)).toBe(true);
+    expect(nextExploreBannerIndex(0, 3)).toBe(1);
+    expect(nextExploreBannerIndex(1, 3)).toBe(2);
+    expect(nextExploreBannerIndex(2, 3)).toBe(0);
+    expect(nextExploreBannerIndex(0, 0)).toBe(0);
+
+    const section = fs.readFileSync(
+      path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
+      'utf8',
+    );
+    expect(section).toContain("from '@/lib/exploreSarhBanners'");
+    expect(section).toContain('useFocusEffect');
+    expect(section).toContain('setInterval');
+    expect(section).toContain('clearInterval');
+    expect(section).toContain('EXPLORE_BANNER_AUTO_PLAY_MS');
+    expect(section).toContain('i === index && styles.dotActive');
+    expect(section).not.toContain('fetch(');
+    expect(section).not.toContain('fetchHomeExplore');
+    expect(section).toContain("href: '/butchers'");
+    expect(section).toContain("href: '/feed-suppliers'");
+    expect(section).toContain("href: '/ministry'");
+    expect(section).toContain('contentFit="cover"');
+    expect(section).toContain("contentPosition={banner.key === 'butchers' ? 'center' : undefined}");
   });
 });
 
