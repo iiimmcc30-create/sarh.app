@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsEmail,
   IsIn,
   IsNumber,
   IsOptional,
@@ -108,6 +109,18 @@ export class CreateFeedSupplierDto {
   whatsapp?: string;
 
   @IsOptional()
+  @IsEmail()
+  @MaxLength(160)
+  @Transform(({ value }) => emptyToUndefined(value))
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  @Transform(({ value }) => emptyToUndefined(value))
+  website?: string;
+
+  @IsOptional()
   @IsString()
   @MaxLength(240)
   @Transform(({ value }) => emptyToUndefined(value))
@@ -188,6 +201,18 @@ export class UpdateFeedSupplierDto {
   @MaxLength(32)
   @Transform(({ value }) => emptyToUndefined(value))
   whatsapp?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(160)
+  @Transform(({ value }) => emptyToUndefined(value))
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  website?: string | null;
 
   @IsOptional()
   @IsString()

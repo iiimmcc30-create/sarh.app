@@ -59,3 +59,21 @@ export function mapsUrl(input: {
   const query = [input.addressAr, input.cityAr].filter(Boolean).join(' ');
   return query ? `https://maps.google.com/?q=${encodeURIComponent(query)}` : null;
 }
+
+export function mailtoUrl(email?: string | null): string | null {
+  const trimmed = email?.trim();
+  return trimmed ? `mailto:${trimmed}` : null;
+}
+
+export function websiteUrl(value?: string | null): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+export function supplierPlace(input: {
+  cityAr?: string | null;
+  districtAr?: string | null;
+}): string {
+  return [input.districtAr, input.cityAr].filter(Boolean).join('، ');
+}

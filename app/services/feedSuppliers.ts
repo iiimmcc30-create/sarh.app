@@ -28,6 +28,8 @@ export type FeedSupplier = {
   lng?: number | null;
   phone?: string | null;
   whatsapp?: string | null;
+  email?: string | null;
+  website?: string | null;
   hoursAr?: string | null;
   verified: boolean;
   published: boolean;

@@ -31,6 +31,8 @@ const EMPTY_SUPPLIER = {
   hoursAr: '',
   phone: '',
   whatsapp: '',
+  email: '',
+  website: '',
   logo: '',
   cover: '',
   lat: '',
@@ -101,6 +103,8 @@ export default function FeedSuppliersAdminPage() {
       hoursAr: row.hoursAr ?? '',
       phone: row.phone ?? '',
       whatsapp: row.whatsapp ?? '',
+      email: row.email ?? '',
+      website: row.website ?? '',
       logo: row.logo ?? '',
       cover: row.cover ?? '',
       lat: row.lat != null ? String(row.lat) : '',
@@ -154,6 +158,8 @@ export default function FeedSuppliersAdminPage() {
         hoursAr: form.hoursAr.trim() || undefined,
         phone: form.phone.trim() || undefined,
         whatsapp: form.whatsapp.trim() || undefined,
+        email: form.email.trim() || undefined,
+        website: form.website.trim() || undefined,
         logo: form.logo || (id ? null : undefined),
         cover: form.cover || (id ? null : undefined),
         lat: form.lat.trim() ? Number(form.lat) : id ? null : undefined,
@@ -282,7 +288,7 @@ export default function FeedSuppliersAdminPage() {
     <div>
       <PageHeader
         title="موردو الأعلاف"
-        description="دليل موردي الأعلاف — إدارة الموردين والمنتجات من لوحة التحكم فقط"
+        description="دليل موردي الأعلاف — إدارة بيانات المورد ووسائل التواصل من لوحة التحكم"
         actions={
           <Button variant="ghost" onClick={() => void load()} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
@@ -318,18 +324,24 @@ export default function FeedSuppliersAdminPage() {
           {editingId ? 'تعديل مورد' : 'إضافة مورد'}
         </h3>
         <div className="grid gap-3 md:grid-cols-2">
-          <EditorialStoryImagePicker
-            imageUrl={form.logo}
-            uploading={uploading === 'logo'}
-            onPick={(file) => void onPickImage('logo', file)}
-            onClear={() => setForm((prev) => ({ ...prev, logo: '' }))}
-          />
-          <EditorialStoryImagePicker
-            imageUrl={form.cover}
-            uploading={uploading === 'cover'}
-            onPick={(file) => void onPickImage('cover', file)}
-            onClear={() => setForm((prev) => ({ ...prev, cover: '' }))}
-          />
+          <div>
+            <p className="mb-2 text-xs text-slate-400">الشعار</p>
+            <EditorialStoryImagePicker
+              imageUrl={form.logo}
+              uploading={uploading === 'logo'}
+              onPick={(file) => void onPickImage('logo', file)}
+              onClear={() => setForm((prev) => ({ ...prev, logo: '' }))}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-xs text-slate-400">صورة الغلاف</p>
+            <EditorialStoryImagePicker
+              imageUrl={form.cover}
+              uploading={uploading === 'cover'}
+              onPick={(file) => void onPickImage('cover', file)}
+              onClear={() => setForm((prev) => ({ ...prev, cover: '' }))}
+            />
+          </div>
           <input
             placeholder="اسم المورد"
             value={form.nameAr}
@@ -381,6 +393,21 @@ export default function FeedSuppliersAdminPage() {
             placeholder="رقم واتساب"
             value={form.whatsapp}
             onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            dir="ltr"
+          />
+          <input
+            placeholder="البريد الإلكتروني"
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            dir="ltr"
+          />
+          <input
+            placeholder="رابط الموقع الإلكتروني"
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
             className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
             dir="ltr"
           />

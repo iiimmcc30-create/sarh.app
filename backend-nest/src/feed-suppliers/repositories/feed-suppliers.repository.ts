@@ -50,26 +50,12 @@ export class FeedSuppliersRepository {
     return this.prisma.feedSupplier.findMany({
       where,
       orderBy: [{ verified: 'desc' }, { nameAr: 'asc' }],
-      include: {
-        _count: {
-          select: { products: { where: publicProductWhere } },
-        },
-      },
     });
   }
 
   findPublicById(id: string) {
     return this.prisma.feedSupplier.findFirst({
       where: { id, deletedAt: null, published: true },
-      include: {
-        products: {
-          where: publicProductWhere,
-          orderBy: [{ available: 'desc' }, { nameAr: 'asc' }],
-        },
-        _count: {
-          select: { products: { where: publicProductWhere } },
-        },
-      },
     });
   }
 
