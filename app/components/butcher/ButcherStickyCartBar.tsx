@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -62,7 +63,7 @@ function createStyles(colors: ThemeColors) {
       ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: colors.electric,
+      backgroundColor: butcherMarket.seeAll,
       borderRadius: radius.pill,
       paddingVertical: 12,
       paddingHorizontal: spacing.lg,

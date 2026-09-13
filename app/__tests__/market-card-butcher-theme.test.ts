@@ -69,7 +69,8 @@ describe('butcher theme isolation', () => {
     const before = colors.textPrimary;
     const snap = snapshotTheme('light');
     expect(snap.colors.textPrimary).toBe('#101820');
-    expect(snap.colors.screenRoot).toBe('#F5F7F9');
+    expect(snap.colors.screenRoot).toBe('#F8F9FA');
+    expect(snap.colors.bgField).toBe('#F1F3F5');
     expect(colors.textPrimary).toBe(before);
     expect(getActiveScheme()).toBe('dark');
     expect(resolveSarhButtonColorsForScheme('light', 'primary', 'default').backgroundColor).toBe(

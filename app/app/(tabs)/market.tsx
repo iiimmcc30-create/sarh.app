@@ -51,6 +51,7 @@ export default function MarketScreen() {
   const listRef = useRef<FlatList<Listing>>(null);
   const loadingMoreRef = useRef(false);
   const loadGenRef = useRef(0);
+  const hasItemsRef = useRef(false);
 
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export default function MarketScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  hasItemsRef.current = items.length > 0;
 
   const apiFilters = useMemo(
     () => ({
@@ -76,7 +78,7 @@ export default function MarketScreen() {
 
   const loadFirstPage = useCallback(async () => {
     const gen = ++loadGenRef.current;
-    setLoading(true);
+    if (!hasItemsRef.current) setLoading(true);
     try {
       const page = await searchListingsPage(apiFilters, accessToken);
       if (gen !== loadGenRef.current) return;

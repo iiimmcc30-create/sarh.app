@@ -1,4 +1,4 @@
-// SAFAT — Butcher Cart Screen (سلة الملحمة)
+// SAFAT — Butcher Cart Screen (سلة الملحمة) — Two-phase checkout
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
@@ -14,6 +14,8 @@ import {
   View,
 } from 'react-native';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
+import { butcherMarket } from '@/constants/butcherMarket';
+import { butcherTypography } from '@/constants/butcherTypography';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useLayout } from '@/hooks/useLayout';
@@ -30,12 +32,174 @@ import {
 } from '@/services/butcherData';
 import { launchPaymentCheckout } from '@/services/payments';
 import { resolveMediaUrl } from '@/services/media';
-import { AppText, SarhBackButton, SarhButton } from '@/design-system/components';
+import { PAYMENT_METHODS, type NIPaymentMethod } from '@/services/network_international';
+import { AppText, SarhBackButton } from '@/design-system/components';
 import { BottomAction, Row, Screen, ScreenBody } from '@/design-system/layout';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
 
+type CheckoutPhase = 'confirm' | 'payment';
+
+// ─── Progress Indicator ───────────────────────────────────────────────────────
+function CheckoutProgress({ phase }: { phase: CheckoutPhase }) {
+  const styles = useThemedStyles(({ colors }) => createProgressStyles(colors));
+  const confirmDone = phase === 'payment';
+  const paymentActive = phase === 'payment';
+
+  return (
+    <Row align="center" justify="center" gap="sm" style={styles.row}>
+      <View style={styles.step}>
+        <View style={[styles.dot, confirmDone ? styles.dotDone : styles.dotActive]}>
+          {confirmDone ? (
+            <AppIcon name="checkmark" size={11} color="#fff" />
+          ) : (
+            <View style={styles.dotInner} />
+          )}
+        </View>
+        <AppText
+          variant="caption"
+          style={[styles.stepLabel, !confirmDone ? styles.labelActive : styles.labelDone]}
+        >
+          تأكيد الطلب
+        </AppText>
+      </View>
+
+      <View style={styles.line} />
+
+      <View style={styles.step}>
+        <View style={[styles.dot, paymentActive ? styles.dotActive : styles.dotIdle]}>
+          {paymentActive ? <View style={styles.dotInner} /> : null}
+        </View>
+        <AppText
+          variant="caption"
+          style={[styles.stepLabel, paymentActive ? styles.labelActive : styles.labelIdle]}
+        >
+          الدفع
+        </AppText>
+      </View>
+    </Row>
+  );
+}
+
+function createProgressStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    row: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    step: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    dot: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dotActive: { backgroundColor: butcherMarket.seeAll },
+    dotDone: { backgroundColor: butcherMarket.seeAll },
+    dotIdle: {
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1.5,
+      borderColor: colors.borderSoft,
+    },
+    dotInner: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#fff',
+    },
+    line: {
+      flex: 1,
+      height: 1.5,
+      backgroundColor: colors.borderSoft,
+      marginTop: -14,
+    },
+    stepLabel: { ...butcherTypography.meta },
+    labelActive: { color: butcherMarket.seeAll, fontWeight: '600' },
+    labelDone: { color: butcherMarket.seeAll },
+    labelIdle: { color: colors.textMuted },
+  });
+}
+
+// ─── Payment Method Row ───────────────────────────────────────────────────────
+function PaymentMethodRow({
+  item,
+  selected,
+  onSelect,
+}: {
+  item: (typeof PAYMENT_METHODS)[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const styles = useThemedStyles(({ colors }) => createPayMethodStyles(colors));
+  return (
+    <Pressable
+      onPress={onSelect}
+      style={({ pressed }) => [styles.row, selected && styles.rowSelected, pressed && { opacity: 0.85 }]}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={item.arabic}
+    >
+      <Row align="center" gap="md" style={styles.inner}>
+        <View style={[styles.radio, selected && styles.radioSelected]}>
+          {selected ? <View style={styles.radioInner} /> : null}
+        </View>
+        <AppText variant="body" style={[styles.methodLabel, selected && styles.methodLabelSelected]}>
+          {item.arabic}
+        </AppText>
+        <View style={styles.iconWrap}>
+          <AppText variant="body">{item.icon}</AppText>
+        </View>
+      </Row>
+    </Pressable>
+  );
+}
+
+function createPayMethodStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    row: {
+      borderRadius: radius.lg,
+      borderWidth: 1.5,
+      borderColor: colors.borderSoft,
+      backgroundColor: colors.bgSurface,
+      overflow: 'hidden',
+    },
+    rowSelected: {
+      borderColor: butcherMarket.seeAll,
+      backgroundColor: butcherMarket.seeAll + '0D',
+    },
+    inner: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    radio: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.borderSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    radioSelected: { borderColor: butcherMarket.seeAll },
+    radioInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: butcherMarket.seeAll,
+    },
+    methodLabel: { flex: 1, color: colors.textPrimary },
+    methodLabelSelected: { color: butcherMarket.seeAll, fontWeight: '600' },
+    iconWrap: {},
+  });
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ButcherCartScreen() {
   const params = useLocalSearchParams<{ butcherId?: string }>();
   const routeButcherId = routeParam(params.butcherId);
@@ -45,6 +209,8 @@ export default function ButcherCartScreen() {
   const { accessToken } = useAuth();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [phase, setPhase] = useState<CheckoutPhase>('confirm');
+  const [selectedMethod, setSelectedMethod] = useState<NIPaymentMethod>('mada');
 
   const {
     butcherId,
@@ -138,7 +304,7 @@ export default function ButcherCartScreen() {
         body: JSON.stringify({
           amount,
           currency: currency.code || 'SAR',
-          method: 'mada',
+          method: selectedMethod,
           type: 'butcher_order',
           referenceId: orderId,
           description: `Butcher order ${orderNumber}`,
@@ -192,6 +358,7 @@ export default function ButcherCartScreen() {
     }
   };
 
+  // ─── Empty / wrong butcher ──────────────────────────────────────────────────
   if (wrongButcher || (!butcherId && itemCount === 0)) {
     return (
       <Screen edges={['top']} pattern={false} style={styles.screen}>
@@ -209,21 +376,187 @@ export default function ButcherCartScreen() {
     );
   }
 
+  const phaseTitle = phase === 'confirm' ? 'تأكيد الطلب' : 'الدفع';
+
+  // ─── Phase 1: Order Confirmation ────────────────────────────────────────────
+  const renderConfirmPhase = () => (
+    <>
+      {/* Items */}
+      {items.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <AppIcon name="cart-outline" size={40} color={styles.mutedColor.color} />
+          <AppText variant="cardTitle">لا منتجات في السلة</AppText>
+          <AppText variant="caption" color="textMuted" align="center">
+            أضف منتجات من صفحة الملحمة
+          </AppText>
+        </View>
+      ) : (
+        <View style={styles.section}>
+          <AppText variant="label" style={styles.sectionLabel}>المنتجات</AppText>
+          <View style={styles.itemsCard}>
+            {items.map((line, idx) => (
+              <View
+                key={line.id}
+                style={[styles.lineRow, idx > 0 && styles.lineRowBorder]}
+              >
+                <Row align="center" gap="sm" style={styles.lineInner}>
+                  <Image
+                    source={{ uri: resolveMediaUrl(line.product.images[0]) ?? PLACEHOLDER }}
+                    style={styles.lineImg}
+                    contentFit="cover"
+                  />
+                  <View style={styles.lineBody}>
+                    <AppText variant="body" numberOfLines={1} style={styles.lineTitle}>
+                      {line.product.nameAr}
+                    </AppText>
+                    <AppText variant="caption" color="textMuted">
+                      {cutLabelAr(line.cutType)} · {formatWeightLabel(line.product, line.weightKg)}
+                    </AppText>
+                    <Row align="center" justify="between" style={styles.lineFooter}>
+                      <AppText variant="label" style={styles.linePrice}>
+                        {line.lineTotal.toLocaleString('en-US')} {currencySymbol}
+                      </AppText>
+                      <Pressable
+                        onPress={() => removeLine(line.id)}
+                        hitSlop={8}
+                        style={styles.removeBtn}
+                        accessibilityLabel="إزالة المنتج"
+                      >
+                        <AppIcon name="trash-outline" size={16} color={styles.dangerColor.color} />
+                      </Pressable>
+                    </Row>
+                  </View>
+                </Row>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Delivery & notes only when items exist */}
+      {items.length > 0 ? (
+        <>
+          <View style={styles.section}>
+            <AppText variant="label" style={styles.sectionLabel}>طريقة الاستلام</AppText>
+            <ButcherDeliverySegment value={deliveryType} onChange={setDeliveryType} />
+          </View>
+
+          {deliveryType === 'delivery' ? (
+            <View style={styles.section}>
+              <AppText variant="label" style={styles.sectionLabel}>عنوان التوصيل</AppText>
+              <DeliveryMapAddressField onAddressChange={setDeliveryAddress} />
+            </View>
+          ) : null}
+
+          <View style={styles.section}>
+            <AppText variant="label" style={styles.sectionLabel}>ملاحظة للملحمة (اختياري)</AppText>
+            <TextInput
+              style={[styles.input, rtlInputText]}
+              placeholder="أضف أي ملاحظة للملحمة..."
+              placeholderTextColor={styles.mutedColor.color}
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+            />
+          </View>
+
+          {/* Cost summary */}
+          <View style={styles.summaryCard}>
+            <Row align="center" justify="between" style={styles.summaryRow}>
+              <AppText variant="caption" color="textMuted">قيمة المنتجات</AppText>
+              <AppText variant="body">{subtotal.toLocaleString('en-US')} {currencySymbol}</AppText>
+            </Row>
+            <Row align="center" justify="between" style={styles.summaryRow}>
+              <AppText variant="caption" color="textMuted">التوصيل</AppText>
+              <AppText variant="caption" color="textMuted">
+                {deliveryType === 'pickup' ? 'استلام من الملحمة' : 'يُحدد لاحقاً'}
+              </AppText>
+            </Row>
+            <View style={styles.summaryDivider} />
+            <Row align="center" justify="between" style={styles.summaryRow}>
+              <AppText variant="body">الإجمالي</AppText>
+              <AppText variant="cardTitle" style={styles.totalPrice}>
+                {subtotal.toLocaleString('en-US')} {currencySymbol}
+              </AppText>
+            </Row>
+          </View>
+        </>
+      ) : null}
+    </>
+  );
+
+  // ─── Phase 2: Payment ────────────────────────────────────────────────────────
+  const renderPaymentPhase = () => (
+    <>
+      {/* Brief summary */}
+      <View style={styles.summaryCard}>
+        {butcherLogo ? (
+          <Row align="center" gap="sm" style={styles.summaryRow}>
+            <Image
+              source={{ uri: resolveMediaUrl(butcherLogo) ?? PLACEHOLDER }}
+              style={styles.butcherLogo}
+              contentFit="cover"
+            />
+            <View style={styles.butcherSummaryText}>
+              <AppText variant="body">{butcherNameAr}</AppText>
+              <AppText variant="caption" color="textMuted">
+                {itemCount} {itemCount === 1 ? 'منتج' : 'منتجات'}
+              </AppText>
+            </View>
+          </Row>
+        ) : null}
+        <View style={styles.summaryDivider} />
+        <Row align="center" justify="between" style={styles.summaryRow}>
+          <AppText variant="body">الإجمالي النهائي</AppText>
+          <AppText variant="cardTitle" style={styles.totalPrice}>
+            {subtotal.toLocaleString('en-US')} {currencySymbol}
+          </AppText>
+        </Row>
+      </View>
+
+      {/* Payment method */}
+      <View style={styles.section}>
+        <AppText variant="label" style={styles.sectionLabel}>طريقة الدفع</AppText>
+        <View style={styles.methodList}>
+          {PAYMENT_METHODS.map((m) => (
+            <PaymentMethodRow
+              key={m.id}
+              item={m}
+              selected={selectedMethod === m.id}
+              onSelect={() => setSelectedMethod(m.id)}
+            />
+          ))}
+        </View>
+      </View>
+    </>
+  );
+
   return (
     <Screen edges={['top']} pattern={false} style={styles.screen}>
       <LinearGradient colors={gradients.hero} style={StyleSheet.absoluteFill} />
 
+      {/* Header */}
       <Row align="center" gap="sm" style={[styles.header, { paddingHorizontal: gutter }]}>
-        <SarhBackButton onPress={() => router.back()} color={styles.iconColor.color} style={styles.backBtn} />
+        <SarhBackButton
+          onPress={() => {
+            if (phase === 'payment') {
+              setPhase('confirm');
+            } else {
+              router.back();
+            }
+          }}
+          color={styles.iconColor.color}
+          style={styles.backBtn}
+        />
         <View style={styles.headerCenter}>
-          <AppText variant="cardTitle" align="center">سلة الطلب</AppText>
-          {butcherNameAr ? (
+          <AppText variant="cardTitle" align="center">{phaseTitle}</AppText>
+          {phase === 'confirm' && butcherNameAr ? (
             <AppText variant="caption" color="textMuted" align="center" numberOfLines={1}>
               {butcherNameAr}
             </AppText>
           ) : null}
         </View>
-        {itemCount > 0 ? (
+        {phase === 'confirm' && itemCount > 0 ? (
           <Pressable onPress={() => clearCart()} hitSlop={8}>
             <AppText variant="label" color="danger" align="center" style={styles.clearText}>
               تفريغ
@@ -234,115 +567,53 @@ export default function ButcherCartScreen() {
         )}
       </Row>
 
+      {/* Progress */}
+      <CheckoutProgress phase={phase} />
+
       <ScreenBody
         gutter={false}
         width="full"
         bottomInset={items.length > 0 ? 'action' : 'none'}
       >
-        {butcherLogo ? (
-          <Row align="center" gap="sm" style={styles.butcherRow}>
-            <Image
-              source={{ uri: resolveMediaUrl(butcherLogo) ?? PLACEHOLDER }}
-              style={styles.butcherLogo}
-              contentFit="cover"
-            />
-            <AppText variant="body">{butcherNameAr}</AppText>
-          </Row>
-        ) : null}
-
-        {items.length === 0 ? (
-          <View style={styles.emptyWrap}>
-            <AppIcon name="cart-outline" size={40} color={styles.mutedColor.color} />
-            <AppText variant="cardTitle">لا منتجات في السلة</AppText>
-            <AppText variant="caption" color="textMuted" align="center">
-              أضف منتجات من صفحة الملحمة
-            </AppText>
-          </View>
-        ) : (
-          <View style={styles.lines}>
-            {items.map((line) => (
-              <Row key={line.id} gap="none" style={styles.lineCard}>
-                <Image
-                  source={{
-                    uri: resolveMediaUrl(line.product.images[0]) ?? PLACEHOLDER,
-                  }}
-                  style={styles.lineImg}
-                  contentFit="cover"
-                />
-                <View style={styles.lineBody}>
-                  <AppText variant="body" numberOfLines={1}>
-                    {line.product.nameAr}
-                  </AppText>
-                  <AppText variant="caption" color="textMuted">
-                    {cutLabelAr(line.cutType)} ·{' '}
-                    {formatWeightLabel(line.product, line.weightKg)}
-                  </AppText>
-                  <Row align="center" justify="between" style={styles.lineFooter}>
-                    <AppText variant="body" color="textSecondary">
-                      {line.lineTotal.toLocaleString('en-US')} {currencySymbol}
-                    </AppText>
-                    <Pressable
-                      onPress={() => removeLine(line.id)}
-                      hitSlop={8}
-                      style={styles.removeBtn}
-                    >
-                      <AppIcon name="trash-outline" size={18} color={styles.dangerColor.color} />
-                    </Pressable>
-                  </Row>
-                </View>
-              </Row>
-            ))}
-          </View>
-        )}
-
-        {items.length > 0 ? (
-          <>
-            <ButcherDeliverySegment value={deliveryType} onChange={setDeliveryType} />
-
-            {deliveryType === 'delivery' ? (
-              <View style={styles.fieldBlock}>
-                <DeliveryMapAddressField onAddressChange={setDeliveryAddress} />
-              </View>
-            ) : null}
-
-            <View style={styles.fieldBlock}>
-              <View style={{ width: '100%' }}>
-                <AppText variant="body" style={styles.fieldLabel}>ملاحظات (اختياري)</AppText>
-              </View>
-              <TextInput
-                style={[styles.input, rtlInputText]}
-                placeholder="تعليمات خاصة للملحمة..."
-                placeholderTextColor={styles.mutedColor.color}
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-              />
-            </View>
-
-            <View style={styles.summary}>
-              <Row justify="between" align="center">
-                <AppText variant="body" color="textSecondary">المجموع ({itemCount})</AppText>
-                <AppText variant="cardTitle">
-                  {subtotal.toLocaleString('en-US')} {currencySymbol}
-                </AppText>
-              </Row>
-              <AppText variant="micro" color="textMuted" style={styles.summaryHint}>
-                رسوم التوصيل (إن وُجدت) تُحسب لاحقاً عند تفعيل الدفع من السلة.
-              </AppText>
-            </View>
-          </>
-        ) : null}
+        {phase === 'confirm' ? renderConfirmPhase() : renderPaymentPhase()}
       </ScreenBody>
 
+      {/* Sticky CTA */}
       {items.length > 0 ? (
         <BottomAction>
-          <SarhButton
-            title="ادفع الآن"
-            leftIcon="card-outline"
-            loading={loadingSubmit}
-            disabled={loadingSubmit}
-            onPress={() => void handlePayNow()}
-          />
+          {phase === 'confirm' ? (
+            <Pressable
+              style={({ pressed }) => [styles.meatBtn, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
+                  Alert.alert('العنوان مطلوب', 'حدّد موقع التوصيل على الخريطة أولاً');
+                  return;
+                }
+                setPhase('payment');
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="متابعة للدفع"
+            >
+              <AppText variant="body" style={styles.meatBtnText}>متابعة للدفع</AppText>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={({ pressed }) => [
+                styles.meatBtn,
+                loadingSubmit ? styles.meatBtnDisabled : null,
+                pressed && !loadingSubmit ? { opacity: 0.88 } : null,
+              ]}
+              disabled={loadingSubmit}
+              onPress={loadingSubmit ? undefined : () => void handlePayNow()}
+              accessibilityRole="button"
+              accessibilityLabel="إتمام الدفع"
+            >
+              {loadingSubmit ? (
+                <AppIcon name="refresh-outline" size={18} color="#fff" />
+              ) : null}
+              <AppText variant="body" style={styles.meatBtnText}>إتمام الدفع</AppText>
+            </Pressable>
+          )}
         </BottomAction>
       ) : null}
     </Screen>
@@ -367,20 +638,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     headerCenter: { flex: 1, alignItems: 'center' },
-    clearText: {
-      minWidth: 44,
-    },
-    butcherRow: {
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.md,
-    },
-    butcherLogo: {
-      width: 36,
-      height: 36,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-    },
+    clearText: { minWidth: 44 },
+
     emptyWrap: {
       alignItems: 'center',
       paddingTop: 80,
@@ -396,46 +655,60 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.borderSoft,
     },
-    lines: { gap: spacing.sm, paddingTop: spacing.sm },
-    lineCard: {
-      marginHorizontal: spacing.lg,
-      backgroundColor: colors.bgSurface,
-      borderRadius: radius.lg,
-      overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-    },
-    lineImg: { width: 88, height: 88 },
-    lineBody: {
-      flex: 1,
-      padding: spacing.md,
-      gap: 4,
-      justifyContent: 'center',
-    },
-    lineFooter: {
-      marginTop: spacing.xs,
-    },
-    removeBtn: { padding: 4 },
-    fieldBlock: {
+
+    // Sections
+    section: {
       paddingHorizontal: spacing.lg,
       marginTop: spacing.md,
-      gap: spacing.xs,
+      gap: spacing.sm,
     },
-    fieldLabel: {
-      color: colors.textPrimary,
+    sectionLabel: { color: colors.textSecondary },
+
+    // Items card
+    itemsCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      overflow: 'hidden',
     },
+    lineRow: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    lineRowBorder: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderHairline,
+    },
+    lineInner: {},
+    lineImg: {
+      width: 72,
+      height: 72,
+      borderRadius: radius.md,
+      flexShrink: 0,
+    },
+    lineBody: { flex: 1, gap: 3 },
+    lineTitle: { color: colors.textPrimary },
+    lineFooter: { marginTop: 4 },
+    linePrice: { color: butcherMarket.seeAll },
+    removeBtn: { padding: 4 },
+
+    // Notes input
     input: {
       borderWidth: 1,
       borderColor: colors.borderSoft,
       borderRadius: radius.lg,
       padding: spacing.md,
-      backgroundColor: colors.bgSurface,
+      backgroundColor: colors.bgField,
       color: colors.textPrimary,
-      minHeight: 48,
+      minHeight: 52,
+      ...butcherTypography.body,
     },
-    summary: {
+
+    // Summary card
+    summaryCard: {
       marginHorizontal: spacing.lg,
-      marginTop: spacing.lg,
+      marginTop: spacing.md,
       padding: spacing.lg,
       backgroundColor: colors.bgSurface,
       borderRadius: radius.lg,
@@ -443,9 +716,46 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
       gap: spacing.sm,
     },
-    summaryHint: {
-      lineHeight: 18,
+    summaryRow: {},
+    summaryDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.borderHairline,
+      marginVertical: spacing.xs,
     },
+    totalPrice: { color: butcherMarket.seeAll },
+
+    // Butcher summary (phase 2)
+    butcherLogo: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.borderSoft,
+      flexShrink: 0,
+    },
+    butcherSummaryText: { flex: 1, gap: 2 },
+
+    // Payment methods
+    methodList: { gap: spacing.sm },
+
+    // Meat CTA button
+    meatBtn: {
+      backgroundColor: butcherMarket.seeAll,
+      borderRadius: radius.pill,
+      minHeight: 52,
+      paddingHorizontal: spacing.xl,
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    meatBtnDisabled: { opacity: 0.55 },
+    meatBtnText: {
+      ...butcherTypography.emphasis,
+      color: '#fff',
+    },
+
     iconColor: { color: colors.textPrimary },
     mutedColor: { color: colors.textMuted },
     dangerColor: { color: colors.danger },

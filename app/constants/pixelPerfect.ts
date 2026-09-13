@@ -11,7 +11,7 @@ export const pp = {
   textMuted: ds.light.textMuted,
   border: ds.light.stroke,
   borderSoft: 'rgba(32, 182, 111, 0.12)',
-  chipInactiveBg: '#F5F7F9',
+  chipInactiveBg: ds.light.chip,
   verifiedBg: '#E8F7EF',
   verifiedText: ds.light.primary,
   space: ds.space,

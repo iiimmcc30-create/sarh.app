@@ -106,7 +106,7 @@ function FoundationInput({
             borderRadius: radius[12],
             borderWidth: 1,
             borderColor,
-            backgroundColor: themeColors.bgSurface,
+            backgroundColor: themeColors.bgField,
             opacity: disabled ? motion.opacity.disabled : 1,
           },
         ]}
@@ -198,16 +198,16 @@ function ThemeInput({
           ? {
               borderColor: themeColors.electric,
               borderWidth: 1.5,
-              backgroundColor: themeColors.bgSurface,
+              backgroundColor: themeColors.bgField,
             }
           : {
               borderColor: themeColors.borderSoft,
               borderWidth: StyleSheet.hairlineWidth,
-              backgroundColor: themeColors.bgSurface,
+              backgroundColor: themeColors.bgField,
             },
       });
     },
-    [themeColors.bgSurface, themeColors.borderSoft, themeColors.electric],
+    [themeColors.bgField, themeColors.borderSoft, themeColors.electric],
   );
 
   const handleFocus = useCallback(
@@ -267,7 +267,7 @@ function createThemeStyles(themeColors: ThemeColors) {
     wrap: {
       ...getRtlRow(),
       alignItems: 'center',
-      backgroundColor: themeColors.bgSurface,
+      backgroundColor: themeColors.bgField,
       borderRadius: themeRadius.md,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: themeColors.borderSoft,

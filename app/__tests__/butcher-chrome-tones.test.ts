@@ -5,6 +5,7 @@ import {
   butcherMeatBg,
   butcherSearchFill,
 } from '@/constants/butcherMarket';
+import { snapshotTheme } from '@/constants/theme';
 
 describe('butcher chrome tones', () => {
   it('alternates only meat and mint from the banner index', () => {
@@ -14,11 +15,14 @@ describe('butcher chrome tones', () => {
     expect(butcherChromeTone(3)).toBe('mint');
   });
 
-  it('uses the meat and light-green fills, never a per-banner image color', () => {
-    expect(butcherChromeBg('light', 'meat')).toBe(butcherMarket.meatLight);
-    expect(butcherChromeBg('light', 'mint')).toBe(butcherMarket.mintLight);
-    expect(butcherMeatBg('light')).toBe(butcherMarket.meatLight);
-    expect(butcherSearchFill('light', 'mint')).toBe(butcherMarket.searchMintLight);
-    expect(butcherSearchFill('light')).toBe(butcherMarket.searchLight);
+  it('uses the app light hierarchy in Light and meat/mint only in Dark', () => {
+    const light = snapshotTheme('light').colors;
+    expect(butcherChromeBg('light', 'meat')).toBe(light.screenRoot);
+    expect(butcherChromeBg('light', 'mint')).toBe(light.screenRoot);
+    expect(butcherMeatBg('light')).toBe(light.screenRoot);
+    expect(butcherSearchFill('light', 'mint')).toBe(light.bgField);
+    expect(butcherSearchFill('light')).toBe(light.bgField);
+    expect(butcherChromeBg('dark', 'meat')).toBe(butcherMarket.meatDark);
+    expect(butcherChromeBg('dark', 'mint')).toBe(butcherMarket.mintDark);
   });
 });

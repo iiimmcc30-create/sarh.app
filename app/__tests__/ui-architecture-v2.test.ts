@@ -877,7 +877,7 @@ describe('Architecture V2 — Wave 4B butchers and chat', () => {
 
   it('keeps store and map contracts after the shell swap', () => {
     expect(src('app/butchers/[id].tsx')).toContain('ButcherStoreHero');
-    expect(src('app/butchers/[id].tsx')).toContain('ButcherMenuPager');
+    expect(src('app/butchers/[id].tsx')).toContain('ButcherMenuCategoryBar');
     expect(src('app/butchers/[id].tsx')).toContain('البحث في القائمة...');
     expect(src('app/butchers/[id].tsx')).toContain('CATEGORY_LABELS');
     expect(src('app/butchers/[id].tsx')).not.toContain("label: 'الكل'");

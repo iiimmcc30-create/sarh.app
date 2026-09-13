@@ -6,10 +6,23 @@ import {
   SELLER_LISTINGS_MAX_PAGES,
 } from '@/services/listings';
 import type { Listing } from '@/services/types';
+import { resetRequestCoordination } from '@/services/requestCoordination';
 
 jest.mock('@/services/api', () => ({
   ensureApiReachable: async () => 'https://api.test',
 }));
+
+function jsonResponse(body: unknown, status = 200): Response {
+  const text = JSON.stringify(body);
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: status === 200 ? 'OK' : 'Error',
+    headers: { get: () => null },
+    json: async () => JSON.parse(text),
+    text: async () => text,
+  } as unknown as Response;
+}
 
 function listingStub(id: string): Listing {
   return {
@@ -49,6 +62,7 @@ function listingStub(id: string): Listing {
 
 describe('marketplace listing pagination', () => {
   afterEach(() => {
+    resetRequestCoordination();
     jest.restoreAllMocks();
   });
 
@@ -56,31 +70,28 @@ describe('marketplace listing pagination', () => {
     const fetchMock = jest.fn(async (url: string) => {
       expect(url).toContain('/api/listings?');
       expect(url).toContain('featured=true');
-      return {
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: {
-            listings: Array.from({ length: 20 }, (_, i) => ({
-              id: `m${i + 1}`,
-              title: `L${i + 1}`,
-              arabicTitle: `إعلان ${i + 1}`,
-              price: 100,
-              category: 'sheep',
-              location: 'Riyadh',
-              arabicLocation: 'الرياض',
-              country: 'SA',
-              images: [],
-              description: 'desc long enough',
-              arabicDescription: 'وصف كافٍ هنا',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              seller: { id: 's1', username: 's', country: 'SA' },
-            })),
-            nextCursor: 'm20',
-            hasMore: true,
-          },
-        }),
-      } as Response;
+      return jsonResponse({
+        success: true,
+        data: {
+          listings: Array.from({ length: 20 }, (_, i) => ({
+            id: `m${i + 1}`,
+            title: `L${i + 1}`,
+            arabicTitle: `إعلان ${i + 1}`,
+            price: 100,
+            category: 'sheep',
+            location: 'Riyadh',
+            arabicLocation: 'الرياض',
+            country: 'SA',
+            images: [],
+            description: 'desc long enough',
+            arabicDescription: 'وصف كافٍ هنا',
+            createdAt: '2026-01-01T00:00:00.000Z',
+            seller: { id: 's1', username: 's', country: 'SA' },
+          })),
+          nextCursor: 'm20',
+          hasMore: true,
+        },
+      });
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -112,17 +123,14 @@ describe('marketplace listing pagination', () => {
           seller: { id: 's1', username: 's', country: 'SA' },
         }));
         const end = start + slice.length;
-        return {
-          ok: true,
-          json: async () => ({
-            success: true,
-            data: {
-              listings: slice,
-              nextCursor: end < total ? `id-${end}` : null,
-              hasMore: end < total,
-            },
-          }),
-        } as Response;
+        return jsonResponse({
+          success: true,
+          data: {
+            listings: slice,
+            nextCursor: end < total ? `id-${end}` : null,
+            hasMore: end < total,
+          },
+        });
       });
       global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -162,25 +170,22 @@ describe('marketplace listing pagination', () => {
         createdAt: '2026-01-01T00:00:00.000Z',
         seller: { id: 'me-1', username: 'me', country: 'SA' },
       }));
-      return {
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: {
-            listings:
-              start === 0
-                ? listings.concat(
-                    Array.from({ length: 15 }, (_, i) => ({
-                      ...listings[0],
-                      id: `l${i + 6}`,
-                    })),
-                  )
-                : listings,
-            nextCursor: start === 0 ? 'l20' : null,
-            hasMore: start === 0,
-          },
-        }),
-      } as Response;
+      return jsonResponse({
+        success: true,
+        data: {
+          listings:
+            start === 0
+              ? listings.concat(
+                  Array.from({ length: 15 }, (_, i) => ({
+                    ...listings[0],
+                    id: `l${i + 6}`,
+                  })),
+                )
+              : listings,
+          nextCursor: start === 0 ? 'l20' : null,
+          hasMore: start === 0,
+        },
+      });
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -242,16 +247,31 @@ describe('marketplace listing pagination', () => {
   it('refresh starts from page one (no cursor)', async () => {
     const fetchMock = jest.fn(async (url: string) => {
       expect(new URL(url).searchParams.get('cursor')).toBeNull();
-      return {
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: { listings: [], nextCursor: null, hasMore: false },
-        }),
-      } as Response;
+      return jsonResponse({
+        success: true,
+        data: { listings: [], nextCursor: null, hasMore: false },
+      });
     });
     global.fetch = fetchMock as unknown as typeof fetch;
     await searchListingsPage({ search: 'ابل' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('dedupes concurrent identical listing GETs through fetchPublicFeed', async () => {
+    const fetchMock = jest.fn(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+      return jsonResponse({
+        success: true,
+        data: { listings: [], nextCursor: null, hasMore: false },
+      });
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await Promise.all([
+      searchListingsPage({ featured: true }),
+      searchListingsPage({ featured: true }),
+      searchListingsPage({ featured: true }),
+    ]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -12,9 +12,11 @@ import { authFetch, getAccessToken } from '@/services/authFetch';
 import { fetchWithTimeout } from '@/services/fetchWithTimeout';
 import { fetchPublicFeed } from '@/services/fetchPublicFeed';
 import {
+  createRequestGeneration,
   feedRetryDelayMs,
   isRateLimited,
   noteRateLimitFromResponse,
+  shouldReuseFreshResult,
 } from '@/services/requestCoordination';
 import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
@@ -68,7 +70,12 @@ let listingsLastSuccessAt = 0;
 const postsFetchInflight = new Map<string, Promise<void>>();
 const postsLastFetchOk = new Map<string, boolean>();
 const postsLastSuccessAt = new Map<string, number>();
+const postsCacheByFeed = new Map<string, Post[]>();
+const postsApplyGeneration = createRequestGeneration();
+let activePostsFeed: 'for_you' | 'following' | null = null;
 let bootstrapInflight: Promise<void> | null = null;
+
+export type FetchPostsOptions = { force?: boolean };
 
 export type ActionResult = { ok: boolean; error?: string; listingId?: string };
 
@@ -91,7 +98,7 @@ interface AppContextValue {
   me: User;
   updateMe: (updates: Partial<User>) => Promise<ActionResult>;
   posts: Post[];
-  fetchPosts: (feed?: 'for_you' | 'following') => Promise<boolean>;
+  fetchPosts: (feed?: 'for_you' | 'following', options?: FetchPostsOptions) => Promise<boolean>;
   fetchListings: () => Promise<boolean>;
   addPost: (post: Omit<Post, 'id' | 'author' | 'likes' | 'reposts' | 'comments' | 'postedAt' | 'liked' | 'reposted'>) => Promise<boolean>;
   updatePost: (postId: string, data: { content: string; arabicContent: string; image?: string | null; images?: string[] }) => Promise<boolean>;
@@ -343,7 +350,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [user]);
 
-  const fetchPosts = useCallback(async (feed: 'for_you' | 'following' = 'for_you'): Promise<boolean> => {
+  const applyPostsFeed = useCallback((
+    feed: 'for_you' | 'following',
+    fetchedPosts: Post[],
+    applyGen?: number,
+  ) => {
+    postsCacheByFeed.set(feed, fetchedPosts);
+    const token = applyGen ?? postsApplyGeneration.next();
+    if (!postsApplyGeneration.isCurrent(token)) return;
+    activePostsFeed = feed;
+    setPosts(fetchedPosts);
+    prefetchRemoteImages(collectPostImageUris(fetchedPosts), 8);
+
+    const liked = new Set<string>();
+    const reposted = new Set<string>();
+    fetchedPosts.forEach((p: Post) => {
+      if (p.liked) liked.add(p.id);
+      if (p.reposted) reposted.add(p.id);
+    });
+    setLikedPosts(liked);
+    setRepostedPosts(reposted);
+  }, []);
+
+  const fetchPosts = useCallback(async (
+    feed: 'for_you' | 'following' = 'for_you',
+    options?: FetchPostsOptions,
+  ): Promise<boolean> => {
     // Dedupe by feed type only — token refresh must not open a parallel posts request.
     const inflightKey = feed;
     const inflight = postsFetchInflight.get(inflightKey);
@@ -351,11 +383,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await inflight;
       return postsLastFetchOk.get(inflightKey) ?? false;
     }
+
+    const cached = postsCacheByFeed.get(inflightKey);
+    if (
+      cached &&
+      shouldReuseFreshResult(postsLastSuccessAt.get(inflightKey), REFETCH_TTL_MS, options?.force)
+    ) {
+      if (activePostsFeed !== inflightKey) {
+        applyPostsFeed(inflightKey, cached);
+      }
+      return postsLastFetchOk.get(inflightKey) ?? true;
+    }
+
     if (isRateLimited()) {
+      if (cached && activePostsFeed !== inflightKey) {
+        applyPostsFeed(inflightKey, cached);
+      }
       return postsLastFetchOk.get(inflightKey) ?? false;
     }
 
     let succeeded = false;
+    const applyGen = postsApplyGeneration.next();
     const promise = (async () => {
       try {
         const qs = feed === 'following' ? '?feed=following' : '';
@@ -371,19 +419,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const fetchedPosts = (json.data.posts as unknown[])
               .map(mapBackendPost)
               .filter((p: Post | null): p is Post => Boolean(p?.id));
-            setPosts(fetchedPosts);
-            prefetchRemoteImages(collectPostImageUris(fetchedPosts), 8);
-
-            const liked = new Set<string>();
-            const reposted = new Set<string>();
-            fetchedPosts.forEach((p: Post) => {
-              if (p.liked) liked.add(p.id);
-              if (p.reposted) reposted.add(p.id);
-            });
-            setLikedPosts(liked);
-            setRepostedPosts(reposted);
             succeeded = true;
             postsLastSuccessAt.set(inflightKey, Date.now());
+            applyPostsFeed(inflightKey, fetchedPosts, applyGen);
             void patchFeedSnapshot({ posts: fetchedPosts });
           }
         }
@@ -398,7 +436,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     postsFetchInflight.set(inflightKey, promise);
     await promise;
     return succeeded;
-  }, [accessToken, mapBackendPost]);
+  }, [accessToken, applyPostsFeed, mapBackendPost]);
 
   const lastRefetchAtRef = useRef(0);
   const lastUserRefetchAtRef = useRef(0);
@@ -432,7 +470,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     lastRefetchAtRef.current = now;
     lastUserRefetchAtRef.current = now;
-    const promise = Promise.all([fetchUserData(), fetchListings(), fetchPosts()]).then(
+    const promise = Promise.all([
+      fetchUserData(),
+      fetchListings(),
+      fetchPosts('for_you', { force }),
+    ]).then(
       () => undefined,
     );
     refetchInflightRef.current = promise;
@@ -517,6 +559,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       if (snapshot) {
         if (snapshot.posts.length > 0) {
+          postsCacheByFeed.set('for_you', snapshot.posts);
+          activePostsFeed = 'for_you';
           setPosts(snapshot.posts);
           prefetchRemoteImages(collectPostImageUris(snapshot.posts), 8);
         }
@@ -570,11 +614,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Avoid racing a second full bootstrap while mount bootstrap is in flight.
       if (bootstrapInflight) {
         void bootstrapInflight.then(() => {
-          if (identityChanged) void fetchPosts();
+          if (identityChanged) void fetchPosts('for_you', { force: true });
         });
         return;
       }
-      void fetchPosts();
+      void fetchPosts('for_you', { force: identityChanged });
     }
   }, [isAuthenticated, accessToken, user?.id, fetchUserData, fetchPosts]);
 
