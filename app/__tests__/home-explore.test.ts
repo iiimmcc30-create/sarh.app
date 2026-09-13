@@ -221,7 +221,7 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../components/ui/filterChipAppearance.tsx'),
       'utf8',
     );
-    expect(chipSrc).toContain('compact ? colors.bgElevated');
+    expect(chipSrc).toContain('colors.royal');
     expect(chipSrc).toContain('const idleBorderWidth = compact ? 0');
   });
 

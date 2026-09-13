@@ -11,15 +11,17 @@ import { sarh } from './sarhTokens';
 
 export const ds = {
   light: {
-    page: '#F5F7F9',
+    page: '#F8F9FA',
     card: '#FFFFFF',
     elevated: '#FFFFFF',
-    cardGradientEnd: '#F5F7F9',
+    field: '#F1F3F5',
+    chip: '#F3F4F5',
+    cardGradientEnd: '#F8F9FA',
     primary: '#20B66F',
     primaryMuted: 'rgba(32, 182, 111, 0.12)',
     glass: 'rgba(255, 255, 255, 0.92)',
-    glassBorder: '#E6EBEF',
-    stroke: '#E6EBEF',
+    glassBorder: '#E6E8EB',
+    stroke: '#E6E8EB',
     glow: '#20B66F',
     textPrimary: '#101820',
     textSecondary: '#65727D',
@@ -134,10 +136,10 @@ export function ambientShadow(scheme: 'light' | 'dark', level: 'soft' | 'card' |
     ios: {
       shadowColor: '#101820',
       shadowOffset: { width: 0, height: isLight ? 2 : 1 },
-      shadowOpacity: isLight ? 0.04 : 0.08,
-      shadowRadius: isLight ? 8 : 4,
+      shadowOpacity: isLight ? 0.02 : 0.08,
+      shadowRadius: isLight ? 4 : 4,
     },
-    android: { elevation: isLight ? 2 : 1 },
+    android: { elevation: isLight ? 1 : 1 },
     default: {},
   }) as ViewStyle;
 }

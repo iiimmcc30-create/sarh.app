@@ -16,6 +16,8 @@ export type ThemeColors = {
   bgPrimary: string;
   bgSurface: string;
   bgElevated: string;
+  /** Input, search, and field wells — light gray in Light; matches elevated surface in Dark. */
+  bgField: string;
   bgGlass: string;
   bgGlassStrong: string;
   bgOverlay: string;
@@ -61,6 +63,7 @@ type BaseThemeColors = Omit<
   | 'textBrandAlt'
   | 'textBrandSuccess'
   | 'screenRoot'
+  | 'bgField'
 >;
 
 export type ThemeGradients = {
@@ -117,16 +120,21 @@ const darkColors: BaseThemeColors = {
   ...sharedAccents,
 };
 
+const LIGHT_PAGE = '#F8F9FA';
+const LIGHT_FIELD = '#F1F3F5';
+const LIGHT_CHIP = '#F3F4F5';
+const LIGHT_BORDER = '#E6E8EB';
+
 const lightColors: BaseThemeColors = {
-  bgDeep: '#F5F7F9',
-  bgPrimary: '#F5F7F9',
+  bgDeep: LIGHT_PAGE,
+  bgPrimary: LIGHT_PAGE,
   bgSurface: '#FFFFFF',
   bgElevated: '#FFFFFF',
   bgGlass: 'rgba(255, 255, 255, 0.90)',
   bgGlassStrong: 'rgba(255, 255, 255, 0.96)',
   bgOverlay: 'rgba(16, 24, 32, 0.45)',
-  royal: '#EAF3EE',
-  royalDeep: '#D8EBE0',
+  royal: LIGHT_CHIP,
+  royalDeep: LIGHT_FIELD,
   /** Keep existing brand accent (not a new identity color) */
   electric: '#20B66F',
   electricBright: '#20B66F',
@@ -138,10 +146,10 @@ const lightColors: BaseThemeColors = {
   textSecondary: '#65727D',
   textMuted: '#8D99A3',
   textSubtle: '#8D99A3',
-  borderSoft: '#E6EBEF',
-  borderMid: '#E6EBEF',
-  borderStrong: '#D5DEE5',
-  borderHairline: '#E6EBEF',
+  borderSoft: LIGHT_BORDER,
+  borderMid: LIGHT_BORDER,
+  borderStrong: '#DDE1E6',
+  borderHairline: LIGHT_BORDER,
   ...sharedAccents,
 };
 
@@ -159,16 +167,16 @@ const darkGradients: ThemeGradients = {
 };
 
 const lightGradients: ThemeGradients = {
-  hero: ['#F5F7F9', '#F5F7F9', '#FFFFFF'],
-  royal: ['#EAF3EE', '#D8EBE0', '#20B66F'],
-  glass: ['rgba(255,255,255,0.96)', 'rgba(245,247,249,0.90)'],
-  liveOverlay: ['transparent', 'rgba(255,255,255,0.35)', 'rgba(245,247,249,0.96)'],
+  hero: [LIGHT_PAGE, LIGHT_PAGE, '#FFFFFF'],
+  royal: [LIGHT_CHIP, LIGHT_FIELD, '#20B66F'],
+  glass: ['rgba(255,255,255,0.96)', 'rgba(248,249,250,0.90)'],
+  liveOverlay: ['transparent', 'rgba(255,255,255,0.35)', 'rgba(248,249,250,0.96)'],
   card: ['#FFFFFF', '#FFFFFF'],
-  cardHover: ['#FFFFFF', '#F5F7F9'],
+  cardHover: ['#FFFFFF', LIGHT_PAGE],
   goldRing: ['#F5C56A', '#FBBF24', '#F5C56A'],
   electric: ['#20B66F', '#18965B', '#20B66F'],
-  primary: ['#20B66F', '#18965B', '#EAF3EE'],
-  rim: ['rgba(230,235,239,0.9)', 'rgba(230,235,239,0)'],
+  primary: ['#20B66F', '#18965B', LIGHT_CHIP],
+  rim: ['rgba(230,232,235,0.9)', 'rgba(230,232,235,0)'],
 };
 
 export function createShadow(palette: BaseThemeColors) {
@@ -190,10 +198,10 @@ export function createShadow(palette: BaseThemeColors) {
     },
     card: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: isLight ? 2 : 1 },
-      shadowOpacity: isLight ? 0.04 : 0.08,
-      shadowRadius: isLight ? 8 : 4,
-      elevation: isLight ? 2 : 1,
+      shadowOffset: { width: 0, height: isLight ? 1 : 1 },
+      shadowOpacity: isLight ? 0.02 : 0.08,
+      shadowRadius: isLight ? 4 : 4,
+      elevation: isLight ? 1 : 1,
     },
     pressed: {
       shadowColor: palette.electric,
@@ -220,6 +228,7 @@ function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeC
   if (scheme === 'dark') {
     return {
       ...palette,
+      bgField: palette.bgElevated,
       // Opaque — never transparent. React Navigation tab scenes paint white
       // behind transparent screens and cause a persistent light flash/leak.
       screenRoot: palette.bgDeep,
@@ -233,6 +242,7 @@ function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeC
   const accent = palette.electric;
   return {
     ...palette,
+    bgField: LIGHT_FIELD,
     screenRoot: palette.bgDeep,
     textBrand: palette.glow,
     textBrandStrong: palette.electricBright,
@@ -301,7 +311,7 @@ applyThemeScheme('dark');
 /** Gradients that must react to light/dark at runtime (not frozen in StyleSheet). */
 export function headerFadeGradient(scheme: ColorScheme): readonly [string, string] {
   return scheme === 'light'
-    ? ['rgba(245, 247, 249, 0.98)', 'rgba(245, 247, 249, 0)']
+    ? ['rgba(248, 249, 250, 0.98)', 'rgba(248, 249, 250, 0)']
     : ['rgba(7, 19, 28, 0.98)', 'rgba(7, 19, 28, 0)'];
 }
 
@@ -319,7 +329,7 @@ export function imageCardOverlayStrong(scheme: ColorScheme): readonly [string, s
 
 export function scrimColor(scheme: ColorScheme, opacity = 0.85): string {
   return scheme === 'light'
-    ? `rgba(245, 247, 249, ${opacity})`
+    ? `rgba(248, 249, 250, ${opacity})`
     : `rgba(7, 19, 28, ${opacity})`;
 }
 
