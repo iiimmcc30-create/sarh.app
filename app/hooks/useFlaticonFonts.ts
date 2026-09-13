@@ -1,21 +1,19 @@
 import {
-  IBMPlexSansArabic_400Regular,
-  IBMPlexSansArabic_500Medium,
-  IBMPlexSansArabic_600SemiBold,
-  IBMPlexSansArabic_700Bold,
+  Tajawal_400Regular,
+  Tajawal_500Medium,
+  Tajawal_700Bold,
   useFonts,
-} from '@expo-google-fonts/ibm-plex-sans-arabic';
+} from '@expo-google-fonts/tajawal';
 
 /**
- * Loads the sole app typeface: IBM Plex Sans Arabic (400 / 500 / 600 / 700).
+ * Loads the sole app typeface: Tajawal (400 / 500 / 700).
  * Icons are SVG — no Flaticon font preload.
  */
 export function useFlaticonFonts() {
   const [loaded, error] = useFonts({
-    IBMPlexSansArabic_400Regular,
-    IBMPlexSansArabic_500Medium,
-    IBMPlexSansArabic_600SemiBold,
-    IBMPlexSansArabic_700Bold,
+    Tajawal_400Regular,
+    Tajawal_500Medium,
+    Tajawal_700Bold,
   });
   return { loaded, error: error ?? null };
 }

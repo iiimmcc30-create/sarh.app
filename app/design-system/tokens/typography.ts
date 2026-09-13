@@ -1,8 +1,9 @@
 import { appFont } from '@/constants/fonts';
 
 /**
- * Official Sarh face: IBM Plex Sans Arabic.
- * Each weight maps to a distinct loaded family — never alias Regular/Medium/SemiBold to Bold.
+ * Official Sarh face: Tajawal.
+ * Each weight maps to a distinct loaded family — Regular/Medium use their own faces;
+ * SemiBold aliases to Bold (Tajawal has no 600 face).
  *
  * `@/design-system` AppText uses these families as-is.
  * Legacy `@/components/ui/AppText` still remaps to Bold via `resolveAppFontFace`.

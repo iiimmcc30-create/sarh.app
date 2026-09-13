@@ -1,28 +1,25 @@
 /**
- * Official Sarh UI typeface = listing price face:
- *   IBMPlexSansArabic_700Bold  (IBM Plex Sans Arabic Bold)
+ * Official Sarh UI typeface = Tajawal.
  *
- * Price text (`typography.valueLarge`) is the visual reference. Every content
- * face resolves to that same Bold file so the app never mixes Medium/SemiBold
- * letterforms with the price typeface.
- *
- * Still loaded (for legacy name remaps / tooling): Regular / Medium / SemiBold.
- * Tajawal is not used and must not be reintroduced.
+ * Tajawal_700Bold  is the visual anchor for listing prices and headings.
+ * Tajawal_400Regular / 500Medium cover body and label roles.
+ * Tajawal has no 600 face — semibold aliases to 700Bold.
  *
  * Phase-2 official scale: `resolveDesignFontFace` maps 400/500/600/700 to
- * distinct IBM Plex files. Used by `@/design-system` AppText.
+ * distinct Tajawal files. Used by `@/design-system` AppText.
  *
  * `resolveAppFontFace` stays Bold-only so existing screens that still go
  * through `@/components/ui/AppText` and `theme.typography` do not rewrite.
  */
-export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
+export const APP_FONT_NAME = 'Tajawal' as const;
 
 export const appFont = {
-  regular: 'IBMPlexSansArabic_400Regular',
-  medium: 'IBMPlexSansArabic_500Medium',
-  semibold: 'IBMPlexSansArabic_600SemiBold',
+  regular: 'Tajawal_400Regular',
+  medium: 'Tajawal_500Medium',
+  /** Tajawal has no 600 — aliases to Bold. */
+  semibold: 'Tajawal_700Bold',
   /** Official sole content face — same as listing price. */
-  bold: 'IBMPlexSansArabic_700Bold',
+  bold: 'Tajawal_700Bold',
 } as const;
 
 /** The only content fontFamily used across the app (matches price). */
@@ -30,18 +27,13 @@ export const OFFICIAL_APP_FONT = appFont.bold;
 
 export type AppFontWeight = '400' | '500' | '600' | '700';
 
-/** Faces that must not be rewritten to IBM Plex (icons / card numbers). */
+/** Faces that must not be rewritten to Tajawal (icons / card numbers). */
 const PRESERVED_FAMILIES = new Set([
   'monospace',
   'FlaticonUicons-RegularRounded',
   'FlaticonUicons-SolidRounded',
   'FlaticonUicons-BoldRounded',
 ]);
-
-function isLegacyTajawalFamily(family?: string): boolean {
-  if (!family) return false;
-  return /tajawal/i.test(family);
-}
 
 const OFFICIAL_FACE = {
   fontFamily: OFFICIAL_APP_FONT,
@@ -72,17 +64,13 @@ export function resolveAppFontFace(
     return { fontFamily: existingFamily, fontWeight: '400' };
   }
 
-  // Ignore weight / legacy Medium-SemiBold names — price Bold only.
+  // Ignore weight / legacy family names — price Bold only.
   void weight;
-  if (isLegacyTajawalFamily(existingFamily)) {
-    return { ...OFFICIAL_FACE };
-  }
-
   return { ...OFFICIAL_FACE };
 }
 
 /**
- * Official design-system face resolver — real IBM Plex weights.
+ * Official design-system face resolver — real Tajawal weights.
  * Do not use from legacy screens that still expect Bold remapping.
  */
 export function resolveDesignFontFace(
@@ -97,10 +85,9 @@ export function resolveDesignFontFace(
   return { fontFamily: DESIGN_FACES[fontWeight], fontWeight };
 }
 
-/** Registered IBM Plex Sans Arabic faces loaded at boot. */
+/** Registered Tajawal faces loaded at boot. */
 export const APP_FONT_FACES = [
   appFont.regular,
   appFont.medium,
-  appFont.semibold,
   appFont.bold,
 ] as const;

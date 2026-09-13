@@ -368,7 +368,7 @@ const directionalText = {
   writingDirection: 'rtl' as const,
 };
 
-/** Same face as listing price (`IBMPlexSansArabic_700Bold`) — sole UI typeface. */
+/** Same face as listing price (`Tajawal_700Bold`) — sole UI typeface. */
 const officialFace = {
   fontFamily: OFFICIAL_APP_FONT,
   fontWeight: '700' as const,

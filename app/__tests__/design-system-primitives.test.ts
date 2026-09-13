@@ -31,7 +31,7 @@ function componentFiles() {
 }
 
 describe('core UI primitives', () => {
-  it('maps AppText variants to real IBM Plex weights', () => {
+  it('maps AppText variants to real Tajawal weights', () => {
     expect(resolveAppTextStyle({ variant: 'display' })).toMatchObject({
       fontFamily: fontFamily.bold,
       fontWeight: fontWeight.bold,
