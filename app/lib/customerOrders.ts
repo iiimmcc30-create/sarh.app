@@ -4,6 +4,10 @@ import {
   type OrderStatus,
 } from '@/services/butcherData';
 import type { ButcherOrderRecord } from '@/services/butcherOrders';
+import {
+  formatOrderLineQuantityPrefix,
+  formatOrderQuantityLabel,
+} from '@/lib/butcherProductQuantity';
 
 export const CUSTOMER_ORDER_FLOW: OrderStatus[] = [
   'pending',
@@ -120,8 +124,8 @@ export function orderProductSummary(order: ButcherOrderRecord): string {
 export function orderSpecsLine(order: ButcherOrderRecord): string {
   const cut = CUT_LABELS[order.cutType as CutType]?.ar ?? order.cutType;
   const delivery = order.deliveryType === 'delivery' ? 'توصيل' : 'استلام';
-  const weight = order.weightKg != null ? `${order.weightKg} كغ` : null;
-  return [weight, cut, delivery].filter(Boolean).join(' • ');
+  const quantity = formatOrderQuantityLabel(order.weightKg, order.product);
+  return [quantity || null, cut, delivery].filter(Boolean).join(' • ');
 }
 
 export function firstProductImage(order: {
@@ -140,6 +144,7 @@ export function orderLineItems(order: any): Array<{
   unitPrice: number;
   linePrice: number;
   quantity: number;
+  quantityLabel: string;
   cutLabel: string;
 }> {
   const currencyItems = Array.isArray(order?.items) ? order.items : [];
@@ -147,7 +152,8 @@ export function orderLineItems(order: any): Array<{
     return currencyItems.map((item: any, index: number) => {
       const weightKg = Number(item.weightKg || 0);
       const linePrice = Number(item.linePrice || 0);
-      const quantity = Number(item.quantity || 1) || 1;
+      const quantityLabel = formatOrderLineQuantityPrefix(weightKg, item.product);
+      const quantity = Number.parseInt(quantityLabel, 10);
       const unitPrice = weightKg > 0 ? linePrice / weightKg : linePrice;
       return {
         id: String(item.id ?? `${order.id}-line-${index}`),
@@ -156,7 +162,8 @@ export function orderLineItems(order: any): Array<{
         weightKg,
         unitPrice,
         linePrice,
-        quantity,
+        quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : Math.max(1, Math.round(weightKg) || 1),
+        quantityLabel,
         cutLabel: CUT_LABELS[item.cutType as CutType]?.ar ?? item.cutType ?? '',
       };
     });
@@ -164,6 +171,8 @@ export function orderLineItems(order: any): Array<{
 
   const weightKg = Number(order?.weightKg || 0);
   const linePrice = Number(order?.totalPrice || 0);
+  const quantityLabel = formatOrderLineQuantityPrefix(weightKg, order?.product);
+  const quantity = Number.parseInt(quantityLabel, 10);
   return [
     {
       id: String(order?.id ?? 'line'),
@@ -172,7 +181,8 @@ export function orderLineItems(order: any): Array<{
       weightKg,
       unitPrice: weightKg > 0 ? linePrice / weightKg : linePrice,
       linePrice,
-      quantity: 1,
+      quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : Math.max(1, Math.round(weightKg) || 1),
+      quantityLabel,
       cutLabel: CUT_LABELS[order?.cutType as CutType]?.ar ?? order?.cutType ?? '',
     },
   ];

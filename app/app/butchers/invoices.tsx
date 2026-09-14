@@ -24,6 +24,7 @@ import {
   formatOrderDate,
   isInvoiceOrder,
 } from '@/services/butcherOrders';
+import { formatOrderQuantityLabel } from '@/lib/butcherProductQuantity';
 
 export default function ButcherInvoicesScreen() {
   const router = useRouter();
@@ -116,7 +117,7 @@ export default function ButcherInvoicesScreen() {
                 </Row>
                 <View style={styles.divider} />
                 <AppText variant="caption" color="textSecondary" numberOfLines={1}>
-                  {invoice.product?.nameAr ?? 'منتج'} · {invoice.weightKg} كغ
+                  {invoice.product?.nameAr ?? 'منتج'} · {formatOrderQuantityLabel(invoice.weightKg, invoice.product)}
                 </AppText>
                 <Row justify="between" gap="sm">
                   <AppText variant="caption" color="textMuted">

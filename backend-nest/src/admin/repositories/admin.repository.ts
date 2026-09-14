@@ -1131,8 +1131,16 @@ export class AdminRepository {
             phone: true,
           },
         },
-        product: true,
-        items: { include: { product: true } },
+        product: {
+          include: { daftraLink: { select: { daftraSaleUnit: true } } },
+        },
+        items: {
+          include: {
+            product: {
+              include: { daftraLink: { select: { daftraSaleUnit: true } } },
+            },
+          },
+        },
         timeline: { orderBy: { createdAt: 'asc' } },
         audits: { orderBy: { changedAt: 'asc' } },
       },

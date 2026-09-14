@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { fetchOrder } from '@/services/admin.service';
 import { useAdminOrderSocket } from '@/hooks/useAdminOrderSocket';
+import { formatOrderQuantityLabel } from '@/lib/butcherOrderQuantityDisplay';
 
 const STATUS_AR: Record<string, string> = {
   pending: 'قيد الانتظار',
@@ -74,8 +75,19 @@ export default function AdminOrderDetailPage() {
           <InfoRow label="رقم الطلب" value={String(order.orderNumber ?? '—')} />
           <InfoRow label="العميل" value={String(customer?.arabicName ?? customer?.displayName ?? '—')} />
           <InfoRow label="الملحمة" value={String(butcher?.nameAr ?? '—')} />
-          <InfoRow label="الوزن" value={`${order.weightKg} كغ`} />
-          <InfoRow label="المحجوز" value={`${order.reservedQuantity ?? order.weightKg} كغ`} />
+          <InfoRow
+            label="الوزن"
+            value={formatOrderQuantityLabel(order.weightKg as number, product) || '—'}
+          />
+          <InfoRow
+            label="المحجوز"
+            value={
+              formatOrderQuantityLabel(
+                (order.reservedQuantity ?? order.weightKg) as number,
+                product,
+              ) || '—'
+            }
+          />
           <InfoRow label="الاستلام" value={order.deliveryType === 'delivery' ? 'توصيل' : 'استلام'} />
           {order.deliveryAddress ? (
             <InfoRow label="العنوان" value={String(order.deliveryAddress)} />

@@ -108,6 +108,8 @@ export interface ButcherProduct {
   images: string[];
   pricePerKg?: number;         // for cuts
   priceFixed?: number;         // for whole animals
+  /** Daftra selling unit when synced from دفترة (e.g. كجم, قطعة). */
+  saleUnit?: string;
   pricingNote?: string;
   pricingNoteAr?: string;
   availableCuts: CutType[];
@@ -315,6 +317,15 @@ export function routeParam(value: string | string[] | undefined): string {
   return value ?? '';
 }
 
+function resolveSaleUnitFromApi(p: Record<string, unknown>): string | undefined {
+  if (typeof p.saleUnit === 'string' && p.saleUnit.trim()) {
+    return p.saleUnit.trim();
+  }
+  const link = p.daftraLink as { daftraSaleUnit?: string | null } | null | undefined;
+  const fromLink = link?.daftraSaleUnit?.trim();
+  return fromLink || undefined;
+}
+
 export function mapButcherProductFromApi(p: Record<string, unknown>): ButcherProduct {
   const cuts = Array.isArray(p.availableCuts)
     ? (p.availableCuts as string[]).filter(Boolean)
@@ -332,6 +343,7 @@ export function mapButcherProductFromApi(p: Record<string, unknown>): ButcherPro
     images,
     pricePerKg: p.pricePerKg != null ? Number(p.pricePerKg) : undefined,
     priceFixed: p.priceFixed != null ? Number(p.priceFixed) : undefined,
+    saleUnit: resolveSaleUnitFromApi(p),
     pricingNote: p.pricingNoteAr ? String(p.pricingNoteAr) : undefined,
     pricingNoteAr: p.pricingNoteAr ? String(p.pricingNoteAr) : undefined,
     availableCuts: (cuts.length ? cuts : ['whole']) as CutType[],

@@ -18,6 +18,7 @@ import {
 import { getApiErrorMessage } from '@/services/api.client';
 import { notifyAllLiveRefresh, subscribeLiveRefresh } from '@/lib/live-refresh';
 import { isBrowserOnline } from '@/lib/pwa';
+import { formatOrderQuantityLabel } from '@/lib/butcherOrderQuantityDisplay';
 
 export default function OrderDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -137,7 +138,7 @@ export default function OrderDetailsPage() {
               <div>
                 <p className="text-sm text-ink">{line.product?.nameAr ?? 'منتج'}</p>
                 <p className="text-xs text-ink-muted">
-                  {line.cutType} · {line.weightKg} كجم
+                  {line.cutType} · {formatOrderQuantityLabel(line.weightKg, line.product)}
                 </p>
               </div>
               <p className="text-sm text-ink-secondary">{line.linePrice.toLocaleString('ar-SA')} ر.س</p>

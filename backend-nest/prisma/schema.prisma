@@ -1363,6 +1363,7 @@ model ButcherDaftraProduct {
   sarhProductId     String?  @unique
   daftraProductId   Int
   daftraProductCode String?
+  daftraSaleUnit    String?
   lastKnownQuantity Float?
   lastSyncedAt      DateTime?
   createdAt         DateTime @default(now())

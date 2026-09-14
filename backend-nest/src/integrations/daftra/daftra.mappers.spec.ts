@@ -32,9 +32,29 @@ describe('daftra.mappers', () => {
         trackStock: true,
         barcode: null,
         description: null,
+        saleUnit: null,
       },
     ]);
     expect(page.pageCount).toBe(3);
+  });
+
+  it('maps Daftra product sale unit when provided', () => {
+    const page = mapDaftraProductPage({
+      result: 'success',
+      data: [
+        {
+          Product: {
+            id: 10,
+            name: 'لحم',
+            unit_small_name: 'kg',
+            unit_price: 30,
+            track_stock: 0,
+          },
+        },
+      ],
+      pagination: { page: 1, page_count: 1, total_results: 1 },
+    });
+    expect(page.items[0]?.saleUnit).toBe('kg');
   });
 
   it('maps Daftra product into Sarh sync fields', () => {
@@ -47,6 +67,7 @@ describe('daftra.mappers', () => {
       trackStock: true,
       barcode: null,
       description: 'لحم طازج',
+      saleUnit: null,
     });
     expect(fields).toMatchObject({
       nameAr: 'لحم بقري',
@@ -70,6 +91,7 @@ describe('daftra.mappers', () => {
         trackStock: false,
         barcode: null,
         description: null,
+        saleUnit: null,
       }),
     ).toBeNull();
   });

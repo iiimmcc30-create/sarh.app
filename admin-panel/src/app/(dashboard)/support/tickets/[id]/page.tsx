@@ -13,6 +13,7 @@ import {
   updateSupportTicket,
 } from '@/services/support.service';
 import { useAdminSupportTicketSocket } from '@/hooks/useAdminSupportTicketSocket';
+import { formatOrderQuantityLabel } from '@/lib/butcherOrderQuantityDisplay';
 
 const STATUS_LABEL: Record<string, string> = {
   OPEN: 'جديدة',
@@ -159,7 +160,9 @@ export default function SupportTicketDetailPage() {
                   const product = item.product as Record<string, unknown> | undefined;
                   return (
                     <li key={String(item.id)}>
-                      {String(product?.nameAr ?? item.cutType)} — {String(item.weightKg)} كغ
+                      {String(product?.nameAr ?? item.cutType)} —{' '}
+                      {formatOrderQuantityLabel(item.weightKg as number, product) ||
+                        String(item.weightKg)}
                     </li>
                   );
                 })}
