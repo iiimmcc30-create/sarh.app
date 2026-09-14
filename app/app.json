@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sarh",
-    "owner": "alsafa00",
+    "owner": "sarh0",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
