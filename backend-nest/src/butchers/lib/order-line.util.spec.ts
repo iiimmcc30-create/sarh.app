@@ -26,6 +26,32 @@ describe('order-line.util', () => {
     ).toBe(120);
   });
 
+  it('computes Daftra kg line price from weight', () => {
+    expect(
+      computeOrderLinePrice(
+        {
+          priceFixed: 40,
+          pricePerKg: null,
+          daftraLink: { daftraSaleUnit: 'كجم' },
+        },
+        2.5,
+      ),
+    ).toBe(100);
+  });
+
+  it('computes Daftra unit-count line price from quantity', () => {
+    expect(
+      computeOrderLinePrice(
+        {
+          priceFixed: 25,
+          pricePerKg: null,
+          daftraLink: { daftraSaleUnit: 'قطعة' },
+        },
+        4,
+      ),
+    ).toBe(100);
+  });
+
   it('validates weight bounds and prices a line', () => {
     const line = validateAndPriceOrderLine(product, 'b1', {
       productId: 'p1',

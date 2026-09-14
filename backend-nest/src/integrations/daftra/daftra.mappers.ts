@@ -1,3 +1,5 @@
+import { extractDaftraSaleUnit } from './daftra-unit.util';
+
 export type DaftraProduct = {
   id: number;
   name: string;
@@ -7,6 +9,8 @@ export type DaftraProduct = {
   trackStock: boolean;
   barcode: string | null;
   description: string | null;
+  /** Selling unit from Daftra when present in API payload; null otherwise. */
+  saleUnit: string | null;
 };
 
 /** Fields used to create/update a Sarh ButcherProduct from a Daftra product. */
@@ -96,6 +100,7 @@ export function mapDaftraProduct(raw: unknown): DaftraProduct | null {
     trackStock: track === 1,
     barcode: asString(product.barcode),
     description: asString(product.description),
+    saleUnit: extractDaftraSaleUnit(raw),
   };
 }
 

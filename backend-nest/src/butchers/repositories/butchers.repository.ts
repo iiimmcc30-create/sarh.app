@@ -15,7 +15,12 @@ const BUTCHER_LIST_INCLUDE = {
 } as const;
 
 const BUTCHER_DETAIL_INCLUDE = {
-  products: true,
+  products: {
+    where: { ...notDeleted },
+    include: {
+      daftraLink: { select: { daftraSaleUnit: true } },
+    },
+  },
   offers: true,
   reviews: {
     take: 10,
@@ -438,6 +443,7 @@ export class ButchersRepository {
         weightMax: true,
         priceFixed: true,
         pricePerKg: true,
+        daftraLink: { select: { daftraSaleUnit: true } },
       },
     });
   }

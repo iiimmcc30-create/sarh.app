@@ -5,6 +5,11 @@ import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { computeProductLineTotal, resolveLineWeightKg } from '@/lib/butcherOrderPricing';
+import {
+  getProductQuantityMode,
+  resolveLineQuantity,
+  showsProductStepper,
+} from '@/lib/butcherProductQuantity';
 import { resolveMediaUrl } from '@/services/media';
 import {
   cutLabelAr,
@@ -52,22 +57,28 @@ export function ButcherProductOptionsModal({
   const [selectedCut, setSelectedCut] = useState<CutType>('whole');
   const [weight, setWeight] = useState('1');
 
+  const quantityMode = product ? getProductQuantityMode(product) : 'none';
+
   useEffect(() => {
     if (!product) return;
     setSelectedCut(product.availableCuts[0] ?? 'whole');
-    setWeight(String(product.weightRange?.min ?? 1));
-  }, [product?.id]);
+    if (quantityMode === 'daftra_quantity') {
+      setWeight('1');
+    } else {
+      setWeight(String(product.weightRange?.min ?? 1));
+    }
+  }, [product?.id, quantityMode]);
 
-  const weightKg = product ? resolveLineWeightKg(weight, product) : 0;
-  const lineTotal = product ? computeProductLineTotal(product, weightKg) : 0;
+  const lineAmount = product ? resolveLineWeightKg(weight, product) : 0;
+  const lineTotal = product ? computeProductLineTotal(product, lineAmount) : 0;
 
   const priceLabel = useMemo(() => {
     if (!product) return '';
-    if (product.pricePerKg) {
+    if (showsProductStepper(quantityMode)) {
       return `${lineTotal.toLocaleString('en-US')} ${currencySymbol}`;
     }
     return `${(product.priceFixed ?? 0).toLocaleString('en-US')} ${currencySymbol}`;
-  }, [product, lineTotal, currencySymbol]);
+  }, [product, lineTotal, currencySymbol, quantityMode]);
 
   if (!product) return null;
 
@@ -103,13 +114,13 @@ export function ButcherProductOptionsModal({
 
           {/* طريقة التقطيع تُعرض في مرحلة تأكيد الطلب وليس هنا */}
 
-          {product.pricePerKg ? (
+          {quantityMode === 'sarh_weight' || quantityMode === 'daftra_weight' ? (
             <View style={styles.section}>
               <Text style={styles.weightTitle}>الوزن (كغ)</Text>
               <View style={styles.weightRow}>
                 <Pressable
                   style={styles.weightBtn}
-                  onPress={() => setWeight(String(Math.max(0.5, weightKg - 0.5)))}
+                  onPress={() => setWeight(String(Math.max(0.5, lineAmount - 0.5)))}
                 >
                   <AppIcon name="remove" size={20} color={styles.iconColor.color} />
                 </Pressable>
@@ -122,7 +133,7 @@ export function ButcherProductOptionsModal({
                 />
                 <Pressable
                   style={styles.weightBtn}
-                  onPress={() => setWeight(String(weightKg + 0.5))}
+                  onPress={() => setWeight(String(lineAmount + 0.5))}
                 >
                   <AppIcon name="add" size={20} color={styles.iconColor.color} />
                 </Pressable>
@@ -132,6 +143,37 @@ export function ButcherProductOptionsModal({
                   من {product.weightRange.min} إلى {product.weightRange.max} كغ
                 </Text>
               ) : null}
+            </View>
+          ) : null}
+
+          {quantityMode === 'daftra_quantity' ? (
+            <View style={styles.section}>
+              <Text style={styles.weightTitle}>الكمية</Text>
+              <View style={styles.weightRow}>
+                <Pressable
+                  style={styles.weightBtn}
+                  onPress={() =>
+                    setWeight(String(Math.max(1, resolveLineQuantity(weight) - 1)))
+                  }
+                >
+                  <AppIcon name="remove" size={20} color={styles.iconColor.color} />
+                </Pressable>
+                <TextInput
+                  style={styles.weightInput}
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="number-pad"
+                  selectTextOnFocus
+                />
+                <Pressable
+                  style={styles.weightBtn}
+                  onPress={() =>
+                    setWeight(String(Math.min(999, resolveLineQuantity(weight) + 1)))
+                  }
+                >
+                  <AppIcon name="add" size={20} color={styles.iconColor.color} />
+                </Pressable>
+              </View>
             </View>
           ) : null}
 
