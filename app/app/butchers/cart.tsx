@@ -740,7 +740,7 @@ function createStyles(colors: ThemeColors) {
 
     // Meat CTA button
     meatBtn: {
-      backgroundColor: butcherMarket.seeAll,
+      backgroundColor: butcherMarket.action,
       borderRadius: radius.pill,
       minHeight: 52,
       paddingHorizontal: spacing.xl,

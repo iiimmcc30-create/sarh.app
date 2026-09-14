@@ -10,9 +10,6 @@ import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import type { ButcherProduct } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-/** Calm flesh/skin tone for add-to-cart action button. */
-const FLESH_COLOR = '#D4876A';
-
 const IMAGE_SIZE = 88;
 const ADD_SIZE = 40;
 
@@ -114,7 +111,7 @@ export function ButcherStoreProductCard({
         >
           <AppIcon name="cart-outline" size={17} color="#fff" />
           <View style={styles.plusDot}>
-            <AppIcon name="plus" size={9} color={FLESH_COLOR} />
+            <AppIcon name="plus" size={9} color={butcherMarket.action} />
           </View>
         </Pressable>
       </View>
@@ -196,7 +193,7 @@ function createStyles(colors: ThemeColors) {
       width: ADD_SIZE,
       height: ADD_SIZE,
       borderRadius: 10,
-      backgroundColor: FLESH_COLOR,
+      backgroundColor: butcherMarket.action,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
