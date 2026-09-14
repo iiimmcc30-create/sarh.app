@@ -4,6 +4,7 @@ import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { ListingCard } from '@/components/feature/ListingCard';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
+import { openPostDetail } from '@/lib/openPost';
 import { AppText, SarhBackButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -261,7 +262,7 @@ export default function SearchScreen() {
           <Pressable
             key={`post-${item.id}`}
             style={styles.resultRow}
-            onPress={() => router.push({ pathname: '/posts/[id]', params: { id: item.id } } as never)}
+            onPress={() => openPostDetail(router, item.id)}
           >
             <Row gap="md" align="center">
             {item.imageUrl ? (
