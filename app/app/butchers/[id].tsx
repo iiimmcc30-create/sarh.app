@@ -1109,7 +1109,7 @@ export default function ButcherProfileScreen() {
                     onPress={() => void submitReview()}
                     disabled={submittingReview}
                     style={{
-                      backgroundColor: butcherMarket.seeAll,
+                      backgroundColor: butcherMarket.action,
                       borderRadius: radius.pill,
                       paddingVertical: 12,
                       alignItems: 'center',

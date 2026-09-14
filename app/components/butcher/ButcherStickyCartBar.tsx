@@ -63,7 +63,7 @@ function createStyles(colors: ThemeColors) {
       ...getRtlRow(),
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: butcherMarket.seeAll,
+      backgroundColor: butcherMarket.action,
       borderRadius: radius.pill,
       paddingVertical: 12,
       paddingHorizontal: spacing.lg,

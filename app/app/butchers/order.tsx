@@ -18,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -538,11 +539,12 @@ export default function ButcherOrderScreen() {
                   <AppIcon
                     name={type === 'pickup' ? 'shop' : 'box'}
                     size={22}
-                    color={active ? colors.electricBright : colors.textMuted}
+                    color={active ? butcherMarket.action : colors.textMuted}
                   />
                   <AppText
                     variant="caption"
-                    color={active ? 'primary' : 'textMuted'}
+                    color={active ? undefined : 'textMuted'}
+                    style={active ? { color: butcherMarket.action } : undefined}
                   >
                     {type === 'pickup' ? 'استلام' : 'توصيل'}
                   </AppText>
@@ -638,7 +640,13 @@ export default function ButcherOrderScreen() {
             loading={loadingSubmit}
             leftIcon="card-outline"
             onPress={() => void handleSubmit()}
-            style={styles.submitCta}
+            style={[
+              styles.submitCta,
+              {
+                backgroundColor: butcherMarket.action,
+                borderColor: butcherMarket.action,
+              },
+            ]}
           />
         </Row>
       </View>
@@ -827,8 +835,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     deliveryCardActive: {
-      borderColor: colors.electric,
-      backgroundColor: colors.electric + '10',
+      borderColor: butcherMarket.action,
+      backgroundColor: butcherMarket.action + '10',
     },
 
     textArea: {
@@ -853,8 +861,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.borderSoft,
     },
     payPillActive: {
-      borderColor: colors.electric,
-      backgroundColor: colors.electric + '14',
+      borderColor: butcherMarket.action,
+      backgroundColor: butcherMarket.action + '14',
     },
 
     summaryCard: {

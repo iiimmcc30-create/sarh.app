@@ -1,4 +1,5 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -6,9 +7,6 @@ import { getRtlRow, getRtlText } from '@/lib/rtl';
 import type { DeliveryType } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-
-/** Calm flesh/skin tone for delivery/pickup action buttons. */
-const FLESH_COLOR = '#D4876A';
 
 type ButcherDeliverySegmentProps = {
   value: DeliveryType;
@@ -80,7 +78,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     optionActive: {
-      backgroundColor: FLESH_COLOR,
+      backgroundColor: butcherMarket.action,
     },
     optionText: {
       ...butcherTypography.secondary,

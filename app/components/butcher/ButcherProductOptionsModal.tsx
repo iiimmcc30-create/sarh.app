@@ -1,6 +1,7 @@
 import { SarhChip, SarhButton } from '@/design-system/components';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
+import { butcherMarket } from '@/constants/butcherMarket';
 import { butcherTypography } from '@/constants/butcherTypography';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -191,6 +192,10 @@ export function ButcherProductOptionsModal({
           disabled={lineTotal <= 0}
           leftIcon="cart-outline"
           onPress={handleAdd}
+          style={{
+            backgroundColor: butcherMarket.action,
+            borderColor: butcherMarket.action,
+          }}
         />
       </View>
       </KeyboardAvoidingView>
@@ -315,7 +320,7 @@ function createStyles(colors: ThemeColors) {
             alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.xs,
-      backgroundColor: colors.electric,
+      backgroundColor: butcherMarket.action,
       borderRadius: radius.pill,
       paddingVertical: 11,
       paddingHorizontal: spacing.lg,

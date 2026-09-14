@@ -7,6 +7,8 @@ export const butcherMarket = {
   searchDark: '#2A1C19',
   searchMintDark: '#16241C',
   seeAll: '#C43C3C',
+  /** Meat-red CTA used by add-to-cart, delivery/pickup, and other market actions. */
+  action: '#C43C3C',
   pin: '#2E9B57',
 } as const;
 
