@@ -346,7 +346,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     gap: 12,
-    backgroundColor: colors.bgDeep,
+    backgroundColor: _scheme === 'light' ? '#FFFFFF' : colors.bgSurface,
   },
   listContent: {
     flex: 1,
@@ -365,7 +365,7 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       },
   listTitle: {
     ...typography.cardHeading,
-    color: colors.textPrimary,
+    color: _scheme === 'light' ? colors.electric : colors.textPrimary,
     width: '100%',
     writingDirection: 'rtl',
   },

@@ -32,14 +32,18 @@ function openLink(url: string | null, fallback: string) {
   void Linking.openURL(url);
 }
 
+const WHATSAPP_GREEN = '#25D366';
+
 function ContactIconButton({
   icon,
   label,
   onPress,
+  whatsapp = false,
 }: {
   icon: string;
   label: string;
   onPress: () => void;
+  whatsapp?: boolean;
 }) {
   return (
     <Pressable
@@ -47,9 +51,13 @@ function ContactIconButton({
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={space[4]}
-      style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.iconBtn,
+        whatsapp && styles.iconBtnWhatsapp,
+        pressed && styles.pressed,
+      ]}
     >
-      <AppIcon name={icon} size={18} color={colors.primary} />
+      <AppIcon name={icon} size={18} color={whatsapp ? '#FFFFFF' : colors.primary} />
     </Pressable>
   );
 }
@@ -85,6 +93,7 @@ export function FeedSupplierContactActions({
             size="sm"
             leftIcon="whatsapp"
             onPress={() => openLink(waUrl, 'رقم واتساب غير متوفر')}
+            style={{ backgroundColor: WHATSAPP_GREEN, borderColor: WHATSAPP_GREEN }}
           />
         ) : null}
         {mailUrl ? (
@@ -131,6 +140,7 @@ export function FeedSupplierContactActions({
           icon="whatsapp"
           label="WhatsApp"
           onPress={() => openLink(waUrl, 'رقم واتساب غير متوفر')}
+          whatsapp
         />
       ) : null}
       {mailUrl ? (
@@ -164,6 +174,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: functional.primaryMuted,
+  },
+  iconBtnWhatsapp: {
+    backgroundColor: WHATSAPP_GREEN,
   },
   webBtn: {
     minHeight: space[40],

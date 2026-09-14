@@ -7,6 +7,9 @@ import type { DeliveryType } from '@/services/butcherData';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 
+/** Calm flesh/skin tone for delivery/pickup action buttons. */
+const FLESH_COLOR = '#D4876A';
+
 type ButcherDeliverySegmentProps = {
   value: DeliveryType;
   onChange: (type: DeliveryType) => void;
@@ -77,7 +80,7 @@ function createStyles(colors: ThemeColors) {
       borderRadius: radius.pill,
     },
     optionActive: {
-      backgroundColor: colors.electric,
+      backgroundColor: FLESH_COLOR,
     },
     optionText: {
       ...butcherTypography.secondary,

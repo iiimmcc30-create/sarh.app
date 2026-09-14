@@ -1,16 +1,37 @@
-import { listingFavoriteFeedback } from '@/lib/listingFavorite';
+import {
+  isListingFavorited,
+  toggleListingFavorite,
+  getListingFavoriteIds,
+} from '@/lib/listingFavorite';
 
-describe('H8 listing favorites', () => {
-  it('does not claim fake success when no listing-favorite API exists', () => {
-    const feedback = listingFavoriteFeedback();
-    expect(feedback.kind).toBe('unavailable');
-    expect(feedback.title).not.toMatch(/تم الحفظ/);
-    expect(feedback.message).not.toMatch(/تم حفظ/);
+// AsyncStorage is auto-mocked by the Jest preset
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
+describe('listing favorites (local storage)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('does not reuse post bookmark semantics', () => {
-    const feedback = listingFavoriteFeedback();
-    expect(JSON.stringify(feedback)).not.toMatch(/bookmark/i);
-    expect(JSON.stringify(feedback)).not.toMatch(/post/i);
+  it('returns false for an unknown listing', async () => {
+    const result = await isListingFavorited('unknown-id');
+    expect(result).toBe(false);
+  });
+
+  it('toggles from false to true then back to false', async () => {
+    const first = await toggleListingFavorite('listing-1');
+    expect(first).toBe(true);
+
+    const second = await toggleListingFavorite('listing-1');
+    expect(second).toBe(false);
+  });
+
+  it('persists favorited ids across calls', async () => {
+    await toggleListingFavorite('listing-a');
+    await toggleListingFavorite('listing-b');
+    const ids = await getListingFavoriteIds();
+    expect(ids).toContain('listing-a');
+    expect(ids).toContain('listing-b');
   });
 });

@@ -54,14 +54,14 @@ function clampOffset(x: number, y: number, bottomOffset: number, insets: { top: 
 export function CreatePostFab({ onPress, bottomOffset = TAB_BAR_CLEARANCE, mode = 'draggable' }: CreatePostFabProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, scheme } = useTheme();
+  useTheme();
   const scale = useRef(new Animated.Value(1)).current;
   const fabColors = useMemo(
     () => ({
-      backgroundColor: scheme === 'light' ? colors.electric : colors.electricBright,
-      shadowColor: scheme === 'light' ? colors.electric : colors.glow,
+      backgroundColor: '#60A5FA',
+      shadowColor: '#2563EB',
     }),
-    [scheme, colors.electric, colors.electricBright, colors.glow],
+    [],
   );
   const dragMoved = useRef(false);
   const dragStart = useRef<Offset>({ x: 0, y: 0 });
@@ -130,7 +130,7 @@ export function CreatePostFab({ onPress, bottomOffset = TAB_BAR_CLEARANCE, mode 
           accessibilityLabel="إنشاء منشور"
           android_ripple={{ color: 'rgba(255,255,255,0.25)', borderless: true, radius: FAB_SIZE / 2 }}
         >
-          <AppIcon name="create" size={24} color="#fff" style={styles.icon} />
+          <AppIcon name="plus" size={24} color="#fff" style={styles.icon} />
         </Pressable>
       </Animated.View>
     );
@@ -200,7 +200,7 @@ export function CreatePostFab({ onPress, bottomOffset = TAB_BAR_CLEARANCE, mode 
       {...panResponder.panHandlers}
     >
       <View style={styles.iconSlot} pointerEvents="none">
-        <AppIcon name="create" size={24} color="#fff" style={styles.icon} />
+        <AppIcon name="plus" size={24} color="#fff" style={styles.icon} />
       </View>
     </Animated.View>
   );

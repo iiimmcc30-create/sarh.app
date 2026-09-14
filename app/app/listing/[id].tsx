@@ -37,7 +37,7 @@ import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSh
 import { ListingDeleteDialog } from '@/components/listing/ListingDeleteDialog';
 import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
 import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
-import { listingFavoriteFeedback } from '@/lib/listingFavorite';
+import { isListingFavorited, toggleListingFavorite } from '@/lib/listingFavorite';
 import { resolveMediaUrl } from '@/services/media';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import {
@@ -79,6 +79,13 @@ export default function ListingDetailScreen() {
   const [followLoading, setFollowLoading] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  // Load local favorite state
+  useEffect(() => {
+    if (!id) return;
+    isListingFavorited(id).then(setIsFavorited).catch(() => {});
+  }, [id]);
 
   // ─── Boost / promote ────────────────────────────────────────────────────
   const [feeModalVisible, setFeeModalVisible] = useState(false);
@@ -432,7 +439,11 @@ export default function ListingDetailScreen() {
       title: 'الإعلان',
       items: [
         { key: 'share', label: 'مشاركة', icon: 'share-outline' },
-        { key: 'favorite', label: 'حفظ', icon: 'heart-outline' },
+        {
+          key: 'favorite',
+          label: isFavorited ? 'إزالة من المفضلة' : 'حفظ في المفضلة',
+          icon: isFavorited ? 'heart' : 'heart-outline',
+        },
         { key: 'report', label: 'إبلاغ', icon: 'flag-outline' },
         { key: 'cancel', label: 'إلغاء', cancel: true },
       ],
@@ -443,8 +454,13 @@ export default function ListingDetailScreen() {
       });
     }
     if (key === 'favorite') {
-      const feedback = listingFavoriteFeedback();
-      Alert.alert(feedback.title, feedback.message);
+      try {
+        const next = await toggleListingFavorite(listing.id);
+        setIsFavorited(next);
+        showToast(next ? 'تم الحفظ في المفضلة ♥' : 'تمت الإزالة من المفضلة', 'success');
+      } catch {
+        showToast('تعذّر تحديث المفضلة', 'error');
+      }
     }
     if (key === 'report') promptReport('listing', listing.id, isAuthenticated);
   };

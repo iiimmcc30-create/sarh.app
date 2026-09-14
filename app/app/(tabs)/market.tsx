@@ -42,10 +42,13 @@ const MARKET_FOCUS_TTL_MS = 60_000;
 
 type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
+/** Light-mode market keeps the grey page tone so listing cards read as cards. */
+const MARKET_PAGE_LIGHT = '#F8F9FA';
+
 export default function MarketScreen() {
   const router = useRouter();
   const { accessToken } = useAuth();
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const { categories, reload: reloadCategories } = useMarketCategories();
   const lastCategoriesFocusAt = useRef(0);
   const listRef = useRef<FlatList<Listing>>(null);
@@ -258,7 +261,10 @@ export default function MarketScreen() {
   );
 
   return (
-    <Screen edges={['top']}>
+    <Screen
+      edges={['top']}
+      style={scheme === 'light' ? { backgroundColor: MARKET_PAGE_LIGHT } : undefined}
+    >
       {/* Sticky chrome — must not flex-grow or horizontal ScrollViews open a gap. */}
       <View style={styles.stickyChrome}>
         <MarketAppBar

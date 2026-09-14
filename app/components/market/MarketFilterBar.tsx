@@ -74,38 +74,35 @@ export function MarketFilterBar({
 
         <SarhChip appearance="filter" label="القريب" icon="navigation" compact onPress={onNearbyPress} />
 
-        <View style={[styles.sortCategoryBar, getRtlRow()]}>
-          <Pressable
-            style={[styles.sortCategoryHalf, getRtlRow()]}
-            onPress={onSortPress}
-            accessibilityRole="button"
-            accessibilityLabel="الترتيب"
-            testID="market-sort-chip"
-          >
-            <AppIcon name="sort-alt" size={16} color={accent} />
-            <Text style={styles.sortCategoryLabel}>الترتيب</Text>
-          </Pressable>
+        <Pressable
+          style={[styles.filterChip, getRtlRow()]}
+          onPress={onSortPress}
+          accessibilityRole="button"
+          accessibilityLabel="الترتيب"
+          testID="market-sort-chip"
+        >
+          <AppIcon name="sort-alt" size={MARKET_CHIP.iconSize} color={accent} />
+          <Text style={styles.filterChipLabel}>الترتيب</Text>
+        </Pressable>
 
-          <View style={styles.sortCategoryDivider} />
-
-          <Pressable
-            style={[styles.sortCategoryHalf, getRtlRow()]}
-            onPress={onCategoryPress}
-            accessibilityRole="button"
-            accessibilityLabel="التصنيف"
-            testID="market-category-chip"
+        <Pressable
+          style={[styles.filterChip, categoryOpen && styles.filterChipActive, getRtlRow()]}
+          onPress={onCategoryPress}
+          accessibilityRole="button"
+          accessibilityLabel="التصنيف"
+          testID="market-category-chip"
+        >
+          <AppIcon
+            name="options-outline"
+            size={MARKET_CHIP.iconSize}
+            color={categoryOpen ? accent : colors.textPrimary}
+          />
+          <Text
+            style={[styles.filterChipLabel, categoryOpen && styles.filterChipLabelActive]}
           >
-            <AppIcon name="options-outline" size={16} color={accent} />
-            <Text
-              style={[
-                styles.sortCategoryLabel,
-                categoryOpen && styles.sortCategoryLabelActive,
-              ]}
-            >
-              التصنيف
-            </Text>
-          </Pressable>
-        </View>
+            التصنيف
+          </Text>
+        </Pressable>
       </SarhChipRow>
     </View>
   );
@@ -148,29 +145,23 @@ function createStyles(colors: ThemeColors) {
     regionTextActive: {
       color: colors.electricBright,
     },
-    sortCategoryBar: {
-      flex: 1,
-      minWidth: 0,
+    filterChip: {
       height: MARKET_CHIP.height,
-      alignItems: 'stretch',
-      backgroundColor: colors.bgElevated,
-      borderRadius: MARKET_CHIP.radius,
-      overflow: 'hidden',
-    },
-    sortCategoryHalf: {
-      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.sm,
+      gap: MARKET_CHIP.gap,
+      paddingHorizontal: MARKET_CHIP.paddingHorizontal,
+      borderRadius: MARKET_CHIP.radius,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
+      flexShrink: 0,
     },
-    sortCategoryDivider: {
-      width: StyleSheet.hairlineWidth,
-      alignSelf: 'stretch',
-      backgroundColor: colors.borderSoft,
-      marginVertical: 8,
+    filterChipActive: {
+      borderWidth: 1,
+      borderColor: colors.electricBright,
+      backgroundColor: `${colors.electricBright}14`,
     },
-    sortCategoryLabel: {
+    filterChipLabel: {
       ...typography.caption,
       fontFamily: OFFICIAL_APP_FONT,
       fontSize: MARKET_CHIP.fontSize,
@@ -179,7 +170,7 @@ function createStyles(colors: ThemeColors) {
       writingDirection: 'rtl',
       includeFontPadding: false,
     },
-    sortCategoryLabelActive: {
+    filterChipLabelActive: {
       color: colors.electricBright,
       fontWeight: '600',
     },
