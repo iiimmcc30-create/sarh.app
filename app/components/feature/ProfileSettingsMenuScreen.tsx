@@ -24,6 +24,8 @@ const styles = StyleSheet.create({
     minHeight: space[48],
     paddingHorizontal: space[16],
     justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'stretch',
   },
 });
 
@@ -74,7 +76,7 @@ export function ProfileSettingsMenuScreen({
             { opacity: pressed ? motion.opacity.pressed : 1 },
           ]}
         >
-          <AppText variant="label" color="danger">
+          <AppText variant="label" color="danger" align="center">
             تسجيل الخروج
           </AppText>
         </Pressable>
