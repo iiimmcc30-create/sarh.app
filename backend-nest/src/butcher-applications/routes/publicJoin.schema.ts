@@ -93,8 +93,29 @@ export const publicJoinBodySchema = z
     closeTime: z
       .string()
       .regex(HH_MM_REGEX, 'صيغة وقت الإغلاق يجب أن تكون HH:mm'),
+    accountUsername: z
+      .string()
+      .trim()
+      .min(3)
+      .max(30)
+      .regex(/^[a-z0-9_]+$/, 'أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط'),
+    accountEmail: z.preprocess(
+      emptyToUndefined,
+      z.string().email().max(254).toLowerCase().optional(),
+    ),
+    accountPassword: z.string().min(6).max(128),
+    accountPasswordConfirm: z.string().min(6).max(128),
   })
   .strict()
-  .superRefine((data, ctx) => addSnapshotCrossFieldIssues(data, ctx));
+  .superRefine((data, ctx) => {
+    addSnapshotCrossFieldIssues(data, ctx);
+    if (data.accountPassword !== data.accountPasswordConfirm) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'تأكيد كلمة المرور غير مطابق',
+        path: ['accountPasswordConfirm'],
+      });
+    }
+  });
 
 export type PublicJoinBody = z.infer<typeof publicJoinBodySchema>;

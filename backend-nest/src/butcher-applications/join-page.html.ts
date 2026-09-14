@@ -216,6 +216,18 @@ export function renderButcherJoinPage(): string {
         <input id="address" name="address" dir="ltr" required />
       </section>
       <section class="card">
+        <h2>حساب الملحمة</h2>
+        <p class="hint">هذه البيانات لحساب الملحمة عند قبول الطلب. حسابك الحالي يبقى كما هو.</p>
+        <label for="accountUsername">اسم المستخدم</label>
+        <input id="accountUsername" name="accountUsername" dir="ltr" placeholder="latin_username" required />
+        <label for="accountEmail">البريد الإلكتروني (اختياري)</label>
+        <input id="accountEmail" name="accountEmail" type="email" dir="ltr" />
+        <label for="accountPassword">كلمة المرور</label>
+        <input id="accountPassword" name="accountPassword" type="password" required />
+        <label for="accountPasswordConfirm">تأكيد كلمة المرور</label>
+        <input id="accountPasswordConfirm" name="accountPasswordConfirm" type="password" required />
+      </section>
+      <section class="card">
         <h2>4. بيانات الموقع</h2>
         <p class="hint">حدد موقع المحل على الخريطة. لا يمكن الإرسال بإحداثيات فارغة أو 0,0.</p>
         <div id="map" class="map" role="application" aria-label="خريطة موقع المحل"></div>
@@ -400,6 +412,13 @@ export function renderButcherJoinPage(): string {
           if (!token) { msg('تحقق من رقم الجوال أولاً'); return; }
           if (!document.getElementById('acceptedTerms').checked) { msg('يجب الموافقة على الشروط'); return; }
           if (!document.getElementById('confirmAccuracy').checked) { msg('يجب تأكيد صحة البيانات'); return; }
+          var accountUsername = document.getElementById('accountUsername').value.trim().toLowerCase();
+          var accountPassword = document.getElementById('accountPassword').value;
+          var accountPasswordConfirm = document.getElementById('accountPasswordConfirm').value;
+          if (!accountUsername) { msg('اسم مستخدم حساب الملحمة مطلوب'); return; }
+          if (!accountPassword) { msg('كلمة المرور مطلوبة'); return; }
+          if (!accountPasswordConfirm) { msg('تأكيد كلمة المرور مطلوب'); return; }
+          if (accountPassword !== accountPasswordConfirm) { msg('تأكيد كلمة المرور غير مطابق'); return; }
           var lat = Number(document.getElementById('lat').value);
           var lng = Number(document.getElementById('lng').value);
           if (!isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0)) {
@@ -450,6 +469,11 @@ export function renderButcherJoinPage(): string {
           form.append('closeTime', document.getElementById('closeTime').value);
           form.append('acceptedTerms', 'true');
           form.append('confirmAccuracy', 'true');
+          form.append('accountUsername', accountUsername);
+          var accountEmail = document.getElementById('accountEmail').value.trim();
+          if (accountEmail) form.append('accountEmail', accountEmail.toLowerCase());
+          form.append('accountPassword', accountPassword);
+          form.append('accountPasswordConfirm', accountPasswordConfirm);
           REQUIRED_DOCS.forEach(function (type) {
             form.append(type, document.getElementById(type).files[0]);
           });

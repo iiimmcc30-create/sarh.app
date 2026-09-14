@@ -43,6 +43,9 @@ describe('public butcher join HTML', () => {
       'closeTime',
       'acceptedTerms',
       'confirmAccuracy',
+      'accountUsername',
+      'accountPassword',
+      'accountPasswordConfirm',
     ]) {
       expect(html).toContain(`id="${id}"`);
     }

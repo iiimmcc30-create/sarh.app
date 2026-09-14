@@ -245,6 +245,38 @@ export function validateSubmitInput(input: SubmitInput): ValidationResult {
   const issues: ValidationIssue[] = [];
   pushIf(issues, input.acceptedTerms !== true, 'acceptedTerms', 'يجب الموافقة على الشروط');
   pushIf(issues, input.confirmAccuracy !== true, 'confirmAccuracy', 'يجب تأكيد صحة البيانات');
+
+  const username = (input.accountUsername ?? '').trim().toLowerCase();
+  pushIf(issues, username.length === 0, 'accountUsername', 'اسم مستخدم حساب الملحمة مطلوب');
+  pushIf(
+    issues,
+    username.length > 0 && (username.length < 3 || username.length > 30 || !/^[a-z0-9_]+$/.test(username)),
+    'accountUsername',
+    'أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط',
+  );
+
+  const email = (input.accountEmail ?? '').trim();
+  pushIf(
+    issues,
+    email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+    'accountEmail',
+    'البريد الإلكتروني غير صالح',
+  );
+
+  pushIf(issues, !input.password, 'password', 'كلمة المرور مطلوبة');
+  pushIf(issues, !input.confirmPassword, 'confirmPassword', 'تأكيد كلمة المرور مطلوب');
+  pushIf(
+    issues,
+    Boolean(input.password) && (input.password.length < 6 || input.password.length > 128),
+    'password',
+    'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+  );
+  pushIf(
+    issues,
+    Boolean(input.password) && Boolean(input.confirmPassword) && input.password !== input.confirmPassword,
+    'confirmPassword',
+    'تأكيد كلمة المرور غير مطابق',
+  );
   return result(issues);
 }
 

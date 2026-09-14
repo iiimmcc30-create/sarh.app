@@ -6,6 +6,8 @@ export const TEST_ADMIN_ID = '22222222-2222-2222-2222-222222222222';
 export const TEST_OTHER_USER_ID = '33333333-3333-3333-3333-333333333333';
 export const TEST_APP_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 export const TEST_DOC_ID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+export const TEST_BUTCHER_USER_ID = '44444444-4444-4444-4444-444444444444';
+export const TEST_ACCOUNT_HASH = '$2b$12$abcdefghijklmnopqrstuv';
 
 export function userPayload(
   userId = TEST_USER_ID,

@@ -3,6 +3,7 @@
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -405,4 +406,58 @@ export function getFileUrl(key: string): string {
   return CDN_URL
     ? `${CDN_URL.replace(/\/$/, '')}/${key}`
     : `https://${BUCKET}.s3.${process.env.AWS_REGION || 'me-south-1'}.amazonaws.com/${key}`;
+}
+
+const SIGNED_GET_EXPIRES_SECONDS = 900;
+
+/**
+ * Resolves a stored object key to a URL the current provider can serve.
+ * Cloudinary keys from butcher-applications are stored without the base folder
+ * prefix; this prepends it. S3 uses a short-lived signed GET when possible.
+ * Local files are served from /uploads and are not newly made public beyond
+ * the existing static mount.
+ */
+export async function getStoredObjectUrl(
+  key: string,
+  mimeType?: string | null,
+): Promise<string> {
+  if (!key) return '';
+  if (key.startsWith('http://') || key.startsWith('https://')) return key;
+
+  const normalized = key.replace(/^\/+/, '');
+  const provider = getStorageProvider();
+
+  if (provider === 'local') {
+    const base = (process.env.APP_URL || 'http://localhost:3001').replace(
+      /\/$/,
+      '',
+    );
+    return `${base}/uploads/${normalized}`;
+  }
+
+  if (provider === 'cloudinary' && CLOUD_NAME) {
+    const resource = mimeType?.startsWith('video/') ? 'video' : 'image';
+    const publicId = normalized.startsWith(`${CLOUDINARY_BASE_FOLDER}/`)
+      ? normalized
+      : `${CLOUDINARY_BASE_FOLDER}/${normalized}`;
+    return `https://res.cloudinary.com/${CLOUD_NAME}/${resource}/upload/${publicId}`;
+  }
+
+  if (provider === 's3' && s3) {
+    try {
+      return await getSignedUrl(
+        s3,
+        new GetObjectCommand({
+          Bucket: BUCKET,
+          Key: normalized,
+          ResponseContentType: mimeType || undefined,
+        }),
+        { expiresIn: SIGNED_GET_EXPIRES_SECONDS },
+      );
+    } catch (err) {
+      logger.warn({ err, key: normalized }, 'S3 signed GET URL failed');
+    }
+  }
+
+  return getFileUrl(normalized);
 }

@@ -24,7 +24,7 @@ const documentInclude = {
 export const applicationInclude = {
   documents: documentInclude,
   timelineEvents: timelineInclude,
-  sourcedButcher: { select: { id: true } },
+  sourcedButcher: { select: { id: true, userId: true } },
   user: {
     select: {
       id: true,
@@ -34,6 +34,7 @@ export const applicationInclude = {
       email: true,
       displayName: true,
       arabicName: true,
+      role: true,
     },
   },
 };
@@ -43,7 +44,7 @@ export type ApplicationEntity = Prisma.ButcherApplicationGetPayload<{
 }>;
 
 const summaryInclude = {
-  sourcedButcher: { select: { id: true } },
+  sourcedButcher: { select: { id: true, userId: true } },
 };
 
 export type ApplicationSummaryEntity = Prisma.ButcherApplicationGetPayload<{

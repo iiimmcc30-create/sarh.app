@@ -107,7 +107,9 @@ describe('PublicButcherJoinService', () => {
     };
     const transactions = {
       runInTransaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({}),
+        fn({
+          user: { findFirst: jest.fn().mockResolvedValue(null) },
+        }),
       ),
     };
     const authRepo = {
@@ -117,17 +119,19 @@ describe('PublicButcherJoinService', () => {
     };
     const prisma = {
       user: {
-        findFirst: jest.fn().mockResolvedValue(
-          opts.existingUser
-            ? {
-                id: TEST_USER_ID,
-                username: 'joinuser',
-                role: 'USER',
-                isAI: false,
-                butcherProfile: null,
-              }
-            : null,
-        ),
+        findFirst: jest.fn().mockImplementation(async (args: { where?: { OR?: unknown; phone?: string } }) => {
+          if (args?.where?.OR) return null;
+          if (opts.existingUser) {
+            return {
+              id: TEST_USER_ID,
+              username: 'joinuser',
+              role: 'USER',
+              isAI: false,
+              butcherProfile: null,
+            };
+          }
+          return null;
+        }),
       },
     };
     const notifications = {
@@ -165,6 +169,9 @@ describe('PublicButcherJoinService', () => {
     phone_token: '',
     displayName: 'أحمد',
     username: 'ahmad_join',
+    accountUsername: 'nakheel_shop',
+    accountPassword: 'secret1',
+    accountPasswordConfirm: 'secret1',
     acceptedTerms: true as const,
     confirmAccuracy: true as const,
     ...snapshot,
@@ -215,5 +222,6 @@ describe('PublicButcherJoinService', () => {
     await service.submitJoin({ ...body, phone_token: token() }, requiredFiles);
     expect(JSON.stringify(logger.info.mock.calls)).not.toContain('phone_token');
     expect(JSON.stringify(logger.info.mock.calls)).not.toContain('%PDF');
+    expect(JSON.stringify(logger.info.mock.calls)).not.toContain('secret1');
   });
 });

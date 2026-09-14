@@ -50,6 +50,10 @@ export type ApplicationSnapshotInput = {
 export type SubmitInput = {
   acceptedTerms: true;
   confirmAccuracy: true;
+  accountUsername: string;
+  accountEmail?: string;
+  password: string;
+  confirmPassword: string;
 };
 
 export type WithdrawInput = {
@@ -92,6 +96,9 @@ export type ApplicationSummary = {
   createdAt: string;
   updatedAt: string;
   provisionedButcherId: string | null;
+  provisionedButcherUserId?: string | null;
+  accountUsername?: string | null;
+  accountEmail?: string | null;
 };
 
 export type ApplicationDetail = ApplicationSummary & {
@@ -116,6 +123,7 @@ export type ApplicationDetail = ApplicationSummary & {
     username: string;
     phone: string | null;
     avatar?: string | null;
+    role?: string | null;
   };
 };
 
@@ -123,6 +131,7 @@ export type ApplicationDocument = {
   id: string;
   type: ButcherApplicationDocumentType;
   fileKey: string | null;
+  fileUrl?: string | null;
   status: ButcherApplicationDocumentStatus;
   notes: string | null;
   originalFileName: string | null;

@@ -243,6 +243,12 @@ export default function ButcherApplicationEditScreen() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [accountUsername, setAccountUsername] = useState('');
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountPassword, setAccountPassword] = useState('');
+  const [accountPasswordConfirm, setAccountPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmAccuracy, setConfirmAccuracy] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
@@ -503,10 +509,15 @@ export default function ButcherApplicationEditScreen() {
       return;
     }
 
-    const termsValidation = validateSubmitInput({
-      acceptedTerms: true,
-      confirmAccuracy: true,
-    });
+    const submitInput = {
+      acceptedTerms: true as const,
+      confirmAccuracy: true as const,
+      accountUsername: accountUsername.trim().toLowerCase(),
+      accountEmail: accountEmail.trim() || undefined,
+      password: accountPassword,
+      confirmPassword: accountPasswordConfirm,
+    };
+    const termsValidation = validateSubmitInput(submitInput);
     if (!termsValidation.valid) {
       setSubmitError(termsValidation.issues[0]?.message ?? 'يرجى الموافقة على الشروط');
       return;
@@ -529,7 +540,7 @@ export default function ButcherApplicationEditScreen() {
     }
 
     try {
-      await submit(applicationId, { acceptedTerms: true, confirmAccuracy: true });
+      await submit(applicationId, submitInput);
       router.replace({
         pathname: '/butchers/application/[id]',
         params: { id: applicationId },
@@ -745,6 +756,56 @@ export default function ButcherApplicationEditScreen() {
           <ReviewRow label="تاريخ الإنشاء" value={formatApplicationDate(application.createdAt)} />
         </View>
 
+        <View style={rv.card}>
+          <AppText variant="cardTitle" style={rv.cardTitle}>حساب الملحمة</AppText>
+          <AppText variant="caption" color="textMuted" style={s.stepSub}>
+            هذه البيانات لحساب الملحمة عند قبول الطلب. حسابك الحالي يبقى كما هو.
+          </AppText>
+          <SarhInput
+            label="اسم المستخدم"
+            value={accountUsername}
+            onChangeText={setAccountUsername}
+            autoCapitalize="none"
+            placeholder="latin_username"
+            ltr
+            error={fieldErrors.accountUsername}
+          />
+          <SarhInput
+            label="البريد الإلكتروني (اختياري)"
+            value={accountEmail}
+            onChangeText={setAccountEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholder="shop@example.com"
+            ltr
+            error={fieldErrors.accountEmail}
+          />
+          <SarhInput
+            label="كلمة المرور"
+            value={accountPassword}
+            onChangeText={setAccountPassword}
+            secureTextEntry={!showPassword}
+            placeholder="••••••••"
+            ltr
+            trailingIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+            onTrailingPress={() => setShowPassword((v) => !v)}
+            accessibilityLabel={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+            error={fieldErrors.password}
+          />
+          <SarhInput
+            label="تأكيد كلمة المرور"
+            value={accountPasswordConfirm}
+            onChangeText={setAccountPasswordConfirm}
+            secureTextEntry={!showConfirmPassword}
+            placeholder="••••••••"
+            ltr
+            trailingIcon={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+            onTrailingPress={() => setShowConfirmPassword((v) => !v)}
+            accessibilityLabel={showConfirmPassword ? 'إخفاء تأكيد كلمة المرور' : 'إظهار تأكيد كلمة المرور'}
+            error={fieldErrors.confirmPassword}
+          />
+        </View>
+
         <CheckboxRow
           checked={acceptedTerms}
           onToggle={() => setAcceptedTerms((v) => !v)}
@@ -814,7 +875,16 @@ export default function ButcherApplicationEditScreen() {
               title="تقديم الطلب"
               variant="primary"
               onPress={handleSubmit}
-              disabled={saving || loading || documentsBusy || !acceptedTerms || !confirmAccuracy}
+              disabled={
+                saving ||
+                loading ||
+                documentsBusy ||
+                !acceptedTerms ||
+                !confirmAccuracy ||
+                !accountUsername.trim() ||
+                !accountPassword ||
+                !accountPasswordConfirm
+              }
             />
           )}
           {step > 0 && step < 4 ? (

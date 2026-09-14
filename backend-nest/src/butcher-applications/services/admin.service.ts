@@ -7,7 +7,6 @@ import {
 } from '../repositories/application.repository';
 import { DocumentRepository } from '../repositories/document.repository';
 import { TransactionService } from './transaction.service';
-import { assertUserHasNoButcher } from '../helpers/transaction';
 import { appendTimelineEvent } from '../helpers/timeline';
 import {
   assertTransition,
@@ -18,8 +17,13 @@ import {
   toAdminApplicationSummary,
   toApplicationDetail,
   toTimelineEventDto,
+  withAdminDocumentUrls,
 } from '../mappers';
 import { ButcherApplicationError, mapPrismaUniqueViolation } from '../errors';
+import {
+  assertAccountCredentialsAvailable,
+  assertApplicationHasAccountCredentials,
+} from '../helpers/accountCredentials';
 import type {
   AdminApplicationSummaryDto,
   AdminListQuery,
@@ -43,9 +47,10 @@ function resolveAdminLimit(limit?: number): number {
 /** Maps an approved application snapshot into butcher persistence input (AdminService-owned). */
 export function buildButcherCreateInput(
   application: ApplicationEntity,
+  butcherUserId: string,
 ): Prisma.ButcherUncheckedCreateInput {
   return {
-    userId: application.userId,
+    userId: butcherUserId,
     nameAr: application.nameAr!,
     nameEn: application.nameEn!,
     country: application.country!,
@@ -100,10 +105,12 @@ export class ButcherApplicationAdminService {
   async getApplication(applicationId: string): Promise<ApplicationDetailDto> {
     const application =
       await this.applications.getApplicationByIdOrThrow(applicationId);
-    return toApplicationDetail(application, {
-      includeAdminFields: true,
-      includeUser: true,
-    });
+    return withAdminDocumentUrls(
+      toApplicationDetail(application, {
+        includeAdminFields: true,
+        includeUser: true,
+      }),
+    );
   }
 
   async approveApplication(
@@ -120,10 +127,12 @@ export class ButcherApplicationAdminService {
 
         if (existing.status === 'APPROVED' && existing.sourcedButcher) {
           return {
-            application: toApplicationDetail(existing, {
-              includeAdminFields: true,
-              includeUser: true,
-            }),
+            application: await withAdminDocumentUrls(
+              toApplicationDetail(existing, {
+                includeAdminFields: true,
+                includeUser: true,
+              }),
+            ),
             butcher: {
               id: existing.sourcedButcher.id,
               sourceApplicationId: applicationId,
@@ -133,32 +142,50 @@ export class ButcherApplicationAdminService {
         }
 
         assertTransition(existing.status, 'APPROVED');
-        await assertUserHasNoButcher(tx, existing.userId);
-
-        const now = new Date();
-        const butcher = await this.applications.createButcher(
-          tx,
-          buildButcherCreateInput(existing),
-        );
-
-        await tx.user.update({
-          where: { id: existing.userId },
-          data: { role: 'BUTCHER' },
+        assertApplicationHasAccountCredentials(existing);
+        const accountUsername = existing.accountUsername as string;
+        const accountPasswordHash = existing.accountPasswordHash as string;
+        const accountEmail = existing.accountEmail ?? null;
+        const available = await assertAccountCredentialsAvailable(tx, {
+          accountUsername,
+          accountEmail,
+          shopPhone: existing.shopPhone,
         });
 
+        const now = new Date();
         const freeButcherPlan = await tx.plan.findUnique({
           where: { slug_audience: { slug: 'free', audience: 'BUTCHER' } },
           select: { id: true },
         });
 
-        await tx.subscription.updateMany({
-          where: { userId: existing.userId, planAudience: 'USER' },
+        const butcherUser = await tx.user.create({
           data: {
-            planAudience: 'BUTCHER',
-            planId: 'free',
-            planDbId: freeButcherPlan?.id ?? null,
+            username: accountUsername,
+            email: accountEmail,
+            phone: available.phone,
+            passwordHash: accountPasswordHash,
+            displayName: existing.nameEn ?? existing.nameAr ?? accountUsername,
+            arabicName: existing.nameAr ?? existing.nameEn ?? accountUsername,
+            country: existing.country ?? 'SA',
+            role: 'BUTCHER',
+            isActive: true,
+            verified: false,
+            subscription: {
+              create: {
+                planId: 'free',
+                planAudience: 'BUTCHER',
+                planDbId: freeButcherPlan?.id ?? null,
+                renewDate: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000),
+              },
+            },
           },
+          select: { id: true },
         });
+
+        const butcher = await this.applications.createButcher(
+          tx,
+          buildButcherCreateInput(existing, butcherUser.id),
+        );
 
         await this.documents.approveUploadedDocuments(
           tx,
@@ -181,14 +208,19 @@ export class ButcherApplicationAdminService {
           action: timelineActionForTransition('APPROVED'),
           createdBy: adminUserId,
           comment: input.comment ?? null,
-          metadata: { butcherId: butcher.id },
+          metadata: {
+            butcherId: butcher.id,
+            butcherUserId: butcherUser.id,
+          },
         });
 
         return {
-          application: toApplicationDetail(updated, {
-            includeAdminFields: true,
-            includeUser: true,
-          }),
+          application: await withAdminDocumentUrls(
+            toApplicationDetail(updated, {
+              includeAdminFields: true,
+              includeUser: true,
+            }),
+          ),
           butcher,
           isNewApproval: true as const,
         };
@@ -256,10 +288,12 @@ export class ButcherApplicationAdminService {
         metadata: { rejectionReason },
       });
 
-      return toApplicationDetail(updated, {
-        includeAdminFields: true,
-        includeUser: true,
-      });
+      return withAdminDocumentUrls(
+        toApplicationDetail(updated, {
+          includeAdminFields: true,
+          includeUser: true,
+        }),
+      );
     });
 
     void this.applicationNotifications

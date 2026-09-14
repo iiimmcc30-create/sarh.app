@@ -52,6 +52,16 @@ describe('mapPrismaUniqueViolation', () => {
     expect(mapped?.code).toBe('DOCUMENT_TYPE_ALREADY_EXISTS');
   });
 
+  it('maps duplicate user login credentials', () => {
+    const err = {
+      code: 'P2002',
+      meta: { modelName: 'User', target: ['username'] },
+    };
+    const mapped = mapPrismaUniqueViolation(err);
+    expect(mapped?.code).toBe('ACCOUNT_CREDENTIALS_TAKEN');
+    expect(mapped?.httpStatus).toBe(409);
+  });
+
   it('returns null for non-unique errors', () => {
     expect(mapPrismaUniqueViolation({ code: 'P2025' })).toBeNull();
     expect(mapPrismaUniqueViolation(new Error('other'))).toBeNull();
