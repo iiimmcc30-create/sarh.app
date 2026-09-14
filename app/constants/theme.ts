@@ -243,7 +243,7 @@ function enrichTextColors(palette: BaseThemeColors, scheme: ColorScheme): ThemeC
   return {
     ...palette,
     bgField: LIGHT_FIELD,
-    screenRoot: palette.bgDeep,
+    screenRoot: '#FFFFFF',
     textBrand: palette.glow,
     textBrandStrong: palette.electricBright,
     textBrandSoft: palette.textSecondary,

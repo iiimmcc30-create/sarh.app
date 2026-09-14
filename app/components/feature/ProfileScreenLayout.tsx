@@ -404,6 +404,7 @@ export function ProfileScreenLayout({
                 <SarhButton
                   title="مراسلة"
                   variant="secondary"
+                  shape="pill"
                   leftIcon="chatbubble-outline"
                   onPress={onMessage}
                   style={styles.actionBtnFlex}
@@ -413,6 +414,7 @@ export function ProfileScreenLayout({
                 <SarhButton
                   title={isFollowing ? 'متابَع' : 'متابعة'}
                   variant={isFollowing ? 'secondary' : 'primary'}
+                  shape="pill"
                   leftIcon={isFollowing ? 'checkmark-circle-outline' : 'person-add-outline'}
                   onPress={onFollow}
                   loading={followLoading}

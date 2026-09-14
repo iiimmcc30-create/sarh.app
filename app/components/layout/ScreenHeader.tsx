@@ -91,7 +91,7 @@ export function ScreenHeader({
     <SarhBackButton
       onPress={() => (onBackPress ? onBackPress() : router.back())}
       color={colors.textPrimary}
-      style={styles.iconBtn}
+      style={styles.backBtn}
     />
   ) : showSidebar && !isSheet && !isModal ? (
     <Pressable
@@ -259,6 +259,14 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
       justifyContent: 'center',
       backgroundColor: colors.bgElevated,
       borderWidth: 0,
+    },
+    /** Back button — same touch target but no background box. */
+    backBtn: {
+      width: controls.iconButton,
+      height: controls.iconButton,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
     },
     iconBtnPressed: {
       transform: [{ scale: motion.press.scale }],

@@ -5,7 +5,7 @@ import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -15,6 +15,8 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+
+const AUTO_ADVANCE_MS = 5000;
 
 const BUTCHERS_IMAGE = require('../../assets/images/explore-sarh-butchers.jpg');
 const FEED_IMAGE = require('../../assets/images/explore-sarh-feed-suppliers.jpg');
@@ -50,13 +52,24 @@ export function ExploreSarhSection() {
   const [index, setIndex] = useState(0);
   const scroller = useRef<ScrollView>(null);
   const slideWidth = width;
+  const indexRef = useRef(index);
+  indexRef.current = index;
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const next = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
-    if (next !== index && next >= 0 && next < BANNERS.length) {
+    if (next !== indexRef.current && next >= 0 && next < BANNERS.length) {
       setIndex(next);
     }
   };
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const next = (indexRef.current + 1) % BANNERS.length;
+      setIndex(next);
+      scroller.current?.scrollTo({ x: next * slideWidth, animated: true });
+    }, AUTO_ADVANCE_MS);
+    return () => clearInterval(timer);
+  }, [slideWidth]);
 
   return (
     <View style={styles.wrap}>

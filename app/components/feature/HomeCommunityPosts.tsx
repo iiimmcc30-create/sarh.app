@@ -43,7 +43,7 @@ export function HomeCommunityPosts() {
   return (
     <View style={styles.wrap}>
       <Row align="center" justify="between" style={[styles.sectionHead, { paddingHorizontal: gutter }]}>
-        <AppText variant="heading2" color="textPrimary">
+        <AppText variant="heading2" color="textPrimary" style={styles.sectionTitle} numberOfLines={1}>
           مجتمع سرح
         </AppText>
         <Pressable
@@ -51,8 +51,9 @@ export function HomeCommunityPosts() {
           accessibilityLabel="عرض كل المنشورات"
           onPress={() => safePush('/(tabs)/posts', undefined, router)}
           hitSlop={8}
+          style={styles.seeAllBtn}
         >
-          <AppText variant="caption" color="primary">
+          <AppText variant="caption" color="primary" numberOfLines={1}>
             عرض الكل
           </AppText>
         </Pressable>
@@ -85,6 +86,14 @@ function createStyles() {
     sectionHead: {
       paddingTop: space[8],
       paddingBottom: space[8],
+    },
+    sectionTitle: {
+      flex: 1,
+      minWidth: 0,
+    },
+    seeAllBtn: {
+      flexShrink: 0,
+      paddingStart: space[8],
     },
   });
 }
