@@ -61,6 +61,9 @@ const mockApplication = {
   timelineEvents: [],
   sourcedButcher: null,
   user: { id: TEST_USER_ID, username: 'user', phone: null, avatar: null },
+  accountUsername: null,
+  accountEmail: null,
+  accountPasswordHash: null,
 };
 
 describe('ButcherApplicationUserService', () => {
@@ -100,7 +103,10 @@ describe('ButcherApplicationUserService', () => {
     jest.clearAllMocks();
     (transactions.runInTransaction as jest.Mock).mockImplementation(
       async (fn: (tx: unknown) => Promise<unknown>) =>
-        fn({ butcher: { findUnique: jest.fn().mockResolvedValue(null) } }),
+        fn({
+          user: { findFirst: jest.fn().mockResolvedValue(null) },
+          butcher: { findUnique: jest.fn().mockResolvedValue(null) },
+        }),
     );
   });
 
@@ -150,31 +156,61 @@ describe('ButcherApplicationUserService', () => {
         service.submitApplication(TEST_USER_ID, TEST_APP_ID, {
           acceptedTerms: false as unknown as true,
           confirmAccuracy: true,
+          accountUsername: 'shop_user',
+          password: 'secret1',
+          confirmPassword: 'secret1',
         }),
       ).rejects.toMatchObject({ code: 'APPLICATION_INCOMPLETE' });
     });
 
-    it('submits and triggers notifications post-commit', async () => {
+    it('submits and stores a password hash without creating a butcher', async () => {
       (applications.getApplicationByIdOrThrow as jest.Mock).mockResolvedValue(
         mockApplication,
       );
       (applications.updateApplicationStatus as jest.Mock).mockResolvedValue({
         ...mockApplication,
         status: 'SUBMITTED',
+        accountUsername: 'shop_user',
       });
 
       const result = await service.submitApplication(TEST_USER_ID, TEST_APP_ID, {
         acceptedTerms: true,
         confirmAccuracy: true,
+        accountUsername: 'shop_user',
+        password: 'secret1',
+        confirmPassword: 'secret1',
       });
 
       expect(result.status).toBe('SUBMITTED');
+      const statusPayload = (applications.updateApplicationStatus as jest.Mock)
+        .mock.calls[0]?.[2];
+      expect(statusPayload.accountUsername).toBe('shop_user');
+      expect(statusPayload.accountPasswordHash).toMatch(/^\$2[aby]\$/);
+      expect(statusPayload.accountPasswordHash).not.toContain('secret1');
+      expect(
+        JSON.stringify(
+          (applications.updateApplicationStatus as jest.Mock).mock.calls,
+        ),
+      ).not.toContain('secret1');
       expect(
         applicationNotifications.notifyAfterApplicationSubmit,
       ).toHaveBeenCalledWith(
         expect.objectContaining({ id: TEST_APP_ID }),
         TEST_USER_ID,
       );
+    });
+
+    it('rejects mismatched passwords before persisting', async () => {
+      await expect(
+        service.submitApplication(TEST_USER_ID, TEST_APP_ID, {
+          acceptedTerms: true,
+          confirmAccuracy: true,
+          accountUsername: 'shop_user',
+          password: 'secret1',
+          confirmPassword: 'other99',
+        }),
+      ).rejects.toMatchObject({ code: 'ACCOUNT_PASSWORD_MISMATCH' });
+      expect(applications.updateApplicationStatus).not.toHaveBeenCalled();
     });
   });
 

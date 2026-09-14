@@ -58,6 +58,9 @@ describe('route schemas', () => {
         submitBodySchema.safeParse({
           acceptedTerms: true,
           confirmAccuracy: true,
+          accountUsername: 'shop_user',
+          password: 'secret1',
+          confirmPassword: 'secret1',
         }).success,
       ).toBe(true);
       expect(
@@ -67,6 +70,15 @@ describe('route schemas', () => {
         }).success,
       ).toBe(false);
       expect(submitBodySchema.safeParse({}).success).toBe(false);
+      expect(
+        submitBodySchema.safeParse({
+          acceptedTerms: true,
+          confirmAccuracy: true,
+          accountUsername: 'shop_user',
+          password: 'secret1',
+          confirmPassword: 'mismatch',
+        }).success,
+      ).toBe(false);
     });
   });
 

@@ -18,7 +18,11 @@ export type ButcherApplicationErrorCode =
   | 'FILE_TOO_LARGE'
   | 'REJECTION_REASON_REQUIRED'
   | 'APPLICATION_CONFLICT'
-  | 'APPLICATION_ACCESS_DENIED';
+  | 'APPLICATION_ACCESS_DENIED'
+  | 'ACCOUNT_CREDENTIALS_REQUIRED'
+  | 'ACCOUNT_CREDENTIALS_INVALID'
+  | 'ACCOUNT_PASSWORD_MISMATCH'
+  | 'ACCOUNT_CREDENTIALS_TAKEN';
 
 const ERROR_META: Record<
   ButcherApplicationErrorCode,
@@ -124,6 +128,27 @@ const ERROR_META: Record<
     messageEn: 'You do not have access to this application',
     messageAr: 'لا تملك صلاحية الوصول لهذا الطلب',
   },
+  ACCOUNT_CREDENTIALS_REQUIRED: {
+    httpStatus: 422,
+    messageEn: 'Butcher account username and password are required',
+    messageAr: 'اسم المستخدم وكلمة مرور حساب الملحمة مطلوبان',
+  },
+  ACCOUNT_CREDENTIALS_INVALID: {
+    httpStatus: 422,
+    messageEn: 'Butcher account credentials are invalid',
+    messageAr: 'بيانات حساب الملحمة غير صالحة',
+  },
+  ACCOUNT_PASSWORD_MISMATCH: {
+    httpStatus: 422,
+    messageEn: 'Password confirmation does not match',
+    messageAr: 'تأكيد كلمة المرور غير مطابق',
+  },
+  ACCOUNT_CREDENTIALS_TAKEN: {
+    httpStatus: 409,
+    messageEn: 'Butcher account username or email is already in use',
+    messageAr:
+      'اسم المستخدم أو البريد لحساب الملحمة مستخدم مسبقاً. لم يتم إنشاء الحساب',
+  },
 };
 
 export class ButcherApplicationError extends Error {
@@ -165,6 +190,16 @@ export function mapPrismaUniqueViolation(
   const modelName = typeof meta.modelName === 'string' ? meta.modelName : '';
   const target = normalizeTarget(meta.target);
   const haystack = buildViolationHaystack(err, meta, target);
+
+  if (modelName === 'User') {
+    if (
+      target.includes('username') ||
+      target.includes('email') ||
+      target.includes('phone')
+    ) {
+      return new ButcherApplicationError('ACCOUNT_CREDENTIALS_TAKEN');
+    }
+  }
 
   if (modelName === 'Butcher') {
     if (target.includes('userId') || haystack.includes('Butcher_userId_key')) {

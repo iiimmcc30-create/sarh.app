@@ -1047,6 +1047,13 @@ model ButcherApplication {
   /// Application layer must validate HH:mm (24-hour), e.g. "06:00", "22:30".
   closeTime     String   @default("22:00")
 
+  /// Login username for the butcher account created on approve. Not the applicant.
+  accountUsername     String?
+  /// Optional login email for the butcher account created on approve.
+  accountEmail        String?
+  /// bcrypt hash of the butcher-account password. Never returned by APIs.
+  accountPasswordHash String?
+
   rejectionReason String?
   acceptedTermsAt DateTime?
   submittedAt     DateTime?

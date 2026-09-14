@@ -22,6 +22,10 @@ import {
 } from '../helpers/validation';
 import { validateSnapshotFormat } from '../helpers/snapshotValidation';
 import {
+  prepareStoredButcherAccountCredentials,
+  assertAccountCredentialsAvailable,
+} from '../helpers/accountCredentials';
+import {
   toApplicationDetail,
   toApplicationSummaryFromEntity,
 } from '../mappers';
@@ -187,6 +191,13 @@ export class ButcherApplicationUserService {
       });
     }
 
+    const account = await prepareStoredButcherAccountCredentials({
+      accountUsername: input.accountUsername,
+      accountEmail: input.accountEmail,
+      password: input.password,
+      confirmPassword: input.confirmPassword,
+    });
+
     try {
       const result = await this.transactions.runInTransaction(async (tx) => {
         await assertUserHasNoButcher(tx, userId);
@@ -200,6 +211,11 @@ export class ButcherApplicationUserService {
 
         validateSubmitSnapshot(existing);
         validateRequiredDocuments(existing);
+        await assertAccountCredentialsAvailable(tx, {
+          accountUsername: account.accountUsername,
+          accountEmail: account.accountEmail,
+          shopPhone: existing.shopPhone,
+        });
 
         const now = new Date();
         const updated = await this.applications.updateApplicationStatus(
@@ -209,6 +225,9 @@ export class ButcherApplicationUserService {
             status: 'SUBMITTED',
             submittedAt: now,
             acceptedTermsAt: now,
+            accountUsername: account.accountUsername,
+            accountEmail: account.accountEmail,
+            accountPasswordHash: account.accountPasswordHash,
           },
         );
 

@@ -29,6 +29,9 @@ describe('public butcher join journey', () => {
     ]) {
       expect(joinPage).toContain(field);
     }
+    expect(joinPage).toContain('accountUsername');
+    expect(joinPage).toContain('accountPassword');
+    expect(joinPage).toContain('تأكيد كلمة المرور');
     for (const doc of [
       'commercial_license',
       'national_id',

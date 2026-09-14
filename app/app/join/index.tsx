@@ -80,6 +80,12 @@ export default function ButcherJoinScreen() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [accountUsername, setAccountUsername] = useState('');
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountPassword, setAccountPassword] = useState('');
+  const [accountPasswordConfirm, setAccountPasswordConfirm] = useState('');
+  const [showAccountPassword, setShowAccountPassword] = useState(false);
+  const [showAccountPasswordConfirm, setShowAccountPasswordConfirm] = useState(false);
 
   const [nameAr, setNameAr] = useState('');
   const [nameEn, setNameEn] = useState('');
@@ -204,6 +210,22 @@ export default function ButcherJoinScreen() {
       setError('يجب تأكيد صحة البيانات');
       return;
     }
+    if (!accountUsername.trim()) {
+      setError('اسم مستخدم حساب الملحمة مطلوب');
+      return;
+    }
+    if (!accountPassword) {
+      setError('كلمة المرور مطلوبة');
+      return;
+    }
+    if (!accountPasswordConfirm) {
+      setError('تأكيد كلمة المرور مطلوب');
+      return;
+    }
+    if (accountPassword !== accountPasswordConfirm) {
+      setError('تأكيد كلمة المرور غير مطابق');
+      return;
+    }
     if (!hasValidCoords(lat, lng)) {
       setError('يجب تحديد موقع المحل على الخريطة');
       return;
@@ -252,6 +274,10 @@ export default function ButcherJoinScreen() {
       form.append('closeTime', closeTime);
       form.append('acceptedTerms', 'true');
       form.append('confirmAccuracy', 'true');
+      form.append('accountUsername', accountUsername.trim().toLowerCase());
+      if (accountEmail.trim()) form.append('accountEmail', accountEmail.trim().toLowerCase());
+      form.append('accountPassword', accountPassword);
+      form.append('accountPasswordConfirm', accountPasswordConfirm);
       for (const type of REQUIRED_DOCS) {
         await appendJoinFile(form, type, docs[type]!);
       }
@@ -413,6 +439,52 @@ export default function ButcherJoinScreen() {
             placeholder="الحي، الشارع"
           />
           <SarhInput label="العنوان (إنجليزي)" value={address} onChangeText={setAddress} ltr />
+        </Stack>
+
+        <Stack gap="sm" style={styles.card}>
+          <AppText variant="heading3">حساب الملحمة</AppText>
+          <AppText variant="caption" color="textMuted">
+            هذه البيانات لحساب الملحمة عند قبول الطلب. حسابك الحالي يبقى كما هو.
+          </AppText>
+          <SarhInput
+            label="اسم المستخدم"
+            value={accountUsername}
+            onChangeText={setAccountUsername}
+            autoCapitalize="none"
+            placeholder="latin_username"
+            ltr
+          />
+          <SarhInput
+            label="البريد الإلكتروني (اختياري)"
+            value={accountEmail}
+            onChangeText={setAccountEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholder="shop@example.com"
+            ltr
+          />
+          <SarhInput
+            label="كلمة المرور"
+            value={accountPassword}
+            onChangeText={setAccountPassword}
+            secureTextEntry={!showAccountPassword}
+            placeholder="••••••••"
+            ltr
+            trailingIcon={showAccountPassword ? 'eye-off-outline' : 'eye-outline'}
+            onTrailingPress={() => setShowAccountPassword((v) => !v)}
+            accessibilityLabel={showAccountPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+          />
+          <SarhInput
+            label="تأكيد كلمة المرور"
+            value={accountPasswordConfirm}
+            onChangeText={setAccountPasswordConfirm}
+            secureTextEntry={!showAccountPasswordConfirm}
+            placeholder="••••••••"
+            ltr
+            trailingIcon={showAccountPasswordConfirm ? 'eye-off-outline' : 'eye-outline'}
+            onTrailingPress={() => setShowAccountPasswordConfirm((v) => !v)}
+            accessibilityLabel={showAccountPasswordConfirm ? 'إخفاء تأكيد كلمة المرور' : 'إظهار تأكيد كلمة المرور'}
+          />
         </Stack>
 
         <Stack gap="sm" style={styles.card}>

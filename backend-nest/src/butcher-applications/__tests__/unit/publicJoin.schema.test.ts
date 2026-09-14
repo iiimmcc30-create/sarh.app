@@ -5,6 +5,9 @@ const valid = {
   phone_token: 'x'.repeat(20),
   displayName: 'أحمد',
   username: 'ahmad_join',
+  accountUsername: 'nakheel_shop',
+  accountPassword: 'secret1',
+  accountPasswordConfirm: 'secret1',
   acceptedTerms: true,
   confirmAccuracy: true,
   nameAr: 'ملحمة النخيل',
@@ -55,6 +58,12 @@ describe('publicJoinBodySchema', () => {
     ).toBe(false);
     expect(
       publicJoinBodySchema.safeParse({ ...valid, lat: 0, lng: 0 }).success,
+    ).toBe(false);
+    expect(
+      publicJoinBodySchema.safeParse({
+        ...valid,
+        accountPasswordConfirm: 'other',
+      }).success,
     ).toBe(false);
   });
 });

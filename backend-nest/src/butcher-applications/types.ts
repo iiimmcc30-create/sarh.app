@@ -31,6 +31,10 @@ export type ApplicationSnapshotInput = {
 export type SubmitInput = {
   acceptedTerms: boolean;
   confirmAccuracy: boolean;
+  accountUsername: string;
+  accountEmail?: string;
+  password: string;
+  confirmPassword: string;
 };
 
 export type WithdrawInput = {
@@ -93,7 +97,7 @@ export type ApplicationWithRelations = ButcherApplication & {
   timelineEvents: (ButcherApplicationTimelineEvent & {
     actor: { id: string; username: string };
   })[];
-  sourcedButcher: { id: string } | null;
+  sourcedButcher: { id: string; userId: string } | null;
   user?: {
     id: string;
     username: string;
@@ -102,6 +106,7 @@ export type ApplicationWithRelations = ButcherApplication & {
     email?: string | null;
     displayName?: string | null;
     arabicName?: string | null;
+    role?: string | null;
   };
 };
 
@@ -120,6 +125,9 @@ export type ApplicationSummaryDto = {
   createdAt: Date;
   updatedAt: Date;
   provisionedButcherId: string | null;
+  provisionedButcherUserId: string | null;
+  accountUsername: string | null;
+  accountEmail: string | null;
 };
 
 export type ApplicationDetailDto = ApplicationSummaryDto & {
@@ -147,6 +155,7 @@ export type ApplicationDetailDto = ApplicationSummaryDto & {
     email?: string | null;
     displayName?: string | null;
     arabicName?: string | null;
+    role?: string | null;
   };
 };
 
@@ -154,6 +163,7 @@ export type DocumentDto = {
   id: string;
   type: ButcherApplicationDocumentType;
   fileKey: string | null;
+  fileUrl?: string | null;
   status: ButcherApplicationDocument['status'];
   notes: string | null;
   originalFileName: string | null;
@@ -184,6 +194,7 @@ export type AdminApplicationSummaryDto = ApplicationSummaryDto & {
     email?: string | null;
     displayName?: string | null;
     arabicName?: string | null;
+    role?: string | null;
   };
   documentCount: number;
   pendingDocumentCount: number;

@@ -9,7 +9,12 @@ import {
   fetchApplication,
   rejectApplication,
 } from '@/services/admin.service';
+import { getApiErrorMessage } from '@/services/api.client';
 import { DaftraIntegrationPanel } from '@/components/butchers/DaftraIntegrationPanel';
+import {
+  documentFileUrl,
+  documentPreviewKind,
+} from '@/lib/butcherApplicationDocuments';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'مسودة',
@@ -41,15 +46,12 @@ function fmtDate(v: unknown) {
   return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleString('ar-SA');
 }
 
-function isImageMime(mime: unknown) {
-  return typeof mime === 'string' && mime.startsWith('image/');
-}
-
 function DocumentCard({ doc }: { doc: Record<string, unknown> }) {
-  const fileUrl = doc.fileUrl ? String(doc.fileUrl) : '';
+  const fileUrl = documentFileUrl(doc);
   const mimeType = doc.mimeType ? String(doc.mimeType) : '';
   const typeLabel = DOC_TYPE_LABELS[String(doc.type)] ?? String(doc.type);
   const fileName = String(doc.originalFileName ?? doc.fileKey ?? '—');
+  const previewKind = documentPreviewKind(mimeType, fileName);
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
@@ -65,7 +67,7 @@ function DocumentCard({ doc }: { doc: Record<string, unknown> }) {
 
       {fileUrl ? (
         <div className="space-y-3">
-          {isImageMime(mimeType) ? (
+          {previewKind === 'image' ? (
             <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -74,9 +76,13 @@ function DocumentCard({ doc }: { doc: Record<string, unknown> }) {
                 className="max-h-48 w-full rounded-lg border border-slate-800 object-contain bg-slate-900"
               />
             </a>
+          ) : previewKind === 'pdf' ? (
+            <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-900 text-sm text-slate-300">
+              ملف PDF
+            </div>
           ) : (
             <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-900 text-sm text-slate-500">
-              معاينة غير متاحة
+              ملف مرفق
             </div>
           )}
           <a
@@ -85,7 +91,7 @@ function DocumentCard({ doc }: { doc: Record<string, unknown> }) {
             rel="noopener noreferrer"
             className="inline-flex text-sm text-emerald-400 hover:text-emerald-300"
           >
-            فتح / تحميل الملف
+            {previewKind === 'image' ? 'فتح الصورة بالحجم الكامل' : 'فتح / تحميل الملف'}
           </a>
         </div>
       ) : (
@@ -159,7 +165,7 @@ export function ApplicationReviewModal({ applicationId, open, onClose, onUpdated
       await load();
       onUpdated?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'تعذّر قبول الطلب');
+      setError(getApiErrorMessage(e, 'تعذّر قبول الطلب'));
     } finally {
       setLoading(false);
     }
@@ -178,7 +184,7 @@ export function ApplicationReviewModal({ applicationId, open, onClose, onUpdated
       await load();
       onUpdated?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'تعذّر رفض الطلب');
+      setError(getApiErrorMessage(e, 'تعذّر رفض الطلب'));
     } finally {
       setLoading(false);
     }
@@ -234,7 +240,27 @@ export function ApplicationReviewModal({ applicationId, open, onClose, onUpdated
                 <Field label="الهاتف" value={user?.phone} />
                 <Field label="البريد" value={user?.email} />
                 <Field label="معرّف المستخدم" value={user?.id} />
+                <Field label="نوع الحساب" value={user?.role ?? 'USER'} />
               </dl>
+            </section>
+
+            <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 lg:col-span-2">
+              <h3 className="mb-3 font-semibold text-white">حساب الملحمة</h3>
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <Field label="اسم المستخدم" value={app.accountUsername} />
+                <Field label="البريد" value={app.accountEmail} />
+                {status === 'APPROVED' ? (
+                  <>
+                    <Field label="معرّف الملحمة" value={app.provisionedButcherId} />
+                    <Field label="معرّف حساب الملحمة" value={app.provisionedButcherUserId} />
+                  </>
+                ) : (
+                  <Field label="حالة الحساب" value="يُنشأ عند قبول الطلب" />
+                )}
+              </dl>
+              {status === 'APPROVED' && app.provisionedButcherId ? (
+                <p className="mt-3 text-sm text-emerald-400">تم إنشاء حساب الملحمة.</p>
+              ) : null}
             </section>
 
             <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 lg:col-span-2">

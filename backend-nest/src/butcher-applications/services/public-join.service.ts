@@ -27,6 +27,10 @@ import {
 } from '../helpers/validation';
 import { validateSnapshotFormat } from '../helpers/snapshotValidation';
 import {
+  prepareStoredButcherAccountCredentials,
+  assertAccountCredentialsAvailable,
+} from '../helpers/accountCredentials';
+import {
   assertJoinFileAcceptable,
   assertRequiredJoinFiles,
   type JoinFilePart,
@@ -83,6 +87,26 @@ export class PublicButcherJoinService {
     assertRequiredJoinFiles(files);
     for (const part of files) assertJoinFileAcceptable(part);
 
+    const account = await prepareStoredButcherAccountCredentials({
+      accountUsername: body.accountUsername,
+      accountEmail: body.accountEmail,
+      password: body.accountPassword,
+      confirmPassword: body.accountPasswordConfirm,
+    });
+    if (
+      body.username &&
+      body.username.trim().toLowerCase() === account.accountUsername
+    ) {
+      throw new ButcherApplicationError('ACCOUNT_CREDENTIALS_TAKEN', {
+        field: 'accountUsername',
+      });
+    }
+    await assertAccountCredentialsAvailable(this.prisma, {
+      accountUsername: account.accountUsername,
+      accountEmail: account.accountEmail,
+      shopPhone: body.shopPhone,
+    });
+
     const existingUser = await this.prisma.user.findFirst({
       where: { phone, deletedAt: null },
       select: {
@@ -124,6 +148,11 @@ export class PublicButcherJoinService {
     try {
       const result = await this.transactions.runInTransaction(async (tx) => {
         await assertUserHasNoButcher(tx, userId!);
+        await assertAccountCredentialsAvailable(tx, {
+          accountUsername: account.accountUsername,
+          accountEmail: account.accountEmail,
+          shopPhone: body.shopPhone,
+        });
 
         const submitted =
           await this.applications.findActiveApplicationByUserAndStatus(
@@ -208,6 +237,9 @@ export class PublicButcherJoinService {
             status: 'SUBMITTED',
             submittedAt: now,
             acceptedTermsAt: now,
+            accountUsername: account.accountUsername,
+            accountEmail: account.accountEmail,
+            accountPasswordHash: account.accountPasswordHash,
           },
         );
 

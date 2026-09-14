@@ -7,6 +7,7 @@ import type {
   DocumentDto,
   TimelineEventDto,
 } from './types';
+import { resolveAdminDocumentFileUrl } from './helpers/documentUrl';
 
 function toDocumentDto(
   doc: ApplicationWithRelations['documents'][number],
@@ -61,6 +62,9 @@ export function toApplicationSummaryFromEntity(
     createdAt: app.createdAt,
     updatedAt: app.updatedAt,
     provisionedButcherId: app.sourcedButcher?.id ?? null,
+    provisionedButcherUserId: app.sourcedButcher?.userId ?? null,
+    accountUsername: app.accountUsername ?? null,
+    accountEmail: app.accountEmail ?? null,
   };
 }
 
@@ -82,6 +86,9 @@ export function toApplicationSummary(
     createdAt: app.createdAt,
     updatedAt: app.updatedAt,
     provisionedButcherId: app.sourcedButcher?.id ?? null,
+    provisionedButcherUserId: app.sourcedButcher?.userId ?? null,
+    accountUsername: app.accountUsername ?? null,
+    accountEmail: app.accountEmail ?? null,
   };
 }
 
@@ -120,6 +127,7 @@ export function toApplicationDetail(
             email: app.user.email,
             displayName: app.user.displayName,
             arabicName: app.user.arabicName,
+            role: app.user.role,
           },
         }
       : {}),
@@ -142,6 +150,7 @@ export function toAdminApplicationSummary(
       email: app.user!.email,
       displayName: app.user!.displayName,
       arabicName: app.user!.arabicName,
+      role: app.user!.role,
     },
     documentCount: app.documents.length,
     pendingDocumentCount,
@@ -153,6 +162,18 @@ export function toDocumentDtoPublic(
   includeAdminNotes = false,
 ): DocumentDto {
   return toDocumentDto(doc, includeAdminNotes);
+}
+
+export async function withAdminDocumentUrls(
+  dto: ApplicationDetailDto,
+): Promise<ApplicationDetailDto> {
+  const documents = await Promise.all(
+    dto.documents.map(async (doc) => ({
+      ...doc,
+      fileUrl: await resolveAdminDocumentFileUrl(doc.fileKey, doc.mimeType),
+    })),
+  );
+  return { ...dto, documents };
 }
 
 export function toTimelineEventDto(
