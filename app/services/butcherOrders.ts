@@ -46,6 +46,8 @@ export type ButcherOrderRecord = {
     images?: string[];
     pricePerKg?: number;
     priceFixed?: number;
+    saleUnit?: string | null;
+    daftraLink?: { daftraSaleUnit?: string | null } | null;
   };
   items?: Array<{
     id: string;
@@ -59,6 +61,8 @@ export type ButcherOrderRecord = {
       id: string;
       nameAr?: string;
       images?: string[];
+      saleUnit?: string | null;
+      daftraLink?: { daftraSaleUnit?: string | null } | null;
     };
   }>;
   timeline?: Array<{ id: string; status: OrderStatus; note?: string; createdAt: string }>;

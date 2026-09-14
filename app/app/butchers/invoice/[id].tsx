@@ -21,6 +21,7 @@ import {
   PAYMENT_STATUS_LABELS,
 } from '@/services/butcherData';
 import { ButcherOrderRecord, formatCurrency, formatOrderDate } from '@/services/butcherOrders';
+import { formatOrderQuantityLabel } from '@/lib/butcherProductQuantity';
 
 function InvoiceRow({
   label,
@@ -151,7 +152,10 @@ export default function InvoiceDetailScreen() {
               label="التقطيع"
               value={CUT_LABELS[invoice.cutType as CutType]?.ar ?? invoice.cutType}
             />
-            <InvoiceRow label="الكمية" value={`${invoice.weightKg} كغ`} />
+            <InvoiceRow
+              label="الكمية"
+              value={formatOrderQuantityLabel(invoice.weightKg, invoice.product) || '—'}
+            />
             <InvoiceRow
               label="سعر المنتج"
               value={formatCurrency(invoice.totalPrice, invoice.currency)}

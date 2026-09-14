@@ -15,7 +15,12 @@ const BUTCHER_LIST_INCLUDE = {
 } as const;
 
 const BUTCHER_DETAIL_INCLUDE = {
-  products: true,
+  products: {
+    where: { ...notDeleted },
+    include: {
+      daftraLink: { select: { daftraSaleUnit: true } },
+    },
+  },
   offers: true,
   reviews: {
     take: 10,
@@ -37,10 +42,16 @@ const ORDER_CUSTOMER_SELECT = {
   phone: true,
 } as const;
 
+const ORDER_PRODUCT_INCLUDE = {
+  include: {
+    daftraLink: { select: { daftraSaleUnit: true } },
+  },
+} as const;
+
 const BUTCHER_ORDER_LIST_INCLUDE = {
   customer: { select: ORDER_CUSTOMER_SELECT },
-  product: true,
-  items: { include: { product: true } },
+  product: ORDER_PRODUCT_INCLUDE,
+  items: { include: { product: ORDER_PRODUCT_INCLUDE } },
   timeline: { orderBy: { createdAt: 'asc' as const } },
 } as const;
 
@@ -244,6 +255,9 @@ export class ButchersRepository {
     return this.prisma.butcherProduct.findMany({
       where: { butcherId, ...notDeleted },
       orderBy: { createdAt: 'desc' },
+      include: {
+        daftraLink: { select: { daftraSaleUnit: true } },
+      },
     });
   }
 
@@ -319,8 +333,8 @@ export class ButchersRepository {
       orderBy: { createdAt: 'desc' },
       include: {
         butcher: true,
-        product: true,
-        items: { include: { product: true } },
+        product: ORDER_PRODUCT_INCLUDE,
+        items: { include: { product: ORDER_PRODUCT_INCLUDE } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
     });
@@ -340,8 +354,8 @@ export class ButchersRepository {
       include: forCustomer
         ? {
             butcher: true,
-            product: true,
-            items: { include: { product: true } },
+            product: ORDER_PRODUCT_INCLUDE,
+            items: { include: { product: ORDER_PRODUCT_INCLUDE } },
             timeline: { orderBy: { createdAt: 'asc' as const } },
           }
         : BUTCHER_ORDER_LIST_INCLUDE,
@@ -438,6 +452,7 @@ export class ButchersRepository {
         weightMax: true,
         priceFixed: true,
         pricePerKg: true,
+        daftraLink: { select: { daftraSaleUnit: true } },
       },
     });
   }
@@ -463,8 +478,8 @@ export class ButchersRepository {
             phone: true,
           },
         },
-        product: true,
-        items: { include: { product: true } },
+        product: ORDER_PRODUCT_INCLUDE,
+        items: { include: { product: ORDER_PRODUCT_INCLUDE } },
         timeline: { orderBy: { createdAt: 'asc' } },
       },
     });

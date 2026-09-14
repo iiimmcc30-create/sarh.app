@@ -46,7 +46,14 @@ const ORDER_SELECT = {
       cutType: true,
       weightKg: true,
       linePrice: true,
-      product: { select: { id: true, nameAr: true, nameEn: true } },
+      product: {
+        select: {
+          id: true,
+          nameAr: true,
+          nameEn: true,
+          daftraLink: { select: { daftraSaleUnit: true } },
+        },
+      },
     },
   },
   butcher: { select: { id: true, nameAr: true, nameEn: true } },

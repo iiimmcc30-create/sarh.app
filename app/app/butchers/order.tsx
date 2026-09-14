@@ -37,12 +37,18 @@ import {
   gccCurrencies,
   mapButcherFromApi,
   mapButcherProductFromApi,
-  parseOrderWeightKg,
   routeParam,
   type ButcherProfile,
 } from '@/services/butcherData';
 import { PAYMENT_METHODS, NIPaymentMethod } from '@/services/network_international';
 import { formatDeliveryAddressLine, loadDeliveryLocation } from '@/services/butcherDeliveryLocation';
+import { computeProductLineTotal, resolveLineWeightKg } from '@/lib/butcherOrderPricing';
+import {
+  formatOrderQuantityLabel,
+  getProductQuantityMode,
+  resolveLineQuantity,
+  showsProductStepper,
+} from '@/lib/butcherProductQuantity';
 
 const PLACEHOLDER_IMG =
   'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80';
@@ -169,14 +175,16 @@ export default function ButcherOrderScreen() {
   );
   const availableCuts = selectedProduct?.availableCuts ?? [];
 
-  const weightKg = parseOrderWeightKg(weight, selectedProduct);
+  const weightKg = selectedProduct
+    ? resolveLineWeightKg(weight, selectedProduct)
+    : 0;
+  const quantityMode = selectedProduct
+    ? getProductQuantityMode(selectedProduct)
+    : 'none';
 
   const computedTotal = useMemo(() => {
     if (!selectedProduct) return 0;
-    if (selectedProduct.pricePerKg) {
-      return weightKg * selectedProduct.pricePerKg;
-    }
-    return selectedProduct.priceFixed ?? 0;
+    return computeProductLineTotal(selectedProduct, weightKg);
   }, [selectedProduct, weightKg]);
 
   const goSuccess = (orderId: string, orderNumber: string, paymentStatus: string) => {
@@ -426,9 +434,11 @@ export default function ButcherOrderScreen() {
                       {cat?.icon} {cat?.ar ?? p.category}
                     </AppText>
                     <AppText variant="label" style={styles.productPrice}>
-                      {p.pricePerKg
+                      {getProductQuantityMode(p) === 'sarh_weight'
                         ? `${p.pricePerKg} ${currency.symbol}/كغ`
-                        : `${(p.priceFixed ?? 0).toLocaleString('en-US')} ${currency.symbol}`}
+                        : getProductQuantityMode(p) === 'daftra_weight'
+                          ? `${(p.priceFixed ?? 0).toLocaleString('en-US')} ${currency.symbol}/كغ`
+                          : `${(p.priceFixed ?? p.pricePerKg ?? 0).toLocaleString('en-US')} ${currency.symbol}`}
                     </AppText>
                   </View>
                 </Pressable>
@@ -452,7 +462,7 @@ export default function ButcherOrderScreen() {
           </Section>
         ) : null}
 
-        {selectedProduct?.pricePerKg ? (
+        {showsProductStepper(quantityMode) && quantityMode !== 'daftra_quantity' ? (
           <Section title="الوزن (كغ)" styles={styles}>
             <Row align="center" gap="none" style={styles.weightCard}>
               <Pressable
@@ -482,6 +492,36 @@ export default function ButcherOrderScreen() {
                 من {selectedProduct.weightRange.min} إلى {selectedProduct.weightRange.max} كغ
               </AppText>
             ) : null}
+          </Section>
+        ) : null}
+
+        {quantityMode === 'daftra_quantity' ? (
+          <Section title="الكمية" styles={styles}>
+            <Row align="center" gap="none" style={styles.weightCard}>
+              <Pressable
+                style={styles.weightBtn}
+                onPress={() =>
+                  setWeight(String(Math.max(1, resolveLineQuantity(weight) - 1)))
+                }
+              >
+                <AppIcon name="remove" size={20} color={colors.textPrimary} />
+              </Pressable>
+              <TextInput
+                style={styles.weightInput}
+                value={weight}
+                onChangeText={setWeight}
+                keyboardType="number-pad"
+                selectTextOnFocus
+              />
+              <Pressable
+                style={styles.weightBtn}
+                onPress={() =>
+                  setWeight(String(Math.min(999, resolveLineQuantity(weight) + 1)))
+                }
+              >
+                <AppIcon name="add" size={20} color={colors.textPrimary} />
+              </Pressable>
+            </Row>
           </Section>
         ) : null}
 
@@ -555,8 +595,12 @@ export default function ButcherOrderScreen() {
           <AppText variant="body" style={styles.summaryTitle}>ملخص الطلب</AppText>
           <SummaryRow label="المنتج" value={selectedProduct?.nameAr ?? '—'} styles={styles} />
           <SummaryRow label="التقطيع" value={cutLabelAr(selectedCut)} styles={styles} />
-          {selectedProduct?.pricePerKg ? (
-            <SummaryRow label="الوزن" value={`${weightKg} كغ`} styles={styles} />
+          {showsProductStepper(quantityMode) ? (
+            <SummaryRow
+              label={quantityMode === 'daftra_quantity' ? 'الكمية' : 'الوزن'}
+              value={formatOrderQuantityLabel(weightKg, selectedProduct)}
+              styles={styles}
+            />
           ) : null}
           <SummaryRow
             label="الاستلام"

@@ -376,7 +376,7 @@ export default function OrderDetailsScreen() {
           {lines.map((item) => (
             <Row key={item.id} justify="between" align="center" gap="md" style={s.summaryLine}>
               <AppText variant="bodySmall" numberOfLines={2} style={s.itemName}>
-                {item.quantity}x {item.name}
+                {item.quantityLabel} {item.name}
               </AppText>
               <AppText variant="bodySmall">{formatCurrency(item.linePrice, order.currency)}</AppText>
             </Row>

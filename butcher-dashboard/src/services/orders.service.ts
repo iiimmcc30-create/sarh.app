@@ -13,6 +13,8 @@ export type OrderProduct = {
   id: string;
   nameAr: string;
   images?: string[];
+  saleUnit?: string | null;
+  daftraLink?: { daftraSaleUnit?: string | null } | null;
 };
 
 export type OrderItem = {

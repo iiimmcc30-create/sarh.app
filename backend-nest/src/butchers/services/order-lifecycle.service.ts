@@ -382,8 +382,16 @@ export class OrderLifecycleService {
           },
           include: {
             butcher: { select: { id: true, userId: true, nameAr: true } },
-            product: true,
-            items: { include: { product: true } },
+            product: {
+              include: { daftraLink: { select: { daftraSaleUnit: true } } },
+            },
+            items: {
+              include: {
+                product: {
+                  include: { daftraLink: { select: { daftraSaleUnit: true } } },
+                },
+              },
+            },
           },
         });
 
@@ -487,7 +495,13 @@ export class OrderLifecycleService {
             where: { id: params.orderId },
             include: {
               butcher: { select: { id: true, userId: true } },
-              items: { include: { product: true } },
+              items: {
+                include: {
+                  product: {
+                    include: { daftraLink: { select: { daftraSaleUnit: true } } },
+                  },
+                },
+              },
             },
           });
           if (!order) throwApi(404, 'not_found', 'الطلب غير موجود');
@@ -550,7 +564,13 @@ export class OrderLifecycleService {
           },
           include: {
             butcher: { select: { id: true, userId: true } },
-            items: { include: { product: true } },
+            items: {
+              include: {
+                product: {
+                  include: { daftraLink: { select: { daftraSaleUnit: true } } },
+                },
+              },
+            },
           },
         });
 

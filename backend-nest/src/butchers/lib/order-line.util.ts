@@ -1,13 +1,16 @@
 import { throwApi } from '../../common/exceptions/api.exception';
+import {
+  isDaftraKgProduct,
+  isDaftraUnitCountProduct,
+  type ProductSaleUnitSource,
+} from './product-sale-unit.util';
 
-export type ProductForOrderLine = {
+export type ProductForOrderLine = ProductSaleUnitSource & {
   id: string;
   butcherId: string;
   inStock: boolean;
   weightMin: number | null;
   weightMax: number | null;
-  priceFixed: number | null;
-  pricePerKg: number | null;
 };
 
 export type ValidatedOrderLine = {
@@ -20,14 +23,19 @@ export type ValidatedOrderLine = {
 
 /** Same pricing rules as ButchersService.createOrder (backend source of truth). */
 export function computeOrderLinePrice(
-  product: Pick<ProductForOrderLine, 'priceFixed' | 'pricePerKg'>,
+  product: ProductSaleUnitSource,
   weightKg: number,
 ): number {
   let totalPrice: number;
-  if (product.priceFixed != null) {
-    totalPrice = product.priceFixed;
-  } else if (product.pricePerKg != null) {
+  if (product.pricePerKg != null) {
     totalPrice = product.pricePerKg * weightKg;
+  } else if (isDaftraKgProduct(product)) {
+    totalPrice = (product.priceFixed ?? 0) * weightKg;
+  } else if (isDaftraUnitCountProduct(product)) {
+    const units = Math.max(1, Math.round(weightKg));
+    totalPrice = (product.priceFixed ?? 0) * units;
+  } else if (product.priceFixed != null) {
+    totalPrice = product.priceFixed;
   } else {
     throwApi(400, 'validation_error', 'المنتج لا يحتوي على سعر');
   }

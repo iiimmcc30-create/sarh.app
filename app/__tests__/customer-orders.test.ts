@@ -47,6 +47,44 @@ describe('customerOrders', () => {
     expect(orderSpecsLine(order as any)).toBe('1 كغ • كامل • توصيل');
   });
 
+  it('labels Daftra kg vs unit quantity on the specs line', () => {
+    const base = {
+      id: '1',
+      orderNumber: 'ORD-1',
+      butcherId: 'b',
+      customerId: 'c',
+      productId: 'p',
+      cutType: 'whole',
+      deliveryType: 'delivery',
+      status: 'delivered',
+      paymentStatus: 'paid',
+      totalPrice: 90,
+      currency: 'SAR',
+      createdAt: '2026-08-14T15:08:00.000Z',
+    };
+    expect(
+      orderSpecsLine({
+        ...base,
+        weightKg: 2.5,
+        product: { id: 'p', nameAr: 'لحم', saleUnit: 'kg' },
+      } as any),
+    ).toBe('2.5 كغ • كامل • توصيل');
+    expect(
+      orderSpecsLine({
+        ...base,
+        weightKg: 3,
+        product: { id: 'p', nameAr: 'صدر', saleUnit: 'قطعة' },
+      } as any),
+    ).toBe('3 • كامل • توصيل');
+    expect(
+      orderSpecsLine({
+        ...base,
+        weightKg: 3,
+        product: { id: 'p', nameAr: 'صدر', saleUnit: 'قطعة' },
+      } as any),
+    ).not.toContain('كغ');
+  });
+
   it('builds item cards and money rows for the inner card', () => {
     const order = {
       id: '1',
@@ -65,11 +103,31 @@ describe('customerOrders', () => {
     const lines = orderLineItems(order);
     expect(lines[0].name).toBe('لحم ضأن طازج');
     expect(lines[0].unitPrice).toBeCloseTo(850);
+    expect(lines[0].quantityLabel).toBe('1.2 كغ');
     expect(orderMoneySummary(order)).toEqual({
       subtotal: 1020,
       deliveryFee: null,
       total: 1020,
     });
+  });
+
+  it('uses stored weightKg for unit-count lines instead of 1x', () => {
+    const lines = orderLineItems({
+      id: '1',
+      totalPrice: 90,
+      items: [
+        {
+          id: 'i1',
+          cutType: 'whole',
+          weightKg: 3,
+          linePrice: 90,
+          product: { nameAr: 'صدر دجاج', saleUnit: 'قطعة' },
+        },
+      ],
+    });
+    expect(lines[0].quantityLabel).toBe('3x');
+    expect(lines[0].quantityLabel).not.toBe('1x');
+    expect(lines[0].quantity).toBe(3);
   });
 
   it('marks flow steps reached and reads timeline times', () => {
