@@ -13,7 +13,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
-import { resolvePostsFontFace } from '@/constants/fonts';
+import { resolveAppFontFace } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import {
@@ -398,13 +398,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     name: {
       ...typography.cardHeading,
-      ...resolvePostsFontFace('600'),
+      ...resolveAppFontFace('600'),
       color: colors.textPrimary,
       flexShrink: 1,
     },
     handle: {
       ...typography.caption,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
       color: colors.textMuted,
       flexShrink: 1,
     },
@@ -419,24 +419,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     ratingMiniText: {
       ...typography.caption,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
       color: colors.textSecondary,
     },
     metaMuted: {
       ...typography.caption,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
       color: colors.textMuted,
       flexShrink: 0,
     },
     metaDot: {
       ...typography.caption,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
       color: colors.textSubtle,
       flexShrink: 0,
     },
     viewsMeta: {
       ...typography.caption,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
       color: colors.textSecondary,
       flexShrink: 0,
     },
@@ -452,7 +452,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     body: {
       ...typography.body,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
       color: colors.textPrimary,
       marginTop: 4,
       lineHeight: 24,
@@ -462,7 +462,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     showMore: {
       ...typography.secondary,
-      ...resolvePostsFontFace('500'),
+      ...resolveAppFontFace('500'),
       color: colors.electricBright,
       marginTop: 4,
     },
@@ -491,7 +491,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     actionCount: {
       ...typography.caption,
-      ...resolvePostsFontFace('400'),
+      ...resolveAppFontFace('400'),
     },
     viewsSlot: {
       alignItems: 'center',
