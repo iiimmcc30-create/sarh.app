@@ -9,10 +9,10 @@ import { space } from '@/design-system/tokens';
 import { useApp } from '@/hooks/useApp';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSellerListingsPager } from '@/hooks/useSellerListingsPager';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
-import { searchAllSellerListings } from '@/services/listings';
-import type { Listing } from '@/services/types';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { SellerListingsPaginationFooter } from '@/components/feature/SellerListingsPaginationFooter';
 import { PostItem } from '@/components/feature/PostItem';
 import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/feature/ProfileScreenLayout';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
@@ -50,9 +50,16 @@ export default function ProfileScreen() {
   const [hasStories, setHasStories] = useState(false);
   const [myStoryGroup, setMyStoryGroup] = useState<StoryGroup | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [myListings, setMyListings] = useState<Listing[]>([]);
   const lastListingsAt = useRef(0);
   const listingsLoadedForUser = useRef<string | null>(null);
+  const {
+    listings: myListings,
+    hasMore,
+    loadingMore,
+    loadMoreFailed,
+    loadFirstPage,
+    loadNextPage,
+  } = useSellerListingsPager({ sellerId: me.id, accessToken });
 
   const profileUrl = sarhProfileShareUrl(me.username);
 
@@ -74,8 +81,13 @@ export default function ProfileScreen() {
 
   const loadMyListings = useCallback(async (force = false) => {
     if (!me.id) {
-      setMyListings([]);
       listingsLoadedForUser.current = null;
+      lastListingsAt.current = 0;
+      try {
+        await loadFirstPage();
+      } catch {
+        /* keep current listings */
+      }
       return;
     }
     if (
@@ -85,13 +97,13 @@ export default function ProfileScreen() {
       return;
     }
     try {
-      setMyListings(await searchAllSellerListings(me.id, accessToken));
+      await loadFirstPage();
       lastListingsAt.current = Date.now();
       listingsLoadedForUser.current = me.id;
     } catch {
       /* keep current listings */
     }
-  }, [accessToken, me.id]);
+  }, [loadFirstPage, me.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -206,17 +218,27 @@ export default function ProfileScreen() {
       );
     }
 
-    return myListings.map((listing) => (
-      <ListingCard
-        key={listing.id}
-        listing={listing}
-        variant="list"
-        listMode="market"
-        onPress={() =>
-          safePush({ pathname: '/listing/[id]', params: { id: listing.id } }, undefined, router)
-        }
-      />
-    ));
+    return (
+      <>
+        {myListings.map((listing) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            variant="list"
+            listMode="market"
+            onPress={() =>
+              safePush({ pathname: '/listing/[id]', params: { id: listing.id } }, undefined, router)
+            }
+          />
+        ))}
+        <SellerListingsPaginationFooter
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          loadMoreFailed={loadMoreFailed}
+          onLoadMore={() => void loadNextPage()}
+        />
+      </>
+    );
   };
 
   return (
@@ -244,6 +266,7 @@ export default function ProfileScreen() {
       onFollowingPress={() => openConnections('following')}
       postsContent={renderPosts()}
       adsContent={renderAds()}
+      onAdsNearEnd={() => void loadNextPage()}
     />
   );
 }
