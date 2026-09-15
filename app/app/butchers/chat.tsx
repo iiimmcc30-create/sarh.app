@@ -25,6 +25,7 @@ import { Row, Screen } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { rtlForwardIcon, rtlInputText } from '@/lib/rtl';
+import { ChatThreadWallpaper } from '@/components/feature/ChatThreadWallpaper';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ChatMessage, ButcherProfile } from '@/services/butcherData';
@@ -1092,22 +1093,26 @@ export default function ButcherChatScreen() {
           </Row>
         ) : null}
 
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            messages.length > 0 ? (
-              <View style={styles.datePillWrap}>
-                <AppText variant="micro" color="textMuted" style={styles.datePill}>اليوم</AppText>
-              </View>
-            ) : null
-          }
-        />
+        <View style={styles.threadPane}>
+          <ChatThreadWallpaper />
+          <FlatList
+            ref={listRef}
+            style={styles.threadList}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMessage}
+            contentContainerStyle={styles.messagesList}
+            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={
+              messages.length > 0 ? (
+                <View style={styles.datePillWrap}>
+                  <AppText variant="micro" color="textMuted" style={styles.datePill}>اليوم</AppText>
+                </View>
+              ) : null
+            }
+          />
+        </View>
 
         {chatUiKind !== 'butcher' && quickReplies.length > 0 && !attachOpen ? (
           <View style={styles.quickRepliesWrap}>
@@ -1287,6 +1292,14 @@ function createStyles(colors: ThemeColors) {
   },
   orderStripText: { flex: 1 },
 
+  threadPane: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  threadList: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   messagesList: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

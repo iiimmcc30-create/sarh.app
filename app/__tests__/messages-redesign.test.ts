@@ -1,9 +1,17 @@
+import { readFileSync } from 'fs';
+import path from 'path';
 import {
   formatOfferMessage,
   parseOfferMessage,
 } from '../lib/messageOffers';
 import { formatListingPrice } from '../lib/messageListingContext';
 import { filterMessageThreads } from '../hooks/useMessageThreads';
+
+const root = path.join(__dirname, '..');
+
+function src(rel: string) {
+  return readFileSync(path.join(root, rel), 'utf8');
+}
 
 describe('message offers', () => {
   it('formats and parses price offers', () => {
@@ -69,5 +77,28 @@ describe('message thread filters', () => {
         (t) => t.id,
       ),
     ).toEqual(['1']);
+  });
+});
+
+describe('chat thread wallpaper', () => {
+  it('applies a local wallpaper behind the message list only', () => {
+    const chat = src('app/butchers/chat.tsx');
+    const wallpaper = src('components/feature/ChatThreadWallpaper.tsx');
+    expect(chat).toContain('ChatThreadWallpaper');
+    expect(chat).toContain('styles.threadPane');
+    const pane = chat.indexOf('styles.threadPane');
+    const wallpaperAt = chat.indexOf('<ChatThreadWallpaper');
+    const listAt = chat.indexOf('style={styles.threadList}');
+    expect(pane).toBeGreaterThan(-1);
+    expect(wallpaperAt).toBeGreaterThan(pane);
+    expect(listAt).toBeGreaterThan(wallpaperAt);
+    expect(chat).not.toContain('LinearGradient');
+    expect(wallpaper).toContain('pointerEvents="none"');
+    expect(wallpaper).toContain('isDark ? 0.055 : 0.1');
+    expect(wallpaper).toContain('colors.bgField');
+    expect(wallpaper).toContain('colors.bgDeep');
+    expect(wallpaper).not.toContain('whatsapp');
+    expect(wallpaper).not.toContain('http');
+    expect(src('components/feature/MessagesPanel.tsx')).not.toContain('ChatThreadWallpaper');
   });
 });
