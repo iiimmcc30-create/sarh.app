@@ -20,6 +20,11 @@ jest.mock('../services/butcherMarketBanners', () => ({
 jest.mock('../services/butcherOffersPreview', () => ({
   BUTCHER_HOME_OFFERS_LIMIT: 20,
   fetchButcherOffersPreview: jest.fn(async () => []),
+  butcherRecordsHaveEmbeddedOffers: jest.fn(() => false),
+  butcherOffersFeedFromRecords: jest.fn(() => []),
+  resolveButcherOffersFeed: jest.fn(async () => []),
+  getCachedResolvedOffersFeed: jest.fn(() => null),
+  resetButcherOffersFeedCache: jest.fn(),
 }));
 
 function jsonResponse(body: unknown, status = 200): Response {

@@ -148,3 +148,174 @@ export async function fetchButcherOffersPreview(
   }
   return offersPreviewFromDetails(records, accessToken, limit);
 }
+
+export const BUTCHER_OFFERS_TTL_MS = 60_000;
+export const BUTCHER_OFFERS_PAGE_LIMIT = 24;
+
+export type ButcherOfferView = {
+  id: string;
+  titleAr: string;
+  image?: string;
+  originalPrice?: number;
+  offerPrice?: number;
+  discountPercent?: number;
+  validUntil?: string;
+};
+
+export type ButcherOffersGroup = {
+  butcherId: string;
+  nameAr: string;
+  logo?: string;
+  cover?: string;
+  cityAr?: string;
+  rating: number;
+  reviewCount: number;
+  subscriptionActive: boolean;
+  offers: ButcherOfferView[];
+};
+
+function mapOfferViews(raw: unknown): ButcherOfferView[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((o: Record<string, unknown>) => ({
+    id: String(o.id),
+    titleAr: String(o.titleAr || o.titleEn || 'عرض'),
+    image: resolveMediaUrl(o.image as string | undefined) ?? undefined,
+    originalPrice: o.originalPrice != null ? Number(o.originalPrice) : undefined,
+    offerPrice: o.offerPrice != null ? Number(o.offerPrice) : undefined,
+    discountPercent: o.discountPercent != null ? Number(o.discountPercent) : undefined,
+    validUntil: typeof o.validUntil === 'string' ? o.validUntil : undefined,
+  }));
+}
+
+function mapOffersGroup(
+  b: Record<string, unknown>,
+  offersRaw: unknown,
+): ButcherOffersGroup | null {
+  const offers = mapOfferViews(offersRaw);
+  if (offers.length === 0) return null;
+  const id = String(b.id ?? '');
+  if (!id) return null;
+  return {
+    butcherId: id,
+    nameAr: String(b.nameAr || b.nameEn || b.name || 'ملحمة'),
+    logo: resolveMediaUrl(b.logo as string | undefined) ?? undefined,
+    cover: resolveMediaUrl(b.cover as string | undefined) ?? undefined,
+    cityAr: String(b.cityAr || ''),
+    rating: Number(b.rating ?? 5),
+    reviewCount: Number(b.reviewCount ?? 0),
+    subscriptionActive: Boolean(b.subscriptionActive),
+    offers,
+  };
+}
+
+function pageCandidates(list: Record<string, unknown>[]): Record<string, unknown>[] {
+  return list
+    .filter((b) => (b.country || 'SA') !== 'EG')
+    .slice(0, BUTCHER_OFFERS_PAGE_LIMIT);
+}
+
+export function butcherOffersFeedFromRecords(
+  records: Record<string, unknown>[],
+): ButcherOffersGroup[] {
+  const groups: ButcherOffersGroup[] = [];
+  for (const b of pageCandidates(records)) {
+    const group = mapOffersGroup(b, b.offers);
+    if (group) groups.push(group);
+  }
+  return groups;
+}
+
+type DetailsFeedCache = {
+  key: string;
+  data: ButcherOffersGroup[];
+  fetchedAt: number;
+};
+
+let detailsFeedCache: DetailsFeedCache | null = null;
+let detailsFeedInflight: { key: string; promise: Promise<ButcherOffersGroup[]> } | null = null;
+let detailsFeedApplyGen = 0;
+
+function detailsFeedKey(records: Record<string, unknown>[]): string {
+  return pageCandidates(records)
+    .map((b) => String(b.id ?? ''))
+    .join(',');
+}
+
+/** Test-only reset for the offers-page details fallback cache. */
+export function resetButcherOffersFeedCache() {
+  detailsFeedCache = null;
+  detailsFeedInflight = null;
+  detailsFeedApplyGen = 0;
+}
+
+export function getCachedResolvedOffersFeed(): ButcherOffersGroup[] | null {
+  return detailsFeedCache?.data ?? null;
+}
+
+async function fetchOffersFeedFromDetails(
+  records: Record<string, unknown>[],
+  accessToken?: string | null,
+  options?: { force?: boolean },
+): Promise<ButcherOffersGroup[]> {
+  const key = detailsFeedKey(records);
+  const now = Date.now();
+  if (!options?.force && detailsFeedCache && detailsFeedCache.key === key) {
+    if (now - detailsFeedCache.fetchedAt < BUTCHER_OFFERS_TTL_MS) {
+      return detailsFeedCache.data;
+    }
+  }
+  if (!options?.force && detailsFeedInflight && detailsFeedInflight.key === key) {
+    return detailsFeedInflight.promise;
+  }
+
+  const gen = ++detailsFeedApplyGen;
+  const headers: HeadersInit = accessToken
+    ? { Authorization: `Bearer ${accessToken}` }
+    : {};
+  const candidates = pageCandidates(records);
+
+  const promise = (async () => {
+    const results = await Promise.all(
+      candidates.map(async (b) => {
+        try {
+          const res = await fetch(`${API_BASE}/api/butchers/${b.id}`, { headers });
+          if (!res.ok) return { ok: false as const, group: null };
+          const json = await res.json();
+          const d = json?.data as Record<string, unknown> | undefined;
+          if (!d) return { ok: false as const, group: null };
+          return { ok: true as const, group: mapOffersGroup(d, d.offers) };
+        } catch {
+          return { ok: false as const, group: null };
+        }
+      }),
+    );
+    if (candidates.length > 0 && results.every((row) => !row.ok)) {
+      throw new Error('butcher_offers_fetch_failed');
+    }
+    const data = results
+      .map((row) => row.group)
+      .filter((group): group is ButcherOffersGroup => group != null);
+    if (gen !== detailsFeedApplyGen) {
+      return detailsFeedCache?.key === key ? detailsFeedCache.data : data;
+    }
+    detailsFeedCache = { key, data, fetchedAt: Date.now() };
+    return data;
+  })().finally(() => {
+    if (detailsFeedInflight?.promise === promise) detailsFeedInflight = null;
+  });
+
+  detailsFeedInflight = { key, promise };
+  return promise;
+}
+
+export async function resolveButcherOffersFeed(
+  records: Record<string, unknown>[],
+  accessToken?: string | null,
+  options?: { force?: boolean },
+): Promise<ButcherOffersGroup[]> {
+  if (records.length === 0) return [];
+  if (butcherRecordsHaveEmbeddedOffers(records)) {
+    return butcherOffersFeedFromRecords(records);
+  }
+  return fetchOffersFeedFromDetails(records, accessToken, options);
+}
