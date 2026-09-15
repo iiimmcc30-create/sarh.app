@@ -1,5 +1,5 @@
 /**
- * Butcher UI typography — aliases global `typography` (IBM Plex Sans Arabic).
+ * Butcher UI typography — aliases global `typography` (Tajawal).
  * `tab` / `tabActive` stay frozen for ButchersTabBar.
  */
 import { APP_FONT_NAME } from '@/constants/fonts';

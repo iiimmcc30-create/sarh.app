@@ -13,6 +13,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { resolvePostsFontFace } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import {
@@ -397,11 +398,13 @@ function createStyles(colors: ThemeColors) {
     },
     name: {
       ...typography.cardHeading,
+      ...resolvePostsFontFace(typography.cardHeading.fontWeight),
       color: colors.textPrimary,
       flexShrink: 1,
     },
     handle: {
       ...typography.caption,
+      ...resolvePostsFontFace(typography.caption.fontWeight),
       color: colors.textMuted,
       flexShrink: 1,
     },
@@ -416,20 +419,24 @@ function createStyles(colors: ThemeColors) {
     },
     ratingMiniText: {
       ...typography.caption,
+      ...resolvePostsFontFace(typography.caption.fontWeight),
       color: colors.textSecondary,
     },
     metaMuted: {
       ...typography.caption,
+      ...resolvePostsFontFace(typography.caption.fontWeight),
       color: colors.textMuted,
       flexShrink: 0,
     },
     metaDot: {
       ...typography.caption,
+      ...resolvePostsFontFace(typography.caption.fontWeight),
       color: colors.textSubtle,
       flexShrink: 0,
     },
     viewsMeta: {
       ...typography.caption,
+      ...resolvePostsFontFace(typography.caption.fontWeight),
       color: colors.textSecondary,
       flexShrink: 0,
     },
@@ -445,6 +452,7 @@ function createStyles(colors: ThemeColors) {
     },
     body: {
       ...typography.body,
+      ...resolvePostsFontFace(typography.body.fontWeight),
       color: colors.textPrimary,
       marginTop: 4,
       lineHeight: 24,
@@ -454,6 +462,7 @@ function createStyles(colors: ThemeColors) {
     },
     showMore: {
       ...typography.secondary,
+      ...resolvePostsFontFace(typography.secondary.fontWeight),
       color: colors.electricBright,
       marginTop: 4,
     },
@@ -482,6 +491,7 @@ function createStyles(colors: ThemeColors) {
     },
     actionCount: {
       ...typography.caption,
+      ...resolvePostsFontFace(typography.caption.fontWeight),
     },
     viewsSlot: {
       alignItems: 'center',

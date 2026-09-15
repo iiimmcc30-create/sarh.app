@@ -21,7 +21,7 @@ export {
 export type { AppTextAlign, AppTextColor, AppTextVariant } from './resolvers';
 
 /**
- * Official Sarh text primitive. Variants own size + real IBM Plex weight.
+ * Official Sarh text primitive. Variants own size + real Tajawal weight.
  * Do not pass fontSize unless escaping the scale for a one-off.
  */
 export function AppText({

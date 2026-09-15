@@ -3,37 +3,40 @@ import {
   APP_FONT_FACES,
   APP_FONT_NAME,
   OFFICIAL_APP_FONT,
+  POSTS_FONT_FACES,
+  postsFont,
   resolveAppFontFace,
   resolveDesignFontFace,
+  resolvePostsFontFace,
 } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
 import packageJson from '../package.json';
 
 describe('resolveAppFontFace', () => {
-  it('always resolves content text to the official price Bold face', () => {
+  it('maps weights to Tajawal faces without forcing Bold', () => {
+    expect(resolveAppFontFace('400')).toEqual({
+      fontFamily: appFont.regular,
+      fontWeight: '400',
+    });
     expect(resolveAppFontFace('500')).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
-      fontWeight: '700',
+      fontFamily: appFont.medium,
+      fontWeight: '500',
     });
     expect(resolveAppFontFace('600')).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
-      fontWeight: '700',
+      fontFamily: appFont.semibold,
+      fontWeight: '600',
     });
     expect(resolveAppFontFace('700')).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
-      fontWeight: '700',
-    });
-    expect(resolveAppFontFace('400')).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
+      fontFamily: appFont.bold,
       fontWeight: '700',
     });
     expect(resolveAppFontFace('normal', appFont.medium)).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
-      fontWeight: '700',
+      fontFamily: appFont.regular,
+      fontWeight: '400',
     });
   });
 
-  it('keeps a separate design-system resolver with real weights', () => {
+  it('keeps a separate design-system resolver with real Tajawal weights', () => {
     expect(resolveDesignFontFace('400')).toEqual({
       fontFamily: appFont.regular,
       fontWeight: '400',
@@ -56,13 +59,24 @@ describe('resolveAppFontFace', () => {
     expect(resolveAppFontFace('600', 'monospace').fontFamily).toBe('monospace');
   });
 
-  it('remaps legacy Tajawal family names to the official Bold face', () => {
-    expect(resolveAppFontFace('700', 'Tajawal_700Bold')).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
+  it('preserves IBM Plex families for posts content', () => {
+    expect(resolveAppFontFace('400', postsFont.regular)).toEqual({
+      fontFamily: postsFont.regular,
+      fontWeight: '400',
+    });
+    expect(resolveAppFontFace('700', postsFont.bold)).toEqual({
+      fontFamily: postsFont.bold,
       fontWeight: '700',
     });
-    expect(resolveAppFontFace(undefined, 'Tajawal-Regular')).toEqual({
-      fontFamily: OFFICIAL_APP_FONT,
+  });
+
+  it('resolves posts faces to IBM Plex', () => {
+    expect(resolvePostsFontFace('400')).toEqual({
+      fontFamily: postsFont.regular,
+      fontWeight: '400',
+    });
+    expect(resolvePostsFontFace('700')).toEqual({
+      fontFamily: postsFont.bold,
       fontWeight: '700',
     });
   });
@@ -90,9 +104,14 @@ describe('typography tokens', () => {
     expect(typography.tab).toMatchObject({ fontSize: 10, lineHeight: 13 });
   });
 
-  it('registers IBM Plex Sans Arabic faces', () => {
-    expect(APP_FONT_NAME).toBe('IBM Plex Sans Arabic');
+  it('registers Tajawal as the app face and IBM Plex for posts', () => {
+    expect(APP_FONT_NAME).toBe('Tajawal');
     expect(APP_FONT_FACES).toEqual([
+      'Tajawal_400Regular',
+      'Tajawal_500Medium',
+      'Tajawal_700Bold',
+    ]);
+    expect(POSTS_FONT_FACES).toEqual([
       'IBMPlexSansArabic_400Regular',
       'IBMPlexSansArabic_500Medium',
       'IBMPlexSansArabic_600SemiBold',
@@ -102,12 +121,12 @@ describe('typography tokens', () => {
 });
 
 describe('package fonts', () => {
-  it('does not depend on Tajawal', () => {
+  it('depends on Tajawal for the app and IBM Plex for posts only', () => {
     const deps = {
       ...packageJson.dependencies,
       ...packageJson.devDependencies,
     };
-    expect(Object.keys(deps).some((name) => /tajawal/i.test(name))).toBe(false);
+    expect(deps['@expo-google-fonts/tajawal']).toBeTruthy();
     expect(deps['@expo-google-fonts/ibm-plex-sans-arabic']).toBeTruthy();
   });
 });
