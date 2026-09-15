@@ -3,8 +3,14 @@ import { mapButcherFromApi, type ButcherProfile } from './butcherData';
 import { fetchButcherMarketBanners, type ButcherMarketBanner } from './butcherMarketBanners';
 import {
   BUTCHER_HOME_OFFERS_LIMIT,
+  butcherOffersFeedFromRecords,
+  butcherRecordsHaveEmbeddedOffers,
   fetchButcherOffersPreview,
+  getCachedResolvedOffersFeed,
+  resetButcherOffersFeedCache,
+  resolveButcherOffersFeed,
   type ButcherOfferPreview,
+  type ButcherOffersGroup,
 } from './butcherOffersPreview';
 
 export const BUTCHERS_HOME_TTL_MS = 60_000;
@@ -30,6 +36,9 @@ let homeSnapshot: ButchersHomeSnapshot | null = null;
 let homeLoadInflight: Promise<ButchersHomeSnapshot> | null = null;
 const sortedCache = new Map<string, SortedCacheEntry>();
 const sortedInflight = new Map<string, Promise<ButcherProfile[]>>();
+const sortedApplyGen = new Map<string, number>();
+let offersFeedInflight: Promise<ButcherOffersGroup[]> | null = null;
+let offersFeedApplyGen = 0;
 
 function coordsKey(coords?: { lat: number; lng: number } | null): string {
   if (!coords) return '';
@@ -50,6 +59,10 @@ export function resetButchersDirectoryCache() {
   homeLoadInflight = null;
   sortedCache.clear();
   sortedInflight.clear();
+  sortedApplyGen.clear();
+  offersFeedInflight = null;
+  offersFeedApplyGen = 0;
+  resetButcherOffersFeedCache();
 }
 
 export function getButchersHomeSnapshot(): ButchersHomeSnapshot | null {
@@ -157,6 +170,9 @@ export async function fetchSortedButchers(
     if (inflight) return inflight;
   }
 
+  const gen = (sortedApplyGen.get(key) ?? 0) + 1;
+  sortedApplyGen.set(key, gen);
+
   const promise = (async () => {
     const headers: HeadersInit = options?.token
       ? { Authorization: `Bearer ${options.token}` }
@@ -176,6 +192,9 @@ export async function fetchSortedButchers(
       (b) => (b.country || 'SA') !== 'EG',
     );
     const data = raw.map((b) => mapButcherFromApi(b));
+    if (sortedApplyGen.get(key) !== gen) {
+      return sortedCache.get(key)?.data ?? data;
+    }
     sortedCache.set(key, { data, raw, fetchedAt: Date.now() });
     return data;
   })().finally(() => {
@@ -221,5 +240,46 @@ export async function loadButchersHome(
   });
 
   homeLoadInflight = promise;
+  return promise;
+}
+
+export function getCachedButcherOffersFeed(): ButcherOffersGroup[] | null {
+  const records = getCachedSortedButcherRecords('rating');
+  if (!records) return getCachedResolvedOffersFeed();
+  if (records.length === 0 || butcherRecordsHaveEmbeddedOffers(records)) {
+    return butcherOffersFeedFromRecords(records);
+  }
+  return getCachedResolvedOffersFeed();
+}
+
+export async function loadButcherOffersFeed(
+  accessToken?: string | null,
+  options?: { force?: boolean },
+): Promise<ButcherOffersGroup[]> {
+  const gen = ++offersFeedApplyGen;
+  if (!options?.force && isSortedButchersFresh('rating')) {
+    const records = getCachedSortedButcherRecords('rating');
+    if (records) {
+      return resolveButcherOffersFeed(records, accessToken, options);
+    }
+  }
+  if (!options?.force && offersFeedInflight) return offersFeedInflight;
+
+  const promise = (async () => {
+    await fetchSortedButchers('rating', {
+      token: accessToken,
+      force: options?.force,
+    });
+    const records = getCachedSortedButcherRecords('rating') ?? [];
+    const feed = await resolveButcherOffersFeed(records, accessToken, options);
+    if (gen !== offersFeedApplyGen) {
+      return getCachedButcherOffersFeed() ?? feed;
+    }
+    return feed;
+  })().finally(() => {
+    if (offersFeedInflight === promise) offersFeedInflight = null;
+  });
+
+  offersFeedInflight = promise;
   return promise;
 }

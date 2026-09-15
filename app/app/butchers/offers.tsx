@@ -9,7 +9,7 @@ import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { safePush } from '@/lib/safeNavigate';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -22,32 +22,11 @@ import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
-import { resolveMediaUrl } from '@/services/media';
-
-const MAX_BUTCHERS = 24;
-
-type OfferView = {
-  id: string;
-  titleAr: string;
-  image?: string;
-  originalPrice?: number;
-  offerPrice?: number;
-  discountPercent?: number;
-  validUntil?: string;
-};
-
-type ButcherOffers = {
-  butcherId: string;
-  nameAr: string;
-  logo?: string;
-  cover?: string;
-  cityAr?: string;
-  rating: number;
-  reviewCount: number;
-  subscriptionActive: boolean;
-  offers: OfferView[];
-};
+import {
+  getCachedButcherOffersFeed,
+  loadButcherOffersFeed,
+} from '@/services/butcherDirectory';
+import { type ButcherOffersGroup as ButcherOffers, type ButcherOfferView as OfferView } from '@/services/butcherOffersPreview';
 
 function formatValidity(iso?: string): string | null {
   if (!iso) return null;
@@ -56,19 +35,6 @@ function formatValidity(iso?: string): string | null {
   } catch {
     return null;
   }
-}
-
-function mapOffers(raw: unknown): OfferView[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((o: any) => ({
-    id: String(o.id),
-    titleAr: o.titleAr || o.titleEn || 'عرض',
-    image: resolveMediaUrl(o.image) ?? undefined,
-    originalPrice: o.originalPrice ?? undefined,
-    offerPrice: o.offerPrice ?? undefined,
-    discountPercent: o.discountPercent ?? undefined,
-    validUntil: o.validUntil ?? undefined,
-  }));
 }
 
 function OfferProductCard({
@@ -206,52 +172,27 @@ export default function ButcherOffersScreen() {
   const { accessToken } = useAuth();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
-  const [data, setData] = useState<ButcherOffers[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ButcherOffers[]>(() => getCachedButcherOffersFeed() ?? []);
+  const [loading, setLoading] = useState(() => getCachedButcherOffersFeed() == null);
   const [refreshing, setRefreshing] = useState(false);
+  const loadGenRef = useRef(0);
 
-  const load = useCallback(async () => {
-    const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+  const load = useCallback(async (opts?: { force?: boolean }) => {
+    const gen = ++loadGenRef.current;
+    const cached = getCachedButcherOffersFeed();
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+    }
     try {
-      const listRes = await fetch(`${API_BASE}/api/butchers?sort=rating`, { headers });
-      const listJson = await listRes.json();
-      const list: any[] = Array.isArray(listJson?.data?.butchers) ? listJson.data.butchers : [];
-      const candidates = list
-        .filter((b) => (b.country || 'SA') !== 'EG')
-        .slice(0, MAX_BUTCHERS);
-
-      const details = await Promise.all(
-        candidates.map(async (b) => {
-          try {
-            const res = await fetch(`${API_BASE}/api/butchers/${b.id}`, { headers });
-            if (!res.ok) return null;
-            const json = await res.json();
-            const d = json?.data;
-            if (!d) return null;
-            const offers = mapOffers(d.offers);
-            if (offers.length === 0) return null;
-            const entry: ButcherOffers = {
-              butcherId: d.id,
-              nameAr: d.nameAr || d.nameEn || 'ملحمة',
-              logo: resolveMediaUrl(d.logo) ?? undefined,
-              cover: resolveMediaUrl(d.cover) ?? undefined,
-              cityAr: d.cityAr || '',
-              rating: d.rating ?? 5,
-              reviewCount: d.reviewCount ?? 0,
-              subscriptionActive: Boolean(d.subscriptionActive),
-              offers,
-            };
-            return entry;
-          } catch {
-            return null;
-          }
-        }),
-      );
-
-      setData(details.filter((d): d is ButcherOffers => d != null));
+      const next = await loadButcherOffersFeed(accessToken, { force: opts?.force });
+      if (gen !== loadGenRef.current) return;
+      setData(next);
     } catch {
+      if (gen !== loadGenRef.current) return;
       /* keep current offers */
     } finally {
+      if (gen !== loadGenRef.current) return;
       setLoading(false);
       setRefreshing(false);
     }
@@ -260,6 +201,9 @@ export default function ButcherOffersScreen() {
   useFocusEffect(
     useCallback(() => {
       void load();
+      return () => {
+        loadGenRef.current += 1;
+      };
     }, [load]),
   );
 
@@ -289,7 +233,7 @@ export default function ButcherOffersScreen() {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                void load();
+                void load({ force: true });
               }}
               tintColor={colors.electricBright}
             />
