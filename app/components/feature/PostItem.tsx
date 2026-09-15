@@ -303,6 +303,18 @@ function PostItemComponent({
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
+            {variant !== 'detail' ? (
+              <View
+                style={[styles.actionSlot, getRtlRow(), styles.viewsSlot]}
+                accessibilityRole="text"
+                accessibilityLabel={`مشاهدات ${formatCount(post.views ?? 0)}`}
+              >
+                <AppIcon name="eye-outline" size={18} color={colors.textMuted} />
+                <AppText style={[styles.actionCount, { color: colors.textMuted }]}>
+                  {formatCount(post.views ?? 0)}
+                </AppText>
+              </View>
+            ) : null}
             <ActionBtn
               icon="paper-plane-outline"
               iconColor={colors.textMuted}
@@ -311,14 +323,6 @@ function PostItemComponent({
               style={styles.actionSlot}
               countStyle={styles.actionCount}
             />
-            {variant !== 'detail' ? (
-              <View style={[styles.actionSlot, getRtlRow(), styles.viewsSlot]}>
-                <AppIcon name="eye-outline" size={18} color={colors.textMuted} />
-                <AppText style={[styles.actionCount, { color: colors.textMuted }]}>
-                  {formatCount(post.views ?? 0)}
-                </AppText>
-              </View>
-            ) : null}
           </View>
         </View>
       </View>
