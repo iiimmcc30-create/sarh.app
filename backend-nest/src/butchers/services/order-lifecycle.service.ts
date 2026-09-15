@@ -498,7 +498,9 @@ export class OrderLifecycleService {
               items: {
                 include: {
                   product: {
-                    include: { daftraLink: { select: { daftraSaleUnit: true } } },
+                    include: {
+                      daftraLink: { select: { daftraSaleUnit: true } },
+                    },
                   },
                 },
               },

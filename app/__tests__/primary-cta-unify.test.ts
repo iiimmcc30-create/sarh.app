@@ -30,7 +30,7 @@ describe('Primary CTA button tokens', () => {
     const dark = resolveSarhButtonColors('primary', 'default');
     expect(dark.backgroundColor).toBe(functional.onPrimary);
     expect(dark.contentColor).toBe(functional.onPrimaryInverse);
-    expect(resolveSarhButtonColors('primary', 'pressed').backgroundColor).toBe('#E6EBEF');
+    expect(resolveSarhButtonColors('primary', 'pressed').backgroundColor).toBe('#E6E8EB');
 
     applyThemeScheme('light');
     const light = resolveSarhButtonColors('primary', 'default');

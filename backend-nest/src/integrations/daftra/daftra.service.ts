@@ -580,7 +580,7 @@ export class DaftraService {
    * Never auto-deletes Sarh products. External key: (butcherId, daftraProductId).
    */
   async syncProductsFromDaftra(
-    adminUserId: string,
+    adminUserId: string | null,
     butcherId: string,
   ): Promise<DaftraProductSyncResult> {
     await this.assertButcherExists(butcherId);
@@ -1241,7 +1241,7 @@ export class DaftraService {
   }
 
   private async appendApplicationComment(
-    adminUserId: string,
+    adminUserId: string | null,
     butcherId: string,
     kind: 'CONFIGURE' | 'TEST' | 'DISABLE' | 'PRODUCT_SYNC',
     metadata: Record<string, unknown>,
@@ -1258,7 +1258,11 @@ export class DaftraService {
           action: 'COMMENT',
           createdBy: adminUserId,
           comment: `daftra_${kind.toLowerCase()}`,
-          metadata: { kind: `DAFTRA_${kind}`, ...metadata },
+          metadata: {
+            kind: `DAFTRA_${kind}`,
+            ...(adminUserId ? {} : { automated: true }),
+            ...metadata,
+          },
         });
       });
     } catch (err) {

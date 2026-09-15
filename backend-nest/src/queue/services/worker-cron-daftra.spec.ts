@@ -1,5 +1,4 @@
 import {
-  DAFTRA_PRODUCT_SYNC_CRON_ACTOR,
   DAFTRA_PRODUCT_SYNC_INTERVAL_MS,
   DAFTRA_PRODUCT_SYNC_LOCK_TTL_SEC,
   WorkerCronService,
@@ -20,7 +19,7 @@ describe('WorkerCronService Daftra product poll', () => {
       connectedIds?: string[];
       redisEnabled?: boolean;
       lockAcquired?: boolean | ((key: string) => boolean);
-      syncImpl?: (actor: string, butcherId: string) => Promise<unknown>;
+      syncImpl?: (actor: string | null, butcherId: string) => Promise<unknown>;
     } = {},
   ) {
     const connectedIds = overrides.connectedIds ?? ['butcher-a', 'butcher-b'];
@@ -92,12 +91,12 @@ describe('WorkerCronService Daftra product poll', () => {
     expect(daftra.syncProductsFromDaftra).toHaveBeenCalledTimes(2);
     expect(daftra.syncProductsFromDaftra).toHaveBeenNthCalledWith(
       1,
-      DAFTRA_PRODUCT_SYNC_CRON_ACTOR,
+      null,
       'butcher-a',
     );
     expect(daftra.syncProductsFromDaftra).toHaveBeenNthCalledWith(
       2,
-      DAFTRA_PRODUCT_SYNC_CRON_ACTOR,
+      null,
       'butcher-b',
     );
     expect(setMock).toHaveBeenCalledWith(
@@ -132,7 +131,7 @@ describe('WorkerCronService Daftra product poll', () => {
 
     expect(daftra.syncProductsFromDaftra).toHaveBeenCalledTimes(1);
     expect(daftra.syncProductsFromDaftra).toHaveBeenCalledWith(
-      DAFTRA_PRODUCT_SYNC_CRON_ACTOR,
+      null,
       'butcher-b',
     );
     expect(summary).toEqual({

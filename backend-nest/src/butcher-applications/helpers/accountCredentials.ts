@@ -51,7 +51,10 @@ export function validateButcherAccountCredentials(
       invalid: ['accountUsername'],
     });
   }
-  if (accountEmail && (accountEmail.length > 254 || !accountEmail.includes('@'))) {
+  if (
+    accountEmail &&
+    (accountEmail.length > 254 || !accountEmail.includes('@'))
+  ) {
     throw new ButcherApplicationError('ACCOUNT_CREDENTIALS_INVALID', {
       invalid: ['accountEmail'],
     });

@@ -91,7 +91,12 @@ export class FeedSuppliersService {
 }
 
 function presentPublicSupplier<T extends object>(row: T) {
-  const { _count, products, productCount, ...rest } = row as T & {
+  const {
+    _count,
+    products: _products,
+    productCount: _productCount,
+    ...rest
+  } = row as T & {
     _count?: unknown;
     products?: unknown;
     productCount?: unknown;
@@ -146,7 +151,9 @@ function toSupplierUpdate(
     ...(dto.phone !== undefined ? { phone: dto.phone } : {}),
     ...(dto.whatsapp !== undefined ? { whatsapp: dto.whatsapp } : {}),
     ...(dto.email !== undefined ? { email: dto.email } : {}),
-    ...(dto.website !== undefined ? { website: normalizeWebsite(dto.website) } : {}),
+    ...(dto.website !== undefined
+      ? { website: normalizeWebsite(dto.website) }
+      : {}),
     ...(dto.hoursAr !== undefined ? { hoursAr: dto.hoursAr } : {}),
     ...(dto.verified !== undefined ? { verified: dto.verified } : {}),
     ...(dto.published !== undefined ? { published: dto.published } : {}),

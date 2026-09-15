@@ -1,3 +1,4 @@
+import { SYSTEM_TIMELINE_ACTOR_LABEL } from './helpers/timeline';
 import type { ApplicationWithRelations } from './types';
 import type { ApplicationSummaryEntity } from './repositories/application.repository';
 import type {
@@ -38,7 +39,7 @@ function toTimelineDto(
     action: event.action,
     comment: event.comment,
     createdBy: event.createdBy,
-    actorUsername: event.actor.username,
+    actorUsername: event.actor?.username ?? SYSTEM_TIMELINE_ACTOR_LABEL,
     metadata: event.metadata,
     createdAt: event.createdAt,
   };

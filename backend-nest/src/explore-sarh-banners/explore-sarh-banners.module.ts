@@ -6,7 +6,10 @@ import { ExploreSarhBannersService } from './explore-sarh-banners.service';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [ExploreSarhBannersController, AdminExploreSarhBannersController],
+  controllers: [
+    ExploreSarhBannersController,
+    AdminExploreSarhBannersController,
+  ],
   providers: [ExploreSarhBannersService],
   exports: [ExploreSarhBannersService],
 })

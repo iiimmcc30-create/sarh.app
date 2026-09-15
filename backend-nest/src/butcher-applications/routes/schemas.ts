@@ -124,13 +124,7 @@ export const submitBodySchema = z
       .min(3)
       .max(30)
       .regex(/^[a-z0-9_]+$/, 'أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط'),
-    accountEmail: z
-      .string()
-      .trim()
-      .email()
-      .max(254)
-      .toLowerCase()
-      .optional(),
+    accountEmail: z.string().trim().email().max(254).toLowerCase().optional(),
     password: z.string().min(6).max(128),
     confirmPassword: z.string().min(6).max(128),
   })

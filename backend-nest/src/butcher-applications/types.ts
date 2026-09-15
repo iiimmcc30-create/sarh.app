@@ -95,7 +95,7 @@ export type PaginatedResult<T> = {
 export type ApplicationWithRelations = ButcherApplication & {
   documents: ButcherApplicationDocument[];
   timelineEvents: (ButcherApplicationTimelineEvent & {
-    actor: { id: string; username: string };
+    actor: { id: string; username: string } | null;
   })[];
   sourcedButcher: { id: string; userId: string } | null;
   user?: {
@@ -179,7 +179,7 @@ export type TimelineEventDto = {
   id: string;
   action: ButcherApplicationTimelineEvent['action'];
   comment: string | null;
-  createdBy: string;
+  createdBy: string | null;
   actorUsername: string;
   metadata: Prisma.JsonValue;
   createdAt: Date;

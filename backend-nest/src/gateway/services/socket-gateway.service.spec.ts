@@ -56,7 +56,7 @@ describe('SocketGatewayService chat authorization', () => {
       threadId: '11111111-1111-1111-1111-111111111111',
       receiverId: 'bob',
       text: 'hi',
-    });
+    } as never);
     expect(err?.code).toBe('unauthorized');
     expect(messagingPolicy.assertCanSendMessage).not.toHaveBeenCalled();
   });
@@ -77,7 +77,7 @@ describe('SocketGatewayService chat authorization', () => {
       threadId: '11111111-1111-1111-1111-111111111111',
       receiverId: 'butcher-user',
       text: 'still open?',
-    });
+    } as never);
     expect(err).toEqual({
       code: 'forbidden',
       message: 'التواصل المباشر مع الملحمة غير متاح',
@@ -101,7 +101,7 @@ describe('SocketGatewayService chat authorization', () => {
       threadId: '11111111-1111-1111-1111-111111111111',
       receiverId: 'bob',
       text: 'hi',
-    });
+    } as never);
     expect(err).toEqual({
       code: 'blocked',
       message: 'لا يمكنك مراسلة هذا المستخدم',
