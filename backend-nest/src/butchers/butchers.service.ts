@@ -268,7 +268,7 @@ export class ButchersService {
     const lng = query.lng ? Number(query.lng) : undefined;
 
     const cacheKey = !search
-      ? `butchers:v3:${JSON.stringify({ cursor, country, isOpen, sort, lat, lng })}`
+      ? `butchers:v4:${JSON.stringify({ cursor, country, isOpen, sort, lat, lng })}`
       : null;
 
     if (cacheKey) {
@@ -1266,7 +1266,7 @@ export class ButchersService {
     }
 
     await this.ranking.onFavoriteChanged(butcherId);
-    await this.redis.cacheDelPattern('butchers:v3:*');
+    await this.redis.cacheDelPattern('butchers:v4:*');
     return { favorited: true };
   }
 
@@ -1281,7 +1281,7 @@ export class ButchersService {
     }
 
     await this.ranking.onFavoriteChanged(butcherId);
-    await this.redis.cacheDelPattern('butchers:v3:*');
+    await this.redis.cacheDelPattern('butchers:v4:*');
     return { favorited: false };
   }
 
@@ -1351,7 +1351,7 @@ export class ButchersService {
 
       await this.ranking.onReviewChanged(butcherId);
       await this.redis.cacheDel(`butcher:${butcherId}`);
-      await this.redis.cacheDelPattern('butchers:v3:*');
+      await this.redis.cacheDelPattern('butchers:v4:*');
 
       logger.info(
         { butcherId, reviewerId: user.userId },

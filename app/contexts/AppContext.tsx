@@ -24,6 +24,10 @@ import { resolveCurrentUserId } from '@/lib/currentUser';
 import { listingThumbUri, listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 import { prefetchRemoteImages } from '@/lib/prefetchRemoteImages';
+import {
+  buildListingsFeedUrl,
+  rememberListingsBootstrapPage,
+} from '@/services/listings';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 /** v2: invalidate v1 snapshots that may hold Mojibake from ArrayBuffer feed clones. */
@@ -306,7 +310,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let succeeded = false;
     listingsFetchInflight = (async () => {
       try {
-        const res = await fetchPublicFeed(`${API_BASE}/api/listings`, accessToken);
+        const res = await fetchPublicFeed(buildListingsFeedUrl(API_BASE), accessToken);
         const json = await res.json().catch(() => ({}));
         if (res.status === 429) {
           noteRateLimitFromResponse(res, json);
@@ -327,6 +331,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           );
           succeeded = true;
           listingsLastSuccessAt = Date.now();
+          rememberListingsBootstrapPage(
+            {
+              listings: market,
+              nextCursor:
+                typeof json.data.nextCursor === 'string' ? json.data.nextCursor : null,
+              hasMore: json.data.hasMore === true,
+            },
+            accessToken,
+          );
           void patchFeedSnapshot({ listings: market });
         }
       } catch (err) {

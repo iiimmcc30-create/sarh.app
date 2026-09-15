@@ -126,4 +126,51 @@ describe('malahm home redesign', () => {
     expect(offers).toHaveLength(5);
     expect(offers.every((o) => o.butcherId && o.titleAr)).toBe(true);
   });
+
+  it('builds preview from embedded list offers without rating refetch or detail GETs', async () => {
+    const fetchMock = jest.fn();
+    (globalThis as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
+    const offers = await fetchButcherOffersPreview(null, 5, {
+      records: [
+        {
+          id: 'b1',
+          country: 'SA',
+          nameAr: 'ملحمة 1',
+          offers: [
+            { id: 'o1', titleAr: 'عرض 1', offerPrice: 10 },
+            { id: 'o2', titleAr: 'عرض 2' },
+          ],
+        },
+        {
+          id: 'b2',
+          country: 'SA',
+          nameAr: 'ملحمة 2',
+          offers: [{ id: 'o3', titleAr: 'عرض 3' }],
+        },
+      ],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(offers.map((o) => o.id)).toEqual(['o1', 'o2', 'o3']);
+    expect(offers[0]?.butcherNameAr).toBe('ملحمة 1');
+  });
+
+  it('does not refetch sort=rating when list records are already provided', async () => {
+    const fetchMock = jest.fn(async (url: string) => {
+      expect(url).not.toContain('sort=rating');
+      return {
+        ok: true,
+        json: async () => ({
+          data: { id: 'b0', nameAr: 'ملحمة', offers: [{ id: 'd1', titleAr: 'من التفاصيل' }] },
+        }),
+      };
+    });
+    (globalThis as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
+    const offers = await fetchButcherOffersPreview(null, 5, {
+      records: [{ id: 'b0', country: 'SA', nameAr: 'ملحمة' }],
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/butchers/b0');
+    expect(offers).toHaveLength(1);
+    expect(offers[0]?.id).toBe('d1');
+  });
 });

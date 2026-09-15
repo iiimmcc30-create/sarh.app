@@ -2,6 +2,7 @@ import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from '@/services/media';
 import { ensureApiReachable } from './api';
 import { fetchPublicFeed } from './fetchPublicFeed';
+import { shouldReuseFreshResult } from './requestCoordination';
 import { countries, type Listing, type Country } from './types';
 
 type BackendListing = {
@@ -144,6 +145,68 @@ export type ListingSearchPage = {
   hasMore: boolean;
 };
 
+/** Same window as posts/home — Market can reuse a fresh bootstrap page. */
+export const LISTINGS_BOOTSTRAP_TTL_MS = 60_000;
+
+type ListingsBootstrapCache = {
+  page: ListingSearchPage;
+  fetchedAt: number;
+  authTag: 'auth' | 'guest';
+};
+
+let listingsBootstrap: ListingsBootstrapCache | null = null;
+
+/** Test-only reset. */
+export function resetListingsBootstrapCache() {
+  listingsBootstrap = null;
+}
+
+export function rememberListingsBootstrapPage(
+  page: ListingSearchPage,
+  accessToken?: string | null,
+) {
+  listingsBootstrap = {
+    page,
+    fetchedAt: Date.now(),
+    authTag: accessToken ? 'auth' : 'guest',
+  };
+}
+
+/** Fresh unfiltered first page from AppContext bootstrap, or null. */
+export function getBootstrappedListingsPage(
+  accessToken?: string | null,
+): ListingSearchPage | null {
+  if (!listingsBootstrap) return null;
+  const tag = accessToken ? 'auth' : 'guest';
+  if (listingsBootstrap.authTag !== tag) return null;
+  if (!shouldReuseFreshResult(listingsBootstrap.fetchedAt, LISTINGS_BOOTSTRAP_TTL_MS)) {
+    return null;
+  }
+  if (listingsBootstrap.page.listings.length === 0) return null;
+  return listingsBootstrap.page;
+}
+
+export function buildListingsFeedUrl(
+  base: string,
+  params: ListingSearchParams = {},
+): string {
+  const qs = new URLSearchParams();
+  if (params.search && params.search.length >= 2) qs.set('search', params.search);
+  if (params.category) qs.set('category', params.category);
+  if (params.categoryId) qs.set('categoryId', params.categoryId);
+  if (params.subcategoryId) qs.set('subcategoryId', params.subcategoryId);
+  if (params.country) qs.set('country', params.country);
+  if (params.minPrice != null) qs.set('minPrice', String(params.minPrice));
+  if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
+  if (params.cursor) qs.set('cursor', params.cursor);
+  if (params.sellerId) qs.set('sellerId', params.sellerId);
+  if (params.featured) qs.set('featured', 'true');
+
+  const root = base.replace(/\/$/, '');
+  const query = qs.toString();
+  return query ? `${root}/api/listings?${query}` : `${root}/api/listings`;
+}
+
 /** Safety cap: 50 pages × 20 = 1000 listings for a single seller. */
 export const SELLER_LISTINGS_MAX_PAGES = 50;
 
@@ -163,19 +226,7 @@ export async function searchListingsPage(
   accessToken?: string | null,
 ): Promise<ListingSearchPage> {
   const base = await ensureApiReachable();
-  const qs = new URLSearchParams();
-  if (params.search && params.search.length >= 2) qs.set('search', params.search);
-  if (params.category) qs.set('category', params.category);
-  if (params.categoryId) qs.set('categoryId', params.categoryId);
-  if (params.subcategoryId) qs.set('subcategoryId', params.subcategoryId);
-  if (params.country) qs.set('country', params.country);
-  if (params.minPrice != null) qs.set('minPrice', String(params.minPrice));
-  if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
-  if (params.cursor) qs.set('cursor', params.cursor);
-  if (params.sellerId) qs.set('sellerId', params.sellerId);
-  if (params.featured) qs.set('featured', 'true');
-
-  const url = `${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`;
+  const url = buildListingsFeedUrl(base, params);
   const res = await fetchPublicFeed(url, accessToken);
   if (!res.ok) {
     throw new Error('listings_fetch_failed');

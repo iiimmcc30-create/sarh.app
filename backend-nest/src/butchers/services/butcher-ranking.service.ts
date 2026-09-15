@@ -107,7 +107,7 @@ export class ButcherRankingService {
     });
 
     await this.redis.cacheDel(BOUNDS_CACHE_KEY);
-    await this.redis.cacheDelPattern('butchers:v3:*');
+    await this.redis.cacheDelPattern('butchers:v4:*');
     logger.info({ butcherId, rankingScore }, 'Butcher ranking recalculated');
   }
 

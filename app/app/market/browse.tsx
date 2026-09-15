@@ -273,7 +273,7 @@ export default function MarketBrowseScreen() {
     <Screen edges={['top', 'bottom']}>
       <ScreenHeader variant="screen" showBack title={headerTitle} />
       <ScreenBody scroll={false} gutter={false}>
-        {loading || (loadFailed && items.length === 0) ? (
+        {(loading || loadFailed) && items.length === 0 ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.electric} />
           </View>

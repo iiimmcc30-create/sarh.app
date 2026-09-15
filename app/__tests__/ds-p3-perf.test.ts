@@ -128,7 +128,7 @@ describe('Wave 5B loading and skeleton consistency', () => {
 
   it('keeps browse pagination items and only footers extra pages', () => {
     const browse = src('app/market/browse.tsx');
-    expect(browse).toContain('loading || (loadFailed && items.length === 0)');
+    expect(browse).toContain('(loading || loadFailed) && items.length === 0');
     expect(browse).toContain('loadingMore ? <ActivityIndicator');
     expect(browse).not.toContain('getItemLayout');
   });

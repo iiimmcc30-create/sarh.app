@@ -58,6 +58,8 @@ describe('P0 tab empty recovery', () => {
     expect(directory).toContain("throw new Error('butchers_fetch_failed')");
     expect(directory).toContain('BUTCHERS_HOME_TTL_MS');
     expect(directory).toContain('homeLoadInflight');
+    expect(directory).toContain('records: ratingRecords');
+    expect(src('services/butcherOffersPreview.ts')).toContain('butcherRecordsHaveEmbeddedOffers');
     const home = src('app/butchers/index.tsx');
     expect(home).not.toContain('if (!res.ok) return []');
     expect(home).toContain('loadButchersHome');
@@ -88,7 +90,7 @@ describe('P0 tab empty recovery', () => {
   it('does not treat browse HTTP failures as a successful empty category', () => {
     const browse = src('app/market/browse.tsx');
     expect(browse).toContain('setLoadFailed(true)');
-    expect(browse).toContain('loading || (loadFailed && items.length === 0)');
+    expect(browse).toContain('(loading || loadFailed) && items.length === 0');
   });
 
   it('force-refetches the community tab on later focus when the list is empty', () => {

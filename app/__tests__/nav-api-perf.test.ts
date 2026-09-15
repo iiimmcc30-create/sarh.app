@@ -35,6 +35,9 @@ describe('tab navigation API performance', () => {
 
   it('gives listing and stories GETs the same feed timeout and in-flight dedupe as posts', () => {
     expect(src('services/listings.ts')).toContain('fetchPublicFeed(url, accessToken)');
+    expect(src('services/listings.ts')).toContain('buildListingsFeedUrl');
+    expect(src('contexts/AppContext.tsx')).toContain('buildListingsFeedUrl(API_BASE)');
+    expect(src('contexts/AppContext.tsx')).toContain('rememberListingsBootstrapPage');
     expect(src('services/stories.ts')).toContain("fetchPublicFeed(`${API_BASE}/api/stories/feed`, accessToken)");
     expect(src('services/fetchPublicFeed.ts')).toContain('export const FEED_TIMEOUT_MS = 12_000');
     expect(src('services/fetchPublicFeed.ts')).toContain('dedupeGetResponse');
@@ -44,6 +47,8 @@ describe('tab navigation API performance', () => {
     const market = src('app/(tabs)/market.tsx');
     expect(market).toContain('if (!hasItemsRef.current) setLoading(true)');
     expect(market).toContain('if (gen !== loadGenRef.current) return');
+    expect(market).toContain('getBootstrappedListingsPage');
+    expect(market).toContain('const boot = getBootstrappedListingsPage(accessToken)');
   });
 
   it('lets pull-to-refresh bypass the posts TTL', () => {
