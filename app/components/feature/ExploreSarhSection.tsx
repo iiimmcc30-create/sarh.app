@@ -3,7 +3,12 @@ import { colors, elevation, motion, radius, space } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import {
+  FALLBACK_EXPLORE_SARH_BANNERS,
+  type ExploreSarhBannerView,
+} from '@/lib/exploreSarhBanners';
 import { safePush } from '@/lib/safeNavigate';
+import { fetchExploreSarhBanners } from '@/services/exploreSarhBanners';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -17,59 +22,55 @@ import {
 } from 'react-native';
 
 const AUTO_ADVANCE_MS = 5000;
-
-const BUTCHERS_IMAGE = require('../../assets/images/explore-sarh-butchers.jpg');
-const FEED_IMAGE = require('../../assets/images/explore-sarh-feed-suppliers.jpg');
-const MINISTRY_IMAGE = require('../../assets/images/explore-sarh-ministry.jpg');
 const BANNER_ASPECT = 1376 / 768;
-
-const BANNERS = [
-  {
-    key: 'butchers',
-    image: BUTCHERS_IMAGE,
-    accessibilityLabel: 'ملاحم سرح',
-    href: '/butchers',
-  },
-  {
-    key: 'feed-suppliers',
-    image: FEED_IMAGE,
-    accessibilityLabel: 'موردو الأعلاف',
-    href: '/feed-suppliers',
-  },
-  {
-    key: 'ministry',
-    image: MINISTRY_IMAGE,
-    accessibilityLabel: 'خدمات وزارة البيئة والمياه والزراعة',
-    href: '/ministry',
-  },
-] as const;
 
 export function ExploreSarhSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { gutter } = useLayout();
   const styles = useThemedStyles(() => createStyles());
+  const [banners, setBanners] = useState<ExploreSarhBannerView[]>(
+    FALLBACK_EXPLORE_SARH_BANNERS,
+  );
   const [index, setIndex] = useState(0);
   const scroller = useRef<ScrollView>(null);
   const slideWidth = width;
   const indexRef = useRef(index);
+  const bannersRef = useRef(banners);
   indexRef.current = index;
+  bannersRef.current = banners;
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchExploreSarhBanners().then((next) => {
+      if (cancelled || next.length === 0) return;
+      setBanners(next);
+      setIndex(0);
+      scroller.current?.scrollTo({ x: 0, animated: false });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const next = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
-    if (next !== indexRef.current && next >= 0 && next < BANNERS.length) {
+    if (next !== indexRef.current && next >= 0 && next < bannersRef.current.length) {
       setIndex(next);
     }
   };
 
   useEffect(() => {
+    if (banners.length <= 1) return;
     const timer = setInterval(() => {
-      const next = (indexRef.current + 1) % BANNERS.length;
+      const len = bannersRef.current.length;
+      if (len <= 1) return;
+      const next = (indexRef.current + 1) % len;
       setIndex(next);
       scroller.current?.scrollTo({ x: next * slideWidth, animated: true });
     }, AUTO_ADVANCE_MS);
     return () => clearInterval(timer);
-  }, [slideWidth]);
+  }, [slideWidth, banners.length]);
 
   return (
     <View style={styles.wrap}>
@@ -88,8 +89,8 @@ export function ExploreSarhSection() {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {BANNERS.map((banner) => (
-          <View key={banner.key} style={[styles.slide, { width: slideWidth }]}>
+        {banners.map((banner) => (
+          <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={banner.accessibilityLabel}
@@ -112,11 +113,11 @@ export function ExploreSarhSection() {
       </ScrollView>
 
       <View style={styles.dots}>
-        {BANNERS.map((banner, i) => (
+        {banners.map((banner, i) => (
           <Pressable
-            key={banner.key}
+            key={banner.id}
             accessibilityRole="button"
-            accessibilityLabel={`بنر ${i + 1} من ${BANNERS.length}`}
+            accessibilityLabel={`بنر ${i + 1} من ${banners.length}`}
             onPress={() => {
               setIndex(i);
               scroller.current?.scrollTo({ x: i * slideWidth, animated: true });

@@ -38,6 +38,7 @@ describe('admin navigation & feature routes inventory', () => {
       '/live',
       '/butchers',
       '/butcher-banners',
+      '/explore-sarh-banners',
       '/feed-suppliers',
       '/applications',
       '/orders',

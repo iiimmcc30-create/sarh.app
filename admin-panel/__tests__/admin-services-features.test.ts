@@ -8,6 +8,7 @@ import * as dashboard from '@/services/dashboard.service';
 import * as support from '@/services/support.service';
 import * as editorial from '@/services/editorial-stories.service';
 import * as butcherBanners from '@/services/butcher-banners.service';
+import * as exploreSarhBanners from '@/services/explore-sarh-banners.service';
 import * as knowledge from '@/services/knowledge.service';
 import * as official from '@/services/official-services.service';
 import * as ministry from '@/services/ministry.service';
@@ -213,6 +214,44 @@ describe('admin feature API wiring — login to every section', () => {
     await butcherBanners.updateButcherBanner('b1', { titleAr: 'عنوان' });
     expect(apiClient.get).toHaveBeenCalledWith('/admin/butcher-banners');
     expect(apiClient.patch).toHaveBeenCalledWith('/admin/butcher-banners/b1', { titleAr: 'عنوان' });
+  });
+
+  it('explore sarh banners', async () => {
+    (apiClient.get as jest.Mock).mockResolvedValueOnce(ok({ banners: [] }));
+    (apiClient.post as jest.Mock).mockResolvedValueOnce(
+      ok({
+        banner: {
+          id: 'e1',
+          imageUrl: 'https://cdn.example/e.jpg',
+          accessibilityLabel: 'ملاحم',
+          href: '/butchers',
+          sortOrder: 0,
+          isActive: true,
+        },
+      }),
+    );
+    await exploreSarhBanners.fetchExploreSarhBannersAdmin();
+    await exploreSarhBanners.createExploreSarhBanner({
+      imageUrl: 'https://cdn.example/e.jpg',
+      accessibilityLabel: 'ملاحم',
+      href: '/butchers',
+    });
+    await exploreSarhBanners.updateExploreSarhBanner('e1', { isActive: false });
+    await exploreSarhBanners.reorderExploreSarhBanners(['e1']);
+    await exploreSarhBanners.deleteExploreSarhBanner('e1');
+    expect(apiClient.get).toHaveBeenCalledWith('/admin/explore-sarh-banners');
+    expect(apiClient.post).toHaveBeenCalledWith('/admin/explore-sarh-banners', {
+      imageUrl: 'https://cdn.example/e.jpg',
+      accessibilityLabel: 'ملاحم',
+      href: '/butchers',
+    });
+    expect(apiClient.patch).toHaveBeenCalledWith('/admin/explore-sarh-banners/e1', {
+      isActive: false,
+    });
+    expect(apiClient.patch).toHaveBeenCalledWith('/admin/explore-sarh-banners/reorder', {
+      orderedIds: ['e1'],
+    });
+    expect(apiClient.delete).toHaveBeenCalledWith('/admin/explore-sarh-banners/e1');
   });
 
   it('knowledge center', async () => {

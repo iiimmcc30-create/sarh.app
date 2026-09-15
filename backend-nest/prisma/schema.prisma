@@ -1810,3 +1810,17 @@ model ButcherMarketBanner {
 
   @@index([isActive, slot])
 }
+
+/// Admin-managed image banners for the home “استكشف سرح” slider (independent of home-explore destinations).
+model ExploreSarhBanner {
+  id                 String   @id @default(uuid())
+  imageUrl           String
+  accessibilityLabel String
+  href               String
+  sortOrder          Int      @default(0)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}

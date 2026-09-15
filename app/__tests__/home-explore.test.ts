@@ -81,18 +81,24 @@ describe('Explore Sarh logo mark', () => {
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
+    const fallback = fs.readFileSync(
+      path.join(__dirname, '../lib/exploreSarhBanners.ts'),
+      'utf8',
+    );
     expect(section).toContain('استكشف سرح');
-    expect(section).toContain('ملاحم سرح');
-    expect(section).toContain('href: \'/butchers\'');
-    expect(section).toContain("safePush(banner.href");
-    expect(section).toContain('href: \'/feed-suppliers\'');
-    expect(section).toContain('موردو الأعلاف');
-    expect(section).toContain('explore-sarh-feed-suppliers.jpg');
-    expect(section).toContain("href: '/ministry'");
-    expect(section).toContain('خدمات وزارة البيئة والمياه والزراعة');
-    expect(section).toContain('explore-sarh-ministry.jpg');
+    expect(section).toContain('fetchExploreSarhBanners');
+    expect(section).toContain('FALLBACK_EXPLORE_SARH_BANNERS');
+    expect(section).toContain('safePush(banner.href');
     expect(section).toContain('pagingEnabled');
     expect(section).toContain('accessibilityRole="button"');
+    expect(fallback).toContain('ملاحم سرح');
+    expect(fallback).toContain("href: '/butchers'");
+    expect(fallback).toContain("href: '/feed-suppliers'");
+    expect(fallback).toContain('موردو الأعلاف');
+    expect(fallback).toContain("href: '/ministry'");
+    expect(fallback).toContain('خدمات وزارة البيئة والمياه والزراعة');
+    expect(fallback).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(fallback).toContain('explore-sarh-ministry.jpg');
     expect(section).not.toContain('SarhButton');
     expect(section).not.toContain('تصفح الملاحم');
     expect(section).not.toContain('CARD_RADIUS');
@@ -243,12 +249,17 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
       'utf8',
     );
+    const fallback = fs.readFileSync(
+      path.join(__dirname, '../lib/exploreSarhBanners.ts'),
+      'utf8',
+    );
     expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('أحدث المنشورات');
     expect(home).toContain('HomeCommunityPosts');
-    expect(explore).toContain("href: '/ministry'");
-    expect(explore).toContain('خدمات وزارة البيئة والمياه والزراعة');
-    expect(explore).toContain('explore-sarh-ministry.jpg');
+    expect(fallback).toContain("href: '/ministry'");
+    expect(fallback).toContain('خدمات وزارة البيئة والمياه والزراعة');
+    expect(fallback).toContain('explore-sarh-ministry.jpg');
+    expect(explore).toContain('fetchExploreSarhBanners');
   });
 });
 
@@ -257,6 +268,10 @@ describe('Home design-system adoption', () => {
   const appBar = fs.readFileSync(path.join(__dirname, '../components/ui/HomeAppBar.tsx'), 'utf8');
   const explore = fs.readFileSync(
     path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
+    'utf8',
+  );
+  const exploreFallback = fs.readFileSync(
+    path.join(__dirname, '../lib/exploreSarhBanners.ts'),
     'utf8',
   );
   const community = fs.readFileSync(
@@ -316,7 +331,7 @@ describe('Home design-system adoption', () => {
     expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
     expect(explore).toContain('accessibilityRole="button"');
-    expect(explore).toContain("accessibilityLabel: 'ملاحم سرح'");
+    expect(exploreFallback).toContain("accessibilityLabel: 'ملاحم سرح'");
     expect(community).toContain('مجتمع سرح');
     expect(stories).toContain('accessibilityRole="button"');
     expect(appBar).toContain('accessibilityLabel="بحث"');
@@ -340,17 +355,19 @@ describe('Home design-system adoption', () => {
     expect(home).not.toContain('Marketplace');
     expect(home).not.toContain('HomeMinistryOrgCard');
     expect(explore).toContain('استكشف سرح');
-    expect(explore).toContain('ملاحم سرح');
-    expect(explore).toContain('explore-sarh-butchers.jpg');
-    expect(explore).toContain("href: '/butchers'");
-    expect(explore).toContain('موردو الأعلاف');
-    expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
-    expect(explore).toContain("href: '/ministry'");
-    expect(explore.indexOf("href: '/butchers'")).toBeLessThan(
-      explore.indexOf("href: '/feed-suppliers'"),
+    expect(explore).toContain('fetchExploreSarhBanners');
+    expect(explore).toContain('FALLBACK_EXPLORE_SARH_BANNERS');
+    expect(exploreFallback).toContain('ملاحم سرح');
+    expect(exploreFallback).toContain('explore-sarh-butchers.jpg');
+    expect(exploreFallback).toContain("href: '/butchers'");
+    expect(exploreFallback).toContain('موردو الأعلاف');
+    expect(exploreFallback).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(exploreFallback).toContain("href: '/ministry'");
+    expect(exploreFallback.indexOf("href: '/butchers'")).toBeLessThan(
+      exploreFallback.indexOf("href: '/feed-suppliers'"),
     );
-    expect(explore.indexOf("href: '/feed-suppliers'")).toBeLessThan(
-      explore.indexOf("href: '/ministry'"),
+    expect(exploreFallback.indexOf("href: '/feed-suppliers'")).toBeLessThan(
+      exploreFallback.indexOf("href: '/ministry'"),
     );
     expect(community).toContain('pickHomeCommunityPosts');
   });
