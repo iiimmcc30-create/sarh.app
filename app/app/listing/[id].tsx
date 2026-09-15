@@ -33,6 +33,7 @@ import {
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
+import { ListingContactSheet } from '@/components/listing/ListingContactSheet';
 import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSheet';
 import { ListingDeleteDialog } from '@/components/listing/ListingDeleteDialog';
 import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
@@ -90,6 +91,7 @@ export default function ListingDetailScreen() {
   // ─── Boost / promote ────────────────────────────────────────────────────
   const [feeModalVisible, setFeeModalVisible] = useState(false);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [contactSheetVisible, setContactSheetVisible] = useState(false);
   const { flags: paidFlags, hasAnyBoostService } = usePaidServices();
 
   const loadListing = useCallback(async () => {
@@ -714,11 +716,19 @@ export default function ListingDetailScreen() {
             title="تواصل"
             variant="primary"
             leftIcon="chatbubbles"
-            onPress={() => openSellerChat()}
+            onPress={() => setContactSheetVisible(true)}
             fullWidth
           />
         </BottomAction>
       ) : null}
+
+      <ListingContactSheet
+        visible={contactSheetVisible}
+        onClose={() => setContactSheetVisible(false)}
+        onMessage={() => openSellerChat()}
+        onCall={() => void openSellerCall()}
+        canCall={Boolean(listing?.contactPhone)}
+      />
 
       {listing ? (
         <ListingFeePaymentSheet

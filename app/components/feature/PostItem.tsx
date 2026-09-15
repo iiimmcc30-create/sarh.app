@@ -150,7 +150,7 @@ function PostItemComponent({
   onBookmark,
 }: PostItemProps) {
   const { styles, colors, scheme } = useThemedStyles((theme) => ({
-    styles: createStyles(theme.colors),
+    styles: createStyles(theme.colors, theme.scheme),
     colors: theme.colors,
     scheme: theme.scheme,
   }));
@@ -356,10 +356,10 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
 
 export const PostItem = memo(PostItemComponent, arePropsEqual);
 
-function createStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     rowWrap: {
-      backgroundColor: colors.bgDeep,
+      backgroundColor: scheme === 'light' ? colors.bgSurface : colors.bgDeep,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
