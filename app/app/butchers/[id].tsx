@@ -48,6 +48,7 @@ import {
   type CutType,
   type MeatCategory,
 } from '@/services/butcherData';
+import { findCachedButcher } from '@/services/butcherDirectory';
 import { type ButcherStoreNavItem } from '@/components/butcher/ButcherCategoryBar';
 import { ButcherMenuCategoryBar } from '@/components/butcher/ButcherMenuCategoryBar';
 import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
@@ -500,6 +501,78 @@ function ReviewsStrip({ reviews }: { reviews: ButcherReview[] }) {
   );
 }
 
+function mapOfferFromApi(o: any): ButcherOffer {
+  return {
+    id: o.id,
+    butcherId: o.butcherId,
+    title: o.titleAr || o.titleEn,
+    titleAr: o.titleAr,
+    description: o.descriptionEn,
+    descriptionAr: o.descriptionAr,
+    discountPercent: o.discountPercent,
+    originalPrice: o.originalPrice,
+    offerPrice: o.offerPrice,
+    image: o.image || undefined,
+    validUntil: o.validUntil,
+    country: o.country,
+  };
+}
+
+function mapReviewFromApi(r: any, butcherId: string): ButcherReview {
+  return {
+    id: r.id,
+    butcherId: r.butcherId || butcherId,
+    authorName: r.reviewer?.displayName || r.authorName || 'عميل سرح',
+    authorNameAr: r.reviewer?.arabicName || r.reviewer?.displayName || r.authorNameAr || 'عميل سرح',
+    authorAvatar: r.reviewer?.avatar || r.authorAvatar || undefined,
+    rating: r.rating ?? 5,
+    comment: r.comment || '',
+    commentAr: r.comment || '',
+    postedAt: r.createdAt,
+  };
+}
+
+function distributionFromReviews(list: { rating?: number }[]): Record<number, number> {
+  const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const row of list) {
+    const rating = Math.round(Number(row.rating) || 0);
+    if (rating >= 1 && rating <= 5) dist[rating] += 1;
+  }
+  return dist;
+}
+
+function offersFromCachedRaw(raw?: Record<string, unknown>): ButcherOffer[] {
+  const list = raw?.offers;
+  if (!Array.isArray(list)) return [];
+  return list.map((o) => mapOfferFromApi(o));
+}
+
+function hasUsableEmbeddedReviews(b: { reviews?: unknown; reviewCount?: unknown }): boolean {
+  if (!Array.isArray(b.reviews)) return false;
+  if (b.reviews.length > 0) return true;
+  return Number(b.reviewCount ?? 0) === 0;
+}
+
+const EMPTY_REVIEW_DISTRIBUTION: Record<number, number> = {
+  1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+};
+
+function applyDirectorySeed(id: string | undefined) {
+  const cached = id ? findCachedButcher(id) : null;
+  if (cached) {
+    return {
+      butcher: cached.profile,
+      offers: offersFromCachedRaw(cached.raw),
+      loading: false,
+    };
+  }
+  return {
+    butcher: null as ButcherProfile | null,
+    offers: [] as ButcherOffer[],
+    loading: true,
+  };
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ButcherProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -525,20 +598,34 @@ export default function ButcherProfileScreen() {
   const categoryBarOffsetRef = useRef<number>(0);
   const isUserScrollingRef = useRef<boolean>(false);
 
-  const [butcher, setButcher] = useState<ButcherProfile | null>(null);
+  const [hydratedId, setHydratedId] = useState(id);
+  const [butcher, setButcher] = useState<ButcherProfile | null>(
+    () => applyDirectorySeed(id).butcher,
+  );
   const butcherRef = useRef<ButcherProfile | null>(null);
   butcherRef.current = butcher;
   const [products, setProducts] = useState<ButcherProduct[]>([]);
-  const [offers, setOffers] = useState<ButcherOffer[]>([]);
+  const [offers, setOffers] = useState<ButcherOffer[]>(() => applyDirectorySeed(id).offers);
   const [reviews, setReviews] = useState<ButcherReview[]>([]);
   const [reviewDistribution, setReviewDistribution] = useState<Record<number, number>>({
-    1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+    ...EMPTY_REVIEW_DISTRIBUTION,
   });
   const [reviewDraft, setReviewDraft] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [storiesList, setStoriesList] = useState<ButcherStory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => applyDirectorySeed(id).loading);
   const [chatAccess, setChatAccess] = useState<ButcherChatAccess | null>(null);
+
+  if (id !== hydratedId) {
+    const next = applyDirectorySeed(id);
+    setHydratedId(id);
+    setButcher(next.butcher);
+    setProducts([]);
+    setOffers(next.offers);
+    setReviews([]);
+    setReviewDistribution({ ...EMPTY_REVIEW_DISTRIBUTION });
+    setLoading(next.loading);
+  }
 
   const stories = useMemo(
     () => storiesList.filter((s) => (butcher ? s.butcherId === butcher.id : false)),
@@ -635,20 +722,45 @@ export default function ButcherProfileScreen() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!id) return;
+
+    const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+
+    const applyReviewsPayload = (payload: any) => {
+      const list = Array.isArray(payload) ? payload : payload?.reviews;
+      if (Array.isArray(list)) {
+        setReviews(list.map((r: any) => mapReviewFromApi(r, id)));
+      }
+      if (payload?.distribution) {
+        setReviewDistribution(payload.distribution);
+      }
+    };
+
+    const fetchReviewsIfNeeded = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, { headers });
+        if (cancelled) return;
+        if (!res.ok) return;
+        const json = await res.json();
+        if (cancelled) return;
+        if (json.success) applyReviewsPayload(json.data);
+      } catch {
+        // Reviews are optional on profile load.
+      }
+    };
+
     const fetchButcherDetails = async () => {
-      if (!id) return;
       let failed = false;
       try {
         if (!butcherRef.current || butcherRef.current.id !== id) setLoading(true);
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const [res, resS] = await Promise.all([
-          fetch(`${API_BASE}/api/butchers/${id}`, { headers }),
-          fetch(`${API_BASE}/api/butchers/stories`),
-        ]);
+        const res = await fetch(`${API_BASE}/api/butchers/${id}`, { headers });
+        if (cancelled) return;
         if (res.ok) {
           const json = await res.json();
+          if (cancelled) return;
           if (json.success && json.data) {
             const b = json.data;
+            if (b.id && String(b.id) !== String(id)) return;
             const mappedButcher: ButcherProfile = {
               id: b.id,
               name: b.nameAr || b.nameEn,
@@ -684,52 +796,30 @@ export default function ButcherProfileScreen() {
               joinedAt: b.createdAt || new Date().toISOString(),
             };
             setButcher(mappedButcher);
-            
+
             if (b.products) {
               setProducts(
                 b.products.map((p: Record<string, unknown>) => mapButcherProductFromApi(p)),
               );
             }
-            
+
             if (b.offers) {
-              setOffers(b.offers.map((o: any) => ({
-                id: o.id,
-                butcherId: o.butcherId,
-                title: o.titleAr || o.titleEn,
-                titleAr: o.titleAr,
-                description: o.descriptionEn,
-                descriptionAr: o.descriptionAr,
-                discountPercent: o.discountPercent,
-                originalPrice: o.originalPrice,
-                offerPrice: o.offerPrice,
-                image: o.image || undefined,
-                validUntil: o.validUntil,
-                country: o.country,
-              })));
+              setOffers(b.offers.map((o: any) => mapOfferFromApi(o)));
             }
-            
-            if (b.reviews) {
-              setReviews(b.reviews.map((r: any) => ({
-                id: r.id,
-                butcherId: r.butcherId,
-                authorName: r.authorName || 'عميل سرح',
-                authorNameAr: r.authorNameAr || 'عميل سرح',
-                authorAvatar: r.authorAvatar || undefined,
-                rating: r.rating ?? 5,
-                comment: r.comment || '',
-                commentAr: r.comment || '',
-                postedAt: r.createdAt,
-              })));
+
+            if (hasUsableEmbeddedReviews(b) && Array.isArray(b.reviews)) {
+              setReviews(b.reviews.map((r: any) => mapReviewFromApi(r, id)));
+              setReviewDistribution(
+                b.reviews.length > 0
+                  ? distributionFromReviews(b.reviews)
+                  : { ...EMPTY_REVIEW_DISTRIBUTION },
+              );
+            } else {
+              void fetchReviewsIfNeeded();
             }
           }
         } else if (res.status !== 404) {
           failed = true;
-        }
-        if (!cancelled && resS.ok) {
-          const json = await resS.json();
-          if (json.success && Array.isArray(json.data)) {
-            setStoriesList(json.data);
-          }
         }
       } catch (err) {
         failed = true;
@@ -741,7 +831,24 @@ export default function ButcherProfileScreen() {
         setLoading(false);
       }
     };
+
+    const fetchStories = async () => {
+      try {
+        const resS = await fetch(`${API_BASE}/api/butchers/stories`);
+        if (cancelled) return;
+        if (!resS.ok) return;
+        const json = await resS.json();
+        if (cancelled) return;
+        if (json.success && Array.isArray(json.data)) {
+          setStoriesList(json.data);
+        }
+      } catch {
+        // Stories are optional and must not block butcher details.
+      }
+    };
+
     void fetchButcherDetails();
+    void fetchStories();
     return () => {
       cancelled = true;
     };
@@ -769,40 +876,6 @@ export default function ButcherProfileScreen() {
     });
   }, [butcher?.id, butcher?.nameAr, butcher?.logo, setButcherMeta]);
 
-  useEffect(() => {
-    if (!id) return;
-    const fetchReviews = async () => {
-      try {
-        const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-        const res = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, { headers });
-        if (!res.ok) return;
-        const json = await res.json();
-        const payload = json.data;
-        const list = Array.isArray(payload) ? payload : payload?.reviews;
-        if (json.success && Array.isArray(list)) {
-          setReviews(
-            list.map((r: any) => ({
-              id: r.id,
-              butcherId: id,
-              authorName: r.reviewer?.displayName || r.reviewer?.arabicName || 'عميل',
-              authorNameAr: r.reviewer?.arabicName || r.reviewer?.displayName || 'عميل',
-              authorAvatar: r.reviewer?.avatar,
-              rating: r.rating,
-              comment: r.comment || '',
-              commentAr: r.comment || '',
-              postedAt: r.createdAt,
-            })),
-          );
-        }
-        if (payload?.distribution) {
-          setReviewDistribution(payload.distribution);
-        }
-      } catch {
-        // Reviews are optional on profile load.
-      }
-    };
-    void fetchReviews();
-  }, [id, accessToken]);
 
   const handleOpenOptions = useCallback((product: ButcherProduct) => {
     if (!product.inStock) {

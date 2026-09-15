@@ -96,6 +96,44 @@ export function isSortedButchersFresh(
   return Boolean(entry && now - entry.fetchedAt < BUTCHERS_HOME_TTL_MS);
 }
 
+export type CachedButcherLookup = {
+  profile: ButcherProfile;
+  raw?: Record<string, unknown>;
+};
+
+function findFreshRawRecord(id: string, now: number): Record<string, unknown> | undefined {
+  for (const entry of sortedCache.values()) {
+    if (now - entry.fetchedAt >= BUTCHERS_HOME_TTL_MS) continue;
+    const raw = entry.raw.find((row) => String(row.id ?? '') === id);
+    if (raw) return raw;
+  }
+  return undefined;
+}
+
+/** TTL-respecting lookup of a butcher already shown on Home / directory lists. */
+export function findCachedButcher(id: string, now = Date.now()): CachedButcherLookup | null {
+  if (!id) return null;
+
+  if (homeSnapshot && now - homeSnapshot.fetchedAt < BUTCHERS_HOME_TTL_MS) {
+    const profile =
+      homeSnapshot.picks.find((b) => b.id === id) ??
+      homeSnapshot.nearby.find((b) => b.id === id);
+    if (profile) {
+      return { profile, raw: findFreshRawRecord(id, now) };
+    }
+  }
+
+  for (const entry of sortedCache.values()) {
+    if (now - entry.fetchedAt >= BUTCHERS_HOME_TTL_MS) continue;
+    const idx = entry.data.findIndex((b) => b.id === id);
+    if (idx >= 0) {
+      return { profile: entry.data[idx], raw: entry.raw[idx] };
+    }
+  }
+
+  return null;
+}
+
 export async function fetchSortedButchers(
   sort: ButcherSort,
   options?: {

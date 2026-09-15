@@ -1,5 +1,7 @@
 import {
+  BUTCHERS_HOME_TTL_MS,
   fetchSortedButchers,
+  findCachedButcher,
   getButchersHomeSnapshot,
   isButchersHomeSnapshotFresh,
   loadButchersHome,
@@ -121,5 +123,40 @@ describe('butcher directory P0 cache and failures', () => {
     const urls = (global.fetch as jest.Mock).mock.calls.map((call) => String(call[0]));
     expect(urls.filter((url) => url.includes('/api/butchers?sort=rating'))).toHaveLength(1);
     expect(urls.some((url) => /\/api\/butchers\/1(?:\?|$)/.test(url))).toBe(false);
+  });
+
+  it('finds a butcher in a fresh home snapshot or sorted cache and ignores TTL expiry', async () => {
+    expect(BUTCHERS_HOME_TTL_MS).toBe(60_000);
+    const butchers = Array.from({ length: 13 }, (_, i) =>
+      i === 0
+        ? { ...butcherPayload('1'), offers: [{ id: 'o1', titleAr: 'عرض', butcherId: '1' }] }
+        : butcherPayload(String(i + 1)),
+    );
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ success: true, data: { butchers } }),
+    );
+    await loadButchersHome();
+    const fromHome = findCachedButcher('1');
+    expect(fromHome?.profile.id).toBe('1');
+    expect(fromHome?.profile.nameAr).toBe('ملحمة 1');
+    expect(Array.isArray(fromHome?.raw?.offers)).toBe(true);
+    expect(getButchersHomeSnapshot()?.picks.some((row) => row.id === '13')).toBe(false);
+
+    const fromSorted = findCachedButcher('13');
+    expect(fromSorted?.profile.id).toBe('13');
+
+    const expiredAt = Date.now() + BUTCHERS_HOME_TTL_MS + 1;
+    expect(findCachedButcher('1', expiredAt)).toBeNull();
+    expect(findCachedButcher('13', expiredAt)).toBeNull();
+  });
+
+  it('seeds from a fresh sorted list even when the home snapshot is absent', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ success: true, data: { butchers: [butcherPayload('solo')] } }),
+    );
+    await fetchSortedButchers('rating');
+    expect(getButchersHomeSnapshot()).toBeNull();
+    expect(findCachedButcher('solo')?.profile.id).toBe('solo');
+    expect(findCachedButcher('missing')).toBeNull();
   });
 });
