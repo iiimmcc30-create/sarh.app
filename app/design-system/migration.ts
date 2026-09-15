@@ -82,10 +82,10 @@ export const PHASE_2_SCOPE = [
 ] as const;
 
 /**
- * Font migration status — Tajawal is the app SSOT; IBM Plex remains post-only.
+ * Font migration status — Tajawal is the sole app typeface for all text.
  */
 export const FONT_WEIGHT_MIGRATION = [
   'components/ui/AppText.tsx — weight-aware Tajawal (no Bold force)',
   'constants/theme.ts typography — roles map to Tajawal 500/600/700 faces',
-  'PostItem — IBM Plex Sans Arabic via resolvePostsFontFace only',
+  'PostItem — Tajawal via resolveAppFontFace (same as the rest of the app)',
 ] as const;

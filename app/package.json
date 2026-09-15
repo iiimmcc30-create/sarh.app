@@ -30,7 +30,6 @@
     "eas:preview:android": "eas build --profile preview --platform android --non-interactive"
   },
   "dependencies": {
-    "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
     "@expo-google-fonts/tajawal": "^0.4.1",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",

@@ -3,11 +3,8 @@ import {
   APP_FONT_FACES,
   APP_FONT_NAME,
   OFFICIAL_APP_FONT,
-  POSTS_FONT_FACES,
-  postsFont,
   resolveAppFontFace,
   resolveDesignFontFace,
-  resolvePostsFontFace,
   toLoadedFontStyle,
 } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
@@ -61,24 +58,13 @@ describe('resolveAppFontFace', () => {
     expect(resolveAppFontFace('600', 'monospace').fontFamily).toBe('monospace');
   });
 
-  it('preserves IBM Plex families for posts content', () => {
-    expect(resolveAppFontFace('400', postsFont.regular)).toEqual({
-      fontFamily: postsFont.regular,
+  it('maps leftover IBM family names to Tajawal instead of preserving them', () => {
+    expect(resolveAppFontFace('400', 'IBMPlexSansArabic_400Regular')).toEqual({
+      fontFamily: appFont.regular,
       fontWeight: '400',
     });
-    expect(resolveAppFontFace('700', postsFont.bold)).toEqual({
-      fontFamily: postsFont.bold,
-      fontWeight: '700',
-    });
-  });
-
-  it('resolves posts faces to IBM Plex', () => {
-    expect(resolvePostsFontFace('400')).toEqual({
-      fontFamily: postsFont.regular,
-      fontWeight: '400',
-    });
-    expect(resolvePostsFontFace('700')).toEqual({
-      fontFamily: postsFont.bold,
+    expect(resolveAppFontFace('700', 'IBMPlexSansArabic_700Bold')).toEqual({
+      fontFamily: appFont.bold,
       fontWeight: '700',
     });
   });
@@ -131,29 +117,25 @@ describe('typography tokens', () => {
     expect(typography.tab).toMatchObject({ fontSize: 10, lineHeight: 13 });
   });
 
-  it('registers Tajawal as the app face and IBM Plex for posts', () => {
+  it('registers Tajawal as the only app text face', () => {
     expect(APP_FONT_NAME).toBe('Tajawal');
     expect(APP_FONT_FACES).toEqual([
       'Tajawal_400Regular',
       'Tajawal_500Medium',
       'Tajawal_700Bold',
     ]);
-    expect(POSTS_FONT_FACES).toEqual([
-      'IBMPlexSansArabic_400Regular',
-      'IBMPlexSansArabic_500Medium',
-      'IBMPlexSansArabic_600SemiBold',
-      'IBMPlexSansArabic_700Bold',
-    ]);
   });
 });
 
 describe('package fonts', () => {
-  it('depends on Tajawal for the app and IBM Plex for posts only', () => {
+  it('depends on Tajawal only and does not ship IBM Plex', () => {
     const deps = {
       ...packageJson.dependencies,
       ...packageJson.devDependencies,
     };
     expect(deps['@expo-google-fonts/tajawal']).toBeTruthy();
-    expect(deps['@expo-google-fonts/ibm-plex-sans-arabic']).toBeTruthy();
+    expect(Object.prototype.hasOwnProperty.call(deps, '@expo-google-fonts/ibm-plex-sans-arabic')).toBe(
+      false,
+    );
   });
 });
