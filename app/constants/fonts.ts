@@ -1,52 +1,54 @@
 /**
- * Official Sarh UI typeface = listing price face:
- *   IBMPlexSansArabic_700Bold  (IBM Plex Sans Arabic Bold)
+ * Official Sarh UI typeface = Tajawal.
  *
- * Price text (`typography.valueLarge`) is the visual reference. Every content
- * face resolves to that same Bold file so the app never mixes Medium/SemiBold
- * letterforms with the price typeface.
- *
- * Still loaded (for legacy name remaps / tooling): Regular / Medium / SemiBold.
- * Tajawal is not used and must not be reintroduced.
+ * Tajawal_700Bold is the visual anchor for listing prices and headings.
+ * Tajawal_400Regular / 500Medium cover body and label roles.
+ * Tajawal has no 600 face — semibold aliases to 700Bold.
  *
  * Phase-2 official scale: `resolveDesignFontFace` maps 400/500/600/700 to
- * distinct IBM Plex files. Used by `@/design-system` AppText.
+ * Tajawal files. Used by `@/design-system` AppText.
  *
- * `resolveAppFontFace` stays Bold-only so existing screens that still go
- * through `@/components/ui/AppText` and `theme.typography` do not rewrite.
+ * `resolveAppFontFace` is weight-aware (does not force Bold). It preserves
+ * Flaticon / monospace faces and IBM Plex faces used by post content only.
+ *
+ * Posts (`PostItem`) keep IBM Plex Sans Arabic — not the app-wide Tajawal face.
  */
-export const APP_FONT_NAME = 'IBM Plex Sans Arabic' as const;
+export const APP_FONT_NAME = 'Tajawal' as const;
 
 export const appFont = {
+  regular: 'Tajawal_400Regular',
+  medium: 'Tajawal_500Medium',
+  /** Tajawal has no 600 — aliases to Bold. */
+  semibold: 'Tajawal_700Bold',
+  /** Official listing-price / emphasis face. */
+  bold: 'Tajawal_700Bold',
+} as const;
+
+/** Default emphasis face for legacy paths that still pin a single family. */
+export const OFFICIAL_APP_FONT = appFont.bold;
+
+/**
+ * Post feed / PostItem content face — IBM Plex Sans Arabic only.
+ * Must stay loaded and must not be remapped to Tajawal by applyAppFonts.
+ */
+export const POSTS_FONT_NAME = 'IBM Plex Sans Arabic' as const;
+
+export const postsFont = {
   regular: 'IBMPlexSansArabic_400Regular',
   medium: 'IBMPlexSansArabic_500Medium',
   semibold: 'IBMPlexSansArabic_600SemiBold',
-  /** Official sole content face — same as listing price. */
   bold: 'IBMPlexSansArabic_700Bold',
 } as const;
 
-/** The only content fontFamily used across the app (matches price). */
-export const OFFICIAL_APP_FONT = appFont.bold;
-
 export type AppFontWeight = '400' | '500' | '600' | '700';
 
-/** Faces that must not be rewritten to IBM Plex (icons / card numbers). */
+/** Faces that must not be rewritten (icons / card numbers). */
 const PRESERVED_FAMILIES = new Set([
   'monospace',
   'FlaticonUicons-RegularRounded',
   'FlaticonUicons-SolidRounded',
   'FlaticonUicons-BoldRounded',
 ]);
-
-function isLegacyTajawalFamily(family?: string): boolean {
-  if (!family) return false;
-  return /tajawal/i.test(family);
-}
-
-const OFFICIAL_FACE = {
-  fontFamily: OFFICIAL_APP_FONT,
-  fontWeight: '700' as const,
-};
 
 function normalizeAppFontWeight(weight?: string | number): AppFontWeight {
   const value = String(weight ?? '400').toLowerCase();
@@ -63,7 +65,22 @@ const DESIGN_FACES: Record<AppFontWeight, string> = {
   '700': appFont.bold,
 };
 
-/** Map any requested weight → official price Bold face (legacy live UI). */
+const POSTS_FACES: Record<AppFontWeight, string> = {
+  '400': postsFont.regular,
+  '500': postsFont.medium,
+  '600': postsFont.semibold,
+  '700': postsFont.bold,
+};
+
+export function isPostsFontFamily(family?: string): boolean {
+  if (!family) return false;
+  return /IBMPlexSansArabic/i.test(family);
+}
+
+/**
+ * Weight-aware app face resolver for live Text patching / legacy AppText.
+ * Preserves icon faces and post (IBM Plex) families; maps other text to Tajawal.
+ */
 export function resolveAppFontFace(
   weight?: string | number,
   existingFamily?: string,
@@ -72,18 +89,21 @@ export function resolveAppFontFace(
     return { fontFamily: existingFamily, fontWeight: '400' };
   }
 
-  // Ignore weight / legacy Medium-SemiBold names — price Bold only.
-  void weight;
-  if (isLegacyTajawalFamily(existingFamily)) {
-    return { ...OFFICIAL_FACE };
+  const fontWeight = normalizeAppFontWeight(weight);
+
+  if (isPostsFontFamily(existingFamily)) {
+    return {
+      fontFamily: existingFamily ?? POSTS_FACES[fontWeight],
+      fontWeight,
+    };
   }
 
-  return { ...OFFICIAL_FACE };
+  return { fontFamily: DESIGN_FACES[fontWeight], fontWeight };
 }
 
 /**
- * Official design-system face resolver — real IBM Plex weights.
- * Do not use from legacy screens that still expect Bold remapping.
+ * Official design-system face resolver — Tajawal weights for app UI.
+ * Do not use for PostItem (use `resolvePostsFontFace`).
  */
 export function resolveDesignFontFace(
   weight?: string | number,
@@ -92,15 +112,34 @@ export function resolveDesignFontFace(
   if (existingFamily && PRESERVED_FAMILIES.has(existingFamily)) {
     return { fontFamily: existingFamily, fontWeight: '400' };
   }
+  if (isPostsFontFamily(existingFamily)) {
+    const fontWeight = normalizeAppFontWeight(weight);
+    return { fontFamily: existingFamily ?? POSTS_FACES[fontWeight], fontWeight };
+  }
 
   const fontWeight = normalizeAppFontWeight(weight);
   return { fontFamily: DESIGN_FACES[fontWeight], fontWeight };
 }
 
-/** Registered IBM Plex Sans Arabic faces loaded at boot. */
+/** Pin post content styles to IBM Plex while the rest of the app uses Tajawal. */
+export function resolvePostsFontFace(
+  weight?: string | number,
+): { fontFamily: string; fontWeight: AppFontWeight } {
+  const fontWeight = normalizeAppFontWeight(weight);
+  return { fontFamily: POSTS_FACES[fontWeight], fontWeight };
+}
+
+/** Registered Tajawal faces loaded for app-wide UI. */
 export const APP_FONT_FACES = [
   appFont.regular,
   appFont.medium,
-  appFont.semibold,
   appFont.bold,
+] as const;
+
+/** IBM Plex faces kept loaded for PostItem / posts feed only. */
+export const POSTS_FONT_FACES = [
+  postsFont.regular,
+  postsFont.medium,
+  postsFont.semibold,
+  postsFont.bold,
 ] as const;

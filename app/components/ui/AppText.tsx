@@ -14,14 +14,14 @@ function withOfficialFont(style: StyleProp<TextStyle> | undefined): StyleProp<Te
 /**
  * Default text primitive. Relies on global I18nManager RTL — no textAlign,
  * no LTR island, no physical-edge alignment. Use this in all new screens.
+ * Defaults to Tajawal Bold; caller styles may request other Tajawal weights.
  */
 export function AppText({ style, ...rest }: AppTextProps) {
   return (
     <Text
       style={[
         getRtlText(),
-        { fontFamily: OFFICIAL_APP_FONT, fontWeight: '700' },
-        withOfficialFont(style),
+        withOfficialFont([{ fontFamily: OFFICIAL_APP_FONT, fontWeight: '700' }, style]),
       ]}
       {...rest}
     />

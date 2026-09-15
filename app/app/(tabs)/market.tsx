@@ -244,6 +244,11 @@ export default function MarketScreen() {
     [router],
   );
 
+  const ListSeparator = useCallback(
+    () => <View style={styles.listSeparator} />,
+    [],
+  );
+
   const ListHeader = useCallback(
     () => (
       <View style={styles.listingsHead}>
@@ -295,6 +300,7 @@ export default function MarketScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           ListHeaderComponent={ListHeader}
+          ItemSeparatorComponent={ListSeparator}
           ListEmptyComponent={
             loading ? (
               <Stack gap="md" align="center" style={styles.empty}>
@@ -359,6 +365,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 0,
+  },
+  listSeparator: {
+    height: spacing.xs,
   },
   listingsHead: {
     width: '100%',
