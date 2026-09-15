@@ -43,6 +43,19 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).not.toContain('/sarh-services');
   });
 
+  it('slides the app sidebar in from the RTL start edge (right)', () => {
+    const layout = src('app/_layout.tsx');
+    const sidebarScreen = layout.match(
+      /<Stack\.Screen\s+name="sidebar"[\s\S]*?\/>/,
+    )?.[0];
+    expect(sidebarScreen).toBeTruthy();
+    expect(sidebarScreen).toContain('stackSlideAnimation()');
+    expect(sidebarScreen).not.toContain('stackSlideBackAnimation()');
+    expect(src('lib/rtl.ts')).toContain(
+      "return isAppRtl() ? 'slide_from_right' : 'slide_from_left'",
+    );
+  });
+
   it('flattens own-profile stats/tabs and removes settings icon entry', () => {
     const profile = src('app/(tabs)/profile.tsx');
     const layout = src('components/feature/ProfileScreenLayout.tsx');
