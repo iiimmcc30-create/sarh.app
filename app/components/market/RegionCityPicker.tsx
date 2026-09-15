@@ -5,7 +5,6 @@ import {
   SAUDI_REGIONS,
   resolveSaudiMainCities,
 } from '@/constants/saudiRegions';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { searchSaudiRegions } from '@/lib/saudiRegionSearch';
@@ -353,20 +352,18 @@ function createStyles(colors: ThemeColors) {
     },
     title: {
       ...typography.cardHeading,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: 20,
       lineHeight: 28,
       color: colors.textPrimary,
       width: '100%',
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     subtitle: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       width: '100%',
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
       marginTop: 2,
       includeFontPadding: false,
     },
@@ -395,9 +392,8 @@ function createStyles(colors: ThemeColors) {
     searchInput: {
       flex: 1,
       ...typography.secondary,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     scroll: {
@@ -413,10 +409,9 @@ function createStyles(colors: ThemeColors) {
     },
     sectionTitle: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       width: '100%',
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     regionGrid: {
@@ -440,7 +435,6 @@ function createStyles(colors: ThemeColors) {
     },
     regionChipText: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: 12,
       lineHeight: 18,
       color: colors.textPrimary,
@@ -475,7 +469,6 @@ function createStyles(colors: ThemeColors) {
     },
     cityChipText: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: 13,
       color: colors.textPrimary,
       textAlign: 'center',
@@ -495,7 +488,6 @@ function createStyles(colors: ThemeColors) {
     },
     allChipText: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       writingDirection: 'rtl',
       includeFontPadding: false,
@@ -521,23 +513,20 @@ function createStyles(colors: ThemeColors) {
     },
     searchRowTitle: {
       ...typography.cardHeading,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       width: '100%',
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     searchRowSub: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       width: '100%',
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
       includeFontPadding: false,
     },
     empty: {
       ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       textAlign: 'center',
       paddingVertical: spacing.xl,
@@ -559,7 +548,6 @@ function createStyles(colors: ThemeColors) {
     },
     applyText: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: '#FFFFFF',
       includeFontPadding: false,
     },
@@ -575,7 +563,6 @@ function createStyles(colors: ThemeColors) {
     },
     resetText: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
       includeFontPadding: false,
     },

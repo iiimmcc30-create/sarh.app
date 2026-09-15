@@ -1,5 +1,5 @@
 /**
- * Butcher UI typography — aliases global `typography` (Tajawal).
+ * Butcher UI typography — aliases global `typography` (weight-aware Tajawal).
  * `tab` / `tabActive` stay frozen for ButchersTabBar.
  */
 import { APP_FONT_NAME } from '@/constants/fonts';

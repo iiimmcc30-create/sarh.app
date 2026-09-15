@@ -4,7 +4,7 @@
 
 import { luxuryDark } from './homeLuxury';
 import { sarh } from './sarhTokens';
-import { OFFICIAL_APP_FONT } from './fonts';
+import { appFont } from './fonts';
 import { applyDesignSystemColors } from '@/design-system/tokens/colors';
 import { applyButtonTokens } from '@/design-system/tokens/button';
 import { motion as dsMotion } from '@/design-system/tokens/motion';
@@ -368,18 +368,27 @@ const directionalText = {
   writingDirection: 'rtl' as const,
 };
 
-/** Same face as listing price (`Tajawal_700Bold`) — sole UI typeface. */
-const officialFace = {
-  fontFamily: OFFICIAL_APP_FONT,
+/**
+ * Live theme faces → Tajawal (weight-aware).
+ * Sizes / lineHeights below stay frozen; only the face/weight mapping is corrected
+ * so Android/iOS load the matching Tajawal file instead of falling back to system.
+ */
+const face500 = {
+  fontFamily: appFont.medium,
+  fontWeight: '500' as const,
+};
+const face600 = {
+  fontFamily: appFont.semibold,
+  fontWeight: '600' as const,
+};
+const face700 = {
+  fontFamily: appFont.bold,
   fontWeight: '700' as const,
 };
-const face500 = officialFace;
-const face600 = officialFace;
-const face700 = officialFace;
 
 /**
  * Sarh content typography — sizes 12 / 14 / 15 / 16 / 18 / 20 / 24.
- * All tokens use the official listing-price Bold face (`OFFICIAL_APP_FONT`).
+ * Each role maps to the intended Tajawal weight (500 / 600 / 700).
  * `tab` / `tabActive` keep frozen sizes for bottom navigation.
  */
 export const typography = {
@@ -493,11 +502,10 @@ export const typography = {
   },
   /**
    * Frozen — FloatingTabBar / ButchersTabBar only.
-   * Do not change size, weight, or line height.
+   * Do not change size or line height.
    */
   tab: {
-    fontFamily: OFFICIAL_APP_FONT,
-    fontWeight: '700' as const,
+    ...face700,
     fontSize: 10,
     lineHeight: 13,
     textAlign: 'center' as const,
@@ -505,11 +513,10 @@ export const typography = {
   },
   /**
    * Frozen — active bottom-tab label.
-   * Do not change size, weight, or line height.
+   * Do not change size or line height.
    */
   tabActive: {
-    fontFamily: OFFICIAL_APP_FONT,
-    fontWeight: '700' as const,
+    ...face700,
     fontSize: 10,
     lineHeight: 13,
     textAlign: 'center' as const,

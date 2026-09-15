@@ -1,4 +1,4 @@
-import { APP_FONT_FACES, OFFICIAL_APP_FONT } from '@/constants/fonts';
+import { APP_FONT_FACES } from '@/constants/fonts';
 import { luxuryDark } from '@/constants/homeLuxury';
 import { sarh } from '@/constants/sarhTokens';
 import { colors as liveThemeColors, typography as liveTypography, applyThemeScheme } from '@/constants/theme';
@@ -136,7 +136,7 @@ describe('Sarh design-system foundation', () => {
   });
 
   it('does not rewrite the live Bold-only theme typography', () => {
-    expect(liveTypography.body.fontFamily).toBe(OFFICIAL_APP_FONT);
+    expect(liveTypography.body.fontFamily).toBe('Tajawal_500Medium');
     expect(liveTypography.display.fontSize).toBe(24);
     expect(typography.display.fontSize).toBe(28);
   });

@@ -3,7 +3,7 @@
  * Post content that already sets an IBM Plex family is preserved.
  */
 import { Text, TextInput, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
-import { OFFICIAL_APP_FONT, resolveAppFontFace } from '@/constants/fonts';
+import { resolveAppFontFace, toLoadedFontStyle } from '@/constants/fonts';
 
 type AnyTextProps = {
   style?: StyleProp<TextStyle>;
@@ -14,7 +14,7 @@ function withAppFont(style: StyleProp<TextStyle> | undefined): StyleProp<TextSty
   const flat = StyleSheet.flatten(style) as TextStyle | undefined;
   const face = resolveAppFontFace(flat?.fontWeight, flat?.fontFamily);
   if (face.fontFamily === 'monospace') return style;
-  return [style, { fontFamily: face.fontFamily, fontWeight: face.fontWeight }];
+  return [style, toLoadedFontStyle(face)];
 }
 
 let applied = false;
@@ -29,12 +29,10 @@ function patchHost(
       original({ ...props, style: withAppFont(props.style as StyleProp<TextStyle>) }, ref);
     return;
   }
+  // Fallback hosts without a custom render: seed Regular Tajawal (weight-aware remap).
   Component.defaultProps = {
     ...Component.defaultProps,
-    style: withAppFont([
-      { fontFamily: OFFICIAL_APP_FONT, fontWeight: '700' },
-      Component.defaultProps?.style as StyleProp<TextStyle>,
-    ]),
+    style: withAppFont(Component.defaultProps?.style as StyleProp<TextStyle>),
   };
 }
 

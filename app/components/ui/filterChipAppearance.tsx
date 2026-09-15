@@ -4,7 +4,6 @@ import { typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { motion } from '@/design-system';
 import { FILTER_CHIP, MARKET_CHIP } from '@/components/ui/filterChipTokens';
 
@@ -124,7 +123,6 @@ export function createChipStyles(colors: ThemeColors, compact: boolean) {
     },
     label: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: tokens.fontSize,
       lineHeight: tokens.lineHeight,
       color: colors.textPrimary,

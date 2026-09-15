@@ -75,18 +75,17 @@ export const HARDCODED_AUDIT = {
 
 export const PHASE_2_SCOPE = [
   'Core primitives live in `@/design-system/components` — adopt screen-by-screen',
-  'Legacy `@/components/ui/AppText` and `resolveAppFontFace` still remap to Bold',
+  'Legacy `@/components/ui/AppText` + `theme.typography` resolve weight-aware Tajawal',
   'Replace hardcoded hex in payment / live / story / listing surfaces',
   'theme.ts danger/warning now alias sarh.color; rose/amber remain decorative',
   'Leave gold / rose / amber / liveRed as local accents — do not promote to brand tokens',
 ] as const;
 
 /**
- * Screens still on Bold remapping via `@/components/ui/AppText` + `theme.typography`.
- * Switch to `@/design-system` AppText variants when a screen is redesigned.
+ * Font migration status — Tajawal is the app SSOT; IBM Plex remains post-only.
  */
 export const FONT_WEIGHT_MIGRATION = [
-  'components/ui/AppText.tsx — default Bold wrapper for existing screens',
-  'constants/theme.ts typography — every role still sets Bold / OFFICIAL_APP_FONT',
-  'Home / Feed / Marketplace / Profile / Messaging / Ministry — do not migrate in phase 2',
+  'components/ui/AppText.tsx — weight-aware Tajawal (no Bold force)',
+  'constants/theme.ts typography — roles map to Tajawal 500/600/700 faces',
+  'PostItem — IBM Plex Sans Arabic via resolvePostsFontFace only',
 ] as const;

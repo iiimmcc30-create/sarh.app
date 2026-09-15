@@ -398,13 +398,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     name: {
       ...typography.cardHeading,
-      ...resolvePostsFontFace(typography.cardHeading.fontWeight),
+      ...resolvePostsFontFace('600'),
       color: colors.textPrimary,
       flexShrink: 1,
     },
     handle: {
       ...typography.caption,
-      ...resolvePostsFontFace(typography.caption.fontWeight),
+      ...resolvePostsFontFace('400'),
       color: colors.textMuted,
       flexShrink: 1,
     },
@@ -419,24 +419,24 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     ratingMiniText: {
       ...typography.caption,
-      ...resolvePostsFontFace(typography.caption.fontWeight),
+      ...resolvePostsFontFace('400'),
       color: colors.textSecondary,
     },
     metaMuted: {
       ...typography.caption,
-      ...resolvePostsFontFace(typography.caption.fontWeight),
+      ...resolvePostsFontFace('400'),
       color: colors.textMuted,
       flexShrink: 0,
     },
     metaDot: {
       ...typography.caption,
-      ...resolvePostsFontFace(typography.caption.fontWeight),
+      ...resolvePostsFontFace('400'),
       color: colors.textSubtle,
       flexShrink: 0,
     },
     viewsMeta: {
       ...typography.caption,
-      ...resolvePostsFontFace(typography.caption.fontWeight),
+      ...resolvePostsFontFace('400'),
       color: colors.textSecondary,
       flexShrink: 0,
     },
@@ -452,7 +452,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     body: {
       ...typography.body,
-      ...resolvePostsFontFace(typography.body.fontWeight),
+      ...resolvePostsFontFace('400'),
       color: colors.textPrimary,
       marginTop: 4,
       lineHeight: 24,
@@ -462,7 +462,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     showMore: {
       ...typography.secondary,
-      ...resolvePostsFontFace(typography.secondary.fontWeight),
+      ...resolvePostsFontFace('500'),
       color: colors.electricBright,
       marginTop: 4,
     },
@@ -491,7 +491,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     actionCount: {
       ...typography.caption,
-      ...resolvePostsFontFace(typography.caption.fontWeight),
+      ...resolvePostsFontFace('400'),
     },
     viewsSlot: {
       alignItems: 'center',
