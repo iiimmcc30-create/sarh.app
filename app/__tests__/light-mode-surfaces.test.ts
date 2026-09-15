@@ -18,7 +18,7 @@ describe('light mode surface hierarchy', () => {
 
   it('maps page, card, field, chip, and border tiers from the central theme', () => {
     applyThemeScheme('light');
-    expect(liveTheme.screenRoot).toBe('#F8F9FA');
+    expect(liveTheme.screenRoot).toBe('#FFFFFF');
     expect(liveTheme.bgSurface).toBe('#FFFFFF');
     expect(liveTheme.bgElevated).toBe('#FFFFFF');
     expect(liveTheme.bgField).toBe('#F1F3F5');

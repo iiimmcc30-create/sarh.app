@@ -20,6 +20,10 @@ import {
 } from '@/design-system';
 
 describe('Sarh design-system foundation', () => {
+  afterEach(() => {
+    applyThemeScheme('dark');
+  });
+
   it('reuses the live Sarh Dark palette hex values', () => {
     expect(palette.bg).toBe('#07131C');
     expect(palette.surface).toBe('#0C1C27');
@@ -58,7 +62,7 @@ describe('Sarh design-system foundation', () => {
   it('exposes nested semantic aliases that follow applyThemeScheme', () => {
     applyThemeScheme('light');
     expect(semantic.background).toBe(colors.background);
-    expect(semantic.background).toBe('#F8F9FA');
+    expect(semantic.background).toBe('#FFFFFF');
     expect(semantic.surface).toBe(colors.surface);
     expect(semantic.text.primary).toBe(colors.textPrimary);
     expect(semantic.action.primary).toBe(colors.primary);
@@ -178,13 +182,14 @@ describe('Sarh design-system foundation', () => {
   });
 
   it('does not change the live dark background', () => {
+    applyThemeScheme('dark');
     expect(liveThemeColors.bgPrimary).toBe(sarh.color.bg);
     expect(colors.background).toBe(liveThemeColors.bgPrimary);
   });
 
   it('keeps design-system semantic colors in sync with applyThemeScheme', () => {
     applyThemeScheme('light');
-    expect(colors.background).toBe('#F8F9FA');
+    expect(colors.background).toBe('#FFFFFF');
     expect(colors.surface).toBe('#FFFFFF');
     expect(colors.textPrimary).toBe('#101820');
     applyThemeScheme('dark');

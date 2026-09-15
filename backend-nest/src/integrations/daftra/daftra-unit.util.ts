@@ -47,7 +47,8 @@ export function extractDaftraSaleUnit(raw: unknown): string | null {
   const product = row ? (asRecord(row.Product) ?? row) : null;
   if (!product) return null;
 
-  const unitTemplate = asRecord(row?.UnitTemplate) ?? asRecord(product.UnitTemplate);
+  const unitTemplate =
+    asRecord(row?.UnitTemplate) ?? asRecord(product.UnitTemplate);
   const sellUnit =
     asRecord(row?.SellUnit) ??
     asRecord(product.SellUnit) ??

@@ -103,7 +103,7 @@ services:
       redis:
         condition: service_healthy
       api:
-        condition: service_started
+        condition: service_healthy
     networks:
       - sarh_internal
     entrypoint: ['node']
@@ -142,7 +142,7 @@ services:
       redis:
         condition: service_healthy
       api:
-        condition: service_started
+        condition: service_healthy
     ports:
       - '127.0.0.1:3002:3002'
     networks:

@@ -9,10 +9,6 @@ import { KnowledgeCenterService } from '../../knowledge/services/knowledge-cente
 import { DaftraService } from '../../integrations/daftra/daftra.service';
 import { cronCleanupAuthHeader } from '../../admin/lib/cron-auth';
 
-/** Synthetic actor for timeline comments from the worker poll (not a real admin login). */
-export const DAFTRA_PRODUCT_SYNC_CRON_ACTOR =
-  '00000000-0000-4000-8000-daftra00c001';
-
 export const DAFTRA_PRODUCT_SYNC_INTERVAL_MS = 10 * 60 * 1000;
 export const DAFTRA_PRODUCT_SYNC_LOCK_TTL_SEC = 9 * 60;
 
@@ -261,10 +257,7 @@ export class WorkerCronService implements OnModuleDestroy {
     butcherId: string,
   ): Promise<'synced' | 'locked'> {
     const run = async () => {
-      const result = await this.daftra.syncProductsFromDaftra(
-        DAFTRA_PRODUCT_SYNC_CRON_ACTOR,
-        butcherId,
-      );
+      const result = await this.daftra.syncProductsFromDaftra(null, butcherId);
       this.logger.info(
         {
           butcherId,

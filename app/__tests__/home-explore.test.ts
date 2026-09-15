@@ -211,15 +211,14 @@ describe('HomeAppBar chrome', () => {
       'utf8',
     );
     const nearbyAt = src.indexOf('label="القريب"');
-    const sortBarAt = src.indexOf('sortCategoryBar', nearbyAt);
-    const sortIconAt = src.indexOf('name="sort-alt"', sortBarAt);
-    const categoryAt = src.indexOf('التصنيف', sortBarAt);
+    const sortAt = src.indexOf('name="sort-alt"', nearbyAt);
+    const categoryAt = src.indexOf('التصنيف', sortAt);
     expect(nearbyAt).toBeGreaterThan(-1);
-    expect(sortBarAt).toBeGreaterThan(nearbyAt);
-    expect(sortIconAt).toBeGreaterThan(sortBarAt);
-    expect(categoryAt).toBeGreaterThan(sortBarAt);
+    expect(sortAt).toBeGreaterThan(nearbyAt);
+    expect(categoryAt).toBeGreaterThan(sortAt);
     expect(src).toContain('options-outline');
     expect(src).toContain('onCategoryPress');
+    expect(src).toContain('onSortPress');
   });
 
   it('uses elevated listing-card surface for compact market chips', () => {

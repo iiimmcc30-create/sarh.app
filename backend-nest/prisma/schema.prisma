@@ -1106,13 +1106,14 @@ model ButcherApplicationTimelineEvent {
   applicationId String
   action        ButcherApplicationTimelineAction
   comment       String?
-  createdBy     String
+  /// Null for automated system events (e.g. Daftra product poll). Real admin/user events keep a User.id.
+  createdBy     String?
   /// Defaults to {} so timeline rows always carry a JSON object; app may merge transition context.
   metadata      Json                             @default("{}")
   createdAt     DateTime                         @default(now())
 
   application ButcherApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
-  actor       User               @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  actor       User?              @relation(fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([applicationId, createdAt])
   @@index([createdBy])

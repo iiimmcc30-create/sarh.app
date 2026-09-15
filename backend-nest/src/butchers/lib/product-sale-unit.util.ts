@@ -14,10 +14,16 @@ export function resolveProductSaleUnit(
 
 export function isDaftraKgProduct(product: ProductSaleUnitSource): boolean {
   const saleUnit = resolveProductSaleUnit(product);
-  return product.priceFixed != null && product.pricePerKg == null && isKgSaleUnit(saleUnit);
+  return (
+    product.priceFixed != null &&
+    product.pricePerKg == null &&
+    isKgSaleUnit(saleUnit)
+  );
 }
 
-export function isDaftraUnitCountProduct(product: ProductSaleUnitSource): boolean {
+export function isDaftraUnitCountProduct(
+  product: ProductSaleUnitSource,
+): boolean {
   const saleUnit = resolveProductSaleUnit(product);
   return (
     product.priceFixed != null &&
