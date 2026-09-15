@@ -32,6 +32,7 @@ import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import {
+  getBootstrappedListingsPage,
   mergeListingPages,
   searchListingsPage,
   shouldFetchNextListingPage,
@@ -85,6 +86,21 @@ export default function MarketScreen() {
 
   const loadFirstPage = useCallback(async () => {
     const gen = ++loadGenRef.current;
+    const hasServerFilters = Boolean(
+      apiFilters.featured || apiFilters.categoryId || apiFilters.subcategoryId,
+    );
+    if (!hasServerFilters) {
+      const boot = getBootstrappedListingsPage(accessToken);
+      if (boot) {
+        if (gen !== loadGenRef.current) return;
+        setItems(boot.listings);
+        setNextCursor(boot.nextCursor);
+        setHasMore(boot.hasMore);
+        setLoadFailed(false);
+        setLoading(false);
+        return;
+      }
+    }
     if (!hasItemsRef.current) setLoading(true);
     setLoadFailed(false);
     try {

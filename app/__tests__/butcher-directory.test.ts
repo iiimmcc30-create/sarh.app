@@ -5,6 +5,7 @@ import {
   loadButchersHome,
   resetButchersDirectoryCache,
 } from '../services/butcherDirectory';
+import { fetchButcherOffersPreview } from '../services/butcherOffersPreview';
 
 jest.mock('../services/api', () => ({
   API_BASE: 'https://example.test',
@@ -103,5 +104,22 @@ describe('butcher directory P0 cache and failures', () => {
       'butchers_fetch_failed',
     );
     expect(getButchersHomeSnapshot()?.picks.map((b) => b.id)).toEqual(['ok']);
+  });
+
+  it('passes rating list records into offers preview instead of refetching or fanning out details', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ success: true, data: { butchers: [butcherPayload('1')] } }),
+    );
+    await loadButchersHome();
+    expect(fetchButcherOffersPreview).toHaveBeenCalledWith(
+      undefined,
+      20,
+      expect.objectContaining({
+        records: [expect.objectContaining({ id: '1', country: 'SA' })],
+      }),
+    );
+    const urls = (global.fetch as jest.Mock).mock.calls.map((call) => String(call[0]));
+    expect(urls.filter((url) => url.includes('/api/butchers?sort=rating'))).toHaveLength(1);
+    expect(urls.some((url) => /\/api\/butchers\/1(?:\?|$)/.test(url))).toBe(false);
   });
 });

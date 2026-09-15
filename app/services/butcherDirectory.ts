@@ -20,7 +20,11 @@ export type ButchersHomeSnapshot = {
 
 export type ButcherSort = 'rating' | 'distance';
 
-type SortedCacheEntry = { data: ButcherProfile[]; fetchedAt: number };
+type SortedCacheEntry = {
+  data: ButcherProfile[];
+  raw: Record<string, unknown>[];
+  fetchedAt: number;
+};
 
 let homeSnapshot: ButchersHomeSnapshot | null = null;
 let homeLoadInflight: Promise<ButchersHomeSnapshot> | null = null;
@@ -76,6 +80,13 @@ export function getCachedSortedButchers(
   return sortedCache.get(butcherSortCacheKey(sort, coords))?.data ?? null;
 }
 
+export function getCachedSortedButcherRecords(
+  sort: ButcherSort,
+  coords?: { lat: number; lng: number } | null,
+): Record<string, unknown>[] | null {
+  return sortedCache.get(butcherSortCacheKey(sort, coords))?.raw ?? null;
+}
+
 export function isSortedButchersFresh(
   sort: ButcherSort,
   coords?: { lat: number; lng: number } | null,
@@ -123,10 +134,11 @@ export async function fetchSortedButchers(
     if (!json.success || !Array.isArray(json.data?.butchers)) {
       throw new Error('butchers_fetch_failed');
     }
-    const data = (json.data.butchers as Record<string, unknown>[])
-      .filter((b) => (b.country || 'SA') !== 'EG')
-      .map((b) => mapButcherFromApi(b));
-    sortedCache.set(key, { data, fetchedAt: Date.now() });
+    const raw = (json.data.butchers as Record<string, unknown>[]).filter(
+      (b) => (b.country || 'SA') !== 'EG',
+    );
+    const data = raw.map((b) => mapButcherFromApi(b));
+    sortedCache.set(key, { data, raw, fetchedAt: Date.now() });
     return data;
   })().finally(() => {
     if (sortedInflight.get(key) === promise) sortedInflight.delete(key);
@@ -150,11 +162,12 @@ export async function loadButchersHome(
       token: accessToken,
       force: options?.force,
     });
+    const ratingRecords = getCachedSortedButcherRecords('rating') ?? [];
     const [banners, offers] = await Promise.all([
       fetchButcherMarketBanners(),
-      fetchButcherOffersPreview(accessToken, BUTCHER_HOME_OFFERS_LIMIT).catch(
-        () => homeSnapshot?.offers ?? [],
-      ),
+      fetchButcherOffersPreview(accessToken, BUTCHER_HOME_OFFERS_LIMIT, {
+        records: ratingRecords,
+      }).catch(() => homeSnapshot?.offers ?? []),
     ]);
     return setButchersHomeSnapshot({
       picks: rated.slice(0, BUTCHERS_HOME_SECTION_LIMIT),

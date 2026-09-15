@@ -1,5 +1,9 @@
 import {
+  buildListingsFeedUrl,
+  getBootstrappedListingsPage,
   mergeListingPages,
+  rememberListingsBootstrapPage,
+  resetListingsBootstrapCache,
   searchAllSellerListings,
   searchListingsPage,
   shouldFetchNextListingPage,
@@ -63,7 +67,26 @@ function listingStub(id: string): Listing {
 describe('marketplace listing pagination', () => {
   afterEach(() => {
     resetRequestCoordination();
+    resetListingsBootstrapCache();
     jest.restoreAllMocks();
+  });
+
+  it('uses the same unfiltered listings URL as AppContext bootstrap', () => {
+    expect(buildListingsFeedUrl('https://api.test')).toBe('https://api.test/api/listings');
+    expect(buildListingsFeedUrl('https://api.test/', { featured: true })).toBe(
+      'https://api.test/api/listings?featured=true',
+    );
+  });
+
+  it('reuses a fresh bootstrap listings page only for the same auth tag', () => {
+    expect(getBootstrappedListingsPage()).toBeNull();
+    rememberListingsBootstrapPage({
+      listings: [listingStub('boot')],
+      nextCursor: 'boot',
+      hasMore: true,
+    });
+    expect(getBootstrappedListingsPage()?.listings.map((row) => row.id)).toEqual(['boot']);
+    expect(getBootstrappedListingsPage('token')).toBeNull();
   });
 
   it('returns nextCursor and hasMore from the listings API', async () => {

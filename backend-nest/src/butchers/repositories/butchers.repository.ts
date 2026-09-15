@@ -12,6 +12,7 @@ export type ButcherListSort =
 const BUTCHER_LIST_INCLUDE = {
   user: { select: { id: true, username: true, avatar: true } },
   _count: { select: { products: true, orders: true, favorites: true } },
+  offers: true,
 } as const;
 
 const BUTCHER_DETAIL_INCLUDE = {
