@@ -71,7 +71,15 @@ const postsFetchInflight = new Map<string, Promise<void>>();
 const postsLastFetchOk = new Map<string, boolean>();
 const postsLastSuccessAt = new Map<string, number>();
 const postsCacheByFeed = new Map<string, Post[]>();
-const postsApplyGeneration = createRequestGeneration();
+const postsApplyGenerationByFeed = {
+  for_you: createRequestGeneration(),
+  following: createRequestGeneration(),
+};
+function postsGeneration(feed: string) {
+  return feed === 'following'
+    ? postsApplyGenerationByFeed.following
+    : postsApplyGenerationByFeed.for_you;
+}
 let activePostsFeed: 'for_you' | 'following' | null = null;
 let bootstrapInflight: Promise<void> | null = null;
 
@@ -373,9 +381,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchedPosts: Post[],
     applyGen?: number,
   ): boolean => {
+    const gen = postsGeneration(feed);
+    const token = applyGen ?? gen.next();
+    if (!gen.isCurrent(token)) return false;
     postsCacheByFeed.set(feed, fetchedPosts);
-    const token = applyGen ?? postsApplyGeneration.next();
-    if (!postsApplyGeneration.isCurrent(token)) return false;
     commitPostsFeed(feed, fetchedPosts);
     return true;
   }, [commitPostsFeed]);
@@ -424,7 +433,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     let succeeded = false;
-    const applyGen = postsApplyGeneration.next();
+    const applyGen = postsGeneration(inflightKey).next();
     const promise = (async () => {
       try {
         const qs = feed === 'following' ? '?feed=following' : '';

@@ -50,9 +50,11 @@ export async function fetchUserPosts(userId: string): Promise<Post[]> {
       headers: { 'Cache-Control': 'no-cache' },
     },
   );
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error('user_posts_fetch_failed');
   const json = await res.json();
-  if (!json.success || !Array.isArray(json.data?.posts)) return [];
+  if (!json.success || !Array.isArray(json.data?.posts)) {
+    throw new Error('user_posts_fetch_failed');
+  }
   return json.data.posts
     .map((p: Record<string, unknown>) => mapPostFromApi(p))
     .filter((p: Post | null): p is Post => Boolean(p));

@@ -11,7 +11,7 @@ import { pickHomeCommunityPosts } from '@/lib/homeCommunityPosts';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { safePush } from '@/lib/safeNavigate';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export function HomeCommunityPosts() {
@@ -29,10 +29,24 @@ export function HomeCommunityPosts() {
     deletePost,
     fetchPosts,
   } = useApp();
+  const postsLenRef = useRef(posts.length);
+  const inflightRef = useRef(false);
+  const needsFailureRecoveryRef = useRef(false);
+  postsLenRef.current = posts.length;
+  if (posts.length > 0) needsFailureRecoveryRef.current = false;
 
   useFocusEffect(
     useCallback(() => {
-      void fetchPosts('for_you');
+      if (inflightRef.current) return;
+      const shouldForce = postsLenRef.current === 0 && needsFailureRecoveryRef.current;
+      inflightRef.current = true;
+      void fetchPosts('for_you', shouldForce ? { force: true } : undefined).then((ok) => {
+        if (postsLenRef.current === 0) {
+          needsFailureRecoveryRef.current = !ok;
+        }
+      }).finally(() => {
+        inflightRef.current = false;
+      });
     }, [fetchPosts]),
   );
 

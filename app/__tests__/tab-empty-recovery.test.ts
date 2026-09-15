@@ -30,9 +30,65 @@ describe('P0 tab empty recovery', () => {
     expect(ctx).toContain('const applied = applyPostsFeed(inflightKey, fetchedPosts, applyGen)');
     expect(ctx).toContain('succeeded = applied');
     expect(ctx).toContain('hydratePostsFeed');
-    expect(ctx).toContain('if (!postsApplyGeneration.isCurrent(token)) return false');
+    expect(ctx).toContain('if (!gen.isCurrent(token)) return false');
+    expect(ctx).toContain('postsApplyGenerationByFeed');
+    expect(ctx).toContain('postsCacheByFeed.set(feed, fetchedPosts)');
     expect(ctx).toContain('if (!succeeded && activePostsFeed == null)');
     expect(ctx).not.toContain('setPosts([])');
+  });
+
+  it('force-refetches the community tab on later focus when the list is empty', () => {
+    const posts = src('app/(tabs)/posts.tsx');
+    expect(posts).toContain('useFocusEffect');
+    expect(posts).toContain('if (postsLenRef.current > 0 || loadingFeedRef.current) return');
+    expect(posts).toContain("void loadFeed(feedTab, { force: true })");
+    expect(posts).toContain('force: Boolean(opts?.refresh || opts?.force)');
+  });
+
+  it('recovers Home community posts after a failed empty fetch without looping', () => {
+    const home = src('components/feature/HomeCommunityPosts.tsx');
+    expect(home).toContain('needsFailureRecoveryRef');
+    expect(home).toContain('if (inflightRef.current) return');
+    expect(home).toContain('shouldForce ? { force: true } : undefined');
+    expect(home).toContain("fetchPosts('for_you'");
+  });
+
+  it('does not treat butcher HTTP failures as a successful empty directory', () => {
+    const directory = src('services/butcherDirectory.ts');
+    expect(directory).toContain("throw new Error('butchers_fetch_failed')");
+    expect(directory).toContain('BUTCHERS_HOME_TTL_MS');
+    expect(directory).toContain('homeLoadInflight');
+    const home = src('app/butchers/index.tsx');
+    expect(home).not.toContain('if (!res.ok) return []');
+    expect(home).toContain('loadButchersHome');
+    expect(home).toContain('loading || (loadFailed && picks.length === 0)');
+    expect(home).not.toContain('userCoords, fetchSorted');
+    const all = src('app/butchers/all.tsx');
+    expect(all).toContain('fetchSortedButchers');
+    expect(all).toContain('loading || (loadFailed && butchers.length === 0)');
+    expect(all).not.toContain('setButchers([])');
+  });
+
+  it('does not treat user post HTTP failures as an empty profile feed', () => {
+    const posts = src('services/posts.ts');
+    expect(posts).toContain("throw new Error('user_posts_fetch_failed')");
+    expect(posts).not.toContain('if (!res.ok) return []');
+    expect(src('app/users/[id].tsx')).toContain('Promise.allSettled');
+    expect(src('app/users/[id].tsx')).toContain('postsLoadFailed');
+    expect(src('app/ministry/index.tsx')).toContain('setPostsLoadFailed(true)');
+  });
+
+  it('keeps listing and butcher detail cache on non-404 fetch failure', () => {
+    expect(src('app/listing/[id].tsx')).toContain('if (failed && !listingRef.current) return');
+    expect(src('app/listing/[id].tsx')).toContain('if (res.status !== 404) failed = true');
+    expect(src('app/butchers/[id].tsx')).toContain('if (failed && !have) return');
+    expect(src('app/butchers/[id].tsx')).toContain('cancelled = true');
+  });
+
+  it('does not treat browse HTTP failures as a successful empty category', () => {
+    const browse = src('app/market/browse.tsx');
+    expect(browse).toContain('setLoadFailed(true)');
+    expect(browse).toContain('loading || (loadFailed && items.length === 0)');
   });
 
   it('force-refetches the community tab on later focus when the list is empty', () => {

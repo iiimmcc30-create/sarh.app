@@ -128,7 +128,7 @@ describe('Wave 5B loading and skeleton consistency', () => {
 
   it('keeps browse pagination items and only footers extra pages', () => {
     const browse = src('app/market/browse.tsx');
-    expect(browse).toContain('loading && items.length === 0');
+    expect(browse).toContain('loading || (loadFailed && items.length === 0)');
     expect(browse).toContain('loadingMore ? <ActivityIndicator');
     expect(browse).not.toContain('getItemLayout');
   });
@@ -155,7 +155,7 @@ describe('Wave 5B loading and skeleton consistency', () => {
     expect(src('app/butchers/favorites.tsx')).toContain('loading && favorites.length === 0');
     expect(src('app/butchers/invoices.tsx')).toContain('loading && invoices.length === 0');
     expect(src('app/butchers/offers.tsx')).toContain('loading && data.length === 0');
-    expect(src('app/butchers/all.tsx')).toContain('loading && butchers.length === 0');
+    expect(src('app/butchers/all.tsx')).toContain('loading || (loadFailed && butchers.length === 0)');
   });
 
   it('refetches connections without wiping the current tab', () => {

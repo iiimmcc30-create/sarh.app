@@ -20,7 +20,7 @@ describe('malahm home redesign', () => {
 
   it('keeps home offers preview at 20 and omits the section when empty', () => {
     const home = src('app/butchers/index.tsx');
-    expect(home).toContain('BUTCHER_HOME_OFFERS_LIMIT');
+    expect(src('services/butcherDirectory.ts')).toContain('BUTCHER_HOME_OFFERS_LIMIT');
     expect(home).toContain('filteredOffers.length > 0');
     expect(home).toContain('title="العروض"');
     expect(home).toContain("'/butchers/offers'");

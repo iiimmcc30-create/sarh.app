@@ -526,6 +526,8 @@ export default function ButcherProfileScreen() {
   const isUserScrollingRef = useRef<boolean>(false);
 
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
+  const butcherRef = useRef<ButcherProfile | null>(null);
+  butcherRef.current = butcher;
   const [products, setProducts] = useState<ButcherProduct[]>([]);
   const [offers, setOffers] = useState<ButcherOffer[]>([]);
   const [reviews, setReviews] = useState<ButcherReview[]>([]);
@@ -632,10 +634,12 @@ export default function ButcherProfileScreen() {
   );
 
   useEffect(() => {
+    let cancelled = false;
     const fetchButcherDetails = async () => {
       if (!id) return;
+      let failed = false;
       try {
-        if (!butcher || butcher.id !== id) setLoading(true);
+        if (!butcherRef.current || butcherRef.current.id !== id) setLoading(true);
         const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
         const [res, resS] = await Promise.all([
           fetch(`${API_BASE}/api/butchers/${id}`, { headers }),
@@ -718,20 +722,29 @@ export default function ButcherProfileScreen() {
               })));
             }
           }
+        } else if (res.status !== 404) {
+          failed = true;
         }
-        if (resS.ok) {
+        if (!cancelled && resS.ok) {
           const json = await resS.json();
           if (json.success && Array.isArray(json.data)) {
             setStoriesList(json.data);
           }
         }
       } catch (err) {
+        failed = true;
         console.warn('[ButcherProfileScreen] Failed to fetch details:', err);
       } finally {
+        if (cancelled) return;
+        const have = butcherRef.current && butcherRef.current.id === id;
+        if (failed && !have) return;
         setLoading(false);
       }
     };
-    fetchButcherDetails();
+    void fetchButcherDetails();
+    return () => {
+      cancelled = true;
+    };
   }, [id, accessToken]);
 
   const onOpenChat = useCallback(() => {

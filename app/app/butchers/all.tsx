@@ -11,8 +11,12 @@ import { Screen, ScreenBody } from '@/design-system/layout';
 import { space } from '@/design-system/tokens';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
-import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
+import { ButcherProfile } from '@/services/butcherData';
+import {
+  fetchSortedButchers,
+  getButchersHomeSnapshot,
+  getCachedSortedButchers,
+} from '@/services/butcherDirectory';
 import { safePush } from '@/lib/safeNavigate';
 
 export default function ButchersAllScreen() {
@@ -21,9 +25,22 @@ export default function ButchersAllScreen() {
   const { accessToken } = useAuth();
   const [butchers, setButchers] = useState<ButcherProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (cancelled: () => boolean) => {
+    const home = getButchersHomeSnapshot();
+    const cachedRating = getCachedSortedButchers('rating');
+    const seed = (cachedRating && cachedRating.length > 0 ? cachedRating : null)
+      ?? (home?.picks.length ? home.picks : null)
+      ?? (home?.nearby.length ? home.nearby : null);
+    if (seed && !cancelled()) {
+      setButchers(seed);
+      setLoading(false);
+      setLoadFailed(false);
+    } else if (!cancelled()) {
+      setLoading(true);
+    }
+
     try {
       let lat: number | undefined;
       let lng: number | undefined;
@@ -38,29 +55,42 @@ export default function ButchersAllScreen() {
         /* fall back to rating */
       }
 
-      const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      const params = new URLSearchParams({ sort: lat != null && lng != null ? 'distance' : 'rating' });
-      if (lat != null && lng != null) {
-        params.set('lat', String(lat));
-        params.set('lng', String(lng));
+      const sort = lat != null && lng != null ? 'distance' : 'rating';
+      const coords = lat != null && lng != null ? { lat, lng } : null;
+      const cachedSorted = getCachedSortedButchers(sort, coords);
+      if (cachedSorted && cachedSorted.length > 0 && !cancelled()) {
+        setButchers(cachedSorted);
+        setLoading(false);
+        setLoadFailed(false);
       }
-      const res = await fetch(`${API_BASE}/api/butchers?${params.toString()}`, { headers });
-      const json = await res.json().catch(() => ({}));
-      const list = res.ok && json.success && Array.isArray(json.data?.butchers)
-        ? json.data.butchers
-            .filter((b: Record<string, unknown>) => (b.country || 'SA') !== 'EG')
-            .map((b: Record<string, unknown>) => mapButcherFromApi(b))
-        : [];
+
+      const list = await fetchSortedButchers(sort, {
+        lat,
+        lng,
+        token: accessToken,
+      });
+      if (cancelled()) return;
       setButchers(list);
+      setLoadFailed(false);
     } catch {
-      /* keep current directory */
+      if (cancelled()) return;
+      if (seed && seed.length > 0) {
+        setButchers(seed);
+        setLoadFailed(false);
+      } else {
+        setLoadFailed(true);
+      }
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, [accessToken]);
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void load(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   const openButcher = useCallback(
@@ -86,7 +116,7 @@ export default function ButchersAllScreen() {
   return (
     <Screen edges={['top']}>
       <ScreenHeader variant="screen" title="الملاحم" showBack />
-      {loading && butchers.length === 0 ? (
+      {loading || (loadFailed && butchers.length === 0) ? (
         <ScreenBody scroll={false} gutter={false}>
           <View style={styles.loader}>
             <ActivityIndicator color={colors.electric} />
