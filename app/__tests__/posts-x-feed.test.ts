@@ -87,4 +87,18 @@ describe('Posts feed — X-style structure', () => {
     expect(formatPostCardTimestampAr(daysAgo(8, now), now)).toMatch(/^\d+\s+\S+$/);
     expect(formatPostCardTimestampAr(daysAgo(30, now), now)).toMatch(/^\d+\s+\S+$/);
   });
+
+  it('downscales Cloudinary post images in the gallery without changing PostItem or the viewer', () => {
+    const gallery = src('components/feature/PostMediaGallery.tsx');
+    expect(gallery).toContain('postFeedImageUrl');
+    expect(gallery).toContain('postFeedDeliveryUri(uri)');
+    expect(gallery).toContain('contentFit="cover"');
+    expect(gallery).toContain('aspectRatio: ASPECT_RATIO');
+    expect(gallery).toContain('images={images}');
+    expect(gallery).not.toContain('cloudinaryFitUrl');
+    expect(postItem).not.toContain('postFeedImageUrl');
+    expect(postItem).not.toContain('cloudinaryFitUrl');
+    expect(postItem).toContain('uriSource(post.author.avatar)');
+    expect(postItem).toContain('<PostMediaGallery images={images}');
+  });
 });
