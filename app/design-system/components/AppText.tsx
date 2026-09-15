@@ -23,6 +23,7 @@ export type { AppTextAlign, AppTextColor, AppTextVariant } from './resolvers';
 /**
  * Official Sarh text primitive. Variants own size + real Tajawal weight.
  * Do not pass fontSize unless escaping the scale for a one-off.
+ * Android face/weight safety is applied globally by `applyAppFonts`.
  */
 export function AppText({
   variant = 'body',

@@ -8,9 +8,11 @@ import {
   resolveAppFontFace,
   resolveDesignFontFace,
   resolvePostsFontFace,
+  toLoadedFontStyle,
 } from '@/constants/fonts';
 import { typography } from '@/constants/theme';
 import packageJson from '../package.json';
+import { Platform } from 'react-native';
 
 describe('resolveAppFontFace', () => {
   it('maps weights to Tajawal faces without forcing Bold', () => {
@@ -80,27 +82,52 @@ describe('resolveAppFontFace', () => {
       fontWeight: '700',
     });
   });
+
+  it('builds Android-safe loaded styles without numeric fontWeight', () => {
+    const face = resolveAppFontFace('700');
+    const style = toLoadedFontStyle(face);
+    expect(style.fontFamily).toBe(appFont.bold);
+    if (Platform.OS === 'android') {
+      expect(style.fontWeight).toBe('normal');
+    } else {
+      expect(style.fontWeight).toBe('700');
+    }
+  });
 });
 
 describe('typography tokens', () => {
-  it('uses the price Bold face for every content token including tabs', () => {
+  it('maps content roles to weight-aware Tajawal faces', () => {
     expect(OFFICIAL_APP_FONT).toBe(appFont.bold);
-    expect(typography.valueLarge.fontFamily).toBe(OFFICIAL_APP_FONT);
-    expect(typography.feedTitle.fontFamily).toBe(OFFICIAL_APP_FONT);
-    expect(typography.feedBody.fontFamily).toBe(OFFICIAL_APP_FONT);
-    expect(typography.tab.fontFamily).toBe(OFFICIAL_APP_FONT);
-    expect(typography.tabActive.fontFamily).toBe(OFFICIAL_APP_FONT);
+    expect(typography.valueLarge.fontFamily).toBe(appFont.bold);
+    expect(typography.feedTitle.fontFamily).toBe(appFont.semibold);
+    expect(typography.feedBody.fontFamily).toBe(appFont.medium);
+    expect(typography.body.fontFamily).toBe(appFont.medium);
+    expect(typography.caption.fontFamily).toBe(appFont.medium);
+    expect(typography.tab.fontFamily).toBe(appFont.bold);
+    expect(typography.tabActive.fontFamily).toBe(appFont.bold);
     for (const token of Object.values(typography)) {
       const family = (token as { fontFamily?: string }).fontFamily;
       if (!family) continue;
-      expect(family).toBe(OFFICIAL_APP_FONT);
+      expect(APP_FONT_FACES).toContain(family);
     }
   });
 
-  it('keeps size hierarchy while locking the official face', () => {
-    expect(typography.display).toMatchObject({ fontSize: 24, fontFamily: OFFICIAL_APP_FONT, lineHeight: 32 });
-    expect(typography.body).toMatchObject({ fontSize: 16, fontFamily: OFFICIAL_APP_FONT, lineHeight: 24 });
-    expect(typography.feedBody).toMatchObject({ fontSize: 14, fontFamily: OFFICIAL_APP_FONT, lineHeight: 20 });
+  it('keeps size hierarchy while using Tajawal faces', () => {
+    expect(typography.display).toMatchObject({
+      fontSize: 24,
+      fontFamily: appFont.bold,
+      lineHeight: 32,
+    });
+    expect(typography.body).toMatchObject({
+      fontSize: 16,
+      fontFamily: appFont.medium,
+      lineHeight: 24,
+    });
+    expect(typography.feedBody).toMatchObject({
+      fontSize: 14,
+      fontFamily: appFont.medium,
+      lineHeight: 20,
+    });
     expect(typography.tab).toMatchObject({ fontSize: 10, lineHeight: 13 });
   });
 

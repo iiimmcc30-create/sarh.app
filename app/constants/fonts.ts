@@ -12,7 +12,13 @@
  * Flaticon / monospace faces and IBM Plex faces used by post content only.
  *
  * Posts (`PostItem`) keep IBM Plex Sans Arabic — not the app-wide Tajawal face.
+ *
+ * Android: always apply via `toLoadedFontStyle` — setting numeric fontWeight
+ * together with a face-specific family (e.g. Tajawal_700Bold) makes Android
+ * fall back to the system font.
  */
+import { Platform, type TextStyle } from 'react-native';
+
 export const APP_FONT_NAME = 'Tajawal' as const;
 
 export const appFont = {
@@ -127,6 +133,23 @@ export function resolvePostsFontFace(
 ): { fontFamily: string; fontWeight: AppFontWeight } {
   const fontWeight = normalizeAppFontWeight(weight);
   return { fontFamily: POSTS_FACES[fontWeight], fontWeight };
+}
+
+/**
+ * Style patch for a resolved face. On Android, omit numeric fontWeight so the
+ * loaded face file is used (otherwise RN falls back to the system typeface).
+ */
+export function toLoadedFontStyle(face: {
+  fontFamily: string;
+  fontWeight: AppFontWeight;
+}): TextStyle {
+  if (face.fontFamily === 'monospace' || PRESERVED_FAMILIES.has(face.fontFamily)) {
+    return { fontFamily: face.fontFamily };
+  }
+  if (Platform.OS === 'android') {
+    return { fontFamily: face.fontFamily, fontWeight: 'normal' };
+  }
+  return { fontFamily: face.fontFamily, fontWeight: face.fontWeight };
 }
 
 /** Registered Tajawal faces loaded for app-wide UI. */

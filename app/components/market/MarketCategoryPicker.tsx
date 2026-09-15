@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
@@ -282,14 +281,12 @@ function createStyles(colors: ThemeColors) {
     },
     closeText: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.electricBright,
       minWidth: 48,
       writingDirection: 'rtl',
     },
     title: {
       ...typography.cardHeading,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: 18,
       color: colors.textPrimary,
       textAlign: 'center',
@@ -303,7 +300,6 @@ function createStyles(colors: ThemeColors) {
     },
     empty: {
       ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textMuted,
       textAlign: 'center',
       paddingVertical: spacing.xl,
@@ -322,9 +318,8 @@ function createStyles(colors: ThemeColors) {
     sectionTitle: {
       flex: 1,
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
     },
     parentAllTap: {
       padding: 4,
@@ -342,9 +337,8 @@ function createStyles(colors: ThemeColors) {
     subLabel: {
       flex: 1,
       ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textSecondary,
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
     },
     subLabelActive: {
       color: colors.electricBright,
@@ -370,7 +364,6 @@ function createStyles(colors: ThemeColors) {
     },
     applyText: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: '#FFFFFF',
     },
     resetBtn: {
@@ -385,7 +378,6 @@ function createStyles(colors: ThemeColors) {
     },
     resetText: {
       ...typography.bodyStrong,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
     },
   });

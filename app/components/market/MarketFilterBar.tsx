@@ -2,7 +2,6 @@ import { SarhChip, SarhChipRow } from '@/design-system/components';
 import type { RegionSelection } from '@/constants/saudiRegions';
 import { regionSelectionLabel } from '@/lib/saudiRegionSearch';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { MARKET_CHIP } from '@/components/ui/filterChipTokens';
@@ -134,7 +133,6 @@ function createStyles(colors: ThemeColors) {
     },
     regionText: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: MARKET_CHIP.fontSize,
       lineHeight: MARKET_CHIP.lineHeight,
       color: colors.textPrimary,
@@ -163,7 +161,6 @@ function createStyles(colors: ThemeColors) {
     },
     filterChipLabel: {
       ...typography.caption,
-      fontFamily: OFFICIAL_APP_FONT,
       fontSize: MARKET_CHIP.fontSize,
       lineHeight: MARKET_CHIP.lineHeight,
       color: colors.textPrimary,

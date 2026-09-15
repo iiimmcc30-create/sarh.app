@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
-import { OFFICIAL_APP_FONT } from '@/constants/fonts';
 import { ds } from '@/constants/designSystem';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -105,9 +104,8 @@ function createStyles(colors: ThemeColors) {
     rowText: {
       flex: 1,
       ...typography.body,
-      fontFamily: OFFICIAL_APP_FONT,
       color: colors.textPrimary,
-            writingDirection: 'rtl',
+      writingDirection: 'rtl',
     },
     logoutText: {
       color: colors.rose,
