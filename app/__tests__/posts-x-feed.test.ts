@@ -36,6 +36,18 @@ describe('Posts feed — X-style structure', () => {
     expect(postItem).toContain('formatCount(post.views ?? 0)');
   });
 
+  it('places share, views, then save from the RTL end (left) with an eye views icon', () => {
+    const actions = postItem.slice(postItem.indexOf('styles.actions'));
+    const bookmark = actions.indexOf("icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}");
+    const views = actions.indexOf('name="eye-outline"');
+    const share = actions.indexOf('icon="paper-plane-outline"');
+    expect(bookmark).toBeGreaterThan(-1);
+    expect(views).toBeGreaterThan(bookmark);
+    expect(share).toBeGreaterThan(views);
+    expect(actions).toContain('getRtlRow()');
+    expect(actions).toContain('accessibilityLabel={`مشاهدات ${formatCount(post.views ?? 0)}`}');
+  });
+
   it('comments are a continuation of the post feed without a section title', () => {
     expect(comments).not.toContain('styles.title');
     expect(comments).not.toContain('CoverTrailRow');
