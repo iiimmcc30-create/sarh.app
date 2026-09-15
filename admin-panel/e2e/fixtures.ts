@@ -16,6 +16,7 @@ export const ADMIN_SECTIONS: { path: string; navLabel: string }[] = [
   { path: '/live', navLabel: 'البث المباشر' },
   { path: '/butchers', navLabel: 'الملاحم' },
   { path: '/butcher-banners', navLabel: 'بنرات الملاحم' },
+  { path: '/explore-sarh-banners', navLabel: 'بنرات استكشف سرح' },
   { path: '/applications', navLabel: 'طلبات الملاحم' },
   { path: '/orders', navLabel: 'الطلبات' },
   { path: '/plans', navLabel: 'الباقات' },

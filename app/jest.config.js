@@ -35,6 +35,7 @@ module.exports = {
     '^expo-location$': '<rootDir>/__tests__/mocks/expo-location.ts',
     '^\\./devHost$': '<rootDir>/__tests__/mocks/devHost.ts',
     '^.*/services/devHost$': '<rootDir>/__tests__/mocks/devHost.ts',
+    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__tests__/mocks/assetFile.js',
   },
   globals: {
     __DEV__: false,

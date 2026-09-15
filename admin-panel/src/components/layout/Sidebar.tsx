@@ -52,6 +52,7 @@ const NAV_ICONS = {
   '/live': Radio,
   '/butchers': Store,
   '/butcher-banners': PanelsTopLeft,
+  '/explore-sarh-banners': Images,
   '/feed-suppliers': Wheat,
   '/applications': ClipboardList,
   '/orders': ReceiptText,

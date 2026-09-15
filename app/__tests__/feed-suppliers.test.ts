@@ -38,6 +38,7 @@ describe('feed supplier screens stay a public directory', () => {
   const contacts = src('components/feed-suppliers/FeedSupplierContactActions.tsx');
   const sidebar = src('components/feature/AppSidebar.tsx');
   const explore = src('components/feature/ExploreSarhSection.tsx');
+  const exploreFallback = src('lib/exploreSarhBanners.ts');
 
   it('keeps the sidebar item directly under ملاحم سرح', () => {
     const butchersAt = sidebar.indexOf("label: 'ملاحم سرح'");
@@ -48,14 +49,15 @@ describe('feed supplier screens stay a public directory', () => {
   });
 
   it('opens the directory from the home explore banner', () => {
-    expect(explore.indexOf("href: '/butchers'")).toBeLessThan(
-      explore.indexOf("href: '/feed-suppliers'"),
+    expect(exploreFallback.indexOf("href: '/butchers'")).toBeLessThan(
+      exploreFallback.indexOf("href: '/feed-suppliers'"),
     );
-    expect(explore.indexOf("href: '/feed-suppliers'")).toBeLessThan(
-      explore.indexOf("href: '/ministry'"),
+    expect(exploreFallback.indexOf("href: '/feed-suppliers'")).toBeLessThan(
+      exploreFallback.indexOf("href: '/ministry'"),
     );
     expect(explore).toContain('استكشف سرح');
-    expect(explore).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(explore).toContain('fetchExploreSarhBanners');
+    expect(exploreFallback).toContain('explore-sarh-feed-suppliers.jpg');
     expect(explore).not.toContain('تصفح واستكشف أبرز الموردين');
   });
 
