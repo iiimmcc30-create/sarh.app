@@ -1,7 +1,7 @@
 // Powered by OnSpace.AI
 // SAFAT — Posts Tab (المنشورات) — X-style For you / Following
 
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -54,25 +54,30 @@ export default function PostsScreen() {
   const [loadingFeed, setLoadingFeed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const loadedTabs = useRef<Set<FeedTab>>(new Set());
+  const postsLenRef = useRef(posts.length);
+  const loadingFeedRef = useRef(loadingFeed);
+  const skipFirstFocusRef = useRef(true);
+  postsLenRef.current = posts.length;
+  loadingFeedRef.current = loadingFeed;
 
   const loadFeed = useCallback(
-    async (tab: FeedTab, opts?: { refresh?: boolean }) => {
+    async (tab: FeedTab, opts?: { refresh?: boolean; force?: boolean }) => {
       if (opts?.refresh) setRefreshing(true);
-      else if (!loadedTabs.current.has(tab) && posts.length === 0) setLoadingFeed(true);
+      else if (!loadedTabs.current.has(tab) && postsLenRef.current === 0) setLoadingFeed(true);
       try {
         if (tab === 'following' && !isAuthenticated) {
-          await fetchPosts('for_you', { force: opts?.refresh });
+          await fetchPosts('for_you', { force: Boolean(opts?.refresh || opts?.force) });
           loadedTabs.current.add('for_you');
           return;
         }
-        await fetchPosts(tab, { force: opts?.refresh });
+        await fetchPosts(tab, { force: Boolean(opts?.refresh || opts?.force) });
         loadedTabs.current.add(tab);
       } finally {
         setLoadingFeed(false);
         setRefreshing(false);
       }
     },
-    [fetchPosts, isAuthenticated, posts.length],
+    [fetchPosts, isAuthenticated],
   );
 
   useEffect(() => {
@@ -87,6 +92,17 @@ export default function PostsScreen() {
     void loadFeed(feedTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when tab changes
   }, [feedTab]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (skipFirstFocusRef.current) {
+        skipFirstFocusRef.current = false;
+        return;
+      }
+      if (postsLenRef.current > 0 || loadingFeedRef.current) return;
+      void loadFeed(feedTab, { force: true });
+    }, [feedTab, loadFeed]),
+  );
 
   useEffect(() => {
     if (!postId) return;

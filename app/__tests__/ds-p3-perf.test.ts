@@ -122,7 +122,7 @@ describe('Wave 5B loading and skeleton consistency', () => {
     const market = src('app/(tabs)/market.tsx');
     expect(market).not.toContain('setItems([])');
     expect(market).toContain('if (!hasItemsRef.current) setLoading(true)');
-    expect(market).toContain('loading ? (');
+    expect(market).toContain('loading || (loadFailed && items.length === 0) ? (');
     expect(market).toContain('loadingMore ? <ActivityIndicator');
   });
 

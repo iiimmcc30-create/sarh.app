@@ -55,6 +55,8 @@ export default function MarketScreen() {
   const loadingMoreRef = useRef(false);
   const loadGenRef = useRef(0);
   const hasItemsRef = useRef(false);
+  const loadingRef = useRef(true);
+  const skipFirstFocusRef = useRef(true);
 
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -68,7 +70,9 @@ export default function MarketScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   hasItemsRef.current = items.length > 0;
+  loadingRef.current = loading;
 
   const apiFilters = useMemo(
     () => ({
@@ -82,15 +86,18 @@ export default function MarketScreen() {
   const loadFirstPage = useCallback(async () => {
     const gen = ++loadGenRef.current;
     if (!hasItemsRef.current) setLoading(true);
+    setLoadFailed(false);
     try {
       const page = await searchListingsPage(apiFilters, accessToken);
       if (gen !== loadGenRef.current) return;
       setItems(page.listings);
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
+      setLoadFailed(false);
     } catch {
       if (gen !== loadGenRef.current) return;
-      // Keep the last good page — a failed refetch must not wipe the list.
+      // Keep the last good page — HTTP/network failure must not wipe the list.
+      setLoadFailed(true);
     } finally {
       if (gen === loadGenRef.current) setLoading(false);
     }
@@ -117,6 +124,8 @@ export default function MarketScreen() {
       setItems((prev) => mergeListingPages(prev, page.listings));
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
+    } catch {
+      // Keep the current page — a failed load-more must not wipe listings.
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
@@ -134,7 +143,13 @@ export default function MarketScreen() {
         lastCategoriesFocusAt.current = now;
         void reloadCategories();
       }
-    }, [reloadCategories]),
+      if (skipFirstFocusRef.current) {
+        skipFirstFocusRef.current = false;
+        return;
+      }
+      if (hasItemsRef.current || loadingRef.current) return;
+      void loadFirstPage();
+    }, [reloadCategories, loadFirstPage]),
   );
 
   const activeParent = useMemo(
@@ -302,7 +317,7 @@ export default function MarketScreen() {
           ListHeaderComponent={ListHeader}
           ItemSeparatorComponent={ListSeparator}
           ListEmptyComponent={
-            loading ? (
+            loading || (loadFailed && items.length === 0) ? (
               <Stack gap="md" align="center" style={styles.empty}>
                 <ActivityIndicator color={colors.electric} />
               </Stack>

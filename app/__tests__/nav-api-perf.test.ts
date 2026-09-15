@@ -19,6 +19,7 @@ describe('tab navigation API performance', () => {
     expect(ctx).toContain('shouldReuseFreshResult(postsLastSuccessAt.get(inflightKey), REFETCH_TTL_MS, options?.force)');
     expect(ctx).toContain('postsCacheByFeed');
     expect(ctx).toContain('postsApplyGeneration');
+    expect(ctx).toContain('hydratePostsFeed');
     expect(ctx).toContain("fetchPosts('for_you', { force })");
     expect(src('components/feature/HomeCommunityPosts.tsx')).toContain("void fetchPosts('for_you')");
   });
@@ -45,7 +46,7 @@ describe('tab navigation API performance', () => {
   });
 
   it('lets pull-to-refresh bypass the posts TTL', () => {
-    expect(src('app/(tabs)/posts.tsx')).toContain('force: opts?.refresh');
+    expect(src('app/(tabs)/posts.tsx')).toContain('force: Boolean(opts?.refresh || opts?.force)');
     expect(src('app/favorites.tsx')).toContain('force: opts?.refresh');
   });
 });
