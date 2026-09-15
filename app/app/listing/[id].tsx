@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppText, SarhButton } from '@/design-system/components';
 import { BottomAction, Row, Screen, ScreenBody } from '@/design-system/layout';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -75,6 +75,8 @@ export default function ListingDetailScreen() {
     [listings, id],
   );
   const [listing, setListing] = useState<Listing | null>(cachedListing);
+  const listingRef = useRef<Listing | null>(listing);
+  listingRef.current = listing;
   const [loading, setLoading] = useState(!cachedListing);
   const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
   const [followLoading, setFollowLoading] = useState(false);
@@ -96,11 +98,15 @@ export default function ListingDetailScreen() {
 
   const loadListing = useCallback(async () => {
     if (!id) return;
+    let failed = false;
     try {
       const res = await (accessToken
         ? authFetch(`${API_BASE}/api/listings/${id}`)
         : fetch(`${API_BASE}/api/listings/${id}`));
-      if (!res.ok) return;
+      if (!res.ok) {
+        if (res.status !== 404) failed = true;
+        return;
+      }
       const json = await res.json();
       if (!json.success || !json.data) return;
       const raw = json.data;
@@ -163,8 +169,9 @@ export default function ListingDetailScreen() {
         editCount: typeof raw.editCount === 'number' ? raw.editCount : 0,
       });
     } catch {
-      /* keep cache */
+      failed = true;
     } finally {
+      if (failed && !listingRef.current) return;
       setLoading(false);
     }
   }, [id, accessToken]);

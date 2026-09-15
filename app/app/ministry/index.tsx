@@ -82,6 +82,7 @@ export default function MinistryProfileScreen() {
   const [account, setAccount] = useState<MinistryAccount | null>(null);
   const [services, setServices] = useState<OfficialService[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoadFailed, setPostsLoadFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -94,10 +95,16 @@ export default function MinistryProfileScreen() {
     setAccount(nextAccount);
     setServices(servicesResult.services.filter((item) => item.active !== false));
     if (nextAccount?.id) {
-      const userPosts = await fetchUserPosts(nextAccount.id);
-      setPosts(userPosts);
+      try {
+        const userPosts = await fetchUserPosts(nextAccount.id);
+        setPosts(userPosts);
+        setPostsLoadFailed(false);
+      } catch {
+        setPostsLoadFailed(true);
+      }
     } else {
       setPosts([]);
+      setPostsLoadFailed(false);
     }
   }, []);
 
@@ -105,8 +112,13 @@ export default function MinistryProfileScreen() {
     useCallback(() => {
       let active = true;
       void (async () => {
-        await load();
-        if (active) setLoading(false);
+        try {
+          await load();
+        } catch {
+          /* keep previous ministry data */
+        } finally {
+          if (active) setLoading(false);
+        }
       })();
       return () => {
         active = false;
@@ -202,6 +214,13 @@ export default function MinistryProfileScreen() {
   );
 
   const renderPosts = () => {
+    if (postsLoadFailed && posts.length === 0) {
+      return (
+        <View style={styles.empty}>
+          <ActivityIndicator color={colors.electricBright} />
+        </View>
+      );
+    }
     if (posts.length === 0) {
       return (
         <View style={styles.empty}>

@@ -48,6 +48,8 @@ export default function UserProfileScreen() {
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [userListings, setUserListings] = useState<Listing[]>([]);
+  const [postsLoadFailed, setPostsLoadFailed] = useState(false);
+  const [listingsLoadFailed, setListingsLoadFailed] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [ratingVisible, setRatingVisible] = useState(false);
@@ -68,12 +70,22 @@ export default function UserProfileScreen() {
     if (!data) {
       return;
     }
-    const [postsData, listingsData] = await Promise.all([
+    const [postsResult, listingsResult] = await Promise.allSettled([
       fetchUserPosts(targetId),
       searchAllSellerListings(targetId, accessToken),
     ]);
-    setUserPosts(postsData);
-    setUserListings(listingsData);
+    if (postsResult.status === 'fulfilled') {
+      setUserPosts(postsResult.value);
+      setPostsLoadFailed(false);
+    } else {
+      setPostsLoadFailed(true);
+    }
+    if (listingsResult.status === 'fulfilled') {
+      setUserListings(listingsResult.value);
+      setListingsLoadFailed(false);
+    } else {
+      setListingsLoadFailed(true);
+    }
   }, [accessToken, fetchAuthoritativeProfile, id, me.id]);
 
   useFocusEffect(
@@ -138,6 +150,13 @@ export default function UserProfileScreen() {
   };
 
   const renderPosts = () => {
+    if (postsLoadFailed && userPosts.length === 0) {
+      return (
+        <Stack gap="none" align="center" style={styles.emptyState}>
+          <ActivityIndicator color={themeColors.electricBright} />
+        </Stack>
+      );
+    }
     if (userPosts.length === 0) {
       return (
         <Stack gap="none" align="center" style={styles.emptyState}>
@@ -168,6 +187,13 @@ export default function UserProfileScreen() {
   };
 
   const renderAds = () => {
+    if (listingsLoadFailed && userListings.length === 0) {
+      return (
+        <Stack gap="none" align="center" style={styles.emptyState}>
+          <ActivityIndicator color={themeColors.electricBright} />
+        </Stack>
+      );
+    }
     if (userListings.length === 0) {
       return (
         <Stack gap="none" align="center" style={styles.emptyState}>

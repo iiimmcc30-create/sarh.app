@@ -65,6 +65,7 @@ export default function MarketBrowseScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const loadingMoreRef = useRef(false);
   const loadGenRef = useRef(0);
 
@@ -108,19 +109,23 @@ export default function MarketBrowseScreen() {
       setItems([]);
       setNextCursor(null);
       setHasMore(false);
+      setLoadFailed(false);
       setLoading(false);
       return;
     }
     setLoading(true);
+    setLoadFailed(false);
     try {
       const page = await searchListingsPage(searchParams, accessToken);
       if (gen !== loadGenRef.current) return;
       setItems(await applyClientFilters(page.listings));
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
+      setLoadFailed(false);
     } catch {
       if (gen !== loadGenRef.current) return;
       // Keep the last good page — a failed refetch must not wipe the list.
+      setLoadFailed(true);
     } finally {
       if (gen === loadGenRef.current) setLoading(false);
     }
@@ -268,7 +273,7 @@ export default function MarketBrowseScreen() {
     <Screen edges={['top', 'bottom']}>
       <ScreenHeader variant="screen" showBack title={headerTitle} />
       <ScreenBody scroll={false} gutter={false}>
-        {loading && items.length === 0 ? (
+        {loading || (loadFailed && items.length === 0) ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.electric} />
           </View>
@@ -279,7 +284,7 @@ export default function MarketBrowseScreen() {
             keyExtractor={(item) => item.id}
             ListHeaderComponent={ListHeader}
             ListEmptyComponent={
-              loading ? (
+              loading || loadFailed ? (
                 <Stack gap="md" align="center" style={styles.empty}>
                   <ActivityIndicator color={colors.electric} />
                 </Stack>

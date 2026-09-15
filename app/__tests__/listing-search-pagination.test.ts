@@ -257,6 +257,27 @@ describe('marketplace listing pagination', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('treats HTTP 200 with an empty listings array as a real empty page', async () => {
+    global.fetch = jest.fn(async () =>
+      jsonResponse({
+        success: true,
+        data: { listings: [], nextCursor: null, hasMore: false },
+      }),
+    ) as unknown as typeof fetch;
+
+    const page = await searchListingsPage({});
+    expect(page.listings).toEqual([]);
+    expect(page.hasMore).toBe(false);
+  });
+
+  it('throws on HTTP failure instead of returning a successful empty page', async () => {
+    global.fetch = jest.fn(async () =>
+      jsonResponse({ success: false }, 429),
+    ) as unknown as typeof fetch;
+
+    await expect(searchListingsPage({})).rejects.toThrow('listings_fetch_failed');
+  });
+
   it('dedupes concurrent identical listing GETs through fetchPublicFeed', async () => {
     const fetchMock = jest.fn(async () => {
       await new Promise((r) => setTimeout(r, 20));

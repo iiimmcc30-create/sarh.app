@@ -71,7 +71,15 @@ const postsFetchInflight = new Map<string, Promise<void>>();
 const postsLastFetchOk = new Map<string, boolean>();
 const postsLastSuccessAt = new Map<string, number>();
 const postsCacheByFeed = new Map<string, Post[]>();
-const postsApplyGeneration = createRequestGeneration();
+const postsApplyGenerationByFeed = {
+  for_you: createRequestGeneration(),
+  following: createRequestGeneration(),
+};
+function postsGeneration(feed: string) {
+  return feed === 'following'
+    ? postsApplyGenerationByFeed.following
+    : postsApplyGenerationByFeed.for_you;
+}
 let activePostsFeed: 'for_you' | 'following' | null = null;
 let bootstrapInflight: Promise<void> | null = null;
 
@@ -350,27 +358,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, [user]);
 
-  const applyPostsFeed = useCallback((
+  const commitPostsFeed = useCallback((
     feed: 'for_you' | 'following',
-    fetchedPosts: Post[],
-    applyGen?: number,
+    nextPosts: Post[],
   ) => {
-    postsCacheByFeed.set(feed, fetchedPosts);
-    const token = applyGen ?? postsApplyGeneration.next();
-    if (!postsApplyGeneration.isCurrent(token)) return;
     activePostsFeed = feed;
-    setPosts(fetchedPosts);
-    prefetchRemoteImages(collectPostImageUris(fetchedPosts), 8);
+    setPosts(nextPosts);
+    prefetchRemoteImages(collectPostImageUris(nextPosts), 8);
 
     const liked = new Set<string>();
     const reposted = new Set<string>();
-    fetchedPosts.forEach((p: Post) => {
+    nextPosts.forEach((p: Post) => {
       if (p.liked) liked.add(p.id);
       if (p.reposted) reposted.add(p.id);
     });
     setLikedPosts(liked);
     setRepostedPosts(reposted);
   }, []);
+
+  const applyPostsFeed = useCallback((
+    feed: 'for_you' | 'following',
+    fetchedPosts: Post[],
+    applyGen?: number,
+  ): boolean => {
+    const gen = postsGeneration(feed);
+    const token = applyGen ?? gen.next();
+    if (!gen.isCurrent(token)) return false;
+    postsCacheByFeed.set(feed, fetchedPosts);
+    commitPostsFeed(feed, fetchedPosts);
+    return true;
+  }, [commitPostsFeed]);
+
+  const hydratePostsFeed = useCallback((
+    feed: 'for_you' | 'following',
+    cachedPosts: Post[],
+  ) => {
+    postsCacheByFeed.set(feed, cachedPosts);
+    commitPostsFeed(feed, cachedPosts);
+  }, [commitPostsFeed]);
 
   const fetchPosts = useCallback(async (
     feed: 'for_you' | 'following' = 'for_you',
@@ -381,29 +406,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const inflight = postsFetchInflight.get(inflightKey);
     if (inflight) {
       await inflight;
-      return postsLastFetchOk.get(inflightKey) ?? false;
+      const cachedAfter = postsCacheByFeed.get(inflightKey);
+      if (cachedAfter && activePostsFeed == null) {
+        hydratePostsFeed(inflightKey, cachedAfter);
+        return true;
+      }
+      return postsLastFetchOk.get(inflightKey) ?? Boolean(cachedAfter);
     }
 
     const cached = postsCacheByFeed.get(inflightKey);
+    if (cached && activePostsFeed !== inflightKey) {
+      hydratePostsFeed(inflightKey, cached);
+    }
     if (
       cached &&
       shouldReuseFreshResult(postsLastSuccessAt.get(inflightKey), REFETCH_TTL_MS, options?.force)
     ) {
-      if (activePostsFeed !== inflightKey) {
-        applyPostsFeed(inflightKey, cached);
-      }
-      return postsLastFetchOk.get(inflightKey) ?? true;
+      return true;
     }
 
     if (isRateLimited()) {
       if (cached && activePostsFeed !== inflightKey) {
-        applyPostsFeed(inflightKey, cached);
+        hydratePostsFeed(inflightKey, cached);
       }
-      return postsLastFetchOk.get(inflightKey) ?? false;
+      return postsLastFetchOk.get(inflightKey) ?? Boolean(cached);
     }
 
     let succeeded = false;
-    const applyGen = postsApplyGeneration.next();
+    const applyGen = postsGeneration(inflightKey).next();
     const promise = (async () => {
       try {
         const qs = feed === 'following' ? '?feed=following' : '';
@@ -419,10 +449,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const fetchedPosts = (json.data.posts as unknown[])
               .map(mapBackendPost)
               .filter((p: Post | null): p is Post => Boolean(p?.id));
-            succeeded = true;
             postsLastSuccessAt.set(inflightKey, Date.now());
-            applyPostsFeed(inflightKey, fetchedPosts, applyGen);
-            void patchFeedSnapshot({ posts: fetchedPosts });
+            const applied = applyPostsFeed(inflightKey, fetchedPosts, applyGen);
+            succeeded = applied;
+            if (applied) {
+              void patchFeedSnapshot({ posts: fetchedPosts });
+            }
           }
         }
       } catch (err) {
@@ -435,8 +467,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     postsFetchInflight.set(inflightKey, promise);
     await promise;
+    if (!succeeded && activePostsFeed == null) {
+      const cachedAfter = postsCacheByFeed.get(inflightKey);
+      if (cachedAfter) {
+        hydratePostsFeed(inflightKey, cachedAfter);
+        postsLastFetchOk.set(inflightKey, true);
+        return true;
+      }
+    }
     return succeeded;
-  }, [accessToken, applyPostsFeed, mapBackendPost]);
+  }, [accessToken, applyPostsFeed, hydratePostsFeed, mapBackendPost]);
 
   const lastRefetchAtRef = useRef(0);
   const lastUserRefetchAtRef = useRef(0);

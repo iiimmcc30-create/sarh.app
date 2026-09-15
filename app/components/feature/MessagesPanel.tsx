@@ -6,7 +6,7 @@ import { functional } from '@/design-system';
 import { AppText, SarhButton, SarhInput } from '@/design-system/components';
 import { Row, Stack } from '@/design-system/layout';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -83,10 +83,21 @@ export function MessagesPanel({
   const [listingByPeer, setListingByPeer] = useState<
     Record<string, MessageListingPreview>
   >({});
+  const threadsLenRef = useRef(threads.length);
+  const loadingRef = useRef(loading);
+  const skipFirstFocusRef = useRef(true);
+  threadsLenRef.current = threads.length;
+  loadingRef.current = loading;
 
   useFocusEffect(
     useCallback(() => {
-      void refetch();
+      if (skipFirstFocusRef.current) {
+        skipFirstFocusRef.current = false;
+        void getAllMessageListingContexts().then(setListingByPeer);
+        return;
+      }
+      const forceEmpty = threadsLenRef.current === 0 && !loadingRef.current;
+      void refetch(forceEmpty);
       void getAllMessageListingContexts().then(setListingByPeer);
     }, [refetch]),
   );
@@ -274,7 +285,9 @@ export function MessagesPanel({
     [colors.electricBright, gutter, listingByPeer, openChat, styles],
   );
 
-  const showInitialSpinner = loading && threads.length === 0;
+  const showInitialSpinner =
+    (loading && threads.length === 0) ||
+    (error === 'fetch_failed' && threads.length === 0);
   const showUnauthorized = error === 'unauthorized' && threads.length === 0;
 
   return (

@@ -139,7 +139,7 @@ export function useMessageThreads(
       } catch (err) {
         const code = err instanceof Error ? err.message : 'fetch_failed';
         setError(code === 'unauthorized' ? 'unauthorized' : 'fetch_failed');
-        if (code === 'unauthorized' || !hasDataRef.current) {
+        if (code === 'unauthorized') {
           setThreads([]);
           hasDataRef.current = false;
         }

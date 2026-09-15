@@ -1,6 +1,6 @@
 // SAFAT — Butchers market home: banners · offers · picks · nearby
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Location from 'expo-location';
 import {
   ActivityIndicator,
@@ -16,9 +16,8 @@ import { Screen, ScreenBody } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
-import { ButcherProfile, mapButcherFromApi } from '@/services/butcherData';
-import { fetchButcherMarketBanners, type ButcherMarketBanner } from '@/services/butcherMarketBanners';
+import { ButcherProfile } from '@/services/butcherData';
+import { type ButcherMarketBanner } from '@/services/butcherMarketBanners';
 import { ButchersAppBar } from '@/components/butchers/ButchersAppBar';
 import { ButchersTabBar } from '@/components/butchers/ButchersTabBar';
 import { ButcherMarketBannerSlider } from '@/components/butchers/ButcherMarketBannerSlider';
@@ -28,13 +27,15 @@ import { ButcherNearbyRow } from '@/components/butchers/ButcherNearbyRow';
 import { ButcherSectionHeader } from '@/components/butchers/ButcherSectionHeader';
 import { safePush, safeReplace } from '@/lib/safeNavigate';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
+import { type ButcherOfferPreview } from '@/services/butcherOffersPreview';
 import {
-  BUTCHER_HOME_OFFERS_LIMIT,
-  fetchButcherOffersPreview,
-  type ButcherOfferPreview,
-} from '@/services/butcherOffersPreview';
-
-const SECTION_LIMIT = 12;
+  BUTCHERS_HOME_SECTION_LIMIT,
+  fetchSortedButchers,
+  getButchersHomeSnapshot,
+  isButchersHomeSnapshotFresh,
+  loadButchersHome,
+  setButchersHomeSnapshot,
+} from '@/services/butcherDirectory';
 
 function filterButchers(list: ButcherProfile[], query: string): ButcherProfile[] {
   const q = query.trim().toLowerCase();
@@ -60,35 +61,17 @@ export default function ButchersScreen() {
   const [banners, setBanners] = useState<ButcherMarketBanner[]>([]);
   const [homeOffers, setHomeOffers] = useState<ButcherOfferPreview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bannerIndex, setBannerIndex] = useState(0);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const hasHomeDataRef = useRef(false);
+  const picksRef = useRef<ButcherProfile[]>([]);
   const chromeTone = butcherChromeTone(bannerIndex);
   const chromeBg = butcherChromeBg(scheme, chromeTone);
 
   const pickWidth = Math.round((screenWidth - spacing.lg * 2) * 0.72);
   const offerWidth = Math.round(Math.min(156, screenWidth * 0.38));
-
-  const fetchSorted = useCallback(
-    async (sort: 'rating' | 'distance'): Promise<ButcherProfile[]> => {
-      const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      const params = new URLSearchParams({ sort });
-      if (sort === 'distance' && userCoords) {
-        params.set('lat', String(userCoords.lat));
-        params.set('lng', String(userCoords.lng));
-      }
-      const res = await fetch(`${API_BASE}/api/butchers?${params.toString()}`, { headers });
-      if (!res.ok) return [];
-      const json = await res.json();
-      if (!json.success || !Array.isArray(json.data?.butchers)) return [];
-      return json.data.butchers
-        .filter((b: Record<string, unknown>) => (b.country || 'SA') !== 'EG')
-        .map((b: Record<string, unknown>) => mapButcherFromApi(b))
-        .slice(0, SECTION_LIMIT);
-    },
-    [accessToken, userCoords],
-  );
 
   useEffect(() => {
     void (async () => {
@@ -105,26 +88,56 @@ export default function ButchersScreen() {
 
   useEffect(() => {
     hasHomeDataRef.current = picks.length > 0;
-  }, [picks.length]);
+    picksRef.current = picks;
+  }, [picks]);
 
   useEffect(() => {
     let cancelled = false;
+    const snap = getButchersHomeSnapshot();
+    if (snap && isButchersHomeSnapshotFresh()) {
+      setPicks(snap.picks);
+      setNearby(snap.nearby);
+      setBanners(snap.banners);
+      setHomeOffers(snap.offers);
+      setLoadFailed(false);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (snap && snap.picks.length > 0) {
+      setPicks(snap.picks);
+      setNearby(snap.nearby);
+      setBanners(snap.banners);
+      setHomeOffers(snap.offers);
+      setLoadFailed(false);
+      setLoading(false);
+    }
+
     void (async () => {
       if (!hasHomeDataRef.current) setLoading(true);
+      setLoadFailed(false);
       try {
-        const [rated, near, promo, offers] = await Promise.all([
-          fetchSorted('rating'),
-          fetchSorted('distance'),
-          fetchButcherMarketBanners(),
-          fetchButcherOffersPreview(accessToken, BUTCHER_HOME_OFFERS_LIMIT).catch(() => []),
-        ]);
+        const next = await loadButchersHome(accessToken);
         if (cancelled) return;
-        setPicks(rated);
-        setNearby(near.length ? near : rated);
-        setBanners(promo);
-        setHomeOffers(offers);
+        setPicks(next.picks);
+        setNearby(next.nearby);
+        setBanners(next.banners);
+        setHomeOffers(next.offers);
+        setLoadFailed(false);
       } catch (err) {
         console.warn('[ButchersScreen] Failed to fetch home:', err);
+        const cached = getButchersHomeSnapshot();
+        if (cancelled) return;
+        if (cached && cached.picks.length > 0) {
+          setPicks(cached.picks);
+          setNearby(cached.nearby);
+          setBanners(cached.banners);
+          setHomeOffers(cached.offers);
+          setLoadFailed(false);
+        } else {
+          setLoadFailed(true);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -132,7 +145,30 @@ export default function ButchersScreen() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, fetchSorted]);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!userCoords) return;
+    let cancelled = false;
+    void fetchSortedButchers('distance', {
+      lat: userCoords.lat,
+      lng: userCoords.lng,
+      token: accessToken,
+    })
+      .then((near) => {
+        const next = near.slice(0, BUTCHERS_HOME_SECTION_LIMIT);
+        const fallback = picksRef.current.slice(0, BUTCHERS_HOME_SECTION_LIMIT);
+        const nearby = next.length ? next : fallback;
+        setButchersHomeSnapshot({ nearby });
+        if (!cancelled) setNearby(nearby);
+      })
+      .catch(() => {
+        /* keep current nearby */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, userCoords]);
 
   const filteredPicks = useMemo(() => filterButchers(picks, searchQuery), [picks, searchQuery]);
   const filteredNearby = useMemo(() => filterButchers(nearby, searchQuery), [nearby, searchQuery]);
@@ -183,7 +219,7 @@ export default function ButchersScreen() {
         <ButcherMarketBannerSlider banners={banners} onActiveIndexChange={setBannerIndex} />
 
         <View style={s.pageBody}>
-        {loading && picks.length === 0 ? (
+        {loading || (loadFailed && picks.length === 0) ? (
           <View style={s.loader}>
             <ActivityIndicator color={colors.electricBright} />
           </View>

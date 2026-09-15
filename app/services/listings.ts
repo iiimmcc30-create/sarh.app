@@ -162,7 +162,6 @@ export async function searchListingsPage(
   params: ListingSearchParams,
   accessToken?: string | null,
 ): Promise<ListingSearchPage> {
-  const empty: ListingSearchPage = { listings: [], nextCursor: null, hasMore: false };
   const base = await ensureApiReachable();
   const qs = new URLSearchParams();
   if (params.search && params.search.length >= 2) qs.set('search', params.search);
@@ -178,10 +177,14 @@ export async function searchListingsPage(
 
   const url = `${base.replace(/\/$/, '')}/api/listings?${qs.toString()}`;
   const res = await fetchPublicFeed(url, accessToken);
-  if (!res.ok) return empty;
+  if (!res.ok) {
+    throw new Error('listings_fetch_failed');
+  }
 
   const json = await res.json();
-  if (!json.success || !Array.isArray(json.data?.listings)) return empty;
+  if (!json.success || !Array.isArray(json.data?.listings)) {
+    throw new Error('listings_fetch_failed');
+  }
   return {
     listings: json.data.listings.map(mapListing),
     nextCursor: typeof json.data.nextCursor === 'string' ? json.data.nextCursor : null,
