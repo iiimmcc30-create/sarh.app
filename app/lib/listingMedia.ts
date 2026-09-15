@@ -48,14 +48,9 @@ function mergeCloudinaryTransformTokens(existing: string, extras: readonly strin
   return [...toAdd, ...current].join(',');
 }
 
-/**
- * Resize Cloudinary delivery URLs for list/card thumbs. Leaves non-Cloudinary
- * URLs, missing values, and already-width-transformed URLs unchanged (no duplicate w_/q_/f_).
- * Does not rewrite stored media — callers keep the original on the model.
- */
-export function cloudinaryFitUrl(
-  uri?: string | null,
-  fit: CloudinaryFit = 'list',
+function applyCloudinaryTransform(
+  uri: string | null | undefined,
+  extras: readonly string[],
 ): string | undefined {
   const value = trimUri(uri);
   if (!value) return undefined;
@@ -83,8 +78,57 @@ export function cloudinaryFitUrl(
   const resource = parts.slice(index).join('/');
   if (!resource) return value;
 
-  const merged = mergeCloudinaryTransformTokens(transformSegs.join(','), CLOUDINARY_FIT[fit]);
+  const merged = mergeCloudinaryTransformTokens(transformSegs.join(','), extras);
   return `${match[1]}${merged}/${resource}${query}`;
+}
+
+/**
+ * Resize Cloudinary delivery URLs for list/card thumbs. Leaves non-Cloudinary
+ * URLs, missing values, and already-width-transformed URLs unchanged (no duplicate w_/q_/f_).
+ * Does not rewrite stored media — callers keep the original on the model.
+ */
+export function cloudinaryFitUrl(
+  uri?: string | null,
+  fit: CloudinaryFit = 'list',
+): string | undefined {
+  return applyCloudinaryTransform(uri, CLOUDINARY_FIT[fit]);
+}
+
+/** Post feed column: screen − (row padding md×2 + avatar 40 + row gap 12). */
+export const POST_FEED_CHROME_PX = 12 + 12 + 40 + 12;
+
+/**
+ * Pixel width requested for a post-feed image: displayed CSS width × density,
+ * with a small round — not a fixed 1080/1200 for every device.
+ */
+export function postFeedImageWidth(screenWidth: number, dpr = 2): number {
+  const css = Math.max(1, screenWidth - POST_FEED_CHROME_PX);
+  const width = Math.round(css * dpr);
+  return Math.max(1, Math.min(width, 1600));
+}
+
+const POST_FEED_FIT = ['c_limit', 'q_auto', 'f_auto'] as const;
+
+/**
+ * Downscale a Cloudinary post image to `width` CSS-pixels×DPR. Keeps original
+ * aspect ratio (`c_limit`, no forced crop) so the gallery `cover` fit is unchanged.
+ */
+export function cloudinaryWidthUrl(
+  uri?: string | null,
+  width?: number,
+): string | undefined {
+  const w = Math.round(Number(width));
+  if (!Number.isFinite(w) || w <= 0) return trimUri(uri);
+  return applyCloudinaryTransform(uri, [`w_${w}`, ...POST_FEED_FIT]);
+}
+
+export function postFeedImageUrl(
+  uri?: string | null,
+  screenWidth?: number,
+  dpr = 2,
+): string | undefined {
+  if (screenWidth == null || !Number.isFinite(screenWidth)) return trimUri(uri);
+  return cloudinaryWidthUrl(uri, postFeedImageWidth(screenWidth, dpr));
 }
 
 export function cloudinaryListThumbUrl(uri?: string | null): string | undefined {

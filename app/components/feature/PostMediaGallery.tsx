@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  PixelRatio,
   Pressable,
   StyleSheet,
   Text,
@@ -18,10 +19,17 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
 import { radius, typography, type ThemeColors } from '@/constants/theme';
+import { postFeedImageUrl } from '@/lib/listingMedia';
 
 const ASPECT_RATIO = 16 / 11;
 
 const ABS_FILL: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
+
+function postFeedDeliveryUri(uri: string): string {
+  const screenW = Dimensions.get('window').width;
+  const dpr = typeof PixelRatio.get === 'function' ? PixelRatio.get() : 2;
+  return postFeedImageUrl(uri, screenW, dpr) ?? uri;
+}
 
 interface PostMediaGalleryProps {
   images: string[];
@@ -75,7 +83,7 @@ function GalleryImage({
       {!failed ? (
         <Animated.View style={[StyleSheet.absoluteFill, { opacity }]}>
           <Image
-            source={uriSource(uri)}
+            source={uriSource(postFeedDeliveryUri(uri))}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             onLoad={handleLoad}
@@ -124,7 +132,7 @@ export function PostMediaGallery({ images, video, colors, scheme }: PostMediaGal
       <View style={containerStyle} onLayout={onLayout}>
         <StoryVideoPlayer
           uri={video}
-          posterUri={images[0]}
+          posterUri={images[0] ? postFeedDeliveryUri(images[0]) : images[0]}
           style={ABS_FILL}
           autoPlay={false}
           muted={false}

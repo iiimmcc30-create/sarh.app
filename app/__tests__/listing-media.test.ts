@@ -2,6 +2,7 @@ import {
   cloudinaryFitUrl,
   cloudinaryListThumbUrl,
   cloudinaryVideoFirstFrameUrl,
+  cloudinaryWidthUrl,
   isEphemeralListingUploadUri,
   isListingVideoStillUri,
   isListingVideoUri,
@@ -9,6 +10,9 @@ import {
   listingPhotoUris,
   listingThumbUri,
   listingVideoUrl,
+  postFeedImageUrl,
+  postFeedImageWidth,
+  POST_FEED_CHROME_PX,
 } from '../lib/listingMedia';
 
 describe('listingMedia', () => {
@@ -190,5 +194,45 @@ describe('cloudinaryFitUrl', () => {
     expect(
       cloudinaryFitUrl('https://images.unsplash.com/photo-x?w=800', 'wide'),
     ).toBe('https://images.unsplash.com/photo-x?w=800');
+  });
+});
+
+describe('post feed Cloudinary delivery', () => {
+  const bare =
+    'https://res.cloudinary.com/demo/image/upload/v1/sarh/posts/feed.jpg';
+
+  it('requests displayed width × density, not a fixed 1080/1200', () => {
+    expect(POST_FEED_CHROME_PX).toBe(76);
+    expect(postFeedImageWidth(390, 2)).toBe((390 - 76) * 2);
+    expect(postFeedImageWidth(390, 3)).toBe((390 - 76) * 3);
+    expect(postFeedImageWidth(430, 3)).toBe((430 - 76) * 3);
+    expect(postFeedImageWidth(390, 2)).not.toBe(1080);
+    expect(postFeedImageWidth(390, 3)).not.toBe(1200);
+  });
+
+  it('inserts w_/c_limit/q_auto/f_auto on Cloudinary post URLs', () => {
+    const width = postFeedImageWidth(390, 2);
+    expect(postFeedImageUrl(bare, 390, 2)).toBe(
+      `https://res.cloudinary.com/demo/image/upload/w_${width},c_limit,q_auto,f_auto/v1/sarh/posts/feed.jpg`,
+    );
+    expect(cloudinaryWidthUrl(bare, 628)).toBe(
+      'https://res.cloudinary.com/demo/image/upload/w_628,c_limit,q_auto,f_auto/v1/sarh/posts/feed.jpg',
+    );
+  });
+
+  it('does not stack a second w_ token on an already-transformed Cloudinary URL', () => {
+    const sized =
+      'https://res.cloudinary.com/demo/image/upload/w_800,c_fill,q_auto,f_auto/v1/sarh/posts/feed.jpg';
+    expect(postFeedImageUrl(sized, 390, 2)).toBe(sized);
+    expect(cloudinaryWidthUrl(sized, 628)).toBe(sized);
+  });
+
+  it('leaves non-Cloudinary, local, and relative URLs unchanged', () => {
+    expect(postFeedImageUrl('https://images.unsplash.com/photo-x?w=800', 390, 2)).toBe(
+      'https://images.unsplash.com/photo-x?w=800',
+    );
+    expect(postFeedImageUrl('file:///data/photo.jpg', 390, 2)).toBe('file:///data/photo.jpg');
+    expect(postFeedImageUrl('/uploads/post.jpg', 390, 2)).toBe('/uploads/post.jpg');
+    expect(postFeedImageUrl('content://media/1', 390, 2)).toBe('content://media/1');
   });
 });
