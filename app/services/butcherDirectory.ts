@@ -35,7 +35,12 @@ type SortedCacheEntry = {
 let homeSnapshot: ButchersHomeSnapshot | null = null;
 let homeLoadInflight: Promise<ButchersHomeSnapshot> | null = null;
 const sortedCache = new Map<string, SortedCacheEntry>();
-const sortedInflight = new Map<string, Promise<ButcherProfile[]>>();
+export type SortedButchersPage = {
+  data: ButcherProfile[];
+  raw: Record<string, unknown>[];
+};
+
+const sortedInflight = new Map<string, Promise<SortedButchersPage>>();
 const sortedApplyGen = new Map<string, number>();
 let offersFeedInflight: Promise<ButcherOffersGroup[]> | null = null;
 let offersFeedApplyGen = 0;
@@ -147,7 +152,7 @@ export function findCachedButcher(id: string, now = Date.now()): CachedButcherLo
   return null;
 }
 
-export async function fetchSortedButchers(
+export async function fetchSortedButchersPage(
   sort: ButcherSort,
   options?: {
     lat?: number;
@@ -155,7 +160,7 @@ export async function fetchSortedButchers(
     token?: string | null;
     force?: boolean;
   },
-): Promise<ButcherProfile[]> {
+): Promise<SortedButchersPage> {
   const coords =
     options?.lat != null && options?.lng != null
       ? { lat: options.lat, lng: options.lng }
@@ -164,7 +169,7 @@ export async function fetchSortedButchers(
   if (!options?.force) {
     const cached = sortedCache.get(key);
     if (cached && Date.now() - cached.fetchedAt < BUTCHERS_HOME_TTL_MS) {
-      return cached.data;
+      return { data: cached.data, raw: cached.raw };
     }
     const inflight = sortedInflight.get(key);
     if (inflight) return inflight;
@@ -192,17 +197,32 @@ export async function fetchSortedButchers(
       (b) => (b.country || 'SA') !== 'EG',
     );
     const data = raw.map((b) => mapButcherFromApi(b));
+    const page = { data, raw };
     if (sortedApplyGen.get(key) !== gen) {
-      return sortedCache.get(key)?.data ?? data;
+      const previous = sortedCache.get(key);
+      return previous ? { data: previous.data, raw: previous.raw } : page;
     }
     sortedCache.set(key, { data, raw, fetchedAt: Date.now() });
-    return data;
+    return page;
   })().finally(() => {
     if (sortedInflight.get(key) === promise) sortedInflight.delete(key);
   });
 
   sortedInflight.set(key, promise);
   return promise;
+}
+
+export async function fetchSortedButchers(
+  sort: ButcherSort,
+  options?: {
+    lat?: number;
+    lng?: number;
+    token?: string | null;
+    force?: boolean;
+  },
+): Promise<ButcherProfile[]> {
+  const page = await fetchSortedButchersPage(sort, options);
+  return page.data;
 }
 
 export async function loadButchersHome(
@@ -215,11 +235,10 @@ export async function loadButchersHome(
   if (!options?.force && homeLoadInflight) return homeLoadInflight;
 
   const promise = (async () => {
-    const rated = await fetchSortedButchers('rating', {
+    const { data: rated, raw: ratingRecords } = await fetchSortedButchersPage('rating', {
       token: accessToken,
       force: options?.force,
     });
-    const ratingRecords = getCachedSortedButcherRecords('rating') ?? [];
     const [banners, offers] = await Promise.all([
       fetchButcherMarketBanners(),
       fetchButcherOffersPreview(accessToken, BUTCHER_HOME_OFFERS_LIMIT, {

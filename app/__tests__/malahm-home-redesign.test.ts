@@ -154,23 +154,13 @@ describe('malahm home redesign', () => {
     expect(offers[0]?.butcherNameAr).toBe('ملحمة 1');
   });
 
-  it('does not refetch sort=rating when list records are already provided', async () => {
-    const fetchMock = jest.fn(async (url: string) => {
-      expect(url).not.toContain('sort=rating');
-      return {
-        ok: true,
-        json: async () => ({
-          data: { id: 'b0', nameAr: 'ملحمة', offers: [{ id: 'd1', titleAr: 'من التفاصيل' }] },
-        }),
-      };
-    });
+  it('does not refetch sort=rating or fan out details when list records are already provided', async () => {
+    const fetchMock = jest.fn();
     (globalThis as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
     const offers = await fetchButcherOffersPreview(null, 5, {
       records: [{ id: 'b0', country: 'SA', nameAr: 'ملحمة' }],
     });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/butchers/b0');
-    expect(offers).toHaveLength(1);
-    expect(offers[0]?.id).toBe('d1');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(offers).toEqual([]);
   });
 });

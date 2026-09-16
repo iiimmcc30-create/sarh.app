@@ -140,10 +140,12 @@ export async function fetchButcherOffersPreview(
   limit = BUTCHER_HOME_OFFERS_LIMIT,
   options?: ButcherOfferPreviewOptions,
 ): Promise<ButcherOfferPreview[]> {
-  const records =
-    options?.records ?? (await fetchRatingListRecords(accessToken));
+  const provided = options?.records;
+  const records = provided ?? (await fetchRatingListRecords(accessToken));
   if (records.length === 0) return [];
-  if (butcherRecordsHaveEmbeddedOffers(records)) {
+  // Home already loaded the rating list (backend embeds offers). Reusing
+  // those records avoids a second ?sort=rating GET and the 12-way detail fan-out.
+  if (provided || butcherRecordsHaveEmbeddedOffers(records)) {
     return offersPreviewFromRecords(records, limit);
   }
   return offersPreviewFromDetails(records, accessToken, limit);
