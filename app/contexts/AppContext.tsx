@@ -26,6 +26,7 @@ import { resolveMediaUrl } from '@/services/media';
 import { prefetchRemoteImages } from '@/lib/prefetchRemoteImages';
 import {
   buildListingsFeedUrl,
+  getBootstrappedListingsPage,
   rememberListingsBootstrapPage,
 } from '@/services/listings';
 
@@ -111,7 +112,7 @@ interface AppContextValue {
   updateMe: (updates: Partial<User>) => Promise<ActionResult>;
   posts: Post[];
   fetchPosts: (feed?: 'for_you' | 'following', options?: FetchPostsOptions) => Promise<boolean>;
-  fetchListings: () => Promise<boolean>;
+  fetchListings: (options?: { force?: boolean }) => Promise<boolean>;
   addPost: (post: Omit<Post, 'id' | 'author' | 'likes' | 'reposts' | 'comments' | 'postedAt' | 'liked' | 'reposted'>) => Promise<boolean>;
   updatePost: (postId: string, data: { content: string; arabicContent: string; image?: string | null; images?: string[] }) => Promise<boolean>;
   deletePost: (postId: string) => Promise<ActionResult>;
@@ -299,13 +300,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await userFetchInflight;
   }, [isAuthenticated, accessToken, user, mapBackendUser]);
 
-  const fetchListings = useCallback(async (): Promise<boolean> => {
+  const fetchListings = useCallback(async (options?: { force?: boolean }): Promise<boolean> => {
     if (listingsFetchInflight) {
       await listingsFetchInflight;
       return listingsLastFetchOk;
     }
     if (isRateLimited()) {
       return listingsLastFetchOk;
+    }
+    if (!options?.force && shouldReuseFreshResult(listingsLastSuccessAt, REFETCH_TTL_MS)) {
+      return listingsLastFetchOk;
+    }
+    if (!options?.force) {
+      const boot = getBootstrappedListingsPage(accessToken);
+      if (boot) {
+        setListingsState(boot.listings);
+        listingsLastSuccessAt = Date.now();
+        listingsLastFetchOk = true;
+        return true;
+      }
     }
     let succeeded = false;
     listingsFetchInflight = (async () => {
@@ -525,7 +538,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     lastUserRefetchAtRef.current = now;
     const promise = Promise.all([
       fetchUserData(),
-      fetchListings(),
+      fetchListings({ force }),
       fetchPosts('for_you', { force }),
     ]).then(
       () => undefined,
