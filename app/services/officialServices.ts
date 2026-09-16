@@ -1,5 +1,8 @@
 import { API_BASE } from '@/services/api';
-import { authFetch } from '@/services/authFetch';
+import { authFetch, getAccessToken } from '@/services/authFetch';
+import { fetchUserPosts } from '@/services/posts';
+import { shouldReuseFreshResult } from '@/services/requestCoordination';
+import type { Post } from '@/services/types';
 
 export type OfficialService = {
   id: string;
@@ -170,36 +173,91 @@ export function inferServiceDeliveryChannel(url?: string | null): string | null 
   }
 }
 
-export async function fetchMinistryAccount(): Promise<MinistryAccount | null> {
-  try {
-    const res = await authFetch(`${API_BASE}/api/services/account`, {
-      cache: 'no-store',
-      headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
-    });
-    const json = await res.json().catch(() => ({}));
-    const account = json?.data?.account;
-    if (!res.ok || !json.success || !account?.id) return null;
-    return {
-      id: String(account.id),
-      username: String(account.username ?? 'mewa'),
-      arabicName: String(account.arabicName ?? ''),
-      displayName: String(account.displayName ?? ''),
-      bio: account.bio ? String(account.bio) : null,
-      about: account.about ? String(account.about) : null,
-      avatar: account.avatar ? String(account.avatar) : null,
-      coverImage: account.coverImage ? String(account.coverImage) : null,
-      website: account.website ? String(account.website) : null,
-      publicPhone: account.publicPhone ? String(account.publicPhone) : null,
-      publicEmail: account.publicEmail ? String(account.publicEmail) : null,
-      verified: Boolean(account.verified),
-      allowPrivateMessages: account.allowPrivateMessages !== false,
-      followersCount: Number(account.followersCount ?? 0),
-      servicesCount: Number(account.servicesCount ?? 0),
-      isFollowing: Boolean(account.isFollowing),
-    };
-  } catch {
-    return null;
+/** Same window as other profile/home focus skips — local to ministry fetches. */
+export const MINISTRY_PROFILE_TTL_MS = 60_000;
+
+type AccountCache = { at: number; data: MinistryAccount; auth: boolean };
+type ServicesCache = { at: number; data: FetchOfficialServicesResult };
+type PostsCache = { at: number; userId: string; data: Post[]; auth: boolean };
+
+let accountCache: AccountCache | null = null;
+let accountInflight: Promise<MinistryAccount | null> | null = null;
+let servicesCache: ServicesCache | null = null;
+let servicesInflight: Promise<FetchOfficialServicesResult> | null = null;
+let postsCache: PostsCache | null = null;
+let postsInflight: Promise<Post[]> | null = null;
+
+function ministryAuthTag(): boolean {
+  return Boolean(getAccessToken());
+}
+
+/** Test-only reset. */
+export function resetMinistryProfileCache(): void {
+  accountCache = null;
+  accountInflight = null;
+  servicesCache = null;
+  servicesInflight = null;
+  postsCache = null;
+  postsInflight = null;
+}
+
+function mapMinistryAccount(account: Record<string, unknown>): MinistryAccount {
+  return {
+    id: String(account.id),
+    username: String(account.username ?? 'mewa'),
+    arabicName: String(account.arabicName ?? ''),
+    displayName: String(account.displayName ?? ''),
+    bio: account.bio ? String(account.bio) : null,
+    about: account.about ? String(account.about) : null,
+    avatar: account.avatar ? String(account.avatar) : null,
+    coverImage: account.coverImage ? String(account.coverImage) : null,
+    website: account.website ? String(account.website) : null,
+    publicPhone: account.publicPhone ? String(account.publicPhone) : null,
+    publicEmail: account.publicEmail ? String(account.publicEmail) : null,
+    verified: Boolean(account.verified),
+    allowPrivateMessages: account.allowPrivateMessages !== false,
+    followersCount: Number(account.followersCount ?? 0),
+    servicesCount: Number(account.servicesCount ?? 0),
+    isFollowing: Boolean(account.isFollowing),
+  };
+}
+
+export function fetchMinistryAccount(options?: {
+  force?: boolean;
+}): Promise<MinistryAccount | null> {
+  const force = options?.force === true;
+  const auth = ministryAuthTag();
+  if (
+    accountCache &&
+    accountCache.auth === auth &&
+    shouldReuseFreshResult(accountCache.at, MINISTRY_PROFILE_TTL_MS, force)
+  ) {
+    return Promise.resolve(accountCache.data);
   }
+  if (accountInflight) return accountInflight;
+
+  accountInflight = (async () => {
+    try {
+      const res = await authFetch(`${API_BASE}/api/services/account`, {
+        cache: 'no-store',
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+      });
+      const json = await res.json().catch(() => ({}));
+      const account = json?.data?.account;
+      if (!res.ok || !json.success || !account?.id) {
+        return accountCache?.auth === auth ? accountCache.data : null;
+      }
+      const mapped = mapMinistryAccount(account as Record<string, unknown>);
+      accountCache = { at: Date.now(), data: mapped, auth };
+      return mapped;
+    } catch {
+      return accountCache?.auth === auth ? accountCache.data : null;
+    } finally {
+      accountInflight = null;
+    }
+  })();
+
+  return accountInflight;
 }
 
 export async function fetchOfficialService(id: string): Promise<OfficialService | null> {
@@ -217,19 +275,76 @@ export async function fetchOfficialService(id: string): Promise<OfficialService 
   return null;
 }
 
-export async function fetchOfficialServices(): Promise<FetchOfficialServicesResult> {
-  try {
-    const res = await fetch(`${API_BASE}/api/services`, {
-      headers: { Accept: 'application/json' },
-    });
-    const json = await res.json().catch(() => ({}));
-    if (res.ok && json.success && Array.isArray(json.data?.services)) {
-      return { services: json.data.services as OfficialService[], fromApi: true };
-    }
-  } catch {
-    // network error
+export function fetchOfficialServices(options?: {
+  force?: boolean;
+}): Promise<FetchOfficialServicesResult> {
+  const force = options?.force === true;
+  if (
+    servicesCache &&
+    shouldReuseFreshResult(servicesCache.at, MINISTRY_PROFILE_TTL_MS, force)
+  ) {
+    return Promise.resolve(servicesCache.data);
   }
-  return { services: [], fromApi: false };
+  if (servicesInflight) return servicesInflight;
+
+  servicesInflight = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/services`, {
+        headers: { Accept: 'application/json' },
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success && Array.isArray(json.data?.services)) {
+        const data: FetchOfficialServicesResult = {
+          services: json.data.services as OfficialService[],
+          fromApi: true,
+        };
+        servicesCache = { at: Date.now(), data };
+        return data;
+      }
+    } catch {
+      // network error
+    }
+    if (servicesCache) return servicesCache.data;
+    return { services: [], fromApi: false };
+  })().finally(() => {
+    servicesInflight = null;
+  });
+
+  return servicesInflight;
+}
+
+export function fetchMinistryPosts(
+  userId: string,
+  options?: { force?: boolean },
+): Promise<Post[]> {
+  const force = options?.force === true;
+  const auth = ministryAuthTag();
+  if (
+    postsCache &&
+    postsCache.userId === userId &&
+    postsCache.auth === auth &&
+    shouldReuseFreshResult(postsCache.at, MINISTRY_PROFILE_TTL_MS, force)
+  ) {
+    return Promise.resolve(postsCache.data);
+  }
+  if (postsInflight) return postsInflight;
+
+  postsInflight = (async () => {
+    try {
+      const data = await fetchUserPosts(userId);
+      postsCache = { at: Date.now(), userId, data, auth };
+      return data;
+    } catch (err) {
+      if (postsCache && postsCache.userId === userId && postsCache.auth === auth) {
+        return postsCache.data;
+      }
+      throw err;
+    } finally {
+      postsInflight = null;
+    }
+  })();
+
+  return postsInflight;
 }
 
 export function splitServiceLines(value?: string | null): string[] {

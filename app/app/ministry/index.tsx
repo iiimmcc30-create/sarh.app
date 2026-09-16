@@ -15,9 +15,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { openPostDetail } from '@/lib/openPost';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { safePush } from '@/lib/safeNavigate';
-import { fetchUserPosts } from '@/services/posts';
 import {
   fetchMinistryAccount,
+  fetchMinistryPosts,
   fetchOfficialServices,
   type MinistryAccount,
   type OfficialService,
@@ -87,24 +87,23 @@ export default function MinistryProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     const [nextAccount, servicesResult] = await Promise.all([
-      fetchMinistryAccount(),
-      fetchOfficialServices(),
+      fetchMinistryAccount({ force }),
+      fetchOfficialServices({ force }),
     ]);
-    setAccount(nextAccount);
-    setServices(servicesResult.services.filter((item) => item.active !== false));
+    if (nextAccount) setAccount(nextAccount);
+    if (servicesResult.fromApi || servicesResult.services.length > 0) {
+      setServices(servicesResult.services.filter((item) => item.active !== false));
+    }
     if (nextAccount?.id) {
       try {
-        const userPosts = await fetchUserPosts(nextAccount.id);
+        const userPosts = await fetchMinistryPosts(nextAccount.id, { force });
         setPosts(userPosts);
         setPostsLoadFailed(false);
       } catch {
         setPostsLoadFailed(true);
       }
-    } else {
-      setPosts([]);
-      setPostsLoadFailed(false);
     }
   }, []);
 
@@ -113,7 +112,7 @@ export default function MinistryProfileScreen() {
       let active = true;
       void (async () => {
         try {
-          await load();
+          await load(false);
         } catch {
           /* keep previous ministry data */
         } finally {
@@ -128,8 +127,11 @@ export default function MinistryProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load();
-    setRefreshing(false);
+    try {
+      await load(true);
+    } finally {
+      setRefreshing(false);
+    }
   }, [load]);
 
   const followersLabel = useMemo(
@@ -151,7 +153,7 @@ export default function MinistryProfileScreen() {
     try {
       const result = await setFollowUser(account.id, !account.isFollowing);
       if (!result) throw new Error('follow_failed');
-      const refreshed = await fetchMinistryAccount();
+      const refreshed = await fetchMinistryAccount({ force: true });
       if (refreshed) setAccount(refreshed);
     } catch {
       void showToast('تعذّرت المتابعة، حاول مجدداً', 'error');

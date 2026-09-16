@@ -29,7 +29,8 @@ describe('MEWA ministry profile wiring', () => {
     const profile = src('app/ministry/index.tsx');
     expect(profile).toContain('fetchMinistryAccount');
     expect(profile).toContain('fetchOfficialServices');
-    expect(profile).toContain('fetchUserPosts');
+    expect(profile).toContain('fetchMinistryPosts');
+    expect(src('services/officialServices.ts')).toContain('fetchUserPosts');
     expect(profile).toContain('setFollowUser');
     expect(profile).toContain('PostItem');
     expect(profile).toContain('MinistryServiceCard');
