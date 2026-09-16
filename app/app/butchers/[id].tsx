@@ -12,6 +12,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,7 +38,6 @@ import { countries, Country } from '@/services/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
 import {
-  mapButcherProductFromApi,
   ButcherOffer,
   ButcherProduct,
   ButcherProfile,
@@ -48,7 +48,13 @@ import {
   type CutType,
   type MeatCategory,
 } from '@/services/butcherData';
-import { findCachedButcher } from '@/services/butcherDirectory';
+import {
+  fetchButcherDetail,
+  fetchButcherStories,
+  findCachedButcher,
+  getCachedButcherDetail,
+  getCachedButcherStories,
+} from '@/services/butcherDirectory';
 import { type ButcherStoreNavItem } from '@/components/butcher/ButcherCategoryBar';
 import { ButcherMenuCategoryBar } from '@/components/butcher/ButcherMenuCategoryBar';
 import { ButcherProductOptionsModal } from '@/components/butcher/ButcherProductOptionsModal';
@@ -518,39 +524,10 @@ function mapOfferFromApi(o: any): ButcherOffer {
   };
 }
 
-function mapReviewFromApi(r: any, butcherId: string): ButcherReview {
-  return {
-    id: r.id,
-    butcherId: r.butcherId || butcherId,
-    authorName: r.reviewer?.displayName || r.authorName || 'عميل سرح',
-    authorNameAr: r.reviewer?.arabicName || r.reviewer?.displayName || r.authorNameAr || 'عميل سرح',
-    authorAvatar: r.reviewer?.avatar || r.authorAvatar || undefined,
-    rating: r.rating ?? 5,
-    comment: r.comment || '',
-    commentAr: r.comment || '',
-    postedAt: r.createdAt,
-  };
-}
-
-function distributionFromReviews(list: { rating?: number }[]): Record<number, number> {
-  const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (const row of list) {
-    const rating = Math.round(Number(row.rating) || 0);
-    if (rating >= 1 && rating <= 5) dist[rating] += 1;
-  }
-  return dist;
-}
-
 function offersFromCachedRaw(raw?: Record<string, unknown>): ButcherOffer[] {
   const list = raw?.offers;
   if (!Array.isArray(list)) return [];
   return list.map((o) => mapOfferFromApi(o));
-}
-
-function hasUsableEmbeddedReviews(b: { reviews?: unknown; reviewCount?: unknown }): boolean {
-  if (!Array.isArray(b.reviews)) return false;
-  if (b.reviews.length > 0) return true;
-  return Number(b.reviewCount ?? 0) === 0;
 }
 
 const EMPTY_REVIEW_DISTRIBUTION: Record<number, number> = {
@@ -558,17 +535,37 @@ const EMPTY_REVIEW_DISTRIBUTION: Record<number, number> = {
 };
 
 function applyDirectorySeed(id: string | undefined) {
+  const detail = id ? getCachedButcherDetail(id) : null;
+  if (detail) {
+    return {
+      butcher: detail.profile,
+      products: detail.products,
+      offers: detail.offers,
+      reviews: detail.reviews,
+      reviewDistribution: detail.reviewDistribution,
+      stories: getCachedButcherStories() ?? [],
+      loading: false,
+    };
+  }
   const cached = id ? findCachedButcher(id) : null;
   if (cached) {
     return {
       butcher: cached.profile,
+      products: [] as ButcherProduct[],
       offers: offersFromCachedRaw(cached.raw),
+      reviews: [] as ButcherReview[],
+      reviewDistribution: { ...EMPTY_REVIEW_DISTRIBUTION },
+      stories: getCachedButcherStories() ?? [],
       loading: false,
     };
   }
   return {
     butcher: null as ButcherProfile | null,
+    products: [] as ButcherProduct[],
     offers: [] as ButcherOffer[],
+    reviews: [] as ButcherReview[],
+    reviewDistribution: { ...EMPTY_REVIEW_DISTRIBUTION },
+    stories: getCachedButcherStories() ?? [],
     loading: true,
   };
 }
@@ -604,26 +601,32 @@ export default function ButcherProfileScreen() {
   );
   const butcherRef = useRef<ButcherProfile | null>(null);
   butcherRef.current = butcher;
-  const [products, setProducts] = useState<ButcherProduct[]>([]);
+  const [products, setProducts] = useState<ButcherProduct[]>(
+    () => applyDirectorySeed(id).products,
+  );
   const [offers, setOffers] = useState<ButcherOffer[]>(() => applyDirectorySeed(id).offers);
-  const [reviews, setReviews] = useState<ButcherReview[]>([]);
-  const [reviewDistribution, setReviewDistribution] = useState<Record<number, number>>({
-    ...EMPTY_REVIEW_DISTRIBUTION,
-  });
+  const [reviews, setReviews] = useState<ButcherReview[]>(() => applyDirectorySeed(id).reviews);
+  const [reviewDistribution, setReviewDistribution] = useState<Record<number, number>>(
+    () => applyDirectorySeed(id).reviewDistribution,
+  );
   const [reviewDraft, setReviewDraft] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
-  const [storiesList, setStoriesList] = useState<ButcherStory[]>([]);
+  const [storiesList, setStoriesList] = useState<ButcherStory[]>(
+    () => applyDirectorySeed(id).stories,
+  );
   const [loading, setLoading] = useState(() => applyDirectorySeed(id).loading);
+  const [refreshing, setRefreshing] = useState(false);
   const [chatAccess, setChatAccess] = useState<ButcherChatAccess | null>(null);
 
   if (id !== hydratedId) {
     const next = applyDirectorySeed(id);
     setHydratedId(id);
     setButcher(next.butcher);
-    setProducts([]);
+    setProducts(next.products);
     setOffers(next.offers);
-    setReviews([]);
-    setReviewDistribution({ ...EMPTY_REVIEW_DISTRIBUTION });
+    setReviews(next.reviews);
+    setReviewDistribution(next.reviewDistribution);
+    setStoriesList(next.stories);
     setLoading(next.loading);
   }
 
@@ -724,135 +727,76 @@ export default function ButcherProfileScreen() {
     let cancelled = false;
     if (!id) return;
 
-    const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    const cachedDetail = getCachedButcherDetail(id);
+    if (cachedDetail) {
+      setButcher(cachedDetail.profile);
+      setProducts(cachedDetail.products);
+      setOffers(cachedDetail.offers);
+      setReviews(cachedDetail.reviews);
+      setReviewDistribution(cachedDetail.reviewDistribution);
+      setLoading(false);
+    }
+    const cachedStories = getCachedButcherStories();
+    if (cachedStories) setStoriesList(cachedStories);
 
-    const applyReviewsPayload = (payload: any) => {
-      const list = Array.isArray(payload) ? payload : payload?.reviews;
-      if (Array.isArray(list)) {
-        setReviews(list.map((r: any) => mapReviewFromApi(r, id)));
-      }
-      if (payload?.distribution) {
-        setReviewDistribution(payload.distribution);
-      }
-    };
-
-    const fetchReviewsIfNeeded = async () => {
+    const load = async (force = false) => {
+      if (!butcherRef.current || butcherRef.current.id !== id) setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, { headers });
+        // Stories are optional and must not block butcher details.
+        const [snapshot, stories] = await Promise.all([
+          fetchButcherDetail(id, { token: accessToken, force }),
+          fetchButcherStories({ force }),
+        ]);
         if (cancelled) return;
-        if (!res.ok) return;
-        const json = await res.json();
-        if (cancelled) return;
-        if (json.success) applyReviewsPayload(json.data);
-      } catch {
-        // Reviews are optional on profile load.
-      }
-    };
-
-    const fetchButcherDetails = async () => {
-      let failed = false;
-      try {
-        if (!butcherRef.current || butcherRef.current.id !== id) setLoading(true);
-        const res = await fetch(`${API_BASE}/api/butchers/${id}`, { headers });
-        if (cancelled) return;
-        if (res.ok) {
-          const json = await res.json();
-          if (cancelled) return;
-          if (json.success && json.data) {
-            const b = json.data;
-            if (b.id && String(b.id) !== String(id)) return;
-            const mappedButcher: ButcherProfile = {
-              id: b.id,
-              name: b.nameAr || b.nameEn,
-              nameAr: b.nameAr,
-              logo: b.logo || undefined,
-              cover: b.cover || undefined,
-              type: b.type || 'regular',
-              country: b.country || 'SA',
-              city: b.city || '',
-              cityAr: b.cityAr || '',
-              address: b.address || '',
-              addressAr: b.addressAr || '',
-              lat: b.lat || 0,
-              lng: b.lng || 0,
-              phone: b.phone || '',
-              rating: b.rating ?? 5.0,
-              reviewCount: b.reviewCount ?? 0,
-              orderCompletionRate: b.orderCompletionRate ?? 100,
-              workingHours: {
-                open: b.openTime || '06:00',
-                close: b.closeTime || '22:00',
-                isOpen: b.isOpen ?? true,
-                closedOn: b.closedDays || [],
-              },
-              bio: b.bioAr || b.bioEn || '',
-              bioAr: b.bioAr || '',
-              specialties: b.specialties || [],
-              subscriptionActive: b.subscriptionActive ?? false,
-              subscriptionExpiry: b.subscriptionExpiry,
-              commercialReg: b.commercialReg,
-              activityScore: b.activityScore ?? 50,
-              totalOrders: b.totalOrders ?? 0,
-              joinedAt: b.createdAt || new Date().toISOString(),
-            };
-            setButcher(mappedButcher);
-
-            if (b.products) {
-              setProducts(
-                b.products.map((p: Record<string, unknown>) => mapButcherProductFromApi(p)),
-              );
-            }
-
-            if (b.offers) {
-              setOffers(b.offers.map((o: any) => mapOfferFromApi(o)));
-            }
-
-            if (hasUsableEmbeddedReviews(b) && Array.isArray(b.reviews)) {
-              setReviews(b.reviews.map((r: any) => mapReviewFromApi(r, id)));
-              setReviewDistribution(
-                b.reviews.length > 0
-                  ? distributionFromReviews(b.reviews)
-                  : { ...EMPTY_REVIEW_DISTRIBUTION },
-              );
-            } else {
-              void fetchReviewsIfNeeded();
-            }
+        if (snapshot) {
+          if (snapshot.profile.id && String(snapshot.profile.id) !== String(id)) return;
+          if (String(snapshot.profile.id) === String(id)) {
+            setButcher(snapshot.profile);
+            setProducts(snapshot.products);
+            setOffers(snapshot.offers);
+            setReviews(snapshot.reviews);
+            setReviewDistribution(snapshot.reviewDistribution);
           }
-        } else if (res.status !== 404) {
-          failed = true;
         }
+        setStoriesList(stories);
       } catch (err) {
-        failed = true;
         console.warn('[ButcherProfileScreen] Failed to fetch details:', err);
-      } finally {
         if (cancelled) return;
         const have = butcherRef.current && butcherRef.current.id === id;
+        const failed = true;
         if (failed && !have) return;
-        setLoading(false);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
-    const fetchStories = async () => {
-      try {
-        const resS = await fetch(`${API_BASE}/api/butchers/stories`);
-        if (cancelled) return;
-        if (!resS.ok) return;
-        const json = await resS.json();
-        if (cancelled) return;
-        if (json.success && Array.isArray(json.data)) {
-          setStoriesList(json.data);
-        }
-      } catch {
-        // Stories are optional and must not block butcher details.
-      }
-    };
-
-    void fetchButcherDetails();
-    void fetchStories();
+    void load();
     return () => {
       cancelled = true;
     };
   }, [id, accessToken]);
+
+  const onRefresh = useCallback(async () => {
+    if (!id) return;
+    setRefreshing(true);
+    try {
+      const [snapshot, stories] = await Promise.all([
+        fetchButcherDetail(id, { token: accessToken, force: true }),
+        fetchButcherStories({ force: true }),
+      ]);
+      if (snapshot && String(snapshot.profile.id) === String(id)) {
+        setButcher(snapshot.profile);
+        setProducts(snapshot.products);
+        setOffers(snapshot.offers);
+        setReviews(snapshot.reviews);
+        setReviewDistribution(snapshot.reviewDistribution);
+      }
+      setStoriesList(stories);
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
+  }, [accessToken, id]);
 
   const onOpenChat = useCallback(() => {
     if (!chatAccess?.allowed || !id) return;
@@ -1026,6 +970,9 @@ export default function ButcherProfileScreen() {
         keyboardShouldPersistTaps="handled"
         onScroll={handleScroll}
         scrollEventThrottle={100}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+        }
       >
         <ButcherStoreHero
           butcher={butcher}
