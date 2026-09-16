@@ -51,6 +51,13 @@ describe('tab navigation API performance', () => {
     expect(market).toContain('const boot = getBootstrappedListingsPage(accessToken)');
   });
 
+  it('keeps existing browse rows visible while filter or search revalidates', () => {
+    const browse = src('app/market/browse.tsx');
+    expect(browse).toContain('if (!hasItemsRef.current) setLoading(true)');
+    expect(browse).toContain('if (gen !== loadGenRef.current) return');
+    expect(browse).toContain('(loading || loadFailed) && items.length === 0');
+  });
+
   it('lets pull-to-refresh bypass the posts TTL', () => {
     expect(src('app/(tabs)/posts.tsx')).toContain('force: Boolean(opts?.refresh || opts?.force)');
     expect(src('app/favorites.tsx')).toContain('force: opts?.refresh');

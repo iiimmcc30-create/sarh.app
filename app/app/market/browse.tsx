@@ -68,6 +68,8 @@ export default function MarketBrowseScreen() {
   const [loadFailed, setLoadFailed] = useState(false);
   const loadingMoreRef = useRef(false);
   const loadGenRef = useRef(0);
+  const hasItemsRef = useRef(false);
+  hasItemsRef.current = items.length > 0;
 
   const searchParams = useMemo(
     () => ({
@@ -113,7 +115,7 @@ export default function MarketBrowseScreen() {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!hasItemsRef.current) setLoading(true);
     setLoadFailed(false);
     try {
       const page = await searchListingsPage(searchParams, accessToken);
