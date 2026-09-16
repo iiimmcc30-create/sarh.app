@@ -80,11 +80,13 @@ describe('AuthService signup uniqueness', () => {
     const { service } = makeService({
       findAnyUserByPhone: jest.fn().mockResolvedValue({ id: 'user-a' }),
     });
-    await expect(service.checkSignup({ phone: PHONE_A })).rejects.toMatchObject({
-      status: 409,
-      error: 'phone_taken',
-      messageAr: SIGNUP_PHONE_TAKEN_AR,
-    });
+    await expect(service.checkSignup({ phone: PHONE_A })).rejects.toMatchObject(
+      {
+        status: 409,
+        error: 'phone_taken',
+        messageAr: SIGNUP_PHONE_TAKEN_AR,
+      },
+    );
   });
 
   it('checkSignup rejects taken username with exact Arabic message', async () => {
