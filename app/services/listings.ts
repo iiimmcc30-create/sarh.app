@@ -186,6 +186,22 @@ export function getBootstrappedListingsPage(
   return listingsBootstrap.page;
 }
 
+/** True when params match the default Market / AppContext listings first page. */
+export function isDefaultListingsFirstPage(params: ListingSearchParams = {}): boolean {
+  return (
+    !(params.search && params.search.length >= 2) &&
+    !params.category &&
+    !params.categoryId &&
+    !params.subcategoryId &&
+    !params.country &&
+    params.minPrice == null &&
+    params.maxPrice == null &&
+    !params.cursor &&
+    !params.sellerId &&
+    !params.featured
+  );
+}
+
 export function buildListingsFeedUrl(
   base: string,
   params: ListingSearchParams = {},
@@ -225,6 +241,11 @@ export async function searchListingsPage(
   params: ListingSearchParams,
   accessToken?: string | null,
 ): Promise<ListingSearchPage> {
+  if (isDefaultListingsFirstPage(params)) {
+    const boot = getBootstrappedListingsPage(accessToken);
+    if (boot) return boot;
+  }
+
   const base = await ensureApiReachable();
   const url = buildListingsFeedUrl(base, params);
   const res = await fetchPublicFeed(url, accessToken);
@@ -236,11 +257,21 @@ export async function searchListingsPage(
   if (!json.success || !Array.isArray(json.data?.listings)) {
     throw new Error('listings_fetch_failed');
   }
-  return {
+  const page: ListingSearchPage = {
     listings: json.data.listings.map(mapListing),
     nextCursor: typeof json.data.nextCursor === 'string' ? json.data.nextCursor : null,
     hasMore: json.data.hasMore === true,
   };
+  if (isDefaultListingsFirstPage(params)) {
+    const usable = page.listings.filter((row) => row.country !== 'EG');
+    if (usable.length > 0) {
+      rememberListingsBootstrapPage(
+        { listings: usable, nextCursor: page.nextCursor, hasMore: page.hasMore },
+        accessToken,
+      );
+    }
+  }
+  return page;
 }
 
 export async function searchListings(

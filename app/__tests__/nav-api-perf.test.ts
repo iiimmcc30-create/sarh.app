@@ -36,8 +36,12 @@ describe('tab navigation API performance', () => {
   it('gives listing and stories GETs the same feed timeout and in-flight dedupe as posts', () => {
     expect(src('services/listings.ts')).toContain('fetchPublicFeed(url, accessToken)');
     expect(src('services/listings.ts')).toContain('buildListingsFeedUrl');
+    expect(src('services/listings.ts')).toContain('isDefaultListingsFirstPage');
     expect(src('contexts/AppContext.tsx')).toContain('buildListingsFeedUrl(API_BASE)');
     expect(src('contexts/AppContext.tsx')).toContain('rememberListingsBootstrapPage');
+    expect(src('contexts/AppContext.tsx')).toContain(
+      'shouldReuseFreshResult(listingsLastSuccessAt, REFETCH_TTL_MS)',
+    );
     expect(src('services/stories.ts')).toContain("fetchPublicFeed(`${API_BASE}/api/stories/feed`, accessToken)");
     expect(src('services/fetchPublicFeed.ts')).toContain('export const FEED_TIMEOUT_MS = 12_000');
     expect(src('services/fetchPublicFeed.ts')).toContain('dedupeGetResponse');
