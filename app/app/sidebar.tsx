@@ -93,12 +93,7 @@ export default function SidebarScreen() {
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}
       />
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={close}
-        accessibilityRole="button"
-        accessibilityLabel="إغلاق القائمة"
-      />
+      <Pressable style={StyleSheet.absoluteFill} onPress={close} />
       <Animated.View
         pointerEvents="box-none"
         style={[styles.panelLayer, getRtlRow(), { transform: [{ translateX }] }]}
