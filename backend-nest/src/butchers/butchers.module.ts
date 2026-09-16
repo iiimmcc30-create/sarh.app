@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ButchersController } from './butchers.controller';
 import { ButchersService } from './butchers.service';
 import { ButchersRepository } from './repositories/butchers.repository';
@@ -8,9 +8,14 @@ import { ButcherRankingService } from './services/butcher-ranking.service';
 import { UnpaidOrderExpiryService } from './services/unpaid-order-expiry.service';
 import { GatewaySharedModule } from '../gateway/gateway-shared.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [GatewaySharedModule, SubscriptionsModule],
+  imports: [
+    GatewaySharedModule,
+    SubscriptionsModule,
+    forwardRef(() => PaymentsModule),
+  ],
   controllers: [ButchersController],
   providers: [
     ButchersService,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Prisma, OrderStatus } from '@prisma/client';
 import { z } from 'zod';
 import { ButchersRepository } from './repositories/butchers.repository';
@@ -39,6 +39,7 @@ import {
   sumOrderLinePrices,
   validateAndPriceOrderLine,
 } from './lib/order-line.util';
+import { PaymentsService } from '../payments/payments.service';
 
 const PAGE_SIZE = 20;
 
@@ -243,12 +244,16 @@ function pctChange(current: number, previous: number): number | null {
 
 @Injectable()
 export class ButchersService {
+  private readonly inFlightCheckouts = new Map<string, Promise<unknown>>();
+
   constructor(
     private readonly repo: ButchersRepository,
     private readonly redis: RedisService,
     private readonly orderLifecycle: OrderLifecycleService,
     private readonly orderStateMachine: OrderStateMachineService,
     private readonly ranking: ButcherRankingService,
+    @Inject(forwardRef(() => PaymentsService))
+    private readonly payments?: PaymentsService,
   ) {}
 
   async listButchers(query: {
@@ -1051,6 +1056,187 @@ export class ButchersService {
       'Butcher order placed',
     );
     return order;
+  }
+
+  private async validateCheckoutLines(
+    user: JwtPayload,
+    body: unknown,
+  ): Promise<{
+    butcherId: string;
+    deliveryType: string;
+    deliveryAddress?: string | null;
+    notes?: string | null;
+    currency: string;
+    totalPrice: number;
+    validatedLines: ReturnType<typeof validateAndPriceOrderLine>[];
+    method: 'mada' | 'visa' | 'mastercard' | 'apple_pay' | 'stc_pay';
+  }> {
+    const raw = (body ?? {}) as Record<string, unknown>;
+    const methodRaw = raw.method;
+    const method =
+      methodRaw === 'visa' ||
+      methodRaw === 'mastercard' ||
+      methodRaw === 'apple_pay' ||
+      methodRaw === 'stc_pay' ||
+      methodRaw === 'mada'
+        ? methodRaw
+        : 'mada';
+    const { method: _ignored, ...orderBody } = raw;
+    const parsed = createOrderSchema.safeParse(orderBody);
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+
+    const orderInput = parsed.data;
+    const { butcherId, deliveryType, deliveryAddress, notes, currency } =
+      orderInput;
+    const rawLines =
+      'items' in orderInput
+        ? orderInput.items
+        : [
+            {
+              productId: orderInput.productId,
+              cutType: orderInput.cutType,
+              weightKg: orderInput.weightKg,
+            },
+          ];
+
+    const validatedLines = [];
+    for (const line of rawLines) {
+      const product = await this.repo.findProductForOrder(line.productId);
+      validatedLines.push(validateAndPriceOrderLine(product, butcherId, line));
+    }
+
+    return {
+      butcherId,
+      deliveryType,
+      deliveryAddress,
+      notes,
+      currency,
+      totalPrice: sumOrderLinePrices(validatedLines),
+      validatedLines,
+      method,
+    };
+  }
+
+  async createCheckout(user: JwtPayload, body: unknown) {
+    if (!this.payments) {
+      throwApi(500, 'payments_unavailable', 'خدمة الدفع غير متاحة');
+    }
+
+    const input = await this.validateCheckoutLines(user, body);
+    const inFlightKey = `${user.userId}:${input.butcherId}`;
+    const running = this.inFlightCheckouts.get(inFlightKey);
+    if (running) {
+      return running as Promise<{
+        checkoutId: string;
+        paymentId: string;
+        checkoutUrl: string;
+        status: string;
+        alreadyPaid: boolean;
+        devMode: boolean;
+        butcherId: string;
+        totalPrice: number;
+        currency: string;
+        expiresAt: Date;
+        orderId: string | null;
+        orderNumber: string | null;
+      }>;
+    }
+
+    const promise = this.startCheckoutPayment(user, input).finally(() => {
+      this.inFlightCheckouts.delete(inFlightKey);
+    });
+    this.inFlightCheckouts.set(inFlightKey, promise);
+    return promise;
+  }
+
+  private async startCheckoutPayment(
+    user: JwtPayload,
+    input: Awaited<ReturnType<ButchersService['validateCheckoutLines']>>,
+  ) {
+    const payments = this.payments;
+    if (!payments) {
+      throwApi(500, 'payments_unavailable', 'خدمة الدفع غير متاحة');
+    }
+
+    const { checkout, reused } = await this.orderLifecycle.createCheckoutAttempt(
+      {
+        butcherId: input.butcherId,
+        deliveryType: input.deliveryType,
+        deliveryAddress: input.deliveryAddress,
+        notes: input.notes,
+        currency: input.currency,
+        totalPrice: input.totalPrice,
+        customerId: user.userId,
+        items: input.validatedLines,
+      },
+    );
+
+    try {
+      const payment = await payments.initiate(user, {
+        amount: input.totalPrice,
+        currency: input.currency || 'SAR',
+        method: input.method,
+        type: 'butcher_checkout',
+        referenceId: checkout.id,
+        description: `Butcher checkout ${checkout.id}`,
+        descriptionAr: 'دفع طلب ملحمة',
+      });
+
+      await this.orderLifecycle.linkCheckoutPayment(checkout.id, payment.paymentId);
+
+      const alreadyPaid =
+        'alreadyPaid' in payment && payment.alreadyPaid === true;
+      const paidOrder =
+        alreadyPaid || payment.status === 'paid'
+          ? await this.orderLifecycle.findOrderByPaymentId(payment.paymentId)
+          : null;
+
+      logger.info(
+        {
+          checkoutId: checkout.id,
+          paymentId: payment.paymentId,
+          customerId: user.userId,
+          reused,
+          alreadyPaid,
+          orderId: paidOrder?.id ?? null,
+        },
+        'Butcher checkout payment attempt started',
+      );
+
+      return {
+        checkoutId: checkout.id,
+        paymentId: payment.paymentId,
+        checkoutUrl: payment.checkoutUrl,
+        status: payment.status,
+        alreadyPaid,
+        devMode: payment.devMode,
+        butcherId: input.butcherId,
+        totalPrice: input.totalPrice,
+        currency: input.currency,
+        expiresAt: checkout.expiresAt,
+        orderId: paidOrder?.id ?? null,
+        orderNumber: paidOrder?.orderNumber ?? null,
+      };
+    } catch (err) {
+      if (!reused) {
+        await this.orderLifecycle
+          .abandonCheckout(user.userId, checkout.id)
+          .catch(() => undefined);
+      }
+      throw err;
+    }
+  }
+
+  async abandonCheckout(user: JwtPayload, checkoutId: string) {
+    if (!checkoutId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+    return this.orderLifecycle.abandonCheckout(user.userId, checkoutId);
   }
 
   async updateOrder(id: string, user: JwtPayload, body: unknown) {

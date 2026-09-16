@@ -157,6 +157,8 @@ export async function completeButcherOrderPayment(params: {
       paymentId: payJson.data.paymentId,
       checkoutUrl: payJson.data.checkoutUrl,
       devMode: payJson.data.devMode,
+      alreadyPaid: payJson.data.alreadyPaid === true,
+      status: payJson.data.status,
       context: 'butcher_order',
       returnParams: {
         orderId: order.id,
@@ -168,4 +170,65 @@ export async function completeButcherOrderPayment(params: {
     Alert.alert('خطأ', 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.');
     return 'failed';
   }
+}
+
+export async function startButcherCheckout(params: {
+  accessToken: string;
+  payload: Record<string, unknown>;
+  butcherId: string;
+  context?: 'butcher_checkout';
+}): Promise<'paid' | 'opened' | 'cancelled' | 'failed'> {
+  const { accessToken, payload, butcherId } = params;
+  const res = await fetch(`${API_BASE}/api/butchers/checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.success || !json.data) {
+    throw new Error(json.messageAr || json.message || 'تعذّر بدء الدفع');
+  }
+
+  const data = json.data as {
+    checkoutId?: string;
+    paymentId?: string;
+    checkoutUrl?: string;
+    alreadyPaid?: boolean;
+    status?: string;
+    devMode?: boolean;
+    orderId?: string | null;
+    orderNumber?: string | null;
+    butcherId?: string;
+  };
+
+  return launchPaymentCheckout({
+    accessToken,
+    paymentId: data.paymentId,
+    checkoutUrl: data.checkoutUrl,
+    devMode: data.devMode,
+    alreadyPaid: data.alreadyPaid === true,
+    status: data.status,
+    context: 'butcher_checkout',
+    returnParams: {
+      checkoutId: data.checkoutId ?? '',
+      orderId: data.orderId ?? '',
+      orderNumber: data.orderNumber ?? '',
+      butcherId: data.butcherId ?? butcherId,
+    },
+  });
+}
+
+export async function abandonButcherCheckout(params: {
+  accessToken: string;
+  checkoutId: string;
+}): Promise<void> {
+  const { accessToken, checkoutId } = params;
+  if (!checkoutId) return;
+  await fetch(`${API_BASE}/api/butchers/checkout/${encodeURIComponent(checkoutId)}/abandon`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  }).catch(() => undefined);
 }

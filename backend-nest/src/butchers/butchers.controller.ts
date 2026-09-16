@@ -186,6 +186,23 @@ export class ButchersController {
     return successResponse(await this.butchers.createOrder(user, body));
   }
 
+  @RateLimit('payment')
+  @Post('checkout')
+  @HttpCode(HttpStatus.CREATED)
+  async createCheckout(@CurrentUser() user: JwtPayload, @Body() body: unknown) {
+    return successResponse(await this.butchers.createCheckout(user, body));
+  }
+
+  @RateLimit('api')
+  @Post('checkout/:id/abandon')
+  @HttpCode(HttpStatus.OK)
+  async abandonCheckout(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(await this.butchers.abandonCheckout(user, id));
+  }
+
   @RateLimit('api')
   @Put('orders/:id')
   @HttpCode(HttpStatus.OK)

@@ -85,9 +85,32 @@ function bridgeHtml(opts: {
 </html>`;
 }
 
+function verificationMessage(context?: string): string {
+  if (
+    context === 'butcher_order' ||
+    context === 'butcher_checkout' ||
+    context === 'butcher'
+  ) {
+    return 'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.';
+  }
+  if (context === 'boost' || context === 'promotion' || context === 'promoted_ad') {
+    return 'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة العملية في N-Genius — لا تُفعَّل الترقية قبل التأكيد.';
+  }
+  if (
+    context === 'listing_fee' ||
+    context === 'fee' ||
+    context === 'commission'
+  ) {
+    return 'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة العملية في N-Genius — لا تُسجَّل الرسوم قبل التأكيد.';
+  }
+  return 'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة العملية في N-Genius — لا يُفعَّل الاشتراك قبل التأكيد.';
+}
+
 /**
- * NI hosted checkout redirects to HTTPS APP_URL (the API host).
- * These pages bridge the browser back into the mobile app via deep link.
+ * NI hosted checkout redirects to HTTPS APP_URL (the public site).
+ * Native apps intercept /payment/result in the in-app WebView.
+ * Expo web handles the same path for verification/sync.
+ * These pages remain as a native deep-link bridge when the API host is hit directly.
  */
 @Controller('payment')
 export class PaymentRedirectController {
@@ -98,17 +121,27 @@ export class PaymentRedirectController {
     @Query('paymentId') paymentId: string | undefined,
     @Query('ref') ref: string | undefined,
     @Query('type') type: string | undefined,
+    @Query('context') context: string | undefined,
+    @Query('orderId') orderId: string | undefined,
+    @Query('checkoutId') checkoutId: string | undefined,
     @Res() res: Response,
   ) {
+    const resolvedContext = context || type;
     const deepLink = buildDeepLink('payment/result', {
       paymentId,
       ref,
       type,
+      context: resolvedContext,
+      orderId,
+      checkoutId,
     });
     const intentLink = `intent://payment/result?${new URLSearchParams({
       ...(paymentId ? { paymentId } : {}),
       ...(ref ? { ref } : {}),
       ...(type ? { type } : {}),
+      ...(resolvedContext ? { context: resolvedContext } : {}),
+      ...(orderId ? { orderId } : {}),
+      ...(checkoutId ? { checkoutId } : {}),
     }).toString()}#Intent;scheme=${APP_SCHEME};package=${ANDROID_PACKAGE};end`;
 
     res
@@ -117,8 +150,7 @@ export class PaymentRedirectController {
       .send(
         bridgeHtml({
           title: 'التحقق من الدفع',
-          message:
-            'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة العملية في N-Genius — لا يُفعَّل الاشتراك قبل التأكيد.',
+          message: verificationMessage(resolvedContext),
           deepLink,
           intentLink,
         }),
@@ -128,9 +160,28 @@ export class PaymentRedirectController {
   @Public()
   @Get('cancel')
   @Header('Cache-Control', 'no-store')
-  cancel(@Res() res: Response) {
-    const deepLink = buildDeepLink('payment/cancel', {});
-    const intentLink = `intent://payment/cancel#Intent;scheme=${APP_SCHEME};package=${ANDROID_PACKAGE};end`;
+  cancel(
+    @Query('context') context: string | undefined,
+    @Query('orderId') orderId: string | undefined,
+    @Query('checkoutId') checkoutId: string | undefined,
+    @Query('paymentId') paymentId: string | undefined,
+    @Res() res: Response,
+  ) {
+    const deepLink = buildDeepLink('payment/cancel', {
+      context,
+      orderId,
+      checkoutId,
+      paymentId,
+    });
+    const intentQs = new URLSearchParams({
+      ...(context ? { context } : {}),
+      ...(orderId ? { orderId } : {}),
+      ...(checkoutId ? { checkoutId } : {}),
+      ...(paymentId ? { paymentId } : {}),
+    }).toString();
+    const intentLink = `intent://payment/cancel${intentQs ? `?${intentQs}` : ''}#Intent;scheme=${APP_SCHEME};package=${ANDROID_PACKAGE};end`;
+    const isButcher =
+      context === 'butcher_order' || context === 'butcher_checkout';
 
     res
       .status(200)
@@ -138,7 +189,9 @@ export class PaymentRedirectController {
       .send(
         bridgeHtml({
           title: 'تم إلغاء الدفع',
-          message: 'لم تُخصم أي مبالغ. اضغط لفتح التطبيق والعودة.',
+          message: isButcher
+            ? 'لم تُخصم أي مبالغ ولم يُنشأ طلب للملحمة. يمكنك المحاولة مرة أخرى.'
+            : 'لم تُخصم أي مبالغ. اضغط لفتح التطبيق والعودة.',
           deepLink,
           intentLink,
         }),

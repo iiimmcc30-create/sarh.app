@@ -23,6 +23,7 @@ const PAYMENT_TYPES = [
   'fee',
   'listing_fee',
   'butcher_order',
+  'butcher_checkout',
   'commission',
   'order_commission',
 ] as const;

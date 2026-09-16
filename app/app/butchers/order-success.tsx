@@ -25,6 +25,7 @@ export default function OrderSuccessScreen() {
   }>();
   const displayOrderId = orderNumber || (orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : '—');
   const isPaid = paymentStatus === 'paid';
+  const hasFinalOrder = Boolean(orderId);
 
   return (
     <Screen edges={['top']} pattern={false}>
@@ -39,12 +40,14 @@ export default function OrderSuccessScreen() {
           </View>
 
           <AppText variant="heading2" align="center">
-            {isPaid ? 'تم الدفع وإرسال الطلب!' : 'الطلب بانتظار الدفع'}
+            {isPaid ? 'تم الدفع وإرسال الطلب!' : 'لم يكتمل الدفع'}
           </AppText>
           <AppText variant="body" color="textSecondary" align="center">
             {isPaid
-              ? 'وصل طلبك المدفوع للملحمة وسيتواصل معك الجزار قريباً لتأكيد التفاصيل'
-              : 'لم يكتمل الدفع. أكمل الدفع من صفحة الطلب حتى يصل للملحمة.'}
+              ? 'وصل طلبك المدفوع وسيواصل معك الجزار قريبًا لتأكيد التفاصيل'
+              : hasFinalOrder
+                ? 'لم يكتمل الدفع. أكمل الدفع من صفحة الطلب حتى يصل للملحمة.'
+                : 'لم يُرسل طلب للملحمة. يمكنك إعادة المحاولة من السلة.'}
           </AppText>
 
           {/* Order summary */}
@@ -107,12 +110,16 @@ export default function OrderSuccessScreen() {
           {/* Actions */}
           <Pressable
             style={({ pressed }) => [s.chatBtn, pressed && { opacity: motion.press.opacity }]}
-            onPress={() =>
+            onPress={() => {
+              if (!isPaid && !hasFinalOrder) {
+                router.replace('/butchers');
+                return;
+              }
               router.push({
                 pathname: '/butchers/order/[id]',
                 params: { id: orderId ?? '' },
-              })
-            }
+              });
+            }}
           >
             <LinearGradient
               colors={[colors.electricBright, colors.cyan]}
@@ -123,7 +130,7 @@ export default function OrderSuccessScreen() {
               <Row align="center" justify="center" gap="sm">
                 <AppIcon name="receipt-outline" size={20} color="#fff" />
                 <AppText variant="label" numberOfLines={1} style={s.chatBtnText}>
-                  {isPaid ? 'تتبع الطلب' : 'إكمال الدفع'}
+                  {isPaid ? 'تتبع الطلب' : hasFinalOrder ? 'إكمال الدفع' : 'العودة للملاحم'}
                 </AppText>
               </Row>
             </LinearGradient>
