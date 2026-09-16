@@ -29,43 +29,35 @@ import {
   getBootstrappedListingsPage,
   rememberListingsBootstrapPage,
 } from '@/services/listings';
+import {
+  clearFeedSnapshot,
+  feedSnapshotOwnerId,
+  FEED_SNAPSHOT_GUEST_OWNER,
+  patchFeedSnapshot,
+  planFeedSnapshotHydration,
+  readFeedSnapshot,
+} from '@/lib/feedSnapshot';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
-/** v2: invalidate v1 snapshots that may hold Mojibake from ArrayBuffer feed clones. */
-const FEED_SNAPSHOT_KEY = 'sarouh:feed_snapshot_v2';
-const FEED_SNAPSHOT_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const REFETCH_TTL_MS = 60_000;
 const FEED_RETRY_MAX = 4;
 
-type FeedSnapshot = { posts: Post[]; listings: Listing[]; savedAt: number };
+let feedSnapshotBootDone = false;
+let resolveFeedSnapshotBoot: (() => void) | null = null;
+let feedSnapshotBoot = new Promise<void>((resolve) => {
+  resolveFeedSnapshotBoot = resolve;
+});
 
-async function readFeedSnapshot(): Promise<FeedSnapshot | null> {
-  try {
-    // Drop pre-fix Mojibake snapshots (ArrayBuffer latin1 clone bug).
-    void AsyncStorage.removeItem('sarouh:feed_snapshot_v1');
-    const raw = await AsyncStorage.getItem(FEED_SNAPSHOT_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as FeedSnapshot;
-    if (!parsed || Date.now() - parsed.savedAt > FEED_SNAPSHOT_MAX_AGE_MS) return null;
-    if (!Array.isArray(parsed.posts) || !Array.isArray(parsed.listings)) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
+function finishFeedSnapshotBoot() {
+  if (feedSnapshotBootDone) return;
+  feedSnapshotBootDone = true;
+  resolveFeedSnapshotBoot?.();
+  resolveFeedSnapshotBoot = null;
 }
 
-async function patchFeedSnapshot(partial: { posts?: Post[]; listings?: Listing[] }) {
-  try {
-    const prev = (await readFeedSnapshot()) ?? { posts: [], listings: [], savedAt: 0 };
-    const next: FeedSnapshot = {
-      posts: partial.posts ?? prev.posts,
-      listings: partial.listings ?? prev.listings,
-      savedAt: Date.now(),
-    };
-    await AsyncStorage.setItem(FEED_SNAPSHOT_KEY, JSON.stringify(next));
-  } catch {
-    /* ignore quota */
-  }
+async function waitForFeedSnapshotBoot() {
+  if (feedSnapshotBootDone) return;
+  await feedSnapshotBoot;
 }
 
 let userFetchInflight: Promise<void> | null = null;
@@ -156,7 +148,7 @@ function collectPostImageUris(posts: Post[]): Array<string | undefined> {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { user, accessToken, isAuthenticated } = useAuth();
+  const { user, accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
   const [me, setMe] = useState<User>(DEFAULT_USER);
   const [posts, setPosts] = useState<Post[]>([]);
   const [listingsState, setListingsState] = useState<Listing[]>([]);
@@ -301,6 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, accessToken, user, mapBackendUser]);
 
   const fetchListings = useCallback(async (options?: { force?: boolean }): Promise<boolean> => {
+    await waitForFeedSnapshotBoot();
     if (listingsFetchInflight) {
       await listingsFetchInflight;
       return listingsLastFetchOk;
@@ -353,7 +346,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             },
             accessToken,
           );
-          void patchFeedSnapshot({ listings: market });
+          void patchFeedSnapshot(
+            { listings: market },
+            feedSnapshotOwnerId(user?.id, isAuthenticated),
+          );
         }
       } catch (err) {
         console.warn('[AppContext] Failed to fetch listings:', err);
@@ -364,7 +360,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     await listingsFetchInflight;
     return succeeded;
-  }, [accessToken, mapBackendListing]);
+  }, [accessToken, isAuthenticated, mapBackendListing, user?.id]);
 
   // Keep ownership checks working even before profile fetch finishes
   useEffect(() => {
@@ -427,6 +423,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     feed: 'for_you' | 'following' = 'for_you',
     options?: FetchPostsOptions,
   ): Promise<boolean> => {
+    await waitForFeedSnapshotBoot();
     // Dedupe by feed type only — token refresh must not open a parallel posts request.
     const inflightKey = feed;
     const inflight = postsFetchInflight.get(inflightKey);
@@ -479,7 +476,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const applied = applyPostsFeed(inflightKey, fetchedPosts, applyGen);
             succeeded = applied;
             if (applied) {
-              void patchFeedSnapshot({ posts: fetchedPosts });
+              void patchFeedSnapshot(
+                { posts: fetchedPosts },
+                feedSnapshotOwnerId(user?.id, isAuthenticated),
+              );
             }
           }
         }
@@ -502,12 +502,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
     return succeeded;
-  }, [accessToken, applyPostsFeed, hydratePostsFeed, mapBackendPost]);
+  }, [accessToken, applyPostsFeed, hydratePostsFeed, isAuthenticated, mapBackendPost, user?.id]);
 
   const lastRefetchAtRef = useRef(0);
   const lastUserRefetchAtRef = useRef(0);
   const refetchInflightRef = useRef<Promise<void> | null>(null);
   const bootstrapStartedRef = useRef(false);
+  const lastAuthUserIdRef = useRef<string | null>(null);
   const fetchPostsRef = useRef(fetchPosts);
   const fetchListingsRef = useRef(fetchListings);
   fetchPostsRef.current = fetchPosts;
@@ -617,30 +618,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await bootstrapInflight;
   }, [scheduleFeedRetry]);
 
-  // Public feed — available to guests and logged-in users (once per mount)
+  // Public feed — hydrate disk snapshot, then skip GET when it is still network-fresh.
   useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
     (async () => {
-      const snapshot = await readFeedSnapshot();
-      if (cancelled) return;
-      if (snapshot) {
-        if (snapshot.posts.length > 0) {
-          postsCacheByFeed.set('for_you', snapshot.posts);
-          activePostsFeed = 'for_you';
-          setPosts(snapshot.posts);
-          prefetchRemoteImages(collectPostImageUris(snapshot.posts), 8);
+      try {
+        const ownerId = feedSnapshotOwnerId(user?.id, isAuthenticated);
+        const snapshot = await readFeedSnapshot(ownerId);
+        if (cancelled) return;
+        lastAuthUserIdRef.current = ownerId;
+        if (snapshot) {
+          const plan = planFeedSnapshotHydration(snapshot);
+          if (plan.posts) {
+            postsCacheByFeed.set('for_you', plan.posts);
+            activePostsFeed = 'for_you';
+            postsLastSuccessAt.set('for_you', snapshot.savedAt);
+            postsLastFetchOk.set('for_you', true);
+            setPosts(plan.posts);
+            prefetchRemoteImages(collectPostImageUris(plan.posts), 8);
+          }
+          if (plan.listings) {
+            listingsLastSuccessAt = snapshot.savedAt;
+            listingsLastFetchOk = true;
+            setListingsState(plan.listings);
+            prefetchRemoteImages(
+              plan.listings.map((l) => l.thumbnailUrl || l.images?.[0]),
+              8,
+            );
+          }
         }
-        if (snapshot.listings.length > 0) {
-          setListingsState(snapshot.listings);
-          prefetchRemoteImages(
-            snapshot.listings.map((l) => l.thumbnailUrl || l.images?.[0]),
-            8,
-          );
+      } finally {
+        finishFeedSnapshotBoot();
+        if (!cancelled && !bootstrapStartedRef.current) {
+          bootstrapStartedRef.current = true;
+          await bootstrapFeeds();
         }
       }
-      if (bootstrapStartedRef.current) return;
-      bootstrapStartedRef.current = true;
-      await bootstrapFeeds();
     })();
     return () => {
       cancelled = true;
@@ -650,43 +664,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
         retry.timer = null;
       }
     };
-    // Mount-only: refs keep fetch functions current without re-bootstrapping.
+    // Auth-ready once: refs keep fetch functions current without re-bootstrapping.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const lastAuthUserIdRef = useRef<string | null>(null);
+  }, [authLoading]);
 
   // User profile + authenticated feed metadata (liked/reposted)
   useEffect(() => {
+    if (authLoading) return;
     if (!isAuthenticated || !accessToken) {
-      lastAuthUserIdRef.current = null;
+      const wasUser =
+        Boolean(lastAuthUserIdRef.current) &&
+        lastAuthUserIdRef.current !== FEED_SNAPSHOT_GUEST_OWNER;
+      lastAuthUserIdRef.current = FEED_SNAPSHOT_GUEST_OWNER;
       if (!isAuthenticated) {
         setMe(DEFAULT_USER);
         setLikedPosts(new Set());
         setRepostedPosts(new Set());
+        if (wasUser) void clearFeedSnapshot();
       }
       return;
     }
-    const userId = String(user?.id ?? '');
-    const identityChanged = lastAuthUserIdRef.current !== userId;
-    lastAuthUserIdRef.current = userId;
+    let cancelled = false;
+    void (async () => {
+      await waitForFeedSnapshotBoot();
+      if (cancelled) return;
+      const userId = String(user?.id ?? '');
+      const previousId = lastAuthUserIdRef.current;
+      lastAuthUserIdRef.current = userId;
+      const switchedUser = previousId !== userId;
 
-    void fetchUserData();
+      void fetchUserData();
 
-    // After token refresh (same user), skip feed reload when data is still fresh.
-    const postsAge = Date.now() - (postsLastSuccessAt.get('for_you') ?? 0);
-    const postsFresh = postsAge < REFETCH_TTL_MS && (postsLastFetchOk.get('for_you') ?? false);
-    if (identityChanged || !postsFresh) {
-      // Avoid racing a second full bootstrap while mount bootstrap is in flight.
-      if (bootstrapInflight) {
-        void bootstrapInflight.then(() => {
-          if (identityChanged) void fetchPosts('for_you', { force: true });
-        });
+      // After token refresh (same user), skip feed reload when data is still fresh.
+      const postsAge = Date.now() - (postsLastSuccessAt.get('for_you') ?? 0);
+      const postsFresh = postsAge < REFETCH_TTL_MS && (postsLastFetchOk.get('for_you') ?? false);
+      if (switchedUser) {
+        if (bootstrapInflight) {
+          void bootstrapInflight.then(() => {
+            void fetchPosts('for_you', { force: true });
+          });
+          return;
+        }
+        void fetchPosts('for_you', { force: true });
         return;
       }
-      void fetchPosts('for_you', { force: identityChanged });
-    }
-  }, [isAuthenticated, accessToken, user?.id, fetchUserData, fetchPosts]);
+      if (!postsFresh) {
+        if (bootstrapInflight) return;
+        void fetchPosts('for_you');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAuthenticated, accessToken, user?.id, fetchUserData, fetchPosts]);
 
   const updateMe = useCallback(async (updates: Partial<User>): Promise<ActionResult> => {
     if (!isAuthenticated || !accessToken || !user) {
