@@ -103,10 +103,12 @@ function RootNavigator() {
         <Stack.Screen
           name="sidebar"
           options={{
-            // Start-edge drawer: RTL slides from the physical right (right → left).
-            // stackSlideBackAnimation is the opposite edge and opened LTR-style from the left.
-            animation: stackSlideAnimation(),
+            // JS drawer in app/sidebar.tsx owns slide + dim from one Animated progress.
+            // Native stack slide would move the dim independently of the panel.
+            animation: 'none',
             presentation: 'transparentModal',
+            gestureEnabled: false,
+            contentStyle: { backgroundColor: 'transparent', ...getRtlDirection() },
           }}
         />
         <Stack.Screen name="butchers-market-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />

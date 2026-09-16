@@ -49,11 +49,21 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
       /<Stack\.Screen\s+name="sidebar"[\s\S]*?\/>/,
     )?.[0];
     expect(sidebarScreen).toBeTruthy();
-    expect(sidebarScreen).toContain('stackSlideAnimation()');
+    expect(sidebarScreen).toContain("animation: 'none'");
+    expect(sidebarScreen).toContain("presentation: 'transparentModal'");
     expect(sidebarScreen).not.toContain('stackSlideBackAnimation()');
     expect(src('lib/rtl.ts')).toContain(
       "return isAppRtl() ? 'slide_from_right' : 'slide_from_left'",
     );
+
+    const sidebar = src('app/sidebar.tsx');
+    expect(sidebar).toContain('new Animated.Value(0)');
+    expect(sidebar).toContain('{ opacity: progress }');
+    expect(sidebar).toContain('transform: [{ translateX }]');
+    expect(sidebar).toContain('progress.interpolate');
+    expect(sidebar).toContain("rgba(0,0,0,0.28)");
+    expect(sidebar).toContain('isAppRtl() ? slideDistance : -slideDistance');
+    expect(sidebar).not.toContain('LayoutAnimation');
   });
 
   it('flattens own-profile stats/tabs and removes settings icon entry', () => {
