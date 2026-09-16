@@ -125,6 +125,11 @@ export class SendOtpDto {
   @IsOptional()
   @IsEnum(['sms', 'whatsapp'])
   channel: 'sms' | 'whatsapp' = 'sms';
+
+  /** login = default; signup = create account (reject if phone exists); join = butcher join */
+  @IsOptional()
+  @IsEnum(['login', 'signup', 'join', 'reset_password'])
+  purpose?: 'login' | 'signup' | 'join' | 'reset_password' = 'login';
 }
 
 export class VerifyOtpDto {
@@ -137,8 +142,28 @@ export class VerifyOtpDto {
   code!: string;
 
   @IsOptional()
-  @IsEnum(['login', 'reset_password', 'join'])
-  purpose: 'login' | 'reset_password' | 'join' = 'login';
+  @IsEnum(['login', 'reset_password', 'join', 'signup'])
+  purpose: 'login' | 'reset_password' | 'join' | 'signup' = 'login';
+}
+
+/** Early uniqueness check for signup UX (phone / username). */
+export class CheckSignupDto {
+  @IsOptional()
+  @Transform(normalizePhoneTransform)
+  @Matches(SAUDI_MOBILE_E164, { message: saudiMobileMessage })
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches(/^[a-z0-9_]+$/, {
+    message: 'أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط',
+  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  username?: string;
 }
 
 export class GoogleAuthDto {

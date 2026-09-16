@@ -15,6 +15,7 @@ import { ApiException, throwApi } from '../../common/exceptions/api.exception';
 import type { JwtPayload } from '../../common/types/jwt-payload.interface';
 import {
   ChangePasswordDto,
+  CheckSignupDto,
   GoogleAuthDto,
   LoginDto,
   LogoutDto,
@@ -28,6 +29,25 @@ import {
 import { isValidSaudiMobileE164, normalizeE164Phone } from '../../lib/phone';
 
 const DEFAULT_SESSION_TTL_DAYS = 30;
+
+/** Exact UX copy for signup uniqueness (do not leak account details). */
+export const SIGNUP_PHONE_TAKEN_AR = 'هذا الرقم مسجل مسبقًا';
+export const SIGNUP_USERNAME_TAKEN_AR = 'هذا الاسم مستخدم بالفعل';
+
+function isPrismaUniqueConflict(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code?: string }).code === 'P2002'
+  );
+}
+
+function prismaUniqueTarget(err: unknown): string[] {
+  const meta = (err as { meta?: { target?: string[] | string } })?.meta;
+  if (!meta?.target) return [];
+  return Array.isArray(meta.target) ? meta.target : [String(meta.target)];
+}
 
 function isTwilioDevOtpMode(): boolean {
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim() ?? '';
@@ -172,12 +192,28 @@ export class AuthService {
       ) as {
         phone: string;
         verified: boolean;
+        purpose?: string;
       };
       if (!decoded.verified || decoded.phone !== dto.phone) {
         throwApi(
           400,
           'invalid_phone_token',
           'رمز تحقق الجوال غير صحيح أو لا يطابق رقم الجوال',
+        );
+      }
+      // Signup must use a signup-purpose phone token — never a login/reset token.
+      if (decoded.purpose && decoded.purpose !== 'signup') {
+        throwApi(
+          400,
+          'invalid_phone_token',
+          'رمز تحقق الجوال غير صالح لإنشاء حساب جديد',
+        );
+      }
+      if (!decoded.purpose) {
+        throwApi(
+          400,
+          'invalid_phone_token',
+          'رمز تحقق الجوال غير صالح لإنشاء حساب جديد',
         );
       }
     } catch (err) {
@@ -199,9 +235,9 @@ export class AuthService {
     const exists = await this.repo.findExistingUser(orConditions);
     if (exists) {
       if (exists.username === dto.username)
-        throwApi(409, 'username_taken', 'اسم المستخدم مستخدم بالفعل');
+        throwApi(409, 'username_taken', SIGNUP_USERNAME_TAKEN_AR);
       if (exists.phone === dto.phone)
-        throwApi(409, 'phone_taken', 'رقم الجوال مسجّل بالفعل');
+        throwApi(409, 'phone_taken', SIGNUP_PHONE_TAKEN_AR);
       if (dto.email && exists.email === dto.email)
         throwApi(409, 'email_taken', 'البريد الإلكتروني مستخدم بالفعل');
       if (dto.googleId && exists.googleId === dto.googleId)
@@ -217,18 +253,36 @@ export class AuthService {
       passwordHash = await bcrypt.hash(randomPassword, 12);
     }
 
-    const user = await this.repo.createUser({
-      username: dto.username,
-      displayName: dto.displayName,
-      arabicName: dto.arabicName ?? dto.displayName,
-      country: dto.country ?? 'SA',
-      phone: dto.phone,
-      email: dto.email ?? null,
-      googleId: dto.googleId ?? null,
-      avatar: dto.avatar ?? null,
-      passwordHash,
-      verified: !!dto.googleId,
-    });
+    let user;
+    try {
+      user = await this.repo.createUser({
+        username: dto.username,
+        displayName: dto.displayName,
+        arabicName: dto.arabicName ?? dto.displayName,
+        country: dto.country ?? 'SA',
+        phone: dto.phone,
+        email: dto.email ?? null,
+        googleId: dto.googleId ?? null,
+        avatar: dto.avatar ?? null,
+        passwordHash,
+        verified: !!dto.googleId,
+      });
+    } catch (err) {
+      if (isPrismaUniqueConflict(err)) {
+        const target = prismaUniqueTarget(err);
+        if (target.includes('username')) {
+          throwApi(409, 'username_taken', SIGNUP_USERNAME_TAKEN_AR);
+        }
+        if (target.includes('phone')) {
+          throwApi(409, 'phone_taken', SIGNUP_PHONE_TAKEN_AR);
+        }
+        if (target.includes('email')) {
+          throwApi(409, 'email_taken', 'البريد الإلكتروني مستخدم بالفعل');
+        }
+        throwApi(409, 'conflict', 'تعذّر إنشاء الحساب بسبب تعارض البيانات');
+      }
+      throw err;
+    }
 
     await this.repo.followKnowledgeCenter(user.id).catch(() => undefined);
 
@@ -256,6 +310,47 @@ export class AuthService {
       user: formatUser({ ...user, phone: user.phone }),
       access_token: accessToken,
       refresh_token: refreshToken,
+    };
+  }
+
+  /**
+   * Early uniqueness probe for signup UX.
+   * Rejects with the same Arabic messages as final register — never leaks
+   * other account fields.
+   */
+  async checkSignup(dto: CheckSignupDto) {
+    if (!dto.phone && !dto.username) {
+      throwApi(400, 'missing_fields', 'أدخل رقم الجوال أو اسم المستخدم للتحقق');
+    }
+
+    if (dto.phone) {
+      const phone = normalizeE164Phone(dto.phone);
+      if (!isValidSaudiMobileE164(phone)) {
+        throwApi(
+          400,
+          'invalid_phone',
+          'رقم الجوال غير صحيح. استخدم صيغة +9665xxxxxxxx',
+        );
+      }
+      const existingPhone = await this.repo.findAnyUserByPhone(phone);
+      if (existingPhone) {
+        throwApi(409, 'phone_taken', SIGNUP_PHONE_TAKEN_AR);
+      }
+    }
+
+    if (dto.username) {
+      const existingUsername = await this.repo.findAnyUserByUsername(
+        dto.username,
+      );
+      if (existingUsername) {
+        throwApi(409, 'username_taken', SIGNUP_USERNAME_TAKEN_AR);
+      }
+    }
+
+    return {
+      available: true,
+      phone: dto.phone ? normalizeE164Phone(dto.phone) : undefined,
+      username: dto.username,
     };
   }
 
@@ -386,6 +481,14 @@ export class AuthService {
       );
     }
 
+    // Signup OTP must not be issued for an already-registered phone.
+    if (dto.purpose === 'signup') {
+      const existing = await this.repo.findAnyUserByPhone(phone);
+      if (existing) {
+        throwApi(409, 'phone_taken', SIGNUP_PHONE_TAKEN_AR);
+      }
+    }
+
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
@@ -472,6 +575,28 @@ export class AuthService {
     }
 
     const user = await this.repo.findUserByPhone(phone);
+
+    // App signup: OTP proves phone ownership but NEVER creates/logs into an
+    // existing account. Reject taken phones even when the code is valid.
+    if (dto.purpose === 'signup') {
+      const anyUser = user ?? (await this.repo.findAnyUserByPhone(phone));
+      if (anyUser) {
+        throwApi(409, 'phone_taken', SIGNUP_PHONE_TAKEN_AR);
+      }
+      const phoneToken = jwt.sign(
+        { phone, verified: true, purpose: 'signup' },
+        this.config.get<string>('JWT_SECRET')!,
+        { expiresIn: '15m' },
+      );
+      return {
+        verified: true,
+        purpose: 'signup',
+        is_new_user: true,
+        phone,
+        phone_token: phoneToken,
+        message: 'تم التحقق من رقم الجوال',
+      };
+    }
 
     if (dto.purpose === 'join') {
       const phoneToken = jwt.sign(

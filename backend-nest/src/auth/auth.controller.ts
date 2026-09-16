@@ -19,6 +19,7 @@ import { successResponse } from '../common/utils/response.util';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import {
   ChangePasswordDto,
+  CheckSignupDto,
   GoogleAuthDto,
   LoginDto,
   LogoutDto,
@@ -82,6 +83,14 @@ export class AuthController {
     return successResponse(
       await this.auth.changePassword(user, accessToken, dto),
     );
+  }
+
+  @Public()
+  @RateLimit('auth')
+  @Post('check-signup')
+  @HttpCode(HttpStatus.OK)
+  async checkSignup(@Body() dto: CheckSignupDto) {
+    return successResponse(await this.auth.checkSignup(dto));
   }
 
   @Public()

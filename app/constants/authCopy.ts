@@ -35,8 +35,10 @@ type AuthCopy = {
   usernameFormatOk: string;
   usernameFormatBad: string;
   errPhone: string;
+  errPhoneTaken: string;
   errName: string;
   errUsername: string;
+  errUsernameTaken: string;
   errDob: string;
   errPassword: string;
   errPasswordMatch: string;
@@ -81,8 +83,10 @@ const ar: AuthCopy = {
   usernameFormatOk: 'الصيغة صحيحة',
   usernameFormatBad: '3-20 حرف: أرقام، حروف إنجليزية صغيرة، أو _',
   errPhone: 'أدخل رقم جوال سعودي صحيح',
+  errPhoneTaken: 'هذا الرقم مسجل مسبقًا',
   errName: 'أدخل اسمًا كاملًا (حرفان على الأقل)',
   errUsername: 'اختر اسم مستخدم صالحًا',
+  errUsernameTaken: 'هذا الاسم مستخدم بالفعل',
   errDob: 'استخدم الصيغة YYYY-MM-DD',
   errPassword: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
   errPasswordMatch: 'كلمتا المرور غير متطابقتين',
@@ -127,8 +131,10 @@ const en: AuthCopy = {
   usernameFormatOk: 'Looks valid',
   usernameFormatBad: '3–20 chars: a–z, 0–9, or _',
   errPhone: 'Enter a valid Saudi mobile number',
+  errPhoneTaken: 'This number is already registered',
   errName: 'Enter your full name (at least 2 characters)',
   errUsername: 'Choose a valid username',
+  errUsernameTaken: 'This username is already taken',
   errDob: 'Use YYYY-MM-DD format',
   errPassword: 'Password must be at least 6 characters',
   errPasswordMatch: 'Passwords do not match',
