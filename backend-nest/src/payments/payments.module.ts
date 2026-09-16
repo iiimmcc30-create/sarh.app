@@ -12,9 +12,14 @@ import { PaymentsService } from './payments.service';
 import { PaymentsRepository } from './repositories/payments.repository';
 import { SettingsModule } from '../settings/settings.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { GatewaySharedModule } from '../gateway/gateway-shared.module';
 
 @Module({
-  imports: [SettingsModule, forwardRef(() => IntegrationsModule)],
+  imports: [
+    SettingsModule,
+    GatewaySharedModule,
+    forwardRef(() => IntegrationsModule),
+  ],
   controllers: [PaymentsController, PaymentRedirectController],
   providers: [PaymentsService, PaymentsRepository],
   exports: [PaymentsService],

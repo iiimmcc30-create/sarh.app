@@ -65,8 +65,15 @@ const CONTEXT_COPY: Record<PaymentContext, ContextCopy> = {
   },
   butcher_order: {
     successTitle: 'تم الدفع وإرسال الطلب!',
-    successSubtitle: 'تم تأكيد الدفع من N-Genius ووصل طلبك للملحمة.',
-    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُؤكَّد الطلب.',
+    successSubtitle: 'وصل طلبك المدفوع وسيواصل معك الجزار قريبًا لتأكيد التفاصيل',
+    pendingSubtitle: 'جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.',
+    primaryLabel: 'تفاصيل الطلب',
+    secondaryLabel: 'قسم الملاحم',
+  },
+  butcher_checkout: {
+    successTitle: 'تم الدفع وإرسال الطلب!',
+    successSubtitle: 'وصل طلبك المدفوع وسيواصل معك الجزار قريبًا لتأكيد التفاصيل',
+    pendingSubtitle: 'جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.',
     primaryLabel: 'تفاصيل الطلب',
     secondaryLabel: 'قسم الملاحم',
   },
@@ -87,6 +94,7 @@ function normalizeContext(raw?: string): PaymentContext {
     'boost',
     'promotion',
     'butcher_order',
+    'butcher_checkout',
     'generic',
   ];
   if (raw && allowed.includes(raw as PaymentContext)) {
@@ -118,6 +126,7 @@ export default function PaymentResultScreen() {
     orderId?: string;
     orderNumber?: string;
     butcherId?: string;
+    checkoutId?: string;
     boostType?: string;
     durationDays?: string;
     gatewayReturn?: string;
@@ -129,6 +138,7 @@ export default function PaymentResultScreen() {
     orderId,
     orderNumber,
     butcherId,
+    checkoutId: _checkoutId,
     boostType: paramBoostType,
     durationDays: paramDurationDays,
   } = params;
@@ -141,13 +151,27 @@ export default function PaymentResultScreen() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [boostExpiry, setBoostExpiry] = useState<string | null>(null);
   const [resolvedBoostType, setResolvedBoostType] = useState<string | null>(null);
+  const [paidOrderId, setPaidOrderId] = useState<string>(orderId ?? '');
+  const [paidOrderNumber, setPaidOrderNumber] = useState<string>(orderNumber ?? '');
+  const [paidButcherId, setPaidButcherId] = useState<string>(butcherId ?? '');
   const [retrying, setRetrying] = useState(false);
   const syncInflightRef = useRef(false);
   const initialSyncDoneRef = useRef(false);
 
+  const isButcherContext = context === 'butcher_order' || context === 'butcher_checkout';
+
   const applyPaidSideEffects = useCallback(
     async (result: PaymentSyncResult) => {
       await refetchSubscription();
+      if (result.butcherOrder?.id) {
+        setPaidOrderId(result.butcherOrder.id);
+        if (result.butcherOrder.orderNumber) {
+          setPaidOrderNumber(result.butcherOrder.orderNumber);
+        }
+        if (result.butcherOrder.butcherId) {
+          setPaidButcherId(result.butcherOrder.butcherId);
+        }
+      }
       if (context === 'boost' || context === 'promotion') {
         await refetchData();
         if (result.boost?.expiresAt) {
@@ -246,27 +270,32 @@ export default function PaymentResultScreen() {
         }
         break;
       case 'butcher_order':
-        router.replace({
-          pathname: '/butchers/order-success',
-          params: {
-            orderId: orderId ?? '',
-            orderNumber: orderNumber ?? '',
-            butcherId: butcherId ?? '',
-            paymentStatus: syncState === 'paid' ? 'paid' : 'unpaid',
-          },
-        } as never);
+      case 'butcher_checkout':
+        if (syncState === 'paid' && paidOrderId) {
+          router.replace({
+            pathname: '/butchers/order-success',
+            params: {
+              orderId: paidOrderId,
+              orderNumber: paidOrderNumber,
+              butcherId: paidButcherId,
+              paymentStatus: 'paid',
+            },
+          } as never);
+        } else {
+          router.replace('/butchers' as never);
+        }
         break;
       default:
         router.replace('/(tabs)/profile' as never);
     }
-  }, [context, listingId, orderId, orderNumber, butcherId, router, syncState]);
+  }, [context, listingId, paidOrderId, paidOrderNumber, paidButcherId, router, syncState]);
 
   const goSecondary = useCallback(() => {
     if (context === 'subscription') {
       router.replace('/subscription' as never);
       return;
     }
-    if (context === 'butcher_order') {
+    if (context === 'butcher_order' || context === 'butcher_checkout') {
       router.replace('/butchers' as never);
       return;
     }
@@ -291,7 +320,11 @@ export default function PaymentResultScreen() {
           <ActivityIndicator size="large" color={colors.electricBright} />
           <AppText variant="heading2" align="center">جارٍ التحقق من N-Genius...</AppText>
           <AppText variant="body" color="textSecondary" align="center">
-            لا يُفعَّل الاشتراك قبل تأكيد بوابة الدفع
+            {isButcherContext
+              ? 'جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.'
+              : context === 'subscription'
+                ? 'لا يُفعَّل الاشتراك قبل تأكيد بوابة الدفع'
+                : 'جارٍ التحقق من حالة العملية في N-Genius'}
           </AppText>
         </>
       );

@@ -23,14 +23,13 @@ import { formatWeightLabel } from '@/lib/butcherOrderPricing';
 import { rtlInputText } from '@/lib/rtl';
 import { useButcherCart } from '@/contexts/ButcherCartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
 import {
   cutLabelAr,
   gccCurrencies,
   routeParam,
   type Country,
 } from '@/services/butcherData';
-import { launchPaymentCheckout } from '@/services/payments';
+import { startButcherCheckout } from '@/services/butcherOrders';
 import { resolveMediaUrl } from '@/services/media';
 import { PAYMENT_METHODS, type NIPaymentMethod } from '@/services/network_international';
 import { AppText, SarhBackButton } from '@/design-system/components';
@@ -236,14 +235,6 @@ export default function ButcherCartScreen() {
   const wrongButcher =
     routeButcherId && butcherId && routeButcherId !== butcherId;
 
-  const goSuccess = (orderId: string, orderNumber: string, paymentStatus: string) => {
-    clearCart();
-    router.replace({
-      pathname: '/butchers/order-success',
-      params: { orderId, orderNumber, paymentStatus, butcherId: butcherId ?? '' },
-    });
-  };
-
   const handlePayNow = async () => {
     if (!butcherId || items.length === 0) return;
     if (!accessToken) {
@@ -273,86 +264,35 @@ export default function ButcherCartScreen() {
         deliveryAddress: deliveryType === 'delivery' ? deliveryAddress.trim() : null,
         notes: notes.trim() || null,
         currency: currency.code,
+        method: selectedMethod,
       };
 
-      const res = await fetch(`${API_BASE}/api/butchers/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok || !json.success) {
-        Alert.alert('خطأ', json.messageAr || json.message || 'حدث خطأ أثناء إنشاء الطلب');
-        return;
-      }
-
-      const orderId = json.data?.id as string;
-      const orderNumber = json.data?.orderNumber as string;
-      const amount = Number(json.data?.totalPrice ?? subtotal);
-
-      const payRes = await fetch(`${API_BASE}/api/payments/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          amount,
-          currency: currency.code || 'SAR',
-          method: selectedMethod,
-          type: 'butcher_order',
-          referenceId: orderId,
-          description: `Butcher order ${orderNumber}`,
-          descriptionAr: `دفع طلب ملحمة رقم ${orderNumber}`,
-        }),
-      });
-
-      const payJson = await payRes.json().catch(() => ({}));
-
-      if (!payRes.ok || !payJson.success || !payJson.data) {
-        const errMsg = payJson.messageAr || payJson.message || 'فشل إنشاء معاملة الدفع';
-        Alert.alert(
-          'الطلب بانتظار الدفع',
-          `${errMsg}\nيمكنك إكمال الدفع لاحقاً من صفحة الطلب.`,
-          [{ text: 'متابعة', onPress: () => goSuccess(orderId, orderNumber, 'unpaid') }],
-        );
-        return;
-      }
-
-      const { checkoutUrl, paymentId, devMode } = payJson.data as {
-        checkoutUrl?: string;
-        paymentId?: string;
-        devMode?: boolean;
-      };
-
-      const payOutcome = await launchPaymentCheckout({
+      const payOutcome = await startButcherCheckout({
         accessToken,
-        paymentId,
-        checkoutUrl,
-        devMode,
-        context: 'butcher_order',
-        returnParams: {
-          orderId,
-          orderNumber,
-          butcherId,
-        },
+        payload,
+        butcherId,
       });
 
+      if (payOutcome === 'paid') {
+        clearCart();
+        return;
+      }
+      if (payOutcome === 'opened') {
+        clearCart();
+        return;
+      }
       if (payOutcome === 'cancelled' || payOutcome === 'failed') {
         Alert.alert(
-          'الطلب بانتظار الدفع',
-          'يمكنك إكمال الدفع لاحقاً من صفحة الطلب.',
-          [{ text: 'متابعة', onPress: () => goSuccess(orderId, orderNumber, 'unpaid') }],
+          'لم يكتمل الدفع',
+          'لم يُرسل طلب للملحمة. يمكنك إعادة المحاولة من السلة.',
         );
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('خطأ', 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.');
+      Alert.alert(
+        'خطأ',
+        err instanceof Error ? err.message : 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.',
+      );
     } finally {
       setLoadingSubmit(false);
     }

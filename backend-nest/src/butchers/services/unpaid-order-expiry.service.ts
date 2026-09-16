@@ -57,11 +57,19 @@ export class UnpaidOrderExpiryService
         DEFAULT_UNPAID_ORDER_EXPIRY_MINUTES,
       );
       const cutoff = new Date(Date.now() - expiryMinutes * 60 * 1000);
-      const result = await this.orders.expireStaleUnpaidOrders(cutoff);
-      if (result.expired > 0 || result.scanned > 0) {
+      const [orders, checkouts] = await Promise.all([
+        this.orders.expireStaleUnpaidOrders(cutoff),
+        this.orders.expireStaleCheckouts(new Date()),
+      ]);
+      if (
+        orders.expired > 0 ||
+        orders.scanned > 0 ||
+        checkouts.expired > 0 ||
+        checkouts.scanned > 0
+      ) {
         this.logger.info(
-          { expiryMinutes, ...result },
-          'Unpaid butcher order expiry pass completed',
+          { expiryMinutes, orders, checkouts },
+          'Unpaid butcher order and checkout expiry pass completed',
         );
       }
     } catch (err) {

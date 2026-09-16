@@ -290,6 +290,7 @@ describe('OrderLifecycleService', () => {
       id: 'order-new',
       orderNumber: 'ORD-2026-000001',
       status: 'pending',
+      paymentStatus: 'unpaid',
       customerId: 'c1',
       butcher: { id: 'b1', userId: 'butcher-1', nameAr: 'ملحمة' },
       items: [{ productId: 'p1' }],
@@ -346,6 +347,56 @@ describe('OrderLifecycleService', () => {
         }),
       }),
     );
+    expect(notifications.notifyUser).toHaveBeenCalled();
+    expect(sockets.emitToUser).toHaveBeenCalledWith(
+      'c1',
+      'order.created',
+      expect.objectContaining({ paymentStatus: 'unpaid' }),
+    );
+  });
+
+  it('createCheckoutAttempt does not emit order.created or notify the butcher', async () => {
+    const checkoutCreate = jest.fn().mockResolvedValue({
+      id: 'chk-1',
+      userId: 'c1',
+      butcherId: 'b1',
+      status: 'pending',
+      totalPrice: 150,
+      itemsSnapshot: [],
+      expiresAt: new Date(Date.now() + 1800000),
+    });
+    prisma.$transaction.mockImplementation(
+      async (fn: (tx: unknown) => Promise<unknown>) =>
+        fn({
+          $executeRaw: jest.fn().mockResolvedValue(1),
+          butcherCheckout: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: checkoutCreate,
+          },
+        }),
+    );
+
+    const result = await service.createCheckoutAttempt({
+      butcherId: 'b1',
+      customerId: 'c1',
+      deliveryType: 'pickup',
+      currency: 'SAR',
+      totalPrice: 150,
+      items: [
+        {
+          productId: 'p1',
+          cutType: 'whole',
+          weightKg: 2,
+          linePrice: 150,
+          reservedQuantity: 2,
+        },
+      ],
+    });
+
+    expect(result.checkout.id).toBe('chk-1');
+    expect(notifications.notifyUser).not.toHaveBeenCalled();
+    expect(notifications.notifyUsers).not.toHaveBeenCalled();
+    expect(sockets.emitToUser).not.toHaveBeenCalled();
   });
 
   it('expires stale unpaid orders through the normal cancel path', async () => {

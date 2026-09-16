@@ -13,6 +13,16 @@ import {
 import { OrderStateMachineService } from './order-state-machine.service';
 import { ButcherRankingService } from './butcher-ranking.service';
 import type { ValidatedOrderLine } from '../lib/order-line.util';
+import { nextButcherOrderNumber } from '../lib/order-number.util';
+import {
+  DEFAULT_CHECKOUT_TTL_MINUTES,
+  checkoutItemsEqual,
+  createCheckoutWithReservations,
+  fulfillPaidCheckout,
+  lockCheckoutRow,
+  releaseCheckoutReservations,
+  type PaidCheckoutOrder,
+} from '../lib/butcher-checkout.lifecycle';
 
 type CreateOrderInput = {
   butcherId: string;
@@ -58,21 +68,6 @@ export class OrderLifecycleService {
     private readonly ranking: ButcherRankingService,
     private readonly entitlements: SubscriptionEntitlementService,
   ) {}
-
-  private async nextOrderNumber(tx: Prisma.TransactionClient): Promise<string> {
-    const year = new Date().getFullYear();
-    await tx.orderNumberSequence.upsert({
-      where: { year },
-      create: { year, lastNumber: 0 },
-      update: {},
-    });
-    const seq = await tx.orderNumberSequence.update({
-      where: { year },
-      data: { lastNumber: { increment: 1 } },
-      select: { lastNumber: true },
-    });
-    return `ORD-${year}-${String(seq.lastNumber).padStart(6, '0')}`;
-  }
 
   private statusMsg(status: OrderStatus): string {
     const map: Record<OrderStatus, string> = {
@@ -352,7 +347,7 @@ export class OrderLifecycleService {
           }
         }
 
-        const orderNumber = await this.nextOrderNumber(tx);
+        const orderNumber = await nextButcherOrderNumber(tx);
 
         const order = await tx.butcherOrder.create({
           data: {
@@ -438,6 +433,187 @@ export class OrderLifecycleService {
     });
 
     return created.order;
+  }
+
+  checkoutTtlMinutes(): number {
+    const parsed = Number.parseInt(
+      process.env.BUTCHER_ORDER_UNPAID_EXPIRES_MINUTES || '',
+      10,
+    );
+    return Number.isFinite(parsed) && parsed > 0
+      ? parsed
+      : DEFAULT_CHECKOUT_TTL_MINUTES;
+  }
+
+  async createCheckoutAttempt(input: CreateOrderInput) {
+    if (!input.items.length) {
+      throwApi(
+        400,
+        'validation_error',
+        'يجب أن يحتوي الطلب على منتج واحد على الأقل',
+      );
+    }
+
+    const expiresAt = new Date(
+      Date.now() + this.checkoutTtlMinutes() * 60 * 1000,
+    );
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.butcherCheckout.findFirst({
+          where: {
+            userId: input.customerId,
+            butcherId: input.butcherId,
+            status: 'pending',
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (existing) {
+          const locked = await lockCheckoutRow(tx, existing.id);
+          if (
+            locked &&
+            locked.status === 'pending' &&
+            locked.expiresAt > new Date() &&
+            checkoutItemsEqual(existing.itemsSnapshot, input.items) &&
+            existing.totalPrice === input.totalPrice
+          ) {
+            return { checkout: existing, reused: true as const };
+          }
+          if (locked?.status === 'pending') {
+            await releaseCheckoutReservations(tx, existing.id, 'cancelled');
+          }
+        }
+
+        try {
+          const checkout = await createCheckoutWithReservations(tx, {
+            userId: input.customerId,
+            butcherId: input.butcherId,
+            deliveryType: input.deliveryType,
+            deliveryAddress: input.deliveryAddress,
+            notes: input.notes,
+            currency: input.currency,
+            totalPrice: input.totalPrice,
+            items: input.items,
+            expiresAt,
+          });
+          return { checkout, reused: false as const };
+        } catch (err) {
+          const prismaErr = err as { code?: string };
+          if (prismaErr.code === 'P2002') {
+            const raced = await tx.butcherCheckout.findFirst({
+              where: {
+                userId: input.customerId,
+                butcherId: input.butcherId,
+                status: 'pending',
+              },
+              orderBy: { createdAt: 'desc' },
+            });
+            if (raced) return { checkout: raced, reused: true as const };
+          }
+          throw err;
+        }
+      },
+      { maxWait: 10000, timeout: 30000 },
+    );
+  }
+
+  async linkCheckoutPayment(checkoutId: string, paymentId: string) {
+    return this.prisma.butcherCheckout.updateMany({
+      where: { id: checkoutId, status: 'pending' },
+      data: { paymentId },
+    });
+  }
+
+  findOrderByPaymentId(paymentId: string) {
+    return this.prisma.butcherOrder.findUnique({
+      where: { paymentId },
+      select: {
+        id: true,
+        orderNumber: true,
+        butcherId: true,
+        status: true,
+        paymentStatus: true,
+      },
+    });
+  }
+
+  async abandonCheckout(userId: string, checkoutId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const checkout = await tx.butcherCheckout.findFirst({
+        where: { id: checkoutId, userId },
+        select: { id: true, status: true, paymentId: true },
+      });
+      if (!checkout) throwApi(404, 'not_found', 'محاولة الدفع غير موجودة');
+      if (checkout.status !== 'pending') {
+        return { released: false, status: checkout.status };
+      }
+      const released = await releaseCheckoutReservations(
+        tx,
+        checkout.id,
+        'cancelled',
+      );
+      if (checkout.paymentId) {
+        await tx.payment.updateMany({
+          where: { id: checkout.paymentId, status: 'pending' },
+          data: { status: 'failed' },
+        });
+      }
+      return { released: released.released, status: 'cancelled' as const };
+    });
+  }
+
+  async expireStaleCheckouts(cutoff: Date, limit = 50) {
+    const candidates = await this.prisma.butcherCheckout.findMany({
+      where: {
+        status: 'pending',
+        OR: [
+          { expiresAt: { lte: cutoff } },
+          { expiresAt: { lte: new Date() } },
+        ],
+      },
+      orderBy: { expiresAt: 'asc' },
+      take: limit,
+      select: { id: true, paymentId: true },
+    });
+
+    let expired = 0;
+    let skipped = 0;
+    for (const candidate of candidates) {
+      try {
+        const result = await this.prisma.$transaction(async (tx) => {
+          const released = await releaseCheckoutReservations(
+            tx,
+            candidate.id,
+            'expired',
+          );
+          if (released.released && candidate.paymentId) {
+            await tx.payment.updateMany({
+              where: { id: candidate.paymentId, status: 'pending' },
+              data: { status: 'failed' },
+            });
+          }
+          return released;
+        });
+        if (result.released) expired += 1;
+        else skipped += 1;
+      } catch {
+        skipped += 1;
+      }
+    }
+
+    return { scanned: candidates.length, expired, skipped };
+  }
+
+  fulfillPaidCheckoutInTransaction(
+    tx: Prisma.TransactionClient,
+    params: { checkoutId: string; paymentId: string; userId: string },
+  ): Promise<{
+    butcherOrder?: PaidCheckoutOrder;
+    capturedAfterCancel?: boolean;
+    created: boolean;
+  }> {
+    return fulfillPaidCheckout(tx, params);
   }
 
   async expireStaleUnpaidOrders(cutoff: Date, limit = 50) {

@@ -26,7 +26,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { rtlInputText } from '@/lib/rtl';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE } from '@/services/api';
-import { launchPaymentCheckout } from '@/services/payments';
+import { startButcherCheckout } from '@/services/butcherOrders';
 import { resolveMediaUrl } from '@/services/media';
 import {
   CATEGORY_LABELS,
@@ -188,19 +188,6 @@ export default function ButcherOrderScreen() {
     return computeProductLineTotal(selectedProduct, weightKg);
   }, [selectedProduct, weightKg]);
 
-  const goSuccess = (orderId: string, orderNumber: string, paymentStatus: string) => {
-    setSubmitted(true);
-    router.replace({
-      pathname: '/butchers/order-success',
-      params: {
-        orderId: orderId ?? '',
-        orderNumber: orderNumber ?? '',
-        butcherId: butcherId ?? '',
-        paymentStatus: paymentStatus ?? 'unpaid',
-      },
-    });
-  };
-
   const handleSubmit = async () => {
     if (!selectedProduct) {
       Alert.alert('لا منتجات', 'لا توجد منتجات متاحة للطلب من هذه الملحمة حالياً');
@@ -230,94 +217,32 @@ export default function ButcherOrderScreen() {
         deliveryAddress: deliveryType === 'delivery' ? address.trim() : null,
         notes: notes.trim() || null,
         currency: currency.code,
+        method: selectedMethod,
       };
 
-      const res = await fetch(`${API_BASE}/api/butchers/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok || !json.success) {
-        const errorMsg = json.messageAr || json.message || 'حدث خطأ أثناء إنشاء الطلب';
-        Alert.alert('خطأ', errorMsg);
-        return;
-      }
-
-      const orderId = json.data?.id as string;
-      const orderNumber = json.data?.orderNumber as string;
-      const amount = Number(json.data?.totalPrice ?? computedTotal);
-
-      const payRes = await fetch(`${API_BASE}/api/payments/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          amount,
-          currency: currency.code || 'SAR',
-          method: selectedMethod,
-          type: 'butcher_order',
-          referenceId: orderId,
-          description: `Butcher order ${orderNumber}`,
-          descriptionAr: `دفع طلب ملحمة رقم ${orderNumber}`,
-        }),
-      });
-
-      const payJson = await payRes.json().catch(() => ({}));
-
-      if (!payRes.ok || !payJson.success || !payJson.data) {
-        const errMsg = payJson.messageAr || payJson.message || 'فشل إنشاء معاملة الدفع';
-        Alert.alert(
-          'الطلب بانتظار الدفع',
-          `${errMsg}\nيمكنك إكمال الدفع لاحقاً من صفحة الطلب.`,
-          [{ text: 'متابعة', onPress: () => goSuccess(orderId, orderNumber, 'unpaid') }],
-        );
-        return;
-      }
-
-      const { checkoutUrl, paymentId, devMode } = payJson.data as {
-        checkoutUrl?: string;
-        paymentId?: string;
-        devMode?: boolean;
-      };
-
-      const payOutcome = await launchPaymentCheckout({
+      const payOutcome = await startButcherCheckout({
         accessToken,
-        paymentId,
-        checkoutUrl,
-        devMode,
-        context: 'butcher_order',
-        returnParams: {
-          orderId,
-          orderNumber,
-          butcherId,
-        },
+        payload,
+        butcherId,
       });
 
-      if (payOutcome === 'cancelled') {
-        goSuccess(orderId, orderNumber, 'unpaid');
+      if (payOutcome === 'paid' || payOutcome === 'opened') {
+        setSubmitted(true);
         return;
       }
 
-      if (payOutcome === 'failed') {
+      if (payOutcome === 'cancelled' || payOutcome === 'failed') {
         Alert.alert(
-          'الطلب بانتظار الدفع',
-          devMode
-            ? 'لم يكتمل الدفع التجريبي. يمكنك المحاولة مجدداً لاحقاً.'
-            : 'تعذّر فتح بوابة الدفع. يمكنك إكمال الدفع لاحقاً.',
-          [{ text: 'متابعة', onPress: () => goSuccess(orderId, orderNumber, 'unpaid') }],
+          'لم يكتمل الدفع',
+          'لم يُرسل طلب للملحمة. يمكنك إعادة المحاولة من هذه الصفحة.',
         );
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('خطأ', 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.');
+      Alert.alert(
+        'خطأ',
+        err instanceof Error ? err.message : 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.',
+      );
     } finally {
       setLoadingSubmit(false);
     }

@@ -51,6 +51,8 @@ model User {
   reviewsGiven                        UserReview[]                      @relation("UserReviewsGiven")
   butcherProfile                      Butcher?
   butcherOrders                       ButcherOrder[]
+  butcherCheckouts                    ButcherCheckout[]
+  butcherCheckoutReservations         ButcherCheckoutReservation[]
   following                           Follow[]                          @relation("Followers")
   followers                           Follow[]                          @relation("Following")
   blocksInitiated                     UserBlock[]                       @relation("BlocksInitiated")
@@ -231,6 +233,8 @@ model Payment {
   subscription      Subscription?      @relation(fields: [subscriptionId], references: [id])
   user              User               @relation(fields: [userId], references: [id])
   integrationOrder  IntegrationOrder?
+  butcherCheckout   ButcherCheckout?
+  butcherOrder      ButcherOrder?      @relation("ButcherOrderPayment")
 
   @@index([userId])
   @@index([status])
@@ -796,6 +800,7 @@ model Butcher {
   daftraProductLinks  ButcherDaftraProduct[]
   offers              ButcherOffer[]
   orders              ButcherOrder[]
+  checkouts           ButcherCheckout[]
   products            ButcherProduct[]
   reviews             ButcherReview[]
   stories             ButcherStory[]
@@ -837,9 +842,10 @@ model ButcherProduct {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   deletedAt         DateTime?
-  orderItems        ButcherOrder[]
-  lineItems         ButcherOrderItem[]
-  butcher           Butcher        @relation(fields: [butcherId], references: [id])
+  orderItems             ButcherOrder[]
+  lineItems              ButcherOrderItem[]
+  checkoutReservations   ButcherCheckoutReservation[]
+  butcher                Butcher        @relation(fields: [butcherId], references: [id])
   daftraLink        ButcherDaftraProduct?
 
   @@index([butcherId])
@@ -909,11 +915,15 @@ model ButcherOrder {
   cancelledBy        String?
   cancellationReason String?
   cancelledAt        DateTime?
+  checkoutId         String?            @unique
+  paymentId          String?            @unique
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   butcher            Butcher            @relation(fields: [butcherId], references: [id])
   customer           User               @relation(fields: [customerId], references: [id])
   product            ButcherProduct     @relation(fields: [productId], references: [id])
+  checkout           ButcherCheckout?   @relation(fields: [checkoutId], references: [id])
+  payment            Payment?           @relation("ButcherOrderPayment", fields: [paymentId], references: [id])
   items              ButcherOrderItem[]
   timeline           OrderTimeline[]
   audits             OrderStatusAudit[]
@@ -925,6 +935,53 @@ model ButcherOrder {
   @@index([butcherId, status])
   @@index([orderNumber])
   @@index([paymentStatus])
+}
+
+/// Temporary payment-first checkout. Final ButcherOrder is created only after N-Genius confirmation.
+model ButcherCheckout {
+  id              String                        @id @default(uuid())
+  userId          String
+  butcherId       String
+  paymentId       String?                       @unique
+  status          ButcherCheckoutStatus         @default(pending)
+  expiresAt       DateTime
+  deliveryType    String                        @default("pickup")
+  deliveryAddress String?
+  notes           String?
+  currency        String                        @default("SAR")
+  totalPrice      Float
+  itemsSnapshot   Json
+  createdAt       DateTime                      @default(now())
+  updatedAt       DateTime                      @updatedAt
+  user            User                          @relation(fields: [userId], references: [id])
+  butcher         Butcher                       @relation(fields: [butcherId], references: [id])
+  payment         Payment?                      @relation(fields: [paymentId], references: [id])
+  order           ButcherOrder?
+  reservations    ButcherCheckoutReservation[]
+
+  @@index([userId, status])
+  @@index([butcherId, status])
+  @@index([status, expiresAt])
+}
+
+model ButcherCheckoutReservation {
+  id          String                       @id @default(uuid())
+  checkoutId  String
+  userId      String
+  productId   String
+  quantity    Float
+  status      ButcherReservationStatus     @default(held)
+  expiresAt   DateTime
+  releasedAt  DateTime?
+  createdAt   DateTime                     @default(now())
+  checkout    ButcherCheckout              @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  user        User                         @relation(fields: [userId], references: [id])
+  product     ButcherProduct               @relation(fields: [productId], references: [id])
+
+  @@index([checkoutId])
+  @@index([userId, status])
+  @@index([productId, status])
+  @@index([status, expiresAt])
 }
 
 model ButcherOrderItem {
@@ -1197,11 +1254,26 @@ enum PaymentReferenceType {
   fee
   listing_fee
   butcher_order
+  butcher_checkout
   featured_ad
   pinned_ad
   promoted_ad
   commission
   order_commission
+}
+
+enum ButcherCheckoutStatus {
+  pending
+  paid
+  failed
+  cancelled
+  expired
+}
+
+enum ButcherReservationStatus {
+  held
+  converted
+  released
 }
 
 enum BoostType {

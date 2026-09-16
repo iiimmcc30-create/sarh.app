@@ -10,18 +10,23 @@ import { RedisCacheService } from '../redis/services/redis-cache.service';
 import { PlansService } from '../plans/plans.service';
 import { PaidServicesService } from '../settings/paid-services.service';
 import { IntegrationCheckoutService } from '../integrations/services/integration-checkout.service';
-import { verifyNiOrderForCheckout } from './ni-client';
+import { SocketEmitService } from '../gateway/services/socket-emit.service';
+import { fetchNiOrderResolved, verifyNiOrderForCheckout } from './ni-client';
 
 jest.mock('./ni-client', () => {
   const actual = jest.requireActual('./ni-client') as Record<string, unknown>;
   return {
     ...actual,
     verifyNiOrderForCheckout: jest.fn(),
+    fetchNiOrderResolved: jest.fn(),
   };
 });
 
 const mockedVerifyNi = verifyNiOrderForCheckout as jest.MockedFunction<
   typeof verifyNiOrderForCheckout
+>;
+const mockedFetchNi = fetchNiOrderResolved as jest.MockedFunction<
+  typeof fetchNiOrderResolved
 >;
 
 describe('PaymentsService', () => {
@@ -32,6 +37,9 @@ describe('PaymentsService', () => {
     findPendingFee: jest.fn(),
     recordListingFeeSaleAmount: jest.fn().mockResolvedValue({ count: 1 }),
     findUnpaidButcherOrder: jest.fn(),
+    findPayableButcherCheckout: jest.fn(),
+    findOrderIdByCheckoutId: jest.fn(),
+    findButcherOrderByPaymentId: jest.fn(),
     findOwnedListingForCommission: jest.fn(),
     findUserContact: jest.fn().mockResolvedValue({
       displayName: 'User',
@@ -97,6 +105,10 @@ describe('PaymentsService', () => {
         { provide: PlansService, useValue: plans },
         { provide: RedisCacheService, useValue: cache },
         { provide: PaidServicesService, useValue: paidServices },
+        {
+          provide: SocketEmitService,
+          useValue: { emitToUser: jest.fn(), getServer: jest.fn() },
+        },
         {
           provide: IntegrationCheckoutService,
           useValue: {
@@ -313,6 +325,23 @@ describe('PaymentsService', () => {
     expect(repo.createPendingPayment).toHaveBeenCalled();
     expect(result.paymentId).toBe('pay-fresh');
     expect(repo.findPaymentByIdFull).not.toHaveBeenCalled();
+  });
+
+  it('rejects butcher-checkout payment that is not owned or is expired', async () => {
+    repo.findPayableButcherCheckout.mockResolvedValue(null);
+
+    await expect(
+      service.initiate(
+        { userId: 'stranger', role: 'USER' } as never,
+        {
+          amount: 80,
+          method: 'mada',
+          type: 'butcher_checkout',
+          referenceId: 'chk-1',
+        } as never,
+      ),
+    ).rejects.toMatchObject({ error: 'checkout_not_found', status: 404 });
+    expect(repo.createPendingPaymentOrReturnExisting).not.toHaveBeenCalled();
   });
 
   it('rejects butcher-order payment for another customer', async () => {
@@ -851,6 +880,205 @@ describe('PaymentsService', () => {
       1,
       0.01,
     );
+  });
+
+  it('sync after webhook returns paid + needsReconciliation without a butcherOrder', async () => {
+    repo.findPaymentOwnedByUser.mockResolvedValue({
+      id: 'pay-late',
+      status: 'paid',
+      userId: 'u1',
+      metadata: {
+        type: 'butcher_checkout',
+        capturedAfterCancel: true,
+        needsReconciliation: true,
+      },
+    });
+
+    const result = await service.syncPayment(
+      { userId: 'u1', role: 'USER' } as never,
+      'pay-late',
+    );
+
+    expect(result).toMatchObject({
+      paymentId: 'pay-late',
+      status: 'paid',
+      capturedAfterCancel: true,
+      needsReconciliation: true,
+    });
+    expect(result.butcherOrder).toBeUndefined();
+    expect(repo.findButcherOrderByPaymentId).not.toHaveBeenCalled();
+  });
+
+  it('sync after webhook returns the Final Order that was actually stored', async () => {
+    repo.findPaymentOwnedByUser.mockResolvedValue({
+      id: 'pay-ok',
+      status: 'paid',
+      userId: 'u1',
+      metadata: { type: 'butcher_checkout' },
+    });
+    repo.findButcherOrderByPaymentId.mockResolvedValue({
+      id: 'ord-final',
+      orderNumber: 'ORD-2026-000001',
+      butcherId: 'b1',
+      paymentStatus: 'paid',
+      status: 'pending',
+    });
+
+    const result = await service.syncPayment(
+      { userId: 'u1', role: 'USER' } as never,
+      'pay-ok',
+    );
+
+    expect(result.status).toBe('paid');
+    expect(result.butcherOrder).toEqual(
+      expect.objectContaining({
+        id: 'ord-final',
+        paymentStatus: 'paid',
+      }),
+    );
+    expect(result.needsReconciliation).toBeUndefined();
+  });
+
+  it('sync does not report paid when NI succeeded but the DB payment is still failed', async () => {
+    const prevKey = process.env.NI_API_KEY;
+    process.env.NI_API_KEY = 'live_ci_test_key_not_mock';
+    const niUuid = 'a13f81f3-27b4-48b6-88de-22b9ddc1e1dc';
+    repo.findPaymentOwnedByUser.mockResolvedValue({
+      id: 'pay-stuck',
+      status: 'failed',
+      userId: 'u1',
+      orderId: niUuid,
+      transactionId: niUuid,
+      metadata: { type: 'listing_fee' },
+      referenceType: 'listing_fee',
+      referenceId: 'fee-1',
+    });
+    repo.findPaymentByIdFull.mockResolvedValue({
+      id: 'pay-stuck',
+      status: 'failed',
+      userId: 'u1',
+      orderId: niUuid,
+      transactionId: niUuid,
+      metadata: { type: 'listing_fee' },
+      referenceType: 'listing_fee',
+      referenceId: 'fee-1',
+    });
+    repo.processSuccessfulPayment.mockResolvedValue({ processed: false });
+    mockedFetchNi.mockResolvedValue({
+      order: { reference: 'ni-1', state: 'CAPTURED', transactionId: 'ni-1' },
+      state: 'CAPTURED',
+    });
+
+    try {
+      const result = await service.syncPayment(
+        { userId: 'u1', role: 'USER' } as never,
+        'pay-stuck',
+      );
+      expect(result.status).toBe('failed');
+      expect(result.outcome).toBe('failed');
+      expect(result.butcherOrder).toBeUndefined();
+    } finally {
+      if (prevKey === undefined) delete process.env.NI_API_KEY;
+      else process.env.NI_API_KEY = prevKey;
+    }
+  });
+
+  it('sync after failed→paid checkout without an order returns DB reconciliation flags', async () => {
+    const prevKey = process.env.NI_API_KEY;
+    process.env.NI_API_KEY = 'live_ci_test_key_not_mock';
+    const niUuid = 'a13f81f3-27b4-48b6-88de-22b9ddc1e1dc';
+    repo.findPaymentOwnedByUser.mockResolvedValue({
+      id: 'pay-late',
+      status: 'failed',
+      userId: 'u1',
+      orderId: niUuid,
+      transactionId: niUuid,
+      metadata: { type: 'butcher_checkout' },
+      referenceType: 'butcher_checkout',
+      referenceId: 'chk-1',
+    });
+    repo.findPaymentByIdFull
+      .mockResolvedValueOnce({
+        id: 'pay-late',
+        status: 'failed',
+        userId: 'u1',
+        orderId: niUuid,
+        transactionId: niUuid,
+        metadata: { type: 'butcher_checkout' },
+        referenceType: 'butcher_checkout',
+        referenceId: 'chk-1',
+      })
+      .mockResolvedValueOnce({
+        id: 'pay-late',
+        status: 'paid',
+        metadata: {
+          type: 'butcher_checkout',
+          capturedAfterCancel: true,
+          needsReconciliation: true,
+        },
+      });
+    repo.processSuccessfulPayment.mockResolvedValue({
+      processed: false,
+      capturedAfterCancel: true,
+    });
+    mockedFetchNi.mockResolvedValue({
+      order: {
+        reference: 'ni-cap',
+        state: 'CAPTURED',
+        transactionId: 'ni-cap',
+      },
+      state: 'CAPTURED',
+    });
+
+    try {
+      const result = await service.syncPayment(
+        { userId: 'u1', role: 'USER' } as never,
+        'pay-late',
+      );
+      expect(result).toMatchObject({
+        status: 'paid',
+        capturedAfterCancel: true,
+        needsReconciliation: true,
+      });
+      expect(result.butcherOrder).toBeUndefined();
+    } finally {
+      if (prevKey === undefined) delete process.env.NI_API_KEY;
+      else process.env.NI_API_KEY = prevKey;
+    }
+  });
+
+  it('legacy cancelled butcher_order capture still records without fulfillment notify', async () => {
+    repo.findPaymentForWebhook.mockResolvedValue({
+      id: 'pay-legacy',
+      status: 'failed',
+      userId: 'u1',
+      amount: 80,
+      currency: 'SAR',
+      metadata: { type: 'butcher_order', referenceId: 'ord-1' },
+      referenceType: 'butcher_order',
+      referenceId: 'ord-1',
+    });
+    repo.processSuccessfulPayment.mockResolvedValue({
+      processed: false,
+      capturedAfterCancel: true,
+    });
+
+    await (service as any).handleNIWebhook({
+      eventName: 'ORDER.CAPTURED',
+      order: {
+        reference: 'ni-cap',
+        state: 'CAPTURED',
+        customData: { paymentId: 'pay-legacy', type: 'butcher_order' },
+      },
+    });
+
+    expect(repo.processSuccessfulPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'butcher_order',
+        referenceId: 'ord-1',
+      }),
+    );
+    expect(notifications.notifyUser).not.toHaveBeenCalled();
   });
 
   describe('verifyWebhookSignature', () => {

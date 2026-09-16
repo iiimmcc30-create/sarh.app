@@ -10,6 +10,7 @@ export type PaymentContext =
   | 'boost'
   | 'promotion'
   | 'butcher_order'
+  | 'butcher_checkout'
   | 'generic';
 
 export type InitiatedPayment = {
@@ -44,6 +45,13 @@ export async function devCompletePayment(
 export type PaymentSyncResult = {
   status: 'paid' | 'pending' | 'failed' | 'cancelled' | 'not_found' | 'rate_limited';
   messageAr?: string;
+  butcherOrder?: {
+    id: string;
+    orderNumber?: string;
+    butcherId?: string;
+    paymentStatus?: string;
+    status?: string;
+  };
   boost?: {
     boostType: string;
     expiresAt?: string;
@@ -79,6 +87,29 @@ function mapSyncResponse(res: Response, json: Record<string, unknown>): PaymentS
     typeof data.messageAr === 'string' ? data.messageAr : undefined;
 
   if (outcome === 'success' || data.status === 'paid') {
+    const butcherRaw = data.butcherOrder;
+    const butcherOrder =
+      butcherRaw && typeof butcherRaw === 'object'
+        ? {
+            id: String((butcherRaw as Record<string, unknown>).id ?? ''),
+            orderNumber:
+              typeof (butcherRaw as Record<string, unknown>).orderNumber === 'string'
+                ? ((butcherRaw as Record<string, unknown>).orderNumber as string)
+                : undefined,
+            butcherId:
+              typeof (butcherRaw as Record<string, unknown>).butcherId === 'string'
+                ? ((butcherRaw as Record<string, unknown>).butcherId as string)
+                : undefined,
+            paymentStatus:
+              typeof (butcherRaw as Record<string, unknown>).paymentStatus === 'string'
+                ? ((butcherRaw as Record<string, unknown>).paymentStatus as string)
+                : undefined,
+            status:
+              typeof (butcherRaw as Record<string, unknown>).status === 'string'
+                ? ((butcherRaw as Record<string, unknown>).status as string)
+                : undefined,
+          }
+        : undefined;
     const boostRaw = data.boost;
     const boost =
       boostRaw && typeof boostRaw === 'object'
@@ -108,7 +139,7 @@ function mapSyncResponse(res: Response, json: Record<string, unknown>): PaymentS
                 : undefined,
           }
         : undefined;
-    return { status: 'paid', messageAr, boost, promotion };
+    return { status: 'paid', messageAr, butcherOrder, boost, promotion };
   }
 
   if (outcome === 'failed' || data.status === 'failed') {
@@ -149,6 +180,8 @@ type LaunchPaymentOptions = {
   paymentId?: string;
   checkoutUrl?: string;
   devMode?: boolean;
+  alreadyPaid?: boolean;
+  status?: 'pending' | 'paid' | 'refunded' | string;
   context?: PaymentContext;
   returnParams?: Record<string, string>;
 };
@@ -202,6 +235,7 @@ function navigateAfterPaymentCancelled(
       }
       break;
     case 'butcher_order':
+    case 'butcher_checkout':
       break;
     default:
       router.replace('/(tabs)/profile' as never);
@@ -217,9 +251,17 @@ export async function launchPaymentCheckout(
     paymentId,
     checkoutUrl,
     devMode,
+    alreadyPaid,
+    status,
     context = 'generic',
     returnParams,
   } = options;
+
+  if (alreadyPaid || status === 'paid' || status === 'refunded') {
+    if (!paymentId) return 'failed';
+    goToPaymentResult(paymentId, context, returnParams);
+    return 'paid';
+  }
 
   if (devMode) {
     if (!paymentId) return 'failed';
@@ -278,11 +320,11 @@ export async function launchPaymentCheckout(
 
   // User closed the in-app sheet / cancelled — avoid stacking cancel alerts
   // when checkout already moved to /payment/cancel.
-  if (sessionResult === 'cancel' && context === 'butcher_order') {
+  if (sessionResult === 'cancel' && (context === 'butcher_order' || context === 'butcher_checkout')) {
     return 'cancelled';
   }
 
-  if (context !== 'butcher_order') {
+  if (context !== 'butcher_order' && context !== 'butcher_checkout') {
     // Checkout screen already shows /payment/cancel for explicit gateway cancel.
     // Only alert when the sheet was dismissed without a gateway redirect.
     if (sessionResult === 'dismiss') {

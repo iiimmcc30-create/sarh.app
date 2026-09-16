@@ -4,7 +4,10 @@ import { AppText, SarhButton } from '@/design-system/components';
 import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
+import { abandonButcherCheckout } from '@/services/butcherOrders';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { type ThemeColors } from '@/constants/theme';
 
@@ -18,13 +21,23 @@ export default function PaymentCancelScreen() {
   const { colors, gradients } = useTheme();
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
+  const { accessToken } = useAuth();
   const params = useLocalSearchParams<{
     context?: string | string[];
     orderId?: string | string[];
+    checkoutId?: string | string[];
   }>();
   const context = pickParam(params.context);
   const orderId = pickParam(params.orderId);
-  const isButcherOrder = context === 'butcher_order' && Boolean(orderId);
+  const checkoutId = pickParam(params.checkoutId);
+  const isLegacyUnpaidOrder = context === 'butcher_order' && Boolean(orderId);
+  const isCheckoutAttempt =
+    context === 'butcher_checkout' || (context === 'butcher_order' && !orderId);
+
+  useEffect(() => {
+    if (!isCheckoutAttempt || !checkoutId || !accessToken) return;
+    void abandonButcherCheckout({ accessToken, checkoutId });
+  }, [accessToken, checkoutId, isCheckoutAttempt]);
 
   return (
     <Screen edges={['top', 'bottom']} pattern={false} style={styles.screen}>
@@ -36,30 +49,36 @@ export default function PaymentCancelScreen() {
           </View>
           <AppText variant="heading2" align="center">لم يكتمل الدفع</AppText>
           <AppText variant="body" color="textSecondary" align="center">
-            {isButcherOrder
+            {isLegacyUnpaidOrder
               ? 'طلبك ما زال بانتظار الدفع. يمكنك إكمال الدفع من تفاصيل الطلب دون إنشاء طلب جديد.'
-              : 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
+              : isCheckoutAttempt
+                ? 'لم تُخصم أي مبالغ ولم يُرسل طلب للملحمة. يمكنك إعادة المحاولة من السلة.'
+                : 'لم تُخصم أي مبالغ. يمكنك المحاولة مرة أخرى متى شئت.'}
           </AppText>
           <SarhButton
-            title={isButcherOrder ? 'إكمال الدفع' : 'إعادة المحاولة'}
+            title={isLegacyUnpaidOrder ? 'إكمال الدفع' : 'إعادة المحاولة'}
             fullWidth
             onPress={() => {
-              if (isButcherOrder) {
+              if (isLegacyUnpaidOrder) {
                 router.replace({
                   pathname: '/butchers/order/[id]',
                   params: { id: orderId },
                 } as never);
                 return;
               }
+              if (isCheckoutAttempt) {
+                router.replace('/butchers' as never);
+                return;
+              }
               router.replace('/subscription' as never);
             }}
           />
           <SarhButton
-            title={isButcherOrder ? 'طلباتي' : 'العودة للملف'}
+            title={isLegacyUnpaidOrder || isCheckoutAttempt ? 'طلباتي' : 'العودة للملف'}
             variant="ghost"
             fullWidth
             onPress={() => {
-              if (isButcherOrder) {
+              if (isLegacyUnpaidOrder || isCheckoutAttempt) {
                 router.replace('/butchers/my-orders' as never);
                 return;
               }

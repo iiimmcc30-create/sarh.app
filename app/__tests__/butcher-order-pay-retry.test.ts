@@ -77,7 +77,38 @@ describe('completeButcherOrderPayment', () => {
       expect.objectContaining({
         paymentId: 'pay-2',
         context: 'butcher_order',
+        alreadyPaid: false,
+        status: undefined,
         returnParams: expect.objectContaining({ orderId: 'ord-same' }),
+      }),
+    );
+  });
+
+  it('passes alreadyPaid through so a dead NI checkout URL is not opened', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          paymentId: 'pay-paid',
+          checkoutUrl: 'https://ni.example/dead',
+          alreadyPaid: true,
+          status: 'paid',
+        },
+      }),
+    });
+
+    await completeButcherOrderPayment({
+      accessToken: 'token',
+      order: unpaidOrder,
+    });
+
+    expect(launchPaymentCheckout).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentId: 'pay-paid',
+        alreadyPaid: true,
+        status: 'paid',
+        checkoutUrl: 'https://ni.example/dead',
       }),
     );
   });
