@@ -1,6 +1,7 @@
 import { API_BASE } from '@/services/api';
 import { parseApiError } from '@/services/apiError';
 import { authFetch } from '@/services/authFetch';
+import { dedupeInflight, shouldReuseFreshResult } from '@/services/requestCoordination';
 
 export type BlockResult =
   | { ok: true; blocked: boolean }
@@ -36,7 +37,34 @@ export type PublicUserProfile = {
   showInSearch?: boolean;
 };
 
-export async function fetchUserProfile(userId: string): Promise<PublicUserProfile | null> {
+/** Same local window as other focus screens — skip a refetch while the profile is fresh. */
+export const PUBLIC_PROFILE_TTL_MS = 60_000;
+
+type PublicProfileCacheEntry = {
+  profile: PublicUserProfile;
+  at: number;
+};
+
+const publicProfileCache = new Map<string, PublicProfileCacheEntry>();
+
+/** Test-only reset of per-userId profile cache. */
+export function resetPublicProfileCache(): void {
+  publicProfileCache.clear();
+}
+
+export function getCachedUserProfile(userId: string): PublicUserProfile | null {
+  const id = userId?.trim();
+  if (!id) return null;
+  return publicProfileCache.get(id)?.profile ?? null;
+}
+
+export function peekUserProfileCachedAt(userId: string): number | undefined {
+  const id = userId?.trim();
+  if (!id) return undefined;
+  return publicProfileCache.get(id)?.at;
+}
+
+async function loadUserProfileNetwork(userId: string): Promise<PublicUserProfile | null> {
   const res = await authFetch(`${API_BASE}/api/users/${userId}`, {
     cache: 'no-store',
     headers: { 'Cache-Control': 'no-cache' },
@@ -52,6 +80,33 @@ export async function fetchUserProfile(userId: string): Promise<PublicUserProfil
     return null;
   }
   return json.data as PublicUserProfile;
+}
+
+export function fetchUserProfile(
+  userId: string,
+  options?: { force?: boolean },
+): Promise<PublicUserProfile | null> {
+  const id = userId?.trim();
+  if (!id) return Promise.resolve(null);
+
+  const force = options?.force === true;
+  const cached = publicProfileCache.get(id);
+  if (cached && shouldReuseFreshResult(cached.at, PUBLIC_PROFILE_TTL_MS, force)) {
+    return Promise.resolve(cached.profile);
+  }
+
+  return dedupeInflight(`GET:/api/users/${id}`, async () => {
+    try {
+      const profile = await loadUserProfileNetwork(id);
+      if (profile) {
+        publicProfileCache.set(id, { profile, at: Date.now() });
+        return profile;
+      }
+      return publicProfileCache.get(id)?.profile ?? null;
+    } catch {
+      return publicProfileCache.get(id)?.profile ?? null;
+    }
+  });
 }
 
 export type ConnectionUser = {

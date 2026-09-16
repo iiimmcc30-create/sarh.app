@@ -192,12 +192,12 @@ export default function ListingDetailScreen() {
 
   const sellerId = listing?.seller.id;
 
-  const refreshSellerFollowState = useCallback(async () => {
+  const refreshSellerFollowState = useCallback(async (force = false) => {
     if (!sellerId || sellerId === me.id || !isAuthenticated || !accessToken) {
       setIsFollowing(null);
       return null;
     }
-    const profile = await fetchUserProfile(sellerId);
+    const profile = await fetchUserProfile(sellerId, { force });
     setIsFollowing(profile?.isFollowing ?? null);
     return profile;
   }, [accessToken, isAuthenticated, sellerId, me.id]);
@@ -273,10 +273,10 @@ export default function ListingDetailScreen() {
     try {
       const result = await setFollowUser(listing.seller.id, !isFollowing);
       if (!result) throw new Error('follow_failed');
-      const refreshed = await refreshSellerFollowState();
+      const refreshed = await refreshSellerFollowState(true);
       if (!refreshed) throw new Error('profile_refetch_failed');
     } catch (error) {
-      await refreshSellerFollowState();
+      await refreshSellerFollowState(true);
       void showToast('تعذّرت المتابعة', 'error');
     } finally {
       setFollowLoading(false);

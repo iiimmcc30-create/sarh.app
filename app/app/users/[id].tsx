@@ -9,7 +9,14 @@ import { space } from '@/design-system/tokens';
 import { useTheme } from '@/hooks/useTheme';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchUserProfile, rateUser, setFollowUser, setBlockUser, type PublicUserProfile } from '@/services/users';
+import {
+  fetchUserProfile,
+  getCachedUserProfile,
+  rateUser,
+  setFollowUser,
+  setBlockUser,
+  type PublicUserProfile,
+} from '@/services/users';
 import { fetchUserPosts } from '@/services/posts';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
 import { useSellerListingsPager } from '@/hooks/useSellerListingsPager';
@@ -45,16 +52,17 @@ export default function UserProfileScreen() {
   const { accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
   const { colors: themeColors } = useTheme();
 
-  const [profile, setProfile] = useState<PublicUserProfile | null>(null);
+  const isOwnProfile = !id || id === me.id;
+  const targetId = id || me.id;
+  const [profile, setProfile] = useState<PublicUserProfile | null>(() =>
+    targetId ? getCachedUserProfile(targetId) : null,
+  );
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [postsLoadFailed, setPostsLoadFailed] = useState(false);
   const [listingsLoadFailed, setListingsLoadFailed] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [ratingVisible, setRatingVisible] = useState(false);
-
-  const isOwnProfile = !id || id === me.id;
-  const targetId = id || me.id;
   const {
     listings: userListings,
     hasMore,
@@ -64,6 +72,20 @@ export default function UserProfileScreen() {
     loadNextPage,
   } = useSellerListingsPager({ sellerId: isOwnProfile ? null : targetId, accessToken });
   const listingsLoadGen = useRef(0);
+  const loadedExtrasForRef = useRef<string | null>(null);
+  const profileRef = useRef<PublicUserProfile | null>(profile);
+  profileRef.current = profile;
+
+  useEffect(() => {
+    loadedExtrasForRef.current = null;
+    const cached = targetId ? getCachedUserProfile(targetId) : null;
+    if (cached) {
+      setProfile(cached);
+    } else {
+      setProfile((prev) => (prev?.id === targetId ? prev : null));
+    }
+    setUserPosts([]);
+  }, [targetId]);
 
   useEffect(() => {
     return () => {
@@ -71,23 +93,31 @@ export default function UserProfileScreen() {
     };
   }, []);
 
-  const fetchAuthoritativeProfile = useCallback(async () => {
+  const fetchAuthoritativeProfile = useCallback(async (force = false) => {
     if (!isAuthenticated || !accessToken) return null;
-    const targetId = id || me.id;
-    const data = await fetchUserProfile(targetId);
-    if (data) setProfile(data);
+    const requestedId = id || me.id;
+    const data = await fetchUserProfile(requestedId, { force });
+    if (data && (id || me.id) === requestedId) setProfile(data);
     return data;
   }, [accessToken, id, isAuthenticated, me.id]);
 
-  const loadProfile = useCallback(async () => {
-    const targetId = id || me.id;
+  const loadProfile = useCallback(async (force = false) => {
+    const requestedId = id || me.id;
+    if (
+      !force &&
+      profileRef.current?.id === requestedId &&
+      loadedExtrasForRef.current === requestedId
+    ) {
+      await fetchAuthoritativeProfile(false);
+      return;
+    }
     const gen = ++listingsLoadGen.current;
-    const data = await fetchAuthoritativeProfile();
+    const data = await fetchAuthoritativeProfile(force);
     if (!data || gen !== listingsLoadGen.current) {
       return;
     }
     const [postsResult, listingsResult] = await Promise.allSettled([
-      fetchUserPosts(targetId),
+      fetchUserPosts(requestedId),
       loadFirstPage(),
     ]);
     if (gen !== listingsLoadGen.current) return;
@@ -102,6 +132,7 @@ export default function UserProfileScreen() {
     } else {
       setListingsLoadFailed(true);
     }
+    loadedExtrasForRef.current = requestedId;
   }, [fetchAuthoritativeProfile, id, loadFirstPage, me.id]);
 
   useFocusEffect(
@@ -117,7 +148,7 @@ export default function UserProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadProfile();
+    await loadProfile(true);
     setRefreshing(false);
   }, [loadProfile]);
 
@@ -130,9 +161,9 @@ export default function UserProfileScreen() {
     try {
       const result = await setFollowUser(profile.id, !profile.isFollowing);
       if (!result) throw new Error('follow_failed');
-      await fetchAuthoritativeProfile();
+      await fetchAuthoritativeProfile(true);
     } catch {
-      await fetchAuthoritativeProfile();
+      await fetchAuthoritativeProfile(true);
       Alert.alert('خطأ', 'تعذّرت المتابعة، حاول مجدداً');
     } finally {
       setFollowLoading(false);
