@@ -1,6 +1,15 @@
 import { API_BASE } from './api';
-import { mapButcherFromApi, type ButcherProfile } from './butcherData';
+import {
+  mapButcherFromApi,
+  mapButcherProductFromApi,
+  type ButcherOffer,
+  type ButcherProduct,
+  type ButcherProfile,
+  type ButcherReview,
+  type ButcherStory,
+} from './butcherData';
 import { fetchButcherMarketBanners, type ButcherMarketBanner } from './butcherMarketBanners';
+import { dedupeInflight, shouldReuseFreshResult } from './requestCoordination';
 import {
   BUTCHER_HOME_OFFERS_LIMIT,
   butcherOffersFeedFromRecords,
@@ -44,6 +53,8 @@ const sortedInflight = new Map<string, Promise<SortedButchersPage>>();
 const sortedApplyGen = new Map<string, number>();
 let offersFeedInflight: Promise<ButcherOffersGroup[]> | null = null;
 let offersFeedApplyGen = 0;
+const detailCache = new Map<string, ButcherDetailSnapshot>();
+let storiesCache: { list: ButcherStory[]; at: number } | null = null;
 
 function coordsKey(coords?: { lat: number; lng: number } | null): string {
   if (!coords) return '';
@@ -67,6 +78,8 @@ export function resetButchersDirectoryCache() {
   sortedApplyGen.clear();
   offersFeedInflight = null;
   offersFeedApplyGen = 0;
+  detailCache.clear();
+  storiesCache = null;
   resetButcherOffersFeedCache();
 }
 
@@ -117,6 +130,23 @@ export function isSortedButchersFresh(
 export type CachedButcherLookup = {
   profile: ButcherProfile;
   raw?: Record<string, unknown>;
+};
+
+export type ButcherDetailSnapshot = {
+  profile: ButcherProfile;
+  products: ButcherProduct[];
+  offers: ButcherOffer[];
+  reviews: ButcherReview[];
+  reviewDistribution: Record<number, number>;
+  fetchedAt: number;
+};
+
+const EMPTY_REVIEW_DISTRIBUTION: Record<number, number> = {
+  1: 0,
+  2: 0,
+  3: 0,
+  4: 0,
+  5: 0,
 };
 
 function findFreshRawRecord(id: string, now: number): Record<string, unknown> | undefined {
@@ -301,4 +331,191 @@ export async function loadButcherOffersFeed(
 
   offersFeedInflight = promise;
   return promise;
+}
+
+function mapOfferFromApi(o: Record<string, unknown>): ButcherOffer {
+  return {
+    id: String(o.id ?? ''),
+    butcherId: String(o.butcherId ?? ''),
+    title: String(o.titleAr || o.titleEn || ''),
+    titleAr: String(o.titleAr ?? ''),
+    description: String(o.descriptionEn ?? ''),
+    descriptionAr: String(o.descriptionAr ?? ''),
+    discountPercent: typeof o.discountPercent === 'number' ? o.discountPercent : undefined,
+    originalPrice: typeof o.originalPrice === 'number' ? o.originalPrice : undefined,
+    offerPrice: typeof o.offerPrice === 'number' ? o.offerPrice : undefined,
+    image: typeof o.image === 'string' ? o.image : '',
+    validUntil: String(o.validUntil ?? ''),
+    country: (o.country as ButcherOffer['country']) || 'SA',
+  };
+}
+
+function mapReviewFromApi(r: Record<string, unknown>, butcherId: string): ButcherReview {
+  const reviewer = r.reviewer as
+    | { displayName?: string; arabicName?: string; avatar?: string }
+    | undefined;
+  return {
+    id: String(r.id ?? ''),
+    butcherId: String(r.butcherId || butcherId),
+    authorName: String(reviewer?.displayName || r.authorName || 'عميل سرح'),
+    authorNameAr: String(
+      reviewer?.arabicName || reviewer?.displayName || r.authorNameAr || 'عميل سرح',
+    ),
+    authorAvatar: (reviewer?.avatar || r.authorAvatar || undefined) as string | undefined,
+    rating: Number(r.rating ?? 5),
+    comment: String(r.comment || ''),
+    commentAr: String(r.comment || ''),
+    postedAt: String(r.createdAt ?? ''),
+  };
+}
+
+function distributionFromReviews(list: { rating?: number }[]): Record<number, number> {
+  const dist: Record<number, number> = { ...EMPTY_REVIEW_DISTRIBUTION };
+  for (const row of list) {
+    const rating = Math.round(Number(row.rating) || 0);
+    if (rating >= 1 && rating <= 5) dist[rating] += 1;
+  }
+  return dist;
+}
+
+function hasUsableEmbeddedReviews(b: { reviews?: unknown; reviewCount?: unknown }): boolean {
+  if (!Array.isArray(b.reviews)) return false;
+  if (b.reviews.length > 0) return true;
+  return Number(b.reviewCount ?? 0) === 0;
+}
+
+export function getCachedButcherDetail(id: string): ButcherDetailSnapshot | null {
+  if (!id) return null;
+  return detailCache.get(id) ?? null;
+}
+
+export function peekButcherDetailCachedAt(id: string): number | undefined {
+  return detailCache.get(id)?.fetchedAt;
+}
+
+export function getCachedButcherStories(): ButcherStory[] | null {
+  return storiesCache?.list ?? null;
+}
+
+export function peekButcherStoriesCachedAt(): number | undefined {
+  return storiesCache?.at;
+}
+
+async function loadReviewsIfNeeded(
+  id: string,
+  headers: HeadersInit,
+  embedded: { reviews?: unknown; reviewCount?: unknown },
+): Promise<{ reviews: ButcherReview[]; reviewDistribution: Record<number, number> }> {
+  if (hasUsableEmbeddedReviews(embedded) && Array.isArray(embedded.reviews)) {
+    const reviews = (embedded.reviews as Record<string, unknown>[]).map((row) =>
+      mapReviewFromApi(row, id),
+    );
+    return {
+      reviews,
+      reviewDistribution:
+        reviews.length > 0 ? distributionFromReviews(reviews) : { ...EMPTY_REVIEW_DISTRIBUTION },
+    };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/butchers/${id}/reviews`, { headers });
+    if (!res.ok) {
+      return { reviews: [], reviewDistribution: { ...EMPTY_REVIEW_DISTRIBUTION } };
+    }
+    const json = await res.json();
+    if (!json.success) {
+      return { reviews: [], reviewDistribution: { ...EMPTY_REVIEW_DISTRIBUTION } };
+    }
+    const payload = json.data;
+    const list = Array.isArray(payload) ? payload : payload?.reviews;
+    const reviews = Array.isArray(list)
+      ? (list as Record<string, unknown>[]).map((row) => mapReviewFromApi(row, id))
+      : [];
+    return {
+      reviews,
+      reviewDistribution: payload?.distribution
+        ? (payload.distribution as Record<number, number>)
+        : reviews.length > 0
+          ? distributionFromReviews(reviews)
+          : { ...EMPTY_REVIEW_DISTRIBUTION },
+    };
+  } catch {
+    return { reviews: [], reviewDistribution: { ...EMPTY_REVIEW_DISTRIBUTION } };
+  }
+}
+
+async function loadButcherDetailNetwork(
+  id: string,
+  token?: string | null,
+): Promise<ButcherDetailSnapshot | null> {
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(`${API_BASE}/api/butchers/${id}`, { headers });
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.success || !json.data) return null;
+  const b = json.data as Record<string, unknown>;
+  if (b.id && String(b.id) !== String(id)) return null;
+
+  const products = Array.isArray(b.products)
+    ? (b.products as Record<string, unknown>[]).map((row) => mapButcherProductFromApi(row))
+    : [];
+  const offers = Array.isArray(b.offers)
+    ? (b.offers as Record<string, unknown>[]).map((row) => mapOfferFromApi(row))
+    : [];
+  const reviewState = await loadReviewsIfNeeded(id, headers, b);
+
+  const snapshot: ButcherDetailSnapshot = {
+    profile: mapButcherFromApi(b),
+    products,
+    offers,
+    reviews: reviewState.reviews,
+    reviewDistribution: reviewState.reviewDistribution,
+    fetchedAt: Date.now(),
+  };
+  detailCache.set(id, snapshot);
+  return snapshot;
+}
+
+export function fetchButcherDetail(
+  id: string,
+  options?: { token?: string | null; force?: boolean },
+): Promise<ButcherDetailSnapshot | null> {
+  const butcherId = id?.trim();
+  if (!butcherId) return Promise.resolve(null);
+  const force = options?.force === true;
+  const cached = detailCache.get(butcherId);
+  if (cached && shouldReuseFreshResult(cached.fetchedAt, BUTCHERS_HOME_TTL_MS, force)) {
+    return Promise.resolve(cached);
+  }
+
+  return dedupeInflight(`GET:/api/butchers/${butcherId}`, async () => {
+    try {
+      const snapshot = await loadButcherDetailNetwork(butcherId, options?.token);
+      if (snapshot) return snapshot;
+      return detailCache.get(butcherId) ?? null;
+    } catch {
+      return detailCache.get(butcherId) ?? null;
+    }
+  });
+}
+
+/** Stories are optional and must not block butcher details. */
+export function fetchButcherStories(options?: { force?: boolean }): Promise<ButcherStory[]> {
+  const force = options?.force === true;
+  if (storiesCache && shouldReuseFreshResult(storiesCache.at, BUTCHERS_HOME_TTL_MS, force)) {
+    return Promise.resolve(storiesCache.list);
+  }
+
+  return dedupeInflight('GET:/api/butchers/stories', async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/butchers/stories`);
+      if (!res.ok) return storiesCache?.list ?? [];
+      const json = await res.json();
+      if (!json.success || !Array.isArray(json.data)) return storiesCache?.list ?? [];
+      storiesCache = { list: json.data as ButcherStory[], at: Date.now() };
+      return storiesCache.list;
+    } catch {
+      return storiesCache?.list ?? [];
+    }
+  });
 }

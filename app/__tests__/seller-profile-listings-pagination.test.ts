@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import path from 'path';
 import {
   createSellerListingsPager,
@@ -318,5 +318,30 @@ describe('P1-4 seller/profile listing callers', () => {
     expect(src('app/(tabs)/market.tsx')).not.toContain('useSellerListingsPager');
     expect(src('app/market/browse.tsx')).not.toContain('useSellerListingsPager');
     expect(src('app/butchers/index.tsx')).not.toContain('useSellerListingsPager');
+  });
+
+  it('keeps searchAllSellerListings off production seller feeds after #253', () => {
+    const hits: string[] = [];
+    function walk(dir: string) {
+      for (const name of readdirSync(dir)) {
+        const full = path.join(dir, name);
+        if (statSync(full).isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!/\.(ts|tsx)$/.test(name)) continue;
+        const text = readFileSync(full, 'utf8');
+        if (!text.includes('searchAllSellerListings')) continue;
+        hits.push(path.relative(root, full).replace(/\\/g, '/'));
+      }
+    }
+    walk(path.join(root, 'app'));
+    walk(path.join(root, 'components'));
+    walk(path.join(root, 'hooks'));
+    walk(path.join(root, 'services'));
+    expect(hits.sort()).toEqual(['app/promote.tsx', 'services/listings.ts']);
+    expect(src('app/promote.tsx')).toContain('searchAllSellerListings(userId, accessToken)');
+    expect(src('services/sellerListingsPager.ts')).toContain('loadFirstPage');
+    expect(src('services/sellerListingsPager.ts')).not.toContain('SELLER_LISTINGS_MAX_PAGES');
   });
 });
