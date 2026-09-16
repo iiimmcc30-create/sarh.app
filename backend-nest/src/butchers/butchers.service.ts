@@ -1165,8 +1165,8 @@ export class ButchersService {
       throwApi(500, 'payments_unavailable', 'خدمة الدفع غير متاحة');
     }
 
-    const { checkout, reused } = await this.orderLifecycle.createCheckoutAttempt(
-      {
+    const { checkout, reused } =
+      await this.orderLifecycle.createCheckoutAttempt({
         butcherId: input.butcherId,
         deliveryType: input.deliveryType,
         deliveryAddress: input.deliveryAddress,
@@ -1175,8 +1175,7 @@ export class ButchersService {
         totalPrice: input.totalPrice,
         customerId: user.userId,
         items: input.validatedLines,
-      },
-    );
+      });
 
     try {
       const payment = await payments.initiate(user, {
@@ -1189,7 +1188,10 @@ export class ButchersService {
         descriptionAr: 'دفع طلب ملحمة',
       });
 
-      await this.orderLifecycle.linkCheckoutPayment(checkout.id, payment.paymentId);
+      await this.orderLifecycle.linkCheckoutPayment(
+        checkout.id,
+        payment.paymentId,
+      );
 
       const alreadyPaid =
         'alreadyPaid' in payment && payment.alreadyPaid === true;

@@ -290,12 +290,17 @@ function createCheckoutCaptureStore(seed: {
         id: seed.reservation.productId,
         inStock: true,
         availableQuantity: 10,
-        reservedQuantity: seed.reservation.status === 'held' ? seed.reservation.quantity : 0,
+        reservedQuantity:
+          seed.reservation.status === 'held' ? seed.reservation.quantity : 0,
       },
     ],
   ]);
-  const payments = new Map<string, PaymentRow>([[seed.payment.id, { ...seed.payment }]]);
-  const checkouts = new Map<string, CheckoutRow>([[seed.checkout.id, { ...seed.checkout }]]);
+  const payments = new Map<string, PaymentRow>([
+    [seed.payment.id, { ...seed.payment }],
+  ]);
+  const checkouts = new Map<string, CheckoutRow>([
+    [seed.checkout.id, { ...seed.checkout }],
+  ]);
   const reservations: ReservationRow[] = [{ ...seed.reservation }];
   const orders = new Map<string, OrderRow>();
   let orderSeq = 0;
@@ -335,16 +340,16 @@ function createCheckoutCaptureStore(seed: {
         }
         throw new Error(`Unexpected SQL: ${sql}`);
       },
-      $queryRaw: async (_strings: TemplateStringsArray, ...values: unknown[]) => {
+      $queryRaw: async (
+        _strings: TemplateStringsArray,
+        ...values: unknown[]
+      ) => {
         const checkout = checkouts.get(String(values[0]));
         return checkout ? [checkout] : [];
       },
       payment: {
-        findUnique: async ({
-          where,
-        }: {
-          where: { id: string };
-        }) => payments.get(where.id) ?? null,
+        findUnique: async ({ where }: { where: { id: string } }) =>
+          payments.get(where.id) ?? null,
         updateMany: async ({
           where,
           data,
@@ -384,9 +389,12 @@ function createCheckoutCaptureStore(seed: {
         }) => {
           const row = where.id
             ? checkouts.get(where.id)
-            : [...checkouts.values()].find((c) => c.paymentId === where.paymentId);
+            : [...checkouts.values()].find(
+                (c) => c.paymentId === where.paymentId,
+              );
           if (!row) return null;
-          if (select?.itemsSnapshot) return { itemsSnapshot: row.itemsSnapshot };
+          if (select?.itemsSnapshot)
+            return { itemsSnapshot: row.itemsSnapshot };
           return row;
         },
         update: async ({
@@ -477,11 +485,7 @@ function createCheckoutCaptureStore(seed: {
             butcher: { userId: 'butcher-user', nameAr: 'ملحمة' },
           };
         },
-        create: async ({
-          data,
-        }: {
-          data: Record<string, unknown>;
-        }) => {
+        create: async ({ data }: { data: Record<string, unknown> }) => {
           if (
             [...orders.values()].some(
               (order) =>
@@ -489,7 +493,9 @@ function createCheckoutCaptureStore(seed: {
                 (data.checkoutId && order.checkoutId === data.checkoutId),
             )
           ) {
-            const err = new Error('Unique constraint') as Error & { code?: string };
+            const err = new Error('Unique constraint') as Error & {
+              code?: string;
+            };
             err.code = 'P2002';
             throw err;
           }
@@ -645,9 +651,9 @@ describe('butcher_checkout NI success after local failed payment', () => {
     expect(order.paymentId).toBe('pay-late');
     expect(result.butcherOrder?.id).toBe(order.id);
     expect(store.payments.get('pay-late')?.status).toBe('paid');
-    expect(store.payments.get('pay-late')?.metadata.needsReconciliation).not.toBe(
-      true,
-    );
+    expect(
+      store.payments.get('pay-late')?.metadata.needsReconciliation,
+    ).not.toBe(true);
     expect(store.reservations[0]?.status).toBe('converted');
     expect(store.products.get('prod-1')?.reservedQuantity).toBe(2);
   });
@@ -710,4 +716,3 @@ describe('butcher_checkout NI success after local failed payment', () => {
     expect(store.reservations[0]?.status).toBe('released');
   });
 });
-

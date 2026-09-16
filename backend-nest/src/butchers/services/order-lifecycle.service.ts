@@ -567,7 +567,10 @@ export class OrderLifecycleService {
     const candidates = await this.prisma.butcherCheckout.findMany({
       where: {
         status: 'pending',
-        OR: [{ expiresAt: { lte: cutoff } }, { expiresAt: { lte: new Date() } }],
+        OR: [
+          { expiresAt: { lte: cutoff } },
+          { expiresAt: { lte: new Date() } },
+        ],
       },
       orderBy: { expiresAt: 'asc' },
       take: limit,

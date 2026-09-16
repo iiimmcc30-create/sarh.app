@@ -893,9 +893,10 @@ export class PaymentsRepository {
       where: { id: params.paymentId },
       select: { metadata: true },
     });
-    const prevMeta = (latest?.metadata ??
-      current?.metadata ??
-      {}) as Record<string, unknown>;
+    const prevMeta = (latest?.metadata ?? current?.metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
     await tx.payment.update({
       where: { id: params.paymentId },
       data: {
@@ -1022,11 +1023,7 @@ export class PaymentsRepository {
         payment?.referenceType === 'butcher_checkout' &&
         payment.referenceId
       ) {
-        await releaseCheckoutReservations(
-          tx,
-          payment.referenceId,
-          'failed',
-        );
+        await releaseCheckoutReservations(tx, payment.referenceId, 'failed');
       }
       return failed;
     });

@@ -1022,7 +1022,11 @@ describe('PaymentsService', () => {
       capturedAfterCancel: true,
     });
     mockedFetchNi.mockResolvedValue({
-      order: { reference: 'ni-cap', state: 'CAPTURED', transactionId: 'ni-cap' },
+      order: {
+        reference: 'ni-cap',
+        state: 'CAPTURED',
+        transactionId: 'ni-cap',
+      },
       state: 'CAPTURED',
     });
 

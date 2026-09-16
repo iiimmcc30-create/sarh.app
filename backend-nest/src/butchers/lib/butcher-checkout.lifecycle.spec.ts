@@ -1,7 +1,9 @@
 import {
+  checkoutItemsEqual,
   createCheckoutWithReservations,
   fulfillPaidCheckout,
   releaseCheckoutReservations,
+  releaseProductQuantity,
   reserveProductQuantity,
 } from './butcher-checkout.lifecycle';
 import type { ValidatedOrderLine } from './order-line.util';
@@ -186,9 +188,12 @@ function createStore() {
         }) => {
           const row = where.id
             ? checkouts.get(where.id)
-            : [...checkouts.values()].find((c) => c.paymentId === where.paymentId);
+            : [...checkouts.values()].find(
+                (c) => c.paymentId === where.paymentId,
+              );
           if (!row) return null;
-          if (select?.itemsSnapshot) return { itemsSnapshot: row.itemsSnapshot };
+          if (select?.itemsSnapshot)
+            return { itemsSnapshot: row.itemsSnapshot };
           return row;
         },
         update: async ({
@@ -290,7 +295,11 @@ function createStore() {
         },
       },
       orderTimeline: {
-        create: async ({ data }: { data: { orderId: string; note: string } }) => {
+        create: async ({
+          data,
+        }: {
+          data: { orderId: string; note: string };
+        }) => {
           timelines.push(data);
           return data;
         },
@@ -335,9 +344,9 @@ describe('butcher checkout payment-first lifecycle', () => {
     expect(store.orders.size).toBe(0);
     expect(store.products.get('prod-1')?.reservedQuantity).toBe(0);
     expect(store.checkouts.get(checkout.id)?.status).toBe('failed');
-    expect(
-      store.reservations.every((row) => row.status === 'released'),
-    ).toBe(true);
+    expect(store.reservations.every((row) => row.status === 'released')).toBe(
+      true,
+    );
   });
 
   it('cancelled payment → 0 Final Orders and reservation released', async () => {
@@ -467,8 +476,12 @@ describe('butcher checkout payment-first lifecycle', () => {
     const store = createStore();
     await createCheckoutWithReservations(store.tx(), input);
     expect(store.orders.size).toBe(0);
-    expect([...store.orders.values()].filter((o) => o.customerId === 'user-1')).toHaveLength(0);
-    expect([...store.orders.values()].filter((o) => o.butcherId === 'butcher-1')).toHaveLength(0);
+    expect(
+      [...store.orders.values()].filter((o) => o.customerId === 'user-1'),
+    ).toHaveLength(0);
+    expect(
+      [...store.orders.values()].filter((o) => o.butcherId === 'butcher-1'),
+    ).toHaveLength(0);
   });
 
   it('order number is generated only for the Final Order', async () => {
@@ -492,5 +505,291 @@ describe('reserveProductQuantity concurrency', () => {
     expect(ok).toBe(true);
     expect(blocked).toBe(false);
     expect(store.products.get('prod-2')?.reservedQuantity).toBe(3);
+  });
+
+  it('does not change reserved stock for a zero-quantity hold or release', async () => {
+    const store = createStore();
+    const held = await reserveProductQuantity(store.tx(), 'prod-1', 0);
+    await releaseProductQuantity(store.tx(), 'prod-1', 0);
+    expect(held).toBe(true);
+    expect(store.products.get('prod-1')?.reservedQuantity).toBe(0);
+  });
+});
+
+describe('checkoutItemsEqual pending-checkout reuse', () => {
+  const snapshot = [
+    {
+      productId: 'prod-1',
+      cutType: 'whole',
+      weightKg: 2,
+      linePrice: 80,
+      reservedQuantity: 2,
+    },
+  ];
+
+  it('reuses a pending checkout only when the cart snapshot still matches', () => {
+    expect(checkoutItemsEqual(snapshot, [line()])).toBe(true);
+    expect(checkoutItemsEqual(null, [line()])).toBe(false);
+    expect(checkoutItemsEqual([], [line()])).toBe(false);
+    expect(
+      checkoutItemsEqual([{ ...snapshot[0], productId: 'other' }], [line()]),
+    ).toBe(false);
+    expect(
+      checkoutItemsEqual([{ ...snapshot[0], cutType: 'ribs' }], [line()]),
+    ).toBe(false);
+    expect(
+      checkoutItemsEqual([{ ...snapshot[0], weightKg: 5 }], [line()]),
+    ).toBe(false);
+    expect(
+      checkoutItemsEqual([{ ...snapshot[0], linePrice: 10 }], [line()]),
+    ).toBe(false);
+    expect(
+      checkoutItemsEqual([{ ...snapshot[0], reservedQuantity: 9 }], [line()]),
+    ).toBe(false);
+  });
+});
+
+describe('fulfill and release edge states', () => {
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+  const input = {
+    userId: 'user-1',
+    butcherId: 'butcher-1',
+    deliveryType: 'pickup',
+    currency: 'SAR',
+    totalPrice: 80,
+    items: [line()],
+    expiresAt,
+  };
+
+  it('does not create a checkout with no line items', async () => {
+    const store = createStore();
+    await expect(
+      createCheckoutWithReservations(store.tx(), { ...input, items: [] }),
+    ).rejects.toMatchObject({ error: 'validation_error', status: 400 });
+    expect(store.checkouts.size).toBe(0);
+    expect(store.orders.size).toBe(0);
+  });
+
+  it('release of a missing checkout does not touch stock', async () => {
+    const store = createStore();
+    const result = await releaseCheckoutReservations(
+      store.tx(),
+      'chk-missing',
+      'failed',
+    );
+    expect(result).toEqual({ released: false, quantities: 0 });
+    expect(store.products.get('prod-1')?.reservedQuantity).toBe(0);
+  });
+
+  it('does not release an already expired checkout a second time', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    await releaseCheckoutReservations(store.tx(), checkout.id, 'expired');
+    const second = await releaseCheckoutReservations(
+      store.tx(),
+      checkout.id,
+      'cancelled',
+    );
+    expect(second.released).toBe(false);
+    expect(store.checkouts.get(checkout.id)?.status).toBe('expired');
+    expect(store.products.get('prod-1')?.reservedQuantity).toBe(0);
+  });
+
+  it('marks a pending checkout failed even when no held rows remain', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    store.reservations[0].status = 'released';
+    store.products.get('prod-1')!.reservedQuantity = 0;
+    const result = await releaseCheckoutReservations(
+      store.tx(),
+      checkout.id,
+      'failed',
+    );
+    expect(result).toEqual({ released: true, quantities: 0 });
+    expect(store.checkouts.get(checkout.id)?.status).toBe('failed');
+    expect(store.orders.size).toBe(0);
+  });
+
+  it('throws when fulfilling a checkout that does not exist', async () => {
+    const store = createStore();
+    await expect(
+      fulfillPaidCheckout(store.tx(), {
+        checkoutId: 'chk-missing',
+        paymentId: 'pay-x',
+        userId: 'user-1',
+      }),
+    ).rejects.toThrow('not found for payment fulfillment');
+    expect(store.orders.size).toBe(0);
+  });
+
+  it('pending checkout with no held reservation does not create a Final Order', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    store.reservations[0].status = 'released';
+    store.products.get('prod-1')!.reservedQuantity = 0;
+    const result = await fulfillPaidCheckout(store.tx(), {
+      checkoutId: checkout.id,
+      paymentId: 'pay-late',
+      userId: 'user-1',
+    });
+    expect(result.capturedAfterCancel).toBe(true);
+    expect(result.created).toBe(false);
+    expect(store.orders.size).toBe(0);
+    expect(store.checkouts.get(checkout.id)?.status).toBe('pending');
+  });
+
+  it('returns the existing Final Order when the same checkout is paid under a second payment id', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    const first = await fulfillPaidCheckout(store.tx(), {
+      checkoutId: checkout.id,
+      paymentId: 'pay-1',
+      userId: 'user-1',
+    });
+    const second = await fulfillPaidCheckout(store.tx(), {
+      checkoutId: checkout.id,
+      paymentId: 'pay-2',
+      userId: 'user-1',
+    });
+    expect(store.orders.size).toBe(1);
+    expect(second.created).toBe(false);
+    expect(second.butcherOrder?.id).toBe(first.butcherOrder?.id);
+  });
+
+  it('rejects fulfillment when the checkout snapshot is missing', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    store.checkouts.get(checkout.id)!.itemsSnapshot = {};
+    await expect(
+      fulfillPaidCheckout(store.tx(), {
+        checkoutId: checkout.id,
+        paymentId: 'pay-snap',
+        userId: 'user-1',
+      }),
+    ).rejects.toThrow('snapshot missing');
+    expect(store.orders.size).toBe(0);
+  });
+
+  it('unique constraint during create still returns the single raced Final Order', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    const params = {
+      checkoutId: checkout.id,
+      paymentId: 'pay-race',
+      userId: 'user-1',
+    };
+    const [a, b] = await Promise.all([
+      fulfillPaidCheckout(store.tx(), params),
+      fulfillPaidCheckout(store.tx(), params),
+    ]);
+    expect(store.orders.size).toBe(1);
+    const ids = [a.butcherOrder?.id, b.butcherOrder?.id];
+    expect(ids[0]).toBe(ids[1]);
+    expect([a.created, b.created].filter(Boolean).length).toBeLessThanOrEqual(
+      1,
+    );
+  });
+
+  it('late capture after cancelled checkout does not create a Final Order', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    await releaseCheckoutReservations(store.tx(), checkout.id, 'cancelled');
+    const result = await fulfillPaidCheckout(store.tx(), {
+      checkoutId: checkout.id,
+      paymentId: 'pay-late-cancel',
+      userId: 'user-1',
+    });
+    expect(result.capturedAfterCancel).toBe(true);
+    expect(result.created).toBe(false);
+    expect(store.orders.size).toBe(0);
+    expect(store.checkouts.get(checkout.id)?.status).toBe('cancelled');
+    expect(store.reservations.every((row) => row.status === 'released')).toBe(
+      true,
+    );
+    expect(store.products.get('prod-1')?.reservedQuantity).toBe(0);
+  });
+
+  it('returns the existing Final Order when create races under a second payment id', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    const tx = store.tx() as {
+      butcherOrder: {
+        create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+      };
+    };
+    const originalCreate = tx.butcherOrder.create.bind(tx.butcherOrder);
+    let concurrentInsert = false;
+    tx.butcherOrder.create = async (args) => {
+      if (!concurrentInsert) {
+        concurrentInsert = true;
+        await originalCreate({
+          data: {
+            ...args.data,
+            paymentId: 'pay-1',
+          },
+        });
+        const err = new Error('Unique constraint') as Error & { code?: string };
+        err.code = 'P2002';
+        throw err;
+      }
+      return originalCreate(args);
+    };
+
+    const result = await fulfillPaidCheckout(tx as never, {
+      checkoutId: checkout.id,
+      paymentId: 'pay-2',
+      userId: 'user-1',
+    });
+    expect(store.orders.size).toBe(1);
+    expect(result.created).toBe(false);
+    expect(result.butcherOrder?.id).toBe([...store.orders.values()][0].id);
+    expect([...store.orders.values()][0].paymentId).toBe('pay-1');
+  });
+
+  it('does not convert a reservation when Final Order insert fails', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    const tx = store.tx() as {
+      butcherOrder: { create: (args: unknown) => Promise<unknown> };
+    };
+    tx.butcherOrder.create = async () => {
+      throw new Error('database write failed');
+    };
+
+    await expect(
+      fulfillPaidCheckout(tx as never, {
+        checkoutId: checkout.id,
+        paymentId: 'pay-fail',
+        userId: 'user-1',
+      }),
+    ).rejects.toThrow('database write failed');
+    expect(store.orders.size).toBe(0);
+    expect(store.checkouts.get(checkout.id)?.status).toBe('pending');
+    expect(store.reservations[0]?.status).toBe('held');
+    expect(store.products.get('prod-1')?.reservedQuantity).toBe(2);
+  });
+
+  it('does not swallow a unique constraint that is not a duplicate payment or checkout', async () => {
+    const store = createStore();
+    const checkout = await createCheckoutWithReservations(store.tx(), input);
+    const tx = store.tx() as {
+      butcherOrder: { create: (args: unknown) => Promise<unknown> };
+    };
+    tx.butcherOrder.create = async () => {
+      const err = new Error('Unique constraint') as Error & { code?: string };
+      err.code = 'P2002';
+      throw err;
+    };
+
+    await expect(
+      fulfillPaidCheckout(tx as never, {
+        checkoutId: checkout.id,
+        paymentId: 'pay-orphan-unique',
+        userId: 'user-1',
+      }),
+    ).rejects.toThrow('Unique constraint');
+    expect(store.orders.size).toBe(0);
+    expect(store.checkouts.get(checkout.id)?.status).toBe('pending');
+    expect(store.reservations[0]?.status).toBe('held');
   });
 });

@@ -93,7 +93,11 @@ function verificationMessage(context?: string): string {
   ) {
     return 'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.';
   }
-  if (context === 'boost' || context === 'promotion' || context === 'promoted_ad') {
+  if (
+    context === 'boost' ||
+    context === 'promotion' ||
+    context === 'promoted_ad'
+  ) {
     return 'تمت إعادتك من بوابة الدفع. جارٍ التحقق من حالة العملية في N-Genius — لا تُفعَّل الترقية قبل التأكيد.';
   }
   if (
