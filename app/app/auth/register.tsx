@@ -49,7 +49,7 @@ export default function RegisterScreen() {
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const router = useRouter();
   const params = useLocalSearchParams<{ phone?: string; token?: string }>();
-  const { sendOtp, verifyOtp, register } = useAuth();
+  const { sendOtp, verifyOtp, register, checkSignup } = useAuth();
   const { copy } = useAuthCopy();
 
   const initialStep: Step =
@@ -70,6 +70,8 @@ export default function RegisterScreen() {
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
 
   const cleanPhoneDigits = phone
     .trim()
@@ -113,9 +115,22 @@ export default function RegisterScreen() {
     else router.replace('/auth/welcome');
   };
 
-  const advanceFromPhone = () => {
+  const advanceFromPhone = async () => {
+    setPhoneError('');
+    setError('');
     if (!isPhoneValid) {
-      setError(copy.errPhone);
+      setPhoneError(copy.errPhone);
+      return;
+    }
+    setLoading(true);
+    const check = await checkSignup({ phone: fullPhone });
+    setLoading(false);
+    if (!check.success) {
+      setPhoneError(
+        check.code === 'phone_taken' || check.error?.includes('مسجل')
+          ? copy.errPhoneTaken
+          : (check.error ?? copy.errGeneric),
+      );
       return;
     }
     goTo('name');
@@ -129,13 +144,28 @@ export default function RegisterScreen() {
     goTo('identity');
   };
 
-  const advanceFromIdentity = () => {
+  const advanceFromIdentity = async () => {
+    setUsernameError('');
+    setError('');
     if (!usernameOk) {
-      setError(copy.errUsername);
+      setUsernameError(copy.errUsername);
       return;
     }
     if (!dobOk) {
       setError(copy.errDob);
+      return;
+    }
+    setLoading(true);
+    const check = await checkSignup({
+      username: username.trim().toLowerCase(),
+    });
+    setLoading(false);
+    if (!check.success) {
+      setUsernameError(
+        check.code === 'username_taken' || check.error?.includes('مستخدم')
+          ? copy.errUsernameTaken
+          : (check.error ?? copy.errGeneric),
+      );
       return;
     }
     goTo('password');
@@ -157,9 +187,35 @@ export default function RegisterScreen() {
     }
 
     setLoading(true);
-    const result = await sendOtp(fullPhone, 'sms');
+    // Re-check uniqueness before OTP (race + defense in depth).
+    const availability = await checkSignup({
+      phone: fullPhone,
+      username: username.trim().toLowerCase(),
+    });
+    if (!availability.success) {
+      setLoading(false);
+      if (availability.code === 'phone_taken') {
+        setPhoneError(copy.errPhoneTaken);
+        goTo('phone');
+        return;
+      }
+      if (availability.code === 'username_taken') {
+        setUsernameError(copy.errUsernameTaken);
+        goTo('identity');
+        return;
+      }
+      setError(availability.error ?? copy.errGeneric);
+      return;
+    }
+
+    const result = await sendOtp(fullPhone, 'sms', 'signup');
     setLoading(false);
     if (!result.success) {
+      if (result.code === 'phone_taken') {
+        setPhoneError(copy.errPhoneTaken);
+        goTo('phone');
+        return;
+      }
       setError(result.error ?? copy.errGeneric);
       return;
     }
@@ -173,15 +229,23 @@ export default function RegisterScreen() {
       return;
     }
     setLoading(true);
-    const verified = await verifyOtp(fullPhone, otpCode);
+    const verified = await verifyOtp(fullPhone, otpCode, 'signup');
     const otpFlow = interpretOtpVerifyResult(verified);
     if (otpFlow.kind === 'invalid' || otpFlow.kind === 'missing_phone_token') {
       setLoading(false);
+      if (verified.code === 'phone_taken') {
+        setPhoneError(copy.errPhoneTaken);
+        goTo('phone');
+        return;
+      }
       setError(otpFlow.error);
       return;
     }
+    // Signup must never fall through into an existing-account login.
     if (otpFlow.kind === 'existing_login') {
       setLoading(false);
+      setPhoneError(copy.errPhoneTaken);
+      goTo('phone');
       return;
     }
 
@@ -197,8 +261,17 @@ export default function RegisterScreen() {
 
     if (!regResult.success) {
       setLoading(false);
-      if (regResult.error?.includes('مستخدم') || regResult.error?.includes('username')) {
-        setError(regResult.error);
+      if (regResult.code === 'phone_taken') {
+        setPhoneError(copy.errPhoneTaken);
+        goTo('phone');
+        return;
+      }
+      if (
+        regResult.code === 'username_taken' ||
+        regResult.error?.includes('مستخدم') ||
+        regResult.error?.includes('username')
+      ) {
+        setUsernameError(copy.errUsernameTaken);
         goTo('identity');
         return;
       }
@@ -267,6 +340,7 @@ export default function RegisterScreen() {
                 value={phone}
                 onChangeText={(t) => {
                   setPhone(t.replace(/[^\d\s]/g, ''));
+                  setPhoneError('');
                   setError('');
                 }}
                 placeholder={copy.phonePlaceholder}
@@ -274,12 +348,14 @@ export default function RegisterScreen() {
                 maxLength={10}
                 autoFocus
                 ltr
+                errorText={phoneError || undefined}
               />
               <SarhButton
                 title={copy.continueCta}
                 fullWidth
-                disabled={!isPhoneValid}
-                onPress={advanceFromPhone}
+                loading={loading}
+                disabled={!isPhoneValid || loading}
+                onPress={() => void advanceFromPhone()}
               />
             </Stack>
           ) : null}
@@ -311,6 +387,7 @@ export default function RegisterScreen() {
                 value={username}
                 onChangeText={(t) => {
                   setUsername(t.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+                  setUsernameError('');
                   setError('');
                 }}
                 placeholder={copy.usernamePlaceholder}
@@ -319,19 +396,22 @@ export default function RegisterScreen() {
                 maxLength={20}
                 autoFocus
                 ltr
+                errorText={usernameError || undefined}
                 leadingIcon={
                   <AppText variant="body" color="textMuted">
                     @
                   </AppText>
                 }
               />
-              <AppText variant="caption" color={usernameHintColor ?? 'textMuted'}>
-                {username.length === 0
-                  ? copy.usernameHint
-                  : usernameOk
-                    ? copy.usernameFormatOk
-                    : copy.usernameFormatBad}
-              </AppText>
+              {!usernameError ? (
+                <AppText variant="caption" color={usernameHintColor ?? 'textMuted'}>
+                  {username.length === 0
+                    ? copy.usernameHint
+                    : usernameOk
+                      ? copy.usernameFormatOk
+                      : copy.usernameFormatBad}
+                </AppText>
+              ) : null}
 
               <SarhInput
                 label={copy.stepDobTitle}
@@ -349,8 +429,9 @@ export default function RegisterScreen() {
               <SarhButton
                 title={copy.continueCta}
                 fullWidth
-                disabled={!usernameOk || !dobOk}
-                onPress={advanceFromIdentity}
+                loading={loading}
+                disabled={!usernameOk || !dobOk || loading}
+                onPress={() => void advanceFromIdentity()}
               />
             </Stack>
           ) : null}

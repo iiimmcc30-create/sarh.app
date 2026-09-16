@@ -168,6 +168,22 @@ export class AuthRepository {
     });
   }
 
+  /** Any row with this phone (active or not) — used for signup uniqueness. */
+  findAnyUserByPhone(phone: string) {
+    return this.prisma.user.findFirst({
+      where: { phone },
+      select: { id: true },
+    });
+  }
+
+  /** Any row with this username — used for signup uniqueness. */
+  findAnyUserByUsername(username: string) {
+    return this.prisma.user.findFirst({
+      where: { username },
+      select: { id: true },
+    });
+  }
+
   findGoogleUser(googleId: string, email: string) {
     return this.prisma.user.findFirst({
       where: { OR: [{ googleId }, { email }] },

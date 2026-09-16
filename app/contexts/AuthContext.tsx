@@ -47,15 +47,27 @@ interface AuthContextValue {
   activeMode: 'USER' | 'BUTCHER';
   switchMode: (mode: 'USER' | 'BUTCHER') => void;
   // OTP flow
-  sendOtp:   (phone: string, channel?: 'sms' | 'whatsapp') => Promise<{ success: boolean; devMode?: boolean; error?: string }>;
-  verifyOtp: (phone: string, code: string, purpose?: 'login' | 'reset_password') => Promise<{ success: boolean; isNew?: boolean; phone?: string; phoneToken?: string; error?: string }>;
+  sendOtp:   (
+    phone: string,
+    channel?: 'sms' | 'whatsapp',
+    purpose?: 'login' | 'signup' | 'join' | 'reset_password',
+  ) => Promise<{ success: boolean; devMode?: boolean; error?: string; code?: string }>;
+  verifyOtp: (
+    phone: string,
+    code: string,
+    purpose?: 'login' | 'reset_password' | 'signup' | 'join',
+  ) => Promise<{ success: boolean; isNew?: boolean; phone?: string; phoneToken?: string; error?: string; code?: string }>;
+  checkSignup: (fields: {
+    phone?: string;
+    username?: string;
+  }) => Promise<{ success: boolean; error?: string; code?: string }>;
   // Google flow
   signInWithGoogle: (idToken: string) => Promise<{ success: boolean; isNew?: boolean; googleData?: GoogleSignInData; error?: string }>;
   // Password flow
   signInWithPassword: (login: string, password: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (phone: string, phoneToken: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   // Register (بعد OTP أو Google)
-  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string; code?: string }>;
   // Session
   signOut:        () => Promise<void>;
   refreshSession: () => Promise<boolean>;
@@ -278,18 +290,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── إرسال OTP ─────────────────────────────────────────────────────────────
-  const sendOtp = useCallback(async (phone: string, channel: 'sms' | 'whatsapp' = 'sms') => {
+  const sendOtp = useCallback(async (
+    phone: string,
+    channel: 'sms' | 'whatsapp' = 'sms',
+    purpose: 'login' | 'signup' | 'join' | 'reset_password' = 'login',
+  ) => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, channel }),
+        body: JSON.stringify({ phone, channel, purpose }),
       });
       const responseJson = await res.json().catch(() => ({}));
       const data = (responseJson && responseJson.success && responseJson.data !== undefined) ? responseJson.data : responseJson;
       
       if (!res.ok) {
-        return { success: false, error: responseJson.messageAr ?? responseJson.message_ar ?? 'فشل إرسال الرمز' };
+        return {
+          success: false,
+          error: responseJson.messageAr ?? responseJson.message_ar ?? 'فشل إرسال الرمز',
+          code: responseJson.error as string | undefined,
+        };
       }
       return { success: true, devMode: data.dev_mode ?? false };
     } catch {
@@ -298,7 +318,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── التحقق من OTP ─────────────────────────────────────────────────────────
-  const verifyOtp = useCallback(async (phone: string, code: string, purpose: 'login' | 'reset_password' = 'login') => {
+  const verifyOtp = useCallback(async (
+    phone: string,
+    code: string,
+    purpose: 'login' | 'reset_password' | 'signup' | 'join' = 'login',
+  ) => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
         method: 'POST',
@@ -309,20 +333,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = (responseJson && responseJson.success && responseJson.data !== undefined) ? responseJson.data : responseJson;
 
       if (!res.ok) {
-        return { success: false, error: responseJson.messageAr ?? responseJson.message_ar ?? 'الرمز غير صحيح' };
+        return {
+          success: false,
+          error: responseJson.messageAr ?? responseJson.message_ar ?? 'الرمز غير صحيح',
+          code: responseJson.error as string | undefined,
+        };
       }
 
-      if (data.is_new_user || purpose === 'reset_password') {
-        return { success: true, isNew: data.is_new_user ?? false, phone, phoneToken: data.phone_token };
+      // Signup / join / reset: return phone_token only — never create a session here.
+      if (
+        purpose === 'signup' ||
+        purpose === 'join' ||
+        purpose === 'reset_password' ||
+        data.is_new_user
+      ) {
+        return {
+          success: true,
+          isNew: data.is_new_user ?? purpose === 'signup',
+          phone,
+          phoneToken: data.phone_token,
+        };
       }
 
-      // مستخدم موجود — احفظ الجلسة
+      // مستخدم موجود — احفظ الجلسة (login OTP فقط)
       await saveSession(data.user, data.access_token ?? data.accessToken, data.refresh_token ?? data.refreshToken);
       return { success: true, isNew: false };
     } catch {
       return { success: false, error: 'تعذّر الاتصال بالخادم' };
     }
   }, [saveSession]);
+
+  // ── تحقق مبكّر لتفرّد التسجيل ──────────────────────────────────────────────
+  const checkSignup = useCallback(async (fields: { phone?: string; username?: string }) => {
+    try {
+      const body: Record<string, string> = {};
+      if (fields.phone) body.phone = fields.phone;
+      if (fields.username) body.username = fields.username;
+      const res = await fetch(`${API_BASE}/api/auth/check-signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const responseJson = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return {
+          success: false,
+          error: responseJson.messageAr ?? responseJson.message_ar ?? 'تعذّر التحقق',
+          code: responseJson.error as string | undefined,
+        };
+      }
+      return { success: true };
+    } catch {
+      return { success: false, error: 'تعذّر الاتصال بالخادم' };
+    }
+  }, []);
 
   // ── Google Sign In ─────────────────────────────────────────────────────────
   const signInWithGoogle = useCallback(async (idToken: string) => {
@@ -429,7 +493,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = (responseJson && responseJson.success && responseJson.data !== undefined) ? responseJson.data : responseJson;
 
       if (!res.ok) {
-        return { success: false, error: responseJson.messageAr ?? responseJson.message_ar ?? 'فشل إنشاء الحساب' };
+        return {
+          success: false,
+          error: responseJson.messageAr ?? responseJson.message_ar ?? 'فشل إنشاء الحساب',
+          code: responseJson.error as string | undefined,
+        };
       }
 
       await saveSession(data.user, data.access_token ?? data.accessToken, data.refresh_token ?? data.refreshToken);
@@ -469,6 +537,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       switchMode,
       sendOtp,
       verifyOtp,
+      checkSignup,
       signInWithGoogle,
       signInWithPassword,
       resetPassword,
@@ -479,12 +548,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [
       user,
       accessToken,
-      lastAuthOkAt,
       isLoading,
+      lastAuthOkAt,
       activeMode,
       switchMode,
       sendOtp,
       verifyOtp,
+      checkSignup,
       signInWithGoogle,
       signInWithPassword,
       resetPassword,
