@@ -36,8 +36,13 @@ import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchButcherChatAccess } from '@/services/butcherChat';
 import { fetchUserProfile } from '@/services/users';
-import { applyChatSocketEvent, mergeChatMessages } from '@/lib/chatRealtime';
+import { applyChatSocketEvent, mergeChatMessages, parseChatSocketPayload } from '@/lib/chatRealtime';
 import { useChatThreadSocket } from '@/hooks/useChatThreadSocket';
+import {
+  applyInboxThreadPreview,
+  inboxPreviewText,
+  markInboxThreadRead,
+} from '@/hooks/useMessageThreads';
 import {
   formatListingPrice,
   getMessageListingContext,
@@ -401,6 +406,10 @@ export default function ButcherChatScreen() {
   const [butcher, setButcher] = useState<ButcherProfile | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(threadIdParam ?? null);
+
+  useEffect(() => {
+    if (threadId) markInboxThreadRead(threadId);
+  }, [threadId]);
   const [resolvedButcherId, setResolvedButcherId] = useState<string | null>(
     butcherId ?? null,
   );
@@ -765,6 +774,38 @@ export default function ButcherChatScreen() {
   useChatThreadSocket(accessToken, threadId, (payload) => {
     if (!threadId) return;
     setMessages((prev) => applyChatSocketEvent(prev, payload, threadId));
+    const parsed = parseChatSocketPayload(payload);
+    if (!parsed) return;
+    applyInboxThreadPreview({
+      threadId,
+      lastMessage: inboxPreviewText({
+        text: parsed.message.text,
+        image: parsed.message.image,
+        video: parsed.message.video,
+      }),
+      lastMessageAt: parsed.message.createdAt,
+      unread: 0,
+      isMine: parsed.message.senderId === MY_ID,
+      type: activeChatType,
+      participant: receiverId
+        ? {
+            id: receiverId,
+            displayName: receiverName || '',
+            arabicName: receiverName || '',
+            avatar: receiverAvatar || undefined,
+            verified: false,
+          }
+        : null,
+      butcherId: effectiveButcherId ?? null,
+      butcher: butcher
+        ? {
+            id: butcher.id,
+            nameAr: butcher.nameAr,
+            nameEn: butcher.name,
+            logo: butcher.logo,
+          }
+        : null,
+    });
   });
 
   const deliverMessage = async (
@@ -819,6 +860,39 @@ export default function ButcherChatScreen() {
             ),
           );
           if (!threadId && json.data.threadId) setThreadId(json.data.threadId);
+          const resolvedThreadId = json.data.threadId || threadId;
+          if (resolvedThreadId) {
+            applyInboxThreadPreview({
+              threadId: resolvedThreadId,
+              lastMessage: inboxPreviewText({
+                text: bodyText,
+                image: media?.imageUrl,
+                video: media?.videoUrl,
+              }),
+              lastMessageAt: new Date().toISOString(),
+              unread: 0,
+              isMine: true,
+              type: activeChatType,
+              participant: receiverId
+                ? {
+                    id: receiverId,
+                    displayName: receiverName || '',
+                    arabicName: receiverName || '',
+                    avatar: receiverAvatar || undefined,
+                    verified: false,
+                  }
+                : null,
+              butcherId: effectiveButcherId ?? null,
+              butcher: butcher
+                ? {
+                    id: butcher.id,
+                    nameAr: butcher.nameAr,
+                    nameEn: butcher.name,
+                    logo: butcher.logo,
+                  }
+                : null,
+            });
+          }
         }
       } else {
         const json = await res.json().catch(() => ({}));

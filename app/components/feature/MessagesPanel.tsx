@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  RefreshControl,
   StyleSheet,
   View,
 } from 'react-native';
@@ -80,6 +81,7 @@ export function MessagesPanel({
   const { threads, loading, error, refetch } = useMessageThreads(accessToken, 'ALL');
   const filter: MessageThreadFilter = 'all';
   const [search, setSearch] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const [listingByPeer, setListingByPeer] = useState<
     Record<string, MessageListingPreview>
   >({});
@@ -101,6 +103,15 @@ export function MessagesPanel({
       void getAllMessageListingContexts().then(setListingByPeer);
     }, [refetch]),
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   const listingTitlesByPeer = useMemo(() => {
     const map: Record<string, string | undefined> = {};
@@ -329,6 +340,9 @@ export function MessagesPanel({
           keyExtractor={(item) => item.id}
           renderItem={renderThread}
           contentContainerStyle={{ paddingBottom: listBottomPadding, flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
           ListEmptyComponent={
             <Stack gap="sm" align="center" style={[styles.emptyCard, { marginHorizontal: gutter }]}>
               <View style={styles.emptyIconWrap}>

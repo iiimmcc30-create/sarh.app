@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_BASE } from '@/services/api';
 import { authFetch } from '@/services/authFetch';
+import { dedupeInflight, shouldReuseFreshResult } from '@/services/requestCoordination';
 
 export type MessageThreadType = 'DIRECT' | 'BUTCHER';
 
@@ -30,6 +31,21 @@ export interface MessageThreadItem {
   lastMessageAt: string;
   unread: number;
   isMine?: boolean;
+}
+
+type InboxCacheEntry = {
+  threads: MessageThreadItem[];
+  at: number;
+};
+
+let inboxOwnerToken: string | null = null;
+const inboxCache = new Map<string, InboxCacheEntry>();
+
+function sortThreads(threads: MessageThreadItem[]): MessageThreadItem[] {
+  return [...threads].sort(
+    (a, b) =>
+      new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime(),
+  );
 }
 
 function mapThread(t: any, fallbackType: MessageThreadType): MessageThreadItem {
@@ -79,37 +95,205 @@ async function fetchType(
   return json.data.map((t: any) => mapThread(t, type));
 }
 
+function ensureInboxOwner(accessToken: string) {
+  if (inboxOwnerToken === accessToken) return;
+  inboxOwnerToken = accessToken;
+  inboxCache.clear();
+}
+
+/** Test-only reset of inbox TTL cache. */
+export function resetMessageInboxCache(): void {
+  inboxOwnerToken = null;
+  inboxCache.clear();
+}
+
+export function getCachedMessageInbox(
+  type: MessageThreadType | 'ALL' = 'ALL',
+): MessageThreadItem[] | null {
+  return inboxCache.get(type)?.threads ?? null;
+}
+
+export function peekMessageInboxCachedAt(
+  type: MessageThreadType | 'ALL' = 'ALL',
+): number | undefined {
+  return inboxCache.get(type)?.at;
+}
+
+export function inboxPreviewText(message: {
+  text?: string | null;
+  image?: string | null;
+  video?: string | null;
+}): string | null {
+  const text = message.text?.trim();
+  if (text) return text;
+  if (message.video) return '[فيديو]';
+  if (message.image) return '[صورة]';
+  return null;
+}
+
+export type InboxThreadPreviewPatch = {
+  threadId: string;
+  lastMessage?: string | null;
+  lastMessageAt?: string;
+  unread?: number;
+  isMine?: boolean;
+  type?: MessageThreadType;
+  participant?: MessageThreadItem['participant'];
+  butcherId?: string | null;
+  butcher?: MessageThreadItem['butcher'];
+};
+
+function applyPreviewToThreads(
+  threads: MessageThreadItem[],
+  patch: InboxThreadPreviewPatch,
+): MessageThreadItem[] {
+  const idx = threads.findIndex((t) => t.id === patch.threadId);
+  if (idx >= 0) {
+    const current = threads[idx];
+    const nextRow: MessageThreadItem = {
+      ...current,
+      lastMessage:
+        patch.lastMessage !== undefined ? patch.lastMessage : current.lastMessage,
+      lastMessageAt: patch.lastMessageAt ?? current.lastMessageAt,
+      unread: patch.unread !== undefined ? patch.unread : current.unread,
+      isMine: patch.isMine !== undefined ? patch.isMine : current.isMine,
+    };
+    return sortThreads([
+      ...threads.slice(0, idx),
+      nextRow,
+      ...threads.slice(idx + 1),
+    ]);
+  }
+
+  if (!patch.participant && !patch.butcher) return threads;
+
+  const created: MessageThreadItem = {
+    id: patch.threadId,
+    type: patch.type ?? 'DIRECT',
+    butcherId: patch.butcherId ?? null,
+    butcher: patch.butcher ?? null,
+    participant: patch.participant ?? null,
+    lastMessage: patch.lastMessage ?? null,
+    lastMessageAt: patch.lastMessageAt ?? new Date().toISOString(),
+    unread: patch.unread ?? 0,
+    isMine: patch.isMine ?? false,
+  };
+  return sortThreads([created, ...threads]);
+}
+
+/** Patch the cached inbox from chat send / socket / read without a list GET. */
+export function applyInboxThreadPreview(
+  patch: InboxThreadPreviewPatch,
+): MessageThreadItem[] | null {
+  if (inboxCache.size === 0) {
+    if (!patch.participant && !patch.butcher) return null;
+    inboxCache.set('ALL', {
+      threads: applyPreviewToThreads([], patch),
+      at: 0,
+    });
+    return inboxCache.get('ALL')?.threads ?? null;
+  }
+
+  for (const [key, entry] of inboxCache) {
+    inboxCache.set(key, {
+      threads: applyPreviewToThreads(entry.threads, patch),
+      at: entry.at,
+    });
+  }
+  return inboxCache.get('ALL')?.threads ?? [...inboxCache.values()][0]?.threads ?? null;
+}
+
+export function markInboxThreadRead(threadId: string): void {
+  if (!threadId) return;
+  applyInboxThreadPreview({ threadId, unread: 0 });
+}
+
+async function loadInbox(
+  accessToken: string,
+  type: MessageThreadType | 'ALL',
+): Promise<MessageThreadItem[]> {
+  const next =
+    type === 'ALL'
+      ? sortThreads(
+          (
+            await Promise.all([
+              fetchType(accessToken, 'DIRECT'),
+              fetchType(accessToken, 'BUTCHER'),
+            ])
+          ).flat(),
+        )
+      : await fetchType(accessToken, type);
+  if (inboxOwnerToken === accessToken) {
+    inboxCache.set(type, { threads: next, at: Date.now() });
+  }
+  return next;
+}
+
+export function fetchMessageInbox(
+  accessToken: string,
+  type: MessageThreadType | 'ALL' = 'ALL',
+  options?: { force?: boolean },
+): Promise<MessageThreadItem[]> {
+  ensureInboxOwner(accessToken);
+  const force = options?.force === true;
+  const cached = inboxCache.get(type);
+  if (cached && shouldReuseFreshResult(cached.at, MESSAGES_REFRESH_TTL_MS, force)) {
+    return Promise.resolve(cached.threads);
+  }
+
+  return dedupeInflight(`messages:inbox:${accessToken}:${type}`, async () => {
+    try {
+      return await loadInbox(accessToken, type);
+    } catch (err) {
+      const code = err instanceof Error ? err.message : 'fetch_failed';
+      if (code === 'unauthorized') {
+        if (inboxOwnerToken === accessToken) inboxCache.delete(type);
+        throw err;
+      }
+      const stale = inboxCache.get(type)?.threads;
+      if (stale) return stale;
+      throw err;
+    }
+  });
+}
+
 export function useMessageThreads(
   accessToken: string | null,
   type: MessageThreadType | 'ALL' = 'ALL',
 ) {
-  const [threads, setThreads] = useState<MessageThreadItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [threads, setThreads] = useState<MessageThreadItem[]>(
+    () => (accessToken ? getCachedMessageInbox(type) ?? [] : []),
+  );
+  const [loading, setLoading] = useState(() => {
+    if (!accessToken) return false;
+    return getCachedMessageInbox(type) == null;
+  });
   const [error, setError] = useState<string | null>(null);
-  const hasDataRef = useRef(false);
-  const lastSuccessAtRef = useRef(0);
-  const inflightRef = useRef<Promise<void> | null>(null);
+  const hasDataRef = useRef(getCachedMessageInbox(type) != null);
 
   const fetchThreads = useCallback(async (force = false) => {
     if (!accessToken) {
+      resetMessageInboxCache();
       setThreads([]);
       setLoading(false);
       setError(null);
       hasDataRef.current = false;
-      lastSuccessAtRef.current = 0;
       return;
     }
 
-    const now = Date.now();
-    if (
-      !force &&
-      hasDataRef.current &&
-      now - lastSuccessAtRef.current < MESSAGES_REFRESH_TTL_MS
-    ) {
-      return;
+    const cachedNow = getCachedMessageInbox(type);
+    if (cachedNow) {
+      setThreads(cachedNow);
+      hasDataRef.current = true;
     }
-    if (inflightRef.current && !force) {
-      await inflightRef.current;
+
+    if (
+      shouldReuseFreshResult(
+        peekMessageInboxCachedAt(type),
+        MESSAGES_REFRESH_TTL_MS,
+        force,
+      )
+    ) {
       return;
     }
 
@@ -117,42 +301,19 @@ export function useMessageThreads(
     if (showSpinner) setLoading(true);
     setError(null);
 
-    const run = (async () => {
-      try {
-        const next =
-          type === 'ALL'
-            ? await (async () => {
-                const [direct, butcher] = await Promise.all([
-                  fetchType(accessToken, 'DIRECT'),
-                  fetchType(accessToken, 'BUTCHER'),
-                ]);
-                return [...direct, ...butcher].sort(
-                  (a, b) =>
-                    new Date(b.lastMessageAt).getTime() -
-                    new Date(a.lastMessageAt).getTime(),
-                );
-              })()
-            : await fetchType(accessToken, type);
-        setThreads(next);
-        hasDataRef.current = true;
-        lastSuccessAtRef.current = Date.now();
-      } catch (err) {
-        const code = err instanceof Error ? err.message : 'fetch_failed';
-        setError(code === 'unauthorized' ? 'unauthorized' : 'fetch_failed');
-        if (code === 'unauthorized') {
-          setThreads([]);
-          hasDataRef.current = false;
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
-
-    inflightRef.current = run;
     try {
-      await run;
+      const next = await fetchMessageInbox(accessToken, type, { force });
+      setThreads(next);
+      hasDataRef.current = true;
+    } catch (err) {
+      const code = err instanceof Error ? err.message : 'fetch_failed';
+      setError(code === 'unauthorized' ? 'unauthorized' : 'fetch_failed');
+      if (code === 'unauthorized') {
+        setThreads([]);
+        hasDataRef.current = false;
+      }
     } finally {
-      if (inflightRef.current === run) inflightRef.current = null;
+      setLoading(false);
     }
   }, [accessToken, type]);
 
