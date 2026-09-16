@@ -1,4 +1,5 @@
 import { ensureApiReachable } from './api';
+import { shouldReuseFreshResult } from './requestCoordination';
 
 export type PaidServiceFlags = {
   /** ترويج الظهور */
@@ -18,8 +19,23 @@ export const DEFAULT_PAID_SERVICE_FLAGS: PaidServiceFlags = {
   listingFeesEnabled: true,
 };
 
+export const PAID_SERVICES_TTL_MS = 60_000;
+
 let cachedFlags: PaidServiceFlags | null = null;
+let cachedAt: number | undefined;
 let inflight: Promise<PaidServiceFlags> | null = null;
+
+/** True when a network response has been stored (defaults do not count). */
+export function hasCachedPaidServiceFlags(): boolean {
+  return cachedFlags != null;
+}
+
+/** Test-only reset of flags, TTL timestamp, and in-flight fetch. */
+export function resetPaidServicesCache(): void {
+  cachedFlags = null;
+  cachedAt = undefined;
+  inflight = null;
+}
 
 function asBool(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
@@ -84,11 +100,14 @@ export function getCachedPaidServiceFlags(): PaidServiceFlags {
   return cachedFlags ?? { ...DEFAULT_PAID_SERVICE_FLAGS };
 }
 
-export async function fetchPaidServiceFlags(options?: {
+export function fetchPaidServiceFlags(options?: {
   force?: boolean;
 }): Promise<PaidServiceFlags> {
-  if (!options?.force && cachedFlags) return cachedFlags;
-  if (!options?.force && inflight) return inflight;
+  const force = options?.force === true;
+  if (cachedFlags && shouldReuseFreshResult(cachedAt, PAID_SERVICES_TTL_MS, force)) {
+    return Promise.resolve(cachedFlags);
+  }
+  if (inflight) return inflight;
 
   inflight = (async () => {
     try {
@@ -100,6 +119,7 @@ export async function fetchPaidServiceFlags(options?: {
       const json = await res.json();
       const flags = normalizeFlags(json?.data?.flags);
       cachedFlags = flags;
+      cachedAt = Date.now();
       return flags;
     } catch {
       return getCachedPaidServiceFlags();
