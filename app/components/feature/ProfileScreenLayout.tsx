@@ -17,6 +17,7 @@ import { spacing, type ThemeColors } from '@/constants/theme';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
+import { isSellerListNearEnd } from '@/services/sellerListingsPager';
 
 export type ProfileTabKey = 'posts' | 'ads';
 
@@ -60,6 +61,7 @@ type ProfileScreenLayoutProps = {
   followLoading?: boolean;
   isFollowing?: boolean;
   initialTab?: ProfileTabKey;
+  onAdsNearEnd?: () => void;
 };
 
 function formatStatCount(n: number): string {
@@ -142,6 +144,7 @@ export function ProfileScreenLayout({
   followLoading = false,
   isFollowing = false,
   initialTab = 'posts',
+  onAdsNearEnd,
 }: ProfileScreenLayoutProps) {
   const { colors: themeColors } = useTheme();
   const { gutter } = useLayout();
@@ -215,6 +218,10 @@ export function ProfileScreenLayout({
         stickyHeaderIndices={[1]}
         bottomInset="tabBar"
         padBottom="md"
+        onScroll={(event) => {
+          if (activeTab !== 'ads' || !onAdsNearEnd) return;
+          if (isSellerListNearEnd(event.nativeEvent)) onAdsNearEnd();
+        }}
         refreshControl={
           onRefresh ? (
             <RefreshControl

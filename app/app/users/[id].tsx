@@ -1,7 +1,7 @@
 // SAFAT — Public User Profile
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Share, StyleSheet } from 'react-native';
 import { AppText } from '@/design-system/components';
 import { Screen, ScreenBody, Stack } from '@/design-system/layout';
@@ -12,11 +12,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchUserProfile, rateUser, setFollowUser, setBlockUser, type PublicUserProfile } from '@/services/users';
 import { fetchUserPosts } from '@/services/posts';
 import { sarhProfileShareUrl } from '@/constants/sarhOfficial';
-import { searchAllSellerListings } from '@/services/listings';
-import type { Listing } from '@/services/types';
+import { useSellerListingsPager } from '@/hooks/useSellerListingsPager';
 import type { Post } from '@/services/types';
 import { promptReport } from '@/services/reports';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { SellerListingsPaginationFooter } from '@/components/feature/SellerListingsPaginationFooter';
 import { PostItem } from '@/components/feature/PostItem';
 import { ProfileScreenLayout, type ProfileDisplayUser } from '@/components/feature/ProfileScreenLayout';
 import { RatingModal } from '@/components/feature/RatingModal';
@@ -47,7 +47,6 @@ export default function UserProfileScreen() {
 
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
-  const [userListings, setUserListings] = useState<Listing[]>([]);
   const [postsLoadFailed, setPostsLoadFailed] = useState(false);
   const [listingsLoadFailed, setListingsLoadFailed] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -55,6 +54,22 @@ export default function UserProfileScreen() {
   const [ratingVisible, setRatingVisible] = useState(false);
 
   const isOwnProfile = !id || id === me.id;
+  const targetId = id || me.id;
+  const {
+    listings: userListings,
+    hasMore,
+    loadingMore,
+    loadMoreFailed,
+    loadFirstPage,
+    loadNextPage,
+  } = useSellerListingsPager({ sellerId: isOwnProfile ? null : targetId, accessToken });
+  const listingsLoadGen = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      listingsLoadGen.current += 1;
+    };
+  }, []);
 
   const fetchAuthoritativeProfile = useCallback(async () => {
     if (!isAuthenticated || !accessToken) return null;
@@ -66,14 +81,16 @@ export default function UserProfileScreen() {
 
   const loadProfile = useCallback(async () => {
     const targetId = id || me.id;
+    const gen = ++listingsLoadGen.current;
     const data = await fetchAuthoritativeProfile();
-    if (!data) {
+    if (!data || gen !== listingsLoadGen.current) {
       return;
     }
     const [postsResult, listingsResult] = await Promise.allSettled([
       fetchUserPosts(targetId),
-      searchAllSellerListings(targetId, accessToken),
+      loadFirstPage(),
     ]);
+    if (gen !== listingsLoadGen.current) return;
     if (postsResult.status === 'fulfilled') {
       setUserPosts(postsResult.value);
       setPostsLoadFailed(false);
@@ -81,12 +98,11 @@ export default function UserProfileScreen() {
       setPostsLoadFailed(true);
     }
     if (listingsResult.status === 'fulfilled') {
-      setUserListings(listingsResult.value);
       setListingsLoadFailed(false);
     } else {
       setListingsLoadFailed(true);
     }
-  }, [accessToken, fetchAuthoritativeProfile, id, me.id]);
+  }, [fetchAuthoritativeProfile, id, loadFirstPage, me.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -204,15 +220,25 @@ export default function UserProfileScreen() {
       );
     }
 
-    return userListings.map((listing) => (
-      <ListingCard
-        key={listing.id}
-        listing={listing}
-        variant="list"
-        listMode="market"
-        onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
-      />
-    ));
+    return (
+      <>
+        {userListings.map((listing) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            variant="list"
+            listMode="market"
+            onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
+          />
+        ))}
+        <SellerListingsPaginationFooter
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          loadMoreFailed={loadMoreFailed}
+          onLoadMore={() => void loadNextPage()}
+        />
+      </>
+    );
   };
 
   if (!profile) {
@@ -341,6 +367,7 @@ export default function UserProfileScreen() {
         isFollowing={profile.isFollowing}
         postsContent={renderPosts()}
         adsContent={renderAds()}
+        onAdsNearEnd={() => void loadNextPage()}
       />
 
       <RatingModal
