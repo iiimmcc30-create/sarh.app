@@ -28,13 +28,12 @@ describe('home community posts', () => {
     expect(picked[0].createdAt).toBe('2026-09-10T00:00:00.000Z');
   });
 
-  it('renders a community section on Home and records views on post detail', () => {
+  it('renders a community section component with view counts on post detail', () => {
     const home = src('app/(tabs)/index.tsx');
     const section = src('components/feature/HomeCommunityPosts.tsx');
     const postItem = src('components/feature/PostItem.tsx');
     const detail = src('app/post/[id].tsx');
-    expect(home).toContain('<HomeCommunityPosts');
-    expect(home.indexOf('<ExploreSarhSection')).toBeLessThan(home.indexOf('<HomeCommunityPosts'));
+    expect(home).not.toContain('<HomeCommunityPosts');
     expect(section).toContain('مجتمع سرح');
     expect(section).toContain('pickHomeCommunityPosts');
     expect(postItem).toContain('formatCount(post.views ?? 0)');

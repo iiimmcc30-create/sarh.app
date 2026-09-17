@@ -45,12 +45,12 @@ describe('P0 tab empty recovery', () => {
     expect(posts).toContain('force: Boolean(opts?.refresh || opts?.force)');
   });
 
-  it('recovers Home community posts after a failed empty fetch without looping', () => {
-    const home = src('components/feature/HomeCommunityPosts.tsx');
+  it('recovers Home latest listings after a failed empty fetch without looping', () => {
+    const home = src('components/feature/HomeLatestListings.tsx');
     expect(home).toContain('needsFailureRecoveryRef');
     expect(home).toContain('if (inflightRef.current) return');
-    expect(home).toContain('shouldForce ? { force: true } : undefined');
-    expect(home).toContain("fetchPosts('for_you'");
+    expect(home).toContain('getBootstrappedListingsPage');
+    expect(home).toContain('searchListingsPage');
   });
 
   it('does not treat butcher HTTP failures as a successful empty directory', () => {
