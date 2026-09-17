@@ -327,7 +327,7 @@ export class AdminService {
     return this.repo.listButchers(this.parsePagination(query));
   }
 
-  updateButcher(id: string, body: Record<string, unknown>) {
+  async updateButcher(id: string, body: Record<string, unknown>) {
     const parsed = updateButcherSchema.safeParse(body);
     if (!parsed.success) {
       throwApi(
@@ -337,9 +337,18 @@ export class AdminService {
         parsed.error.flatten(),
       );
     }
+    const existing = await this.repo.findButcherById(id);
+    if (!existing) throwApi(404, 'not_found', 'المسلخ غير موجود');
     return this.repo
       .updateButcher(id, parsed.data)
       .then((butcher) => ({ butcher }));
+  }
+
+  async deleteButcher(id: string) {
+    const existing = await this.repo.findButcherById(id);
+    if (!existing) throwApi(404, 'not_found', 'المسلخ غير موجود');
+    await this.repo.softDeleteButcher(id);
+    return { deleted: true, archived: true };
   }
 
   async getButcher(id: string) {

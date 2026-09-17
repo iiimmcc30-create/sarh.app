@@ -1,4 +1,4 @@
-import { apiClient, unwrap } from './api.client';
+import { apiClient, unwrap } from "./api.client";
 
 export type Paginated<T> = {
   items: T[];
@@ -15,13 +15,15 @@ export type ListParams = {
 };
 
 /** Drop empty/invalid list query values so the API receives clean params. */
-export function cleanListParams<T extends Record<string, unknown>>(params: T): Partial<T> {
+export function cleanListParams<T extends Record<string, unknown>>(
+  params: T,
+): Partial<T> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
     if (value === undefined || value === null) continue;
-    if (typeof value === 'string' && value.trim() === '') continue;
-    if (key === 'page' || key === 'pageSize') {
-      const n = typeof value === 'number' ? value : Number(value);
+    if (typeof value === "string" && value.trim() === "") continue;
+    if (key === "page" || key === "pageSize") {
+      const n = typeof value === "number" ? value : Number(value);
       if (!Number.isFinite(n) || n < 1) continue;
       out[key] = Math.floor(n);
       continue;
@@ -33,7 +35,9 @@ export function cleanListParams<T extends Record<string, unknown>>(params: T): P
 }
 
 export async function fetchUsers(params: ListParams = {}) {
-  const res = await apiClient.get('/admin/users', { params: cleanListParams(params) });
+  const res = await apiClient.get("/admin/users", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -52,8 +56,12 @@ export async function deleteUser(id: string) {
   return unwrap(res);
 }
 
-export async function fetchPosts(params: ListParams & { hidden?: string } = {}) {
-  const res = await apiClient.get('/admin/posts', { params: cleanListParams(params) });
+export async function fetchPosts(
+  params: ListParams & { hidden?: string } = {},
+) {
+  const res = await apiClient.get("/admin/posts", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -67,8 +75,12 @@ export async function deletePost(id: string) {
   return unwrap(res);
 }
 
-export async function fetchListings(params: ListParams & { status?: string } = {}) {
-  const res = await apiClient.get('/admin/listings', { params: cleanListParams(params) });
+export async function fetchListings(
+  params: ListParams & { status?: string } = {},
+) {
+  const res = await apiClient.get("/admin/listings", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -78,19 +90,32 @@ export async function updateListing(id: string, data: Record<string, unknown>) {
 }
 
 export async function fetchListingFeeCompliance() {
-  const res = await apiClient.get('/admin/listing-fee-compliance');
+  const res = await apiClient.get("/admin/listing-fee-compliance");
   return unwrap<{
     users: Array<{
-      user: { id: string; username: string; arabicName: string; isActive: boolean };
+      user: {
+        id: string;
+        username: string;
+        arabicName: string;
+        isActive: boolean;
+      };
       deletedUnpaidCount: number;
       outstandingTotal: number;
-      previousActions: Array<{ id: string; action: string; reason: string; createdAt: string }>;
+      previousActions: Array<{
+        id: string;
+        action: string;
+        reason: string;
+        createdAt: string;
+      }>;
     }>;
   }>(res);
 }
 
 export async function closeAccountForListingFees(id: string, reason: string) {
-  const res = await apiClient.post(`/admin/users/${id}/listing-fee-enforcement`, { reason });
+  const res = await apiClient.post(
+    `/admin/users/${id}/listing-fee-enforcement`,
+    { reason },
+  );
   return unwrap(res);
 }
 
@@ -99,8 +124,12 @@ export async function deleteListing(id: string) {
   return unwrap(res);
 }
 
-export async function fetchReports(params: ListParams & { status?: string; category?: string } = {}) {
-  const res = await apiClient.get('/admin/reports', { params: cleanListParams(params) });
+export async function fetchReports(
+  params: ListParams & { status?: string; category?: string } = {},
+) {
+  const res = await apiClient.get("/admin/reports", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -119,8 +148,12 @@ export async function deleteReport(id: string) {
   return unwrap(res);
 }
 
-export async function fetchLiveStreams(params: ListParams & { live?: string } = {}) {
-  const res = await apiClient.get('/admin/livestreams', { params: cleanListParams(params) });
+export async function fetchLiveStreams(
+  params: ListParams & { live?: string } = {},
+) {
+  const res = await apiClient.get("/admin/livestreams", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -135,18 +168,28 @@ export async function deleteLiveStream(id: string) {
 }
 
 export async function fetchButchers(params: ListParams = {}) {
-  const res = await apiClient.get('/admin/butchers', { params: cleanListParams(params) });
+  const res = await apiClient.get("/admin/butchers", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
 export async function fetchButcher(id: string) {
   const res = await apiClient.get(`/admin/butchers/${id}`);
-  return unwrap<{ butcher: Record<string, unknown>; user: Record<string, unknown> }>(res);
+  return unwrap<{
+    butcher: Record<string, unknown>;
+    user: Record<string, unknown>;
+  }>(res);
 }
 
 export async function updateButcher(id: string, data: Record<string, unknown>) {
   const res = await apiClient.patch(`/admin/butchers/${id}`, data);
   return unwrap(res);
+}
+
+export async function deleteButcher(id: string) {
+  const res = await apiClient.delete(`/admin/butchers/${id}`);
+  return unwrap<{ deleted: boolean; archived: boolean }>(res);
 }
 
 export async function fetchOrders(
@@ -159,7 +202,9 @@ export async function fetchOrders(
     orderNumber?: string;
   } = {},
 ) {
-  const res = await apiClient.get('/admin/orders', { params: cleanListParams(params) });
+  const res = await apiClient.get("/admin/orders", {
+    params: cleanListParams(params),
+  });
   return unwrap<Paginated<Record<string, unknown>>>(res);
 }
 
@@ -169,7 +214,7 @@ export async function fetchOrder(id: string) {
 }
 
 export async function fetchApplications(params: Record<string, string> = {}) {
-  const res = await apiClient.get('/admin/butcher-applications', { params });
+  const res = await apiClient.get("/admin/butcher-applications", { params });
   return unwrap(res);
 }
 
@@ -179,13 +224,20 @@ export async function fetchApplication(id: string) {
 }
 
 export async function approveApplication(id: string, comment?: string) {
-  const res = await apiClient.post(`/admin/butcher-applications/${id}/approve`, {
-    ...(comment?.trim() ? { comment: comment.trim() } : {}),
-  });
+  const res = await apiClient.post(
+    `/admin/butcher-applications/${id}/approve`,
+    {
+      ...(comment?.trim() ? { comment: comment.trim() } : {}),
+    },
+  );
   return unwrap(res);
 }
 
-export async function rejectApplication(id: string, rejectionReason: string, comment?: string) {
+export async function rejectApplication(
+  id: string,
+  rejectionReason: string,
+  comment?: string,
+) {
   const res = await apiClient.post(`/admin/butcher-applications/${id}/reject`, {
     rejectionReason: rejectionReason.trim(),
     ...(comment?.trim() ? { comment: comment.trim() } : {}),
@@ -194,22 +246,27 @@ export async function rejectApplication(id: string, rejectionReason: string, com
 }
 
 export async function fetchSettings() {
-  const res = await apiClient.get('/admin/settings');
+  const res = await apiClient.get("/admin/settings");
   return unwrap<{ settings: Record<string, unknown>[] }>(res);
 }
 
-export async function updateSetting(data: { key: string; value: unknown; labelAr?: string; category?: string }) {
-  const res = await apiClient.put('/admin/settings', data);
+export async function updateSetting(data: {
+  key: string;
+  value: unknown;
+  labelAr?: string;
+  category?: string;
+}) {
+  const res = await apiClient.put("/admin/settings", data);
   return unwrap(res);
 }
 
 export async function fetchSections() {
-  const res = await apiClient.get('/admin/sections');
+  const res = await apiClient.get("/admin/sections");
   return unwrap<{ sections: Record<string, unknown>[] }>(res);
 }
 
 export async function createSection(data: Record<string, unknown>) {
-  const res = await apiClient.post('/admin/sections', data);
+  const res = await apiClient.post("/admin/sections", data);
   return unwrap(res);
 }
 
@@ -245,16 +302,21 @@ export async function unpublishSection(id: string) {
 
 export async function fetchSectionVersions(id: string) {
   const res = await apiClient.get(`/admin/sections/${id}/versions`);
-  return unwrap<{ section: Record<string, unknown>; versions: Record<string, unknown>[] }>(res);
+  return unwrap<{
+    section: Record<string, unknown>;
+    versions: Record<string, unknown>[];
+  }>(res);
 }
 
 export async function restoreSectionVersion(id: string, versionId: string) {
-  const res = await apiClient.post(`/admin/sections/${id}/restore/${versionId}`);
+  const res = await apiClient.post(
+    `/admin/sections/${id}/restore/${versionId}`,
+  );
   return unwrap(res);
 }
 
 export async function seedPolicies() {
-  const res = await apiClient.post('/content/seed-policies');
+  const res = await apiClient.post("/content/seed-policies");
   return unwrap(res);
 }
 
@@ -265,7 +327,7 @@ export type AdminPlan = {
   slug: string;
   name: string;
   description: string;
-  audience: 'USER' | 'BUTCHER';
+  audience: "USER" | "BUTCHER";
   monthlyPrice: number;
   yearlyPrice: number;
   currency: string;
@@ -276,7 +338,7 @@ export type AdminPlan = {
     id?: string;
     key: string;
     value: string;
-    valueType: 'BOOLEAN' | 'NUMBER' | 'STRING' | 'JSON';
+    valueType: "BOOLEAN" | "NUMBER" | "STRING" | "JSON";
   }>;
 };
 
@@ -284,13 +346,13 @@ export type PlanFeatureCatalogItem = {
   key: string;
   labelAr: string;
   descriptionAr: string;
-  valueType: 'BOOLEAN' | 'NUMBER' | 'STRING' | 'JSON';
-  audiences: Array<'USER' | 'BUTCHER'>;
+  valueType: "BOOLEAN" | "NUMBER" | "STRING" | "JSON";
+  audiences: Array<"USER" | "BUTCHER">;
   suggestedValue?: string;
 };
 
-export async function fetchPlans(audience?: 'USER' | 'BUTCHER') {
-  const res = await apiClient.get('/admin/plans', {
+export async function fetchPlans(audience?: "USER" | "BUTCHER") {
+  const res = await apiClient.get("/admin/plans", {
     params: audience ? { audience } : undefined,
   });
   return unwrap<{ plans: AdminPlan[] }>(res);
@@ -301,15 +363,15 @@ export async function fetchPlan(id: string) {
   return unwrap<{ plan: AdminPlan }>(res);
 }
 
-export async function fetchPlanFeatureCatalog(audience?: 'USER' | 'BUTCHER') {
-  const res = await apiClient.get('/admin/plans/feature-catalog/list', {
+export async function fetchPlanFeatureCatalog(audience?: "USER" | "BUTCHER") {
+  const res = await apiClient.get("/admin/plans/feature-catalog/list", {
     params: audience ? { audience } : undefined,
   });
   return unwrap<{ features: PlanFeatureCatalogItem[] }>(res);
 }
 
 export async function createPlan(data: Record<string, unknown>) {
-  const res = await apiClient.post('/admin/plans', data);
+  const res = await apiClient.post("/admin/plans", data);
   return unwrap(res);
 }
 
@@ -335,7 +397,7 @@ export async function deletePlan(id: string) {
 
 export type DaftraStatus = {
   butcherId: string;
-  status: 'NOT_CONFIGURED' | 'CONNECTED' | 'CONNECTION_FAILED' | 'DISABLED';
+  status: "NOT_CONFIGURED" | "CONNECTED" | "CONNECTION_FAILED" | "DISABLED";
   accountIdentifier: string | null;
   apiKeyMasked: string | null;
   lastConnectionTestAt: string | null;
@@ -367,7 +429,10 @@ export async function testDaftraConnection(
   butcherId: string,
   data: { sendInvite?: boolean; invitePassword?: string } = {},
 ) {
-  const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/test`, data);
+  const res = await apiClient.post(
+    `/admin/butchers/${butcherId}/daftra/test`,
+    data,
+  );
   return unwrap<{
     status: DaftraStatus;
     messageAr: string;
@@ -377,7 +442,9 @@ export async function testDaftraConnection(
 }
 
 export async function disableDaftra(butcherId: string) {
-  const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/disable`);
+  const res = await apiClient.post(
+    `/admin/butchers/${butcherId}/daftra/disable`,
+  );
   return unwrap<DaftraStatus>(res);
 }
 
@@ -390,18 +457,32 @@ export type DaftraCatalogProduct = {
 };
 
 export async function fetchDaftraProducts(butcherId: string) {
-  const res = await apiClient.get(`/admin/butchers/${butcherId}/daftra/products`, {
-    params: { page: 1, limit: 20 },
-  });
-  return unwrap<{ items: DaftraCatalogProduct[]; page: number; totalResults: number }>(res);
+  const res = await apiClient.get(
+    `/admin/butchers/${butcherId}/daftra/products`,
+    {
+      params: { page: 1, limit: 20 },
+    },
+  );
+  return unwrap<{
+    items: DaftraCatalogProduct[];
+    page: number;
+    totalResults: number;
+  }>(res);
 }
 
 export async function fetchDaftraInventory(butcherId: string) {
-  const res = await apiClient.get(`/admin/butchers/${butcherId}/daftra/inventory`, {
-    params: { page: 1, limit: 20 },
-  });
+  const res = await apiClient.get(
+    `/admin/butchers/${butcherId}/daftra/inventory`,
+    {
+      params: { page: 1, limit: 20 },
+    },
+  );
   return unwrap<{
-    items: Array<{ productId: number; name: string | null; quantity: number | null }>;
+    items: Array<{
+      productId: number;
+      name: string | null;
+      quantity: number | null;
+    }>;
     totalResults: number;
   }>(res);
 }
@@ -416,6 +497,8 @@ export type DaftraProductSyncResult = {
 };
 
 export async function syncDaftraProducts(butcherId: string) {
-  const res = await apiClient.post(`/admin/butchers/${butcherId}/daftra/products/sync`);
+  const res = await apiClient.post(
+    `/admin/butchers/${butcherId}/daftra/products/sync`,
+  );
   return unwrap<DaftraProductSyncResult>(res);
 }

@@ -1,17 +1,18 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { fetchButcher } from '@/services/admin.service';
-import { DaftraIntegrationPanel } from '@/components/butchers/DaftraIntegrationPanel';
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { fetchButcher, deleteButcher } from "@/services/admin.service";
+import { getApiErrorMessage } from "@/services/api.client";
+import { DaftraIntegrationPanel } from "@/components/butchers/DaftraIntegrationPanel";
 
 function fmtDate(v: unknown) {
-  if (!v) return '—';
+  if (!v) return "—";
   const d = new Date(String(v));
-  return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleString('ar-SA');
+  return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleString("ar-SA");
 }
 
 function Field({
@@ -23,17 +24,26 @@ function Field({
   value?: unknown;
   children?: React.ReactNode;
 }) {
-  const content = children ?? (value == null || value === '' ? '—' : String(value));
-  const isEmpty = content == null || content === '' || content === '—';
+  const content =
+    children ?? (value == null || value === "" ? "—" : String(value));
+  const isEmpty = content == null || content === "" || content === "—";
   return (
     <div>
       <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-slate-200">{isEmpty ? '—' : content}</dd>
+      <dd className="mt-0.5 text-sm text-slate-200">
+        {isEmpty ? "—" : content}
+      </dd>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
       <h3 className="mb-3 text-sm font-semibold text-emerald-400">{title}</h3>
@@ -47,24 +57,34 @@ type Props = {
   open: boolean;
   onClose: () => void;
   verifiedJustNow?: boolean;
+  onEdit?: (id: string) => void;
+  onDeleted?: () => void;
 };
 
-export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }: Props) {
+export function ButcherDetailModal({
+  butcherId,
+  open,
+  onClose,
+  verifiedJustNow,
+  onEdit,
+  onDeleted,
+}: Props) {
   const [butcher, setButcher] = useState<Record<string, unknown> | null>(null);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     if (!butcherId) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const data = await fetchButcher(butcherId);
       setButcher(data.butcher);
       setUser(data.user);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'تعذّر تحميل التفاصيل');
+      setError(e instanceof Error ? e.message : "تعذّر تحميل التفاصيل");
     } finally {
       setLoading(false);
     }
@@ -75,7 +95,7 @@ export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }
     if (!open) {
       setButcher(null);
       setUser(null);
-      setError('');
+      setError("");
     }
   }, [open, butcherId, load]);
 
@@ -86,11 +106,13 @@ export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }
     <Modal
       open={open}
       onClose={onClose}
-      title={butcher ? String(butcher.nameAr ?? 'تفاصيل المسلخ') : 'تفاصيل المسلخ'}
+      title={
+        butcher ? String(butcher.nameAr ?? "تفاصيل المسلخ") : "تفاصيل المسلخ"
+      }
       description={
         verifiedJustNow
-          ? 'تم التوثيق بنجاح — مراجعة بيانات المسلخ والمالك'
-          : 'بيانات المسلخ والمستخدم المالك'
+          ? "تم التوثيق بنجاح — مراجعة بيانات المسلخ والمالك"
+          : "بيانات المسلخ والمستخدم المالك"
       }
       size="xl"
     >
@@ -112,13 +134,19 @@ export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }
             <Field label="العنوان" value={butcher.addressAr} />
             <Field label="الهاتف" value={butcher.phone} />
             <Field label="النوع">
-              <Badge tone={butcher.type === 'verified' ? 'success' : 'default'}>
+              <Badge tone={butcher.type === "verified" ? "success" : "default"}>
                 {String(butcher.type)}
               </Badge>
             </Field>
-            <Field label="مفتوح الآن" value={butcher.isOpen ? 'نعم' : 'لا'} />
-            <Field label="ساعات العمل" value={`${butcher.openTime} – ${butcher.closeTime}`} />
-            <Field label="التقييم" value={`${butcher.rating} (${butcher.reviewCount} تقييم)`} />
+            <Field label="مفتوح الآن" value={butcher.isOpen ? "نعم" : "لا"} />
+            <Field
+              label="ساعات العمل"
+              value={`${butcher.openTime} – ${butcher.closeTime}`}
+            />
+            <Field
+              label="التقييم"
+              value={`${butcher.rating} (${butcher.reviewCount} تقييم)`}
+            />
             <Field label="إجمالي الطلبات" value={butcher.totalOrders} />
             <Field label="السجل التجاري" value={butcher.commercialReg} />
             <Field label="تاريخ التسجيل" value={fmtDate(butcher.createdAt)} />
@@ -139,10 +167,13 @@ export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }
             <Field label="الدولة" value={user.country} />
             <Field
               label="حالة الحساب"
-              value={user.isActive ? 'نشط' : 'محظور'}
+              value={user.isActive ? "نشط" : "محظور"}
             />
-            <Field label="موثّق" value={user.verified ? 'نعم' : 'لا'} />
-            <Field label="البريد مُفعّل" value={user.emailVerified ? 'نعم' : 'لا'} />
+            <Field label="موثّق" value={user.verified ? "نعم" : "لا"} />
+            <Field
+              label="البريد مُفعّل"
+              value={user.emailVerified ? "نعم" : "لا"}
+            />
             <Field label="آخر ظهور" value={fmtDate(user.lastSeenAt)} />
             <Field label="تاريخ الانضمام" value={fmtDate(user.createdAt)} />
             {user.bio ? <Field label="نبذة" value={user.bio} /> : null}
@@ -161,11 +192,48 @@ export function ButcherDetailModal({ butcherId, open, onClose, verifiedJustNow }
           {butcherId ? <DaftraIntegrationPanel butcherId={butcherId} /> : null}
 
           <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4">
+            {onEdit && butcherId ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onEdit(butcherId)}
+              >
+                تعديل الملحمة
+              </Button>
+            ) : null}
             <Link href={`/users/${String(user.id)}`}>
               <Button variant="secondary" size="sm">
                 صفحة المستخدم الكاملة
               </Button>
             </Link>
+            {onDeleted && butcherId ? (
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={deleting}
+                onClick={async () => {
+                  if (
+                    !confirm(
+                      `أرشفة الملحمة «${String(butcher.nameAr ?? "")}»؟ ستختفي من التطبيق مع منتجاتها وعروضها، وتُحفظ الطلبات التاريخية.`,
+                    )
+                  ) {
+                    return;
+                  }
+                  setDeleting(true);
+                  setError("");
+                  try {
+                    await deleteButcher(butcherId);
+                    onDeleted();
+                  } catch (e: unknown) {
+                    setError(getApiErrorMessage(e, "تعذّر أرشفة الملحمة"));
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {deleting ? "جارٍ الحذف..." : "حذف / أرشفة"}
+              </Button>
+            ) : null}
             <Button variant="ghost" size="sm" onClick={onClose}>
               إغلاق
             </Button>
