@@ -68,7 +68,6 @@ describe('P3 performance — lists images state', () => {
     const home = src('app/(tabs)/index.tsx');
     expect(home).toContain('useAppUser');
     expect(home).not.toContain('useApp()');
-    expect(home).toContain('if (!hasStoriesData.current) setStoriesLoading(true)');
   });
 
   it('does not add Reanimated or FlashList as production dependencies', () => {

@@ -3,17 +3,20 @@ import { NotificationBellButton } from '@/components/notifications/NotificationB
 import { ds } from '@/constants/designSystem';
 import { type ThemeColors } from '@/constants/theme';
 import { radius, space } from '@/design-system';
-import { AppText, SarhAvatar, SarhIconButton, SarhSurface } from '@/design-system/components';
+import { AppText, SarhAvatar, SarhSurface } from '@/design-system/components';
 import { Row } from '@/design-system/layout';
 import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { Pressable, StyleSheet } from 'react-native';
+import { HOME_SEARCH_PLACEHOLDER } from '@/lib/homeQuickAccess';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
 const BAR_H = HOME_APP_BAR_H;
 const TOOL = space[48];
 const ICON_SIZE = space[20];
+const SEARCH_H = space[48];
+const SEARCH_ICON = space[20];
 
 type HomeAppBarProps = {
   onSearch: () => void;
@@ -23,7 +26,7 @@ type HomeAppBarProps = {
   avatarUri?: string | null;
 };
 
-/** Home header: avatar + name at the start (right in RTL), search + notifications opposite. */
+/** Home header: avatar + name + notifications, then a full-width search field. */
 export function HomeAppBar({
   onSearch,
   onProfilePress,
@@ -37,57 +40,64 @@ export function HomeAppBar({
 
   return (
     <SarhSurface tone="background" style={[styles.shell, colorStyles.shell]}>
-      <Row justify="between" align="center" style={[styles.bar, { paddingHorizontal: gutter }]}>
-        <Row align="center" gap="md" style={styles.profileCluster}>
-          <Pressable
-            onPress={onAvatarPress}
-            style={styles.avatarBtn}
-            hitSlop={space[4]}
-            accessibilityRole="button"
-            accessibilityLabel="القائمة الجانبية"
-          >
-            <SarhAvatar
-              uri={avatarUri}
-              name={displayName}
-              size="md"
+      <View style={[styles.inner, { paddingHorizontal: gutter }]}>
+        <Row justify="between" align="center" style={styles.bar}>
+          <Row align="center" gap="md" style={styles.profileCluster}>
+            <Pressable
+              onPress={onAvatarPress}
+              style={styles.avatarBtn}
+              hitSlop={space[4]}
+              accessibilityRole="button"
+              accessibilityLabel="القائمة الجانبية"
+            >
+              <SarhAvatar
+                uri={avatarUri}
+                name={displayName}
+                size="md"
+                accessibilityLabel={displayName}
+                style={[styles.avatar, colorStyles.avatar]}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={onProfilePress}
+              style={styles.nameTap}
+              hitSlop={space[4]}
+              accessibilityRole="button"
               accessibilityLabel={displayName}
-              style={[styles.avatar, colorStyles.avatar]}
+            >
+              <AppText variant="heading3" color="textPrimary" numberOfLines={1} ellipsizeMode="tail">
+                {displayName}
+              </AppText>
+            </Pressable>
+          </Row>
+
+          <Row align="center" gap="xs" style={styles.toolsCluster}>
+            <NotificationBellButton
+              bare
+              size={TOOL}
+              iconSize={ICON_SIZE}
+              style={styles.iconBtn}
+              iconColor={themeColors.textPrimary}
+              badgeBorderColor={themeColors.screenRoot}
             />
-          </Pressable>
+          </Row>
+        </Row>
 
-          <Pressable
-            onPress={onProfilePress}
-            style={styles.nameTap}
-            hitSlop={space[4]}
-            accessibilityRole="button"
-            accessibilityLabel={displayName}
-          >
-            <AppText variant="heading3" color="textPrimary" numberOfLines={1} ellipsizeMode="tail">
-              {displayName}
+        <Pressable
+          onPress={onSearch}
+          style={[styles.searchBar, colorStyles.searchBar]}
+          accessibilityRole="search"
+          accessibilityLabel={HOME_SEARCH_PLACEHOLDER}
+        >
+          <Row align="center" gap="sm" fill>
+            <AppIcon name="search" size={SEARCH_ICON} color={themeColors.textMuted} />
+            <AppText variant="bodySmall" color="textMuted" numberOfLines={1} style={styles.searchPlaceholder}>
+              {HOME_SEARCH_PLACEHOLDER}
             </AppText>
-          </Pressable>
-        </Row>
-
-        <Row align="center" gap="xs" style={styles.toolsCluster}>
-          <SarhIconButton
-            chrome="ghost"
-            size="sm"
-            accessibilityLabel="بحث"
-            onPress={onSearch}
-            style={styles.iconBtn}
-          >
-            <AppIcon name="search" size={ICON_SIZE} color={themeColors.textPrimary} />
-          </SarhIconButton>
-          <NotificationBellButton
-            bare
-            size={TOOL}
-            iconSize={ICON_SIZE}
-            style={styles.iconBtn}
-            iconColor={themeColors.textPrimary}
-            badgeBorderColor={themeColors.screenRoot}
-          />
-        </Row>
-      </Row>
+          </Row>
+        </Pressable>
+      </View>
     </SarhSurface>
   );
 }
@@ -99,6 +109,10 @@ function createColorStyles(colors: ThemeColors) {
       borderColor: colors.electric,
       backgroundColor: colors.bgField,
     },
+    searchBar: {
+      backgroundColor: colors.bgField,
+      borderColor: colors.borderSoft,
+    },
   });
 }
 
@@ -108,12 +122,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  inner: {
+    width: '100%',
+    paddingTop: space[8],
+    paddingBottom: space[12],
+    gap: space[12],
+  },
   bar: {
     width: '100%',
     minHeight: BAR_H,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: space[12],
   },
   toolsCluster: {
     alignItems: 'center',
@@ -151,6 +170,18 @@ const styles = StyleSheet.create({
     height: space[40],
     borderRadius: radius[999],
     borderWidth: 2,
+  },
+  searchBar: {
+    width: '100%',
+    height: SEARCH_H,
+    paddingHorizontal: space[16],
+    borderRadius: radius[999],
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+  },
+  searchPlaceholder: {
+    flex: 1,
+    minWidth: 0,
   },
 });
 

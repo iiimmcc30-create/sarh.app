@@ -85,10 +85,9 @@ describe('Explore Sarh logo mark', () => {
       path.join(__dirname, '../lib/exploreSarhBanners.ts'),
       'utf8',
     );
-    expect(section).toContain('استكشف سرح');
     expect(section).toContain('fetchExploreSarhBanners');
-    expect(section).toContain('FALLBACK_EXPLORE_SARH_BANNERS');
-    expect(section).toContain('safePush(banner.href');
+    expect(section).not.toContain('FALLBACK_EXPLORE_SARH_BANNERS');
+    expect(section).toContain('HOME_BANNER_CTA_HREF');
     expect(section).toContain('pagingEnabled');
     expect(section).toContain('accessibilityRole="button"');
     expect(fallback).toContain('ملاحم سرح');
@@ -99,8 +98,8 @@ describe('Explore Sarh logo mark', () => {
     expect(fallback).toContain('خدمات وزارة البيئة والمياه والزراعة');
     expect(fallback).toContain('explore-sarh-feed-suppliers.jpg');
     expect(fallback).toContain('explore-sarh-ministry.jpg');
-    expect(section).not.toContain('SarhButton');
-    expect(section).not.toContain('تصفح الملاحم');
+    expect(section).toContain('SarhButton');
+    expect(section).toContain('HOME_BANNER_CTA_LABEL');
     expect(section).not.toContain('CARD_RADIUS');
     expect(section).not.toContain('partitionExploreSections');
     expect(section).not.toContain('gridRow');
@@ -160,22 +159,23 @@ describe('progressive register screen', () => {
 });
 
 describe('HomeAppBar chrome', () => {
-  it('uses flat home header with notifications, search icon, and profile identity', () => {
+  it('uses flat home header with notifications, search bar, and profile identity', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
       'utf8',
     );
     const avatarAt = src.indexOf('accessibilityLabel="القائمة الجانبية"');
-    const searchAt = src.indexOf('accessibilityLabel="بحث"');
     const bellAt = src.indexOf('<NotificationBellButton');
+    const searchAt = src.indexOf('accessibilityRole="search"');
     expect(avatarAt).toBeGreaterThan(-1);
-    expect(searchAt).toBeGreaterThan(avatarAt);
-    expect(bellAt).toBeGreaterThan(searchAt);
+    expect(bellAt).toBeGreaterThan(avatarAt);
+    expect(searchAt).toBeGreaterThan(bellAt);
     expect(src).toContain('onAvatarPress');
+    expect(src).toContain('styles.searchBar');
+    expect(src).toContain('HOME_SEARCH_PLACEHOLDER');
     expect(src).not.toContain('HomeProfileMenu');
     expect(src).not.toContain('angle-down');
     expect(src).not.toContain("direction: 'ltr'");
-    expect(src).not.toContain('styles.searchBar');
     expect(src).not.toContain('more-vertical');
     expect(src).toContain('bare');
     expect(src).toContain('backgroundColor: \'transparent\'');
@@ -242,7 +242,7 @@ describe('HomeAppBar chrome', () => {
     expect(src).not.toContain('menuCardStyle');
   });
 
-  it('opens ministry services from the explore banner pager', () => {
+  it('opens ministry services from home quick access, not a new route', () => {
     const home = fs.readFileSync(path.join(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
     const explore = fs.readFileSync(
       path.join(__dirname, '../components/feature/ExploreSarhSection.tsx'),
@@ -252,9 +252,15 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../lib/exploreSarhBanners.ts'),
       'utf8',
     );
+    const quick = fs.readFileSync(
+      path.join(__dirname, '../lib/homeQuickAccess.ts'),
+      'utf8',
+    );
     expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('أحدث المنشورات');
-    expect(home).toContain('HomeCommunityPosts');
+    expect(home).toContain('HomeQuickAccess');
+    expect(quick).toContain("pathname: '/ministry'");
+    expect(quick).toContain("tab: 'services'");
     expect(fallback).toContain("href: '/ministry'");
     expect(fallback).toContain('خدمات وزارة البيئة والمياه والزراعة');
     expect(fallback).toContain('explore-sarh-ministry.jpg');
@@ -285,18 +291,28 @@ describe('Home design-system adoption', () => {
     path.join(__dirname, '../components/feature/ListingCard.tsx'),
     'utf8',
   );
+  const quick = fs.readFileSync(
+    path.join(__dirname, '../components/feature/HomeQuickAccess.tsx'),
+    'utf8',
+  );
+  const listings = fs.readFileSync(
+    path.join(__dirname, '../components/feature/HomeLatestListings.tsx'),
+    'utf8',
+  );
 
   it('uses SarhSurface, AppText, and matching primitives on Home-owned files', () => {
     expect(home).toContain("from '@/design-system/layout'");
     expect(home).toContain('<Screen');
     expect(home).toContain('<ScreenBody');
     expect(appBar).toContain('SarhAvatar');
-    expect(appBar).toContain('SarhIconButton');
-    expect(appBar).toContain('chrome="ghost"');
+    expect(appBar).toContain('NotificationBellButton');
     expect(appBar).toContain('variant="heading3"');
+    expect(appBar).toContain('styles.searchBar');
     expect(explore).toContain('AppText');
     expect(explore).toContain('variant="heading2"');
-    expect(explore).toContain('استكشف سرح');
+    expect(explore).toContain('SarhButton');
+    expect(quick).toContain('الوصول السريع');
+    expect(listings).toContain('أحدث الإعلانات');
     expect(community).toContain('مجتمع سرح');
     expect(community).toContain('pickHomeCommunityPosts');
     expect(community).toContain('PostItem');
@@ -306,7 +322,7 @@ describe('Home design-system adoption', () => {
   });
 
   it('does not remap Home copy through the legacy Bold AppText path', () => {
-    for (const src of [appBar, explore, community, stories]) {
+    for (const src of [appBar, explore, community, stories, quick, listings]) {
       expect(src).not.toContain("from '@/components/ui/AppText'");
       expect(src).not.toContain('OFFICIAL_APP_FONT');
       expect(src).not.toContain('resolveAppFontFace');
@@ -333,7 +349,7 @@ describe('Home design-system adoption', () => {
     expect(exploreFallback).toContain("accessibilityLabel: 'ملاحم سرح'");
     expect(community).toContain('مجتمع سرح');
     expect(stories).toContain('accessibilityRole="button"');
-    expect(appBar).toContain('accessibilityLabel="بحث"');
+    expect(appBar).toContain('accessibilityRole="search"');
   });
 
   it('does not introduce a second Home-only primitive set', () => {
@@ -343,19 +359,20 @@ describe('Home design-system adoption', () => {
     expect(community).not.toContain('PrimaryButton');
   });
 
-  it('keeps the existing Home section order and does not invent new sections', () => {
-    const storiesAt = home.indexOf('<EditorialStoriesBar');
+  it('keeps the launch Home section order', () => {
     const exploreAt = home.indexOf('<ExploreSarhSection');
-    const communityAt = home.indexOf('<HomeCommunityPosts');
-    expect(storiesAt).toBeGreaterThan(-1);
-    expect(exploreAt).toBeGreaterThan(storiesAt);
-    expect(communityAt).toBeGreaterThan(exploreAt);
-    expect(home).not.toContain('ListingCard');
-    expect(home).not.toContain('Marketplace');
+    const quickAt = home.indexOf('<HomeQuickAccess');
+    const suppliersAt = home.indexOf('<HomeFeedSuppliers');
+    const listingsAt = home.indexOf('<HomeLatestListings');
+    expect(exploreAt).toBeGreaterThan(-1);
+    expect(quickAt).toBeGreaterThan(exploreAt);
+    expect(suppliersAt).toBeGreaterThan(quickAt);
+    expect(listingsAt).toBeGreaterThan(suppliersAt);
     expect(home).not.toContain('HomeMinistryOrgCard');
-    expect(explore).toContain('استكشف سرح');
+    expect(home).not.toContain('<EditorialStoriesBar');
+    expect(home).not.toContain('<HomeCommunityPosts');
     expect(explore).toContain('fetchExploreSarhBanners');
-    expect(explore).toContain('FALLBACK_EXPLORE_SARH_BANNERS');
+    expect(explore).not.toContain('FALLBACK_EXPLORE_SARH_BANNERS');
     expect(exploreFallback).toContain('ملاحم سرح');
     expect(exploreFallback).toContain('explore-sarh-butchers.jpg');
     expect(exploreFallback).toContain("href: '/butchers'");
