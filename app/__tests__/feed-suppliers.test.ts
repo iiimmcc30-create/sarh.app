@@ -48,16 +48,16 @@ describe('feed supplier screens stay a public directory', () => {
     expect(sidebar).toContain("route: '/feed-suppliers'");
   });
 
-  it('opens the directory from the home explore banner', () => {
+  it('opens the directory from home quick access and keeps CMS banners', () => {
     expect(exploreFallback.indexOf("href: '/butchers'")).toBeLessThan(
       exploreFallback.indexOf("href: '/feed-suppliers'"),
     );
     expect(exploreFallback.indexOf("href: '/feed-suppliers'")).toBeLessThan(
       exploreFallback.indexOf("href: '/ministry'"),
     );
-    expect(explore).toContain('استكشف سرح');
     expect(explore).toContain('fetchExploreSarhBanners');
     expect(exploreFallback).toContain('explore-sarh-feed-suppliers.jpg');
+    expect(src('lib/homeQuickAccess.ts')).toContain("href: '/feed-suppliers'");
     expect(explore).not.toContain('تصفح واستكشف أبرز الموردين');
   });
 

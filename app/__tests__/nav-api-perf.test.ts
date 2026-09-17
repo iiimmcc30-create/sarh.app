@@ -14,15 +14,15 @@ describe('tab navigation API performance', () => {
     expect(pkg).not.toContain('"swr"');
   });
 
-  it('reuses a fresh posts feed from memory instead of refetching on every Home focus', () => {
+  it('reuses a fresh listings bootstrap instead of refetching on every Home focus', () => {
     const ctx = src('contexts/AppContext.tsx');
     expect(ctx).toContain('shouldReuseFreshResult(postsLastSuccessAt.get(inflightKey), REFETCH_TTL_MS, options?.force)');
     expect(ctx).toContain('postsCacheByFeed');
     expect(ctx).toContain('postsApplyGenerationByFeed');
     expect(ctx).toContain('hydratePostsFeed');
     expect(ctx).toContain("fetchPosts('for_you', { force })");
-    expect(src('components/feature/HomeCommunityPosts.tsx')).toContain("fetchPosts('for_you'");
-    expect(src('components/feature/HomeCommunityPosts.tsx')).toContain('needsFailureRecoveryRef');
+    expect(src('components/feature/HomeLatestListings.tsx')).toContain('getBootstrappedListingsPage');
+    expect(src('components/feature/HomeLatestListings.tsx')).toContain('needsFailureRecoveryRef');
   });
 
   it('skips profile seller listing walks when the same user was loaded within TTL', () => {

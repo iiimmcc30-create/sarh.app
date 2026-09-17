@@ -1,12 +1,14 @@
 import { Image } from '@/components/ui/AppImage';
-import { colors, elevation, motion, radius, space } from '@/design-system';
-import { AppText } from '@/design-system/components';
+import { colors, functional, radius, space } from '@/design-system';
+import { AppText, SarhButton } from '@/design-system/components';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { type ExploreSarhBannerView } from '@/lib/exploreSarhBanners';
 import {
-  FALLBACK_EXPLORE_SARH_BANNERS,
-  type ExploreSarhBannerView,
-} from '@/lib/exploreSarhBanners';
+  HOME_BANNER_CTA_HREF,
+  HOME_BANNER_CTA_LABEL,
+  HOME_BANNER_SUBTITLE_AR,
+} from '@/lib/homeQuickAccess';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchExploreSarhBanners } from '@/services/exploreSarhBanners';
 import { useRouter } from 'expo-router';
@@ -22,19 +24,23 @@ import {
 } from 'react-native';
 
 const AUTO_ADVANCE_MS = 5000;
-const BANNER_ASPECT = 1376 / 768;
+const BANNER_ASPECT = 16 / 9;
+
+function bannerSubtitle(banner: ExploreSarhBannerView): string | null {
+  if (banner.href === HOME_BANNER_CTA_HREF) return HOME_BANNER_SUBTITLE_AR;
+  return null;
+}
 
 export function ExploreSarhSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { gutter } = useLayout();
   const styles = useThemedStyles(() => createStyles());
-  const [banners, setBanners] = useState<ExploreSarhBannerView[]>(
-    FALLBACK_EXPLORE_SARH_BANNERS,
-  );
+  const [banners, setBanners] = useState<ExploreSarhBannerView[]>([]);
   const [index, setIndex] = useState(0);
   const scroller = useRef<ScrollView>(null);
   const slideWidth = width;
+  const bannerWidth = slideWidth - gutter * 2;
   const indexRef = useRef(index);
   const bannersRef = useRef(banners);
   indexRef.current = index;
@@ -72,14 +78,10 @@ export function ExploreSarhSection() {
     return () => clearInterval(timer);
   }, [slideWidth, banners.length]);
 
+  const openButchers = () => safePush(HOME_BANNER_CTA_HREF, undefined, router);
+
   return (
     <View style={styles.wrap}>
-      <View style={[styles.sectionHead, { paddingHorizontal: gutter }]}>
-        <AppText variant="heading2" color="textPrimary">
-          استكشف سرح
-        </AppText>
-      </View>
-
       <ScrollView
         ref={scroller}
         horizontal
@@ -89,43 +91,68 @@ export function ExploreSarhSection() {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {banners.map((banner) => (
-          <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={banner.accessibilityLabel}
-              onPress={() => safePush(banner.href, undefined, router)}
-              style={({ pressed }) => [
-                styles.banner,
-                { width: slideWidth - gutter * 2 },
-                pressed && styles.pressed,
-              ]}
-            >
-              <Image
-                source={banner.image}
-                style={styles.image}
-                contentFit="cover"
-                pointerEvents="none"
-              />
-            </Pressable>
-          </View>
-        ))}
+        {banners.map((banner) => {
+          const subtitle = bannerSubtitle(banner);
+          return (
+            <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
+              <View
+                style={[styles.banner, { width: bannerWidth }]}
+                accessibilityRole="image"
+                accessibilityLabel={banner.accessibilityLabel}
+              >
+                <Image
+                  source={banner.image}
+                  style={styles.image}
+                  contentFit="cover"
+                  pointerEvents="none"
+                />
+                <View pointerEvents="none" style={styles.scrim} />
+                <View style={styles.copy}>
+                  <AppText
+                    variant="heading2"
+                    numberOfLines={2}
+                    style={styles.title}
+                  >
+                    {banner.accessibilityLabel}
+                  </AppText>
+                  {subtitle ? (
+                    <AppText variant="bodySmall" numberOfLines={2} style={styles.subtitle}>
+                      {subtitle}
+                    </AppText>
+                  ) : null}
+                  <View style={styles.ctaWrap}>
+                    <SarhButton
+                      title={HOME_BANNER_CTA_LABEL}
+                      size="sm"
+                      shape="pill"
+                      leftIcon="angle-left"
+                      accessibilityLabel={HOME_BANNER_CTA_LABEL}
+                      onPress={openButchers}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          );
+        })}
       </ScrollView>
 
-      <View style={styles.dots}>
-        {banners.map((banner, i) => (
-          <Pressable
-            key={banner.id}
-            accessibilityRole="button"
-            accessibilityLabel={`بنر ${i + 1} من ${banners.length}`}
-            onPress={() => {
-              setIndex(i);
-              scroller.current?.scrollTo({ x: i * slideWidth, animated: true });
-            }}
-            style={[styles.dot, i === index && styles.dotActive]}
-          />
-        ))}
-      </View>
+      {banners.length > 1 ? (
+        <View style={[styles.dots, { paddingHorizontal: gutter }]}>
+          {banners.map((banner, i) => (
+            <Pressable
+              key={banner.id}
+              accessibilityRole="button"
+              accessibilityLabel={`بنر ${i + 1} من ${banners.length}`}
+              onPress={() => {
+                setIndex(i);
+                scroller.current?.scrollTo({ x: i * slideWidth, animated: true });
+              }}
+              style={[styles.dot, i === index && styles.dotActive]}
+            />
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -133,11 +160,8 @@ export function ExploreSarhSection() {
 function createStyles() {
   return StyleSheet.create({
     wrap: {
-      paddingBottom: space[16],
-    },
-    sectionHead: {
-      paddingTop: space[16],
-      paddingBottom: space[12],
+      paddingTop: space[12],
+      paddingBottom: space[8],
     },
     slide: {
       alignItems: 'center',
@@ -147,13 +171,29 @@ function createStyles() {
       borderRadius: radius[20],
       overflow: 'hidden',
       backgroundColor: colors.surfaceElevated,
-      ...elevation.raised,
     },
     image: {
       ...StyleSheet.absoluteFillObject,
     },
-    pressed: {
-      opacity: motion.opacity.pressed,
+    scrim: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: functional.overlay,
+    },
+    copy: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'flex-end',
+      padding: space[16],
+      gap: space[8],
+    },
+    title: {
+      color: functional.onPrimary,
+    },
+    subtitle: {
+      color: functional.onPrimary,
+    },
+    ctaWrap: {
+      alignSelf: 'flex-start',
+      marginTop: space[4],
     },
     dots: {
       flexDirection: 'row',
