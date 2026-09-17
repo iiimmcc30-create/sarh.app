@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { getApiErrorMessage } from '@/services/api.client';
 import {
   clearSession,
+  FORBIDDEN_ROLE_MESSAGE,
   loginAndRequireButcher,
   tryRestoreSession,
 } from '@/services/auth.service';
@@ -33,6 +34,9 @@ export default function LoginPage() {
       if (status === 'restored') {
         window.location.assign(withButcherBase('/dashboard'));
         return;
+      }
+      if (status === 'forbidden_role') {
+        setError(FORBIDDEN_ROLE_MESSAGE);
       }
       setCheckingSession(false);
     })();
