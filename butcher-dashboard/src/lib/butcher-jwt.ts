@@ -1,5 +1,10 @@
 const BUTCHER_ROLES = new Set(['BUTCHER']);
 
+/** Roles allowed through butcher-dashboard middleware and client session gates. */
+export function isAllowedButcherDashboardRole(role: string | null | undefined): boolean {
+  return typeof role === 'string' && BUTCHER_ROLES.has(role);
+}
+
 export type ButcherJwtResult =
   | { ok: true; role: string; userId: string }
   | { ok: false; reason: 'missing' | 'malformed' | 'bad_signature' | 'expired' | 'forbidden_role' };
@@ -107,7 +112,7 @@ export async function verifyButcherAccessToken(
   }
 
   const role = String(payload.role ?? '');
-  if (!BUTCHER_ROLES.has(role)) {
+  if (!isAllowedButcherDashboardRole(role)) {
     return { ok: false, reason: 'forbidden_role' };
   }
 

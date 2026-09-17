@@ -1,3 +1,4 @@
+import { isAllowedButcherDashboardRole } from '@/lib/butcher-jwt';
 import { normalizeLoginIdentifier } from '@/lib/login-identifier';
 import { apiClient, unwrap } from './api.client';
 import {
@@ -30,6 +31,35 @@ export type LoginResult = {
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 12;
 
 export const NO_BUTCHER_MESSAGE = 'هذا الحساب غير مرتبط بملحمة معتمدة';
+export const FORBIDDEN_ROLE_MESSAGE =
+  'هذا الحساب غير مصرح له بدخول لوحة الملاحم. يجب أن يكون دور الحساب ملحمة (BUTCHER).';
+
+export type RestoreSessionStatus =
+  | 'restored'
+  | 'none'
+  | 'cleared'
+  | 'no_butcher'
+  | 'forbidden_role';
+
+/** Read JWT payload role without verifying signature (middleware verifies). */
+export function peekAccessTokenRole(token: string): string | null {
+  const parts = token.trim().split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const pad = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4));
+    const json = atob(padded + pad);
+    const payload = JSON.parse(json) as { role?: unknown };
+    return typeof payload.role === 'string' ? payload.role : null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveDashboardRole(token: string, user: AuthUser | null): string | null {
+  if (user?.role) return user.role;
+  return peekAccessTokenRole(token);
+}
 
 export function setSessionCookie(accessToken: string) {
   document.cookie = `${SESSION_COOKIE}=${encodeURIComponent(accessToken)}; path=/; max-age=${SESSION_COOKIE_MAX_AGE}; SameSite=Lax`;
@@ -67,6 +97,12 @@ export async function loginAndRequireButcher(login: string, password: string): P
   butcher: ButcherProfile;
 }> {
   const session = await platformLogin(login, password);
+  // Must match middleware role gate BEFORE writing cookie/localStorage.
+  // Otherwise USER(+butcher profile) → dashboard assign → middleware 307 → login restore → loop.
+  if (!isAllowedButcherDashboardRole(session.user.role)) {
+    clearSession();
+    throw new Error(FORBIDDEN_ROLE_MESSAGE);
+  }
   persistTokens(session);
   try {
     const butcher = await fetchMyButcher();
@@ -95,15 +131,19 @@ export async function logoutQuietly() {
   clearSession();
 }
 
-export async function tryRestoreSession(): Promise<
-  'restored' | 'none' | 'cleared' | 'no_butcher'
-> {
+export async function tryRestoreSession(): Promise<RestoreSessionStatus> {
   if (typeof window === 'undefined') return 'none';
 
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
   if (!token) {
     document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0`;
     return 'none';
+  }
+
+  const role = resolveDashboardRole(token, getStoredUser());
+  if (!isAllowedButcherDashboardRole(role)) {
+    clearSession();
+    return 'forbidden_role';
   }
 
   setSessionCookie(token);

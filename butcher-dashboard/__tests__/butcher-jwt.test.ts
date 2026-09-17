@@ -1,9 +1,20 @@
 import {
+  isAllowedButcherDashboardRole,
   signButcherAccessToken,
   verifyButcherAccessToken,
 } from '@/lib/butcher-jwt';
 
 const SECRET = 'test-butcher-jwt-secret-minimum-32-chars!!';
+
+describe('isAllowedButcherDashboardRole', () => {
+  it('allows only BUTCHER', () => {
+    expect(isAllowedButcherDashboardRole('BUTCHER')).toBe(true);
+    expect(isAllowedButcherDashboardRole('USER')).toBe(false);
+    expect(isAllowedButcherDashboardRole('ADMIN')).toBe(false);
+    expect(isAllowedButcherDashboardRole(null)).toBe(false);
+    expect(isAllowedButcherDashboardRole(undefined)).toBe(false);
+  });
+});
 
 describe('verifyButcherAccessToken', () => {
   it('accepts a valid HS256 butcher token', async () => {

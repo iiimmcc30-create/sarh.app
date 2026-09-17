@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { persistButcher, getStoredButcher, getStoredUser, tryRestoreSession, type AuthUser, clearSession, NO_BUTCHER_MESSAGE } from '@/services/auth.service';
+import { persistButcher, getStoredButcher, getStoredUser, tryRestoreSession, type AuthUser, clearSession, NO_BUTCHER_MESSAGE, FORBIDDEN_ROLE_MESSAGE } from '@/services/auth.service';
 import { withButcherBase } from '@/constants/butcherBasePath';
 import { fetchMyButcher, type ButcherProfile } from '@/services/butcher.service';
 
@@ -42,6 +42,11 @@ export function ButcherSessionProvider({ children }: { children: ReactNode }) {
     const status = await tryRestoreSession();
     if (status === 'none' || status === 'cleared') {
       window.location.assign(withButcherBase('/login'));
+      return;
+    }
+    if (status === 'forbidden_role') {
+      setError(FORBIDDEN_ROLE_MESSAGE);
+      setReady(true);
       return;
     }
     if (status === 'no_butcher') {
