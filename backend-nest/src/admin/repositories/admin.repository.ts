@@ -427,8 +427,8 @@ export class AdminRepository {
   }
 
   findButcherById(id: string) {
-    return this.prisma.butcher.findUnique({
-      where: { id },
+    return this.prisma.butcher.findFirst({
+      where: { id, ...notDeleted },
       include: {
         user: { select: OWNER_USER_SELECT },
         sourceApplication: {
@@ -441,6 +441,31 @@ export class AdminRepository {
         },
       },
     });
+  }
+
+  /**
+   * Soft-delete butcher + catalog rows. Orders/checkouts/reviews stay for history.
+   */
+  softDeleteButcher(id: string) {
+    const now = softDeleteFields();
+    return this.prisma.$transaction([
+      this.prisma.butcherProduct.updateMany({
+        where: { butcherId: id, deletedAt: null },
+        data: { ...now, inStock: false },
+      }),
+      this.prisma.butcherOffer.updateMany({
+        where: { butcherId: id, deletedAt: null },
+        data: now,
+      }),
+      this.prisma.butcherStory.updateMany({
+        where: { butcherId: id, deletedAt: null },
+        data: now,
+      }),
+      this.prisma.butcher.update({
+        where: { id },
+        data: { ...now, isOpen: false },
+      }),
+    ]);
   }
 
   listSettings() {

@@ -290,6 +290,14 @@ export class AdminController {
     return successResponse(await this.admin.updateButcher(id, body));
   }
 
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Delete('butchers/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteButcher(@Param('id') id: string) {
+    return successResponse(await this.admin.deleteButcher(id));
+  }
+
   // ─── Settings (ADMIN only) ──────────────────────────────────────────────────
 
   @Roles('ADMIN')

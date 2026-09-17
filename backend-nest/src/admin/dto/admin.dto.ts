@@ -5,6 +5,7 @@ import {
   commentBodySchema,
   rejectBodySchema,
 } from '../../butcher-applications/routes/schemas';
+import { countrySchema } from '../../shared/lib/countries';
 
 export type AdminListQueryDto = z.infer<typeof adminListQuerySchema>;
 export type ApproveApplicationBodyDto = z.infer<typeof approveBodySchema>;
@@ -95,10 +96,42 @@ export const updateReportSchema = z
   })
   .refine((d) => Object.keys(d).length > 0, { message: 'empty_update' });
 
-export const updateButcherSchema = z.object({
-  type: z.enum(['regular', 'verified']).optional(),
-  isOpen: z.boolean().optional(),
-});
+/** Admin may update profile fields (same surface as butcher self-update) plus verification/open. */
+export const updateButcherSchema = z
+  .object({
+    nameAr: z.string().min(2).max(100).trim().optional(),
+    nameEn: z.string().min(2).max(100).trim().optional(),
+    logo: z.string().url().optional().nullable(),
+    cover: z.string().url().optional().nullable(),
+    bioAr: z.string().max(500).trim().optional().nullable(),
+    bioEn: z.string().max(500).trim().optional().nullable(),
+    specialties: z.array(z.string()).optional(),
+    commercialReg: z.string().max(50).trim().optional().nullable(),
+    phone: z
+      .string()
+      .regex(/^\+?[0-9]{8,20}$/, 'رقم هاتف غير صالح')
+      .optional(),
+    openTime: z
+      .string()
+      .regex(/^([0-9]{2}):([0-9]{2})$/)
+      .optional(),
+    closeTime: z
+      .string()
+      .regex(/^([0-9]{2}):([0-9]{2})$/)
+      .optional(),
+    closedDays: z.array(z.string()).optional(),
+    address: z.string().min(5).max(300).trim().optional(),
+    addressAr: z.string().min(5).max(300).trim().optional(),
+    city: z.string().min(2).max(100).trim().optional(),
+    cityAr: z.string().min(2).max(100).trim().optional(),
+    lat: z.number().min(-90).max(90).optional().nullable(),
+    lng: z.number().min(-180).max(180).optional().nullable(),
+    country: countrySchema.optional(),
+    type: z.enum(['regular', 'verified']).optional(),
+    isOpen: z.boolean().optional(),
+  })
+  .strict()
+  .refine((d) => Object.keys(d).length > 0, { message: 'empty_update' });
 
 export const updateSettingSchema = z.object({
   key: z.string().min(1),
