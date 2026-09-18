@@ -1,11 +1,10 @@
 import { ListingCard } from '@/components/feature/ListingCard';
-import { radius, space } from '@/design-system';
+import { space } from '@/design-system';
 import { AppText } from '@/design-system/components';
 import { Row } from '@/design-system/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import type { ThemeColors } from '@/constants/theme';
 import { HOME_LATEST_LISTINGS_LIMIT } from '@/lib/homeQuickAccess';
 import { safePush } from '@/lib/safeNavigate';
 import { getBootstrappedListingsPage, searchListingsPage } from '@/services/listings';
@@ -20,7 +19,7 @@ export function HomeLatestListings() {
   const router = useRouter();
   const { gutter } = useLayout();
   const { accessToken } = useAuth();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const styles = useThemedStyles(() => createStyles());
   const [items, setItems] = useState<Listing[]>([]);
   const inflightRef = useRef(false);
   const lastAt = useRef(0);
@@ -97,25 +96,25 @@ export function HomeLatestListings() {
         </Pressable>
       </Row>
       {items.map((item) => (
-        <View key={item.id} style={[styles.cardShell, { marginHorizontal: gutter }]}>
-          <ListingCard
-            listing={item}
-            variant="list"
-            listMode="home"
-            onPress={() =>
-              safePush({ pathname: '/listing/[id]', params: { id: item.id } }, undefined, router)
-            }
-          />
-        </View>
+        <ListingCard
+          key={item.id}
+          listing={item}
+          variant="list"
+          listMode="market"
+          onPress={() =>
+            safePush({ pathname: '/listing/[id]', params: { id: item.id } }, undefined, router)
+          }
+        />
       ))}
     </View>
   );
 }
 
-function createStyles(theme: ThemeColors) {
+function createStyles() {
   return StyleSheet.create({
     wrap: {
       paddingBottom: space[8],
+      gap: space[4],
     },
     sectionHead: {
       paddingTop: space[8],
@@ -128,12 +127,6 @@ function createStyles(theme: ThemeColors) {
     seeAllBtn: {
       flexShrink: 0,
       paddingStart: space[8],
-    },
-    cardShell: {
-      borderRadius: radius[16],
-      overflow: 'hidden',
-      backgroundColor: theme.bgSurface,
-      marginBottom: space[12],
     },
   });
 }

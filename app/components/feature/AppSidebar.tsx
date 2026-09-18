@@ -26,7 +26,7 @@ const PRIMARY_ITEMS: NavItem[] = [
   { key: 'favorites', icon: 'heart-outline', label: 'المفضلة', route: '/favorites' },
   { key: 'butchers', icon: 'storefront-outline', label: 'ملاحم سرح', route: '/butchers' },
   { key: 'feed-suppliers', icon: 'leaf', label: 'موردو الأعلاف', route: '/feed-suppliers' },
-  { key: 'promote', icon: 'megaphone-outline', label: 'تعزيز سرح', route: '/promote' },
+  { key: 'promote', icon: 'megaphone-outline', label: 'الترويج', route: '/promote' },
   { key: 'news', icon: 'newspaper-outline', label: 'قطاع الأخبار', route: '/news' },
 ];
 

@@ -8,15 +8,15 @@ const SECTIONS = [
   {
     title: 'الحساب',
     items: [
-      { icon: 'shield-check-outline', label: 'التحقق من الحساب والأمان', route: '/settings/account' },
-      { icon: 'lock-outline', label: 'تغيير كلمة المرور والبريد', route: '/settings/account' },
+      { icon: 'person-outline', label: 'إدارة الملف الشخصي', route: '/profile/edit' },
+      { icon: 'shield-check-outline', label: 'التحقق من الحساب والأمان', route: '/profile/settings' },
+      { icon: 'lock-outline', label: 'تغيير كلمة المرور', route: '/profile/settings/password' },
       { icon: 'block', label: 'المحظورين', route: '/settings/blocked' },
     ],
   },
   {
-    title: 'مركز المعلومات',
+    title: 'حول التطبيق',
     items: [
-      { icon: 'information-outline', label: 'مركز المعلومات', route: '/settings/info' },
       { icon: 'information-outline', label: 'من نحن', route: '/info/about' },
       { icon: 'file-document-outline', label: 'الشروط والأحكام', route: '/info/terms' },
       { icon: 'lock-outline', label: 'سياسة الخصوصية', route: '/info/privacy' },

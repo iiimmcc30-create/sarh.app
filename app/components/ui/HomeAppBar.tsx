@@ -12,7 +12,7 @@ import { HOME_SEARCH_PLACEHOLDER } from '@/lib/homeQuickAccess';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
-const BAR_H = HOME_APP_BAR_H;
+const BAR_H = space[48];
 const TOOL = space[48];
 const ICON_SIZE = space[20];
 const SEARCH_H = space[48];
@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
   inner: {
     width: '100%',
     paddingTop: space[8],
-    paddingBottom: space[12],
-    gap: space[12],
+    paddingBottom: space[8],
+    gap: space[4],
   },
   bar: {
     width: '100%',

@@ -1018,8 +1018,8 @@ describe('Architecture V2 — Wave 4D home and explore', () => {
   it('keeps Home fetch, section order, and official ministry routes', () => {
     const home = src('app/(tabs)/index.tsx');
     expect(home.indexOf('<ExploreSarhSection')).toBeLessThan(home.indexOf('<HomeQuickAccess'));
-    expect(home.indexOf('<HomeQuickAccess')).toBeLessThan(home.indexOf('<HomeFeedSuppliers'));
-    expect(home.indexOf('<HomeFeedSuppliers')).toBeLessThan(home.indexOf('<HomeLatestListings'));
+    expect(home.indexOf('<HomeQuickAccess')).toBeLessThan(home.indexOf('<HomeLatestListings'));
+    expect(home).not.toContain('<HomeFeedSuppliers');
     expect(home).not.toContain('ListingCard');
     expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('PostItem');

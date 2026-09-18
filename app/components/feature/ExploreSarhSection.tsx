@@ -1,14 +1,11 @@
 import { Image } from '@/components/ui/AppImage';
-import { colors, functional, radius, space } from '@/design-system';
-import { AppText, SarhButton } from '@/design-system/components';
+import { colors, radius, space } from '@/design-system';
+import { SarhButton } from '@/design-system/components';
 import { useLayout } from '@/hooks/useLayout';
+import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { type ExploreSarhBannerView } from '@/lib/exploreSarhBanners';
-import {
-  HOME_BANNER_CTA_HREF,
-  HOME_BANNER_CTA_LABEL,
-  HOME_BANNER_SUBTITLE_AR,
-} from '@/lib/homeQuickAccess';
+import { HOME_BANNER_CTA_HREF, HOME_BANNER_CTA_LABEL } from '@/lib/homeQuickAccess';
 import { safePush } from '@/lib/safeNavigate';
 import { fetchExploreSarhBanners } from '@/services/exploreSarhBanners';
 import { useRouter } from 'expo-router';
@@ -26,13 +23,9 @@ import {
 const AUTO_ADVANCE_MS = 5000;
 const BANNER_ASPECT = 16 / 9;
 
-function bannerSubtitle(banner: ExploreSarhBannerView): string | null {
-  if (banner.href === HOME_BANNER_CTA_HREF) return HOME_BANNER_SUBTITLE_AR;
-  return null;
-}
-
 export function ExploreSarhSection() {
   const router = useRouter();
+  const { scheme } = useTheme();
   const { width } = useWindowDimensions();
   const { gutter } = useLayout();
   const styles = useThemedStyles(() => createStyles());
@@ -91,50 +84,32 @@ export function ExploreSarhSection() {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {banners.map((banner) => {
-          const subtitle = bannerSubtitle(banner);
-          return (
-            <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
-              <View
-                style={[styles.banner, { width: bannerWidth }]}
-                accessibilityRole="image"
-                accessibilityLabel={banner.accessibilityLabel}
-              >
-                <Image
-                  source={banner.image}
-                  style={styles.image}
-                  contentFit="cover"
-                  pointerEvents="none"
+        {banners.map((banner) => (
+          <View key={banner.id} style={[styles.slide, { width: slideWidth }]}>
+            <View
+              style={[styles.banner, { width: bannerWidth }]}
+              accessibilityRole="image"
+              accessibilityLabel={banner.accessibilityLabel}
+            >
+              <Image
+                source={banner.image}
+                style={styles.image}
+                contentFit="cover"
+                pointerEvents="none"
+              />
+              <View pointerEvents="box-none" style={styles.ctaLayer}>
+                <SarhButton
+                  title={HOME_BANNER_CTA_LABEL}
+                  size="sm"
+                  shape="rounded"
+                  variant={scheme === 'light' ? 'secondary' : 'inverse'}
+                  accessibilityLabel={HOME_BANNER_CTA_LABEL}
+                  onPress={openButchers}
                 />
-                <View pointerEvents="none" style={styles.scrim} />
-                <View style={styles.copy}>
-                  <AppText
-                    variant="heading2"
-                    numberOfLines={2}
-                    style={styles.title}
-                  >
-                    {banner.accessibilityLabel}
-                  </AppText>
-                  {subtitle ? (
-                    <AppText variant="bodySmall" numberOfLines={2} style={styles.subtitle}>
-                      {subtitle}
-                    </AppText>
-                  ) : null}
-                  <View style={styles.ctaWrap}>
-                    <SarhButton
-                      title={HOME_BANNER_CTA_LABEL}
-                      size="sm"
-                      shape="pill"
-                      leftIcon="angle-left"
-                      accessibilityLabel={HOME_BANNER_CTA_LABEL}
-                      onPress={openButchers}
-                    />
-                  </View>
-                </View>
               </View>
             </View>
-          );
-        })}
+          </View>
+        ))}
       </ScrollView>
 
       {banners.length > 1 ? (
@@ -175,25 +150,11 @@ function createStyles() {
     image: {
       ...StyleSheet.absoluteFillObject,
     },
-    scrim: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: functional.overlay,
-    },
-    copy: {
+    ctaLayer: {
       ...StyleSheet.absoluteFillObject,
       justifyContent: 'flex-end',
+      alignItems: 'flex-end',
       padding: space[16],
-      gap: space[8],
-    },
-    title: {
-      color: functional.onPrimary,
-    },
-    subtitle: {
-      color: functional.onPrimary,
-    },
-    ctaWrap: {
-      alignSelf: 'flex-start',
-      marginTop: space[4],
     },
     dots: {
       flexDirection: 'row',

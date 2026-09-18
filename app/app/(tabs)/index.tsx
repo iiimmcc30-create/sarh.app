@@ -3,7 +3,6 @@
 
 import { useRouter } from 'expo-router';
 import { ExploreSarhSection } from '@/components/feature/ExploreSarhSection';
-import { HomeFeedSuppliers } from '@/components/feature/HomeFeedSuppliers';
 import { HomeLatestListings } from '@/components/feature/HomeLatestListings';
 import { HomeQuickAccess } from '@/components/feature/HomeQuickAccess';
 import { HomeAppBar } from '@/components/ui/HomeAppBar';
@@ -45,7 +44,6 @@ export default function HomeScreen() {
       <ScreenBody gutter={false} bottomInset="tabBar" padBottom="md">
         <ExploreSarhSection />
         <HomeQuickAccess />
-        <HomeFeedSuppliers />
         <HomeLatestListings />
       </ScreenBody>
     </Screen>
