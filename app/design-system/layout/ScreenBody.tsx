@@ -34,6 +34,9 @@ export type ScreenBodyProps = {
   /** Children that pin to the top while the rest scrolls, e.g. a tab bar. */
   stickyHeaderIndices?: number[];
   onScroll?: ScrollViewProps['onScroll'];
+  onScrollEndDrag?: ScrollViewProps['onScrollEndDrag'];
+  onMomentumScrollEnd?: ScrollViewProps['onMomentumScrollEnd'];
+  scrollEventThrottle?: ScrollViewProps['scrollEventThrottle'];
   testID?: string;
 };
 
@@ -62,6 +65,9 @@ export function ScreenBody({
   refreshControl,
   stickyHeaderIndices,
   onScroll,
+  onScrollEndDrag,
+  onMomentumScrollEnd,
+  scrollEventThrottle,
   testID,
 }: ScreenBodyProps) {
   const layout = useLayout();
@@ -102,6 +108,9 @@ export function ScreenBody({
       refreshControl={refreshControl}
       stickyHeaderIndices={stickyHeaderIndices}
       onScroll={onScroll}
+      onScrollEndDrag={onScrollEndDrag}
+      onMomentumScrollEnd={onMomentumScrollEnd}
+      scrollEventThrottle={scrollEventThrottle}
     >
       {children}
     </AppScrollView>

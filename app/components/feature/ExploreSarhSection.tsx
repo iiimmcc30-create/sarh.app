@@ -9,7 +9,7 @@ import { HOME_BANNER_CTA_HREF, HOME_BANNER_CTA_LABEL } from '@/lib/homeQuickAcce
 import { safePush } from '@/lib/safeNavigate';
 import { fetchExploreSarhBanners } from '@/services/exploreSarhBanners';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -23,7 +23,12 @@ import {
 const AUTO_ADVANCE_MS = 5000;
 const BANNER_ASPECT = 16 / 9;
 
-export function ExploreSarhSection() {
+export type ExploreSarhSectionHandle = {
+  refresh: () => Promise<void>;
+};
+
+export const ExploreSarhSection = forwardRef<ExploreSarhSectionHandle>(
+  function ExploreSarhSection(_props, ref) {
   const router = useRouter();
   const { scheme } = useTheme();
   const { width } = useWindowDimensions();
@@ -32,6 +37,7 @@ export function ExploreSarhSection() {
   const [banners, setBanners] = useState<ExploreSarhBannerView[]>([]);
   const [index, setIndex] = useState(0);
   const scroller = useRef<ScrollView>(null);
+  const inflightRef = useRef(false);
   const slideWidth = width;
   const bannerWidth = slideWidth - gutter * 2;
   const indexRef = useRef(index);
@@ -39,17 +45,28 @@ export function ExploreSarhSection() {
   indexRef.current = index;
   bannersRef.current = banners;
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchExploreSarhBanners().then((next) => {
-      if (cancelled || next.length === 0) return;
+  const load = async (force = false) => {
+    if (inflightRef.current) return;
+    inflightRef.current = true;
+    try {
+      const next = await fetchExploreSarhBanners(force ? { force: true } : undefined);
+      if (next.length === 0) return;
       setBanners(next);
-      setIndex(0);
-      scroller.current?.scrollTo({ x: 0, animated: false });
-    });
-    return () => {
-      cancelled = true;
-    };
+      if (force) {
+        setIndex(0);
+        scroller.current?.scrollTo({ x: 0, animated: false });
+      }
+    } finally {
+      inflightRef.current = false;
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    refresh: () => load(true),
+  }));
+
+  useEffect(() => {
+    void load(false);
   }, []);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -130,7 +147,7 @@ export function ExploreSarhSection() {
       ) : null}
     </View>
   );
-}
+});
 
 function createStyles() {
   return StyleSheet.create({

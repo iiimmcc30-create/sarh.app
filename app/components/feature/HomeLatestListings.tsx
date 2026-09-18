@@ -10,12 +10,19 @@ import { safePush } from '@/lib/safeNavigate';
 import { getBootstrappedListingsPage, searchListingsPage } from '@/services/listings';
 import type { Listing } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 const HOME_LISTINGS_TTL_MS = 60_000;
 
-export function HomeLatestListings() {
+export type HomeLatestListingsHandle = {
+  refresh: () => Promise<void>;
+};
+
+export const HomeLatestListings = forwardRef<HomeLatestListingsHandle>(function HomeLatestListings(
+  _props,
+  ref,
+) {
   const router = useRouter();
   const { gutter } = useLayout();
   const { accessToken } = useAuth();
@@ -64,6 +71,10 @@ export function HomeLatestListings() {
     [accessToken],
   );
 
+  useImperativeHandle(ref, () => ({
+    refresh: () => load(true),
+  }));
+
   useFocusEffect(
     useCallback(() => {
       const shouldForce = itemsLenRef.current === 0 && needsFailureRecoveryRef.current;
@@ -108,7 +119,7 @@ export function HomeLatestListings() {
       ))}
     </View>
   );
-}
+});
 
 function createStyles() {
   return StyleSheet.create({

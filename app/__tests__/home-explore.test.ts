@@ -359,9 +359,9 @@ describe('Home design-system adoption', () => {
   });
 
   it('keeps the launch Home section order', () => {
-    const exploreAt = home.indexOf('<ExploreSarhSection');
-    const quickAt = home.indexOf('<HomeQuickAccess');
-    const listingsAt = home.indexOf('<HomeLatestListings');
+    const exploreAt = home.indexOf('<ExploreSarhSection ref={bannerRef}');
+    const quickAt = home.indexOf('<HomeQuickAccess />');
+    const listingsAt = home.indexOf('<HomeLatestListings ref={listingsRef}');
     expect(exploreAt).toBeGreaterThan(-1);
     expect(quickAt).toBeGreaterThan(exploreAt);
     expect(listingsAt).toBeGreaterThan(quickAt);
