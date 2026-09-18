@@ -242,7 +242,7 @@ export function ProfileScreenLayout({
             <Row gap="xs" align="center" style={styles.toolbarSide}>
               {mode === 'own' && onEditProfile ? (
                 <SarhIconButton
-                  icon="pencil-outline"
+                  icon="pencil"
                   chrome="ghost"
                   size="sm"
                   onPress={onEditProfile}

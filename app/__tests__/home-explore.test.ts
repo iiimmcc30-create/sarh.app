@@ -308,9 +308,8 @@ describe('Home design-system adoption', () => {
     expect(appBar).toContain('NotificationBellButton');
     expect(appBar).toContain('variant="heading3"');
     expect(appBar).toContain('styles.searchBar');
-    expect(explore).toContain('AppText');
-    expect(explore).toContain('variant="heading2"');
     expect(explore).toContain('SarhButton');
+    expect(explore).toContain('HOME_BANNER_CTA_LABEL');
     expect(quick).toContain('الوصول السريع');
     expect(listings).toContain('أحدث الإعلانات');
     expect(community).toContain('مجتمع سرح');
@@ -362,12 +361,11 @@ describe('Home design-system adoption', () => {
   it('keeps the launch Home section order', () => {
     const exploreAt = home.indexOf('<ExploreSarhSection');
     const quickAt = home.indexOf('<HomeQuickAccess');
-    const suppliersAt = home.indexOf('<HomeFeedSuppliers');
     const listingsAt = home.indexOf('<HomeLatestListings');
     expect(exploreAt).toBeGreaterThan(-1);
     expect(quickAt).toBeGreaterThan(exploreAt);
-    expect(suppliersAt).toBeGreaterThan(quickAt);
-    expect(listingsAt).toBeGreaterThan(suppliersAt);
+    expect(listingsAt).toBeGreaterThan(quickAt);
+    expect(home).not.toContain('<HomeFeedSuppliers');
     expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('<EditorialStoriesBar');
     expect(home).not.toContain('<HomeCommunityPosts');
