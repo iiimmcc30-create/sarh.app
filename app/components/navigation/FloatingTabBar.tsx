@@ -1,16 +1,20 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { motion, spacing, typography } from '@/constants/theme';
+import { motion as dsMotion } from '@/design-system/tokens/motion';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { HOME_TAB_RESELECT_EVENT } from '@/lib/homeQuickAccess';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Animated, DeviceEventEmitter, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICON_SIZE = 22;
 const ADD_BOX = 22;
+const INDICATOR_W = 18;
 
 type TabDef =
   | { kind: 'route'; route: string; icon: string; label: string }
@@ -36,12 +40,46 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const inactiveTint = colors.textSecondary;
 
   const activeRoute = state.routes[state.index]?.name;
+  const layouts = useRef<Record<string, { x: number; width: number }>>({});
+  const indicatorX = useRef(new Animated.Value(0)).current;
+  const indicatorReady = useRef(false);
+  const indicatorAnim = useRef<Animated.CompositeAnimation | null>(null);
+
+  const moveIndicator = (routeName: string, animated: boolean) => {
+    const layout = layouts.current[routeName];
+    if (!layout) return;
+    const nextX = layout.x + (layout.width - INDICATOR_W) / 2;
+    indicatorAnim.current?.stop();
+    if (!animated || !indicatorReady.current) {
+      indicatorX.setValue(nextX);
+      indicatorReady.current = true;
+      return;
+    }
+    indicatorAnim.current = Animated.timing(indicatorX, {
+      toValue: nextX,
+      duration: dsMotion.duration.ui,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    indicatorAnim.current.start();
+  };
+
+  useEffect(() => {
+    if (activeRoute) moveIndicator(activeRoute, true);
+  }, [activeRoute]);
 
   const onTabPress = (routeName: string, isFocused: boolean) => {
-    if (isFocused || isNavigationLocked()) return;
+    const route = state.routes.find((r) => r.name === routeName);
+    if (isFocused) {
+      if (routeName === 'index') {
+        DeviceEventEmitter.emit(HOME_TAB_RESELECT_EVENT);
+      }
+      return;
+    }
+    if (isNavigationLocked()) return;
     const event = navigation.emit({
       type: 'tabPress',
-      target: state.routes.find((r) => r.name === routeName)?.key,
+      target: route?.key,
       canPreventDefault: true,
     });
     if (!event.defaultPrevented) {
@@ -63,6 +101,16 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
         ]}
       >
         <View style={[styles.row, getRtlRow()]}>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.indicator,
+              {
+                backgroundColor: activeTint,
+                transform: [{ translateX: indicatorX }],
+              },
+            ]}
+          />
           {TABS.map((tab) => {
             if (tab.kind === 'create') {
               return (
@@ -99,16 +147,27 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                 accessibilityRole="button"
                 accessibilityState={{ selected: focused }}
                 onPress={() => onTabPress(tab.route, focused)}
+                onLayout={(event) => {
+                  layouts.current[tab.route] = {
+                    x: event.nativeEvent.layout.x,
+                    width: event.nativeEvent.layout.width,
+                  };
+                  if (tab.route === activeRoute) {
+                    moveIndicator(tab.route, indicatorReady.current);
+                  }
+                }}
                 style={({ pressed }) => [styles.tabSlot, pressed && styles.pressed]}
               >
-                <View style={styles.iconSlot}>
-                  <AppIcon
-                    name={tab.icon}
-                    size={ICON_SIZE}
-                    color={tint}
-                    variant={focused ? 'sr' : 'rr'}
-                  />
-                </View>
+                <TabGlyph focused={focused}>
+                  <View style={styles.iconSlot}>
+                    <AppIcon
+                      name={tab.icon}
+                      size={ICON_SIZE}
+                      color={tint}
+                      variant={focused ? 'sr' : 'rr'}
+                    />
+                  </View>
+                </TabGlyph>
                 <Text
                   style={[
                     focused ? typography.tabActive : typography.tab,
@@ -125,6 +184,33 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       </View>
     </View>
   );
+}
+
+function TabGlyph({ focused, children }: { focused: boolean; children: ReactNode }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const prev = useRef(focused);
+
+  useEffect(() => {
+    if (focused && !prev.current) {
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.06,
+          duration: dsMotion.duration.press,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: dsMotion.duration.ui,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+    prev.current = focused;
+  }, [focused, scale]);
+
+  return <Animated.View style={{ transform: [{ scale }] }}>{children}</Animated.View>;
 }
 
 const styles = StyleSheet.create({
@@ -174,6 +260,14 @@ const styles = StyleSheet.create({
   pressed: {
     transform: [{ scale: motion.pressScale }],
     opacity: 0.92,
+  },
+  indicator: {
+    position: 'absolute',
+    bottom: 0,
+    start: 0,
+    width: INDICATOR_W,
+    height: 2,
+    borderRadius: 1,
   },
 });
 

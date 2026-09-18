@@ -17,6 +17,8 @@ const TOOL = space[48];
 const ICON_SIZE = space[20];
 const SEARCH_H = space[48];
 const SEARCH_ICON = space[20];
+/** Measured chrome stack: padding + identity row + gap + search. */
+export const HOME_APP_BAR_STACK_H = space[8] + BAR_H + space[4] + SEARCH_H + space[8];
 
 type HomeAppBarProps = {
   onSearch: () => void;

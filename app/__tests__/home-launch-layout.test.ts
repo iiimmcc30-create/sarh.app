@@ -10,8 +10,8 @@ function src(rel: string) {
 describe('home launch layout', () => {
   it('keeps Home section order: banner, quick access, latest listings', () => {
     const home = src('app/(tabs)/index.tsx');
-    expect(home.indexOf('<ExploreSarhSection')).toBeLessThan(home.indexOf('<HomeQuickAccess'));
-    expect(home.indexOf('<HomeQuickAccess')).toBeLessThan(home.indexOf('<HomeLatestListings'));
+    expect(home.indexOf('<ExploreSarhSection ref={bannerRef}')).toBeLessThan(home.indexOf('<HomeQuickAccess'));
+    expect(home.indexOf('<HomeQuickAccess />')).toBeLessThan(home.indexOf('<HomeLatestListings ref={listingsRef}'));
     expect(home).not.toContain('<HomeFeedSuppliers');
     expect(home).not.toContain('<EditorialStoriesBar');
     expect(home).not.toContain('<HomeCommunityPosts');
@@ -109,5 +109,50 @@ describe('home launch layout', () => {
     expect(src('app/profile/settings/password.tsx')).toContain('currentPassword');
     expect(src('app/profile/settings/password.tsx')).toContain('newPassword');
     expect(src('app/settings/info.tsx')).toContain('export default function InfoCenterScreen');
+  });
+
+  it('hides Home chrome on scroll using the existing ScreenBody, not a second scroller', () => {
+    const home = src('app/(tabs)/index.tsx');
+    const body = src('design-system/layout/ScreenBody.tsx');
+    expect(home).toContain('onScroll={onScroll}');
+    expect(home).toContain('onScrollEndDrag={onScrollIdle}');
+    expect(home).toContain('onMomentumScrollEnd={onScrollIdle}');
+    expect(home).toContain('headerProgress');
+    expect(home).toContain('useNativeDriver: true');
+    expect(home).not.toContain('AppScrollView');
+    expect(home).not.toContain('<ScrollView');
+    expect(body).toContain('onScrollEndDrag');
+    expect(body).toContain('onMomentumScrollEnd');
+  });
+
+  it('refreshes Home data on re-press of the focused Home tab without remounting', () => {
+    const home = src('app/(tabs)/index.tsx');
+    const banner = src('components/feature/ExploreSarhSection.tsx');
+    const listings = src('components/feature/HomeLatestListings.tsx');
+    const tabs = src('components/navigation/FloatingTabBar.tsx');
+    expect(home).toContain('HOME_TAB_RESELECT_EVENT');
+    expect(home).toContain('DeviceEventEmitter.addListener');
+    expect(home).toContain('refreshBusyRef');
+    expect(home).toContain('bannerRef.current?.refresh()');
+    expect(home).toContain('listingsRef.current?.refresh()');
+    expect(banner).toContain('fetchExploreSarhBanners(force ? { force: true }');
+    expect(banner).toContain('inflightRef');
+    expect(listings).toContain('refresh: () => load(true)');
+    expect(listings).toContain('if (inflightRef.current) return');
+    expect(tabs).toContain("routeName === 'index'");
+    expect(tabs).toContain('DeviceEventEmitter.emit(HOME_TAB_RESELECT_EVENT)');
+  });
+
+  it('slides the existing tab bar indicator without changing tab routes or chrome', () => {
+    const tabs = src('components/navigation/FloatingTabBar.tsx');
+    expect(tabs).toContain("route: 'index'");
+    expect(tabs).toContain("route: 'market'");
+    expect(tabs).toContain("route: 'messages'");
+    expect(tabs).toContain("route: 'posts'");
+    expect(tabs).toContain('addBox');
+    expect(tabs).toContain('indicatorX');
+    expect(tabs).toContain('useNativeDriver: true');
+    expect(tabs).not.toContain('SarhButton');
+    expect(tabs).not.toContain('react-native-reanimated');
   });
 });
