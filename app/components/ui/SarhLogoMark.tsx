@@ -31,12 +31,20 @@ type SarhLogoMarkProps = {
   /** Height in points. Width follows the original mark aspect. */
   size?: number;
   color?: string;
+  /** Diamond / star fill. Defaults to `color` so existing marks stay one tint. */
+  accentColor?: string;
   style?: StyleProp<ViewStyle>;
 };
 
-export function SarhLogoMark({ size = 14, color = '#FFFFFF', style }: SarhLogoMarkProps) {
+export function SarhLogoMark({
+  size = 14,
+  color = '#FFFFFF',
+  accentColor,
+  style,
+}: SarhLogoMarkProps) {
   const height = size;
   const width = size * SARH_LOGO_MARK_ASPECT;
+  const starColor = accentColor ?? color;
 
   return (
     <Svg
@@ -49,7 +57,7 @@ export function SarhLogoMark({ size = 14, color = '#FFFFFF', style }: SarhLogoMa
     >
       <Path d={WAVE_BOTTOM} fill={color} />
       <Path d={WAVE_TOP} fill={color} />
-      <Path d={DIAMOND} fill={color} />
+      <Path d={DIAMOND} fill={starColor} />
     </Svg>
   );
 }

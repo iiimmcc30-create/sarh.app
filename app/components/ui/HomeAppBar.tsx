@@ -49,7 +49,7 @@ export function HomeAppBar({
   center,
   children,
 }: HomeAppBarProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const { gutter } = useLayout();
   const insets = useSafeAreaInsets();
   const colorStyles = useThemedStyles(({ colors }) => createColorStyles(colors));
@@ -83,7 +83,11 @@ export function HomeAppBar({
             <View style={styles.centerSlot}>{center}</View>
           ) : (
             <View pointerEvents="none" style={styles.logoSlot}>
-              <SarhLogoMark size={SHELL_LOGO_SIZE} color={themeColors.electric} />
+              <SarhLogoMark
+                size={SHELL_LOGO_SIZE}
+                color={isDark ? '#FFFFFF' : '#000000'}
+                accentColor={themeColors.electric}
+              />
             </View>
           )}
 
