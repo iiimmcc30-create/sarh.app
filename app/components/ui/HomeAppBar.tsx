@@ -36,6 +36,8 @@ type HomeAppBarProps = {
   onAvatarPress: () => void;
   displayName: string;
   avatarUri?: string | null;
+  /** Replaces the centered logo — used by the Search tab identity row. */
+  center?: ReactNode;
   children?: ReactNode;
 };
 
@@ -44,6 +46,7 @@ export function HomeAppBar({
   onAvatarPress,
   displayName,
   avatarUri,
+  center,
   children,
 }: HomeAppBarProps) {
   const { colors: themeColors } = useTheme();
@@ -76,9 +79,13 @@ export function HomeAppBar({
             />
           </Pressable>
 
-          <View pointerEvents="none" style={styles.logoSlot}>
-            <SarhLogoMark size={SHELL_LOGO_SIZE} color={themeColors.electric} />
-          </View>
+          {center ? (
+            <View style={styles.centerSlot}>{center}</View>
+          ) : (
+            <View pointerEvents="none" style={styles.logoSlot}>
+              <SarhLogoMark size={SHELL_LOGO_SIZE} color={themeColors.electric} />
+            </View>
+          )}
 
           <View style={styles.toolsCluster}>
             <NotificationBellButton
@@ -132,6 +139,13 @@ const styles = StyleSheet.create({
   logoSlot: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  centerSlot: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    marginHorizontal: space[8],
     justifyContent: 'center',
   },
   toolsCluster: {

@@ -54,6 +54,15 @@ const FILTERS: { id: SearchFilter; label: string }[] = [
   { id: 'services', label: 'الخدمات' },
 ];
 
+type ExploreSection = 'explore' | 'trending' | 'news' | 'services';
+
+const EXPLORE_SECTIONS: { id: ExploreSection; label: string }[] = [
+  { id: 'explore', label: 'استكشف' },
+  { id: 'trending', label: 'الأكثر تداولاً' },
+  { id: 'news', label: 'الأخبار' },
+  { id: 'services', label: 'الخدمات' },
+];
+
 const GROUP_LABELS: Record<Exclude<SearchFilter, 'all'>, string> = {
   listings: 'الإعلانات',
   posts: 'المنشورات',
@@ -77,7 +86,8 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const isTab = variant === 'tab';
-  const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top));
+  const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top) + 40);
+  const [section, setSection] = useState<ExploreSection>('explore');
   const displayName = isAuthenticated
     ? me.arabicName || me.displayName || me.username || 'حسابي'
     : 'ضيف';
@@ -93,6 +103,13 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 350);
   const [filter, setFilter] = useState<SearchFilter>('all');
+
+  const selectSection = useCallback((next: ExploreSection) => {
+    setSection(next);
+    if (next === 'news') setFilter('news');
+    else if (next === 'services') setFilter('services');
+    else setFilter('all');
+  }, []);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [trendingTags, setTrendingTags] = useState<Array<{ tag: string; count: number }>>([]);
   const [suggestions, setSuggestions] = useState<Array<{ text: string; kind: string }>>([]);
@@ -314,6 +331,112 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     }
   };
 
+  const searchField = (
+    <SarhInput
+      value={query}
+      onChangeText={setQuery}
+      placeholder={isTab ? 'بحث' : 'ابحث في سرح...'}
+      autoFocus={!isTab}
+      returnKeyType="search"
+      onSubmitEditing={() => addRecentSearch(query)}
+      leadingIcon="search"
+      trailingIcon={hasQuery ? 'close-circle' : undefined}
+      onTrailingPress={hasQuery ? () => setQuery('') : undefined}
+      shape={isTab ? 'pill' : 'rounded'}
+      accessibilityRole="search"
+      accessibilityLabel={hasQuery ? 'مسح البحث' : isTab ? 'بحث' : 'ابحث في سرح...'}
+      containerStyle={styles.inputFlex}
+    />
+  );
+
+  const trendingBlock = (
+    <Stack gap="md" style={styles.section}>
+      <AppText variant="heading3">🔥 الأكثر تداولاً</AppText>
+      {trendingTags.length === 0 ? (
+        <AppText variant="caption" color="textMuted">لا توجد هاشتاقات رائجة حالياً</AppText>
+      ) : (
+        <Row gap="sm" wrap>
+          {trendingTags.map((item) => (
+            <Pressable key={item.tag} style={styles.trendingChip} onPress={() => applyQuery(item.tag)}>
+              <AppText variant="caption" color="textSecondary">{item.tag}</AppText>
+            </Pressable>
+          ))}
+        </Row>
+      )}
+    </Stack>
+  );
+
+  const exploreIdle = (
+    <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
+      {recentSearches.length > 0 ? (
+        <Stack gap="md" style={styles.section}>
+          <Row justify="between" align="center">
+            <AppText variant="heading3">البحث الأخير</AppText>
+            <Pressable onPress={() => saveRecent([])}>
+              <AppText variant="caption" color="primary">مسح الكل</AppText>
+            </Pressable>
+          </Row>
+          {recentSearches.map((term) => (
+            <Pressable key={term} onPress={() => applyQuery(term)}>
+              <Row gap="md" align="center" style={styles.recentRow}>
+                <AppIcon name="time-outline" size={16} color={colors.textPrimary} />
+                <AppText variant="body" color="textSecondary" style={styles.flex}>
+                  {term}
+                </AppText>
+                <Pressable
+                  onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
+                  hitSlop={8}
+                >
+                  <AppIcon name="close" size={14} color={colors.textPrimary} />
+                </Pressable>
+              </Row>
+            </Pressable>
+          ))}
+        </Stack>
+      ) : null}
+
+      {trendingBlock}
+
+      {featuredUsers.length > 0 ? (
+        <Stack gap="sm" style={styles.section}>
+          <AppText variant="heading3">🏆 أبرز المربّين</AppText>
+          {featuredUsers.map((user) => (
+            <UserIdentityRow
+              key={user.id}
+              avatarUri={user.avatar}
+              displayName={user.arabicName || user.displayName || user.username}
+              username={user.username}
+              verified={user.verified}
+              avatarSize={USER_IDENTITY.listAvatarSize}
+              avatarRadius={USER_IDENTITY.listAvatarRadius}
+              avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+              nameLines={2}
+              onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as never)}
+              style={styles.userRow}
+            />
+          ))}
+        </Stack>
+      ) : null}
+    </Stack>
+  );
+
+  const idleForSection =
+    !isTab || section === 'explore'
+      ? exploreIdle
+      : section === 'trending'
+        ? (
+          <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
+            {trendingBlock}
+          </Stack>
+        )
+        : (
+          <Stack gap="sm" align="center" style={[styles.hintBox, { paddingHorizontal: gutter }]}>
+            <AppText variant="caption" color="textMuted">
+              {section === 'news' ? 'ابحث في الأخبار' : 'ابحث في الخدمات'}
+            </AppText>
+          </Stack>
+        );
+
   return (
     <Screen edges={isTab ? [] : ['top', 'bottom']} keyboard>
       {isTab ? (
@@ -322,39 +445,46 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
             displayName={displayName}
             avatarUri={me.avatar}
             onAvatarPress={openSidebar}
-          />
+            center={searchField}
+          >
+            <Row style={styles.sectionRow}>
+              {EXPLORE_SECTIONS.map((item) => {
+                const active = section === item.id;
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => selectSection(item.id)}
+                    style={styles.sectionTab}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                  >
+                    <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
+                      {item.label}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </Row>
+          </HomeAppBar>
         </AppChromeLayer>
       ) : null}
 
-      <Row
-        gap="sm"
-        align="center"
-        style={[
-          styles.searchBar,
-          { paddingHorizontal: gutter },
-          isTab ? { paddingTop: headerH + 12 } : null,
-        ]}
-      >
-        {isTab ? null : (
+      {isTab ? null : (
+        <Row gap="sm" align="center" style={[styles.searchBar, { paddingHorizontal: gutter }]}>
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
-        )}
-        <SarhInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="ابحث في سرح..."
-          autoFocus={!isTab}
-          returnKeyType="search"
-          onSubmitEditing={() => addRecentSearch(query)}
-          leadingIcon="search"
-          trailingIcon={hasQuery ? 'close-circle' : undefined}
-          onTrailingPress={hasQuery ? () => setQuery('') : undefined}
-          accessibilityLabel={hasQuery ? 'مسح البحث' : 'ابحث في سرح...'}
-          containerStyle={styles.inputFlex}
-        />
-      </Row>
+          {searchField}
+        </Row>
+      )}
 
       {hasQuery && query.trim().length >= MIN_QUERY && suggestions.length > 0 && !loading ? (
-        <Stack gap="none" style={[styles.suggestBox, { marginHorizontal: gutter }]}>
+        <Stack
+          gap="none"
+          style={[
+            styles.suggestBox,
+            { marginHorizontal: gutter },
+            isTab ? { marginTop: headerH } : null,
+          ]}
+        >
           {suggestions.map((s) => (
             <Pressable key={`${s.kind}-${s.text}`} onPress={() => applyQuery(s.text)}>
               <Row gap="sm" align="center" style={styles.suggestRow}>
@@ -368,7 +498,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         </Stack>
       ) : null}
 
-      {hasQuery ? (
+      {isTab || !hasQuery ? null : (
         <SarhChipRow contentPaddingHorizontal={gutter} style={styles.filterRowWrap}>
           {FILTERS.map((f) => (
             <SarhChip
@@ -380,7 +510,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
             />
           ))}
         </SarhChipRow>
-      ) : null}
+      )}
 
       <ScreenBody
         padBottom={isTab ? 'md' : 'xxxl'}
@@ -388,72 +518,12 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         bottomInset={isTab ? 'tabBar' : 'none'}
         onScroll={isTab ? onChromeScroll : undefined}
         scrollEventThrottle={16}
+        style={isTab && !(hasQuery && query.trim().length >= MIN_QUERY && suggestions.length > 0 && !loading)
+          ? { paddingTop: headerH }
+          : undefined}
       >
         {!hasQuery ? (
-          <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
-            {recentSearches.length > 0 ? (
-              <Stack gap="md" style={styles.section}>
-                <Row justify="between" align="center">
-                  <AppText variant="heading3">البحث الأخير</AppText>
-                  <Pressable onPress={() => saveRecent([])}>
-                    <AppText variant="caption" color="primary">مسح الكل</AppText>
-                  </Pressable>
-                </Row>
-                {recentSearches.map((term) => (
-                  <Pressable key={term} onPress={() => applyQuery(term)}>
-                    <Row gap="md" align="center" style={styles.recentRow}>
-                      <AppIcon name="time-outline" size={16} color={colors.textPrimary} />
-                      <AppText variant="body" color="textSecondary" style={styles.flex}>
-                        {term}
-                      </AppText>
-                      <Pressable
-                        onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
-                        hitSlop={8}
-                      >
-                        <AppIcon name="close" size={14} color={colors.textPrimary} />
-                      </Pressable>
-                    </Row>
-                  </Pressable>
-                ))}
-              </Stack>
-            ) : null}
-
-            <Stack gap="md" style={styles.section}>
-              <AppText variant="heading3">🔥 الأكثر تداولاً</AppText>
-              {trendingTags.length === 0 ? (
-                <AppText variant="caption" color="textMuted">لا توجد هاشتاقات رائجة حالياً</AppText>
-              ) : (
-                <Row gap="sm" wrap>
-                  {trendingTags.map((item) => (
-                    <Pressable key={item.tag} style={styles.trendingChip} onPress={() => applyQuery(item.tag)}>
-                      <AppText variant="caption" color="textSecondary">{item.tag}</AppText>
-                    </Pressable>
-                  ))}
-                </Row>
-              )}
-            </Stack>
-
-            {featuredUsers.length > 0 ? (
-              <Stack gap="sm" style={styles.section}>
-                <AppText variant="heading3">🏆 أبرز المربّين</AppText>
-                {featuredUsers.map((user) => (
-                  <UserIdentityRow
-                    key={user.id}
-                    avatarUri={user.avatar}
-                    displayName={user.arabicName || user.displayName || user.username}
-                    username={user.username}
-                    verified={user.verified}
-                    avatarSize={USER_IDENTITY.listAvatarSize}
-                    avatarRadius={USER_IDENTITY.listAvatarRadius}
-                    avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
-                    nameLines={2}
-                    onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as never)}
-                    style={styles.userRow}
-                  />
-                ))}
-              </Stack>
-            ) : null}
-          </Stack>
+          idleForSection
         ) : (
           <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
             {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
@@ -530,6 +600,15 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     inputFlex: { flex: 1 },
     flex: { flex: 1 },
+    sectionRow: {
+      paddingTop: 12,
+    },
+    sectionTab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 32,
+    },
     filterRowWrap: {
       backgroundColor: colors.bgDeep,
       paddingVertical: 8,
