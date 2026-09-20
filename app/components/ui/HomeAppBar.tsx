@@ -10,6 +10,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const HOME_APP_BAR_H = ds.homeAppBar.height;
 const BAR_H = space[40];
@@ -23,8 +24,13 @@ export const SHELL_TOOL = TOOL;
 export const SHELL_ICON_SIZE = ICON_SIZE;
 export const SHELL_BAR_H = BAR_H;
 export const SHELL_LOGO_SIZE = 28;
-/** Measured chrome stack: padding + identity row. */
+/** Identity row only — top safe area is owned here, not by Screen. */
 export const HOME_APP_BAR_STACK_H = space[8] + BAR_H + space[8];
+
+/** Full identity chrome height with the single top-inset owner. */
+export function shellIdentityStackH(insetTop = 0) {
+  return insetTop + HOME_APP_BAR_STACK_H;
+}
 
 type HomeAppBarProps = {
   onAvatarPress: () => void;
@@ -42,11 +48,17 @@ export function HomeAppBar({
 }: HomeAppBarProps) {
   const { colors: themeColors } = useTheme();
   const { gutter } = useLayout();
+  const insets = useSafeAreaInsets();
   const colorStyles = useThemedStyles(({ colors }) => createColorStyles(colors));
 
   return (
     <SarhSurface tone="background" style={[styles.shell, colorStyles.shell]}>
-      <View style={[styles.inner, { paddingHorizontal: gutter }]}>
+      <View
+        style={[
+          styles.inner,
+          { paddingHorizontal: gutter, paddingTop: insets.top + space[8] },
+        ]}
+      >
         <Row justify="between" align="center" style={styles.bar}>
           <Pressable
             onPress={onAvatarPress}
@@ -105,7 +117,6 @@ const styles = StyleSheet.create({
   inner: {
     width: '100%',
     overflow: 'visible',
-    paddingTop: space[8],
     paddingBottom: space[8],
   },
   bar: {

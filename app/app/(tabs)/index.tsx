@@ -8,7 +8,7 @@ import {
   type MarketListingsFeedHandle,
 } from '@/components/market/MarketListingsFeed';
 import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
-import { HomeAppBar, HOME_APP_BAR_STACK_H } from '@/components/ui/HomeAppBar';
+import { HomeAppBar, shellIdentityStackH } from '@/components/ui/HomeAppBar';
 import { Screen, ScreenBody } from '@/design-system/layout';
 import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,19 +17,21 @@ import { HOME_TAB_RESELECT_EVENT } from '@/lib/homeQuickAccess';
 import { safePush } from '@/lib/safeNavigate';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeviceEventEmitter } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { me } = useAppUser();
   const { isAuthenticated } = useAuth();
   const { setChromeVisible } = useAppChromeScroll();
+  const insets = useSafeAreaInsets();
   const displayName = isAuthenticated
     ? me.arabicName || me.displayName || me.username || 'حسابي'
     : 'ضيف';
 
   const listingsRef = useRef<MarketListingsFeedHandle>(null);
   const refreshBusyRef = useRef(false);
-  const [headerH, setHeaderH] = useState(HOME_APP_BAR_STACK_H);
+  const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top));
 
   const refreshHome = useCallback(() => {
     if (refreshBusyRef.current) return;
@@ -56,7 +58,7 @@ export default function HomeScreen() {
   const quickAccess = useMemo(() => <HomeQuickAccess />, []);
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={[]}>
       <AppChromeLayer onHeight={setHeaderH}>
         <HomeAppBar
           displayName={displayName}

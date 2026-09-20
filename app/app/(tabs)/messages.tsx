@@ -3,7 +3,7 @@
 
 import { MessagesPanel } from '@/components/feature/MessagesPanel';
 import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
-import { HomeAppBar, HOME_APP_BAR_STACK_H } from '@/components/ui/HomeAppBar';
+import { HomeAppBar, shellIdentityStackH } from '@/components/ui/HomeAppBar';
 import { space } from '@/design-system';
 import { SarhInput } from '@/design-system/components';
 import { Screen, ScreenBody } from '@/design-system/layout';
@@ -13,14 +13,18 @@ import { safePush } from '@/lib/safeNavigate';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const MESSAGES_CHROME_H = HOME_APP_BAR_STACK_H + space[8] + space[48];
+function messagesChromeH(insetTop: number) {
+  return shellIdentityStackH(insetTop) + space[8] + space[48];
+}
 
 export default function MessagesScreen() {
   const router = useRouter();
   const { me } = useAppUser();
   const { isAuthenticated } = useAuth();
-  const [headerH, setHeaderH] = useState(MESSAGES_CHROME_H);
+  const insets = useSafeAreaInsets();
+  const [headerH, setHeaderH] = useState(() => messagesChromeH(insets.top));
   const [search, setSearch] = useState('');
   const displayName = isAuthenticated
     ? me.arabicName || me.displayName || me.username || 'حسابي'
@@ -35,7 +39,7 @@ export default function MessagesScreen() {
   }, [isAuthenticated, router]);
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={[]}>
       <AppChromeLayer onHeight={setHeaderH}>
         <HomeAppBar
           displayName={displayName}

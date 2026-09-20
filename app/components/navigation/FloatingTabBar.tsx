@@ -40,7 +40,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   const activeTint = colors.electricBright;
-  const inactiveTint = colors.textPrimary;
+  const inactiveTint = colors.textSecondary;
   const hideDistance = ds.tabBar.height + bottomPad + spacing.md;
 
   const activeRoute = state.routes[state.index]?.name;
@@ -107,7 +107,6 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       style={[
         styles.wrap,
         {
-          paddingBottom: bottomPad,
           opacity: chromeProgress,
           transform: [{ translateY }],
         },
@@ -117,9 +116,10 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       <View
         style={[
           styles.bar,
+          { paddingBottom: bottomPad },
           {
             backgroundColor: tokens.glass,
-            borderColor: tokens.glassBorder,
+            borderTopColor: tokens.glassBorder,
           },
           ambientShadow(scheme, 'soft'),
         ]}
@@ -226,24 +226,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: ds.tabBar.marginH,
   },
   bar: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 22,
+    borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
     paddingHorizontal: spacing.xs,
   },
   row: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   tabSlot: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
+    justifyContent: 'flex-start',
+    minHeight: 52,
     paddingVertical: 2,
     paddingHorizontal: 2,
   },
