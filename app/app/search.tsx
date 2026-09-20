@@ -3,11 +3,16 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
+import { HomeAppBar, shellIdentityStackH } from '@/components/ui/HomeAppBar';
+import { useAuth } from '@/contexts/AuthContext';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { openPostDetail } from '@/lib/openPost';
+import { safePush } from '@/lib/safeNavigate';
 import { AppText, SarhBackButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAppChromeScroll } from '@/hooks/useAppChrome';
+import { useAppUser } from '@/hooks/useApp';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -33,6 +38,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RECENT_KEY = 'safat_recent_searches';
 const MIN_QUERY = 2;
@@ -67,7 +73,22 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
   const router = useRouter();
   const { onChromeScroll } = useAppChromeScroll();
+  const { me } = useAppUser();
+  const { isAuthenticated } = useAuth();
+  const insets = useSafeAreaInsets();
   const isTab = variant === 'tab';
+  const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top));
+  const displayName = isAuthenticated
+    ? me.arabicName || me.displayName || me.username || 'حسابي'
+    : 'ضيف';
+
+  const openSidebar = useCallback(() => {
+    if (!isAuthenticated) {
+      safePush('/auth/phone', undefined, router);
+      return;
+    }
+    safePush('/sidebar', undefined, router);
+  }, [isAuthenticated, router]);
 
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 350);
@@ -294,8 +315,26 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   };
 
   return (
-    <Screen edges={isTab ? ['top'] : ['top', 'bottom']} keyboard>
-      <Row gap="sm" align="center" style={[styles.searchBar, { paddingHorizontal: gutter }]}>
+    <Screen edges={isTab ? [] : ['top', 'bottom']} keyboard>
+      {isTab ? (
+        <AppChromeLayer onHeight={setHeaderH}>
+          <HomeAppBar
+            displayName={displayName}
+            avatarUri={me.avatar}
+            onAvatarPress={openSidebar}
+          />
+        </AppChromeLayer>
+      ) : null}
+
+      <Row
+        gap="sm"
+        align="center"
+        style={[
+          styles.searchBar,
+          { paddingHorizontal: gutter },
+          isTab ? { paddingTop: headerH + 12 } : null,
+        ]}
+      >
         {isTab ? null : (
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
         )}
