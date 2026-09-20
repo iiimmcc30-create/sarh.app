@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { openPostDetail } from '@/lib/openPost';
 import { safePush } from '@/lib/safeNavigate';
-import { AppText, SarhBackButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
+import { AppText, SarhBackButton, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useAppUser } from '@/hooks/useApp';
@@ -30,7 +30,7 @@ import {
 import { ds } from '@/constants/designSystem';
 import { type ThemeColors } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -45,11 +45,11 @@ const MIN_QUERY = 2;
 
 type SearchFilter = SearchContentType;
 
-const FILTERS: { id: SearchFilter; label: string }[] = [
-  { id: 'all', label: 'الكل' },
+const RESULT_SECTIONS: { id: SearchFilter; label: string }[] = [
+  { id: 'all', label: 'الأحدث' },
+  { id: 'users', label: 'الأشخاص' },
   { id: 'listings', label: 'الإعلانات' },
   { id: 'posts', label: 'المنشورات' },
-  { id: 'butchers', label: 'الملاحم' },
   { id: 'news', label: 'الأخبار' },
   { id: 'services', label: 'الخدمات' },
 ];
@@ -63,24 +63,17 @@ const EXPLORE_SECTIONS: { id: ExploreSection; label: string }[] = [
   { id: 'services', label: 'الخدمات' },
 ];
 
-const GROUP_LABELS: Record<Exclude<SearchFilter, 'all'>, string> = {
-  listings: 'الإعلانات',
-  posts: 'المنشورات',
-  butchers: 'الملاحم',
-  news: 'الأخبار',
-  services: 'الخدمات',
-  users: 'الحسابات',
-};
-
 type SearchScreenProps = {
   variant?: 'stack' | 'tab';
 };
 
 export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const { colors } = useTheme();
-  const { gutter } = useLayout();
+  const { gutter, width } = useLayout();
   const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
   const router = useRouter();
+  const { q: qParam } = useLocalSearchParams<{ q?: string }>();
+  const resultTabWidth = Math.max(72, (width - gutter * 2) / 5.15);
   const { onChromeScroll } = useAppChromeScroll();
   const { me } = useAppUser();
   const { isAuthenticated } = useAuth();
@@ -100,7 +93,9 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     safePush('/sidebar', undefined, router);
   }, [isAuthenticated, router]);
 
-  const [query, setQuery] = useState('');
+  const initialQuery =
+    !isTab && typeof qParam === 'string' ? qParam : '';
+  const [query, setQuery] = useState(initialQuery);
   const debouncedQuery = useDebouncedValue(query.trim(), 350);
   const [filter, setFilter] = useState<SearchFilter>('all');
 
@@ -166,7 +161,13 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   }, [debouncedQuery]);
 
   useEffect(() => {
-    if (debouncedQuery.length < MIN_QUERY) return;
+    if (isTab) return;
+    const next = typeof qParam === 'string' ? qParam : '';
+    if (next) setQuery(next);
+  }, [isTab, qParam]);
+
+  useEffect(() => {
+    if (isTab || debouncedQuery.length < MIN_QUERY) return;
 
     const seq = ++searchSeq.current;
     setLoading(true);
@@ -184,7 +185,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       .finally(() => {
         if (seq === searchSeq.current) setLoading(false);
       });
-  }, [debouncedQuery, filter]);
+  }, [debouncedQuery, filter, isTab]);
 
   const saveRecent = useCallback((searches: string[]) => {
     setRecentSearches(searches);
@@ -201,12 +202,30 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     [recentSearches, saveRecent],
   );
 
+  const openResults = useCallback(
+    (term: string) => {
+      const trimmed = term.trim();
+      if (trimmed.length < MIN_QUERY) return;
+      addRecentSearch(trimmed);
+      if (isTab) {
+        safePush({ pathname: '/search', params: { q: trimmed } }, { force: true }, router);
+        return;
+      }
+      setQuery(trimmed);
+    },
+    [addRecentSearch, isTab, router],
+  );
+
   const applyQuery = useCallback(
     (term: string) => {
+      if (isTab) {
+        openResults(term);
+        return;
+      }
       setQuery(term);
       addRecentSearch(term);
     },
-    [addRecentSearch],
+    [addRecentSearch, isTab, openResults],
   );
 
   const hasQuery = query.trim().length > 0;
@@ -217,10 +236,21 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     return groups.filter((g) => g.type === filter);
   }, [groups, filter]);
 
-  const totalResults = useMemo(
-    () => visibleGroups.reduce((n, g) => n + g.items.length, 0),
-    [visibleGroups],
-  );
+  const latestItems = useMemo(() => {
+    return groups
+      .flatMap((group) => group.items)
+      .slice()
+      .sort((a, b) => {
+        const left = a.createdAt ? Date.parse(a.createdAt) : 0;
+        const right = b.createdAt ? Date.parse(b.createdAt) : 0;
+        return right - left;
+      });
+  }, [groups]);
+
+  const totalResults = useMemo(() => {
+    if (filter === 'all') return latestItems.length;
+    return visibleGroups.reduce((n, g) => n + g.items.length, 0);
+  }, [filter, latestItems.length, visibleGroups]);
 
   const renderResult = (item: SearchResultItem) => {
     switch (item.type) {
@@ -302,6 +332,31 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
             </Row>
           </Pressable>
         );
+      case 'users': {
+        const user = item.data as {
+          id?: string;
+          username?: string;
+          arabicName?: string;
+          displayName?: string;
+          avatar?: string;
+          verified?: boolean;
+        };
+        return (
+          <UserIdentityRow
+            key={`user-${item.id}`}
+            avatarUri={user.avatar ?? item.imageUrl}
+            displayName={user.arabicName || user.displayName || user.username || item.title}
+            username={user.username}
+            verified={user.verified}
+            avatarSize={USER_IDENTITY.listAvatarSize}
+            avatarRadius={USER_IDENTITY.listAvatarRadius}
+            avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+            nameLines={2}
+            onPress={() => router.push({ pathname: '/users/[id]', params: { id: item.id } } as never)}
+            style={styles.userRow}
+          />
+        );
+      }
       case 'posts':
         return (
           <Pressable
@@ -335,16 +390,16 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     <SarhInput
       value={query}
       onChangeText={setQuery}
-      placeholder={isTab ? 'بحث' : 'ابحث في سرح...'}
+      placeholder="بحث"
       autoFocus={!isTab}
       returnKeyType="search"
-      onSubmitEditing={() => addRecentSearch(query)}
+      onSubmitEditing={() => openResults(query)}
       leadingIcon="search"
       trailingIcon={hasQuery ? 'close-circle' : undefined}
       onTrailingPress={hasQuery ? () => setQuery('') : undefined}
-      shape={isTab ? 'pill' : 'rounded'}
+      shape="pill"
       accessibilityRole="search"
-      accessibilityLabel={hasQuery ? 'مسح البحث' : isTab ? 'بحث' : 'ابحث في سرح...'}
+      accessibilityLabel={hasQuery ? 'مسح البحث' : 'بحث'}
       containerStyle={styles.inputFlex}
     />
   );
@@ -471,7 +526,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
       {isTab ? null : (
         <Row gap="sm" align="center" style={[styles.searchBar, { paddingHorizontal: gutter }]}>
-          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} chrome="ghost" />
           {searchField}
         </Row>
       )}
@@ -500,15 +555,23 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
       {isTab || !hasQuery ? null : (
         <SarhChipRow contentPaddingHorizontal={gutter} style={styles.filterRowWrap}>
-          {FILTERS.map((f) => (
-            <SarhChip
-              appearance="filter"
-              key={f.id}
-              label={f.label}
-              selected={filter === f.id}
-              onPress={() => setFilter(f.id)}
-            />
-          ))}
+          {RESULT_SECTIONS.map((item) => {
+            const active = filter === item.id;
+            return (
+              <Pressable
+                key={item.id}
+                onPress={() => setFilter(item.id)}
+                style={[styles.resultTab, { minWidth: resultTabWidth }]}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
+                  {item.label}
+                </AppText>
+                {active ? <View style={styles.resultTabIndicator} /> : null}
+              </Pressable>
+            );
+          })}
         </SarhChipRow>
       )}
 
@@ -522,7 +585,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
           ? { paddingTop: headerH }
           : undefined}
       >
-        {!hasQuery ? (
+        {isTab || !hasQuery ? (
           idleForSection
         ) : (
           <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
@@ -554,16 +617,19 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
               </Stack>
             ) : null}
 
-            {canSearch
+            {canSearch && filter === 'all' && latestItems.length > 0
+              ? (
+                <Stack gap="none" style={styles.section}>
+                  {latestItems.map((item) => renderResult(item))}
+                </Stack>
+              )
+              : null}
+
+            {canSearch && filter !== 'all'
               ? visibleGroups.map((group) =>
                   group.items.length > 0 ? (
-                    <Stack key={group.type} gap="md" style={styles.section}>
-                      <AppText variant="heading3">
-                        {GROUP_LABELS[group.type]} ({group.items.length})
-                      </AppText>
-                      <Stack gap={group.type === 'listings' ? 'md' : 'none'}>
-                        {group.items.map((item) => renderResult(item))}
-                      </Stack>
+                    <Stack key={group.type} gap={group.type === 'listings' ? 'md' : 'none'} style={styles.section}>
+                      {group.items.map((item) => renderResult(item))}
                     </Stack>
                   ) : null,
                 )
@@ -588,15 +654,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   return StyleSheet.create({
     searchBar: {
       paddingVertical: 12,
-      backgroundColor: colors.bgDeep,
-    },
-    backBtn: {
-      width: ds.iconBtn.md,
-      height: ds.iconBtn.md,
-      borderRadius: 12,
-      backgroundColor: colors.bgElevated,
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: colors.screenRoot,
     },
     inputFlex: { flex: 1 },
     flex: { flex: 1 },
@@ -610,8 +668,23 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       minHeight: 32,
     },
     filterRowWrap: {
-      backgroundColor: colors.bgDeep,
-      paddingVertical: 8,
+      backgroundColor: colors.screenRoot,
+      paddingTop: 4,
+    },
+    resultTab: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 36,
+      paddingBottom: 8,
+      position: 'relative',
+    },
+    resultTabIndicator: {
+      position: 'absolute',
+      bottom: 0,
+      width: 22,
+      height: 2,
+      borderRadius: 999,
+      backgroundColor: colors.textPrimary,
     },
     suggestBox: {
       marginTop: 8,
