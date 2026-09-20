@@ -25,7 +25,7 @@ export type {
 } from './SarhCard';
 
 export { SarhInput, resolveSarhInputBorder } from './SarhInput';
-export type { SarhInputAppearance, SarhInputProps, SarhInputState } from './SarhInput';
+export type { SarhInputAppearance, SarhInputProps, SarhInputShape, SarhInputState } from './SarhInput';
 
 export { AVATAR_SIZE, SarhAvatar, avatarInitials } from './SarhAvatar';
 export type { SarhAvatarProps, SarhAvatarSize } from './SarhAvatar';

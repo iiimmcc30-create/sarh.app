@@ -4,6 +4,7 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ambientShadow } from '@/constants/designSystem';
 import {
   imageCardOverlay,
   imageCardOverlayStrong,
@@ -105,7 +106,12 @@ function ListingCardInner({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.listRow, getRtlDirection(), pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.listRow,
+          styles.listRowChrome,
+          getRtlDirection(),
+          pressed && styles.pressed,
+        ]}
       >
         <View style={styles.listContent}>
           <View style={[styles.listTitleRow, getRtlRow()]}>
@@ -342,7 +348,6 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
     ...getRtlRow(),
     alignItems: 'flex-start',
     flexGrow: 0,
-    width: '100%',
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     gap: 12,
@@ -483,6 +488,13 @@ function createStyles(colors: ThemeColors, _scheme: 'light' | 'dark') {
   listPhotoCountText: {
     ...typography.badge,
     color: '#fff',
+  },
+  listRowChrome: {
+    borderRadius: MENU_CARD.radius,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderHairline,
+    marginHorizontal: spacing.sm,
+    ...ambientShadow(_scheme, 'soft'),
   },
 
   profileCard: {

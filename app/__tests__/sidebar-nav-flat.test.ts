@@ -8,18 +8,22 @@ function src(rel: string) {
 }
 
 describe('Sidebar + bottom nav + profile/settings flatten', () => {
-  it('replaces المزيد with مجتمع سرح and keeps profile off the tab bar', () => {
+  it('uses Search beside Home and keeps Community after Chat, with Profile off the tab bar', () => {
     const tabs = src('components/navigation/FloatingTabBar.tsx');
     const layout = src('app/(tabs)/_layout.tsx');
+    expect(tabs).toContain("label: 'البحث'");
+    expect(tabs).toContain("route: 'search'");
     expect(tabs).toContain("label: 'مجتمع سرح'");
     expect(tabs).toContain("route: 'posts'");
     expect(tabs).not.toContain("route: 'profile'");
+    expect(tabs).not.toContain("route: 'market'");
     expect(tabs).not.toContain("label: 'المزيد'");
-    expect(tabs).not.toContain("label: 'الملف الشخصي'");
+    expect(layout).toContain("title: 'البحث'");
     expect(layout).toContain("title: 'مجتمع سرح'");
     expect(layout).toContain('name="more"');
     expect(layout).toContain('name="profile"');
     expect(layout).toMatch(/name="more"[\s\S]*href: null/);
+    expect(layout).toMatch(/name="market"[\s\S]*href: null/);
     expect(layout).toMatch(/name="profile"[\s\S]*href: null/);
   });
 

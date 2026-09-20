@@ -1,3 +1,4 @@
+import { useBindChromeScroll } from '@/hooks/useAppChrome';
 import React, { forwardRef } from 'react';
 import {
   Platform,
@@ -26,10 +27,12 @@ export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
       bounces = true,
       alwaysBounceVertical,
       overScrollMode,
+      onScroll,
       ...rest
     },
     ref,
   ) {
+    const boundScroll = useBindChromeScroll(onScroll);
     return (
       <ScrollView
         ref={ref}
@@ -41,6 +44,7 @@ export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
         bounces={bounces}
         alwaysBounceVertical={alwaysBounceVertical ?? bounces}
         overScrollMode={overScrollMode ?? (Platform.OS === 'android' ? 'always' : undefined)}
+        onScroll={boundScroll}
         {...rest}
       />
     );

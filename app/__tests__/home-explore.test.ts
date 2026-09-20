@@ -159,20 +159,21 @@ describe('progressive register screen', () => {
 });
 
 describe('HomeAppBar chrome', () => {
-  it('uses flat home header with notifications, search bar, and profile identity', () => {
+  it('uses flat home header with notifications and profile identity, without a search bar', () => {
     const src = fs.readFileSync(
       path.join(__dirname, '../components/ui/HomeAppBar.tsx'),
       'utf8',
     );
     const avatarAt = src.indexOf('accessibilityLabel="القائمة الجانبية"');
     const bellAt = src.indexOf('<NotificationBellButton');
-    const searchAt = src.indexOf('accessibilityRole="search"');
     expect(avatarAt).toBeGreaterThan(-1);
     expect(bellAt).toBeGreaterThan(avatarAt);
-    expect(searchAt).toBeGreaterThan(bellAt);
     expect(src).toContain('onAvatarPress');
-    expect(src).toContain('styles.searchBar');
-    expect(src).toContain('HOME_SEARCH_PLACEHOLDER');
+    expect(src).toContain('SarhLogoMark');
+    expect(src).toContain('uri={avatarUri}');
+    expect(src).not.toContain('styles.searchBar');
+    expect(src).not.toContain('HOME_SEARCH_PLACEHOLDER');
+    expect(src).not.toContain('accessibilityRole="search"');
     expect(src).not.toContain('HomeProfileMenu');
     expect(src).not.toContain('angle-down');
     expect(src).not.toContain("direction: 'ltr'");
@@ -180,7 +181,8 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain('bare');
     expect(src).toContain('backgroundColor: \'transparent\'');
     expect(src).toContain('minHeight: BAR_H');
-    expect(src).toContain('variant="heading3"');
+    expect(src).not.toContain('variant="heading3"');
+    expect(src).not.toContain('onProfilePress');
   });
 
   it('embeds filter inside market search bar with featured star on the right', () => {
@@ -212,13 +214,14 @@ describe('HomeAppBar chrome', () => {
     );
     const nearbyAt = src.indexOf('label="القريب"');
     const sortAt = src.indexOf('name="sort-alt"', nearbyAt);
-    const categoryAt = src.indexOf('التصنيف', sortAt);
+    const categoryAt = src.indexOf('accessibilityLabel="التصنيف"', sortAt);
     expect(nearbyAt).toBeGreaterThan(-1);
     expect(sortAt).toBeGreaterThan(nearbyAt);
     expect(categoryAt).toBeGreaterThan(sortAt);
-    expect(src).toContain('options-outline');
+    expect(src).toContain('name="apps"');
     expect(src).toContain('onCategoryPress');
     expect(src).toContain('onSortPress');
+    expect(src).not.toContain('options-outline');
   });
 
   it('uses elevated listing-card surface for compact market chips', () => {
@@ -296,7 +299,7 @@ describe('Home design-system adoption', () => {
     'utf8',
   );
   const listings = fs.readFileSync(
-    path.join(__dirname, '../components/feature/HomeLatestListings.tsx'),
+    path.join(__dirname, '../components/market/MarketListingsFeed.tsx'),
     'utf8',
   );
 
@@ -305,13 +308,15 @@ describe('Home design-system adoption', () => {
     expect(home).toContain('<Screen');
     expect(home).toContain('<ScreenBody');
     expect(appBar).toContain('SarhAvatar');
+    expect(appBar).toContain('SarhLogoMark');
     expect(appBar).toContain('NotificationBellButton');
-    expect(appBar).toContain('variant="heading3"');
-    expect(appBar).toContain('styles.searchBar');
+    expect(appBar).not.toContain('variant="heading3"');
+    expect(appBar).not.toContain('styles.searchBar');
     expect(explore).toContain('SarhButton');
     expect(explore).toContain('HOME_BANNER_CTA_LABEL');
     expect(quick).toContain('الوصول السريع');
-    expect(listings).toContain('أحدث الإعلانات');
+    expect(listings).toContain('listMode="market"');
+    expect(listings).not.toContain('أحدث الإعلانات');
     expect(community).toContain('مجتمع سرح');
     expect(community).toContain('pickHomeCommunityPosts');
     expect(community).toContain('PostItem');
@@ -344,11 +349,11 @@ describe('Home design-system adoption', () => {
     expect(community).toContain('<Row');
     expect(stories).toContain('<Row');
     expect(appBar).toContain('accessibilityRole="button"');
+    expect(appBar).not.toContain('accessibilityRole="search"');
     expect(explore).toContain('accessibilityRole="button"');
     expect(exploreFallback).toContain("accessibilityLabel: 'ملاحم سرح'");
     expect(community).toContain('مجتمع سرح');
     expect(stories).toContain('accessibilityRole="button"');
-    expect(appBar).toContain('accessibilityRole="search"');
   });
 
   it('does not introduce a second Home-only primitive set', () => {
@@ -359,16 +364,17 @@ describe('Home design-system adoption', () => {
   });
 
   it('keeps the launch Home section order', () => {
-    const exploreAt = home.indexOf('<ExploreSarhSection ref={bannerRef}');
-    const quickAt = home.indexOf('<HomeQuickAccess />');
-    const listingsAt = home.indexOf('<HomeLatestListings ref={listingsRef}');
-    expect(exploreAt).toBeGreaterThan(-1);
-    expect(quickAt).toBeGreaterThan(exploreAt);
+    const exploreAt = home.indexOf('ExploreSarhSection');
+    const quickAt = home.indexOf('<HomeQuickAccess');
+    const listingsAt = home.indexOf('extraHeader={quickAccess}');
+    expect(exploreAt).toBe(-1);
+    expect(quickAt).toBeGreaterThan(-1);
     expect(listingsAt).toBeGreaterThan(quickAt);
     expect(home).not.toContain('<HomeFeedSuppliers');
     expect(home).not.toContain('HomeMinistryOrgCard');
     expect(home).not.toContain('<EditorialStoriesBar');
     expect(home).not.toContain('<HomeCommunityPosts');
+    expect(home).not.toContain('أحدث الإعلانات');
     expect(explore).toContain('fetchExploreSarhBanners');
     expect(explore).not.toContain('FALLBACK_EXPLORE_SARH_BANNERS');
     expect(exploreFallback).toContain('ملاحم سرح');

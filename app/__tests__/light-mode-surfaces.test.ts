@@ -39,6 +39,28 @@ describe('light mode surface hierarchy', () => {
     expect(src('components/ui/filterChipAppearance.tsx')).toContain('colors.royal');
   });
 
+  it('keeps chat chrome on live light/dark tokens instead of fixed light fills', () => {
+    const messages = src('app/(tabs)/messages.tsx');
+    const appBar = src('components/ui/HomeAppBar.tsx');
+    const input = src('design-system/components/SarhInput.tsx');
+    expect(messages).toContain('HomeAppBar');
+    expect(messages).toContain('shape="pill"');
+    expect(appBar).toContain('tone="background"');
+    expect(appBar).toContain('themeColors.electric');
+    expect(appBar).toContain('themeColors.textPrimary');
+    expect(appBar).toContain('themeColors.screenRoot');
+    expect(appBar).toContain('colors.borderHairline');
+    expect(appBar).toContain('colors.bgField');
+    expect(input).toContain('themeColors.bgField');
+    expect(input).toContain('themeColors.textMuted');
+    expect(input).toContain("isDark ? 'dark' : 'light'");
+    const dark = snapshotTheme('dark').colors;
+    const light = snapshotTheme('light').colors;
+    expect(dark.bgField).not.toBe(dark.screenRoot);
+    expect(light.bgField).not.toBe(light.screenRoot);
+    expect(dark.textPrimary).not.toBe(light.textPrimary);
+  });
+
   it('aligns butcher light chrome with the same hierarchy', () => {
     const light = snapshotTheme('light').colors;
     expect(butcherChromeBg('light', 'meat')).toBe(light.screenRoot);

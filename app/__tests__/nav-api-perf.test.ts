@@ -21,8 +21,8 @@ describe('tab navigation API performance', () => {
     expect(ctx).toContain('postsApplyGenerationByFeed');
     expect(ctx).toContain('hydratePostsFeed');
     expect(ctx).toContain("fetchPosts('for_you', { force })");
-    expect(src('components/feature/HomeLatestListings.tsx')).toContain('getBootstrappedListingsPage');
-    expect(src('components/feature/HomeLatestListings.tsx')).toContain('needsFailureRecoveryRef');
+    expect(src('components/market/MarketListingsFeed.tsx')).toContain('getBootstrappedListingsPage');
+    expect(src('components/market/MarketListingsFeed.tsx')).toContain('setLoadFailed(true)');
   });
 
   it('skips profile seller listing walks when the same user was loaded within TTL', () => {
@@ -48,7 +48,7 @@ describe('tab navigation API performance', () => {
   });
 
   it('keeps existing market rows visible while a later first page is in flight', () => {
-    const market = src('app/(tabs)/market.tsx');
+    const market = src('components/market/MarketListingsFeed.tsx');
     expect(market).toContain('if (!hasItemsRef.current) setLoading(true)');
     expect(market).toContain('if (gen !== loadGenRef.current) return');
     expect(market).toContain('getBootstrappedListingsPage');

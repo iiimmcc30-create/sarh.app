@@ -7,6 +7,7 @@ import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { openPostDetail } from '@/lib/openPost';
 import { AppText, SarhBackButton, SarhChip, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -56,11 +57,17 @@ const GROUP_LABELS: Record<Exclude<SearchFilter, 'all'>, string> = {
   users: 'الحسابات',
 };
 
-export default function SearchScreen() {
+type SearchScreenProps = {
+  variant?: 'stack' | 'tab';
+};
+
+export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const { colors } = useTheme();
   const { gutter } = useLayout();
   const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
   const router = useRouter();
+  const { onChromeScroll } = useAppChromeScroll();
+  const isTab = variant === 'tab';
 
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 350);
@@ -287,14 +294,16 @@ export default function SearchScreen() {
   };
 
   return (
-    <Screen edges={['top', 'bottom']} keyboard>
+    <Screen edges={isTab ? ['top'] : ['top', 'bottom']} keyboard>
       <Row gap="sm" align="center" style={[styles.searchBar, { paddingHorizontal: gutter }]}>
-        <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
+        {isTab ? null : (
+          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
+        )}
         <SarhInput
           value={query}
           onChangeText={setQuery}
           placeholder="ابحث في سرح..."
-          autoFocus
+          autoFocus={!isTab}
           returnKeyType="search"
           onSubmitEditing={() => addRecentSearch(query)}
           leadingIcon="search"
@@ -334,7 +343,13 @@ export default function SearchScreen() {
         </SarhChipRow>
       ) : null}
 
-      <ScreenBody padBottom="xxxl" gutter={false}>
+      <ScreenBody
+        padBottom={isTab ? 'md' : 'xxxl'}
+        gutter={false}
+        bottomInset={isTab ? 'tabBar' : 'none'}
+        onScroll={isTab ? onChromeScroll : undefined}
+        scrollEventThrottle={16}
+      >
         {!hasQuery ? (
           <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
             {recentSearches.length > 0 ? (
