@@ -8,14 +8,18 @@ function src(rel: string) {
 }
 
 describe('home launch layout', () => {
-  it('keeps Home section order: banner, quick access, latest listings', () => {
+  it('keeps Home section order: quick access, then the existing market feed', () => {
     const home = src('app/(tabs)/index.tsx');
-    expect(home.indexOf('<ExploreSarhSection ref={bannerRef}')).toBeLessThan(home.indexOf('<HomeQuickAccess'));
-    expect(home.indexOf('<HomeQuickAccess />')).toBeLessThan(home.indexOf('<HomeLatestListings ref={listingsRef}'));
+    expect(home).not.toContain('ExploreSarhSection');
     expect(home).not.toContain('<HomeFeedSuppliers');
     expect(home).not.toContain('<EditorialStoriesBar');
     expect(home).not.toContain('<HomeCommunityPosts');
-    expect(home).toContain("safePush('/search'");
+    expect(home).not.toContain('HomeLatestListings');
+    expect(home).not.toContain('أحدث الإعلانات');
+    expect(home).toContain('<HomeQuickAccess');
+    expect(home).toContain('extraHeader={quickAccess}');
+    expect(home).toContain('variant="home"');
+    expect(home.indexOf('<HomeQuickAccess')).toBeLessThan(home.indexOf('extraHeader={quickAccess}'));
     expect(home).toContain("safePush('/sidebar'");
   });
 
@@ -42,36 +46,27 @@ describe('home launch layout', () => {
     expect(src('app/settings/index.tsx')).toContain('export default function SettingsScreen');
   });
 
-  it('keeps the hero on the existing explore-sarh banner CMS and CTA to /butchers', () => {
+  it('does not show the Malahem banner on Home', () => {
+    const home = src('app/(tabs)/index.tsx');
     const banner = src('components/feature/ExploreSarhSection.tsx');
-    const catalog = src('lib/homeQuickAccess.ts');
+    expect(home).not.toContain('ExploreSarhSection');
+    expect(home).not.toContain('HOME_BANNER_CTA_LABEL');
+    expect(home).not.toContain("safePush('/butchers'");
     expect(banner).toContain('fetchExploreSarhBanners');
-    expect(banner).not.toContain('FALLBACK_EXPLORE_SARH_BANNERS');
-    expect(banner).toContain('useState<ExploreSarhBannerView[]>([])');
-    expect(banner).toContain('HOME_BANNER_CTA_LABEL');
-    expect(banner).not.toContain('safePush(banner.href');
-    expect(banner).not.toContain('styles.title');
-    expect(banner).not.toContain('styles.subtitle');
-    expect(banner).not.toContain('styles.scrim');
-    expect(banner).not.toContain('HOME_BANNER_SUBTITLE_AR');
-    expect(banner).toContain("alignItems: 'flex-end'");
-    expect(banner).toContain("variant={scheme === 'light' ? 'secondary' : 'inverse'}");
-    expect(catalog).toContain("HOME_BANNER_CTA_HREF = '/butchers'");
-    expect(catalog).toContain("HOME_BANNER_CTA_LABEL = 'تصفح الملاحم'");
     expect(src('app/butchers/index.tsx')).toContain('ButcherMarketBannerSlider');
   });
 
-  it('shows ten latest market listings without changing ListingCard internals', () => {
-    const catalog = src('lib/homeQuickAccess.ts');
-    const listings = src('components/feature/HomeLatestListings.tsx');
-    expect(catalog).toContain('HOME_LATEST_LISTINGS_LIMIT = 10');
-    expect(listings).toContain('searchListingsPage');
-    expect(listings).toContain('getBootstrappedListingsPage');
-    expect(listings).toContain('HOME_LATEST_LISTINGS_LIMIT');
-    expect(listings).toContain('listMode="market"');
-    expect(listings).not.toContain('cardShell');
-    expect(listings).toContain("pathname: '/listing/[id]'");
-    expect(listings).toContain("safePush('/(tabs)/market'");
+  it('reuses the market ListingCard feed on Home without a latest-listings title', () => {
+    const home = src('app/(tabs)/index.tsx');
+    const feed = src('components/market/MarketListingsFeed.tsx');
+    expect(home).toContain('MarketListingsFeed');
+    expect(home).not.toContain('أحدث الإعلانات');
+    expect(feed).toContain('searchListingsPage');
+    expect(feed).toContain('getBootstrappedListingsPage');
+    expect(feed).toContain('listMode="market"');
+    expect(feed).toContain("pathname: '/listing/[id]'");
+    expect(feed).not.toContain('أحدث الإعلانات');
+    expect(feed).not.toContain('cardShell');
     expect(src('components/feature/ListingCard.tsx')).not.toContain('cardShell');
     expect(src('components/feature/ListingCard.tsx')).not.toContain("from '@/design-system'");
   });
@@ -111,44 +106,47 @@ describe('home launch layout', () => {
     expect(src('app/settings/info.tsx')).toContain('export default function InfoCenterScreen');
   });
 
-  it('hides Home chrome on scroll using the existing ScreenBody, not a second scroller', () => {
+  it('hides Home chrome on scroll using the market feed scroller, not a nested ScrollView', () => {
     const home = src('app/(tabs)/index.tsx');
-    const body = src('design-system/layout/ScreenBody.tsx');
-    expect(home).toContain('onScroll={onScroll}');
-    expect(home).toContain('onScrollEndDrag={onScrollIdle}');
-    expect(home).toContain('onMomentumScrollEnd={onScrollIdle}');
-    expect(home).toContain('headerProgress');
-    expect(home).toContain('useNativeDriver: true');
+    const feed = src('components/market/MarketListingsFeed.tsx');
+    const layer = src('components/navigation/AppChromeLayer.tsx');
+    const list = src('components/ui/AppFlatList.tsx');
+    expect(home).toContain('AppChromeLayer');
+    expect(home).toContain('useAppChromeScroll');
+    expect(home).not.toContain('onScrollEndDrag={onScrollIdle}');
+    expect(home).not.toContain('onMomentumScrollEnd={onScrollIdle}');
+    expect(layer).toContain('chromeProgress');
+    expect(list).toContain('useBindChromeScroll');
+    expect(home).toContain('scroll={false}');
     expect(home).not.toContain('AppScrollView');
     expect(home).not.toContain('<ScrollView');
-    expect(body).toContain('onScrollEndDrag');
-    expect(body).toContain('onMomentumScrollEnd');
+    expect(feed).toContain('AppFlatList');
+    expect(feed).toContain('onScroll={onScroll}');
   });
 
-  it('refreshes Home data on re-press of the focused Home tab without remounting', () => {
+  it('refreshes Home listings on re-press of the focused Home tab without remounting', () => {
     const home = src('app/(tabs)/index.tsx');
-    const banner = src('components/feature/ExploreSarhSection.tsx');
-    const listings = src('components/feature/HomeLatestListings.tsx');
+    const feed = src('components/market/MarketListingsFeed.tsx');
     const tabs = src('components/navigation/FloatingTabBar.tsx');
     expect(home).toContain('HOME_TAB_RESELECT_EVENT');
     expect(home).toContain('DeviceEventEmitter.addListener');
     expect(home).toContain('refreshBusyRef');
-    expect(home).toContain('bannerRef.current?.refresh()');
     expect(home).toContain('listingsRef.current?.refresh()');
-    expect(banner).toContain('fetchExploreSarhBanners(force ? { force: true }');
-    expect(banner).toContain('inflightRef');
-    expect(listings).toContain('refresh: () => load(true)');
-    expect(listings).toContain('if (inflightRef.current) return');
+    expect(home).not.toContain('bannerRef');
+    expect(feed).toContain('refresh: () => loadFirstPage()');
+    expect(feed).toContain('getBootstrappedListingsPage');
     expect(tabs).toContain("routeName === 'index'");
     expect(tabs).toContain('DeviceEventEmitter.emit(HOME_TAB_RESELECT_EVENT)');
   });
 
-  it('slides the existing tab bar indicator without changing tab routes or chrome', () => {
+  it('slides the existing tab bar indicator with Home, Search, Add, Chat, and Community', () => {
     const tabs = src('components/navigation/FloatingTabBar.tsx');
     expect(tabs).toContain("route: 'index'");
-    expect(tabs).toContain("route: 'market'");
+    expect(tabs).toContain("route: 'search'");
     expect(tabs).toContain("route: 'messages'");
     expect(tabs).toContain("route: 'posts'");
+    expect(tabs).not.toContain("route: 'profile'");
+    expect(tabs).not.toContain("route: 'market'");
     expect(tabs).toContain('addBox');
     expect(tabs).toContain('indicatorX');
     expect(tabs).toContain('useNativeDriver: true');

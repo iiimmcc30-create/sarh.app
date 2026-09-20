@@ -1,3 +1,4 @@
+import { useBindChromeScroll } from '@/hooks/useAppChrome';
 import React, { forwardRef } from 'react';
 import {
   FlatList,
@@ -29,8 +30,10 @@ function AppFlatListInner<T>(
     windowSize = Platform.OS === 'android' ? 7 : 11,
     initialNumToRender = Platform.OS === 'android' ? 6 : 8,
     removeClippedSubviews = Platform.OS === 'android',
+    onScroll,
     ...rest
   } = props;
+  const boundScroll = useBindChromeScroll(onScroll);
 
   return (
     <FlatList
@@ -48,6 +51,7 @@ function AppFlatListInner<T>(
       windowSize={windowSize}
       initialNumToRender={initialNumToRender}
       removeClippedSubviews={removeClippedSubviews}
+      onScroll={boundScroll}
       {...rest}
     />
   );

@@ -14,6 +14,7 @@ import {
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { duration } from '@/design-system/tokens';
 import { spacing, type ThemeColors } from '@/constants/theme';
+import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -148,6 +149,7 @@ export function ProfileScreenLayout({
 }: ProfileScreenLayoutProps) {
   const { colors: themeColors } = useTheme();
   const { gutter } = useLayout();
+  const { onChromeScroll } = useAppChromeScroll();
   const styles = useThemedStyles(({ colors, scheme }) => createStyles(colors, scheme));
   const [activeTab, setActiveTab] = useState<ProfileTabKey>(initialTab);
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -219,6 +221,7 @@ export function ProfileScreenLayout({
         bottomInset="tabBar"
         padBottom="md"
         onScroll={(event) => {
+          onChromeScroll(event);
           if (activeTab !== 'ads' || !onAdsNearEnd) return;
           if (isSellerListNearEnd(event.nativeEvent)) onAdsNearEnd();
         }}

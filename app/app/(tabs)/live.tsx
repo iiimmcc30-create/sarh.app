@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
+import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,7 @@ const LIVE_ROW_HEIGHT = 200 + spacing.md;
 export default function LiveScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  const { onChromeScroll } = useAppChromeScroll();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { accessToken } = useAuth();
@@ -211,6 +213,8 @@ export default function LiveScreen() {
         ListFooterComponent={<View style={{ height: 100 + insets.bottom }} />}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={onChromeScroll}
         removeClippedSubviews
         initialNumToRender={4}
         maxToRenderPerBatch={4}

@@ -85,22 +85,17 @@ export function MarketFilterBar({
         </Pressable>
 
         <Pressable
-          style={[styles.filterChip, categoryOpen && styles.filterChipActive, getRtlRow()]}
+          style={[styles.categoryIconBtn, categoryOpen && styles.filterChipActive]}
           onPress={onCategoryPress}
           accessibilityRole="button"
           accessibilityLabel="التصنيف"
           testID="market-category-chip"
         >
           <AppIcon
-            name="options-outline"
+            name="apps"
             size={MARKET_CHIP.iconSize}
             color={categoryOpen ? accent : colors.textPrimary}
           />
-          <Text
-            style={[styles.filterChipLabel, categoryOpen && styles.filterChipLabelActive]}
-          >
-            التصنيف
-          </Text>
         </Pressable>
       </SarhChipRow>
     </View>
@@ -112,7 +107,8 @@ function createStyles(colors: ThemeColors) {
     wrap: {
       flexGrow: 0,
       flexShrink: 0,
-      paddingVertical: spacing.xs,
+      paddingTop: 0,
+      paddingBottom: spacing.sm,
     },
     regionBtn: {
       height: MARKET_CHIP.height,
@@ -159,6 +155,16 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.electricBright,
       backgroundColor: `${colors.electricBright}14`,
     },
+    categoryIconBtn: {
+      height: MARKET_CHIP.height,
+      width: MARKET_CHIP.height,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: MARKET_CHIP.radius,
+      backgroundColor: colors.bgElevated,
+      borderWidth: 0,
+      flexShrink: 0,
+    },
     filterChipLabel: {
       ...typography.caption,
       fontSize: MARKET_CHIP.fontSize,
@@ -166,10 +172,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       writingDirection: 'rtl',
       includeFontPadding: false,
-    },
-    filterChipLabelActive: {
-      color: colors.electricBright,
-      fontWeight: '600',
     },
   });
 }

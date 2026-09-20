@@ -1,7 +1,8 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ambientShadow, ds } from '@/constants/designSystem';
-import { motion, spacing, typography } from '@/constants/theme';
+import { motion, spacing } from '@/constants/theme';
 import { motion as dsMotion } from '@/design-system/tokens/motion';
+import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useTheme } from '@/hooks/useTheme';
 import { getRtlRow } from '@/lib/rtl';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -9,7 +10,7 @@ import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { isNavigationLocked, safeNavigateTab } from '@/lib/safeNavigate';
 import { HOME_TAB_RESELECT_EVENT } from '@/lib/homeQuickAccess';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Animated, DeviceEventEmitter, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, DeviceEventEmitter, Easing, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICON_SIZE = 22;
@@ -22,11 +23,11 @@ type TabDef =
 
 /**
  * Visual RTL order (right→left):
- * الرئيسية · السوق · إضافة عرض · المحادثات · مجتمع سرح
+ * الرئيسية · البحث · إضافة عرض · المحادثات · مجتمع سرح
  */
 const TABS: TabDef[] = [
   { kind: 'route', route: 'index', icon: 'home-outline', label: 'الرئيسية' },
-  { kind: 'route', route: 'market', icon: 'cart-outline', label: 'السوق' },
+  { kind: 'route', route: 'search', icon: 'search', label: 'البحث' },
   { kind: 'create', label: 'إضافة عرض' },
   { kind: 'route', route: 'messages', icon: 'chatbubble-ellipses-outline', label: 'المحادثات' },
   { kind: 'route', route: 'posts', icon: 'people-outline', label: 'مجتمع سرح' },
@@ -35,15 +36,19 @@ const TABS: TabDef[] = [
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, scheme } = useTheme();
+  const { chromeProgress, chromeVisible, setChromeVisible } = useAppChromeScroll();
   const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   const activeTint = colors.electricBright;
-  const inactiveTint = colors.textSecondary;
+  const inactiveTint = colors.textPrimary;
+  const hideDistance = ds.tabBar.height + bottomPad + spacing.md;
 
   const activeRoute = state.routes[state.index]?.name;
   const layouts = useRef<Record<string, { x: number; width: number }>>({});
   const indicatorX = useRef(new Animated.Value(0)).current;
   const indicatorReady = useRef(false);
   const indicatorAnim = useRef<Animated.CompositeAnimation | null>(null);
+  const lastRouteRef = useRef(activeRoute);
 
   const moveIndicator = (routeName: string, animated: boolean) => {
     const layout = layouts.current[routeName];
@@ -66,7 +71,11 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
 
   useEffect(() => {
     if (activeRoute) moveIndicator(activeRoute, true);
-  }, [activeRoute]);
+    if (activeRoute && lastRouteRef.current !== activeRoute) {
+      lastRouteRef.current = activeRoute;
+      setChromeVisible(true);
+    }
+  }, [activeRoute, setChromeVisible]);
 
   const onTabPress = (routeName: string, isFocused: boolean) => {
     const route = state.routes.find((r) => r.name === routeName);
@@ -74,6 +83,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       if (routeName === 'index') {
         DeviceEventEmitter.emit(HOME_TAB_RESELECT_EVENT);
       }
+      setChromeVisible(true);
       return;
     }
     if (isNavigationLocked()) return;
@@ -87,15 +97,29 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
     }
   };
 
+  const translateY = chromeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [hideDistance, 0],
+  });
+
   return (
-    <View style={styles.wrap} pointerEvents="box-none">
+    <Animated.View
+      style={[
+        styles.wrap,
+        {
+          paddingBottom: bottomPad,
+          opacity: chromeProgress,
+          transform: [{ translateY }],
+        },
+      ]}
+      pointerEvents={chromeVisible ? 'box-none' : 'none'}
+    >
       <View
         style={[
           styles.bar,
-          { paddingBottom: bottomPad },
           {
-            backgroundColor: colors.screenRoot,
-            borderTopColor: colors.screenRoot,
+            backgroundColor: tokens.glass,
+            borderColor: tokens.glassBorder,
           },
           ambientShadow(scheme, 'soft'),
         ]}
@@ -126,15 +150,6 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                       <AppIcon name="plus" size={14} color={activeTint} variant="sr" />
                     </View>
                   </View>
-                  <Text
-                    style={[
-                      typography.tab,
-                      { color: inactiveTint },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {tab.label}
-                  </Text>
                 </Pressable>
               );
             }
@@ -145,6 +160,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
               <Pressable
                 key={tab.route}
                 accessibilityRole="button"
+                accessibilityLabel={tab.label}
                 accessibilityState={{ selected: focused }}
                 onPress={() => onTabPress(tab.route, focused)}
                 onLayout={(event) => {
@@ -168,21 +184,12 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                     />
                   </View>
                 </TabGlyph>
-                <Text
-                  style={[
-                    focused ? typography.tabActive : typography.tab,
-                    { color: tint },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {tab.label}
-                </Text>
               </Pressable>
             );
           })}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -219,25 +226,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: ds.tabBar.marginH,
+    paddingHorizontal: spacing.md,
   },
   bar: {
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 22,
     paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
     paddingHorizontal: spacing.xs,
   },
   row: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   tabSlot: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    minHeight: 52,
+    justifyContent: 'center',
+    minHeight: 44,
     paddingVertical: 2,
     paddingHorizontal: 2,
-    gap: 4,
   },
   /** Fixed icon box so every tab (including +) shares the same visual height. */
   iconSlot: {
@@ -253,9 +261,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.75,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabLabel: {
-    ...typography.tab,
   },
   pressed: {
     transform: [{ scale: motion.pressScale }],

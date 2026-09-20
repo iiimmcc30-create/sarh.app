@@ -12,10 +12,21 @@ import {
   View,
 } from 'react-native';
 import { AppFlatList } from '@/components/ui/AppFlatList';
+import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
+import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
+import { SarhLogoMark } from '@/components/ui/SarhLogoMark';
+import {
+  SHELL_AVATAR_BTN,
+  SHELL_AVATAR_SIZE,
+  SHELL_BAR_H,
+  SHELL_ICON_SIZE,
+  SHELL_LOGO_SIZE,
+  SHELL_TOOL,
+} from '@/components/ui/HomeAppBar';
 import { ds } from '@/constants/designSystem';
 import { type ThemeColors } from '@/constants/theme';
-import { space } from '@/design-system/tokens';
-import { AppText, SarhButton, SarhSurface } from '@/design-system/components';
+import { radius, space } from '@/design-system/tokens';
+import { AppText, SarhAvatar, SarhButton, SarhSurface } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
@@ -26,6 +37,7 @@ import { PostItem } from '@/components/feature/PostItem';
 import { CreatePostFab } from '@/components/feature/CreatePostFab';
 import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
+import { safePush } from '@/lib/safeNavigate';
 import type { Post } from '@/services/types';
 
 type FeedTab = 'for_you' | 'following';
@@ -51,6 +63,7 @@ export default function PostsScreen() {
     fetchPosts,
   } = useApp();
   const [feedTab, setFeedTab] = useState<FeedTab>('for_you');
+  const [headerH, setHeaderH] = useState(SHELL_BAR_H + space[8] + space[32] + space[8]);
   const [loadingFeed, setLoadingFeed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const loadedTabs = useRef<Set<FeedTab>>(new Set());
@@ -117,6 +130,18 @@ export default function PostsScreen() {
     setFeedTab(tab);
   };
 
+  const openSidebar = useCallback(() => {
+    if (!isAuthenticated) {
+      safePush('/auth/phone', undefined, router);
+      return;
+    }
+    safePush('/sidebar', undefined, router);
+  }, [isAuthenticated, router]);
+
+  const displayName = isAuthenticated
+    ? me.arabicName || me.displayName || me.username || 'حسابي'
+    : 'ضيف';
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Post>) => (
       <PostItem
@@ -167,31 +192,63 @@ export default function PostsScreen() {
 
   return (
     <Screen edges={['top']}>
-      <SarhSurface tone="background" style={[styles.topBar, { paddingHorizontal: gutter }]}>
-        <Row gap="sm">
-          {(['for_you', 'following'] as const).map((tab) => {
-            const active = feedTab === tab;
-            return (
+      <AppChromeLayer onHeight={setHeaderH}>
+        <SarhSurface tone="background" style={styles.topBar}>
+          <View style={[styles.topInner, { paddingHorizontal: gutter }]}>
+            <Row justify="between" align="center" style={styles.identityRow}>
               <Pressable
-                key={tab}
-                onPress={() => switchTab(tab)}
-                style={styles.tab}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
+                onPress={openSidebar}
+                style={styles.avatarBtn}
+                hitSlop={space[4]}
+                accessibilityRole="button"
+                accessibilityLabel="القائمة الجانبية"
               >
-                <AppText variant="label" color={active ? 'textPrimary' : 'textMuted'}>
-                  {tab === 'for_you' ? 'لك' : 'متابعة'}
-                </AppText>
-                {active ? <View style={styles.tabIndicator} /> : null}
+                <SarhAvatar
+                  uri={me.avatar}
+                  name={displayName}
+                  size="sm"
+                  accessibilityLabel={displayName}
+                  style={styles.avatar}
+                />
               </Pressable>
-            );
-          })}
-        </Row>
-      </SarhSurface>
+              <View pointerEvents="none" style={styles.logoSlot}>
+                <SarhLogoMark size={SHELL_LOGO_SIZE} color={colors.electric} />
+              </View>
+              <NotificationBellButton
+                bare
+                size={SHELL_TOOL}
+                iconSize={SHELL_ICON_SIZE}
+                style={styles.iconBtn}
+                iconColor={colors.textPrimary}
+                badgeBorderColor={colors.screenRoot}
+              />
+            </Row>
+            <Row gap="sm">
+              {(['for_you', 'following'] as const).map((tab) => {
+                const active = feedTab === tab;
+                return (
+                  <Pressable
+                    key={tab}
+                    onPress={() => switchTab(tab)}
+                    style={styles.tab}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                  >
+                    <AppText variant="label" color={active ? 'textPrimary' : 'textMuted'}>
+                      {tab === 'for_you' ? 'لك' : 'متابعة'}
+                    </AppText>
+                    {active ? <View style={styles.tabIndicator} /> : null}
+                  </Pressable>
+                );
+              })}
+            </Row>
+          </View>
+        </SarhSurface>
+      </AppChromeLayer>
 
       <ScreenBody scroll={false} gutter={false} bottomInset="tabBar">
         {loadingFeed && posts.length === 0 ? (
-          <Stack gap="md" align="center" fill style={styles.empty}>
+          <Stack gap="md" align="center" fill style={[styles.empty, { paddingTop: headerH }]}>
             <ActivityIndicator color={colors.electricBright} />
           </Stack>
         ) : (
@@ -199,7 +256,7 @@ export default function PostsScreen() {
             data={posts}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            contentContainerStyle={styles.scroll}
+            contentContainerStyle={[styles.scroll, { paddingTop: headerH }]}
             ListEmptyComponent={ListEmpty}
             ListFooterComponent={<View style={styles.listFooter} />}
             refreshControl={
@@ -226,8 +283,42 @@ function createPostsStyles(themeColors: ThemeColors) {
     topBar: {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: themeColors.borderHairline,
-      paddingBottom: space[8],
+    },
+    topInner: {
       paddingTop: space[8],
+      paddingBottom: space[8],
+    },
+    identityRow: {
+      minHeight: SHELL_BAR_H,
+      position: 'relative',
+      overflow: 'visible',
+    },
+    avatarBtn: {
+      width: SHELL_AVATAR_BTN,
+      height: SHELL_AVATAR_BTN,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'visible',
+    },
+    avatar: {
+      width: SHELL_AVATAR_SIZE,
+      height: SHELL_AVATAR_SIZE,
+      borderRadius: radius[999],
+      borderWidth: 2,
+      borderColor: themeColors.electric,
+      backgroundColor: themeColors.bgField,
+    },
+    logoSlot: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconBtn: {
+      width: SHELL_TOOL,
+      height: SHELL_TOOL,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
     },
     tab: {
       flex: 1,

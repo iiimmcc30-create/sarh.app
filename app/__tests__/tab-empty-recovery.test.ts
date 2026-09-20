@@ -16,7 +16,7 @@ describe('P0 tab empty recovery', () => {
   });
 
   it('keeps market rows on fetch failure and retries empty tabs on later focus', () => {
-    const market = src('app/(tabs)/market.tsx');
+    const market = src('components/market/MarketListingsFeed.tsx');
     expect(market).toContain('setLoadFailed(true)');
     expect(market).toContain('Keep the last good page');
     expect(market).toContain('if (hasItemsRef.current || loadingRef.current) return');
@@ -45,12 +45,12 @@ describe('P0 tab empty recovery', () => {
     expect(posts).toContain('force: Boolean(opts?.refresh || opts?.force)');
   });
 
-  it('recovers Home latest listings after a failed empty fetch without looping', () => {
-    const home = src('components/feature/HomeLatestListings.tsx');
-    expect(home).toContain('needsFailureRecoveryRef');
-    expect(home).toContain('if (inflightRef.current) return');
-    expect(home).toContain('getBootstrappedListingsPage');
-    expect(home).toContain('searchListingsPage');
+  it('recovers Home market listings after a failed empty fetch without looping', () => {
+    const feed = src('components/market/MarketListingsFeed.tsx');
+    expect(feed).toContain('if (hasItemsRef.current || loadingRef.current) return');
+    expect(feed).toContain('getBootstrappedListingsPage');
+    expect(feed).toContain('searchListingsPage');
+    expect(feed).toContain('setLoadFailed(true)');
   });
 
   it('does not treat butcher HTTP failures as a successful empty directory', () => {

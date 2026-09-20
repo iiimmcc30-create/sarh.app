@@ -313,9 +313,10 @@ describe('P1-4 seller/profile listing callers', () => {
   });
 
   it('does not change market, browse, or butcher listing loaders', () => {
-    expect(src('app/(tabs)/market.tsx')).toContain('onEndReached');
+    expect(src('components/market/MarketListingsFeed.tsx')).toContain('onEndReached');
     expect(src('app/market/browse.tsx')).toContain('onEndReached');
     expect(src('app/(tabs)/market.tsx')).not.toContain('useSellerListingsPager');
+    expect(src('components/market/MarketListingsFeed.tsx')).not.toContain('useSellerListingsPager');
     expect(src('app/market/browse.tsx')).not.toContain('useSellerListingsPager');
     expect(src('app/butchers/index.tsx')).not.toContain('useSellerListingsPager');
   });

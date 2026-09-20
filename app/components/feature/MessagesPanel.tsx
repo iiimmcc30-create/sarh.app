@@ -14,6 +14,8 @@ import {
   RefreshControl,
   StyleSheet,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { radius, type ThemeColors } from '@/constants/theme';
 import { space } from '@/design-system/tokens';
@@ -66,11 +68,19 @@ function formatThreadTime(iso: string): string {
 interface MessagesPanelProps {
   variant?: 'embedded' | 'standalone';
   showHeader?: boolean;
+  showSearch?: boolean;
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 export function MessagesPanel({
   variant = 'standalone',
   showHeader = true,
+  showSearch = true,
+  search: searchProp,
+  onSearchChange,
+  onScroll,
 }: MessagesPanelProps) {
   const { colors } = useTheme();
   const { gutter } = useLayout();
@@ -80,7 +90,9 @@ export function MessagesPanel({
   const { accessToken } = useAuth();
   const { threads, loading, error, refetch } = useMessageThreads(accessToken, 'ALL');
   const filter: MessageThreadFilter = 'all';
-  const [search, setSearch] = useState('');
+  const [searchInner, setSearchInner] = useState('');
+  const search = searchProp ?? searchInner;
+  const setSearch = onSearchChange ?? setSearchInner;
   const [refreshing, setRefreshing] = useState(false);
   const [listingByPeer, setListingByPeer] = useState<
     Record<string, MessageListingPreview>
@@ -305,16 +317,21 @@ export function MessagesPanel({
     <View style={styles.root}>
       {showHeader ? <ScreenHeader variant="tab" title="الرسائل" /> : null}
 
-      <View style={[styles.searchWrap, { paddingHorizontal: gutter }]}>
-        <SarhInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="البحث في الرسائل والإعلانات"
-          returnKeyType="search"
-          leadingIcon="search"
-          clearButtonMode="while-editing"
-        />
-      </View>
+      {showSearch ? (
+        <View style={[styles.searchWrap, { paddingHorizontal: gutter }]}>
+          <SarhInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="بحث..."
+            returnKeyType="search"
+            trailingIcon="search"
+            shape="pill"
+            clearButtonMode="while-editing"
+            accessibilityRole="search"
+            accessibilityLabel="بحث"
+          />
+        </View>
+      ) : null}
 
       {showInitialSpinner ? (
         <Stack gap="sm" align="center" style={styles.empty}>
@@ -339,6 +356,7 @@ export function MessagesPanel({
           data={listData}
           keyExtractor={(item) => item.id}
           renderItem={renderThread}
+          onScroll={onScroll}
           contentContainerStyle={{ paddingBottom: listBottomPadding, flexGrow: 1 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />

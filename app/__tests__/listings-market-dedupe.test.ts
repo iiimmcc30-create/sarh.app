@@ -169,7 +169,7 @@ describe('P0-3 default listings page is shared, other queries are not', () => {
   });
 
   it('hydrates Market from the shared default page only when no server filters are set', () => {
-    const market = src('app/(tabs)/market.tsx');
+    const market = src('components/market/MarketListingsFeed.tsx');
     expect(market).toContain('if (!hasServerFilters)');
     expect(market).toContain('const boot = getBootstrappedListingsPage(accessToken)');
     expect(market).toContain('apiFilters.featured || apiFilters.categoryId || apiFilters.subcategoryId');

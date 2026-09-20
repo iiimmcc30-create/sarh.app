@@ -19,6 +19,7 @@ import { AppText } from './AppText';
 import { type SarhInputState } from './resolvers';
 
 export type SarhInputAppearance = 'foundation' | 'theme';
+export type SarhInputShape = 'rounded' | 'pill';
 
 export type SarhInputProps = TextInputProps & {
   label?: string;
@@ -28,6 +29,7 @@ export type SarhInputProps = TextInputProps & {
   trailingIcon?: ReactNode | string;
   onTrailingPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
+  shape?: SarhInputShape;
   /** Live-theme field chrome (former AppTextInput). Default is foundation DS. */
   appearance?: SarhInputAppearance;
   /** Alias of errorText — AppTextInput API. */
@@ -59,6 +61,7 @@ function FoundationInput({
   trailingIcon,
   onTrailingPress,
   containerStyle,
+  shape = 'rounded',
   editable = true,
   secureTextEntry,
   onFocus,
@@ -69,7 +72,7 @@ function FoundationInput({
   ltr = false,
   ...rest
 }: SarhInputProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const [focused, setFocused] = useState(false);
   const disabled = editable === false;
   const state: SarhInputState = disabled
@@ -103,8 +106,8 @@ function FoundationInput({
             minHeight: space[48],
             paddingHorizontal: space[12],
             gap: space[8],
-            borderRadius: radius[12],
-            borderWidth: 1,
+            borderRadius: shape === 'pill' ? radius[999] : radius[12],
+            borderWidth: state === 'focused' || state === 'error' ? 1 : StyleSheet.hairlineWidth,
             borderColor,
             backgroundColor: themeColors.bgField,
             opacity: disabled ? motion.opacity.disabled : 1,
@@ -118,6 +121,8 @@ function FoundationInput({
           secureTextEntry={secureTextEntry}
           placeholder={placeholder}
           placeholderTextColor={themeColors.textMuted}
+          keyboardAppearance={isDark ? 'dark' : 'light'}
+          selectionColor={themeColors.electric}
           accessibilityLabel={accessibilityLabel ?? label ?? placeholder}
           accessibilityState={{ disabled }}
           style={[
@@ -181,9 +186,10 @@ function ThemeInput({
   editable = true,
   ...props
 }: SarhInputProps) {
-  const { styles, colors: themeColors } = useThemedStyles((theme) => ({
+  const { styles, colors: themeColors, isDark } = useThemedStyles((theme) => ({
     styles: createThemeStyles(theme.colors),
     colors: theme.colors,
+    isDark: theme.scheme === 'dark',
   }));
   const inputStyle = ltr ? ltrInputText : rtlInputText;
   const focusedRef = useRef(false);
@@ -242,6 +248,8 @@ function ThemeInput({
         ) : null}
         <TextInput
           placeholderTextColor={placeholderTextColor ?? themeColors.textSubtle}
+          keyboardAppearance={isDark ? 'dark' : 'light'}
+          selectionColor={themeColors.electric}
           style={[styles.input, inputStyle, style]}
           editable={editable}
           onFocus={handleFocus}

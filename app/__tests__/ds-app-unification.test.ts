@@ -22,15 +22,17 @@ describe('design-system unification — allowed redesigns only', () => {
     expect(post).not.toContain("from '@/design-system/components'");
   });
 
-  it('bottom nav keeps the pre-unification chrome and the same routes', () => {
+  it('bottom nav keeps Add Listing with Search then Chat then Community', () => {
     const tabs = src('components/navigation/FloatingTabBar.tsx');
     expect(tabs).toContain("route: 'index'");
-    expect(tabs).toContain("route: 'market'");
+    expect(tabs).toContain("route: 'search'");
     expect(tabs).toContain("route: 'messages'");
     expect(tabs).toContain("route: 'posts'");
     expect(tabs).toContain("label: 'مجتمع سرح'");
+    expect(tabs).toContain("label: 'البحث'");
     expect(tabs).toContain('navigateToCreateListing');
     expect(tabs).toContain('addBox');
+    expect(tabs).not.toContain("route: 'market'");
     expect(tabs).not.toContain("route: 'profile'");
   });
 

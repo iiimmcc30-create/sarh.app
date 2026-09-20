@@ -932,8 +932,8 @@ describe('Architecture V2 — Wave 4C marketplace', () => {
   });
 
   it('wraps ListingCard without taking ownership of the card', () => {
-    expect(src('app/(tabs)/market.tsx')).toContain('variant="list"');
-    expect(src('app/(tabs)/market.tsx')).toContain('listMode="market"');
+    expect(src('components/market/MarketListingsFeed.tsx')).toContain('variant="list"');
+    expect(src('components/market/MarketListingsFeed.tsx')).toContain('listMode="market"');
     expect(src('app/market/browse.tsx')).toContain('variant="list"');
     expect(src('app/market/browse.tsx')).not.toContain('getItemLayout');
     expect(src('components/feature/ListingCard.tsx')).toContain('export const ListingCard');
@@ -1017,8 +1017,9 @@ describe('Architecture V2 — Wave 4D home and explore', () => {
 
   it('keeps Home fetch, section order, and official ministry routes', () => {
     const home = src('app/(tabs)/index.tsx');
-    expect(home.indexOf('<ExploreSarhSection ref={bannerRef}')).toBeLessThan(home.indexOf('<HomeQuickAccess'));
-    expect(home.indexOf('<HomeQuickAccess />')).toBeLessThan(home.indexOf('<HomeLatestListings ref={listingsRef}'));
+    expect(home).not.toContain('ExploreSarhSection');
+    expect(home).toContain('extraHeader={quickAccess}');
+    expect(home.indexOf('<HomeQuickAccess')).toBeLessThan(home.indexOf('extraHeader={quickAccess}'));
     expect(home).not.toContain('<HomeFeedSuppliers');
     expect(home).not.toContain('ListingCard');
     expect(home).not.toContain('HomeMinistryOrgCard');

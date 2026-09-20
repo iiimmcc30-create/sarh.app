@@ -77,7 +77,7 @@ export function HomeQuickAccess() {
 function createStyles(chipBg: string, chipBorder: string) {
   return StyleSheet.create({
     wrap: {
-      paddingBottom: space[8],
+      paddingBottom: 0,
     },
     sectionHead: {
       paddingTop: space[8],
