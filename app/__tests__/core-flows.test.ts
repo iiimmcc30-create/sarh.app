@@ -1,4 +1,4 @@
-import { compareListingBoostPriority } from '../lib/listingSort';
+import { compareListingBoostPriority, nextMarketSortMode } from '../lib/listingSort';
 import type { Listing } from '../services/types';
 import {
   BOOST_TYPE_ORDER,
@@ -76,6 +76,13 @@ describe('listingSort', () => {
     ];
     const sorted = [...items].sort(compareListingBoostPriority);
     expect(sorted.map((x) => x.id)).toEqual(['b', 'a', 'c', 'd']);
+  });
+
+  it('cycles the existing market sort values without inventing new ones', () => {
+    expect(nextMarketSortMode('newest')).toBe('oldest');
+    expect(nextMarketSortMode('oldest')).toBe('price_asc');
+    expect(nextMarketSortMode('price_asc')).toBe('price_desc');
+    expect(nextMarketSortMode('price_desc')).toBe('newest');
   });
 });
 

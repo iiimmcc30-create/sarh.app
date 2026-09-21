@@ -9,9 +9,14 @@ import { Stack } from '@/design-system/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMarketCategories } from '@/hooks/useMarketCategories';
 import { useTheme } from '@/hooks/useTheme';
-import { compareListingBoostPriority, interleavePromotedListings } from '@/lib/listingSort';
+import {
+  compareListingBoostPriority,
+  interleavePromotedListings,
+  nextMarketSortMode,
+  type MarketSortMode,
+} from '@/lib/listingSort';
 import { listingMatchesMarketSelection } from '@/lib/marketCategoriesFallback';
-import { listingMatchesRegionSelection } from '@/lib/saudiRegionSearch';
+import { listingMatchesRegionSelection, resolveNearbyRegionSelection } from '@/lib/saudiRegionSearch';
 import { safePush } from '@/lib/safeNavigate';
 import {
   getBootstrappedListingsPage,
@@ -46,8 +51,6 @@ import {
 import * as Location from 'expo-location';
 
 const MARKET_FOCUS_TTL_MS = 60_000;
-
-type SortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
 export type MarketListingsFeedHandle = {
   refresh: () => Promise<void>;
@@ -92,7 +95,9 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
     const [regionPickerOpen, setRegionPickerOpen] = useState(false);
     const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
     const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
-    const [sortMode, setSortMode] = useState<SortMode>('newest');
+    const [sortMode, setSortMode] = useState<MarketSortMode>('newest');
+    const [nearbyActive, setNearbyActive] = useState(false);
+    const nearbyBusyRef = useRef(false);
     const [items, setItems] = useState<Listing[]>([]);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(false);
@@ -250,15 +255,17 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
     }, [filtered.length, hasMore, loadNextPage, loading, loadingMore, regionSelection.type]);
 
     const cycleSort = useCallback(() => {
-      setSortMode((prev) => {
-        if (prev === 'newest') return 'oldest';
-        if (prev === 'oldest') return 'price_asc';
-        if (prev === 'price_asc') return 'price_desc';
-        return 'newest';
-      });
+      setSortMode((prev) => nextMarketSortMode(prev));
     }, []);
 
     const onNearby = useCallback(async () => {
+      if (nearbyActive) {
+        setNearbyActive(false);
+        setRegionSelection({ type: 'all' });
+        return;
+      }
+      if (nearbyBusyRef.current) return;
+      nearbyBusyRef.current = true;
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
@@ -270,25 +277,23 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
         });
-        const city = geo?.city || geo?.subregion || geo?.region;
-        if (!city) {
+        const resolved = resolveNearbyRegionSelection({
+          city: geo?.city,
+          subregion: geo?.subregion,
+          region: geo?.region,
+        });
+        if (!resolved) {
           Alert.alert('الموقع', 'تعذّر تحديد مدينتك');
           return;
         }
-        setRegionSelection({
-          type: 'city',
-          region: {
-            id: 'nearby',
-            nameAr: 'بالقرب منك',
-            nameEn: 'Nearby',
-            cities: [{ id: 'nearby-city', nameAr: city, nameEn: city }],
-          },
-          city: { id: 'nearby-city', nameAr: city, nameEn: city },
-        });
+        setRegionSelection(resolved);
+        setNearbyActive(true);
       } catch {
         Alert.alert('خطأ', 'تعذّر الحصول على موقعك');
+      } finally {
+        nearbyBusyRef.current = false;
       }
-    }, []);
+    }, [nearbyActive]);
 
     const onRegionPress = useCallback(() => setRegionPickerOpen(true), []);
     const onNearbyPress = useCallback(() => {
@@ -308,6 +313,8 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
           categoryActive={categoryActive}
           categoryPickerOpen={categoryPickerOpen}
           regionActive={regionPickerOpen}
+          nearbyActive={nearbyActive}
+          sortActive={sortMode !== 'newest'}
         />
       ),
       [
@@ -319,6 +326,8 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
         categoryActive,
         categoryPickerOpen,
         regionPickerOpen,
+        nearbyActive,
+        sortMode,
       ],
     );
 
@@ -409,7 +418,10 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
           visible={regionPickerOpen}
           selection={regionSelection}
           onClose={() => setRegionPickerOpen(false)}
-          onSelect={setRegionSelection}
+          onSelect={(selection) => {
+            setNearbyActive(false);
+            setRegionSelection(selection);
+          }}
         />
 
         <MarketCategoryPicker

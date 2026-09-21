@@ -183,6 +183,9 @@ describe('HomeAppBar chrome', () => {
     expect(src).toContain('minHeight: BAR_H');
     expect(src).not.toContain('variant="heading3"');
     expect(src).not.toContain('onProfilePress');
+    expect(src).toContain('tokens.glass');
+    expect(src).toContain('tokens.glassBorder');
+    expect(src).not.toContain('ambientShadow');
   });
 
   it('embeds filter inside market search bar with featured star on the right', () => {
@@ -212,16 +215,42 @@ describe('HomeAppBar chrome', () => {
       path.join(__dirname, '../components/market/MarketFilterBar.tsx'),
       'utf8',
     );
-    const nearbyAt = src.indexOf('label="القريب"');
+    const nearbyAt = src.indexOf('accessibilityLabel="القريب"');
     const sortAt = src.indexOf('name="sort-alt"', nearbyAt);
     const categoryAt = src.indexOf('accessibilityLabel="التصنيف"', sortAt);
     expect(nearbyAt).toBeGreaterThan(-1);
     expect(sortAt).toBeGreaterThan(nearbyAt);
     expect(categoryAt).toBeGreaterThan(sortAt);
     expect(src).toContain('name="apps"');
+    expect(src).toContain('>القريب</Text>');
+    expect(src).toContain('>التصنيف</Text>');
+    expect(src).toContain('onNearbyPress');
+    expect(src).toContain('onPress={onNearbyPress}');
+    expect(src).toContain('onPress={onSortPress}');
     expect(src).toContain('onCategoryPress');
     expect(src).toContain('onSortPress');
+    expect(src).toContain('nearbyActive');
+    expect(src).toContain('sortActive');
+    expect(src).not.toContain('categoryIconBtn');
     expect(src).not.toContain('options-outline');
+    expect(src).toContain('borderColor: colors.borderHairline');
+    expect(src).toContain('fontSize: MARKET_CHIP.fontSize');
+  });
+
+  it('wires nearby and sort chips to live market listing state', () => {
+    const feed = fs.readFileSync(
+      path.join(__dirname, '../components/market/MarketListingsFeed.tsx'),
+      'utf8',
+    );
+    expect(feed).toContain('onNearbyPress={onNearbyPress}');
+    expect(feed).toContain('onSortPress={onSortPress}');
+    expect(feed).toContain('resolveNearbyRegionSelection');
+    expect(feed).toContain('nextMarketSortMode');
+    expect(feed).toContain('listingMatchesRegionSelection');
+    expect(feed).toContain('nearbyActive={nearbyActive}');
+    expect(feed).toContain("sortActive={sortMode !== 'newest'}");
+    expect(feed).not.toContain('searchListingsPage({ ...apiFilters, sort');
+    expect(feed).not.toContain("id: 'nearby'");
   });
 
   it('uses elevated listing-card surface for compact market chips', () => {

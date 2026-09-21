@@ -49,8 +49,11 @@ describe('light mode surface hierarchy', () => {
     expect(appBar).toContain('themeColors.electric');
     expect(appBar).toContain('themeColors.textPrimary');
     expect(appBar).toContain('themeColors.screenRoot');
-    expect(appBar).toContain('colors.borderHairline');
+    expect(appBar).toContain("scheme === 'light' ? ds.light : ds.dark");
+    expect(appBar).toContain('tokens.glass');
+    expect(appBar).toContain('tokens.glassBorder');
     expect(appBar).toContain('colors.bgField');
+    expect(appBar).not.toContain('borderBottomColor: colors.borderHairline');
     expect(input).toContain('themeColors.bgField');
     expect(input).toContain('themeColors.textMuted');
     expect(input).toContain("isDark ? 'dark' : 'light'");
