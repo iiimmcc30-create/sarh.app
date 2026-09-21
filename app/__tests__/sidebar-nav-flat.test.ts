@@ -38,6 +38,8 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).toContain("route: '/create/listing'");
     expect(panel).toContain('المفضلة');
     expect(panel).toContain('موردو الأعلاف');
+    expect(panel).toContain("label: 'خدمات الوزارة'");
+    expect(panel).toContain("route: '/ministry?tab=services'");
     expect(panel).toContain('قطاع الأخبار');
     expect(panel).toContain("label: 'الترويج'");
     expect(panel).toContain('مركز المعلومات');
@@ -49,10 +51,12 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).toContain('متابعون');
     expect(panel).toContain('marginBottom: spacing.lg');
     expect(panel).not.toContain('menuCardStyle');
-    expect(panel).not.toContain('خدمات الوزارة');
     expect(panel).not.toContain('/sarh-services');
     expect(panel).not.toContain("label: 'الإشعارات'");
     expect(panel).not.toContain("label: 'ملاحم سرح'");
+    expect(panel).toContain('navigateToCreateListing');
+    expect(panel).toContain('requireCovenant: true');
+    expect(panel).toContain('closeThen');
   });
 
   it('orders primary rows then the quieter help section, and keeps the theme icon', () => {
@@ -61,6 +65,7 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     const createAt = panel.indexOf("label: 'إضافة عرض'");
     const favoritesAt = panel.indexOf("label: 'المفضلة'");
     const feedAt = panel.indexOf("label: 'موردو الأعلاف'");
+    const ministryAt = panel.indexOf("label: 'خدمات الوزارة'");
     const newsAt = panel.indexOf("label: 'قطاع الأخبار'");
     const promoteAt = panel.indexOf("label: 'الترويج'");
     const infoAt = panel.indexOf("label: 'مركز المعلومات'");
@@ -70,7 +75,8 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(createAt).toBeGreaterThan(profileAt);
     expect(favoritesAt).toBeGreaterThan(createAt);
     expect(feedAt).toBeGreaterThan(favoritesAt);
-    expect(newsAt).toBeGreaterThan(feedAt);
+    expect(ministryAt).toBeGreaterThan(feedAt);
+    expect(newsAt).toBeGreaterThan(ministryAt);
     expect(promoteAt).toBeGreaterThan(newsAt);
     expect(infoAt).toBeGreaterThan(promoteAt);
     expect(settingsAt).toBeGreaterThan(infoAt);
@@ -81,6 +87,9 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).toContain('size={24}');
     expect(panel).toContain('accessibilityLabel="المظهر"');
     expect(panel).toContain('weather-night');
+    expect(src('lib/navigateToCreateListing.ts')).toContain('requireCovenant');
+    expect(src('lib/navigateToCreateListing.ts')).toContain('requestListingCovenant');
+    expect(src('lib/safeNavigate.ts')).toContain('export function closeThen(');
   });
 
   it('slides the app sidebar in from the RTL start edge (right)', () => {

@@ -40,13 +40,13 @@ describe('feed supplier screens stay a public directory', () => {
   const explore = src('components/feature/ExploreSarhSection.tsx');
   const exploreFallback = src('lib/exploreSarhBanners.ts');
 
-  it('keeps the sidebar item after favorites and before news', () => {
+  it('keeps the sidebar item after favorites and before ministry services', () => {
     const favoritesAt = sidebar.indexOf("label: 'المفضلة'");
     const feedAt = sidebar.indexOf("label: 'موردو الأعلاف'");
-    const newsAt = sidebar.indexOf("label: 'قطاع الأخبار'");
+    const ministryAt = sidebar.indexOf("label: 'خدمات الوزارة'");
     expect(favoritesAt).toBeGreaterThan(-1);
     expect(feedAt).toBeGreaterThan(favoritesAt);
-    expect(newsAt).toBeGreaterThan(feedAt);
+    expect(ministryAt).toBeGreaterThan(feedAt);
     expect(sidebar).toContain("route: '/feed-suppliers'");
   });
 
