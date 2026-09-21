@@ -13,8 +13,12 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Animated, DeviceEventEmitter, Easing, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ICON_SIZE = 22;
-const ADD_BOX = 22;
+/** ~7–9% larger than the prior 22px glyph — still light on the bar. */
+const ICON_SIZE = 24;
+const ADD_BOX = 24;
+const ADD_GLYPH = 15;
+/** Nudge icons down without growing the bar height. */
+const ICON_NUDGE_Y = 2;
 const INDICATOR_W = 18;
 
 type TabDef =
@@ -40,7 +44,8 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   const activeTint = colors.electricBright;
-  const inactiveTint = colors.textSecondary;
+  /** High-contrast inactive glyphs on glass — white in dark, black in light. */
+  const inactiveTint = scheme === 'light' ? '#000000' : '#FFFFFF';
   const hideDistance = ds.tabBar.height + bottomPad + spacing.md;
 
   const activeRoute = state.routes[state.index]?.name;
@@ -147,7 +152,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                 >
                   <View style={styles.iconSlot}>
                     <View style={[styles.addBox, { borderColor: inactiveTint }]}>
-                      <AppIcon name="plus" size={14} color={activeTint} variant="sr" />
+                      <AppIcon name="plus" size={ADD_GLYPH} color={activeTint} variant="sr" />
                     </View>
                   </View>
                 </Pressable>
@@ -251,6 +256,7 @@ const styles = StyleSheet.create({
     height: ICON_SIZE + 2,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: ICON_NUDGE_Y,
   },
   addBox: {
     width: ADD_BOX,
