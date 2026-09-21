@@ -1,6 +1,6 @@
 // SAFAT — Notification Center (مركز الإشعارات)
-import { EmptyState } from '@/components/butcherApplication/EmptyState';
-import { LoadingState } from '@/components/butcherApplication/LoadingState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { LoadingState } from '@/components/ui/LoadingState';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { NotificationCard } from '@/components/notifications/NotificationCard';
 import { useAuth } from '@/contexts/AuthContext';

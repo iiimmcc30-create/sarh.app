@@ -53,24 +53,6 @@ describe('P0 tab empty recovery', () => {
     expect(feed).toContain('setLoadFailed(true)');
   });
 
-  it('does not treat butcher HTTP failures as a successful empty directory', () => {
-    const directory = src('services/butcherDirectory.ts');
-    expect(directory).toContain("throw new Error('butchers_fetch_failed')");
-    expect(directory).toContain('BUTCHERS_HOME_TTL_MS');
-    expect(directory).toContain('homeLoadInflight');
-    expect(directory).toContain('records: ratingRecords');
-    expect(src('services/butcherOffersPreview.ts')).toContain('butcherRecordsHaveEmbeddedOffers');
-    const home = src('app/butchers/index.tsx');
-    expect(home).not.toContain('if (!res.ok) return []');
-    expect(home).toContain('loadButchersHome');
-    expect(home).toContain('loading || (loadFailed && picks.length === 0)');
-    expect(home).not.toContain('userCoords, fetchSorted');
-    const all = src('app/butchers/all.tsx');
-    expect(all).toContain('fetchSortedButchers');
-    expect(all).toContain('loading || (loadFailed && butchers.length === 0)');
-    expect(all).not.toContain('setButchers([])');
-  });
-
   it('does not treat user post HTTP failures as an empty profile feed', () => {
     const posts = src('services/posts.ts');
     expect(posts).toContain("throw new Error('user_posts_fetch_failed')");
@@ -80,11 +62,9 @@ describe('P0 tab empty recovery', () => {
     expect(src('app/ministry/index.tsx')).toContain('setPostsLoadFailed(true)');
   });
 
-  it('keeps listing and butcher detail cache on non-404 fetch failure', () => {
+  it('keeps listing detail cache on non-404 fetch failure', () => {
     expect(src('app/listing/[id].tsx')).toContain('if (failed && !listingRef.current) return');
     expect(src('app/listing/[id].tsx')).toContain('if (res.status !== 404) failed = true');
-    expect(src('app/butchers/[id].tsx')).toContain('if (failed && !have) return');
-    expect(src('app/butchers/[id].tsx')).toContain('cancelled = true');
   });
 
   it('does not treat browse HTTP failures as a successful empty category', () => {

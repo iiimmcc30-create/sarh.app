@@ -42,7 +42,6 @@ test.describe('App web — public feature routes (§3/§12/§19)', () => {
     '/search',
     '/sarh-services',
     '/ministry',
-    '/butchers',
     '/promote',
     '/subscription',
     '/fees',

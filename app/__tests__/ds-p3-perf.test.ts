@@ -79,7 +79,7 @@ describe('P3 performance — lists images state', () => {
 
 describe('Wave 1 performance foundations', () => {
   it('keeps chat draft state inside ChatComposer', () => {
-    const chat = src('app/butchers/chat.tsx');
+    const chat = src('app/chat.tsx');
     expect(chat).toContain('function ChatComposer');
     expect(chat).toContain('const ChatMessageBubble = memo');
     expect(chat).toContain('onContentSizeChange');
@@ -149,15 +149,6 @@ describe('Wave 5B loading and skeleton consistency', () => {
     expect(src('app/support/tickets/[id].tsx')).toContain('loading && !ticket');
   });
 
-  it('keeps butcher list screens visible on focus refresh', () => {
-    expect(src('app/butchers/my-orders.tsx')).toContain('loading && orders.length === 0');
-    expect(src('app/butchers/my-orders.tsx')).toContain('CustomerOrderCardSkeleton');
-    expect(src('app/butchers/favorites.tsx')).toContain('loading && favorites.length === 0');
-    expect(src('app/butchers/invoices.tsx')).toContain('loading && invoices.length === 0');
-    expect(src('app/butchers/offers.tsx')).toContain('loading && data.length === 0');
-    expect(src('app/butchers/all.tsx')).toContain('loading || (loadFailed && butchers.length === 0)');
-  });
-
   it('refetches connections without wiping the current tab', () => {
     const connections = src('app/profile/connections.tsx');
     expect(connections).toContain('isBackground');
@@ -185,20 +176,6 @@ describe('Wave 5B loading and skeleton consistency', () => {
 });
 
 describe('Wave 5A lists and virtualization', () => {
-  it('windows butcher menu pages so inactive categories are not mounted', () => {
-    const pager = src('components/butcher/ButcherMenuPager.tsx');
-    expect(pager).toContain('isMenuPageMounted');
-    expect(pager).toContain('MENU_PAGER_RENDER_WINDOW');
-    expect(pager).toContain('pagingEnabled');
-    expect(pager).toContain('page.render()');
-  });
-
-  it('virtualizes the all-butchers directory', () => {
-    const all = src('app/butchers/all.tsx');
-    expect(all).toContain('AppFlatList');
-    expect(all).not.toContain('butchers.map(');
-  });
-
   it('does not pin market browse rows to an unverified fixed height', () => {
     expect(src('app/market/browse.tsx')).not.toContain('getItemLayout');
     expect(src('app/market/browse.tsx')).not.toContain('LISTING_ROW_HEIGHT');
@@ -225,12 +202,6 @@ describe('Wave 5C image and asset performance', () => {
   });
 
   it('downscales list/card Cloudinary images at the call site', () => {
-    expect(src('components/butcher/ButcherStoreProductCard.tsx')).toContain(
-      "cloudinaryFitUrl(product.images[0], 'row')",
-    );
-    expect(src('components/butchers/ButcherPickCard.tsx')).toContain(
-      "cloudinaryFitUrl(cover, 'card')",
-    );
     expect(src('app/news.tsx')).toContain("cloudinaryFitUrl(story.imageUrl, 'wide')");
     expect(src('components/feature/EditorialStoriesBar.tsx')).toContain(
       "cloudinaryFitUrl(story.imageUrl, 'card')",
@@ -241,29 +212,7 @@ describe('Wave 5C image and asset performance', () => {
 });
 
 describe('Wave 5D final performance pass', () => {
-  it('debounces butcher-home search so typing does not re-filter the market lists', () => {
-    const bar = src('components/butchers/ButchersAppBar.tsx');
-    expect(bar).toContain('HOME_SEARCH_DEBOUNCE_MS');
-    expect(bar).toContain('onChangeText={setText}');
-    expect(bar).not.toContain('onChangeText={onSearchChange}');
-  });
-
-  it('loads butcher chat access on focus only, not a duplicate mount effect', () => {
-    const store = src('app/butchers/[id].tsx');
-    expect(store).toContain('void loadChatAccess()');
-    expect(store).toContain('useFocusEffect');
-    expect(store.match(/void loadChatAccess\(\)/g)?.length).toBe(1);
-  });
-
-  it('keeps butcher map pins while a later fetch is in flight', () => {
-    const map = src('app/butchers/map.tsx');
-    expect(map).toContain('hasButchersRef');
-    expect(map).toContain("if (!hasButchersRef.current) setLoadState('loading')");
-  });
-
-  it('does not flip butcher home into a loading pass when GPS refetches', () => {
-    const home = src('app/butchers/index.tsx');
-    expect(home).toContain('hasHomeDataRef');
-    expect(home).toContain('if (!hasHomeDataRef.current) setLoading(true)');
+  it('keeps listing media on original URLs after malahem removal', () => {
+    expect(src('app/listing/[id].tsx')).not.toContain('cloudinaryFitUrl');
   });
 });

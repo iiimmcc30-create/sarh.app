@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ambientShadow, ds } from '@/constants/designSystem';
 import { spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
-import { formatApplicationDateTime } from '@/lib/butcherApplicationLabels';
+import { formatApplicationDateTime } from '@/lib/formatDateTime';
 import { getRtlRow, marginEnd, rtlForwardIcon } from '@/lib/rtl';
 import type { AppNotification } from '@/services/notifications';
 

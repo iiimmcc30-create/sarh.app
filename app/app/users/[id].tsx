@@ -185,7 +185,7 @@ export default function UserProfileScreen() {
       return;
     }
     router.push({
-      pathname: '/butchers/chat',
+      pathname: '/chat',
       params: {
         receiverId: profile.id,
         receiverName: profile.arabicName,

@@ -1,9 +1,11 @@
-import { SarhChip, SarhChipRow } from '@/design-system/components';
-// SAFAT — Create Story Screen (إنشاء قصة)
+import { rtlInputText } from '@/lib/rtl';
+import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE } from '@/services/api';
+import { uploadMediaFromUri } from '@/services/upload';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import type { ImagePickerAsset } from 'expo-image-picker';
@@ -38,12 +40,6 @@ import {
   validateStoryVideoDuration,
   type StoryMediaKind,
 } from '@/lib/storyMedia';
-import { rtlInputText } from '@/lib/rtl';
-import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE } from '@/services/api';
-import { uploadMediaFromUri } from '@/services/upload';
-
-type ButcherStoryType = 'daily_slaughter' | 'offer' | 'new_stock' | 'update';
 
 type StoryDraft = {
   uri: string;
@@ -67,31 +63,13 @@ export default function CreateStoryScreen() {
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const insets = useSafeAreaInsets();
 
-  const BUTCHER_TYPES: { id: ButcherStoryType; label: string }[] = [
-    { id: 'daily_slaughter', label: 'ذبح يومي' },
-    { id: 'new_stock', label: 'مخزون جديد' },
-    { id: 'offer', label: 'عرض اليوم' },
-    { id: 'update', label: 'تحديث عام' },
-  ];
-
   const router = useRouter();
-  const { accessToken, user, activeMode } = useAuth();
-  const params = useLocalSearchParams<{ type?: string; mode?: string }>();
-
-  const isButcherMode =
-    params.mode === 'butcher' ||
-    activeMode === 'BUTCHER' ||
-    user?.role === 'BUTCHER';
-
-  const initialType = BUTCHER_TYPES.some((t) => t.id === params.type)
-    ? (params.type as ButcherStoryType)
-    : 'update';
+  const { accessToken } = useAuth();
 
   const [media, setMedia] = useState<StoryDraft | null>(null);
   const [pendingTrim, setPendingTrim] = useState<PendingVideoTrim | null>(null);
   const [captionAr, setCaptionAr] = useState('');
   const [location, setLocation] = useState('');
-  const [storyType, setStoryType] = useState<ButcherStoryType>(initialType);
   const [submitting, setSubmitting] = useState(false);
   const [publishStage, setPublishStage] = useState<PublishStage>('idle');
   const [showOptions, setShowOptions] = useState(false);
@@ -219,24 +197,18 @@ export default function CreateStoryScreen() {
 
       setPublishStage('publishing');
 
-      const endpoint = isButcherMode ? `${API_BASE}/api/butchers/stories` : `${API_BASE}/api/stories`;
+      const endpoint = `${API_BASE}/api/stories`;
       const shared = {
         thumbnail: thumbnailUrl,
         captionAr: captionAr.trim() || null,
         caption: captionAr.trim() || null,
         duration: media.durationSec,
       };
-      const body = isButcherMode
-        ? {
-            ...shared,
-            mediaUrl: media.kind === 'video' ? mediaUrl : null,
-            type: storyType,
-          }
-        : {
-            ...shared,
-            mediaUrl,
-            location: location.trim() || null,
-          };
+      const body = {
+        ...shared,
+        mediaUrl,
+        location: location.trim() || null,
+      };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -378,20 +350,7 @@ export default function CreateStoryScreen() {
                   contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}
                   keyboardShouldPersistTaps="handled"
                 >
-                  {isButcherMode ? (
-                    <SarhChipRow contentPaddingHorizontal={0}>
-                      {BUTCHER_TYPES.map((t) => (
-                        <SarhChip appearance="filter"
-                          key={t.id}
-                          label={t.label}
-                          selected={storyType === t.id}
-                          onPress={() => setStoryType(t.id)}
-                        />
-                      ))}
-                    </SarhChipRow>
-                  ) : null}
-                  {!isButcherMode ? (
-                    <TextInput
+                  <TextInput
                       style={[styles.optionInput, rtlInputText]}
                       value={location}
                       onChangeText={setLocation}
@@ -399,7 +358,6 @@ export default function CreateStoryScreen() {
                       placeholderTextColor="rgba(255,255,255,0.45)"
                       maxLength={120}
                     />
-                  ) : null}
                 </ScrollView>
               ) : null}
 

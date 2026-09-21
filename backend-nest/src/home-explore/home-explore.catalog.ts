@@ -1,13 +1,7 @@
 export const HOME_EXPLORE_SETTING_KEY = 'home.exploreItems';
 
 export type HomeExploreDestinationKey =
-  | 'community'
-  | 'butchers'
-  | 'listings'
-  | 'services'
-  | 'news'
-  | 'live'
-  | 'promote';
+  'community' | 'listings' | 'services' | 'news' | 'live' | 'promote';
 
 export type HomeExploreCatalogEntry = {
   key: HomeExploreDestinationKey;
@@ -26,13 +20,6 @@ export const HOME_EXPLORE_CATALOG: HomeExploreCatalogEntry[] = [
     descriptionAr: 'نقاشات-تجارب-اسئلة-معرفه',
     icon: 'people-outline',
     route: '/(tabs)/posts',
-  },
-  {
-    key: 'butchers',
-    titleAr: 'سوق الملاحم',
-    descriptionAr: 'تصفح منتجات الملاحم والطلبات',
-    icon: 'storefront-outline',
-    route: '/butchers',
   },
   {
     key: 'listings',
@@ -74,7 +61,6 @@ export const HOME_EXPLORE_CATALOG: HomeExploreCatalogEntry[] = [
 
 export const DEFAULT_HOME_EXPLORE_DESTINATIONS: HomeExploreDestinationKey[] = [
   'community',
-  'butchers',
   'listings',
   'services',
   'news',

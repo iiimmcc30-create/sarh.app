@@ -69,7 +69,6 @@ export const HARDCODED_AUDIT = {
     'app/live/watch/[id].tsx',
     'constants/designSystem.ts',
     'components/feature/ListingCard.tsx',
-    'app/butchers/[id].tsx',
   ],
 } as const;
 

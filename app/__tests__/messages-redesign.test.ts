@@ -82,7 +82,7 @@ describe('message thread filters', () => {
 
 describe('chat thread wallpaper', () => {
   it('applies a local wallpaper behind the message list only', () => {
-    const chat = src('app/butchers/chat.tsx');
+    const chat = src('app/chat.tsx');
     const wallpaper = src('components/feature/ChatThreadWallpaper.tsx');
     expect(chat).toContain('ChatThreadWallpaper');
     expect(chat).toContain('styles.threadPane');

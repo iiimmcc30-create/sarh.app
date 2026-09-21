@@ -9,7 +9,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   {
     id: 'livestock',
     title: 'كل ما يخص الثروة الحيوانية في مكان واحد',
-    description: 'من المواشي إلى الملاحم، ومن الأخبار إلى العروض، كل ما تحتاجه تجده هنا.',
+    description: 'من المواشي إلى السوق، ومن الأخبار إلى العروض، كل ما تحتاجه تجده هنا.',
     image: require('../assets/images/onboarding/slide-1.jpg'),
   },
   {

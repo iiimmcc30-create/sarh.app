@@ -26,14 +26,11 @@ describe('P2-B UI/UX finalization', () => {
       'app/auth/register.tsx',
       'app/auth/forgot-password.tsx',
       'app/auth/otp.tsx',
-      'app/join/index.tsx',
       'app/profile/edit.tsx',
       'app/create/post.tsx',
       'app/create/story.tsx',
       'app/live/create.tsx',
-      'app/butchers/order.tsx',
-      'app/butchers/chat.tsx',
-      'app/butchers/story-viewer.tsx',
+      'app/chat.tsx',
     ];
     for (const file of files) {
       const text = src(file);
@@ -42,7 +39,6 @@ describe('P2-B UI/UX finalization', () => {
     }
     expect(src('app/auth/phone.tsx')).toContain('SarhInput');
     expect(src('app/auth/register.tsx')).toContain('SarhInput');
-    expect(src('app/join/index.tsx')).toContain('SarhInput');
     // OTP digit boxes are not a SarhInput primitive — they keep ltrInputText locally.
     expect(src('app/auth/otp.tsx')).toContain('ltrInputText');
     expect(src('app/auth/forgot-password.tsx')).toContain('ltrInputText');
@@ -58,17 +54,12 @@ describe('P2-B UI/UX finalization', () => {
     expect(src('app/auth/register.tsx')).toContain('maxWidth: 440');
     expect(src('app/auth/forgot-password.tsx')).toContain('maxWidth: 440');
     expect(src('app/auth/otp.tsx')).toContain('maxWidth: 440');
-    expect(src('app/join/index.tsx')).toContain('width="form"');
     // Profile edit takes the same 560 cap from the responsive layer instead of
     // hard-coding it — CONTENT_MAX_WIDTH.form is asserted in useLayout's tests.
     expect(src('app/profile/edit.tsx')).toContain('width="form"');
   });
 
-  it('adds map load/error retry and password a11y on auth', () => {
-    const map = src('app/butchers/map.tsx');
-    expect(map).toContain('تعذر تحميل الملاحم');
-    expect(map).toContain('جاري تحميل الملاحم');
-    expect(map).toContain('setLoadState');
+  it('adds password a11y on auth', () => {
     expect(src('app/auth/phone.tsx')).toContain('إظهار كلمة المرور');
     expect(src('app/auth/register.tsx')).toContain('accessibilityRole="checkbox"');
   });

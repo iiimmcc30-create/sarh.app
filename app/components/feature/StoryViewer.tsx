@@ -267,7 +267,7 @@ export function StoryViewer({
       setReplyText('');
       onClose();
       router.push({
-        pathname: '/butchers/chat',
+        pathname: '/chat',
         params: {
           threadId: res.threadId,
           receiverId: res.receiverId,

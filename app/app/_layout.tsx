@@ -13,7 +13,6 @@ import { AppProvider } from '@/contexts/AppContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
-import { ButcherOwnerProvider } from '@/contexts/ButcherOwnerContext';
 import { NotificationManager } from '@/components/NotificationManager';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { BootSplashGate } from '@/components/ui/BootSplashGate';
@@ -22,7 +21,7 @@ import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
 import { NavigationPathTracker } from '@/components/navigation/NavigationPathTracker';
-import { setupRtl, getRtlDirection, stackSlideAnimation, stackSlideBackAnimation, setupRtlFromStorage } from '@/lib/rtl';
+import { setupRtl, getRtlDirection, stackSlideAnimation, setupRtlFromStorage } from '@/lib/rtl';
 import { resolveBootNavigation } from '@/lib/bootRouting';
 
 import { bootstrapTheme } from '@/constants/themeBootstrap';
@@ -88,7 +87,7 @@ function RootNavigator() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
-        <Stack.Screen name="butchers" />
+        <Stack.Screen name="chat" />
         <Stack.Screen name="feed-suppliers/index" />
         <Stack.Screen name="feed-suppliers/[id]" />
         <Stack.Screen name="listing/[id]" />
@@ -111,7 +110,6 @@ function RootNavigator() {
             contentStyle: { backgroundColor: 'transparent', ...getRtlDirection() },
           }}
         />
-        <Stack.Screen name="butchers-market-sidebar" options={{ animation: stackSlideBackAnimation(), presentation: 'transparentModal' }} />
         <Stack.Screen name="notifications/index" />
         <Stack.Screen name="favorites" />
         <Stack.Screen name="promote" />
@@ -127,8 +125,6 @@ function RootNavigator() {
         <Stack.Screen name="create/post" />
         <Stack.Screen name="create/story" options={{ animation: stackSlideAnimation() }} />
         <Stack.Screen name="stories/view" options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="join/index" />
-        <Stack.Screen name="join/success" options={{ animation: 'fade' }} />
         <Stack.Screen name="info/about" />
         <Stack.Screen name="info/privacy" />
         <Stack.Screen name="info/terms" />
@@ -193,15 +189,13 @@ function RootLayoutBody() {
             <AppProvider>
               <AuthGuard>
                 <NotificationManager />
-                <ButcherOwnerProvider>
-                  <SubscriptionProvider>
-                    <NavigationPathTracker />
-                    <RootNavigator />
-                    <ActionSheetHost />
-                    <ListingCovenantHost />
-                    <ToastHost />
-                  </SubscriptionProvider>
-                </ButcherOwnerProvider>
+                <SubscriptionProvider>
+                  <NavigationPathTracker />
+                  <RootNavigator />
+                  <ActionSheetHost />
+                  <ListingCovenantHost />
+                  <ToastHost />
+                </SubscriptionProvider>
               </AuthGuard>
             </AppProvider>
           </BootSplashGate>

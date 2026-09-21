@@ -13,8 +13,6 @@ import { PaymentsModule } from './payments/payments.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { PlansModule } from './plans/plans.module';
-import { ButchersModule } from './butchers/butchers.module';
-import { ButcherApplicationsModule } from './butcher-applications/butcher-applications.module';
 import { LivestreamsModule } from './livestreams/livestreams.module';
 import { MessagesModule } from './messages/messages.module';
 import { UploadModule } from './upload/upload.module';
@@ -30,13 +28,11 @@ import { OfficialServicesModule } from './official-services/official-services.mo
 import { SupportModule } from './support/support.module';
 import { ContentModule } from './content/content.module';
 import { EditorialStoriesModule } from './editorial-stories/editorial-stories.module';
-import { ButcherBannersModule } from './butcher-banners/butcher-banners.module';
 import { ExploreSarhBannersModule } from './explore-sarh-banners/explore-sarh-banners.module';
 import { FeedSuppliersModule } from './feed-suppliers/feed-suppliers.module';
 import { MarketCategoriesModule } from './market-categories/market-categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { HomeExploreModule } from './home-explore/home-explore.module';
-import { DaftraModule } from './integrations/daftra/daftra.module';
 
 @Module({
   imports: [
@@ -57,11 +53,8 @@ import { DaftraModule } from './integrations/daftra/daftra.module';
     NotificationsModule,
     PaymentsModule,
     IntegrationsModule,
-    DaftraModule,
     SubscriptionsModule,
     PlansModule,
-    ButchersModule,
-    ButcherApplicationsModule,
     LivestreamsModule,
     MessagesModule,
     UploadModule,
@@ -75,7 +68,6 @@ import { DaftraModule } from './integrations/daftra/daftra.module';
     SupportModule,
     ContentModule,
     EditorialStoriesModule,
-    ButcherBannersModule,
     ExploreSarhBannersModule,
     FeedSuppliersModule,
   ],

@@ -9,15 +9,27 @@ import {
 import { resetRequestCoordination } from '../services/requestCoordination';
 
 describe('exploreSarhBanners mapping', () => {
-  it('keeps the local fallback trio in order', () => {
+  it('keeps the local fallback banners in order without malahem', () => {
     expect(FALLBACK_EXPLORE_SARH_BANNERS.map((b) => b.href)).toEqual([
-      '/butchers',
       '/feed-suppliers',
       '/ministry',
     ]);
   });
 
-  it('maps valid remote rows and rejects bad href/image', () => {
+  it('maps valid remote rows and rejects butcher or bad href/image', () => {
+    expect(
+      mapRemoteExploreSarhBanner({
+        id: '1',
+        imageUrl: 'https://cdn.example/a.jpg',
+        accessibilityLabel: 'موردو الأعلاف',
+        href: '/feed-suppliers',
+      }),
+    ).toEqual({
+      id: '1',
+      accessibilityLabel: 'موردو الأعلاف',
+      href: '/feed-suppliers',
+      image: { uri: 'https://cdn.example/a.jpg' },
+    });
     expect(
       mapRemoteExploreSarhBanner({
         id: '1',
@@ -25,12 +37,7 @@ describe('exploreSarhBanners mapping', () => {
         accessibilityLabel: 'ملاحم',
         href: '/butchers',
       }),
-    ).toEqual({
-      id: '1',
-      accessibilityLabel: 'ملاحم',
-      href: '/butchers',
-      image: { uri: 'https://cdn.example/a.jpg' },
-    });
+    ).toBeNull();
     expect(
       mapRemoteExploreSarhBanner({
         id: '1',
@@ -43,8 +50,8 @@ describe('exploreSarhBanners mapping', () => {
       mapRemoteExploreSarhBanner({
         id: '1',
         imageUrl: '',
-        accessibilityLabel: 'ملاحم',
-        href: '/butchers',
+        accessibilityLabel: 'موردون',
+        href: '/feed-suppliers',
       }),
     ).toBeNull();
   });
@@ -77,8 +84,8 @@ describe('fetchExploreSarhBanners', () => {
               {
                 id: 'r1',
                 imageUrl: 'https://cdn.example/r.jpg',
-                accessibilityLabel: 'ملاحم',
-                href: '/butchers',
+                accessibilityLabel: 'موردو الأعلاف',
+                href: '/feed-suppliers',
                 sortOrder: 0,
               },
             ],
@@ -93,7 +100,7 @@ describe('fetchExploreSarhBanners', () => {
     ]);
     expect(calls).toBe(1);
     expect(a).toEqual(b);
-    expect(a[0].href).toBe('/butchers');
+    expect(a[0].href).toBe('/feed-suppliers');
 
     await fetchExploreSarhBanners();
     expect(calls).toBe(1);
@@ -105,7 +112,6 @@ describe('fetchExploreSarhBanners', () => {
     }) as typeof fetch;
     const failed = await fetchExploreSarhBanners({ force: true });
     expect(failed.map((b) => b.href)).toEqual([
-      '/butchers',
       '/feed-suppliers',
       '/ministry',
     ]);
@@ -119,7 +125,6 @@ describe('fetchExploreSarhBanners', () => {
     );
     const empty = await fetchExploreSarhBanners({ force: true });
     expect(empty.map((b) => b.href)).toEqual([
-      '/butchers',
       '/feed-suppliers',
       '/ministry',
     ]);

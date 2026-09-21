@@ -10,8 +10,8 @@ import {
 export class ExploreSarhBannersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  listPublic() {
-    return this.prisma.exploreSarhBanner.findMany({
+  async listPublic() {
+    const rows = await this.prisma.exploreSarhBanner.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {
@@ -21,6 +21,10 @@ export class ExploreSarhBannersService {
         href: true,
         sortOrder: true,
       },
+    });
+    return rows.filter((row: { href?: string | null }) => {
+      const href = typeof row.href === 'string' ? row.href : '';
+      return href !== '/butchers' && !href.startsWith('/butchers/');
     });
   }
 

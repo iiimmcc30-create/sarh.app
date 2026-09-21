@@ -43,7 +43,6 @@ describe('HomeExploreService', () => {
     const sections = await service.listPublic();
     expect(sections.map((s) => s.destination)).toEqual([
       'community',
-      'butchers',
       'listings',
       'services',
       'news',
@@ -54,7 +53,6 @@ describe('HomeExploreService', () => {
   it('returns catalog routes from known destinations only', () => {
     expect(HOME_EXPLORE_CATALOG.map((c) => c.key)).toEqual([
       'community',
-      'butchers',
       'listings',
       'services',
       'news',
@@ -78,7 +76,7 @@ describe('HomeExploreService', () => {
     let stored = {
       items: [
         { id: 'a', destination: 'community', sortOrder: 0, isActive: true },
-        { id: 'b', destination: 'butchers', sortOrder: 1, isActive: true },
+        { id: 'b', destination: 'listings', sortOrder: 1, isActive: true },
       ],
     };
     prisma.appSetting.findUnique.mockImplementation(async () => ({
@@ -90,7 +88,7 @@ describe('HomeExploreService', () => {
     });
     const reordered = await service.reorder(['b', 'a']);
     expect(reordered.map((s) => s!.destination)).toEqual([
-      'butchers',
+      'listings',
       'community',
     ]);
     const toggled = await service.update('b', { isActive: false });

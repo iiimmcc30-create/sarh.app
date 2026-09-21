@@ -1,6 +1,5 @@
 import { FEED_TIMEOUT_MS, fetchPublicFeed } from '../services/fetchPublicFeed';
 import { fetchEditorialStories, resetEditorialStoriesCache } from '../services/editorialStories';
-import { loadButcherCatalog, resetButcherCatalogCache } from '../hooks/useButcher';
 import { resetRequestCoordination } from '../services/requestCoordination';
 
 jest.mock('../services/api', () => ({
@@ -29,7 +28,6 @@ function jsonResponse(body: unknown, status = 200): Response {
 describe('home feed speed', () => {
   beforeEach(() => {
     fetchWithTimeout.mockReset();
-    resetButcherCatalogCache();
     resetEditorialStoriesCache();
     resetRequestCoordination();
   });
@@ -57,33 +55,5 @@ describe('home feed speed', () => {
       {},
       12_000,
     );
-  });
-
-  it('skips butcher stories when the home mini section does not need them', async () => {
-    fetchWithTimeout.mockImplementation(async (url: string) => {
-      if (String(url).endsWith('/api/butchers')) {
-        return jsonResponse({
-          success: true,
-          data: [
-            {
-              id: 'b1',
-              nameAr: 'ملحمة',
-              nameEn: 'Shop',
-              city: 'Riyadh',
-              cityAr: 'الرياض',
-              country: 'SA',
-            },
-          ],
-        });
-      }
-      throw new Error(`unexpected ${url}`);
-    });
-
-    const catalog = await loadButcherCatalog(false);
-    expect(catalog.includeStories).toBe(false);
-    expect(catalog.stories).toEqual([]);
-    expect(catalog.butchers.length).toBeGreaterThan(0);
-    const urls = fetchWithTimeout.mock.calls.map((c: unknown[]) => String(c[0]));
-    expect(urls.some((u) => u.includes('/api/butchers/stories'))).toBe(false);
   });
 });

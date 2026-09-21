@@ -43,7 +43,6 @@ describe('SocketGatewayService chat authorization', () => {
       repo as never,
       notifications as never,
       emitService as never,
-      {} as never,
       { error: jest.fn() } as never,
       messagingPolicy as never,
       supportTickets as never,

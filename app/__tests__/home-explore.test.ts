@@ -20,9 +20,7 @@ describe('homeExplore catalog', () => {
     expect(resolveExploreCard({ destination: 'listings' })?.descriptionAr).toBe(
       'اعلانات البيع والشراء والمنتجات',
     );
-    expect(resolveExploreCard({ destination: 'butchers' })?.descriptionAr).toBe(
-      'تصفح منتجات الملاحم والطلبات',
-    );
+    expect(resolveExploreCard({ destination: 'butchers' })).toBeNull();
     expect(resolveExploreCard({ destination: 'services' })?.route).toBe('/ministry');
     expect(resolveExploreCard({ destination: 'services' })?.titleAr).toBe(
       'خدمات وزارة البيئة والمياه والزراعة',
@@ -45,7 +43,6 @@ describe('homeExplore catalog', () => {
   it('keeps a fallback row that does not include promote', () => {
     expect(FALLBACK_HOME_EXPLORE.map((item) => item.destination)).toEqual([
       'community',
-      'butchers',
       'listings',
       'services',
       'news',
@@ -58,7 +55,6 @@ describe('homeExplore catalog', () => {
     expect(featured?.titleAr).toBe('خدمات وزارة البيئة والمياه والزراعة');
     expect(grid.map((item) => item.destination)).toEqual([
       'listings',
-      'butchers',
       'community',
       'news',
     ]);
@@ -66,9 +62,8 @@ describe('homeExplore catalog', () => {
 });
 
 describe('Explore Sarh logo mark', () => {
-  it('uses the official mark on community, butchers, listings, services, and news', () => {
+  it('uses the official mark on community, listings, services, and news', () => {
     expect(usesExploreSarhLogoMark('community')).toBe(true);
-    expect(usesExploreSarhLogoMark('butchers')).toBe(true);
     expect(usesExploreSarhLogoMark('listings')).toBe(true);
     expect(usesExploreSarhLogoMark('services')).toBe(true);
     expect(usesExploreSarhLogoMark('news')).toBe(true);
@@ -90,8 +85,8 @@ describe('Explore Sarh logo mark', () => {
     expect(section).toContain('HOME_BANNER_CTA_HREF');
     expect(section).toContain('pagingEnabled');
     expect(section).toContain('accessibilityRole="button"');
-    expect(fallback).toContain('ملاحم سرح');
-    expect(fallback).toContain("href: '/butchers'");
+    expect(fallback).not.toContain('ملاحم سرح');
+    expect(fallback).not.toContain("href: '/butchers'");
     expect(fallback).toContain("href: '/feed-suppliers'");
     expect(fallback).toContain('موردو الأعلاف');
     expect(fallback).toContain("href: '/ministry'");
@@ -380,7 +375,7 @@ describe('Home design-system adoption', () => {
     expect(appBar).toContain('accessibilityRole="button"');
     expect(appBar).not.toContain('accessibilityRole="search"');
     expect(explore).toContain('accessibilityRole="button"');
-    expect(exploreFallback).toContain("accessibilityLabel: 'ملاحم سرح'");
+    expect(exploreFallback).toContain("accessibilityLabel: 'موردو الأعلاف'");
     expect(community).toContain('مجتمع سرح');
     expect(stories).toContain('accessibilityRole="button"');
   });
@@ -406,15 +401,12 @@ describe('Home design-system adoption', () => {
     expect(home).not.toContain('أحدث الإعلانات');
     expect(explore).toContain('fetchExploreSarhBanners');
     expect(explore).not.toContain('FALLBACK_EXPLORE_SARH_BANNERS');
-    expect(exploreFallback).toContain('ملاحم سرح');
-    expect(exploreFallback).toContain('explore-sarh-butchers.jpg');
-    expect(exploreFallback).toContain("href: '/butchers'");
+    expect(exploreFallback).not.toContain('ملاحم سرح');
+    expect(exploreFallback).not.toContain('explore-sarh-butchers.jpg');
+    expect(exploreFallback).not.toContain("href: '/butchers'");
     expect(exploreFallback).toContain('موردو الأعلاف');
     expect(exploreFallback).toContain('explore-sarh-feed-suppliers.jpg');
     expect(exploreFallback).toContain("href: '/ministry'");
-    expect(exploreFallback.indexOf("href: '/butchers'")).toBeLessThan(
-      exploreFallback.indexOf("href: '/feed-suppliers'"),
-    );
     expect(exploreFallback.indexOf("href: '/feed-suppliers'")).toBeLessThan(
       exploreFallback.indexOf("href: '/ministry'"),
     );

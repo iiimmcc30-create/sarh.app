@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 import { applyThemeScheme, colors as liveTheme, snapshotTheme } from '@/constants/theme';
-import { butcherChromeBg, butcherSearchFill } from '@/constants/butcherMarket';
 import { sarh } from '@/constants/sarhTokens';
 import { ds } from '@/constants/designSystem';
 
@@ -62,14 +61,6 @@ describe('light mode surface hierarchy', () => {
     expect(dark.bgField).not.toBe(dark.screenRoot);
     expect(light.bgField).not.toBe(light.screenRoot);
     expect(dark.textPrimary).not.toBe(light.textPrimary);
-  });
-
-  it('aligns butcher light chrome with the same hierarchy', () => {
-    const light = snapshotTheme('light').colors;
-    expect(butcherChromeBg('light', 'meat')).toBe(light.screenRoot);
-    expect(butcherSearchFill('light')).toBe(light.bgField);
-    expect(src('components/butchers/butcherSoftCard.ts')).toContain('backgroundColor: colors.bgSurface');
-    expect(butcherChromeBg('dark', 'meat')).toBe('#3F2A26');
   });
 
   it('mirrors the light palette in sarhTokens and ds.light without duplicating dark values', () => {

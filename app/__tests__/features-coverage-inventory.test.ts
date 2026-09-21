@@ -1,7 +1,7 @@
 /**
  * End-to-end *feature inventory* for the mobile app.
  * Ensures every major product area has automated unit coverage wired in,
- * from login through tabs, ads, payment, posts, butcher, and support.
+ * from login through tabs, ads, payment, posts, and support.
  *
  * This is not a UI E2E runner — it asserts that the pure logic modules
  * backing each feature area are imported and exercised by the Jest suite.
@@ -34,7 +34,6 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
     routes: ['/(tabs)', '/(tabs)/market', '/listing/[id]', '/search', '/favorites', '/news'],
     coveredByTests: [
       'core-flows.test.ts',
-      'features-butcher-services.test.ts',
       'features-locale-user.test.ts',
       'home-explore.test.ts',
     ],
@@ -44,7 +43,7 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
     id: 'promote-ads-payment',
     titleAr: 'ترويج الإعلان والدفع والباقات',
     routes: ['/promote', '/listing/[id]/promote', '/payment', '/payment/result', '/subscription', '/fees'],
-    coveredByTests: ['core-flows.test.ts', 'features-promote-commissions.test.ts', 'features-journey-butcher-promote.test.ts'],
+    coveredByTests: ['core-flows.test.ts', 'features-promote-commissions.test.ts'],
     modules: [
       'services/listingPromote.ts',
       'services/listingBoost.ts',
@@ -60,25 +59,6 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
     routes: ['/(tabs)/posts', '/post/[id]', '/create/post', '/create/story', '/stories/view', '/(tabs)/profile'],
     coveredByTests: ['features-posts-stories-support.test.ts', 'features-locale-user.test.ts'],
     modules: ['services/posts.ts', 'lib/storyMedia.ts', 'lib/profileTimeline.ts', 'lib/currentUser.ts'],
-  },
-  {
-    id: 'butcher-marketplace',
-    titleAr: 'سوق الملاحم / السلة / الطلبات',
-    routes: ['/butchers', '/butchers/cart', '/butchers/order/[id]', '/butchers/invoice/[id]'],
-    coveredByTests: ['features-butcher-services.test.ts', 'features-journey-butcher-promote.test.ts'],
-    modules: [
-      'services/butcherCart.ts',
-      'services/butcherOrders.ts',
-      'services/butcherData.ts',
-      'lib/butcherOrderPricing.ts',
-    ],
-  },
-  {
-    id: 'butcher-application',
-    titleAr: 'طلب انضمام ملحمة',
-    routes: ['/butchers/apply', '/butchers/register', '/butchers/application', '/butchers/my-application'],
-    coveredByTests: ['features-journey-butcher-promote.test.ts'],
-    modules: ['lib/butcherApplicationValidation.ts'],
   },
   {
     id: 'support-help',
@@ -105,7 +85,7 @@ export const APP_FEATURE_AREAS: FeatureArea[] = [
     id: 'official-services',
     titleAr: 'خدمات وزارة البيئة والمياه والزراعة',
     routes: ['/ministry', '/ministry/services/[id]', '/sarh-services'],
-    coveredByTests: ['features-butcher-services.test.ts', 'ministry-profile.test.ts'],
+    coveredByTests: ['ministry-profile.test.ts'],
     modules: ['services/officialServices.ts', 'app/ministry/index.tsx'],
   },
 ];
@@ -117,8 +97,6 @@ describe('app feature coverage inventory (login → pages → pay → ads → po
       'home-market-listings',
       'promote-ads-payment',
       'posts-stories-profile',
-      'butcher-marketplace',
-      'butcher-application',
       'support-help',
       'navigation',
       'locale-rtl',
@@ -143,8 +121,6 @@ describe('app feature coverage inventory (login → pages → pay → ads → po
     await expect(import('../services/listingPromote')).resolves.toBeTruthy();
     await expect(import('../services/paymentCheckout')).resolves.toBeTruthy();
     await expect(import('../services/posts')).resolves.toBeTruthy();
-    await expect(import('../services/butcherCart')).resolves.toBeTruthy();
-    await expect(import('../lib/butcherApplicationValidation')).resolves.toBeTruthy();
     await expect(import('../services/support')).resolves.toBeTruthy();
     await expect(import('../lib/safeNavigate')).resolves.toBeTruthy();
   });

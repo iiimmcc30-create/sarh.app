@@ -420,7 +420,6 @@ describe('Architecture V2 — permanent guardrails', () => {
     'components/feature/ListingCard.tsx',
     'components/feature/PostItem.tsx',
     'components/navigation/FloatingTabBar.tsx',
-    'components/butchers/ButchersTabBar.tsx',
   ];
 
   it('leaves the marketplace card, feed post and tab bars untouched', () => {
@@ -616,7 +615,7 @@ const WAVE_3B_SHELLS = [
   'app/auth/forgot-password.tsx',
 ];
 
-const WAVE_3B_LANDING = ['app/auth/welcome.tsx', 'app/join/index.tsx'];
+const WAVE_3B_LANDING = ['app/auth/welcome.tsx'];
 
 const WAVE_3B = [...WAVE_3B_SHELLS, ...WAVE_3B_LANDING];
 
@@ -663,19 +662,13 @@ describe('Architecture V2 — Wave 3b auth and join screens', () => {
     });
   }
 
-  it('keeps labeled auth/join fields on SarhInput and the 440 auth cap', () => {
-    for (const file of ['app/auth/phone.tsx', 'app/auth/register.tsx', 'app/join/index.tsx']) {
+  it('keeps labeled auth fields on SarhInput and the 440 auth cap', () => {
+    for (const file of ['app/auth/phone.tsx', 'app/auth/register.tsx']) {
       expect(src(file)).toContain('SarhInput');
     }
-    expect(src('app/join/index.tsx')).toContain('width="form"');
     for (const file of WAVE_3B_SHELLS) {
       expect(src(file)).toContain('maxWidth: 440');
     }
-  });
-
-  it('does not remigrate the Wave 3a join success theme wiring', () => {
-    expect(src('app/join/success.tsx')).toContain('useThemedStyles');
-    expect(src('app/join/success.tsx')).toContain('تم استلام طلب الانضمام');
   });
 });
 
@@ -795,9 +788,10 @@ describe('Architecture V2 — Wave 4A community and messages inbox', () => {
     expect(src('components/feature/PostItem.tsx')).not.toContain("from '@/design-system/components'");
   });
 
-  it('keeps inbox navigation on the existing butcher chat route', () => {
+  it('keeps inbox navigation on the shared chat route', () => {
     const panel = src(WAVE_4A_PANEL);
-    expect(panel).toContain("pathname: '/butchers/chat'");
+    expect(panel).toContain("pathname: '/chat'");
+    expect(panel).not.toContain("pathname: '/butchers/chat'");
     expect(panel).toContain('useMessageThreads');
     expect(panel).toContain('filterMessageThreads');
     expect(panel).toContain('SarhInput');
@@ -808,50 +802,20 @@ describe('Architecture V2 — Wave 4A community and messages inbox', () => {
   });
 });
 
-const WAVE_4B_SCREENS = [
-  'app/butchers/index.tsx',
-  'app/butchers/all.tsx',
-  'app/butchers/more.tsx',
-  'app/butchers/favorites.tsx',
-  'app/butchers/invoices.tsx',
-  'app/butchers/invoice/[id].tsx',
-  'app/butchers/my-orders.tsx',
-  'app/butchers/offers.tsx',
-  'app/butchers/apply.tsx',
-  'app/butchers/register.tsx',
-  'app/butchers/order-success.tsx',
-  'app/butchers/my-application.tsx',
-  'app/butchers/application/[id].tsx',
-  'app/butchers/application/edit/[id].tsx',
-  'app/butchers/location.tsx',
-  'app/butchers/cart.tsx',
-  'app/butchers/order.tsx',
-  'app/butchers/order/[id].tsx',
-];
+const WAVE_4B_CHAT = 'app/chat.tsx';
 
-const WAVE_4B_CHAT = 'app/butchers/chat.tsx';
-
-const WAVE_4B_SHELL = ['app/butchers/[id].tsx', 'app/butchers/map.tsx'];
-
-describe('Architecture V2 — Wave 4B butchers and chat', () => {
-  for (const file of WAVE_4B_SCREENS) {
-    it(`${file} composes its shell with the L2 layer`, () => {
-      const text = src(file);
-      expect(text).toContain("from '@/design-system/layout'");
-      expect(text).toContain('<Screen');
-      expect(text).toContain('<ScreenBody');
-    });
-
-    it(`${file} hands RTL helpers to the system`, () => {
-      const text = code(file);
-      expect(text).not.toContain('getRtlRow');
-      expect(text).not.toContain('getRtlText');
-      expect(text).not.toContain('getRtlDirection');
-      expect(text).not.toContain('row-reverse');
-      expect(text).not.toMatch(/(margin|padding)(Left|Right):/);
-      expect(text).not.toMatch(/textAlign:\s*'(left|right)'/);
-    });
-  }
+describe('Architecture V2 — Wave 4B chat after malahem removal', () => {
+  it('removes butcher marketplace screens from the Sarh app', () => {
+    for (const file of [
+      'app/butchers/index.tsx',
+      'app/butchers/[id].tsx',
+      'app/butchers/cart.tsx',
+      'app/butchers/order.tsx',
+      'app/join/index.tsx',
+    ]) {
+      expect(() => src(file)).toThrow();
+    }
+  });
 
   it('migrates the chat thread shell without taking Socket ownership', () => {
     const text = src(WAVE_4B_CHAT);
@@ -866,24 +830,6 @@ describe('Architecture V2 — Wave 4B butchers and chat', () => {
     expect(code(WAVE_4B_CHAT)).not.toContain('getRtlRow');
     expect(code(WAVE_4B_CHAT)).not.toContain('getRtlText');
     expect(code(WAVE_4B_CHAT)).not.toContain('SafeAreaView');
-  });
-
-  for (const file of WAVE_4B_SHELL) {
-    it(`${file} uses Screen without rewriting map/store internals`, () => {
-      expect(src(file)).toContain('<Screen');
-      expect(src(file)).toContain("from '@/design-system/layout'");
-    });
-  }
-
-  it('keeps store and map contracts after the shell swap', () => {
-    expect(src('app/butchers/[id].tsx')).toContain('ButcherStoreHero');
-    expect(src('app/butchers/[id].tsx')).toContain('ButcherMenuCategoryBar');
-    expect(src('app/butchers/[id].tsx')).toContain('البحث في القائمة...');
-    expect(src('app/butchers/[id].tsx')).toContain('CATEGORY_LABELS');
-    expect(src('app/butchers/[id].tsx')).not.toContain("label: 'الكل'");
-    expect(src('app/butchers/map.tsx')).toContain('تعذر تحميل الملاحم');
-    expect(src('app/butchers/map.tsx')).toContain('جاري تحميل الملاحم');
-    expect(src('app/butchers/map.tsx')).toContain('setLoadState');
   });
 
   it('leaves Live and create-post media outside this wave', () => {

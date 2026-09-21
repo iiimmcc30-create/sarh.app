@@ -5,7 +5,6 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
 import { AuthModule } from '../auth/auth.module';
 import { QueueModule } from '../queue/queue.module';
-import { ButchersModule } from '../butchers/butchers.module';
 import { MessagesModule } from '../messages/messages.module';
 import { SupportModule } from '../support/support.module';
 import { AppGateway } from './app.gateway';
@@ -23,7 +22,6 @@ import { SocketRedisAdapterService } from './services/socket-redis-adapter.servi
     PrismaModule,
     RedisModule,
     QueueModule,
-    ButchersModule,
     MessagesModule,
     SupportModule,
     GatewaySharedModule,

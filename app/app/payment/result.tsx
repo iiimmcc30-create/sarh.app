@@ -64,18 +64,16 @@ const CONTEXT_COPY: Record<PaymentContext, ContextCopy> = {
     primaryLabel: 'عرض الإعلان',
   },
   butcher_order: {
-    successTitle: 'تم الدفع وإرسال الطلب!',
-    successSubtitle: 'وصل طلبك المدفوع وسيواصل معك الجزار قريبًا لتأكيد التفاصيل',
-    pendingSubtitle: 'جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.',
-    primaryLabel: 'تفاصيل الطلب',
-    secondaryLabel: 'قسم الملاحم',
+    successTitle: 'تم الدفع بنجاح',
+    successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُحدَّث الطلب.',
+    primaryLabel: 'الرئيسية',
   },
   butcher_checkout: {
-    successTitle: 'تم الدفع وإرسال الطلب!',
-    successSubtitle: 'وصل طلبك المدفوع وسيواصل معك الجزار قريبًا لتأكيد التفاصيل',
-    pendingSubtitle: 'جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.',
-    primaryLabel: 'تفاصيل الطلب',
-    secondaryLabel: 'قسم الملاحم',
+    successTitle: 'تم الدفع بنجاح',
+    successSubtitle: 'تم تأكيد عملية الدفع من N-Genius.',
+    pendingSubtitle: 'العملية قيد المعالجة. اضغط «إعادة التحقق» إذا لم يُحدَّث الطلب.',
+    primaryLabel: 'الرئيسية',
   },
   generic: {
     successTitle: 'تم الدفع بنجاح!',
@@ -271,19 +269,7 @@ export default function PaymentResultScreen() {
         break;
       case 'butcher_order':
       case 'butcher_checkout':
-        if (syncState === 'paid' && paidOrderId) {
-          router.replace({
-            pathname: '/butchers/order-success',
-            params: {
-              orderId: paidOrderId,
-              orderNumber: paidOrderNumber,
-              butcherId: paidButcherId,
-              paymentStatus: 'paid',
-            },
-          } as never);
-        } else {
-          router.replace('/butchers' as never);
-        }
+        router.replace('/(tabs)' as never);
         break;
       default:
         router.replace('/(tabs)/profile' as never);
@@ -296,7 +282,7 @@ export default function PaymentResultScreen() {
       return;
     }
     if (context === 'butcher_order' || context === 'butcher_checkout') {
-      router.replace('/butchers' as never);
+      router.replace('/(tabs)' as never);
       return;
     }
     if (context === 'boost' || context === 'promotion') {
@@ -321,7 +307,7 @@ export default function PaymentResultScreen() {
           <AppText variant="heading2" align="center">جارٍ التحقق من N-Genius...</AppText>
           <AppText variant="body" color="textSecondary" align="center">
             {isButcherContext
-              ? 'جارٍ التحقق من حالة الدفع، ولن يُرسل الطلب للملحمة قبل تأكيد N-Genius.'
+              ? 'جارٍ التحقق من حالة العملية في N-Genius'
               : context === 'subscription'
                 ? 'لا يُفعَّل الاشتراك قبل تأكيد بوابة الدفع'
                 : 'جارٍ التحقق من حالة العملية في N-Genius'}
