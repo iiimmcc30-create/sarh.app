@@ -19,7 +19,8 @@ export const ds = {
     cardGradientEnd: '#F8F9FA',
     primary: '#20B66F',
     primaryMuted: 'rgba(32, 182, 111, 0.12)',
-    glass: 'rgba(255, 255, 255, 0.92)',
+    /** Chrome glass — denser than before so content behind is felt, not read. */
+    glass: 'rgba(255, 255, 255, 0.96)',
     glassBorder: '#E6E8EB',
     stroke: '#E6E8EB',
     glow: '#20B66F',
@@ -35,7 +36,8 @@ export const ds = {
     primary: sarh.color.action,
     accent: sarh.color.action,
     primaryMuted: sarh.color.actionMuted,
-    glass: sarh.color.overlay,
+    /** Chrome glass — denser local tint; leave `sarh.color.overlay` for modals/scrims. */
+    glass: 'rgba(7, 19, 28, 0.94)',
     glassBorder: sarh.color.border,
     stroke: sarh.color.border,
     glow: sarh.color.action,
