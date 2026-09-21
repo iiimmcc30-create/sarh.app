@@ -3,6 +3,7 @@ import {
   listingMatchesRegionSelection,
   regionMatchTokens,
   regionSelectionLabel,
+  resolveNearbyRegionSelection,
 } from '../lib/saudiRegionSearch';
 
 describe('saudi region filter matching', () => {
@@ -63,5 +64,27 @@ describe('saudi region filter matching', () => {
       'المدينة المنورة',
       'مكة المكرمة',
     ]);
+  });
+
+  it('maps device geocode places onto catalog cities so nearby actually matches listings', () => {
+    const riyadh = resolveNearbyRegionSelection({ city: 'Riyadh' });
+    expect(riyadh).toEqual({
+      type: 'city',
+      region: expect.objectContaining({ id: 'riyadh' }),
+      city: expect.objectContaining({ id: 'riyadh-city', nameAr: 'الرياض' }),
+    });
+    expect(listingMatchesRegionSelection('الرياض، منطقة الرياض', riyadh!)).toBe(true);
+    expect(listingMatchesRegionSelection('جدة', riyadh!)).toBe(false);
+
+    const jeddah = resolveNearbyRegionSelection({ city: 'Jeddah', region: 'Makkah' });
+    expect(jeddah?.type).toBe('city');
+    expect(jeddah && jeddah.type === 'city' ? jeddah.city.nameAr : null).toBe('جدة');
+
+    const eastern = resolveNearbyRegionSelection({ region: 'Eastern Province' });
+    expect(eastern?.type).toBe('region');
+    expect(eastern && eastern.type === 'region' ? eastern.region.id : null).toBe('eastern');
+    expect(listingMatchesRegionSelection('الدمام', eastern!)).toBe(true);
+
+    expect(resolveNearbyRegionSelection({ city: 'Atlantis' })).toBeNull();
   });
 });

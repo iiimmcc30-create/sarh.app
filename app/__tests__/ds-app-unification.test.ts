@@ -73,16 +73,9 @@ describe('design-system unification — allowed redesigns only', () => {
     );
   });
 
-  it('butcher store uses Hunger-style category underline and keeps offers plus about copy', () => {
-    const bar = src('components/butcher/ButcherCategoryBar.tsx');
-    const store = src('app/butchers/[id].tsx');
-    const menuBar = src('components/butcher/ButcherMenuCategoryBar.tsx');
-    expect(store).toContain("label: 'عروضنا'");
-    expect(store).toContain('عن الملحمة');
-    expect(store).toContain('ButcherMenuCategoryBar');
-    expect(menuBar).toContain('underlineActive');
-    expect(bar).toContain("from '@/design-system/components'");
-    expect(bar).toContain('SarhChip');
+  it('does not keep a butcher storefront after malahem removal', () => {
+    expect(() => src('app/butchers/[id].tsx')).toThrow();
+    expect(() => src('components/butcher/ButcherCategoryBar.tsx')).toThrow();
   });
 
   it('removes the unused PrimaryButton adapter', () => {

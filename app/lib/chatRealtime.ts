@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@/services/butcherData';
+import type { ChatMessage } from '@/services/chatMessages';
 import { resolveMediaUrl } from '@/services/media';
 
 export type ChatSocketLike = {

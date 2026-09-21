@@ -39,13 +39,6 @@ type LocalUploadSlot = {
 
 type UploadSlot = S3UploadSlot | CloudinaryUploadSlot | LocalUploadSlot;
 
-export type ButcherApplicationFileUploadResult = {
-  fileKey: string;
-  mimeType: string;
-  fileSizeBytes: number;
-  originalFileName: string;
-};
-
 type PresignSlot = UploadSlot & { fileKey?: string };
 
 function guessMime(uri: string): string {
@@ -258,52 +251,6 @@ async function uploadBlobToSlot(
   if (!putRes.ok) {
     throw new Error('فشل رفع الملف');
   }
-}
-
-/** Presign + upload for butcher-application documents; returns storage fileKey for API registration. */
-export async function uploadButcherApplicationFileFromUri(
-  accessToken: string,
-  localUri: string,
-  options: { originalFileName?: string; mimeType?: string } = {},
-): Promise<ButcherApplicationFileUploadResult> {
-  const mimetype = options.mimeType ?? guessMime(localUri);
-  const originalFileName = options.originalFileName ?? fileNameFromUri(localUri);
-  const { blob, fileSizeBytes } = await readLocalFileMeta(localUri, mimetype);
-
-  const token = getAccessToken() ?? accessToken;
-  const presignRes = await authFetch(`${API_BASE}/api/upload/presign`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ mimetype, folder: 'butcher-applications', count: 1 }),
-  });
-
-  const presignJson = await presignRes.json().catch(() => ({}));
-  if (!presignRes.ok || !presignJson.success) {
-    throw new Error(
-      presignJson.messageAr ||
-        presignJson.message ||
-        (presignRes.status === 503
-          ? 'خدمة رفع الملفات غير مُعدّة على السيرفر'
-          : 'فشل تجهيز الرفع'),
-    );
-  }
-
-  const slot = presignJson.data?.urls?.[0] as PresignSlot | undefined;
-  if (!slot?.uploadUrl || !slot.fileKey) {
-    throw new Error('استجابة الرفع غير صالحة');
-  }
-
-  await uploadBlobToSlot(slot, getAccessToken() ?? token, localUri, mimetype, blob);
-
-  return {
-    fileKey: slot.fileKey,
-    mimeType: mimetype,
-    fileSizeBytes,
-    originalFileName,
-  };
 }
 
 /** Presign + upload for support ticket / verification attachments. */

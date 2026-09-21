@@ -24,10 +24,9 @@ export function resolveBootNavigation(state: BootNavState): BootNavAction {
   const inOnboarding = seg === 'onboarding';
   const inAuth = seg === 'auth';
   const inInfo = seg === 'info';
-  const inJoin = seg === 'join';
   const onRootIndex = !seg || seg === 'index';
 
-  if (!state.onboardingComplete && !inOnboarding && !inJoin) {
+  if (!state.onboardingComplete && !inOnboarding) {
     return { type: 'replace', href: '/onboarding' };
   }
 
@@ -50,8 +49,7 @@ export function resolveBootNavigation(state: BootNavState): BootNavAction {
     !state.isAuthenticated &&
     !inAuth &&
     !inInfo &&
-    !inOnboarding &&
-    !inJoin
+    !inOnboarding
   ) {
     return { type: 'replace', href: '/auth/welcome' };
   }

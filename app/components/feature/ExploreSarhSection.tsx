@@ -88,7 +88,7 @@ export const ExploreSarhSection = forwardRef<ExploreSarhSectionHandle>(
     return () => clearInterval(timer);
   }, [slideWidth, banners.length]);
 
-  const openButchers = () => safePush(HOME_BANNER_CTA_HREF, undefined, router);
+  const openBannerCta = () => safePush(HOME_BANNER_CTA_HREF, undefined, router);
 
   return (
     <View style={styles.wrap}>
@@ -121,7 +121,7 @@ export const ExploreSarhSection = forwardRef<ExploreSarhSectionHandle>(
                   shape="rounded"
                   variant={scheme === 'light' ? 'secondary' : 'inverse'}
                   accessibilityLabel={HOME_BANNER_CTA_LABEL}
-                  onPress={openButchers}
+                  onPress={openBannerCta}
                 />
               </View>
             </View>

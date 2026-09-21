@@ -1,5 +1,15 @@
 import type { Listing } from '@/services/types';
 
+export type MarketSortMode = 'newest' | 'oldest' | 'price_asc' | 'price_desc';
+
+/** Client-side market chip cycle — newest → oldest → price ↑ → price ↓. */
+export function nextMarketSortMode(mode: MarketSortMode): MarketSortMode {
+  if (mode === 'newest') return 'oldest';
+  if (mode === 'oldest') return 'price_asc';
+  if (mode === 'price_asc') return 'price_desc';
+  return 'newest';
+}
+
 function byRecency(a: Listing, b: Listing): number {
   const ta = new Date(a.createdAt ?? a.postedAt ?? 0).getTime();
   const tb = new Date(b.createdAt ?? b.postedAt ?? 0).getTime();

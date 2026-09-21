@@ -17,6 +17,8 @@ type Props = {
   categoryActive?: boolean;
   categoryPickerOpen?: boolean;
   regionActive?: boolean;
+  nearbyActive?: boolean;
+  sortActive?: boolean;
 };
 
 /** Region + nearby chips, then paired sort/category bar (reference layout). */
@@ -29,6 +31,8 @@ export function MarketFilterBar({
   categoryActive = false,
   categoryPickerOpen = false,
   regionActive = false,
+  nearbyActive = false,
+  sortActive = false,
 }: Props) {
   const { styles, colors } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors),
@@ -73,24 +77,35 @@ export function MarketFilterBar({
         </Pressable>
 
         <Pressable
-          style={[styles.chip, getRtlRow()]}
+          style={[styles.chip, nearbyActive && styles.chipActive, getRtlRow()]}
           onPress={onNearbyPress}
           accessibilityRole="button"
           accessibilityLabel="القريب"
+          accessibilityState={{ selected: nearbyActive }}
+          testID="market-nearby-chip"
         >
-          <AppIcon name="navigation" size={MARKET_CHIP.iconSize} color={accent} />
-          <Text style={styles.chipLabel}>القريب</Text>
+          <AppIcon
+            name="navigation"
+            size={MARKET_CHIP.iconSize}
+            color={nearbyActive ? accent : colors.textPrimary}
+          />
+          <Text style={[styles.chipLabel, nearbyActive && styles.chipLabelActive]}>القريب</Text>
         </Pressable>
 
         <Pressable
-          style={[styles.chip, getRtlRow()]}
+          style={[styles.chip, sortActive && styles.chipActive, getRtlRow()]}
           onPress={onSortPress}
           accessibilityRole="button"
           accessibilityLabel="الترتيب"
+          accessibilityState={{ selected: sortActive }}
           testID="market-sort-chip"
         >
-          <AppIcon name="sort-alt" size={MARKET_CHIP.iconSize} color={accent} />
-          <Text style={styles.chipLabel}>الترتيب</Text>
+          <AppIcon
+            name="sort-alt"
+            size={MARKET_CHIP.iconSize}
+            color={sortActive ? accent : colors.textPrimary}
+          />
+          <Text style={[styles.chipLabel, sortActive && styles.chipLabelActive]}>الترتيب</Text>
         </Pressable>
 
         <Pressable

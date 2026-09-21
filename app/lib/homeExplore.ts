@@ -1,6 +1,5 @@
 export type HomeExploreDestinationKey =
   | 'community'
-  | 'butchers'
   | 'listings'
   | 'services'
   | 'news'
@@ -28,12 +27,6 @@ const CATALOG: Record<
     descriptionAr: 'نقاشات-تجارب-اسئلة-معرفه',
     icon: 'people-outline',
     route: '/(tabs)/posts',
-  },
-  butchers: {
-    titleAr: 'سوق الملاحم',
-    descriptionAr: 'تصفح منتجات الملاحم والطلبات',
-    icon: 'storefront-outline',
-    route: '/butchers',
   },
   listings: {
     titleAr: 'السوق',
@@ -69,7 +62,7 @@ const CATALOG: Record<
 };
 
 export const FALLBACK_HOME_EXPLORE: HomeExploreCard[] = (
-  ['community', 'butchers', 'listings', 'services', 'news'] as HomeExploreDestinationKey[]
+  ['community', 'listings', 'services', 'news'] as HomeExploreDestinationKey[]
 ).map((destination, sortOrder) => ({
   destination,
   sortOrder,
@@ -80,7 +73,6 @@ export const FALLBACK_HOME_EXPLORE: HomeExploreCard[] = (
 /** Explore cards that use the official Sarh mark instead of a catalog Lucide icon. */
 export const EXPLORE_SARH_LOGO_DESTINATIONS: HomeExploreDestinationKey[] = [
   'community',
-  'butchers',
   'listings',
   'services',
   'news',
@@ -100,7 +92,6 @@ export function splitExploreRows<T>(items: T[]): { top: T[]; bottom: T[] } {
 /** Visual order for the 2×2 home grid (matches reference layout). */
 export const EXPLORE_GRID_DESTINATION_ORDER: HomeExploreDestinationKey[] = [
   'listings',
-  'butchers',
   'community',
   'news',
 ];

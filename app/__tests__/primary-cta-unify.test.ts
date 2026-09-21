@@ -65,7 +65,5 @@ describe('Primary CTA button tokens', () => {
     expect(src('app/auth/otp.tsx')).toContain('<SarhButton');
     expect(src('app/ministry/services/[id].tsx')).toContain('<SarhButton');
     expect(src('app/create/listing.tsx')).toContain('<SarhButton');
-    expect(src('app/join/index.tsx')).toContain('إرسال طلب الانضمام');
-    expect(src('components/butcher/ButcherProductOptionsModal.tsx')).toContain('<SarhButton');
   });
 });

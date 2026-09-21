@@ -51,9 +51,6 @@ describe('feed supplier screens stay a public directory', () => {
   });
 
   it('opens the directory from home quick access and keeps CMS banners', () => {
-    expect(exploreFallback.indexOf("href: '/butchers'")).toBeLessThan(
-      exploreFallback.indexOf("href: '/feed-suppliers'"),
-    );
     expect(exploreFallback.indexOf("href: '/feed-suppliers'")).toBeLessThan(
       exploreFallback.indexOf("href: '/ministry'"),
     );

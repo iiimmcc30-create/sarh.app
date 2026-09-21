@@ -4,7 +4,7 @@ import {
   mergeChatMessages,
   type ChatSocketLike,
 } from '@/lib/chatRealtime';
-import type { ChatMessage } from '@/services/butcherData';
+import type { ChatMessage } from '@/services/chatMessages';
 
 function msg(partial: Partial<ChatMessage> & Pick<ChatMessage, 'id'>): ChatMessage {
   return {

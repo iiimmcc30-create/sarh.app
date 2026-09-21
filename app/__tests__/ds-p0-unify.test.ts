@@ -35,7 +35,6 @@ describe('P0 design-system unification', () => {
       if (r.includes('lucideIconMap') || r.includes('flaticon') || r.includes('constants/')) {
         return false;
       }
-      if (r === 'components/butchers/ButchersAppBar.tsx') return false;
       const src = readFileSync(file, 'utf8');
       return src.includes('name="angle-left"') || src.includes("name='angle-left'");
     });

@@ -20,8 +20,6 @@ describe('admin butcher manage', () => {
       {} as never,
       {} as never,
       {} as never,
-      {} as never,
-      {} as never,
     );
   });
 

@@ -19,7 +19,6 @@ import {
 } from '../dto/socket-events.dto';
 import { SocketRepository } from '../repositories/socket.repository';
 import { SocketEmitService } from './socket-emit.service';
-import { OrderLifecycleService } from '../../butchers/services/order-lifecycle.service';
 import { MessagingPolicyService } from '../../messages/services/messaging-policy.service';
 import { SupportTicketsService } from '../../support/services/support-tickets.service';
 import { ApiException } from '../../common/exceptions/api.exception';
@@ -42,7 +41,6 @@ export class SocketGatewayService {
     private readonly repo: SocketRepository,
     private readonly notifications: AppNotificationsService,
     private readonly emitService: SocketEmitService,
-    private readonly orderLifecycle: OrderLifecycleService,
     private readonly logger: LoggerService,
     private readonly messagingPolicy: MessagingPolicyService,
     private readonly supportTickets: SupportTicketsService,
@@ -402,29 +400,10 @@ export class SocketGatewayService {
   }
 
   async handleOrderStatus(
-    user: JwtPayload,
-    data: OrderStatusDto,
+    _user: JwtPayload,
+    _data: OrderStatusDto,
   ): Promise<SocketError | null> {
-    const order = await this.repo.findButcherOrder(data.orderId);
-    if (!order) return { code: 'not_found', message: 'Order not found' };
-
-    if (order.butcher.userId !== user.userId) {
-      return { code: 'unauthorized', message: 'Not your order' };
-    }
-    try {
-      await this.orderLifecycle.transitionOrder({
-        orderId: data.orderId,
-        actorId: user.userId,
-        nextStatus: data.status,
-        cancellationReason:
-          data.status === 'cancelled' ? 'Order cancelled by butcher' : null,
-      });
-    } catch (err) {
-      this.logger.warn({ err, data }, 'order transition rejected via socket');
-      return { code: 'invalid_state', message: 'Invalid order transition' };
-    }
-
-    return null;
+    return { code: 'gone', message: 'Butcher orders are no longer available' };
   }
 
   onPresencePing(userId: string, socketId: string): void {

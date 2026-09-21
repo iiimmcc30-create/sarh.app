@@ -318,7 +318,6 @@ describe('P1-4 seller/profile listing callers', () => {
     expect(src('app/(tabs)/market.tsx')).not.toContain('useSellerListingsPager');
     expect(src('components/market/MarketListingsFeed.tsx')).not.toContain('useSellerListingsPager');
     expect(src('app/market/browse.tsx')).not.toContain('useSellerListingsPager');
-    expect(src('app/butchers/index.tsx')).not.toContain('useSellerListingsPager');
   });
 
   it('keeps searchAllSellerListings off production seller feeds after #253', () => {

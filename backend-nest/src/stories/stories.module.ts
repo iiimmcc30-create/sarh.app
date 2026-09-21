@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MessagesModule } from '../messages/messages.module';
-import { ButcherStoriesController } from './butcher-stories.controller';
 import { StoriesController } from './stories.controller';
 import { StoriesService } from './stories.service';
 import { StoriesRepository } from './repositories/stories.repository';
@@ -9,7 +8,7 @@ import { StoryReactionRepository } from './repositories/story-reaction.repositor
 
 @Module({
   imports: [MessagesModule],
-  controllers: [StoriesController, ButcherStoriesController],
+  controllers: [StoriesController],
   providers: [
     StoriesService,
     StoriesRepository,

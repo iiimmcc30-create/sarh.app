@@ -53,7 +53,7 @@ describe('home launch layout', () => {
     expect(home).not.toContain('HOME_BANNER_CTA_LABEL');
     expect(home).not.toContain("safePush('/butchers'");
     expect(banner).toContain('fetchExploreSarhBanners');
-    expect(src('app/butchers/index.tsx')).toContain('ButcherMarketBannerSlider');
+    expect(banner).not.toContain('/butchers');
   });
 
   it('reuses the market ListingCard feed on Home without a latest-listings title', () => {

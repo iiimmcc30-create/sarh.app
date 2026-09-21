@@ -2,29 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import bcrypt from 'bcryptjs';
 import { AdminRepository } from './repositories/admin.repository';
-import { ButcherApplicationAdminService } from '../butcher-applications/services/admin.service';
-import { ApplicationRepository } from '../butcher-applications/repositories/application.repository';
 import { JwtTokenService } from '../auth/services/jwt-token.service';
 import { RedisSessionService } from '../redis/services/redis-session.service';
 import { AuthRepository } from '../auth/repositories/auth.repository';
 import { LoggerService } from '../common/services/logger.service';
 import { throwApi, ApiException } from '../common/exceptions/api.exception';
 import { authorizeCronCleanup } from './lib/cron-auth';
-import { parseApplicationId } from '../butcher-applications/routes/parseRequest';
-import {
-  adminListQuerySchema,
-  approveBodySchema,
-  rejectBodySchema,
-  commentBodySchema,
-} from '../butcher-applications/routes/schemas';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
-import type {
-  AdminLoginDto,
-  ApproveApplicationBodyDto,
-  CommentApplicationBodyDto,
-  PaginationQueryDto,
-  RejectApplicationBodyDto,
-} from './dto/admin.dto';
+import type { AdminLoginDto, PaginationQueryDto } from './dto/admin.dto';
 import {
   adminLoginSchema,
   createSectionSchema,
@@ -65,8 +50,6 @@ function formatAdminUser(user: {
 export class AdminService {
   constructor(
     private readonly repo: AdminRepository,
-    private readonly butcherApplications: ButcherApplicationAdminService,
-    private readonly applicationRepo: ApplicationRepository,
     private readonly jwt: JwtTokenService,
     private readonly sessions: RedisSessionService,
     private readonly authRepo: AuthRepository,
@@ -690,111 +673,5 @@ export class AdminService {
     }
     await this.assertAdminBearer(authHeader);
     return this.runCleanup();
-  }
-
-  async listButcherApplications(query: Record<string, unknown>) {
-    const parsed = adminListQuerySchema.safeParse(query);
-    if (!parsed.success) {
-      throwApi(
-        400,
-        'validation_error',
-        'بيانات غير صحيحة',
-        parsed.error.flatten(),
-      );
-    }
-
-    const [page, draft] = await Promise.all([
-      this.butcherApplications.listApplications(parsed.data),
-      this.applicationRepo.countDraftApplications(),
-    ]);
-
-    return {
-      applications: page.items,
-      nextCursor: page.nextCursor,
-      hasMore: page.hasMore,
-      counts: { submitted: page.counts.submitted, draft },
-    };
-  }
-
-  async getButcherApplication(id: string) {
-    const applicationId = parseApplicationId({ id });
-    if (!applicationId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
-    return this.butcherApplications.getApplication(applicationId);
-  }
-
-  async approveButcherApplication(
-    user: JwtPayload,
-    id: string,
-    body: ApproveApplicationBodyDto,
-  ) {
-    const applicationId = parseApplicationId({ id });
-    if (!applicationId) throwApi(400, 'invalid_id', 'معرّف غير صحيح');
-
-    const parsed = approveBodySchema.safeParse(body ?? {});
-    if (!parsed.success) {
-      throwApi(
-        400,
-        'validation_error',
-        'بيانات غير صحيحة',
-        parsed.error.flatten(),
-      );
-    }
-
-    return this.butcherApplications.approveApplication(
-      user.userId,
-      applicationId,
-      parsed.data as ApproveApplicationBodyDto,
-    );
-  }
-
-  async rejectButcherApplication(
-    user: JwtPayload,
-    id: string,
-    body: RejectApplicationBodyDto,
-  ) {
-    const applicationId = parseApplicationId({ id });
-    if (!applicationId) throwApi(400, 'invalid_id', 'معرّف غير صحيح');
-
-    const parsed = rejectBodySchema.safeParse(body ?? {});
-    if (!parsed.success) {
-      throwApi(
-        400,
-        'validation_error',
-        'بيانات غير صحيحة',
-        parsed.error.flatten(),
-      );
-    }
-
-    return this.butcherApplications.rejectApplication(
-      user.userId,
-      applicationId,
-      parsed.data as RejectApplicationBodyDto,
-    );
-  }
-
-  async addButcherApplicationComment(
-    user: JwtPayload,
-    id: string,
-    body: CommentApplicationBodyDto,
-  ) {
-    const applicationId = parseApplicationId({ id });
-    if (!applicationId) throwApi(400, 'invalid_id', 'معرّف غير صحيح');
-
-    const parsed = commentBodySchema.safeParse(body ?? {});
-    if (!parsed.success) {
-      throwApi(
-        400,
-        'validation_error',
-        'بيانات غير صحيحة',
-        parsed.error.flatten(),
-      );
-    }
-
-    const timelineEvent = await this.butcherApplications.addComment(
-      user.userId,
-      applicationId,
-      parsed.data as CommentApplicationBodyDto,
-    );
-    return { timelineEvent };
   }
 }

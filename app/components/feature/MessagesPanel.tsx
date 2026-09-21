@@ -148,23 +148,14 @@ export function MessagesPanel({
     }
     const listing = listingByPeer[p.id];
     router.push({
-      pathname: '/butchers/chat',
+      pathname: '/chat',
       params: {
         threadId: chat.id,
         receiverId: p.id,
-        receiverName: isButcher
-          ? chat.butcher?.nameAr || p.arabicName
-          : p.arabicName,
-        receiverAvatar: isButcher
-          ? chat.butcher?.logo || p.avatar || ''
-          : p.avatar ?? '',
+        receiverName: p.arabicName,
+        receiverAvatar: p.avatar ?? '',
         threadType: chat.type,
-        accountType: isButcher
-          ? 'BUTCHER'
-          : listing
-            ? 'LIVESTOCK_TRADER'
-            : 'USER',
-        ...(chat.butcherId ? { butcherId: chat.butcherId } : {}),
+        accountType: listing ? 'LIVESTOCK_TRADER' : 'USER',
         ...(listing
           ? {
               listingId: listing.listingId,
@@ -182,21 +173,11 @@ export function MessagesPanel({
   const resolveListingPreview = (chat: MessageThreadItem) => {
     const peerId = chat.participant?.id;
     if (peerId && listingByPeer[peerId]) return listingByPeer[peerId];
-    if (chat.type === 'BUTCHER' && chat.butcher) {
-      return {
-        listingId: chat.butcher.id,
-        title: chat.butcher.nameAr,
-        price: 0,
-        image: chat.butcher.logo || undefined,
-        peerUserId: peerId || '',
-        location: undefined,
-      } satisfies MessageListingPreview;
-    }
     return null;
   };
 
   const listData = useMemo(
-    () => filteredChats.filter((chat) => Boolean(chat.participant)),
+    () => filteredChats.filter((chat) => Boolean(chat.participant) && chat.type !== 'BUTCHER'),
     [filteredChats],
   );
 
@@ -205,12 +186,8 @@ export function MessagesPanel({
       const p = chat.participant;
       if (!p) return null;
       const isButcher = chat.type === 'BUTCHER';
-      const title = isButcher
-        ? chat.butcher?.nameAr || p.arabicName
-        : p.arabicName;
-      const avatarUri = isButcher
-        ? chat.butcher?.logo || p.avatar
-        : p.avatar;
+      const title = p.arabicName;
+      const avatarUri = p.avatar;
       const listing = resolveListingPreview(chat);
       const showListingMeta =
         listing &&
@@ -368,7 +345,7 @@ export function MessagesPanel({
               </View>
               <AppText variant="heading3" align="center">ابدأ محادثة جديدة</AppText>
               <AppText variant="caption" color="textMuted" align="center">
-                تواصل مع البائعين عبر الإعلانات أو الملاحم
+                تواصل مع البائعين عبر الإعلانات
               </AppText>
               <SarhButton
                 title="استكشف الإعلانات"

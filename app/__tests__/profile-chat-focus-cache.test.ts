@@ -286,7 +286,7 @@ describe('P1-07 chat inbox focus cache', () => {
   it('keeps inbox TTL, empty-recovery force, and conversation cache patches', () => {
     const hook = src('hooks/useMessageThreads.ts');
     const panel = src('components/feature/MessagesPanel.tsx');
-    const chat = src('app/butchers/chat.tsx');
+    const chat = src('app/chat.tsx');
     expect(hook).toContain('MESSAGES_REFRESH_TTL_MS');
     expect(hook).toContain('60_000');
     expect(hook).toContain('fetchMessageInbox');

@@ -135,3 +135,40 @@ export function regionSelectionLabel(selection: RegionSelection): string {
   if (selection.type === 'city') return selection.city.nameAr;
   return selection.region.nameAr.replace(/^منطقة\s/, '').replace(/^المنطقة\s/, '');
 }
+
+/** Map a device geocode place onto the existing Saudi region/city catalog. */
+export function resolveNearbyRegionSelection(place: {
+  city?: string | null;
+  subregion?: string | null;
+  region?: string | null;
+}): RegionSelection | null {
+  const queries: string[] = [];
+  for (const raw of [place.city, place.subregion, place.region]) {
+    const value = raw?.trim();
+    if (!value) continue;
+    queries.push(value);
+    for (const part of value.split(/[\s,،-]+/)) {
+      if (part.trim().length >= 3) queries.push(part.trim());
+    }
+  }
+
+  const seen = new Set<string>();
+  for (const query of queries) {
+    const key = query.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const hits = searchSaudiRegions(query);
+    const cityHit = hits.find((hit): hit is Extract<RegionSearchHit, { kind: 'city' }> => hit.kind === 'city');
+    if (cityHit) {
+      return { type: 'city', region: cityHit.region, city: cityHit.city };
+    }
+    const regionHit = hits.find(
+      (hit): hit is Extract<RegionSearchHit, { kind: 'region' }> => hit.kind === 'region',
+    );
+    if (regionHit) {
+      return { type: 'region', region: regionHit.region };
+    }
+  }
+
+  return null;
+}

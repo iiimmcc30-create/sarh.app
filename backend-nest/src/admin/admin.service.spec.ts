@@ -21,8 +21,6 @@ describe('AdminService.updateUser role authorization', () => {
       {} as never,
       {} as never,
       {} as never,
-      {} as never,
-      {} as never,
     );
   });
 

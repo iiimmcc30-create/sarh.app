@@ -39,7 +39,6 @@ describe('P2 UI/UX consistency — frozen visuals', () => {
   it('drops physical textAlign right on touched Arabic fields', () => {
     expect(src('app/search.tsx')).not.toContain('textAlign="right"');
     expect(src('app/info/contact.tsx')).not.toContain('textAlign="right"');
-    expect(src('app/butchers/location.tsx')).not.toContain('textAlign="right"');
     expect(src('app/payment.tsx')).not.toContain('textAlign="right"');
     expect(src('components/market/MarketCategoryPicker.tsx')).not.toContain('paddingRight:');
     expect(src('app/payment.tsx')).toContain('SarhInput');

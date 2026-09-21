@@ -131,23 +131,23 @@ describe('M1 single boot navigation source', () => {
     ).toEqual({ type: 'stay' });
   });
 
-  it('keeps the public butcher join page without forcing welcome', () => {
+  it('treats leftover /join URLs as the normal unauthenticated path', () => {
     expect(
       resolveBootNavigation({
         ...base,
         firstSegment: 'join',
       }),
-    ).toEqual({ type: 'stay' });
+    ).toEqual({ type: 'replace', href: '/auth/welcome' });
   });
 
-  it('keeps /join open before onboarding so the public entry URL works', () => {
+  it('does not keep a public butcher join exception before onboarding', () => {
     expect(
       resolveBootNavigation({
         ...base,
         onboardingComplete: false,
         firstSegment: 'join',
       }),
-    ).toEqual({ type: 'stay' });
+    ).toEqual({ type: 'replace', href: '/onboarding' });
   });
 
   it('restored session on auth screens goes to the app', () => {
@@ -265,7 +265,7 @@ describe('M8 follow notification deep link', () => {
       { router: r as never, isAdmin: false },
     );
     const arg = r.push.mock.calls[0][0];
-    expect(arg.pathname).toBe('/butchers/chat');
+    expect(arg.pathname).toBe('/chat');
     expect(arg.params.threadId).toBe('t1');
   });
 

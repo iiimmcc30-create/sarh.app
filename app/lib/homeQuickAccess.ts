@@ -52,8 +52,8 @@ export const HOME_QUICK_ACCESS_ITEMS: HomeQuickAccessItem[] = [
 export const HOME_LATEST_LISTINGS_LIMIT = 10;
 export const HOME_FEED_SUPPLIERS_PREVIEW_LIMIT = 4;
 
-export const HOME_BANNER_CTA_LABEL = 'تصفح الملاحم';
-export const HOME_BANNER_CTA_HREF = '/butchers';
-export const HOME_BANNER_SUBTITLE_AR = 'جميع الملاحم في مكان واحد';
-export const HOME_SEARCH_PLACEHOLDER = 'ابحث في السوق، الملاحم، أو المحتوى...';
+export const HOME_BANNER_CTA_LABEL = 'تصفح الموردين';
+export const HOME_BANNER_CTA_HREF = '/feed-suppliers';
+export const HOME_BANNER_SUBTITLE_AR = 'موردو الأعلاف في مكان واحد';
+export const HOME_SEARCH_PLACEHOLDER = 'ابحث في السوق أو المحتوى...';
 export const HOME_TAB_RESELECT_EVENT = 'sarh:homeTabReselect';

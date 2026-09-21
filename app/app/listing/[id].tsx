@@ -228,7 +228,7 @@ export default function ListingDetailScreen() {
       }),
     );
     router.push({
-      pathname: '/butchers/chat',
+      pathname: '/chat',
       params: {
         receiverId: listing.seller.id,
         receiverName: listing.seller.arabicName,
