@@ -52,6 +52,8 @@ describe('design-system unification — allowed redesigns only', () => {
   it('sidebar keeps the same sections and adds two hairline separators', () => {
     const panel = src('components/feature/AppSidebar.tsx');
     expect(panel).toContain('الملف الشخصي');
+    expect(panel).toContain("label: 'إضافة عرض'");
+    expect(panel).toContain("route: '/create/listing'");
     expect(panel).toContain('مركز المعلومات');
     expect(panel).toContain('مركز المساعدة');
     expect(panel).toContain('الإعدادات والخصوصية');
@@ -61,6 +63,12 @@ describe('design-system unification — allowed redesigns only', () => {
     expect((panel.match(/SarhDivider/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(panel).toContain('secondaryLabel');
     expect(panel).toContain('variant="bodySmall"');
+    expect(panel.indexOf("label: 'مركز المعلومات'")).toBeLessThan(
+      panel.indexOf("label: 'الإعدادات والخصوصية'"),
+    );
+    expect(panel.indexOf("label: 'الإعدادات والخصوصية'")).toBeLessThan(
+      panel.indexOf("label: 'مركز المساعدة'"),
+    );
   });
 
   it('butcher store uses Hunger-style category underline and keeps offers plus about copy', () => {

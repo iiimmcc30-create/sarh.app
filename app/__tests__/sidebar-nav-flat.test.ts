@@ -34,6 +34,12 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(home).toContain("safePush('/sidebar'");
     expect(sidebar).toContain('AppSidebar');
     expect(panel).toContain('الملف الشخصي');
+    expect(panel).toContain("label: 'إضافة عرض'");
+    expect(panel).toContain("route: '/create/listing'");
+    expect(panel).toContain('المفضلة');
+    expect(panel).toContain('موردو الأعلاف');
+    expect(panel).toContain('قطاع الأخبار');
+    expect(panel).toContain("label: 'الترويج'");
     expect(panel).toContain('مركز المعلومات');
     expect(panel).toContain("route: '/settings/info'");
     expect(panel).toContain("route: '/support'");
@@ -45,6 +51,36 @@ describe('Sidebar + bottom nav + profile/settings flatten', () => {
     expect(panel).not.toContain('menuCardStyle');
     expect(panel).not.toContain('خدمات الوزارة');
     expect(panel).not.toContain('/sarh-services');
+    expect(panel).not.toContain("label: 'الإشعارات'");
+    expect(panel).not.toContain("label: 'ملاحم سرح'");
+  });
+
+  it('orders primary rows then the quieter help section, and keeps the theme icon', () => {
+    const panel = src('components/feature/AppSidebar.tsx');
+    const profileAt = panel.indexOf("label: 'الملف الشخصي'");
+    const createAt = panel.indexOf("label: 'إضافة عرض'");
+    const favoritesAt = panel.indexOf("label: 'المفضلة'");
+    const feedAt = panel.indexOf("label: 'موردو الأعلاف'");
+    const newsAt = panel.indexOf("label: 'قطاع الأخبار'");
+    const promoteAt = panel.indexOf("label: 'الترويج'");
+    const infoAt = panel.indexOf("label: 'مركز المعلومات'");
+    const settingsAt = panel.indexOf("label: 'الإعدادات والخصوصية'");
+    const helpAt = panel.indexOf("label: 'مركز المساعدة'");
+    expect(profileAt).toBeGreaterThan(-1);
+    expect(createAt).toBeGreaterThan(profileAt);
+    expect(favoritesAt).toBeGreaterThan(createAt);
+    expect(feedAt).toBeGreaterThan(favoritesAt);
+    expect(newsAt).toBeGreaterThan(feedAt);
+    expect(promoteAt).toBeGreaterThan(newsAt);
+    expect(infoAt).toBeGreaterThan(promoteAt);
+    expect(settingsAt).toBeGreaterThan(infoAt);
+    expect(helpAt).toBeGreaterThan(settingsAt);
+    expect(panel).toContain('variant="bodySmall"');
+    expect(panel).toContain('color="textSecondary"');
+    expect(panel).toContain('size={20}');
+    expect(panel).toContain('size={24}');
+    expect(panel).toContain('accessibilityLabel="المظهر"');
+    expect(panel).toContain('weather-night');
   });
 
   it('slides the app sidebar in from the RTL start edge (right)', () => {

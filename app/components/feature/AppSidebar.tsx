@@ -22,18 +22,17 @@ type NavItem = {
 
 const PRIMARY_ITEMS: NavItem[] = [
   { key: 'profile', icon: 'person-outline', label: 'الملف الشخصي', route: '/(tabs)/profile' },
-  { key: 'notifications', icon: 'notifications-outline', label: 'الإشعارات', route: '/notifications' },
+  { key: 'create-listing', icon: 'add-circle-outline', label: 'إضافة عرض', route: '/create/listing' },
   { key: 'favorites', icon: 'heart-outline', label: 'المفضلة', route: '/favorites' },
-  { key: 'butchers', icon: 'storefront-outline', label: 'ملاحم سرح', route: '/butchers' },
   { key: 'feed-suppliers', icon: 'leaf', label: 'موردو الأعلاف', route: '/feed-suppliers' },
-  { key: 'promote', icon: 'megaphone-outline', label: 'الترويج', route: '/promote' },
   { key: 'news', icon: 'newspaper-outline', label: 'قطاع الأخبار', route: '/news' },
+  { key: 'promote', icon: 'megaphone-outline', label: 'الترويج', route: '/promote' },
 ];
 
 const SECONDARY_ITEMS: NavItem[] = [
   { key: 'info', icon: 'information-outline', label: 'مركز المعلومات', route: '/settings/info' },
-  { key: 'help', icon: 'lifebuoy', label: 'مركز المساعدة', route: '/support' },
   { key: 'settings', icon: 'settings-outline', label: 'الإعدادات والخصوصية', route: '/profile/settings' },
+  { key: 'help', icon: 'lifebuoy', label: 'مركز المساعدة', route: '/support' },
 ];
 
 type AppSidebarProps = {
