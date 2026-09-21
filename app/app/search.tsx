@@ -3,6 +3,10 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { UserIdentityRow, USER_IDENTITY } from '@/components/ui/UserIdentityRow';
 import { ListingCard } from '@/components/feature/ListingCard';
+import { MinistryServiceCard } from '@/components/feature/MinistryServiceCard';
+import { PostItem } from '@/components/feature/PostItem';
+import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
+import { LinearGradient } from '@/components/ui/AppLinearGradient';
 import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
 import { HomeAppBar, shellIdentityStackH } from '@/components/ui/HomeAppBar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,31 +16,43 @@ import { safePush } from '@/lib/safeNavigate';
 import { AppText, SarhBackButton, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAppChromeScroll } from '@/hooks/useAppChrome';
-import { useAppUser } from '@/hooks/useApp';
+import { useApp, useAppUser } from '@/hooks/useApp';
+import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { ensureApiReachable } from '@/services/api';
+import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
+import {
+  fetchOfficialServices,
+  previewOfficialServices,
+  type OfficialService,
+} from '@/services/officialServices';
 import {
   fetchSearchSuggestions,
   fetchTrendingTags,
   mapListingFromSearch,
+  mapPostFromSearch,
   unifiedSearch,
   type SearchContentType,
   type SearchGroup,
   type SearchResultItem,
 } from '@/services/unifiedSearch';
 import { ds } from '@/constants/designSystem';
+import { functional, space } from '@/design-system';
 import { type ThemeColors } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   Pressable,
   StyleSheet,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -69,17 +85,17 @@ type SearchScreenProps = {
 
 export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const { colors } = useTheme();
-  const { gutter, width } = useLayout();
+  const { gutter } = useLayout();
   const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
   const router = useRouter();
   const { q: qParam } = useLocalSearchParams<{ q?: string }>();
-  const resultTabWidth = Math.max(72, (width - gutter * 2) / 5.15);
   const { onChromeScroll } = useAppChromeScroll();
   const { me } = useAppUser();
+  const { likedPosts, bookmarkedPosts, toggleLike, toggleBookmark, deletePost } = useApp();
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const isTab = variant === 'tab';
-  const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top) + 40);
+  const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top) + 48);
   const [section, setSection] = useState<ExploreSection>('explore');
   const displayName = isAuthenticated
     ? me.arabicName || me.displayName || me.username || 'حسابي'
@@ -93,29 +109,45 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     safePush('/sidebar', undefined, router);
   }, [isAuthenticated, router]);
 
-  const initialQuery =
-    !isTab && typeof qParam === 'string' ? qParam : '';
+  const initialQuery = typeof qParam === 'string' ? qParam : '';
   const [query, setQuery] = useState(initialQuery);
   const debouncedQuery = useDebouncedValue(query.trim(), 350);
   const [filter, setFilter] = useState<SearchFilter>('all');
+  const [page, setPage] = useState(1);
 
   const selectSection = useCallback((next: ExploreSection) => {
     setSection(next);
-    if (next === 'news') setFilter('news');
-    else if (next === 'services') setFilter('services');
-    else setFilter('all');
   }, []);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [trendingTags, setTrendingTags] = useState<Array<{ tag: string; count: number }>>([]);
   const [suggestions, setSuggestions] = useState<Array<{ text: string; kind: string }>>([]);
   const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [featuredUsers, setFeaturedUsers] = useState<
-    Array<{ id: string; username: string; arabicName?: string; displayName?: string; avatar?: string; verified?: boolean; followers?: number }>
+    Array<{ id: string; username: string; arabicName?: string; displayName?: string; avatar?: string; verified?: boolean }>
   >([]);
+  const [stories, setStories] = useState<EditorialStory[]>([]);
+  const [services, setServices] = useState<OfficialService[]>([]);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const searchSeq = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const loadingMoreRef = useRef(false);
+  const pageRef = useRef(1);
+  const filterRef = useRef(filter);
+  const queryRef = useRef(debouncedQuery);
+  filterRef.current = filter;
+  queryRef.current = debouncedQuery;
+  pageRef.current = page;
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      Keyboard.dismiss();
+    };
+  }, []);
 
   useEffect(() => {
     fetchTrendingTags().then(setTrendingTags).catch(() => {});
@@ -123,6 +155,10 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       .then((val) => {
         if (val) setRecentSearches(JSON.parse(val));
       })
+      .catch(() => {});
+    fetchEditorialStories().then(setStories).catch(() => {});
+    fetchOfficialServices()
+      .then((result) => setServices(previewOfficialServices(result.services, 8)))
       .catch(() => {});
 
     (async () => {
@@ -145,47 +181,96 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       setGroups([]);
       setError(null);
       setLoading(false);
+      setPage(1);
       return;
     }
 
-    let cancelled = false;
-    fetchSearchSuggestions(debouncedQuery)
+    const ac = new AbortController();
+    fetchSearchSuggestions(debouncedQuery, 8, ac.signal)
       .then((items) => {
-        if (!cancelled) setSuggestions(items);
+        if (ac.signal.aborted) return;
+        setSuggestions(items);
       })
       .catch(() => {});
 
-    return () => {
-      cancelled = true;
-    };
+    return () => ac.abort();
   }, [debouncedQuery]);
 
   useEffect(() => {
-    if (isTab) return;
     const next = typeof qParam === 'string' ? qParam : '';
-    if (next) setQuery(next);
-  }, [isTab, qParam]);
+    if (next && next !== queryRef.current) setQuery(next);
+  }, [qParam]);
 
-  useEffect(() => {
-    if (isTab || debouncedQuery.length < MIN_QUERY) return;
-
+  const runSearch = useCallback((nextPage: number, append: boolean) => {
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
     const seq = ++searchSeq.current;
-    setLoading(true);
-    setError(null);
 
-    unifiedSearch({ q: debouncedQuery, type: filter, limit: filter === 'all' ? 8 : 20 })
+    if (debouncedQuery.length < MIN_QUERY) {
+      setLoading(false);
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
+      return () => ac.abort();
+    }
+
+    if (append) {
+      loadingMoreRef.current = true;
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setError(null);
+    }
+
+    unifiedSearch({
+      q: debouncedQuery,
+      type: filter,
+      page: nextPage,
+      limit: filter === 'all' ? 8 : 20,
+      signal: ac.signal,
+    })
       .then((res) => {
         if (seq !== searchSeq.current) return;
-        setGroups(res.groups);
+        setGroups((prev) => {
+          if (!append) return res.groups;
+          const byType = new Map(prev.map((g) => [g.type, g]));
+          for (const group of res.groups) {
+            const current = byType.get(group.type);
+            if (!current) {
+              byType.set(group.type, group);
+              continue;
+            }
+            const seen = new Set(current.items.map((item) => item.id));
+            byType.set(group.type, {
+              ...group,
+              items: [
+                ...current.items,
+                ...group.items.filter((item) => !seen.has(item.id)),
+              ],
+            });
+          }
+          return [...byType.values()];
+        });
       })
       .catch((err: unknown) => {
         if (seq !== searchSeq.current) return;
-        setError(err instanceof Error ? err.message : 'تعذّر إكمال البحث');
+        if ((err as { name?: string })?.name === 'AbortError') return;
+        setError(err instanceof Error ? err.message : 'تعذر إتمام البحث');
       })
       .finally(() => {
-        if (seq === searchSeq.current) setLoading(false);
+        if (seq !== searchSeq.current) return;
+        setLoading(false);
+        setLoadingMore(false);
+        loadingMoreRef.current = false;
       });
-  }, [debouncedQuery, filter, isTab]);
+
+    return () => ac.abort();
+  }, [debouncedQuery, filter]);
+
+  useEffect(() => {
+    setPage(1);
+    return runSearch(1, false);
+  }, [runSearch]);
 
   const saveRecent = useCallback((searches: string[]) => {
     setRecentSearches(searches);
@@ -202,30 +287,15 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     [recentSearches, saveRecent],
   );
 
-  const openResults = useCallback(
+  const applyQuery = useCallback(
     (term: string) => {
       const trimmed = term.trim();
       if (trimmed.length < MIN_QUERY) return;
-      addRecentSearch(trimmed);
-      if (isTab) {
-        safePush({ pathname: '/search', params: { q: trimmed } }, { force: true }, router);
-        return;
-      }
       setQuery(trimmed);
+      addRecentSearch(trimmed);
+      Keyboard.dismiss();
     },
-    [addRecentSearch, isTab, router],
-  );
-
-  const applyQuery = useCallback(
-    (term: string) => {
-      if (isTab) {
-        openResults(term);
-        return;
-      }
-      setQuery(term);
-      addRecentSearch(term);
-    },
-    [addRecentSearch, isTab, openResults],
+    [addRecentSearch],
   );
 
   const hasQuery = query.trim().length > 0;
@@ -241,6 +311,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       .flatMap((group) => group.items)
       .slice()
       .sort((a, b) => {
+        if (b.relevance !== a.relevance) return b.relevance - a.relevance;
         const left = a.createdAt ? Date.parse(a.createdAt) : 0;
         const right = b.createdAt ? Date.parse(b.createdAt) : 0;
         return right - left;
@@ -252,6 +323,40 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     return visibleGroups.reduce((n, g) => n + g.items.length, 0);
   }, [filter, latestItems.length, visibleGroups]);
 
+  const hasMore = filter !== 'all' && visibleGroups.some((g) => g.hasMore);
+
+  const loadMore = useCallback(() => {
+    if (loading || loadingMoreRef.current || !hasMore || !canSearch) return;
+    const next = pageRef.current + 1;
+    setPage(next);
+    runSearch(next, true);
+  }, [canSearch, hasMore, loading, runSearch]);
+
+  const onBodyScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isTab) onChromeScroll(event);
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 180) {
+        loadMore();
+      }
+    },
+    [isTab, loadMore, onChromeScroll],
+  );
+
+  const retrySearch = useCallback(() => {
+    setPage(1);
+    runSearch(1, false);
+  }, [runSearch]);
+
+  const resultFrame = useCallback(
+    (type: SearchResultItem['type']) => {
+      if (type === 'listings') return styles.listingResult;
+      if (type === 'posts') return styles.postResult;
+      return [styles.insetResult, { paddingHorizontal: gutter }];
+    },
+    [gutter, styles],
+  );
+
   const renderResult = (item: SearchResultItem) => {
     switch (item.type) {
       case 'listings': {
@@ -259,79 +364,67 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         if (!listing) return null;
         return (
           <ListingCard
-            key={`listing-${item.id}`}
             listing={listing}
-            variant="grid"
+            variant="list"
+            listMode="market"
             onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
           />
         );
       }
-      case 'butchers':
+      case 'news': {
+        const storyIndex = stories.findIndex((story) => story.id === item.id);
         return (
           <Pressable
-            key={`butcher-${item.id}`}
-            style={styles.resultRow}
-            onPress={() => router.push({ pathname: '/butchers/[id]', params: { id: item.id } } as never)}
+            style={styles.newsCard}
+            onPress={() => {
+              if (storyIndex >= 0) setViewerIndex(storyIndex);
+              else router.push('/news' as never);
+            }}
           >
-            <Row gap="md" align="center">
             {item.imageUrl ? (
-              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
-            ) : (
-              <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
-                <AppIcon name="store" size={20} color={colors.textMuted} />
-              </View>
-            )}
-            <Stack gap="xs" style={styles.resultBody}>
-              <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
-              {item.subtitle ? (
-                <AppText variant="caption" color="textMuted" numberOfLines={1}>{item.subtitle}</AppText>
-              ) : null}
-            </Stack>
-            </Row>
-          </Pressable>
-        );
-      case 'news':
-        return (
-          <Pressable
-            key={`news-${item.id}`}
-            style={styles.resultRow}
-            onPress={() => router.push('/news' as never)}
-          >
-            <Row gap="md" align="center">
-            {item.imageUrl ? (
-              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
+              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'wide'))} style={styles.newsImage} contentFit="cover" />
             ) : null}
-            <Stack gap="xs" style={styles.resultBody}>
-              <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
-              {item.subtitle ? (
-                <AppText variant="caption" color="textMuted" numberOfLines={2}>{item.subtitle}</AppText>
-              ) : null}
-            </Stack>
-            </Row>
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.72)']}
+              style={styles.newsGradient}
+            />
+            <AppText
+              variant="heading3"
+              numberOfLines={2}
+              style={[styles.newsTitle, { color: functional.onPrimary }]}
+            >
+              {item.title}
+            </AppText>
           </Pressable>
         );
-      case 'services':
+      }
+      case 'services': {
+        const data = item.data as {
+          category?: string;
+          description?: string;
+          icon?: string;
+          externalUrl?: string;
+        };
+        const mapped: OfficialService = {
+          id: item.id,
+          title: item.title,
+          description: String(data.description ?? ''),
+          category: String(data.category ?? ''),
+          icon: String(data.icon ?? ''),
+          externalUrl: String(data.externalUrl ?? ''),
+          active: true,
+          createdAt: item.createdAt ?? '',
+          updatedAt: item.createdAt ?? '',
+        };
         return (
-          <Pressable
-            key={`service-${item.id}`}
-            style={styles.resultRow}
+          <MinistryServiceCard
+            service={mapped}
             onPress={() =>
               router.push({ pathname: '/ministry/services/[id]', params: { id: item.id } } as never)
             }
-          >
-            <Row gap="md" align="center">
-            <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
-              <AppIcon name="briefcase" size={20} color={colors.textMuted} />
-            </View>
-            <Stack gap="xs" style={styles.resultBody}>
-              <AppText variant="body" numberOfLines={2}>{item.title}</AppText>
-              {item.subtitle ? (
-                <AppText variant="caption" color="textMuted" numberOfLines={1}>{item.subtitle}</AppText>
-              ) : null}
-            </Stack>
-            </Row>
-          </Pressable>
+          />
         );
+      }
       case 'users': {
         const user = item.data as {
           id?: string;
@@ -343,7 +436,6 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         };
         return (
           <UserIdentityRow
-            key={`user-${item.id}`}
             avatarUri={user.avatar ?? item.imageUrl}
             displayName={user.arabicName || user.displayName || user.username || item.title}
             username={user.username}
@@ -357,30 +449,25 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
           />
         );
       }
-      case 'posts':
+      case 'posts': {
+        const post = mapPostFromSearch(item.data);
+        if (!post) return null;
         return (
-          <Pressable
-            key={`post-${item.id}`}
-            style={styles.resultRow}
-            onPress={() => openPostDetail(router, item.id)}
-          >
-            <Row gap="md" align="center">
-            {item.imageUrl ? (
-              <Image source={uriSource(cloudinaryFitUrl(item.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
-            ) : (
-              <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
-                <AppIcon name="file-text" size={20} color={colors.textMuted} />
-              </View>
-            )}
-            <Stack gap="xs" style={styles.resultBody}>
-              <AppText variant="body" numberOfLines={3}>{item.title}</AppText>
-              {item.subtitle ? (
-                <AppText variant="caption" color="textMuted" numberOfLines={1}>{item.subtitle}</AppText>
-              ) : null}
-            </Stack>
-            </Row>
-          </Pressable>
+          <PostItem
+            post={{
+              ...post,
+              liked: likedPosts.has(post.id),
+              bookmarked: bookmarkedPosts.has(post.id),
+            }}
+            onPress={() => openPostDetail(router, post.id)}
+            onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(post.id)}
+            onComment={() => openPostDetail(router, post.id, { focusComment: isAuthenticated })}
+            onBookmark={() => requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(post.id)}
+            onShare={() => sharePost(post)}
+            onMenu={() => showPostMenu(post, me, router, deletePost, isAuthenticated)}
+          />
         );
+      }
       default:
         return null;
     }
@@ -393,22 +480,79 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       placeholder="بحث"
       autoFocus={!isTab}
       returnKeyType="search"
-      onSubmitEditing={() => openResults(query)}
+      onSubmitEditing={() => {
+        Keyboard.dismiss();
+        applyQuery(query);
+      }}
       leadingIcon="search"
-      trailingIcon={hasQuery ? 'close-circle' : undefined}
-      onTrailingPress={hasQuery ? () => setQuery('') : undefined}
+      size="compact"
+      trailingIcon={
+        loading && canSearch ? (
+          <ActivityIndicator size="small" color={colors.electricBright} />
+        ) : hasQuery ? (
+          'close-circle'
+        ) : undefined
+      }
+      onTrailingPress={hasQuery && !(loading && canSearch) ? () => setQuery('') : undefined}
       shape="pill"
       accessibilityRole="search"
-      accessibilityLabel={hasQuery ? 'مسح البحث' : 'بحث'}
+      accessibilityLabel="بحث"
       containerStyle={styles.inputFlex}
     />
   );
 
+  const exploreTabs = (
+    <Row style={styles.sectionRow}>
+      {EXPLORE_SECTIONS.map((item) => {
+        const active = section === item.id;
+        return (
+          <Pressable
+            key={item.id}
+            onPress={() => selectSection(item.id)}
+            style={styles.sectionTab}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+          >
+            <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
+              {item.label}
+            </AppText>
+            {active ? <View style={styles.tabIndicator} /> : null}
+          </Pressable>
+        );
+      })}
+    </Row>
+  );
+
+  const resultTabs = (
+    <SarhChipRow contentPaddingHorizontal={gutter} style={styles.filterRowWrap}>
+      {RESULT_SECTIONS.map((item) => {
+        const active = filter === item.id;
+        return (
+          <Pressable
+            key={item.id}
+            onPress={() => setFilter(item.id)}
+            style={styles.resultTab}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={item.label}
+          >
+            <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
+              {item.label}
+            </AppText>
+            {active ? <View style={styles.resultTabIndicator} /> : null}
+          </Pressable>
+        );
+      })}
+    </SarhChipRow>
+  );
+
+  const chromeTabs = hasQuery ? resultTabs : exploreTabs;
+
   const trendingBlock = (
-    <Stack gap="md" style={styles.section}>
-      <AppText variant="heading3">🔥 الأكثر تداولاً</AppText>
+    <Stack gap="md">
+      <AppText variant="heading3">الأكثر تداولاً</AppText>
       {trendingTags.length === 0 ? (
-        <AppText variant="caption" color="textMuted">لا توجد هاشتاقات رائجة حالياً</AppText>
+        <AppText variant="caption" color="textMuted">لا توجد موضوعات رائجة حالياً</AppText>
       ) : (
         <Row gap="sm" wrap>
           {trendingTags.map((item) => (
@@ -424,25 +568,27 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const exploreIdle = (
     <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
       {recentSearches.length > 0 ? (
-        <Stack gap="md" style={styles.section}>
+        <Stack gap="sm">
           <Row justify="between" align="center">
             <AppText variant="heading3">البحث الأخير</AppText>
-            <Pressable onPress={() => saveRecent([])}>
+            <Pressable onPress={() => saveRecent([])} accessibilityRole="button" accessibilityLabel="مسح الكل">
               <AppText variant="caption" color="primary">مسح الكل</AppText>
             </Pressable>
           </Row>
           {recentSearches.map((term) => (
             <Pressable key={term} onPress={() => applyQuery(term)}>
               <Row gap="md" align="center" style={styles.recentRow}>
-                <AppIcon name="time-outline" size={16} color={colors.textPrimary} />
+                <AppIcon name="time-outline" size={16} color={colors.textMuted} />
                 <AppText variant="body" color="textSecondary" style={styles.flex}>
                   {term}
                 </AppText>
                 <Pressable
                   onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
                   hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="حذف"
                 >
-                  <AppIcon name="close" size={14} color={colors.textPrimary} />
+                  <AppIcon name="close" size={14} color={colors.textMuted} />
                 </Pressable>
               </Row>
             </Pressable>
@@ -453,8 +599,8 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       {trendingBlock}
 
       {featuredUsers.length > 0 ? (
-        <Stack gap="sm" style={styles.section}>
-          <AppText variant="heading3">🏆 أبرز المربّين</AppText>
+        <Stack gap="sm">
+          <AppText variant="heading3">أبرز المربّين</AppText>
           {featuredUsers.map((user) => (
             <UserIdentityRow
               key={user.id}
@@ -475,8 +621,49 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     </Stack>
   );
 
+  const newsIdle = (
+    <Stack gap="sm" style={{ paddingHorizontal: gutter }}>
+      {stories.length === 0 ? (
+        <AppText variant="caption" color="textMuted" align="center">
+          لا توجد أخبار حالياً
+        </AppText>
+      ) : (
+        stories.slice(0, 8).map((story, index) => (
+          <Pressable key={story.id} style={styles.resultRow} onPress={() => setViewerIndex(index)}>
+            <Row gap="md" align="center">
+              <Image source={uriSource(cloudinaryFitUrl(story.imageUrl, 'row'))} style={styles.resultThumb} contentFit="cover" />
+              <AppText variant="body" numberOfLines={2} style={styles.flex}>
+                {story.titleAr}
+              </AppText>
+            </Row>
+          </Pressable>
+        ))
+      )}
+    </Stack>
+  );
+
+  const servicesIdle = (
+    <Stack gap="md" style={{ paddingHorizontal: gutter }}>
+      {services.length === 0 ? (
+        <AppText variant="caption" color="textMuted" align="center">
+          لا توجد خدمات حالياً
+        </AppText>
+      ) : (
+        services.map((service) => (
+          <MinistryServiceCard
+            key={service.id}
+            service={service}
+            onPress={() =>
+              router.push({ pathname: '/ministry/services/[id]', params: { id: service.id } } as never)
+            }
+          />
+        ))
+      )}
+    </Stack>
+  );
+
   const idleForSection =
-    !isTab || section === 'explore'
+    section === 'explore'
       ? exploreIdle
       : section === 'trending'
         ? (
@@ -484,13 +671,12 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
             {trendingBlock}
           </Stack>
         )
-        : (
-          <Stack gap="sm" align="center" style={[styles.hintBox, { paddingHorizontal: gutter }]}>
-            <AppText variant="caption" color="textMuted">
-              {section === 'news' ? 'ابحث في الأخبار' : 'ابحث في الخدمات'}
-            </AppText>
-          </Stack>
-        );
+        : section === 'news'
+          ? newsIdle
+          : servicesIdle;
+
+  const resultItems =
+    filter === 'all' ? latestItems : visibleGroups.flatMap((group) => group.items);
 
   return (
     <Screen edges={isTab ? [] : ['top', 'bottom']} keyboard>
@@ -502,149 +688,132 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
             onAvatarPress={openSidebar}
             center={searchField}
           >
-            <Row style={styles.sectionRow}>
-              {EXPLORE_SECTIONS.map((item) => {
-                const active = section === item.id;
-                return (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => selectSection(item.id)}
-                    style={styles.sectionTab}
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected: active }}
-                  >
-                    <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
-                      {item.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </Row>
+            <View style={styles.searchSlot}>{chromeTabs}</View>
           </HomeAppBar>
         </AppChromeLayer>
-      ) : null}
-
-      {isTab ? null : (
-        <Row gap="sm" align="center" style={[styles.searchBar, { paddingHorizontal: gutter }]}>
-          <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} chrome="ghost" />
-          {searchField}
-        </Row>
-      )}
-
-      {hasQuery && query.trim().length >= MIN_QUERY && suggestions.length > 0 && !loading ? (
-        <Stack
-          gap="none"
-          style={[
-            styles.suggestBox,
-            { marginHorizontal: gutter },
-            isTab ? { marginTop: headerH } : null,
-          ]}
-        >
-          {suggestions.map((s) => (
-            <Pressable key={`${s.kind}-${s.text}`} onPress={() => applyQuery(s.text)}>
-              <Row gap="sm" align="center" style={styles.suggestRow}>
-                <AppIcon name="search" size={14} color={colors.textMuted} />
-                <AppText variant="body" color="textSecondary" style={styles.flex}>
-                  {s.text}
-                </AppText>
-              </Row>
-            </Pressable>
-          ))}
-        </Stack>
-      ) : null}
-
-      {isTab || !hasQuery ? null : (
-        <SarhChipRow contentPaddingHorizontal={gutter} style={styles.filterRowWrap}>
-          {RESULT_SECTIONS.map((item) => {
-            const active = filter === item.id;
-            return (
-              <Pressable
-                key={item.id}
-                onPress={() => setFilter(item.id)}
-                style={[styles.resultTab, { minWidth: resultTabWidth }]}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-              >
-                <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
-                  {item.label}
-                </AppText>
-                {active ? <View style={styles.resultTabIndicator} /> : null}
-              </Pressable>
-            );
-          })}
-        </SarhChipRow>
+      ) : (
+        <View style={[styles.stackChrome, { paddingHorizontal: gutter }]}>
+          <Row gap="sm" align="center" style={styles.searchBar}>
+            <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} chrome="ghost" />
+            {searchField}
+          </Row>
+          {chromeTabs}
+        </View>
       )}
 
       <ScreenBody
         padBottom={isTab ? 'md' : 'xxxl'}
         gutter={false}
         bottomInset={isTab ? 'tabBar' : 'none'}
-        onScroll={isTab ? onChromeScroll : undefined}
+        onScroll={onBodyScroll}
         scrollEventThrottle={16}
-        style={isTab && !(hasQuery && query.trim().length >= MIN_QUERY && suggestions.length > 0 && !loading)
-          ? { paddingTop: headerH }
-          : undefined}
+        style={isTab ? { paddingTop: headerH } : undefined}
       >
-        {isTab || !hasQuery ? (
+        {!hasQuery ? (
           idleForSection
         ) : (
-          <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
+          <Stack gap="md">
             {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
-              <Stack gap="sm" align="center" style={styles.hintBox}>
-                <AppText variant="caption" color="textMuted">
-                  اكتب {MIN_QUERY} أحرف على الأقل للبحث
-                </AppText>
+              <AppText
+                variant="caption"
+                color="textMuted"
+                align="center"
+                style={{ paddingHorizontal: gutter }}
+              >
+                اكتب {MIN_QUERY} أحرف على الأقل للبحث
+              </AppText>
+            ) : null}
+
+            {canSearch && suggestions.length > 0 && totalResults === 0 && !loading ? (
+              <Stack gap="none" style={{ paddingHorizontal: gutter }}>
+                {suggestions.map((s) => (
+                  <Pressable key={`${s.kind}-${s.text}`} onPress={() => applyQuery(s.text)}>
+                    <Row gap="sm" align="center" style={styles.suggestRow}>
+                      <AppIcon name="search" size={14} color={colors.textMuted} />
+                      <AppText variant="body" color="textSecondary" style={styles.flex}>
+                        {s.text}
+                      </AppText>
+                    </Row>
+                  </Pressable>
+                ))}
               </Stack>
             ) : null}
 
             {loading && totalResults === 0 ? (
-              <Stack gap="md" align="center" style={styles.loadingBox}>
+              <Stack gap="md" align="center" style={[styles.loadingBox, { paddingHorizontal: gutter }]}>
                 <ActivityIndicator color={colors.glow} />
                 <AppText variant="caption" color="textMuted">جاري البحث...</AppText>
               </Stack>
             ) : null}
 
             {error && totalResults === 0 ? (
-              <Stack gap="sm" align="center" style={styles.hintBox}>
+              <Stack gap="sm" align="center" style={[styles.hintBox, { paddingHorizontal: gutter }]}>
                 <AppText variant="body" color="danger" align="center">{error}</AppText>
-                <AppText variant="caption" color="textMuted">تحقق من الاتصال وحاول مرة أخرى</AppText>
+                <Pressable onPress={retrySearch} accessibilityRole="button" accessibilityLabel="إعادة المحاولة">
+                  <AppText variant="body" color="primary">إعادة المحاولة</AppText>
+                </Pressable>
               </Stack>
             ) : null}
 
             {error && totalResults > 0 ? (
-              <Stack gap="sm" align="center" style={styles.hintBox}>
-                <AppText variant="caption" color="danger" align="center">{error}</AppText>
+              <AppText
+                variant="caption"
+                color="danger"
+                align="center"
+                style={{ paddingHorizontal: gutter }}
+              >
+                {error}
+              </AppText>
+            ) : null}
+
+            {canSearch && resultItems.length > 0 ? (
+              <Stack gap="none">
+                {resultItems.map((item) => {
+                  const node = renderResult(item);
+                  if (!node) return null;
+                  return (
+                    <View key={`${item.type}-${item.id}`} style={resultFrame(item.type)}>
+                      {node}
+                    </View>
+                  );
+                })}
               </Stack>
             ) : null}
 
-            {canSearch && filter === 'all' && latestItems.length > 0
-              ? (
-                <Stack gap="none" style={styles.section}>
-                  {latestItems.map((item) => renderResult(item))}
-                </Stack>
-              )
-              : null}
-
-            {canSearch && filter !== 'all'
-              ? visibleGroups.map((group) =>
-                  group.items.length > 0 ? (
-                    <Stack key={group.type} gap={group.type === 'listings' ? 'md' : 'none'} style={styles.section}>
-                      {group.items.map((item) => renderResult(item))}
-                    </Stack>
-                  ) : null,
-                )
-              : null}
+            {loadingMore ? (
+              <ActivityIndicator color={colors.electricBright} />
+            ) : null}
 
             {!loading && !error && canSearch && totalResults === 0 ? (
-              <Stack gap="md" align="center" style={styles.noResults}>
-                <AppText variant="display">🔍</AppText>
-                <AppText variant="heading3" align="center">لم نجد نتائج مطابقة لبحثك</AppText>
-                <AppText variant="body" color="textMuted" align="center">جرّب كلمة مختلفة أو عدّل الفلاتر</AppText>
+              <Stack gap="sm" align="center" style={[styles.noResults, { paddingHorizontal: gutter }]}>
+                <AppText variant="heading3" align="center">
+                  لا توجد نتائج لـ "{debouncedQuery}"
+                </AppText>
+                <AppText variant="body" color="textMuted" align="center">
+                  جرّب:
+                </AppText>
+                <AppText variant="caption" color="textMuted" align="center">
+                  • كلمة أقصر
+                </AppText>
+                <AppText variant="caption" color="textMuted" align="center">
+                  • كتابة مختلفة
+                </AppText>
+                <AppText variant="caption" color="textMuted" align="center">
+                  • إزالة بعض الكلمات
+                </AppText>
               </Stack>
             ) : null}
           </Stack>
         )}
       </ScreenBody>
+
+      {viewerIndex != null ? (
+        <EditorialStoryViewer
+          stories={stories}
+          startIndex={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -652,30 +821,48 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
+    searchSlot: {
+      paddingTop: 8,
+    },
+    stackChrome: {
+      backgroundColor: colors.screenRoot,
+    },
     searchBar: {
-      paddingVertical: 12,
+      paddingTop: 4,
+      paddingBottom: 8,
       backgroundColor: colors.screenRoot,
     },
     inputFlex: { flex: 1 },
     flex: { flex: 1 },
     sectionRow: {
-      paddingTop: 12,
+      paddingTop: 8,
     },
     sectionTab: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 32,
+      minHeight: 40,
+      paddingBottom: 6,
+      position: 'relative',
+    },
+    tabIndicator: {
+      position: 'absolute',
+      bottom: 0,
+      width: 18,
+      height: 2,
+      borderRadius: 999,
+      backgroundColor: colors.textPrimary,
     },
     filterRowWrap: {
-      backgroundColor: colors.screenRoot,
+      backgroundColor: 'transparent',
       paddingTop: 4,
     },
     resultTab: {
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 36,
+      minHeight: 40,
       paddingBottom: 8,
+      paddingHorizontal: 4,
       position: 'relative',
     },
     resultTabIndicator: {
@@ -686,25 +873,13 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       borderRadius: 999,
       backgroundColor: colors.textPrimary,
     },
-    suggestBox: {
-      marginTop: 8,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-      overflow: 'hidden',
-    },
     suggestRow: {
-      paddingHorizontal: 12,
       paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
-    section: {
-      padding: 16,
-      borderRadius: 14,
-      backgroundColor: colors.bgElevated,
-    },
     recentRow: {
-      minHeight: 52,
+      minHeight: 48,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderHairline,
     },
@@ -713,18 +888,36 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       paddingVertical: 7,
       borderRadius: ds.radius.pill,
       backgroundColor: tokens.primaryMuted,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderMid,
     },
     userRow: {
       paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderSoft,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderHairline,
+    },
+    listingResult: {
+      paddingBottom: space[8],
+    },
+    postResult: {},
+    insetResult: {
+      paddingBottom: space[12],
+    },
+    newsCard: {
+      height: 168,
+      borderRadius: 18,
+      overflow: 'hidden',
+      backgroundColor: colors.bgElevated,
+      justifyContent: 'flex-end',
+    },
+    newsImage: { ...StyleSheet.absoluteFillObject },
+    newsGradient: { ...StyleSheet.absoluteFillObject },
+    newsTitle: {
+      padding: 12,
+      zIndex: 1,
     },
     resultRow: {
       paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.borderSoft,
+      borderBottomColor: colors.borderHairline,
     },
     resultThumb: { width: 56, height: 56, borderRadius: ds.radius.md },
     resultThumbPlaceholder: {
@@ -735,6 +928,6 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     resultBody: { flex: 1, justifyContent: 'center' },
     loadingBox: { paddingVertical: 32 },
     hintBox: { paddingVertical: 24 },
-    noResults: { paddingVertical: 60 },
+    noResults: { paddingVertical: 48 },
   });
 }
