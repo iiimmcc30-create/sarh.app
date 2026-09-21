@@ -11,6 +11,9 @@ import { AppScrollView } from '@/components/ui/AppScrollView';
 import { ds } from '@/constants/designSystem';
 import { useLayout, type ContentWidth } from '@/hooks/useLayout';
 import { BOTTOM_ACTION_MIN_HEIGHT, GAP, type GapToken } from './metrics';
+import { ScreenBodyContentInsetContext } from './screenBodyContentInset';
+
+export { useScreenBodyContentInset } from './screenBodyContentInset';
 
 /** Space reserved under the content so a fixed layer never covers it. */
 export type ScreenBodyInset = 'none' | 'tabBar' | 'action';
@@ -80,40 +83,49 @@ export function ScreenBody({
       : bottomInset === 'action'
         ? BOTTOM_ACTION_MIN_HEIGHT + insets.bottom
         : 0;
+  const contentPaddingBottom = reserved + GAP[padBottom];
 
   const content: StyleProp<ViewStyle>[] = [
     {
       paddingHorizontal: gutter ? layout.gutter : 0,
       paddingTop: GAP[padTop],
-      paddingBottom: reserved + GAP[padBottom],
+      // Overlay tab/action bars: keep inset on scroll *content*, never as a
+      // flex-wrapper hole. Wrapper padding stays painted after chrome hides.
+      paddingBottom: scroll ? contentPaddingBottom : 0,
       gap: GAP[gap],
     },
     maxWidth != null ? { maxWidth, width: '100%', alignSelf: 'center' } : null,
     contentContainerStyle,
   ];
 
+  const nestedListInset = scroll ? 0 : contentPaddingBottom;
+
   if (!scroll) {
     return (
-      <View testID={testID} style={[styles.fill, content, style]}>
-        {children}
-      </View>
+      <ScreenBodyContentInsetContext.Provider value={nestedListInset}>
+        <View testID={testID} style={[styles.fill, content, style]}>
+          {children}
+        </View>
+      </ScreenBodyContentInsetContext.Provider>
     );
   }
 
   return (
-    <AppScrollView
-      testID={testID}
-      style={[styles.fill, style]}
-      contentContainerStyle={content}
-      refreshControl={refreshControl}
-      stickyHeaderIndices={stickyHeaderIndices}
-      onScroll={onScroll}
-      onScrollEndDrag={onScrollEndDrag}
-      onMomentumScrollEnd={onMomentumScrollEnd}
-      scrollEventThrottle={scrollEventThrottle}
-    >
-      {children}
-    </AppScrollView>
+    <ScreenBodyContentInsetContext.Provider value={nestedListInset}>
+      <AppScrollView
+        testID={testID}
+        style={[styles.fill, style]}
+        contentContainerStyle={content}
+        refreshControl={refreshControl}
+        stickyHeaderIndices={stickyHeaderIndices}
+        onScroll={onScroll}
+        onScrollEndDrag={onScrollEndDrag}
+        onMomentumScrollEnd={onMomentumScrollEnd}
+        scrollEventThrottle={scrollEventThrottle}
+      >
+        {children}
+      </AppScrollView>
+    </ScreenBodyContentInsetContext.Provider>
   );
 }
 

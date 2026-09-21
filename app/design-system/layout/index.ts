@@ -11,7 +11,7 @@
 export { Screen } from './Screen';
 export type { ScreenBackground, ScreenProps } from './Screen';
 
-export { FullBleed, ScreenBody } from './ScreenBody';
+export { FullBleed, ScreenBody, useScreenBodyContentInset } from './ScreenBody';
 export type { FullBleedProps, ScreenBodyInset, ScreenBodyProps } from './ScreenBody';
 
 export { Section } from './Section';
