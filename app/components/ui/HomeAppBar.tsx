@@ -52,7 +52,7 @@ export function HomeAppBar({
   const { colors: themeColors, isDark } = useTheme();
   const { gutter } = useLayout();
   const insets = useSafeAreaInsets();
-  const colorStyles = useThemedStyles(({ colors }) => createColorStyles(colors));
+  const colorStyles = useThemedStyles(({ colors, scheme }) => createColorStyles(colors, scheme));
 
   return (
     <SarhSurface tone="background" style={[styles.shell, colorStyles.shell]}>
@@ -108,9 +108,13 @@ export function HomeAppBar({
   );
 }
 
-function createColorStyles(colors: ThemeColors) {
+function createColorStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
+  const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
-    shell: { borderBottomColor: colors.borderHairline },
+    shell: {
+      backgroundColor: tokens.glass,
+      borderBottomColor: tokens.glassBorder,
+    },
     avatar: {
       borderColor: colors.electric,
       backgroundColor: colors.bgField,

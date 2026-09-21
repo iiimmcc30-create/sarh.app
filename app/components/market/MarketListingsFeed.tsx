@@ -340,7 +340,7 @@ export const MarketListingsFeed = forwardRef<MarketListingsFeedHandle, MarketLis
 
     const ListHeader = useCallback(
       () => (
-        <View>
+        <View style={variant === 'home' ? styles.homeHeaderStack : undefined}>
           {extraHeader}
           {variant === 'home' ? filterBar : null}
         </View>
@@ -442,6 +442,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 0,
+  },
+  /** Separates Quick Access (a section) from listing filter controls. */
+  homeHeaderStack: {
+    gap: spacing.lg,
   },
   listSeparator: {
     height: spacing.sm,

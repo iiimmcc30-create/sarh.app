@@ -5,6 +5,7 @@ import {
   isAlreadyOnRoute,
   setCurrentPathname,
   safePush,
+  closeThen,
   resetNavigationLockForTests,
 } from '@/lib/safeNavigate';
 
@@ -63,5 +64,29 @@ describe('safeNavigate', () => {
     resetNavigationLockForTests();
     expect(safePush('/(tabs)/profile', undefined, router)).toBe(false);
     expect(pushes).toHaveLength(0);
+  });
+
+  it('closes first then runs the follow-up after the lock clears', () => {
+    jest.useFakeTimers();
+    const backs: number[] = [];
+    let ran = false;
+    const router = {
+      push: () => {},
+      back: () => {
+        backs.push(1);
+      },
+    };
+
+    expect(closeThen(() => {
+      ran = true;
+    }, { closeDelayMs: 120 }, router)).toBe(true);
+    expect(backs).toHaveLength(1);
+    expect(ran).toBe(false);
+    expect(isNavigationLocked()).toBe(true);
+
+    jest.advanceTimersByTime(120);
+    expect(ran).toBe(true);
+    expect(isNavigationLocked()).toBe(false);
+    jest.useRealTimers();
   });
 });

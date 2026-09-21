@@ -188,6 +188,35 @@ export function safeReplace(
 }
 
 /**
+ * Close the current modal/sidebar, then run `next` after the close delay.
+ * Clears the nav lock before `next` so a follow-up push can start.
+ */
+export function closeThen(
+  next: () => void,
+  options?: NavigateOptions,
+  routerRef: RouterLike = expoRouter as unknown as RouterLike,
+): boolean {
+  const delay = options?.closeDelayMs ?? CLOSE_THEN_PUSH_DELAY_MS;
+  if (!options?.force && isNavigationLocked()) return false;
+  if (!beginNavigation('__close_then__', options?.force)) return false;
+
+  try {
+    routerRef.back();
+  } catch {
+    // If nothing to close, continue.
+  }
+
+  setTimeout(() => {
+    clearUnlockTimer();
+    lockedUntil = 0;
+    inFlightHref = null;
+    next();
+  }, delay);
+
+  return true;
+}
+
+/**
  * Close modal/sidebar then push — used by all sidebars.
  * If already on destination, only closes (no duplicate push).
  */

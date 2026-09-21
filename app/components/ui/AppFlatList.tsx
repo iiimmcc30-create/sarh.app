@@ -1,10 +1,24 @@
 import { useBindChromeScroll } from '@/hooks/useAppChrome';
+import { useScreenBodyContentInset } from '@/design-system/layout/screenBodyContentInset';
 import React, { forwardRef } from 'react';
 import {
   FlatList,
   Platform,
+  StyleSheet,
   type FlatListProps,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
+
+function withNestedBodyInset(
+  style: StyleProp<ViewStyle> | undefined,
+  extra: number,
+): StyleProp<ViewStyle> {
+  if (!extra) return style;
+  const current = StyleSheet.flatten(style)?.paddingBottom;
+  const base = typeof current === 'number' ? current : 0;
+  return style == null ? { paddingBottom: extra } : [style, { paddingBottom: base + extra }];
+}
 
 type AppFlatListProps<T> = FlatListProps<T>;
 
@@ -31,9 +45,11 @@ function AppFlatListInner<T>(
     initialNumToRender = Platform.OS === 'android' ? 6 : 8,
     removeClippedSubviews = Platform.OS === 'android',
     onScroll,
+    contentContainerStyle,
     ...rest
   } = props;
   const boundScroll = useBindChromeScroll(onScroll);
+  const nestedBodyInset = useScreenBodyContentInset();
 
   return (
     <FlatList
@@ -52,6 +68,7 @@ function AppFlatListInner<T>(
       initialNumToRender={initialNumToRender}
       removeClippedSubviews={removeClippedSubviews}
       onScroll={boundScroll}
+      contentContainerStyle={withNestedBodyInset(contentContainerStyle, nestedBodyInset)}
       {...rest}
     />
   );

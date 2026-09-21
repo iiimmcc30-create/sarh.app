@@ -1,7 +1,7 @@
-import { SarhChip, SarhChipRow } from '@/design-system/components';
+import { SarhChipRow } from '@/design-system/components';
 import type { RegionSelection } from '@/constants/saudiRegions';
 import { regionSelectionLabel } from '@/lib/saudiRegionSearch';
-import { spacing, typography, type ThemeColors } from '@/constants/theme';
+import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { getRtlRow } from '@/lib/rtl';
 import { MARKET_CHIP } from '@/components/ui/filterChipTokens';
@@ -45,8 +45,9 @@ export function MarketFilterBar({
       <SarhChipRow contentPaddingHorizontal={spacing.md}>
         <Pressable
           style={[
-            styles.regionBtn,
-            regionOpen && styles.regionBtnActive,
+            styles.chip,
+            styles.regionChip,
+            regionOpen && styles.chipActive,
             getRtlRow(),
           ]}
           onPress={onRegionPress}
@@ -59,7 +60,7 @@ export function MarketFilterBar({
             color={regionOpen ? accent : colors.textPrimary}
           />
           <Text
-            style={[styles.regionText, regionOpen && styles.regionTextActive]}
+            style={[styles.chipLabel, regionOpen && styles.chipLabelActive]}
             numberOfLines={1}
           >
             {regionLabel}
@@ -71,21 +72,29 @@ export function MarketFilterBar({
           />
         </Pressable>
 
-        <SarhChip appearance="filter" label="القريب" icon="navigation" compact onPress={onNearbyPress} />
+        <Pressable
+          style={[styles.chip, getRtlRow()]}
+          onPress={onNearbyPress}
+          accessibilityRole="button"
+          accessibilityLabel="القريب"
+        >
+          <AppIcon name="navigation" size={MARKET_CHIP.iconSize} color={accent} />
+          <Text style={styles.chipLabel}>القريب</Text>
+        </Pressable>
 
         <Pressable
-          style={[styles.filterChip, getRtlRow()]}
+          style={[styles.chip, getRtlRow()]}
           onPress={onSortPress}
           accessibilityRole="button"
           accessibilityLabel="الترتيب"
           testID="market-sort-chip"
         >
           <AppIcon name="sort-alt" size={MARKET_CHIP.iconSize} color={accent} />
-          <Text style={styles.filterChipLabel}>الترتيب</Text>
+          <Text style={styles.chipLabel}>الترتيب</Text>
         </Pressable>
 
         <Pressable
-          style={[styles.categoryIconBtn, categoryOpen && styles.filterChipActive]}
+          style={[styles.chip, categoryOpen && styles.chipActive, getRtlRow()]}
           onPress={onCategoryPress}
           accessibilityRole="button"
           accessibilityLabel="التصنيف"
@@ -96,6 +105,7 @@ export function MarketFilterBar({
             size={MARKET_CHIP.iconSize}
             color={categoryOpen ? accent : colors.textPrimary}
           />
+          <Text style={[styles.chipLabel, categoryOpen && styles.chipLabelActive]}>التصنيف</Text>
         </Pressable>
       </SarhChipRow>
     </View>
@@ -110,68 +120,37 @@ function createStyles(colors: ThemeColors) {
       paddingTop: 0,
       paddingBottom: spacing.sm,
     },
-    regionBtn: {
+    chip: {
       height: MARKET_CHIP.height,
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: MARKET_CHIP.gap,
       paddingHorizontal: MARKET_CHIP.paddingHorizontal,
-      borderRadius: MARKET_CHIP.radius,
+      borderRadius: radius.md,
       backgroundColor: colors.bgElevated,
-      borderWidth: 0,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderHairline,
+      flexShrink: 0,
+    },
+    regionChip: {
       maxWidth: 160,
-      flexShrink: 0,
     },
-    regionBtnActive: {
+    chipActive: {
       borderWidth: 1,
       borderColor: colors.electricBright,
       backgroundColor: `${colors.electricBright}14`,
     },
-    regionText: {
+    chipLabel: {
       ...typography.caption,
       fontSize: MARKET_CHIP.fontSize,
       lineHeight: MARKET_CHIP.lineHeight,
       color: colors.textPrimary,
       writingDirection: 'rtl',
-      flexShrink: 1,
       includeFontPadding: false,
     },
-    regionTextActive: {
+    chipLabelActive: {
       color: colors.electricBright,
-    },
-    filterChip: {
-      height: MARKET_CHIP.height,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: MARKET_CHIP.gap,
-      paddingHorizontal: MARKET_CHIP.paddingHorizontal,
-      borderRadius: MARKET_CHIP.radius,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 0,
-      flexShrink: 0,
-    },
-    filterChipActive: {
-      borderWidth: 1,
-      borderColor: colors.electricBright,
-      backgroundColor: `${colors.electricBright}14`,
-    },
-    categoryIconBtn: {
-      height: MARKET_CHIP.height,
-      width: MARKET_CHIP.height,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: MARKET_CHIP.radius,
-      backgroundColor: colors.bgElevated,
-      borderWidth: 0,
-      flexShrink: 0,
-    },
-    filterChipLabel: {
-      ...typography.caption,
-      fontSize: MARKET_CHIP.fontSize,
-      lineHeight: MARKET_CHIP.lineHeight,
-      color: colors.textPrimary,
-      writingDirection: 'rtl',
-      includeFontPadding: false,
     },
   });
 }

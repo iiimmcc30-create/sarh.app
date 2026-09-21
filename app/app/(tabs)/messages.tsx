@@ -5,7 +5,7 @@ import { MessagesPanel } from '@/components/feature/MessagesPanel';
 import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
 import { HomeAppBar, shellIdentityStackH } from '@/components/ui/HomeAppBar';
 import { space } from '@/design-system';
-import { SarhInput } from '@/design-system/components';
+import { AppText, SarhInput } from '@/design-system/components';
 import { Screen, ScreenBody } from '@/design-system/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppUser } from '@/hooks/useApp';
@@ -45,6 +45,17 @@ export default function MessagesScreen() {
           displayName={displayName}
           avatarUri={me.avatar}
           onAvatarPress={openSidebar}
+          center={
+            <AppText
+              variant="heading3"
+              color="textPrimary"
+              align="center"
+              numberOfLines={1}
+              accessibilityRole="header"
+            >
+              الدردشة
+            </AppText>
+          }
         >
           <View style={styles.searchSlot}>
             <SarhInput

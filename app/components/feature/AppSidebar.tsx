@@ -9,7 +9,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAppUser } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRtlRow } from '@/lib/rtl';
-import { closeThenPush } from '@/lib/safeNavigate';
+import { closeThen, closeThenPush } from '@/lib/safeNavigate';
+import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,18 +23,18 @@ type NavItem = {
 
 const PRIMARY_ITEMS: NavItem[] = [
   { key: 'profile', icon: 'person-outline', label: 'الملف الشخصي', route: '/(tabs)/profile' },
-  { key: 'notifications', icon: 'notifications-outline', label: 'الإشعارات', route: '/notifications' },
+  { key: 'create-listing', icon: 'add-circle-outline', label: 'إضافة عرض', route: '/create/listing' },
   { key: 'favorites', icon: 'heart-outline', label: 'المفضلة', route: '/favorites' },
-  { key: 'butchers', icon: 'storefront-outline', label: 'ملاحم سرح', route: '/butchers' },
   { key: 'feed-suppliers', icon: 'leaf', label: 'موردو الأعلاف', route: '/feed-suppliers' },
-  { key: 'promote', icon: 'megaphone-outline', label: 'الترويج', route: '/promote' },
+  { key: 'ministry', icon: 'briefcase-outline', label: 'خدمات الوزارة', route: '/ministry?tab=services' },
   { key: 'news', icon: 'newspaper-outline', label: 'قطاع الأخبار', route: '/news' },
+  { key: 'promote', icon: 'megaphone-outline', label: 'الترويج', route: '/promote' },
 ];
 
 const SECONDARY_ITEMS: NavItem[] = [
   { key: 'info', icon: 'information-outline', label: 'مركز المعلومات', route: '/settings/info' },
-  { key: 'help', icon: 'lifebuoy', label: 'مركز المساعدة', route: '/support' },
   { key: 'settings', icon: 'settings-outline', label: 'الإعدادات والخصوصية', route: '/profile/settings' },
+  { key: 'help', icon: 'lifebuoy', label: 'مركز المساعدة', route: '/support' },
 ];
 
 type AppSidebarProps = {
@@ -56,6 +57,12 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
 
   const go = (route: string) => {
     closeThenPush(route);
+  };
+
+  const goCreateListing = () => {
+    closeThen(() => {
+      void navigateToCreateListing({ requireCovenant: true });
+    });
   };
 
   return (
@@ -104,7 +111,9 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
         {PRIMARY_ITEMS.map((item) => (
           <Pressable
             key={item.key}
-            onPress={() => go(item.route)}
+            onPress={() =>
+              item.key === 'create-listing' ? goCreateListing() : go(item.route)
+            }
             style={({ pressed }) => [styles.row, getRtlRow(), pressed && styles.pressed]}
             accessibilityRole="button"
             accessibilityLabel={item.label}

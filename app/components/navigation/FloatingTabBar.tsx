@@ -110,6 +110,7 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
           opacity: chromeProgress,
           transform: [{ translateY }],
         },
+        ambientShadow(scheme, 'soft'),
       ]}
       pointerEvents={chromeVisible ? 'box-none' : 'none'}
     >
@@ -121,7 +122,6 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             backgroundColor: tokens.glass,
             borderTopColor: tokens.glassBorder,
           },
-          ambientShadow(scheme, 'soft'),
         ]}
       >
         <View style={[styles.row, getRtlRow()]}>

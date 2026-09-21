@@ -20,6 +20,7 @@ import { type SarhInputState } from './resolvers';
 
 export type SarhInputAppearance = 'foundation' | 'theme';
 export type SarhInputShape = 'rounded' | 'pill';
+export type SarhInputSize = 'md' | 'compact';
 
 export type SarhInputProps = TextInputProps & {
   label?: string;
@@ -30,6 +31,8 @@ export type SarhInputProps = TextInputProps & {
   onTrailingPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
   shape?: SarhInputShape;
+  /** `compact` matches the 40pt shell tools (avatar / bell). */
+  size?: SarhInputSize;
   /** Live-theme field chrome (former AppTextInput). Default is foundation DS. */
   appearance?: SarhInputAppearance;
   /** Alias of errorText — AppTextInput API. */
@@ -62,6 +65,7 @@ function FoundationInput({
   onTrailingPress,
   containerStyle,
   shape = 'rounded',
+  size = 'md',
   editable = true,
   secureTextEntry,
   onFocus,
@@ -103,7 +107,8 @@ function FoundationInput({
           getRtlRow(),
           {
             alignItems: 'center',
-            minHeight: space[48],
+            minHeight: size === 'compact' ? space[40] : space[48],
+            height: size === 'compact' ? space[40] : undefined,
             paddingHorizontal: space[12],
             gap: space[8],
             borderRadius: shape === 'pill' ? radius[999] : radius[12],
@@ -134,7 +139,7 @@ function FoundationInput({
               lineHeight: typography.body.lineHeight,
               fontWeight: typography.body.fontWeight,
               color: themeColors.textPrimary,
-              paddingVertical: space[12],
+              paddingVertical: size === 'compact' ? 0 : space[12],
             },
             style,
           ]}

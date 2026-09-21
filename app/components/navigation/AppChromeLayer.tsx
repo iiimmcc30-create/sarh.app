@@ -1,4 +1,6 @@
+import { ambientShadow } from '@/constants/designSystem';
 import { useAppChromeScroll } from '@/hooks/useAppChrome';
+import { useTheme } from '@/hooks/useTheme';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { Animated, StyleSheet } from 'react-native';
@@ -10,6 +12,7 @@ type AppChromeLayerProps = {
 
 /** Overlay chrome that hides with the shared tab-shell animation. Does not remount children. */
 export function AppChromeLayer({ children, onHeight }: AppChromeLayerProps) {
+  const { scheme } = useTheme();
   const { chromeProgress, chromeVisible, setChromeVisible } = useAppChromeScroll();
   const heightRef = useRef(0);
   const [height, setHeight] = useState(0);
@@ -38,6 +41,7 @@ export function AppChromeLayer({ children, onHeight }: AppChromeLayerProps) {
       style={[
         styles.layer,
         { opacity: chromeProgress, transform: [{ translateY }] },
+        ambientShadow(scheme, 'soft'),
       ]}
     >
       {children}
