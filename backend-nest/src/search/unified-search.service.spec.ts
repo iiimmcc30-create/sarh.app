@@ -76,11 +76,20 @@ describe('UnifiedSearchService', () => {
     searchButchers.mockResolvedValue([]);
     searchNews.mockResolvedValue([]);
     searchServices.mockResolvedValue([]);
+    searchUsers.mockResolvedValue([]);
 
     const result = await service.search({ q: 'غنم حري', type: 'all' });
 
+    expect(result.groups.map((g) => g.type)).toEqual([
+      'listings',
+      'posts',
+      'users',
+      'news',
+      'services',
+    ]);
     expect(result.groups).toHaveLength(5);
     expect(result.groups[0].type).toBe('listings');
+    expect(searchUsers).toHaveBeenCalled();
     expect(result.groups[0].items[0].title).toContain('غنم');
     expect(searchListings).toHaveBeenCalled();
   });

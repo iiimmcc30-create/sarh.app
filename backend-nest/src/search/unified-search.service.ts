@@ -11,7 +11,7 @@ import { rankSearchResults, scoreSearchMatch } from './lib/search-ranking.util';
 import { UnifiedSearchRepository } from './repositories/unified-search.repository';
 
 export type SearchResultItem = {
-  type: 'listings' | 'posts' | 'butchers' | 'news' | 'services' | 'users';
+  type: 'listings' | 'posts' | 'news' | 'services' | 'users';
   id: string;
   title: string;
   subtitle?: string;
@@ -61,81 +61,22 @@ export class UnifiedSearchService {
 
     const typesToSearch: Array<Exclude<SearchType, 'all'>> =
       type === 'all'
-        ? ['listings', 'posts', 'butchers', 'news', 'services']
+        ? ['listings', 'posts', 'users', 'news', 'services']
         : [type as Exclude<SearchType, 'all'>];
 
-    const groups: SearchGroup[] = [];
-
-    for (const groupType of typesToSearch) {
-      const groupLimit = type === 'all' ? ALL_TYPE_PER_GROUP : limit;
-      const groupSkip = type === 'all' ? 0 : skip;
-      const fetchTake = groupLimit + 1;
-
-      let items: SearchResultItem[] = [];
-
-      switch (groupType) {
-        case 'listings':
-          items = await this.mapListings(
-            query,
-            tokens,
-            await this.repo.searchListings(
-              tokens,
-              filters,
-              groupSkip,
-              fetchTake,
-            ),
-          );
-          break;
-        case 'posts':
-          items = this.mapPosts(
-            query,
-            tokens,
-            await this.repo.searchPosts(tokens, groupSkip, fetchTake),
-          );
-          break;
-        case 'butchers':
-          items = this.mapButchers(
-            query,
-            tokens,
-            await this.repo.searchButchers(tokens, groupSkip, fetchTake),
-          );
-          break;
-        case 'news':
-          items = this.mapNews(
-            query,
-            tokens,
-            await this.repo.searchNews(tokens, groupSkip, fetchTake),
-          );
-          break;
-        case 'services':
-          items = this.mapServices(
-            query,
-            tokens,
-            await this.repo.searchServices(tokens, groupSkip, fetchTake),
-          );
-          break;
-        case 'users':
-          items = this.mapUsers(
-            query,
-            tokens,
-            await this.repo.searchUsers(tokens, groupSkip, fetchTake),
-          );
-          break;
-        default:
-          break;
-      }
-
-      const hasMore = items.length > groupLimit;
-      const trimmed = hasMore ? items.slice(0, groupLimit) : items;
-
-      groups.push({
-        type: groupType,
-        items: trimmed,
-        page: type === 'all' ? 1 : page,
-        limit: groupLimit,
-        hasMore,
-      });
-    }
+    const groups = await Promise.all(
+      typesToSearch.map((groupType) =>
+        this.searchGroup(groupType, {
+          query,
+          tokens,
+          type,
+          page,
+          limit,
+          skip,
+          filters,
+        }),
+      ),
+    );
 
     const durationMs = Date.now() - started;
     const resultCount = groups.reduce((n, g) => n + g.items.length, 0);
@@ -184,6 +125,81 @@ export class UnifiedSearchService {
     }
 
     return { suggestions };
+  }
+
+  private async searchGroup(
+    groupType: Exclude<SearchType, 'all'>,
+    args: {
+      query: string;
+      tokens: string[];
+      type: SearchType;
+      page: number;
+      limit: number;
+      skip: number;
+      filters: {
+        categoryId?: string;
+        subcategoryId?: string;
+        country?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        region?: string;
+      };
+    },
+  ): Promise<SearchGroup> {
+    const groupLimit = args.type === 'all' ? ALL_TYPE_PER_GROUP : args.limit;
+    const groupSkip = args.type === 'all' ? 0 : args.skip;
+    const fetchTake = groupLimit + 1;
+    const { query, tokens, filters } = args;
+
+    let items: SearchResultItem[] = [];
+    switch (groupType) {
+      case 'listings':
+        items = await this.mapListings(
+          query,
+          tokens,
+          await this.repo.searchListings(tokens, filters, groupSkip, fetchTake),
+        );
+        break;
+      case 'posts':
+        items = this.mapPosts(
+          query,
+          tokens,
+          await this.repo.searchPosts(tokens, groupSkip, fetchTake),
+        );
+        break;
+      case 'news':
+        items = this.mapNews(
+          query,
+          tokens,
+          await this.repo.searchNews(tokens, groupSkip, fetchTake),
+        );
+        break;
+      case 'services':
+        items = this.mapServices(
+          query,
+          tokens,
+          await this.repo.searchServices(tokens, groupSkip, fetchTake),
+        );
+        break;
+      case 'users':
+        items = this.mapUsers(
+          query,
+          tokens,
+          await this.repo.searchUsers(tokens, groupSkip, fetchTake),
+        );
+        break;
+      default:
+        break;
+    }
+
+    const hasMore = items.length > groupLimit;
+    return {
+      type: groupType,
+      items: hasMore ? items.slice(0, groupLimit) : items,
+      page: args.type === 'all' ? 1 : args.page,
+      limit: groupLimit,
+      hasMore,
+    };
   }
 
   private async mapListings(
@@ -236,43 +252,6 @@ export class UnifiedSearchService {
           row.author.displayName ||
           row.author.username,
         imageUrl: row.images?.[0] ?? null,
-        relevance,
-        createdAt: row.createdAt.toISOString(),
-        data: row as unknown as Record<string, unknown>,
-      };
-    });
-    return rankSearchResults(scored);
-  }
-
-  private mapButchers(
-    query: string,
-    tokens: string[],
-    rows: Awaited<ReturnType<UnifiedSearchRepository['searchButchers']>>,
-  ): SearchResultItem[] {
-    const scored = rows.map((row) => {
-      const relevance = scoreSearchMatch(
-        query,
-        tokens,
-        {
-          title: row.nameAr || row.nameEn,
-          subtitle: row.cityAr || row.city,
-          description: row.bioAr,
-          createdAt: row.createdAt,
-          boost: Math.min(3, (row.rankingScore ?? 0) / 100),
-        },
-        { boost: 3 },
-      );
-      return {
-        type: 'butchers' as const,
-        id: row.id,
-        title: row.nameAr || row.nameEn,
-        subtitle: [
-          row.cityAr || row.city,
-          row.rating ? `⭐ ${row.rating.toFixed(1)}` : '',
-        ]
-          .filter(Boolean)
-          .join(' · '),
-        imageUrl: row.logo ?? row.cover ?? null,
         relevance,
         createdAt: row.createdAt.toISOString(),
         data: row as unknown as Record<string, unknown>,

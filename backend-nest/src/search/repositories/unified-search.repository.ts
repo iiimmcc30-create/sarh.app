@@ -166,7 +166,12 @@ export class UnifiedSearchRepository {
         id: true,
         content: true,
         arabicContent: true,
+        image: true,
         images: true,
+        likesCount: true,
+        repostsCount: true,
+        commentsCount: true,
+        viewsCount: true,
         createdAt: true,
         author: {
           select: {
@@ -182,66 +187,6 @@ export class UnifiedSearchRepository {
       skip,
       take,
       orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  searchButchers(tokens: string[], skip: number, take: number) {
-    const where: Prisma.ButcherWhereInput = { ...notDeleted };
-
-    if (tokens.length > 0) {
-      where.AND = tokens.map((token) => {
-        const variants = searchTextVariants(token);
-        return {
-          OR: variants.flatMap((v) => [
-            { nameAr: { contains: v } },
-            { nameEn: { contains: v, mode: 'insensitive' } },
-            { cityAr: { contains: v } },
-            { city: { contains: v, mode: 'insensitive' } },
-            { bioAr: { contains: v } },
-            { bioEn: { contains: v, mode: 'insensitive' } },
-            { addressAr: { contains: v } },
-            { address: { contains: v, mode: 'insensitive' } },
-            { specialties: { has: v } },
-            {
-              products: {
-                some: {
-                  deletedAt: null,
-                  OR: [
-                    { nameAr: { contains: v } },
-                    { nameEn: { contains: v, mode: 'insensitive' } },
-                  ],
-                },
-              },
-            },
-          ]),
-        };
-      });
-    }
-
-    return this.prisma.butcher.findMany({
-      where,
-      select: {
-        id: true,
-        nameAr: true,
-        nameEn: true,
-        logo: true,
-        cover: true,
-        city: true,
-        cityAr: true,
-        bioAr: true,
-        rating: true,
-        reviewCount: true,
-        rankingScore: true,
-        isOpen: true,
-        createdAt: true,
-      },
-      skip,
-      take,
-      orderBy: [
-        { rankingScore: 'desc' },
-        { rating: 'desc' },
-        { createdAt: 'desc' },
-      ],
     });
   }
 
@@ -374,19 +319,6 @@ export class UnifiedSearchRepository {
             OR lower(title) LIKE lower(${like})
           )
         LIMIT ${Math.ceil(limit / 2)}
-      )
-      UNION ALL
-      (
-        SELECT DISTINCT "nameAr" AS text, 'butcher'::text AS kind, 2::float AS weight
-        FROM "Butcher"
-        WHERE "deletedAt" IS NULL
-          AND regexp_replace(
-            translate("nameAr", 'أإآٱةى', 'ااااهي'),
-            '[\u0610-\u061A\u064B-\u065F\u0670\u0640]',
-            '',
-            'g'
-          ) ILIKE ${like}
-        LIMIT ${Math.ceil(limit / 3)}
       )
       UNION ALL
       (

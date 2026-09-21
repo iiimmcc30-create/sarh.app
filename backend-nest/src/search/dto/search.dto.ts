@@ -16,7 +16,6 @@ export const SEARCH_TYPES = [
   'all',
   'listings',
   'posts',
-  'butchers',
   'news',
   'services',
   'users',

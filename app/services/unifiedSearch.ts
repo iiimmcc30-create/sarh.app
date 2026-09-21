@@ -1,14 +1,15 @@
 import { ensureApiReachable } from './api';
 import { listingVideoUrl } from '@/lib/listingMedia';
 import { resolveMediaUrl } from './media';
-import type { Listing, Country } from './types';
+import { mapPostFromApi } from './posts';
+import type { Listing, Country, Post } from './types';
 import { countries } from './types';
+import { dedupeInflight, shouldReuseFreshResult } from './requestCoordination';
 
 export type SearchContentType =
   | 'all'
   | 'listings'
   | 'posts'
-  | 'butchers'
   | 'news'
   | 'services'
   | 'users';
@@ -43,6 +44,54 @@ export type SearchSuggestion = {
   text: string;
   kind: string;
 };
+
+const SEARCH_TTL_MS = 45_000;
+const SUGGEST_TTL_MS = 90_000;
+const CACHE_MAX = 40;
+
+type Timed<T> = { at: number; data: T };
+const searchCache = new Map<string, Timed<UnifiedSearchResponse>>();
+const suggestCache = new Map<string, Timed<SearchSuggestion[]>>();
+
+function remember<T>(map: Map<string, Timed<T>>, key: string, data: T) {
+  if (map.size >= CACHE_MAX) {
+    const oldest = map.keys().next().value;
+    if (oldest) map.delete(oldest);
+  }
+  map.set(key, { at: Date.now(), data });
+}
+
+export function resetUnifiedSearchCache() {
+  searchCache.clear();
+  suggestCache.clear();
+}
+
+function searchCacheKey(params: {
+  q: string;
+  type?: SearchContentType;
+  page?: number;
+  limit?: number;
+  categoryId?: string;
+  subcategoryId?: string;
+  country?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  region?: string;
+}): string {
+  return [
+    'search',
+    params.q.trim(),
+    params.type ?? 'all',
+    params.page ?? 1,
+    params.limit ?? 20,
+    params.categoryId ?? '',
+    params.subcategoryId ?? '',
+    params.country ?? '',
+    params.minPrice ?? '',
+    params.maxPrice ?? '',
+    params.region ?? '',
+  ].join(':');
+}
 
 type BackendListing = {
   id: string;
@@ -147,6 +196,10 @@ function mapListingFromSearch(data: Record<string, unknown>): Listing | null {
 
 export { mapListingFromSearch };
 
+export function mapPostFromSearch(data: Record<string, unknown>): Post | null {
+  return mapPostFromApi(data);
+}
+
 export async function unifiedSearch(params: {
   q: string;
   type?: SearchContentType;
@@ -158,45 +211,91 @@ export async function unifiedSearch(params: {
   minPrice?: number;
   maxPrice?: number;
   region?: string;
+  signal?: AbortSignal;
 }): Promise<UnifiedSearchResponse> {
-  const base = await ensureApiReachable();
-  const qs = new URLSearchParams();
-  qs.set('q', params.q.trim());
-  if (params.type && params.type !== 'all') qs.set('type', params.type);
-  if (params.page) qs.set('page', String(params.page));
-  if (params.limit) qs.set('limit', String(params.limit));
-  if (params.categoryId) qs.set('categoryId', params.categoryId);
-  if (params.subcategoryId) qs.set('subcategoryId', params.subcategoryId);
-  if (params.country) qs.set('country', params.country);
-  if (params.minPrice != null) qs.set('minPrice', String(params.minPrice));
-  if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
-  if (params.region) qs.set('region', params.region);
-
-  const res = await fetch(`${base}/api/search?${qs.toString()}`);
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.success) {
-    throw new Error(json.messageAr || json.message || 'تعذّر إكمال البحث');
+  const key = searchCacheKey(params);
+  const cached = searchCache.get(key);
+  if (cached && shouldReuseFreshResult(cached.at, SEARCH_TTL_MS)) {
+    return cached.data;
   }
-  return json.data as UnifiedSearchResponse;
+
+  const load = () =>
+    dedupeInflight(key, async () => {
+      const base = await ensureApiReachable();
+      const qs = new URLSearchParams();
+      qs.set('q', params.q.trim());
+      if (params.type && params.type !== 'all') qs.set('type', params.type);
+      if (params.page) qs.set('page', String(params.page));
+      if (params.limit) qs.set('limit', String(params.limit));
+      if (params.categoryId) qs.set('categoryId', params.categoryId);
+      if (params.subcategoryId) qs.set('subcategoryId', params.subcategoryId);
+      if (params.country) qs.set('country', params.country);
+      if (params.minPrice != null) qs.set('minPrice', String(params.minPrice));
+      if (params.maxPrice != null) qs.set('maxPrice', String(params.maxPrice));
+      if (params.region) qs.set('region', params.region);
+
+      const res = await fetch(`${base}/api/search?${qs.toString()}`, {
+        signal: params.signal,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        throw new Error(json.messageAr || json.message || 'تعذّر إكمال البحث');
+      }
+      const data = json.data as UnifiedSearchResponse;
+      remember(searchCache, key, data);
+      return data;
+    });
+
+  try {
+    return await load();
+  } catch (err) {
+    if ((err as { name?: string })?.name === 'AbortError' && params.signal && !params.signal.aborted) {
+      return load();
+    }
+    throw err;
+  }
 }
 
 export async function fetchSearchSuggestions(
   q: string,
   limit = 8,
+  signal?: AbortSignal,
 ): Promise<SearchSuggestion[]> {
   if (q.trim().length < 2) return [];
-  const base = await ensureApiReachable();
-  const qs = new URLSearchParams({ q: q.trim(), limit: String(limit) });
-  const res = await fetch(`${base}/api/search/suggest?${qs.toString()}`);
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.success) return [];
-  return (json.data?.suggestions ?? []) as SearchSuggestion[];
+  const key = `suggest:${q.trim()}:${limit}`;
+  const cached = suggestCache.get(key);
+  if (cached && shouldReuseFreshResult(cached.at, SUGGEST_TTL_MS)) {
+    return cached.data;
+  }
+
+  const load = () =>
+    dedupeInflight(key, async () => {
+      const base = await ensureApiReachable();
+      const qs = new URLSearchParams({ q: q.trim(), limit: String(limit) });
+      const res = await fetch(`${base}/api/search/suggest?${qs.toString()}`, { signal });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) return [];
+      const suggestions = (json.data?.suggestions ?? []) as SearchSuggestion[];
+      remember(suggestCache, key, suggestions);
+      return suggestions;
+    });
+
+  try {
+    return await load();
+  } catch (err) {
+    if ((err as { name?: string })?.name === 'AbortError' && signal && !signal.aborted) {
+      return load();
+    }
+    throw err;
+  }
 }
 
 export async function fetchTrendingTags(): Promise<Array<{ tag: string; count: number }>> {
-  const base = await ensureApiReachable();
-  const res = await fetch(`${base}/api/search/trending`);
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.success) return [];
-  return json.data?.trending ?? [];
+  return dedupeInflight('GET:/api/search/trending', async () => {
+    const base = await ensureApiReachable();
+    const res = await fetch(`${base}/api/search/trending`);
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.success) return [];
+    return json.data?.trending ?? [];
+  });
 }
