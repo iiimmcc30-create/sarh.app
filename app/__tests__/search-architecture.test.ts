@@ -111,4 +111,16 @@ describe('search architecture', () => {
     expect(appBar).toContain('SHELL_IDENTITY_COLLAPSE_H');
     expect(appBar).toContain('collapseStyle');
   });
+
+  it('keeps one Search input instance across Home/Mode/Results and does not autofocus Mode', () => {
+    const search = src('app/search.tsx');
+    expect(search).toContain('center={searchField}');
+    expect(search).toContain('leading={phase === \'home\' ? undefined : sessionBack}');
+    expect(search).toContain('showNotifications={phase !== \'mode\'}');
+    expect(search).toContain('autoFocus={!isTab}');
+    expect(search).not.toContain('autoFocus={phase === \'mode\'}');
+    expect(search).not.toContain('overlayChrome');
+    expect(search).not.toContain('modeChrome');
+    expect(search).not.toContain('resultsChrome');
+  });
 });

@@ -7,13 +7,12 @@ import { MinistryServiceCard } from '@/components/feature/MinistryServiceCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
-import { HomeAppBar, SHELL_ICON_SIZE, SHELL_IDENTITY_COLLAPSE_H, SHELL_TOOL, shellIdentityStackH } from '@/components/ui/HomeAppBar';
+import { HomeAppBar, SHELL_IDENTITY_COLLAPSE_H, shellIdentityStackH } from '@/components/ui/HomeAppBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { openPostDetail } from '@/lib/openPost';
 import { safePush } from '@/lib/safeNavigate';
-import { AppText, SarhBackButton, SarhChipRow, SarhInput, SarhSurface } from '@/design-system/components';
+import { AppText, SarhBackButton, SarhChipRow, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useApp, useAppUser } from '@/hooks/useApp';
@@ -666,16 +665,18 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     }
   };
 
+  const onSearchFocus = useCallback(() => {
+    if (phaseRef.current === 'home') enterMode();
+  }, [enterMode]);
+
   const searchField = (
     <SarhInput
       value={query}
       onChangeText={setQuery}
       placeholder="بحث"
-      autoFocus={phase === 'mode'}
+      autoFocus={!isTab}
       returnKeyType="search"
-      onFocus={() => {
-        if (phase === 'home') enterMode();
-      }}
+      onFocus={onSearchFocus}
       onSubmitEditing={() => {
         Keyboard.dismiss();
         applyQuery(query);
@@ -1092,7 +1093,6 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const resultItems =
     filter === 'all' ? latestItems : visibleGroups.flatMap((group) => group.items);
 
-  const chromeTop = isTab ? insets.top : 0;
   const collapseStyle = { transform: [{ translateY }] };
   const identityStyle = { opacity: identityOpacity };
 
@@ -1105,67 +1105,29 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     />
   );
 
-  const sessionBell = (
-    <NotificationBellButton
-      bare
-      size={SHELL_TOOL}
-      iconSize={SHELL_ICON_SIZE}
-      style={styles.iconBtn}
-      iconColor={colors.textPrimary}
-      badgeBorderColor={colors.screenRoot}
-    />
-  );
-
-  const homeChrome = (
-    <HomeAppBar
-      displayName={displayName}
-      avatarUri={me.avatar}
-      onAvatarPress={openSidebar}
-      center={searchField}
-      collapseStyle={collapseStyle}
-      identityStyle={identityStyle}
-    >
-      <View style={styles.searchSlot}>{chromeTabs}</View>
-    </HomeAppBar>
-  );
-
-  const modeChrome = (
-    <SarhSurface tone="background" pointerEvents="box-none" style={styles.sessionShell}>
-      <View style={{ paddingTop: chromeTop, paddingHorizontal: gutter }}>
-        <Row gap="sm" align="center" style={styles.searchBar}>
-          {sessionBack}
-          {searchField}
-        </Row>
-      </View>
-    </SarhSurface>
-  );
-
-  const resultsChrome = (
-    <SarhSurface tone="background" pointerEvents="box-none" style={styles.sessionShell}>
-      <View pointerEvents="none" style={[styles.statusFill, { height: chromeTop }]} />
-      <Animated.View pointerEvents="box-none" style={[styles.resultsInner, { paddingTop: chromeTop + space[8], paddingHorizontal: gutter }, collapseStyle]}>
-        <Animated.View style={identityStyle}>
-          <Row gap="sm" align="center" style={styles.resultsIdentity}>
-            {sessionBack}
-            {searchField}
-            {sessionBell}
-          </Row>
-        </Animated.View>
-        <View style={styles.searchSlot}>{resultTabs}</View>
-      </Animated.View>
-    </SarhSurface>
-  );
-
-  const overlayChrome = phase === 'home' ? homeChrome : phase === 'mode' ? modeChrome : resultsChrome;
-
   return (
-    <Screen edges={isTab ? [] : ['top', 'bottom']} keyboard>
+    <Screen edges={isTab ? [] : ['bottom']}>
       <View
         pointerEvents="box-none"
         onLayout={(event) => onChromeLayout(event.nativeEvent.layout.height)}
         style={[styles.chromeLayer, ambientShadow(scheme, 'soft')]}
       >
-        {overlayChrome}
+        <HomeAppBar
+          displayName={displayName}
+          avatarUri={me.avatar}
+          onAvatarPress={openSidebar}
+          center={searchField}
+          leading={phase === 'home' ? undefined : sessionBack}
+          showNotifications={phase !== 'mode'}
+          collapseStyle={collapseStyle}
+          identityStyle={identityStyle}
+        >
+          {phase === 'home' ? (
+            <View style={styles.searchSlot}>{chromeTabs}</View>
+          ) : phase === 'results' ? (
+            <View style={styles.searchSlot}>{resultTabs}</View>
+          ) : null}
+        </HomeAppBar>
       </View>
 
       <Animated.View style={[styles.bodyWrap, { paddingTop: bodyPaddingTop }]}>

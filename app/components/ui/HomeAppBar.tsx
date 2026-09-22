@@ -52,6 +52,10 @@ type HomeAppBarProps = {
   collapseStyle?: StyleProp<ViewStyle>;
   /** Scroll-driven opacity for the avatar / center / bell row only. */
   identityStyle?: StyleProp<ViewStyle>;
+  /** Replaces the avatar control — Search Mode/Results back button. */
+  leading?: ReactNode;
+  /** When false, keep the trailing slot width but hide the bell. */
+  showNotifications?: boolean;
 };
 
 /** Home header: user avatar, centered Sarh mark, notifications. */
@@ -63,6 +67,8 @@ export function HomeAppBar({
   children,
   collapseStyle,
   identityStyle,
+  leading,
+  showNotifications = true,
 }: HomeAppBarProps) {
   const { colors: themeColors, isDark } = useTheme();
   const { gutter } = useLayout();
@@ -97,21 +103,25 @@ export function HomeAppBar({
       >
         <IdentityBox style={identityStyle}>
           <Row justify="between" align="center" style={styles.bar}>
-            <Pressable
-              onPress={onAvatarPress}
-              style={styles.avatarBtn}
-              hitSlop={space[4]}
-              accessibilityRole="button"
-              accessibilityLabel="القائمة الجانبية"
-            >
-              <SarhAvatar
-                uri={avatarUri}
-                name={displayName}
-                size="sm"
-                accessibilityLabel={displayName}
-                style={[styles.avatar, colorStyles.avatar]}
-              />
-            </Pressable>
+            <View style={styles.avatarBtn}>
+              {leading ?? (
+                <Pressable
+                  onPress={onAvatarPress}
+                  style={styles.avatarPress}
+                  hitSlop={space[4]}
+                  accessibilityRole="button"
+                  accessibilityLabel="القائمة الجانبية"
+                >
+                  <SarhAvatar
+                    uri={avatarUri}
+                    name={displayName}
+                    size="sm"
+                    accessibilityLabel={displayName}
+                    style={[styles.avatar, colorStyles.avatar]}
+                  />
+                </Pressable>
+              )}
+            </View>
 
             {center ? (
               <View style={styles.centerSlot}>{center}</View>
@@ -126,14 +136,18 @@ export function HomeAppBar({
             )}
 
             <View style={styles.toolsCluster}>
-              <NotificationBellButton
-                bare
-                size={TOOL}
-                iconSize={ICON_SIZE}
-                style={styles.iconBtn}
-                iconColor={themeColors.textPrimary}
-                badgeBorderColor={themeColors.screenRoot}
-              />
+              {showNotifications ? (
+                <NotificationBellButton
+                  bare
+                  size={TOOL}
+                  iconSize={ICON_SIZE}
+                  style={styles.iconBtn}
+                  iconColor={themeColors.textPrimary}
+                  badgeBorderColor={themeColors.screenRoot}
+                />
+              ) : (
+                <View style={styles.iconBtn} />
+              )}
             </View>
           </Row>
         </IdentityBox>
@@ -219,6 +233,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
+  },
+  avatarPress: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatar: {
     width: AVATAR,
