@@ -352,6 +352,7 @@ export class ListingBoostService {
   /** Return active boosts for a given listing. */
   async getListingBoosts(listingId: string) {
     const boosts = await this.prisma.listingBoost.findMany({
+      take: 50,
       where: { listingId },
       orderBy: { createdAt: 'desc' },
       select: {

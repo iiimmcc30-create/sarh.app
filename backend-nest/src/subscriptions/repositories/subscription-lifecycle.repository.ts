@@ -55,6 +55,7 @@ export class SubscriptionLifecycleRepository {
 
   findExpirablePaidSubscriptions(now: Date) {
     return this.prisma.subscription.findMany({
+      take: 500,
       where: {
         planId: { not: 'free' },
         renewDate: { lt: now },
@@ -66,6 +67,7 @@ export class SubscriptionLifecycleRepository {
   findPaidSubscriptionsRenewingWithin(days: number, now: Date) {
     const end = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
     return this.prisma.subscription.findMany({
+      take: 500,
       where: {
         planId: { not: 'free' },
         renewDate: { gt: now, lte: end },

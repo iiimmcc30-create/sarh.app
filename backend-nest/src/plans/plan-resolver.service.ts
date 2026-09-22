@@ -26,6 +26,7 @@ export class PlanResolverService implements OnModuleInit {
 
   async refreshCache(): Promise<void> {
     const plans = await this.prisma.plan.findMany({
+      take: 100,
       where: { isActive: true },
       include: { features: true },
       orderBy: [{ audience: 'asc' }, { sortOrder: 'asc' }],

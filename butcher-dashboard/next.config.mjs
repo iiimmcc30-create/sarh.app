@@ -27,7 +27,7 @@ function resolveApiOrigin() {
   }
 }
 
-const apiUrl = resolveApiOrigin() ?? (process.env.VERCEL ? 'https://sarh-new4.onrender.com' : null);
+const apiUrl = resolveApiOrigin() ?? (process.env.VERCEL ? 'https://sarhsa.online' : null);
 
 const butcherBasePath = (process.env.NEXT_PUBLIC_BUTCHER_BASE_PATH || '').replace(
   /\/$/,

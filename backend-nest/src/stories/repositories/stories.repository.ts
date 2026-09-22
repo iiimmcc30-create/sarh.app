@@ -45,6 +45,7 @@ export class StoriesRepository {
 
   findActiveStories() {
     return this.prisma.story.findMany({
+      take: 100,
       where: { expiresAt: { gt: new Date() }, ...notDeleted },
       orderBy: { createdAt: 'asc' },
       include: STORY_DETAIL_INCLUDE,
@@ -53,6 +54,7 @@ export class StoriesRepository {
 
   findActiveStoriesForUser(userId: string) {
     return this.prisma.story.findMany({
+      take: 100,
       where: { userId, expiresAt: { gt: new Date() }, ...notDeleted },
       orderBy: { createdAt: 'asc' },
       include: STORY_DETAIL_INCLUDE,
@@ -122,6 +124,7 @@ export class StoriesRepository {
 
   findActiveButcherStories() {
     return this.prisma.butcherStory.findMany({
+      take: 100,
       where: { expiresAt: { gt: new Date() }, ...notDeleted },
       orderBy: { createdAt: 'desc' },
       include: { butcher: { select: BUTCHER_STORY_SELECT } },

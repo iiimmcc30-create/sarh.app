@@ -519,6 +519,7 @@ export class DaftraService {
   async listProductLinks(butcherId: string) {
     await this.assertButcherExists(butcherId);
     return this.prisma.butcherDaftraProduct.findMany({
+      take: 500,
       where: { butcherId },
       orderBy: { updatedAt: 'desc' },
     });
@@ -569,6 +570,7 @@ export class DaftraService {
   /** Butchers with a live Daftra link — used by the worker product poll. */
   async listConnectedButcherIds(): Promise<string[]> {
     const rows = await this.prisma.butcherDaftraIntegration.findMany({
+      take: 500,
       where: { status: 'CONNECTED' },
       select: { butcherId: true },
     });

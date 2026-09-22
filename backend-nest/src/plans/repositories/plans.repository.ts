@@ -8,6 +8,7 @@ export class PlansRepository {
 
   findAll(includeInactive = false) {
     return this.prisma.plan.findMany({
+      take: 100,
       where: includeInactive ? undefined : { isActive: true },
       include: { features: { orderBy: { key: 'asc' } } },
       orderBy: [{ audience: 'asc' }, { sortOrder: 'asc' }],

@@ -8,6 +8,7 @@ export class EditorialStoriesRepository {
 
   findPublic() {
     return this.prisma.editorialStory.findMany({
+      take: 100,
       where: {
         deletedAt: null,
         isActive: true,
@@ -19,6 +20,7 @@ export class EditorialStoriesRepository {
 
   findAll() {
     return this.prisma.editorialStory.findMany({
+      take: 200,
       where: { deletedAt: null },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     });

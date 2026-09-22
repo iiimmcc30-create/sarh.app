@@ -29,6 +29,7 @@ export class StoryReactionRepository {
     if (storyIds.length === 0)
       return Promise.resolve([] as { storyId: string; type: string }[]);
     return this.prisma.storyReaction.findMany({
+      take: Math.max(storyIds.length, 1),
       where: { userId, storyId: { in: storyIds } },
       select: { storyId: true, type: true },
     });

@@ -40,6 +40,18 @@ COPY --from=builder /app/assets ./assets
 COPY scripts/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
+# Local upload/log dirs are writable by the runtime user. Production media
+# goes to Cloudinary; these paths cover dev fallbacks and health probes.
+RUN addgroup -g 1001 -S nodejs \
+  && adduser -S -u 1001 -G nodejs sarh \
+  && mkdir -p /app/public/uploads /app/logs /tmp/npm-cache \
+  && chown -R sarh:nodejs /app /tmp/npm-cache
+
+ENV HOME=/tmp
+ENV npm_config_cache=/tmp/npm-cache
+
+USER sarh
+
 # Render assigns PORT at runtime. Do not hardcode a listen port here.
 EXPOSE 3001 3002
 

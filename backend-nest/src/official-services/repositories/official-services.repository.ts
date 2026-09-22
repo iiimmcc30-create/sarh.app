@@ -91,6 +91,7 @@ export class OfficialServicesRepository implements OnModuleInit {
 
   findActive() {
     return this.prisma.service.findMany({
+      take: 200,
       where: { active: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
@@ -98,6 +99,7 @@ export class OfficialServicesRepository implements OnModuleInit {
 
   findAll() {
     return this.prisma.service.findMany({
+      take: 200,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
@@ -173,6 +175,7 @@ export class OfficialServicesRepository implements OnModuleInit {
 
   listMewaPosts(authorId: string) {
     return this.prisma.post.findMany({
+      take: 100,
       where: { authorId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });

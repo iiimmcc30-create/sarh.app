@@ -48,6 +48,7 @@ export class FeedSuppliersRepository {
     };
 
     return this.prisma.feedSupplier.findMany({
+      take: 200,
       where,
       orderBy: [{ verified: 'desc' }, { nameAr: 'asc' }],
     });
@@ -62,6 +63,7 @@ export class FeedSuppliersRepository {
   findAllAdmin(q?: string) {
     const query = q?.trim();
     return this.prisma.feedSupplier.findMany({
+      take: 200,
       where: {
         deletedAt: null,
         ...(query

@@ -79,6 +79,7 @@ export class SupportRepository {
 
   findAllStaffUserIds() {
     return this.prisma.user.findMany({
+      take: 200,
       where: {
         role: { in: ['ADMIN', 'MODERATOR'] },
         isActive: true,
@@ -450,6 +451,7 @@ export class SupportRepository {
         : {}),
     };
     return this.prisma.faq.findMany({
+      take: 200,
       where,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
@@ -470,6 +472,7 @@ export class SupportRepository {
         : {}),
     };
     return this.prisma.faq.findMany({
+      take: 200,
       where,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });

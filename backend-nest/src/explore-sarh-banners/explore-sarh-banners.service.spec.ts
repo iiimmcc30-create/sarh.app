@@ -26,6 +26,7 @@ describe('ExploreSarhBannersService', () => {
     ]);
     await service.listPublic();
     expect(prisma.exploreSarhBanner.findMany).toHaveBeenCalledWith({
+      take: 50,
       where: { isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {

@@ -584,6 +584,7 @@ export class SupportTicketsService {
   async listAssignableStaff() {
     const staff = await this.repo.findAllStaffUserIds();
     const users = await this.prisma.user.findMany({
+      take: Math.max(staff.length, 1),
       where: { id: { in: staff.map((s) => s.id) } },
       select: {
         id: true,

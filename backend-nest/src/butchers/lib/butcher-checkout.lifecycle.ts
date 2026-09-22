@@ -127,6 +127,7 @@ export async function releaseCheckoutReservations(
   if (locked.status !== 'pending') return { released: false, quantities: 0 };
 
   const held = await tx.butcherCheckoutReservation.findMany({
+    take: 200,
     where: { checkoutId, status: 'held' },
     select: { id: true, productId: true, quantity: true },
   });
@@ -137,7 +138,7 @@ export async function releaseCheckoutReservations(
 
   if (held.length > 0) {
     await tx.butcherCheckoutReservation.updateMany({
-      where: { checkoutId, status: 'held' },
+      where: { id: { in: held.map((row) => row.id) }, status: 'held' },
       data: { status: 'released', releasedAt: new Date() },
     });
   }
@@ -282,6 +283,7 @@ export async function fulfillPaidCheckout(
   }
 
   const reservations = await tx.butcherCheckoutReservation.findMany({
+    take: 200,
     where: { checkoutId: locked.id, status: 'held', userId: params.userId },
     select: { id: true, productId: true, quantity: true },
   });

@@ -73,6 +73,7 @@ export class MessagesRepository {
 
   findParticipants(ids: string[]) {
     return this.prisma.user.findMany({
+      take: Math.max(ids.length, 1),
       where: { id: { in: ids } },
       select: PARTICIPANT_SELECT,
     });

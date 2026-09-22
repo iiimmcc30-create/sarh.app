@@ -247,6 +247,7 @@ export class ApplicationRepository {
 
   async findAllAdminUserIds(): Promise<string[]> {
     const admins = await this.prisma.user.findMany({
+      take: 200,
       where: { role: 'ADMIN', isActive: true },
       select: { id: true },
     });

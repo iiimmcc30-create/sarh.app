@@ -56,7 +56,6 @@ export function ButcherSessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshButcher = useCallback(async () => {
