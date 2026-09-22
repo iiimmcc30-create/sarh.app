@@ -7,13 +7,13 @@ import { MinistryServiceCard } from '@/components/feature/MinistryServiceCard';
 import { PostItem } from '@/components/feature/PostItem';
 import { EditorialStoryViewer } from '@/components/feature/EditorialStoryViewer';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { AppChromeLayer } from '@/components/navigation/AppChromeLayer';
-import { HomeAppBar, shellIdentityStackH } from '@/components/ui/HomeAppBar';
+import { NotificationBellButton } from '@/components/notifications/NotificationBellButton';
+import { HomeAppBar, SHELL_ICON_SIZE, SHELL_IDENTITY_COLLAPSE_H, SHELL_TOOL, shellIdentityStackH } from '@/components/ui/HomeAppBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
 import { openPostDetail } from '@/lib/openPost';
 import { safePush } from '@/lib/safeNavigate';
-import { AppText, SarhBackButton, SarhChipRow, SarhInput } from '@/design-system/components';
+import { AppText, SarhBackButton, SarhChipRow, SarhInput, SarhSurface } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAppChromeScroll } from '@/hooks/useAppChrome';
 import { useApp, useAppUser } from '@/hooks/useApp';
@@ -47,14 +47,17 @@ import {
   type SearchGroup,
   type SearchResultItem,
 } from '@/services/unifiedSearch';
-import { ds } from '@/constants/designSystem';
+import { ambientShadow, ds } from '@/constants/designSystem';
 import { functional, space } from '@/design-system';
 import { type ThemeColors } from '@/constants/theme';
+import { useCollapsibleSearchHeader } from '@/hooks/useCollapsibleSearchHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  BackHandler,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -91,19 +94,29 @@ type SearchScreenProps = {
   variant?: 'stack' | 'tab';
 };
 
+type SearchPhase = 'home' | 'mode' | 'results';
+
 export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const { gutter } = useLayout();
-  const styles = useThemedStyles(({ colors: c, scheme }) => createStyles(c, scheme));
+  const styles = useThemedStyles(({ colors: c, scheme: s }) => createStyles(c, s));
   const router = useRouter();
+  const navigation = useNavigation();
   const { q: qParam } = useLocalSearchParams<{ q?: string }>();
-  const { onChromeScroll } = useAppChromeScroll();
+  const { setTabBarForceHidden } = useAppChromeScroll();
   const { me } = useAppUser();
   const { likedPosts, bookmarkedPosts, toggleLike, toggleBookmark, deletePost } = useApp();
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const isTab = variant === 'tab';
   const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top) + 48);
+  const {
+    scrollY,
+    translateY,
+    identityOpacity,
+    paddingFor,
+    resetCollapse,
+  } = useCollapsibleSearchHeader(SHELL_IDENTITY_COLLAPSE_H);
   const [section, setSection] = useState<ExploreSection>('explore');
   const displayName = isAuthenticated
     ? me.arabicName || me.displayName || me.username || 'حسابي'
@@ -119,6 +132,10 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
   const initialQuery = typeof qParam === 'string' ? qParam : '';
   const [query, setQuery] = useState(initialQuery);
+  const [phase, setPhase] = useState<SearchPhase>(() => {
+    if (initialQuery.trim().length >= MIN_QUERY) return 'results';
+    return isTab ? 'home' : 'mode';
+  });
   const debouncedQuery = useDebouncedValue(query.trim(), 350);
   const [filter, setFilter] = useState<SearchFilter>('all');
   const [page, setPage] = useState(1);
@@ -268,7 +285,10 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
   useEffect(() => {
     const next = typeof qParam === 'string' ? qParam : '';
-    if (next && next !== queryRef.current) setQuery(next);
+    if (next && next !== queryRef.current) {
+      setQuery(next);
+      if (next.trim().length >= MIN_QUERY) setPhase('results');
+    }
   }, [qParam]);
 
   const runSearch = useCallback((nextPage: number, append: boolean) => {
@@ -338,9 +358,15 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   }, [debouncedQuery, filter]);
 
   useEffect(() => {
+    if (phase !== 'results') {
+      setLoading(false);
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
+      return;
+    }
     setPage(1);
     return runSearch(1, false);
-  }, [runSearch]);
+  }, [runSearch, phase]);
 
   const saveRecent = useCallback((searches: string[]) => {
     setRecentSearches(searches);
@@ -363,13 +389,106 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       if (trimmed.length < MIN_QUERY) return;
       setQuery(trimmed);
       addRecentSearch(trimmed);
+      setPhase('results');
+      resetCollapse();
       Keyboard.dismiss();
     },
-    [addRecentSearch],
+    [addRecentSearch, resetCollapse],
   );
+
+  const goHome = useCallback(() => {
+    abortRef.current?.abort();
+    setPhase('home');
+    setQuery('');
+    setSuggestions([]);
+    setGroups([]);
+    setError(null);
+    setFilter('all');
+    setPage(1);
+    setLoading(false);
+    setLoadingMore(false);
+    loadingMoreRef.current = false;
+    resetCollapse();
+    Keyboard.dismiss();
+  }, [resetCollapse]);
+
+  const enterMode = useCallback(() => {
+    setPhase((current) => (current === 'home' ? 'mode' : current));
+    resetCollapse();
+  }, [resetCollapse]);
+
+  const onSessionBack = useCallback(() => {
+    if (isTab) {
+      goHome();
+      return;
+    }
+    router.back();
+  }, [goHome, isTab, router]);
 
   const hasQuery = query.trim().length > 0;
   const canSearch = debouncedQuery.length >= MIN_QUERY;
+  const collapseEnabled = phase === 'home' || phase === 'results';
+  const hideTabBar = isTab && phase !== 'home';
+  const bodyPaddingTop = useMemo(
+    () => (collapseEnabled ? paddingFor(headerH) : headerH),
+    [collapseEnabled, headerH, paddingFor],
+  );
+  const visibleTabBarStyle = useMemo(
+    () => ({
+      position: 'absolute' as const,
+      backgroundColor: 'transparent',
+      borderTopWidth: 0,
+      elevation: 0,
+      height: ds.tabBar.height + Math.max(insets.bottom, ds.tabBar.marginBottom),
+    }),
+    [insets.bottom],
+  );
+
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+
+  useEffect(() => {
+    if (!isTab) return;
+    setTabBarForceHidden(hideTabBar);
+    navigation.setOptions({
+      tabBarStyle: hideTabBar
+        ? { display: 'none', height: 0, overflow: 'hidden' }
+        : visibleTabBarStyle,
+    });
+  }, [hideTabBar, isTab, navigation, setTabBarForceHidden, visibleTabBarStyle]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isTab) return undefined;
+      const hidden = phaseRef.current !== 'home';
+      setTabBarForceHidden(hidden);
+      navigation.setOptions({
+        tabBarStyle: hidden
+          ? { display: 'none', height: 0, overflow: 'hidden' }
+          : visibleTabBarStyle,
+      });
+      return () => {
+        setTabBarForceHidden(false);
+        navigation.setOptions({ tabBarStyle: visibleTabBarStyle });
+      };
+    }, [isTab, navigation, setTabBarForceHidden, visibleTabBarStyle]),
+  );
+
+  useEffect(() => {
+    if (!isTab) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (phase === 'home') return false;
+      goHome();
+      return true;
+    });
+    return () => sub.remove();
+  }, [goHome, isTab, phase]);
+
+  const onChromeLayout = useCallback((height: number) => {
+    const next = Math.round(height);
+    if (!next) return;
+    setHeaderH((prev) => (Math.abs(prev - next) < 1 ? prev : next));
+  }, []);
 
   const visibleGroups = useMemo(() => {
     if (filter === 'all') return groups;
@@ -402,15 +521,19 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     runSearch(next, true);
   }, [canSearch, hasMore, loading, runSearch]);
 
-  const onBodyScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (isTab) onChromeScroll(event);
-      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-      if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 180) {
-        loadMore();
-      }
-    },
-    [isTab, loadMore, onChromeScroll],
+  const onBodyScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: false,
+        listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+          if (phase !== 'results') return;
+          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+          if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 180) {
+            loadMore();
+          }
+        },
+      }),
+    [loadMore, phase, scrollY],
   );
 
   const retrySearch = useCallback(() => {
@@ -548,8 +671,11 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       value={query}
       onChangeText={setQuery}
       placeholder="بحث"
-      autoFocus={!isTab}
+      autoFocus={phase === 'mode'}
       returnKeyType="search"
+      onFocus={() => {
+        if (phase === 'home') enterMode();
+      }}
       onSubmitEditing={() => {
         Keyboard.dismiss();
         applyQuery(query);
@@ -582,6 +708,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
             style={styles.sectionTab}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
+            accessibilityLabel={item.label}
           >
             <AppText variant="body" color={active ? 'textPrimary' : 'textMuted'} numberOfLines={1}>
               {item.label}
@@ -617,6 +744,60 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   );
 
   const chromeTabs = hasQuery ? resultTabs : exploreTabs;
+
+  const modeIdle = (
+    <Stack gap="md" style={{ paddingHorizontal: gutter }}>
+      {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
+        <AppText variant="caption" color="textMuted" align="center">
+          اكتب {MIN_QUERY} أحرف على الأقل للبحث
+        </AppText>
+      ) : null}
+
+      {recentSearches.length > 0 ? (
+        <Stack gap="sm">
+          <Row justify="between" align="center">
+            <AppText variant="heading3">البحث الأخير</AppText>
+            <Pressable onPress={() => saveRecent([])} accessibilityRole="button" accessibilityLabel="مسح الكل">
+              <AppText variant="caption" color="primary">مسح الكل</AppText>
+            </Pressable>
+          </Row>
+          {recentSearches.map((term) => (
+            <Pressable key={term} onPress={() => applyQuery(term)}>
+              <Row gap="md" align="center" style={styles.recentRow}>
+                <AppIcon name="time-outline" size={16} color={colors.textMuted} />
+                <AppText variant="body" color="textSecondary" style={styles.flex}>
+                  {term}
+                </AppText>
+                <Pressable
+                  onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="حذف"
+                >
+                  <AppIcon name="close" size={14} color={colors.textMuted} />
+                </Pressable>
+              </Row>
+            </Pressable>
+          ))}
+        </Stack>
+      ) : null}
+
+      {canSearch && suggestions.length > 0 ? (
+        <Stack gap="none">
+          {suggestions.map((s) => (
+            <Pressable key={`${s.kind}-${s.text}`} onPress={() => applyQuery(s.text)}>
+              <Row gap="sm" align="center" style={styles.suggestRow}>
+                <AppIcon name="search" size={14} color={colors.textMuted} />
+                <AppText variant="body" color="textSecondary" style={styles.flex}>
+                  {s.text}
+                </AppText>
+              </Row>
+            </Pressable>
+          ))}
+        </Stack>
+      ) : null}
+    </Stack>
+  );
 
   const trendingBlock = (
     <Stack gap="md">
@@ -911,39 +1092,95 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const resultItems =
     filter === 'all' ? latestItems : visibleGroups.flatMap((group) => group.items);
 
+  const chromeTop = isTab ? insets.top : 0;
+  const collapseStyle = { transform: [{ translateY }] };
+  const identityStyle = { opacity: identityOpacity };
+
+  const sessionBack = (
+    <SarhBackButton
+      onPress={onSessionBack}
+      color={colors.textPrimary}
+      chrome="ghost"
+      accessibilityLabel="رجوع"
+    />
+  );
+
+  const sessionBell = (
+    <NotificationBellButton
+      bare
+      size={SHELL_TOOL}
+      iconSize={SHELL_ICON_SIZE}
+      style={styles.iconBtn}
+      iconColor={colors.textPrimary}
+      badgeBorderColor={colors.screenRoot}
+    />
+  );
+
+  const homeChrome = (
+    <HomeAppBar
+      displayName={displayName}
+      avatarUri={me.avatar}
+      onAvatarPress={openSidebar}
+      center={searchField}
+      collapseStyle={collapseStyle}
+      identityStyle={identityStyle}
+    >
+      <View style={styles.searchSlot}>{chromeTabs}</View>
+    </HomeAppBar>
+  );
+
+  const modeChrome = (
+    <SarhSurface tone="background" pointerEvents="box-none" style={styles.sessionShell}>
+      <View style={{ paddingTop: chromeTop, paddingHorizontal: gutter }}>
+        <Row gap="sm" align="center" style={styles.searchBar}>
+          {sessionBack}
+          {searchField}
+        </Row>
+      </View>
+    </SarhSurface>
+  );
+
+  const resultsChrome = (
+    <SarhSurface tone="background" pointerEvents="box-none" style={styles.sessionShell}>
+      <View pointerEvents="none" style={[styles.statusFill, { height: chromeTop }]} />
+      <Animated.View pointerEvents="box-none" style={[styles.resultsInner, { paddingTop: chromeTop + space[8], paddingHorizontal: gutter }, collapseStyle]}>
+        <Animated.View style={identityStyle}>
+          <Row gap="sm" align="center" style={styles.resultsIdentity}>
+            {sessionBack}
+            {searchField}
+            {sessionBell}
+          </Row>
+        </Animated.View>
+        <View style={styles.searchSlot}>{resultTabs}</View>
+      </Animated.View>
+    </SarhSurface>
+  );
+
+  const overlayChrome = phase === 'home' ? homeChrome : phase === 'mode' ? modeChrome : resultsChrome;
+
   return (
     <Screen edges={isTab ? [] : ['top', 'bottom']} keyboard>
-      {isTab ? (
-        <AppChromeLayer onHeight={setHeaderH}>
-          <HomeAppBar
-            displayName={displayName}
-            avatarUri={me.avatar}
-            onAvatarPress={openSidebar}
-            center={searchField}
-          >
-            <View style={styles.searchSlot}>{chromeTabs}</View>
-          </HomeAppBar>
-        </AppChromeLayer>
-      ) : (
-        <View style={[styles.stackChrome, { paddingHorizontal: gutter }]}>
-          <Row gap="sm" align="center" style={styles.searchBar}>
-            <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} chrome="ghost" />
-            {searchField}
-          </Row>
-          {chromeTabs}
-        </View>
-      )}
+      <View
+        pointerEvents="box-none"
+        onLayout={(event) => onChromeLayout(event.nativeEvent.layout.height)}
+        style={[styles.chromeLayer, ambientShadow(scheme, 'soft')]}
+      >
+        {overlayChrome}
+      </View>
 
+      <Animated.View style={[styles.bodyWrap, { paddingTop: bodyPaddingTop }]}>
       <ScreenBody
-        padBottom={isTab ? 'md' : 'xxxl'}
+        padBottom={hideTabBar || !isTab ? 'xxxl' : 'md'}
         gutter={false}
-        bottomInset={isTab ? 'tabBar' : 'none'}
+        bottomInset={isTab && phase === 'home' ? 'tabBar' : 'none'}
+        bindChromeScroll={false}
         onScroll={onBodyScroll}
         scrollEventThrottle={16}
-        style={isTab ? { paddingTop: headerH } : undefined}
       >
-        {!hasQuery ? (
+        {phase === 'home' ? (
           idleForSection
+        ) : phase === 'mode' ? (
+          modeIdle
         ) : (
           <Stack gap="md">
             {query.trim().length > 0 && query.trim().length < MIN_QUERY ? (
@@ -1039,6 +1276,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
           </Stack>
         )}
       </ScreenBody>
+      </Animated.View>
 
       {viewerIndex != null ? (
         <EditorialStoryViewer
@@ -1054,6 +1292,44 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   return StyleSheet.create({
+    chromeLayer: {
+      position: 'absolute',
+      top: 0,
+      start: 0,
+      end: 0,
+      zIndex: 2,
+    },
+    bodyWrap: {
+      flex: 1,
+    },
+    sessionShell: {
+      backgroundColor: tokens.glass,
+      borderBottomColor: tokens.glassBorder,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    statusFill: {
+      position: 'absolute',
+      top: 0,
+      start: 0,
+      end: 0,
+      zIndex: 2,
+      backgroundColor: tokens.glass,
+    },
+    resultsInner: {
+      width: '100%',
+      paddingBottom: space[8],
+    },
+    resultsIdentity: {
+      width: '100%',
+      minHeight: space[40],
+    },
+    iconBtn: {
+      width: space[40],
+      height: space[40],
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+    },
     searchSlot: {
       paddingTop: 8,
     },
@@ -1063,7 +1339,7 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     searchBar: {
       paddingTop: 4,
       paddingBottom: 8,
-      backgroundColor: colors.screenRoot,
+      backgroundColor: 'transparent',
     },
     inputFlex: { flex: 1 },
     flex: { flex: 1 },

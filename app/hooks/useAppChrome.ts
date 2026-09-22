@@ -28,6 +28,9 @@ type ChromeContextValue = {
   progress: Animated.Value;
   visible: boolean;
   setVisible: (visible: boolean) => void;
+  /** Hide the tab bar and drop its reserved height. Not driven by scroll. */
+  tabBarForceHidden: boolean;
+  setTabBarForceHidden: (hidden: boolean) => void;
 };
 
 const ChromeContext = createContext<ChromeContextValue | null>(null);
@@ -39,6 +42,7 @@ export function AppChromeProvider({ children }: { children: ReactNode }) {
   const hiddenRef = useRef(false);
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
   const [visible, setVisibleState] = useState(true);
+  const [tabBarForceHidden, setTabBarForceHidden] = useState(false);
 
   const setVisible = useCallback(
     (next: boolean) => {
@@ -58,8 +62,14 @@ export function AppChromeProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ progress, visible, setVisible }),
-    [progress, visible, setVisible],
+    () => ({
+      progress,
+      visible,
+      setVisible,
+      tabBarForceHidden,
+      setTabBarForceHidden,
+    }),
+    [progress, visible, setVisible, tabBarForceHidden, setTabBarForceHidden],
   );
 
   return createElement(ChromeContext.Provider, { value }, children);
@@ -116,6 +126,8 @@ export function useAppChromeScroll() {
     chromeProgress: ctx?.progress ?? fallbackProgress,
     chromeVisible: ctx?.visible ?? true,
     setChromeVisible: ctx?.setVisible ?? noopSetVisible,
+    tabBarForceHidden: ctx?.tabBarForceHidden ?? false,
+    setTabBarForceHidden: ctx?.setTabBarForceHidden ?? noopSetHidden,
     onChromeScroll,
   };
 }
@@ -135,3 +147,4 @@ export function useBindChromeScroll(
 }
 
 function noopSetVisible(_visible: boolean) {}
+function noopSetHidden(_hidden: boolean) {}

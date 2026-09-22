@@ -40,7 +40,8 @@ const TABS: TabDef[] = [
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, scheme } = useTheme();
-  const { chromeProgress, chromeVisible, setChromeVisible } = useAppChromeScroll();
+  const { chromeProgress, chromeVisible, setChromeVisible, tabBarForceHidden } =
+    useAppChromeScroll();
   const bottomPad = Math.max(insets.bottom, ds.tabBar.marginBottom);
   const tokens = scheme === 'light' ? ds.light : ds.dark;
   const activeTint = colors.electricBright;
@@ -106,6 +107,10 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
     inputRange: [0, 1],
     outputRange: [hideDistance, 0],
   });
+
+  if (tabBarForceHidden) {
+    return null;
+  }
 
   return (
     <Animated.View
