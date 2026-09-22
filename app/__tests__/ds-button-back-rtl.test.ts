@@ -25,6 +25,12 @@ describe('Back control uses a single RTL icon helper', () => {
     expect(back).not.toContain('row-reverse');
   });
 
+  it('uses the RTL arrow glyph, not a chevron, for back', () => {
+    const rtl = src('lib/rtl.ts');
+    expect(rtl).toContain("isAppRtl() ? 'arrow-forward' : 'arrow-back'");
+    expect(rtl).not.toContain("isAppRtl() ? 'angle-right' : 'angle-left'");
+  });
+
   it('ScreenHeader uses the shared back button', () => {
     const header = src('components/layout/ScreenHeader.tsx');
     expect(header).toContain('SarhBackButton');
