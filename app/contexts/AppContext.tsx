@@ -22,6 +22,7 @@ import { needsUpload } from '@/services/mediaUri';
 import { uploadImageFromUri } from '@/services/upload';
 import { resolveCurrentUserId } from '@/lib/currentUser';
 import { listingThumbUri, listingVideoUrl } from '@/lib/listingMedia';
+import { isManagedListing, managedSeller } from '@/lib/managedListing';
 import { resolveMediaUrl } from '@/services/media';
 import { prefetchRemoteImages } from '@/lib/prefetchRemoteImages';
 import {
@@ -257,7 +258,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ),
       description: l.description,
       arabicDescription: l.arabicDescription,
-      seller: mapBackendUser(l.seller),
+      origin: l.origin === 'ADMIN_MANAGED' ? 'ADMIN_MANAGED' : 'USER',
+      displayUsername: l.displayUsername || undefined,
+      displaySellerName: l.displaySellerName || undefined,
+      displayPhone: l.displayPhone || undefined,
+      displayRegion: l.displayRegion || undefined,
+      seller: isManagedListing(l)
+        ? managedSeller(l)
+        : mapBackendUser(l.seller),
       featured: l.featured ?? false,
       pinned: l.pinned ?? false,
       postedAt: new Date(l.createdAt).toLocaleDateString('ar-SA'),

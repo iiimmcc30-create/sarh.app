@@ -287,6 +287,106 @@ export class AdminRepository {
     });
   }
 
+  findListingOrigin(id: string) {
+    return this.prisma.listing.findFirst({
+      where: { id, ...notDeleted },
+      select: {
+        id: true,
+        origin: true,
+        sellerId: true,
+        displayUsername: true,
+        displaySellerName: true,
+        displayPhone: true,
+        displayRegion: true,
+        title: true,
+        arabicTitle: true,
+        description: true,
+        arabicDescription: true,
+        price: true,
+        category: true,
+        images: true,
+        videoUrl: true,
+        thumbnailUrl: true,
+        contactPhone: true,
+        location: true,
+        arabicLocation: true,
+      },
+    });
+  }
+
+  countUsers() {
+    return this.prisma.user.count();
+  }
+
+  createManagedListing(
+    data: Prisma.ListingUncheckedCreateInput,
+    actorId: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.create({
+        data,
+        include: { seller: { select: AUTHOR_SELECT } },
+      });
+      await tx.activity.create({
+        data: {
+          actorId,
+          type: 'ADMIN_MANAGED_LISTING_CREATED',
+          entityId: listing.id,
+          entityType: 'listing',
+        },
+      });
+      return listing;
+    });
+  }
+
+  updateManagedListing(
+    id: string,
+    data: Prisma.ListingUncheckedUpdateInput,
+    actorId: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.update({
+        where: { id },
+        data,
+        include: { seller: { select: AUTHOR_SELECT } },
+      });
+      await tx.activity.create({
+        data: {
+          actorId,
+          type: 'ADMIN_MANAGED_LISTING_UPDATED',
+          entityId: listing.id,
+          entityType: 'listing',
+        },
+      });
+      return listing;
+    });
+  }
+
+  async softDeleteListingRecorded(
+    id: string,
+    actorId: string,
+    managed: boolean,
+  ) {
+    const listing = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.listing.update({
+        where: { id },
+        data: { ...softDeleteFields(), status: 'suspended' },
+      });
+      if (managed) {
+        await tx.activity.create({
+          data: {
+            actorId,
+            type: 'ADMIN_MANAGED_LISTING_DELETED',
+            entityId: id,
+            entityType: 'listing',
+          },
+        });
+      }
+      return updated;
+    });
+    return listing;
+  }
+
   softDeleteListing(id: string) {
     return this.prisma.listing.update({
       where: { id },

@@ -89,6 +89,32 @@ export async function updateListing(id: string, data: Record<string, unknown>) {
   return unwrap(res);
 }
 
+export type ManagedListingInput = {
+  displayUsername: string;
+  displaySellerName: string;
+  displayPhone: string;
+  displayRegion: string;
+  category: string;
+  title: string;
+  description: string;
+  price: number;
+  images: string[];
+  videoUrl?: string | null;
+};
+
+export async function createManagedListing(data: ManagedListingInput) {
+  const res = await apiClient.post('/admin/listings/managed', data);
+  return unwrap(res);
+}
+
+export async function updateManagedListing(
+  id: string,
+  data: Partial<ManagedListingInput>,
+) {
+  const res = await apiClient.patch(`/admin/listings/${id}/managed`, data);
+  return unwrap(res);
+}
+
 export async function fetchListingFeeCompliance() {
   const res = await apiClient.get("/admin/listing-fee-compliance");
   return unwrap<{

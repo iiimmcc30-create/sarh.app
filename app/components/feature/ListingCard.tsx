@@ -21,6 +21,7 @@ import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { listingHasVideo, listingPhotoUris, listingThumbUri } from '@/lib/listingMedia';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
+import { isManagedListing, listingAdvertiserName } from '@/lib/managedListing';
 import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIcons';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
@@ -93,9 +94,9 @@ function ListingCardInner({
   const title = listing.arabicTitle || listing.title;
   const location = listing.arabicLocation || listing.location;
   const seller = listing.seller;
-  const sellerName =
-    seller?.arabicName || seller?.displayName || seller?.username || 'بائع';
-  const sellerId = seller?.id;
+  const managed = isManagedListing(listing);
+  const sellerName = listingAdvertiserName(listing);
+  const sellerId = managed ? undefined : seller?.id;
   const photoCount = listingPhotoUris(listing).length;
 
   if (variant === 'list') {

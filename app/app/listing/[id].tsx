@@ -38,6 +38,7 @@ import { ListingFeePaymentSheet } from '@/components/listing/ListingFeePaymentSh
 import { ListingDeleteDialog } from '@/components/listing/ListingDeleteDialog';
 import { ListingVideoPlayer } from '@/components/listing/ListingVideoPlayer';
 import { listingPhotoUris, listingVideoUrl } from '@/lib/listingMedia';
+import { isManagedListing, managedSeller } from '@/lib/managedListing';
 import { isListingFavorited, toggleListingFavorite } from '@/lib/listingFavorite';
 import { resolveMediaUrl } from '@/services/media';
 import { navigateToCreateListing } from '@/lib/navigateToCreateListing';
@@ -148,7 +149,14 @@ export default function ListingDetailScreen() {
         ),
         description: raw.description,
         arabicDescription: raw.arabicDescription,
-        seller: {
+        origin: raw.origin === 'ADMIN_MANAGED' ? 'ADMIN_MANAGED' : 'USER',
+        displayUsername: raw.displayUsername || undefined,
+        displaySellerName: raw.displaySellerName || undefined,
+        displayPhone: raw.displayPhone || undefined,
+        displayRegion: raw.displayRegion || undefined,
+        seller: isManagedListing(raw)
+          ? managedSeller(raw)
+          : {
           id: raw.seller?.id,
           username: raw.seller?.username || '',
           displayName: raw.seller?.displayName || '',
@@ -207,7 +215,7 @@ export default function ListingDetailScreen() {
   }, [refreshSellerFollowState]);
 
   const openSellerChat = (draftMessage?: string) => {
-    if (!listing) return;
+    if (!listing || isManagedListing(listing) || !listing.seller.id) return;
     if (!isAuthenticated) {
       Alert.alert('تسجيل الدخول', 'يجب تسجيل الدخول لمراسلة البائع');
       return;
@@ -520,6 +528,19 @@ export default function ListingDetailScreen() {
           </Row>
 
           {!isOwner ? (
+            isManagedListing(listing) ? (
+              <View style={styles.sellerRow}>
+                <AppText variant="cardTitle" color="textSecondary" numberOfLines={1}>
+                  {listing.displayUsername || listing.seller.username}
+                </AppText>
+                <AppText variant="body" color="textMuted" numberOfLines={1}>
+                  {listing.displaySellerName || listing.seller.arabicName}
+                  {listing.displayRegion || listing.arabicLocation
+                    ? ` · ${listing.displayRegion || listing.arabicLocation}`
+                    : ''}
+                </AppText>
+              </View>
+            ) : (
             <Row gap="sm" align="center" justify="between" style={styles.sellerRow}>
               <Pressable
                 onPress={() => openUserProfile(router, listing.seller.id)}
@@ -549,6 +570,7 @@ export default function ListingDetailScreen() {
                 loading={followLoading || (isFollowing === null && isAuthenticated)}
               />
             </Row>
+            )
           ) : null}
 
           {listing.contactPhone ? (
@@ -735,6 +757,7 @@ export default function ListingDetailScreen() {
         onMessage={() => openSellerChat()}
         onCall={() => void openSellerCall()}
         canCall={Boolean(listing?.contactPhone)}
+        allowMessage={!listing || !isManagedListing(listing)}
       />
 
       {listing ? (

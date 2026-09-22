@@ -173,8 +173,36 @@ export class AdminController {
   @RateLimit('api')
   @Delete('listings/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteListing(@Param('id') id: string) {
-    return successResponse(await this.admin.deleteListing(id));
+  async deleteListing(
+    @Param('id') id: string,
+    @CurrentUser() actor: JwtPayload,
+  ) {
+    return successResponse(await this.admin.deleteListing(id, actor));
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Post('listings/managed')
+  @HttpCode(HttpStatus.OK)
+  async createManagedListing(
+    @CurrentUser() actor: JwtPayload,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return successResponse(await this.admin.createManagedListing(actor, body));
+  }
+
+  @Roles(...STAFF)
+  @RateLimit('api')
+  @Patch('listings/:id/managed')
+  @HttpCode(HttpStatus.OK)
+  async updateManagedListing(
+    @CurrentUser() actor: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return successResponse(
+      await this.admin.updateManagedListing(actor, id, body),
+    );
   }
 
   // ─── Reports / Tickets ──────────────────────────────────────────────────────

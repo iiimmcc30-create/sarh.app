@@ -4,6 +4,7 @@ import { ensureApiReachable } from './api';
 import { fetchPublicFeed } from './fetchPublicFeed';
 import { shouldReuseFreshResult } from './requestCoordination';
 import { countries, type Listing, type Country } from './types';
+import { managedSeller, isManagedListing } from '@/lib/managedListing';
 
 type BackendListing = {
   id: string;
@@ -46,7 +47,12 @@ type BackendListing = {
   views?: number;
   editCount?: number;
   createdAt: string;
-  seller: {
+  origin?: 'USER' | 'ADMIN_MANAGED';
+  displayUsername?: string | null;
+  displaySellerName?: string | null;
+  displayPhone?: string | null;
+  displayRegion?: string | null;
+  seller?: {
     id: string;
     username: string;
     displayName?: string;
@@ -58,8 +64,9 @@ type BackendListing = {
 };
 
 function mapListing(l: BackendListing): Listing {
+  const managed = isManagedListing(l);
   const sellerCountry: Country =
-    l.seller.country && l.seller.country in countries
+    !managed && l.seller?.country && l.seller.country in countries
       ? (l.seller.country as Country)
       : 'SA';
 
@@ -100,13 +107,20 @@ function mapListing(l: BackendListing): Listing {
     thumbnailUrl: resolveMediaUrl(l.thumbnailUrl?.trim() || undefined),
     description: l.description,
     arabicDescription: l.arabicDescription,
-    seller: {
-      id: l.seller.id,
-      username: l.seller.username,
-      displayName: l.seller.displayName || '',
-      arabicName: l.seller.arabicName || '',
-      avatar: l.seller.avatar,
-      verified: l.seller.verified ?? false,
+    origin: l.origin === 'ADMIN_MANAGED' ? 'ADMIN_MANAGED' : 'USER',
+    displayUsername: l.displayUsername ?? undefined,
+    displaySellerName: l.displaySellerName ?? undefined,
+    displayPhone: l.displayPhone ?? undefined,
+    displayRegion: l.displayRegion ?? undefined,
+    seller: managed
+      ? managedSeller(l)
+      : {
+      id: l.seller!.id,
+      username: l.seller!.username,
+      displayName: l.seller!.displayName || '',
+      arabicName: l.seller!.arabicName || '',
+      avatar: l.seller!.avatar,
+      verified: l.seller!.verified ?? false,
       followers: 0,
       following: 0,
       rating: null,

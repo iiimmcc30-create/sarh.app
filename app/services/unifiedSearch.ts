@@ -4,6 +4,7 @@ import { resolveMediaUrl } from './media';
 import { mapPostFromApi } from './posts';
 import type { Listing, Country, Post } from './types';
 import { countries } from './types';
+import { isManagedListing, managedSeller } from '@/lib/managedListing';
 import { dedupeInflight, shouldReuseFreshResult } from './requestCoordination';
 
 export type SearchContentType =
@@ -115,7 +116,10 @@ type BackendListing = {
   promoted?: boolean;
   promotionWeight?: number;
   createdAt: string;
-  seller: {
+  origin?: 'USER' | 'ADMIN_MANAGED';
+  displayUsername?: string | null;
+  displaySellerName?: string | null;
+  seller?: {
     id: string;
     username: string;
     displayName?: string;
@@ -132,8 +136,9 @@ function mapListingFromSearch(data: Record<string, unknown>): Listing | null {
   const l = data as unknown as BackendListing;
   if (!l?.id) return null;
 
+  const managed = isManagedListing(l);
   const sellerCountry: Country =
-    l.seller?.country && l.seller.country in countries
+    !managed && l.seller?.country && l.seller.country in countries
       ? (l.seller.country as Country)
       : 'SA';
 
@@ -169,13 +174,18 @@ function mapListingFromSearch(data: Record<string, unknown>): Listing | null {
     thumbnailUrl: resolveMediaUrl(l.thumbnailUrl?.trim() || undefined),
     description: l.description,
     arabicDescription: l.arabicDescription,
-    seller: {
-      id: l.seller.id,
-      username: l.seller.username,
-      displayName: l.seller.displayName || '',
-      arabicName: l.seller.arabicName || '',
-      avatar: l.seller.avatar,
-      verified: l.seller.verified ?? false,
+    origin: managed ? 'ADMIN_MANAGED' : 'USER',
+    displayUsername: l.displayUsername ?? undefined,
+    displaySellerName: l.displaySellerName ?? undefined,
+    seller: managed
+      ? managedSeller(l)
+      : {
+      id: l.seller!.id,
+      username: l.seller!.username,
+      displayName: l.seller!.displayName || '',
+      arabicName: l.seller!.arabicName || '',
+      avatar: l.seller!.avatar,
+      verified: l.seller!.verified ?? false,
       followers: 0,
       following: 0,
       rating: null,

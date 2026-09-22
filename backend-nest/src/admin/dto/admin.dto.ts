@@ -68,6 +68,51 @@ export const updateListingSchema = z.object({
   status: z.enum(['active', 'sold', 'expired', 'pending_fee', 'suspended']),
 });
 
+const managedPhone = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9]{8,15}$/, 'رقم جوال غير صالح');
+
+export const managedListingFieldsSchema = z
+  .object({
+    displayUsername: z
+      .string()
+      .trim()
+      .min(3)
+      .max(32)
+      .regex(/^[A-Za-z0-9_]+$/, 'اسم العرض: أحرف إنجليزية أو أرقام أو _'),
+    displaySellerName: z.string().trim().min(2).max(80),
+    displayPhone: managedPhone,
+    displayRegion: z.string().trim().min(2).max(80),
+    category: z.enum([
+      'camels',
+      'sheep',
+      'goats',
+      'cows',
+      'horses',
+      'birds',
+      'feed',
+      'equipment',
+      'livestock',
+      'transport',
+      'slaughter',
+    ]),
+    title: z.string().trim().min(3).max(120),
+    description: z.string().trim().min(3).max(4000),
+    price: z.number().positive().max(100_000_000),
+    images: z.array(z.string().url()).min(1).max(8),
+    videoUrl: z.string().url().nullable().optional(),
+    thumbnailUrl: z.string().url().nullable().optional(),
+  })
+  .strict();
+
+export const createManagedListingSchema = managedListingFieldsSchema;
+
+export const updateManagedListingSchema = managedListingFieldsSchema
+  .partial()
+  .strict()
+  .refine((d) => Object.keys(d).length > 0, { message: 'empty_update' });
+
 export const updateReportSchema = z
   .object({
     status: z

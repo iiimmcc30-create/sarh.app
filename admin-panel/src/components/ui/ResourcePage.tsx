@@ -32,6 +32,8 @@ type Props<T extends { id: string }> = {
   status?: string;
   /** Optional category filter forwarded into fetchPage. */
   category?: string;
+  /** Extra controls beside search (for example create actions). */
+  toolbar?: React.ReactNode;
 };
 
 export function ResourcePage<T extends { id: string }>({
@@ -41,6 +43,7 @@ export function ResourcePage<T extends { id: string }>({
   fetchPage,
   actions,
   filters,
+  toolbar,
   status,
   category,
 }: Props<T>) {
@@ -72,7 +75,8 @@ export function ResourcePage<T extends { id: string }>({
   return (
     <div>
       <PageHeader title={title} description={description} />
-      <div className="mb-4 flex flex-wrap gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        {toolbar}
         <input
           value={search}
           onChange={(e) => {

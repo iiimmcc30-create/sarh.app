@@ -4,9 +4,12 @@ import bcrypt from 'bcryptjs';
 import { AdminRepository } from './repositories/admin.repository';
 import { JwtTokenService } from '../auth/services/jwt-token.service';
 import { RedisSessionService } from '../redis/services/redis-session.service';
+import { RedisCacheService } from '../redis/services/redis-cache.service';
 import { AuthRepository } from '../auth/repositories/auth.repository';
 import { LoggerService } from '../common/services/logger.service';
 import { throwApi, ApiException } from '../common/exceptions/api.exception';
+import { managedContactFields } from './lib/managed-listing';
+import type { ListingCategory } from '@prisma/client';
 import { authorizeCronCleanup } from './lib/cron-auth';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import type { AdminLoginDto, PaginationQueryDto } from './dto/admin.dto';
@@ -16,6 +19,8 @@ import {
   paginationQuerySchema,
   updateButcherSchema,
   updateListingSchema,
+  createManagedListingSchema,
+  updateManagedListingSchema,
   updatePostSchema,
   updateReportSchema,
   updateSectionSchema,
@@ -54,6 +59,7 @@ export class AdminService {
     private readonly sessions: RedisSessionService,
     private readonly authRepo: AuthRepository,
     private readonly logger: LoggerService,
+    private readonly cache: RedisCacheService,
   ) {}
 
   private parsePagination(query: Record<string, unknown>): PaginationQueryDto {
@@ -258,9 +264,124 @@ export class AdminService {
       .then((listing) => ({ listing }));
   }
 
-  async deleteListing(id: string) {
-    await this.repo.softDeleteListing(id);
+  async deleteListing(id: string, actor?: JwtPayload) {
+    const existing = await this.repo.findListingOrigin(id);
+    if (!existing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+    const managed = existing.origin === 'ADMIN_MANAGED';
+    if (actor) {
+      await this.repo.softDeleteListingRecorded(id, actor.userId, managed);
+    } else {
+      await this.repo.softDeleteListing(id);
+    }
+    await this.invalidateListingSurfaces(id);
     return { deleted: true, archived: true };
+  }
+
+  async createManagedListing(actor: JwtPayload, body: Record<string, unknown>) {
+    const parsed = createManagedListingSchema.safeParse(body);
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+    const input = parsed.data;
+    const identity = managedContactFields(input);
+    const listing = await this.repo.createManagedListing(
+      {
+        ...identity,
+        title: input.title,
+        arabicTitle: input.title,
+        description: input.description,
+        arabicDescription: input.description,
+        price: input.price,
+        currency: 'SAR',
+        category: input.category as ListingCategory,
+        country: 'SA',
+        images: input.images,
+        videoUrl: input.videoUrl ?? null,
+        thumbnailUrl: input.thumbnailUrl ?? null,
+        status: 'active',
+        quantity: 1,
+      },
+      actor.userId,
+    );
+    await this.invalidateListingSurfaces(listing.id);
+    return { listing };
+  }
+
+  async updateManagedListing(
+    actor: JwtPayload,
+    id: string,
+    body: Record<string, unknown>,
+  ) {
+    const parsed = updateManagedListingSchema.safeParse(body);
+    if (!parsed.success) {
+      throwApi(
+        400,
+        'validation_error',
+        'بيانات غير صحيحة',
+        parsed.error.flatten(),
+      );
+    }
+    const existing = await this.repo.findListingOrigin(id);
+    if (!existing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+    if (existing.origin !== 'ADMIN_MANAGED' || existing.sellerId) {
+      throwApi(
+        400,
+        'not_managed_listing',
+        'لا يمكن تحويل إعلان مستخدم إلى إعلان مُدار',
+      );
+    }
+    const input = parsed.data;
+    const displayUsername =
+      input.displayUsername ?? existing.displayUsername ?? '';
+    const displaySellerName =
+      input.displaySellerName ?? existing.displaySellerName ?? '';
+    const displayPhone = input.displayPhone ?? existing.displayPhone ?? '';
+    const displayRegion = input.displayRegion ?? existing.displayRegion ?? '';
+    const identity = managedContactFields({
+      displayUsername,
+      displaySellerName,
+      displayPhone,
+      displayRegion,
+    });
+    const title = input.title ?? existing.arabicTitle;
+    const description = input.description ?? existing.arabicDescription;
+    const listing = await this.repo.updateManagedListing(
+      id,
+      {
+        ...identity,
+        title,
+        arabicTitle: title,
+        description,
+        arabicDescription: description,
+        price: input.price ?? existing.price,
+        category: (input.category ?? existing.category) as ListingCategory,
+        images: input.images ?? existing.images,
+        videoUrl:
+          input.videoUrl === undefined ? existing.videoUrl : input.videoUrl,
+        thumbnailUrl:
+          input.thumbnailUrl === undefined
+            ? existing.thumbnailUrl
+            : input.thumbnailUrl,
+      },
+      actor.userId,
+    );
+    await this.invalidateListingSurfaces(id);
+    return { listing };
+  }
+
+  private async invalidateListingSurfaces(listingId?: string) {
+    await this.cache.delPattern('listings:v2:*').catch(() => 0);
+    await this.cache.delPattern('listings:v3:*').catch(() => 0);
+    await this.cache.delPattern('search:explore:*').catch(() => 0);
+    await this.cache.delPattern('search:unified:*').catch(() => 0);
+    if (listingId) {
+      await this.cache.del(`listing:${listingId}`).catch(() => 0);
+    }
   }
 
   listReports(query: Record<string, unknown>) {
