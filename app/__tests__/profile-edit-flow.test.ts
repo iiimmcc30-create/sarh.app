@@ -22,6 +22,8 @@ describe('profile edit redesign', () => {
     expect(hub).toContain('label="رابط الملف الشخصي"');
     expect(hub).toContain('label="السيرة الذاتية"');
     expect(hub).toContain('معلومات أساسية');
+    expect(hub).toContain('inline');
+    expect(hub).toContain('infoRowSpacer');
     expect(hub).not.toContain('SarhInput');
     expect(hub).not.toContain('BottomAction');
   });

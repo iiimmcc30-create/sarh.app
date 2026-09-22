@@ -91,6 +91,7 @@ export default function EditProfileScreen() {
           <ProfileInfoRow
             label="الاسم"
             value={displayName}
+            inline
             onPress={() => openField('name')}
             styles={styles}
             colors={colors}
@@ -101,6 +102,7 @@ export default function EditProfileScreen() {
             value={username ? `@${username}` : ''}
             placeholder="@username"
             ltr
+            inline
             onPress={() => openField('username')}
             styles={styles}
             colors={colors}
@@ -126,6 +128,7 @@ export default function EditProfileScreen() {
             label="السيرة الذاتية"
             value={bio}
             placeholder=""
+            inline
             onPress={() => openField('bio')}
             styles={styles}
             colors={colors}
@@ -149,6 +152,7 @@ function ProfileInfoRow({
   value,
   placeholder,
   ltr,
+  inline,
   trailing = 'chevron',
   onPress,
   styles,
@@ -158,6 +162,7 @@ function ProfileInfoRow({
   value: string;
   placeholder?: string;
   ltr?: boolean;
+  inline?: boolean;
   trailing?: 'chevron' | 'copy';
   onPress?: () => void;
   styles: ReturnType<typeof createStyles>;
@@ -165,29 +170,42 @@ function ProfileInfoRow({
 }) {
   const shown = value || placeholder || '';
   const muted = !value;
-  const body = (
+  const valueText = shown ? (
+    <AppText
+      variant="label"
+      color={muted ? 'textMuted' : 'textPrimary'}
+      numberOfLines={1}
+      style={[styles.infoValue, ltr ? styles.latin : null]}
+    >
+      {shown}
+    </AppText>
+  ) : (
+    <View style={styles.infoValue} />
+  );
+  const chevron = (
+    <AppIcon
+      name={trailing === 'copy' ? 'copy' : rtlForwardIcon()}
+      size={16}
+      color={colors.textMuted}
+    />
+  );
+  const body = inline ? (
+    <Row align="center" style={styles.infoRow} gap="sm">
+      <AppText variant="caption" color="textMuted">
+        {label}
+      </AppText>
+      {valueText}
+      <View style={styles.infoRowSpacer} />
+      {chevron}
+    </Row>
+  ) : (
     <Row justify="between" align="center" style={styles.infoRow} gap="sm">
       <AppText variant="caption" color="textMuted">
         {label}
       </AppText>
       <Row align="center" gap="sm" style={styles.infoValueCluster}>
-        {shown ? (
-          <AppText
-            variant="label"
-            color={muted ? 'textMuted' : 'textPrimary'}
-            numberOfLines={1}
-            style={[styles.infoValue, ltr ? styles.latin : null]}
-          >
-            {shown}
-          </AppText>
-        ) : (
-          <View style={styles.infoValue} />
-        )}
-        <AppIcon
-          name={trailing === 'copy' ? 'copy' : rtlForwardIcon()}
-          size={16}
-          color={colors.textMuted}
-        />
+        {valueText}
+        {chevron}
       </Row>
     </Row>
   );
@@ -248,6 +266,10 @@ function createStyles(colors: ThemeColors) {
     infoValueCluster: {
       flexShrink: 1,
       minWidth: 0,
+    },
+    infoRowSpacer: {
+      flex: 1,
+      minWidth: 8,
     },
     infoValue: {
       flexShrink: 1,
