@@ -1107,28 +1107,38 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
   return (
     <Screen edges={isTab ? [] : ['bottom']}>
-      <View
+      <Animated.View
         pointerEvents="box-none"
-        onLayout={(event) => onChromeLayout(event.nativeEvent.layout.height)}
-        style={[styles.chromeLayer, ambientShadow(scheme, 'soft')]}
+        style={[
+          styles.chromeLayer,
+          { height: bodyPaddingTop },
+          ambientShadow(scheme, 'soft'),
+        ]}
       >
-        <HomeAppBar
-          displayName={displayName}
-          avatarUri={me.avatar}
-          onAvatarPress={openSidebar}
-          center={searchField}
-          leading={phase === 'home' ? undefined : sessionBack}
-          showNotifications={phase !== 'mode'}
-          collapseStyle={collapseStyle}
-          identityStyle={identityStyle}
-        >
-          {phase === 'home' ? (
-            <View style={styles.searchSlot}>{chromeTabs}</View>
-          ) : phase === 'results' ? (
-            <View style={styles.searchSlot}>{resultTabs}</View>
-          ) : null}
-        </HomeAppBar>
-      </View>
+        <View style={styles.chromeClip} pointerEvents="box-none">
+          <View
+            pointerEvents="box-none"
+            onLayout={(event) => onChromeLayout(event.nativeEvent.layout.height)}
+          >
+            <HomeAppBar
+              displayName={displayName}
+              avatarUri={me.avatar}
+              onAvatarPress={openSidebar}
+              center={searchField}
+              leading={phase === 'home' ? undefined : sessionBack}
+              showNotifications={phase !== 'mode'}
+              collapseStyle={collapseStyle}
+              identityStyle={identityStyle}
+            >
+              {phase === 'home' ? (
+                <View style={styles.searchSlot}>{chromeTabs}</View>
+              ) : phase === 'results' ? (
+                <View style={styles.searchSlot}>{resultTabs}</View>
+              ) : null}
+            </HomeAppBar>
+          </View>
+        </View>
+      </Animated.View>
 
       <Animated.View style={[styles.bodyWrap, { paddingTop: bodyPaddingTop }]}>
       <ScreenBody
@@ -1260,6 +1270,10 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
       start: 0,
       end: 0,
       zIndex: 2,
+    },
+    chromeClip: {
+      height: '100%',
+      overflow: 'hidden',
     },
     bodyWrap: {
       flex: 1,

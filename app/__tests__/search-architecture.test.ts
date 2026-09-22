@@ -102,6 +102,8 @@ describe('search architecture', () => {
     expect(search).toContain('BackHandler.addEventListener');
     expect(search).toContain('hardwareBackPress');
     expect(search).toContain("if (phase !== 'results')");
+    expect(search).toContain('{ height: bodyPaddingTop }');
+    expect(search).toContain('styles.chromeClip');
     expect(search).not.toContain('react-native-reanimated');
     expect(hook).toContain('Animated.diffClamp');
     expect(hook).toContain('useNativeDriver: false');
