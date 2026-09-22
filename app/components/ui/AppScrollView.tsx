@@ -10,6 +10,8 @@ import {
 
 export type AppScrollViewProps = ScrollViewProps & {
   contentContainerStyle?: StyleProp<ViewStyle>;
+  /** Bind the shared tab-shell hide-on-scroll. Disable for local collapse. */
+  bindChromeScroll?: boolean;
 };
 
 /**
@@ -28,6 +30,7 @@ export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
       alwaysBounceVertical,
       overScrollMode,
       onScroll,
+      bindChromeScroll = true,
       ...rest
     },
     ref,
@@ -44,7 +47,7 @@ export const AppScrollView = forwardRef<ScrollView, AppScrollViewProps>(
         bounces={bounces}
         alwaysBounceVertical={alwaysBounceVertical ?? bounces}
         overScrollMode={overScrollMode ?? (Platform.OS === 'android' ? 'always' : undefined)}
-        onScroll={boundScroll}
+        onScroll={bindChromeScroll ? boundScroll : onScroll}
         {...rest}
       />
     );

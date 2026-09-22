@@ -40,6 +40,8 @@ export type ScreenBodyProps = {
   onScrollEndDrag?: ScrollViewProps['onScrollEndDrag'];
   onMomentumScrollEnd?: ScrollViewProps['onMomentumScrollEnd'];
   scrollEventThrottle?: ScrollViewProps['scrollEventThrottle'];
+  /** Forwarded to AppScrollView. Default keeps the shared tab-shell chrome. */
+  bindChromeScroll?: boolean;
   testID?: string;
 };
 
@@ -71,6 +73,7 @@ export function ScreenBody({
   onScrollEndDrag,
   onMomentumScrollEnd,
   scrollEventThrottle,
+  bindChromeScroll,
   testID,
 }: ScreenBodyProps) {
   const layout = useLayout();
@@ -122,6 +125,7 @@ export function ScreenBody({
         onScrollEndDrag={onScrollEndDrag}
         onMomentumScrollEnd={onMomentumScrollEnd}
         scrollEventThrottle={scrollEventThrottle}
+        bindChromeScroll={bindChromeScroll}
       >
         {children}
       </AppScrollView>

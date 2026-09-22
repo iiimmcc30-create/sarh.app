@@ -15,7 +15,9 @@ describe('search architecture', () => {
     expect(search).not.toContain("pathname: '/search'");
     expect(search).toContain('center={searchField}');
     expect(search).toContain('size="compact"');
-    expect(search).toContain('{!hasQuery ? (');
+    expect(search).toContain("phase === 'home'");
+    expect(search).toContain("phase === 'mode'");
+    expect(search).toContain("phase === 'results'");
   });
 
   it('keeps a single compact field in the identity row between avatar and notifications', () => {
@@ -82,5 +84,31 @@ describe('search architecture', () => {
     expect(search).toContain('Keyboard.dismiss()');
     expect(search).toContain('if (seq !== searchSeq.current) return');
     expect(search).toContain('useDebouncedValue(query.trim(), 350)');
+  });
+
+  it('collapses identity on scroll and keeps categories sticky without Reanimated', () => {
+    const search = src('app/search.tsx');
+    const hook = src('hooks/useCollapsibleSearchHeader.ts');
+    const tabs = src('components/navigation/FloatingTabBar.tsx');
+    const appBar = src('components/ui/HomeAppBar.tsx');
+    expect(search).toContain('useCollapsibleSearchHeader(SHELL_IDENTITY_COLLAPSE_H)');
+    expect(search).toContain('collapseStyle={collapseStyle}');
+    expect(search).toContain('identityStyle={identityStyle}');
+    expect(search).toContain('<View style={styles.searchSlot}>{chromeTabs}</View>');
+    expect(search).toContain("bottomInset={isTab && phase === 'home' ? 'tabBar' : 'none'}");
+    expect(search).toContain('bindChromeScroll={false}');
+    expect(search).toContain('setTabBarForceHidden');
+    expect(search).toContain("tabBarStyle: hideTabBar");
+    expect(search).toContain('BackHandler.addEventListener');
+    expect(search).toContain('hardwareBackPress');
+    expect(search).toContain("if (phase !== 'results')");
+    expect(search).not.toContain('react-native-reanimated');
+    expect(hook).toContain('Animated.diffClamp');
+    expect(hook).toContain('useNativeDriver: false');
+    expect(hook).not.toContain('setState');
+    expect(tabs).toContain('if (tabBarForceHidden)');
+    expect(tabs).toContain('return null');
+    expect(appBar).toContain('SHELL_IDENTITY_COLLAPSE_H');
+    expect(appBar).toContain('collapseStyle');
   });
 });
