@@ -31,6 +31,19 @@ export class ConnectionsQueryDto {
   type: 'followers' | 'following' = 'followers';
 }
 
+export class UsernameAvailableQueryDto {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches(/^[a-z0-9_]+$/, {
+    message: 'أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط',
+  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.replace(/\s/g, '').toLowerCase() : value,
+  )
+  username!: string;
+}
+
 export class UpdateUserDto {
   @IsOptional()
   @IsString()

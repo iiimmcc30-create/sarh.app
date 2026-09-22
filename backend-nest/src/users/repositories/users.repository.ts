@@ -54,6 +54,62 @@ const connectionUserSelect = {
   verified: true,
 } satisfies Prisma.UserSelect;
 
+const changeStateSelect = {
+  username: true,
+  displayName: true,
+  arabicName: true,
+  nameChangedAt: true,
+  usernameChangedAt: true,
+} satisfies Prisma.UserSelect;
+
+const updateUserSelect = {
+  id: true,
+  username: true,
+  displayName: true,
+  arabicName: true,
+  avatar: true,
+  coverImage: true,
+  bio: true,
+  verified: true,
+  country: true,
+  rating: true,
+  reviewCount: true,
+  showInSearch: true,
+  allowPrivateMessages: true,
+  showFollowingList: true,
+  commentsAudience: true,
+  privateMessagesAudience: true,
+  notificationsEnabled: true,
+  email: true,
+  birthDate: true,
+  nameChangedAt: true,
+  usernameChangedAt: true,
+  _count: {
+    select: { followers: true, following: true },
+  },
+} satisfies Prisma.UserSelect;
+
+type UpdateUserData = {
+  username?: string;
+  displayName?: string;
+  arabicName?: string;
+  bio?: string;
+  avatar?: string;
+  coverImage?: string;
+  country?: Country;
+  fcmToken?: string | null;
+  showInSearch?: boolean;
+  allowPrivateMessages?: boolean;
+  showFollowingList?: boolean;
+  commentsAudience?: string;
+  privateMessagesAudience?: string;
+  notificationsEnabled?: boolean;
+  email?: string | null;
+  birthDate?: Date | null;
+  nameChangedAt?: Date;
+  usernameChangedAt?: Date;
+};
+
 @Injectable()
 export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -104,54 +160,51 @@ export class UsersRepository {
     });
   }
 
-  updateUser(
-    id: string,
-    data: {
-      username?: string;
-      displayName?: string;
-      arabicName?: string;
-      bio?: string;
-      avatar?: string;
-      coverImage?: string;
-      country?: Country;
-      fcmToken?: string | null;
-      showInSearch?: boolean;
-      allowPrivateMessages?: boolean;
-      showFollowingList?: boolean;
-      commentsAudience?: string;
-      privateMessagesAudience?: string;
-      notificationsEnabled?: boolean;
-      email?: string | null;
-      birthDate?: Date | null;
-    },
-  ) {
+  findUserChangeState(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: changeStateSelect,
+    });
+  }
+
+  updateUser(id: string, data: UpdateUserData) {
     return this.prisma.user.update({
       where: { id },
       data,
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        arabicName: true,
-        avatar: true,
-        coverImage: true,
-        bio: true,
-        verified: true,
-        country: true,
-        rating: true,
-        reviewCount: true,
-        showInSearch: true,
-        allowPrivateMessages: true,
-        showFollowingList: true,
-        commentsAudience: true,
-        privateMessagesAudience: true,
-        notificationsEnabled: true,
-        email: true,
-        birthDate: true,
-        _count: {
-          select: { followers: true, following: true },
-        },
+      select: updateUserSelect,
+    });
+  }
+
+  /**
+   * Serialize identity updates so cooldown + timestamp write cannot race.
+   * Unique(username) remains the final uniqueness guard.
+   */
+  updateUserLocked(
+    id: string,
+    apply: (
+      current: {
+        username: string;
+        displayName: string;
+        arabicName: string;
+        nameChangedAt: Date | null;
+        usernameChangedAt: Date | null;
       },
+      tx: Prisma.TransactionClient,
+    ) => Promise<UpdateUserData> | UpdateUserData,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM "User" WHERE id = ${id} FOR UPDATE`;
+      const current = await tx.user.findUnique({
+        where: { id },
+        select: changeStateSelect,
+      });
+      if (!current) return null;
+      const data = await apply(current, tx);
+      return tx.user.update({
+        where: { id },
+        data,
+        select: updateUserSelect,
+      });
     });
   }
 

@@ -109,6 +109,20 @@ export function fetchUserProfile(
   });
 }
 
+export async function checkUsernameAvailable(username: string): Promise<boolean | null> {
+  const value = username.replace(/\s/g, '').toLowerCase();
+  if (!value) return null;
+  const res = await authFetch(
+    `${API_BASE}/api/users/username-available?username=${encodeURIComponent(value)}`,
+  );
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (json.success && typeof json.data?.available === 'boolean') {
+    return json.data.available;
+  }
+  return null;
+}
+
 export type ConnectionUser = {
   id: string;
   username: string;

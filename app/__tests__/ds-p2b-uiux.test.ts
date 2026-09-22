@@ -26,7 +26,7 @@ describe('P2-B UI/UX finalization', () => {
       'app/auth/register.tsx',
       'app/auth/forgot-password.tsx',
       'app/auth/otp.tsx',
-      'app/profile/edit.tsx',
+      'app/profile/edit/index.tsx',
       'app/create/post.tsx',
       'app/create/story.tsx',
       'app/live/create.tsx',
@@ -44,7 +44,8 @@ describe('P2-B UI/UX finalization', () => {
     expect(src('app/auth/forgot-password.tsx')).toContain('ltrInputText');
     // Auth/join labeled fields now compose SarhInput, which applies
     // rtlInputText/ltrInputText internally, so the guarantee moved to the primitive.
-    expect(src('app/profile/edit.tsx')).toContain('SarhInput');
+    expect(src('app/profile/edit/index.tsx')).toContain('width="form"');
+    expect(src('components/feature/ProfileFieldEditScreen.tsx')).toContain('SarhInput');
     expect(src('design-system/components/SarhInput.tsx')).toContain('rtlInputText');
     expect(src('design-system/components/SarhInput.tsx')).toContain('ltrInputText');
   });
@@ -56,7 +57,7 @@ describe('P2-B UI/UX finalization', () => {
     expect(src('app/auth/otp.tsx')).toContain('maxWidth: 440');
     // Profile edit takes the same 560 cap from the responsive layer instead of
     // hard-coding it — CONTENT_MAX_WIDTH.form is asserted in useLayout's tests.
-    expect(src('app/profile/edit.tsx')).toContain('width="form"');
+    expect(src('app/profile/edit/index.tsx')).toContain('width="form"');
   });
 
   it('adds password a11y on auth', () => {
