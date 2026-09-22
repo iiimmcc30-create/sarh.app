@@ -188,11 +188,20 @@ describe('MessagesService inbox pin and hide', () => {
       }),
       threadRow('pinned-old', {
         lastMessageAt: new Date('2026-09-01T12:00:00.000Z'),
-        states: [{ pinnedAt: new Date('2026-09-10T00:00:00.000Z'), hiddenAt: null }],
+        states: [
+          { pinnedAt: new Date('2026-09-10T00:00:00.000Z'), hiddenAt: null },
+        ],
       }),
     ]);
     repo.findParticipants.mockResolvedValue([
-      { id: 'bob', displayName: 'Bob', arabicName: 'بوب', avatar: null, username: 'bob', verified: false },
+      {
+        id: 'bob',
+        displayName: 'Bob',
+        arabicName: 'بوب',
+        avatar: null,
+        username: 'bob',
+        verified: false,
+      },
     ]);
     repo.countUnreadByThread.mockResolvedValue([]);
 
@@ -215,7 +224,9 @@ describe('MessagesService inbox pin and hide', () => {
       hiddenAt: new Date(),
     });
 
-    await expect(service.hideThread(user, 't1')).resolves.toEqual({ hidden: true });
+    await expect(service.hideThread(user, 't1')).resolves.toEqual({
+      hidden: true,
+    });
     expect(repo.upsertThreadState).toHaveBeenCalledWith(
       't1',
       'alice',
@@ -254,7 +265,10 @@ describe('MessagesService inbox pin and hide', () => {
       expect.objectContaining({ pinnedAt: expect.any(Date) }),
     );
 
-    repo.upsertThreadState.mockResolvedValue({ pinnedAt: null, hiddenAt: null });
+    repo.upsertThreadState.mockResolvedValue({
+      pinnedAt: null,
+      hiddenAt: null,
+    });
     await expect(service.pinThread(user, 't1', false)).resolves.toEqual({
       pinned: false,
       pinnedAt: null,
@@ -263,7 +277,9 @@ describe('MessagesService inbox pin and hide', () => {
 
   it('rejects pin when the user is not a participant', async () => {
     repo.findThreadForUser.mockResolvedValue(null);
-    await expect(service.pinThread(user, 'foreign', true)).rejects.toMatchObject({
+    await expect(
+      service.pinThread(user, 'foreign', true),
+    ).rejects.toMatchObject({
       status: 404,
       error: 'not_found',
     });

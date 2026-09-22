@@ -77,7 +77,8 @@ export class MessagesService {
     return mapped.sort((a, b) => {
       if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
       return (
-        new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        new Date(b.lastMessageAt).getTime() -
+        new Date(a.lastMessageAt).getTime()
       );
     });
   }
