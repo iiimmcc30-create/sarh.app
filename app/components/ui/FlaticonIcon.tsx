@@ -15,6 +15,8 @@ export type AppIconProps = {
   variant?: 'rr' | 'sr' | 'br' | string;
   size?: number;
   color?: string;
+  /** Override Lucide stroke. Defaults to ICON_STROKE (or 2.5 when variant is br). */
+  strokeWidth?: number;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -23,11 +25,12 @@ function LucideAppIcon({
   variant,
   size = DEFAULT_ICON_SIZE,
   color,
+  strokeWidth: strokeWidthProp,
   style,
 }: AppIconProps) {
   const Icon = resolveLucideIcon(name);
   const solid = variant === 'sr' || variant === 'br';
-  const strokeWidth = variant === 'br' ? 2.5 : ICON_STROKE;
+  const strokeWidth = strokeWidthProp ?? (variant === 'br' ? 2.5 : ICON_STROKE);
 
   return (
     <Icon

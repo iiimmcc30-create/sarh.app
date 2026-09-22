@@ -268,7 +268,7 @@ export function bubbleTailRadius(isOwn: boolean): ViewStyle {
 }
 
 export function rtlBackIcon(): string {
-  return isAppRtl() ? 'angle-right' : 'angle-left';
+  return isAppRtl() ? 'arrow-forward' : 'arrow-back';
 }
 
 export function rtlForwardIcon(): string {

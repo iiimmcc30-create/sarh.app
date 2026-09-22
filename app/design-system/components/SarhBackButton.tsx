@@ -62,6 +62,7 @@ export function SarhBackButton({
             name={rtlBackIcon()}
             size={metrics.icon}
             color={color ?? palette.contentColor}
+            strokeWidth={2.5}
           />
         );
       }}
