@@ -10,7 +10,6 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   RefreshControl,
   StyleSheet,
   View,
@@ -20,11 +19,15 @@ import {
 import { radius, type ThemeColors } from '@/constants/theme';
 import { space } from '@/design-system/tokens';
 import { cloudinaryFitUrl } from '@/lib/listingMedia';
+import { confirmDestructive } from '@/lib/actionSheet';
+import type { ConversationAnchor } from '@/lib/conversationActions';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppFlatList } from '@/components/ui/AppFlatList';
+import { ConversationContextMenu } from '@/components/feature/ConversationContextMenu';
+import { ConversationSwipeRow } from '@/components/feature/ConversationSwipeRow';
 import {
   filterMessageThreads,
   useMessageThreads,
@@ -88,12 +91,19 @@ export function MessagesPanel({
   const router = useRouter();
   const listBottomPadding = variant === 'embedded' ? space[16] : space[24];
   const { accessToken } = useAuth();
-  const { threads, loading, error, refetch } = useMessageThreads(accessToken, 'ALL');
+  const { threads, loading, error, refetch, hideThread, pinThread } =
+    useMessageThreads(accessToken, 'ALL');
   const filter: MessageThreadFilter = 'all';
   const [searchInner, setSearchInner] = useState('');
   const search = searchProp ?? searchInner;
   const setSearch = onSearchChange ?? setSearchInner;
   const [refreshing, setRefreshing] = useState(false);
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{
+    id: string;
+    isPinned: boolean;
+    anchor: ConversationAnchor;
+  } | null>(null);
   const [listingByPeer, setListingByPeer] = useState<
     Record<string, MessageListingPreview>
   >({});
@@ -139,6 +149,7 @@ export function MessagesPanel({
   );
 
   const openChat = useCallback((chat: MessageThreadItem) => {
+    if (menu) return;
     const p = chat.participant;
     if (!p) return;
     const isButcher = chat.type === 'BUTCHER';
@@ -168,7 +179,33 @@ export function MessagesPanel({
           : {}),
       },
     } as never);
-  }, [listingByPeer, router]);
+  }, [listingByPeer, menu, router]);
+
+  const handleDeleteConversation = useCallback(
+    async (threadId: string) => {
+      setMenu(null);
+      const confirmed = await confirmDestructive(
+        'حذف المحادثة؟',
+        'هل أنت متأكد من حذف هذه المحادثة؟',
+      );
+      if (!confirmed) {
+        setOpenSwipeId(null);
+        return;
+      }
+      setOpenSwipeId(null);
+      await hideThread(threadId);
+    },
+    [hideThread],
+  );
+
+  const handlePinConversation = useCallback(
+    async (threadId: string, pinned: boolean) => {
+      setMenu(null);
+      setOpenSwipeId(null);
+      await pinThread(threadId, pinned);
+    },
+    [pinThread],
+  );
 
   const resolveListingPreview = (chat: MessageThreadItem) => {
     const peerId = chat.participant?.id;
@@ -192,16 +229,31 @@ export function MessagesPanel({
       const showListingMeta =
         listing &&
         (listing.price > 0 || Boolean(listing.image) || Boolean(listing.title));
+      const menuOpen = Boolean(menu);
 
       return (
-        <Pressable
+        <ConversationSwipeRow
+          id={chat.id}
+          openId={openSwipeId}
+          onOpenChange={setOpenSwipeId}
           onPress={() => openChat(chat)}
-          style={({ pressed }) => [
-            styles.chatRow,
-            { paddingHorizontal: gutter },
-            pressed && styles.chatRowPressed,
-          ]}
+          onLongPress={(anchor) => {
+            setOpenSwipeId(null);
+            setMenu({
+              id: chat.id,
+              isPinned: Boolean(chat.isPinned),
+              anchor,
+            });
+          }}
+          onDelete={() => void handleDeleteConversation(chat.id)}
+          disabled={menuOpen}
         >
+          <View
+            style={[
+              styles.chatRow,
+              { paddingHorizontal: gutter },
+            ]}
+          >
           <Row gap="md" align="center">
             <Row gap="sm" align="center">
               {isButcher ? (
@@ -213,7 +265,7 @@ export function MessagesPanel({
                   />
                 </View>
               ) : (
-                <UserProfileLink userId={p.id}>
+                <UserProfileLink userId={p.id} disabled={menuOpen}>
                   <View style={styles.avatarWrap}>
                     <Image
                       source={{ uri: avatarUri }}
@@ -236,6 +288,9 @@ export function MessagesPanel({
             <Stack gap="xs" style={styles.chatBody}>
               <Row justify="between" align="center" gap="sm">
                 <Row gap="xs" align="center" fill>
+                  {chat.isPinned ? (
+                    <AppIcon name="pin" size={13} color={colors.textMuted} />
+                  ) : null}
                   <AppText variant="label" numberOfLines={1} style={styles.flex}>
                     {title}
                   </AppText>
@@ -279,10 +334,21 @@ export function MessagesPanel({
               </Row>
             </Stack>
           </Row>
-        </Pressable>
+          </View>
+        </ConversationSwipeRow>
       );
     },
-    [colors.electricBright, gutter, listingByPeer, openChat, styles],
+    [
+      colors.electricBright,
+      colors.textMuted,
+      gutter,
+      handleDeleteConversation,
+      listingByPeer,
+      menu,
+      openChat,
+      openSwipeId,
+      styles,
+    ],
   );
 
   const showInitialSpinner =
@@ -334,6 +400,8 @@ export function MessagesPanel({
           keyExtractor={(item) => item.id}
           renderItem={renderThread}
           onScroll={onScroll}
+          scrollEnabled={!menu}
+          extraData={`${openSwipeId ?? ''}:${menu?.id ?? ''}`}
           contentContainerStyle={{ paddingBottom: listBottomPadding, flexGrow: 1 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
@@ -355,6 +423,12 @@ export function MessagesPanel({
           }
         />
       )}
+      <ConversationContextMenu
+        target={menu}
+        onClose={() => setMenu(null)}
+        onPin={(threadId, pinned) => void handlePinConversation(threadId, pinned)}
+        onDelete={(threadId) => void handleDeleteConversation(threadId)}
+      />
     </View>
   );
 }
@@ -370,8 +444,8 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: space[12],
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderSoft,
+      backgroundColor: colors.bgDeep,
     },
-    chatRowPressed: { backgroundColor: colors.bgSurface },
     avatarWrap: { position: 'relative' },
     avatar: {
       width: 52,

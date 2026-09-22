@@ -31,6 +31,8 @@ export interface MessageThreadItem {
   lastMessageAt: string;
   unread: number;
   isMine?: boolean;
+  isPinned?: boolean;
+  pinnedAt?: string | null;
 }
 
 type InboxCacheEntry = {
@@ -42,10 +44,14 @@ let inboxOwnerToken: string | null = null;
 const inboxCache = new Map<string, InboxCacheEntry>();
 
 function sortThreads(threads: MessageThreadItem[]): MessageThreadItem[] {
-  return [...threads].sort(
-    (a, b) =>
-      new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime(),
-  );
+  return [...threads].sort((a, b) => {
+    const pinA = a.isPinned ? 1 : 0;
+    const pinB = b.isPinned ? 1 : 0;
+    if (pinA !== pinB) return pinB - pinA;
+    return (
+      new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+    );
+  });
 }
 
 function mapThread(t: any, fallbackType: MessageThreadType): MessageThreadItem {
@@ -76,6 +82,8 @@ function mapThread(t: any, fallbackType: MessageThreadType): MessageThreadItem {
     lastMessageAt: t.lastMessageAt,
     unread: t.unread ?? 0,
     isMine: Boolean(t.isMine),
+    isPinned: Boolean(t.isPinned),
+    pinnedAt: t.pinnedAt ?? null,
   };
 }
 
@@ -157,6 +165,8 @@ function applyPreviewToThreads(
       lastMessageAt: patch.lastMessageAt ?? current.lastMessageAt,
       unread: patch.unread !== undefined ? patch.unread : current.unread,
       isMine: patch.isMine !== undefined ? patch.isMine : current.isMine,
+      isPinned: current.isPinned,
+      pinnedAt: current.pinnedAt,
     };
     return sortThreads([
       ...threads.slice(0, idx),
@@ -177,6 +187,8 @@ function applyPreviewToThreads(
     lastMessageAt: patch.lastMessageAt ?? new Date().toISOString(),
     unread: patch.unread ?? 0,
     isMine: patch.isMine ?? false,
+    isPinned: false,
+    pinnedAt: null,
   };
   return sortThreads([created, ...threads]);
 }
@@ -206,6 +218,63 @@ export function applyInboxThreadPreview(
 export function markInboxThreadRead(threadId: string): void {
   if (!threadId) return;
   applyInboxThreadPreview({ threadId, unread: 0 });
+}
+
+function publishInbox(type: MessageThreadType | 'ALL' = 'ALL'): MessageThreadItem[] | null {
+  return inboxCache.get(type)?.threads ?? [...inboxCache.values()][0]?.threads ?? null;
+}
+
+export function removeInboxThread(threadId: string): MessageThreadItem[] | null {
+  if (!threadId || inboxCache.size === 0) return null;
+  for (const [key, entry] of inboxCache) {
+    inboxCache.set(key, {
+      threads: entry.threads.filter((t) => t.id !== threadId),
+      at: entry.at,
+    });
+  }
+  return publishInbox();
+}
+
+export function setInboxThreadPinned(
+  threadId: string,
+  pinned: boolean,
+): MessageThreadItem[] | null {
+  if (!threadId || inboxCache.size === 0) return null;
+  const pinnedAt = pinned ? new Date().toISOString() : null;
+  for (const [key, entry] of inboxCache) {
+    inboxCache.set(key, {
+      threads: sortThreads(
+        entry.threads.map((t) =>
+          t.id === threadId ? { ...t, isPinned: pinned, pinnedAt } : t,
+        ),
+      ),
+      at: entry.at,
+    });
+  }
+  return publishInbox();
+}
+
+export async function hideMessageThread(threadId: string): Promise<boolean> {
+  const res = await authFetch(
+    `${API_BASE}/api/messages/${encodeURIComponent(threadId)}`,
+    { method: 'DELETE' },
+  );
+  return res.ok;
+}
+
+export async function pinMessageThread(
+  threadId: string,
+  pinned: boolean,
+): Promise<boolean> {
+  const res = await authFetch(
+    `${API_BASE}/api/messages/${encodeURIComponent(threadId)}/pin`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinned }),
+    },
+  );
+  return res.ok;
 }
 
 async function loadInbox(
@@ -270,6 +339,8 @@ export function useMessageThreads(
   });
   const [error, setError] = useState<string | null>(null);
   const hasDataRef = useRef(getCachedMessageInbox(type) != null);
+  const threadsRef = useRef(threads);
+  threadsRef.current = threads;
 
   const fetchThreads = useCallback(async (force = false) => {
     if (!accessToken) {
@@ -321,7 +392,58 @@ export function useMessageThreads(
     void fetchThreads();
   }, [fetchThreads]);
 
-  return { threads, loading, error, refetch: fetchThreads };
+  const hideThread = useCallback(
+    async (threadId: string) => {
+      if (!threadId) return false;
+      const snapshot = threadsRef.current;
+      const next = snapshot.filter((t) => t.id !== threadId);
+      setThreads(next);
+      removeInboxThread(threadId);
+      const ok = await hideMessageThread(threadId);
+      if (ok) return true;
+      setThreads(snapshot);
+      void fetchThreads(true);
+      return false;
+    },
+    [fetchThreads],
+  );
+
+  const pinThread = useCallback(
+    async (threadId: string, pinned: boolean) => {
+      if (!threadId) return false;
+      const snapshot = threadsRef.current;
+      const fromCache = setInboxThreadPinned(threadId, pinned);
+      const next =
+        fromCache ??
+        sortThreads(
+          snapshot.map((t) =>
+            t.id === threadId
+              ? {
+                  ...t,
+                  isPinned: pinned,
+                  pinnedAt: pinned ? new Date().toISOString() : null,
+                }
+              : t,
+          ),
+        );
+      setThreads(next);
+      const ok = await pinMessageThread(threadId, pinned);
+      if (ok) return true;
+      setThreads(snapshot);
+      void fetchThreads(true);
+      return false;
+    },
+    [fetchThreads],
+  );
+
+  return {
+    threads,
+    loading,
+    error,
+    refetch: fetchThreads,
+    hideThread,
+    pinThread,
+  };
 }
 
 export function filterMessageThreads(

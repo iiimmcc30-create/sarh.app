@@ -102,7 +102,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const router = useRouter();
   const navigation = useNavigation();
   const { q: qParam } = useLocalSearchParams<{ q?: string }>();
-  const { setTabBarForceHidden } = useAppChromeScroll();
+  const { setTabBarForceHidden, onChromeScroll, setChromeVisible } = useAppChromeScroll();
   const { me } = useAppUser();
   const { likedPosts, bookmarkedPosts, toggleLike, toggleBookmark, deletePost } = useApp();
   const { isAuthenticated } = useAuth();
@@ -453,18 +453,20 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   useEffect(() => {
     if (!isTab) return;
     setTabBarForceHidden(hideTabBar);
+    if (!hideTabBar) setChromeVisible(true);
     navigation.setOptions({
       tabBarStyle: hideTabBar
         ? { display: 'none', height: 0, overflow: 'hidden' }
         : visibleTabBarStyle,
     });
-  }, [hideTabBar, isTab, navigation, setTabBarForceHidden, visibleTabBarStyle]);
+  }, [hideTabBar, isTab, navigation, setChromeVisible, setTabBarForceHidden, visibleTabBarStyle]);
 
   useFocusEffect(
     useCallback(() => {
       if (!isTab) return undefined;
       const hidden = phaseRef.current !== 'home';
       setTabBarForceHidden(hidden);
+      if (!hidden) setChromeVisible(true);
       navigation.setOptions({
         tabBarStyle: hidden
           ? { display: 'none', height: 0, overflow: 'hidden' }
@@ -474,7 +476,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         setTabBarForceHidden(false);
         navigation.setOptions({ tabBarStyle: visibleTabBarStyle });
       };
-    }, [isTab, navigation, setTabBarForceHidden, visibleTabBarStyle]),
+    }, [isTab, navigation, setChromeVisible, setTabBarForceHidden, visibleTabBarStyle]),
   );
 
   useEffect(() => {
@@ -548,6 +550,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         useNativeDriver: false,
         listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
           scrollingRef.current = true;
+          onChromeScroll(event);
           if (phaseRef.current !== 'results') return;
           const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
           if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 180) {
@@ -555,7 +558,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
           }
         },
       }),
-    [scrollY],
+    [onChromeScroll, scrollY],
   );
 
   const retrySearch = useCallback(() => {

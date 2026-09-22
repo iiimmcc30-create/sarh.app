@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -14,6 +16,7 @@ import { successResponse } from '../common/utils/response.util';
 import type { JwtPayload } from '../common/types/jwt-payload.interface';
 import {
   ListThreadsQueryDto,
+  PinThreadDto,
   SendMessageDto,
   ThreadMessagesQueryDto,
 } from './dto/messages.dto';
@@ -38,6 +41,29 @@ export class MessagesController {
   @HttpCode(HttpStatus.CREATED)
   async send(@CurrentUser() user: JwtPayload, @Body() dto: SendMessageDto) {
     return successResponse(await this.messages.sendMessage(user, dto));
+  }
+
+  @RateLimit('api')
+  @Patch(':threadId/pin')
+  @HttpCode(HttpStatus.OK)
+  async pinThread(
+    @CurrentUser() user: JwtPayload,
+    @Param('threadId') threadId: string,
+    @Body() dto: PinThreadDto,
+  ) {
+    return successResponse(
+      await this.messages.pinThread(user, threadId, dto.pinned),
+    );
+  }
+
+  @RateLimit('api')
+  @Delete(':threadId')
+  @HttpCode(HttpStatus.OK)
+  async hideThread(
+    @CurrentUser() user: JwtPayload,
+    @Param('threadId') threadId: string,
+  ) {
+    return successResponse(await this.messages.hideThread(user, threadId));
   }
 
   @RateLimit('api')

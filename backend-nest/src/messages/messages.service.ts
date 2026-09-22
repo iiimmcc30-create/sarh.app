@@ -44,11 +44,12 @@ export class MessagesService {
       unreadCounts.map((u) => [u.threadId, u._count.id]),
     );
 
-    return threads.map((t) => {
+    const mapped = threads.map((t) => {
       const otherId =
         t.participant1 === userId ? t.participant2 : t.participant1;
       const other = participantMap.get(otherId);
       const lastMsg = t.messages[0];
+      const state = t.states[0];
       return {
         id: t.id,
         type: t.type,
@@ -68,7 +69,17 @@ export class MessagesService {
         lastMessageAt: t.lastMessageAt,
         unread: unreadMap.get(t.id) ?? 0,
         isMine: lastMsg?.senderId === userId,
+        isPinned: Boolean(state?.pinnedAt),
+        pinnedAt: state?.pinnedAt ?? null,
       };
+    });
+
+    return mapped.sort((a, b) => {
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+      return (
+        new Date(b.lastMessageAt).getTime() -
+        new Date(a.lastMessageAt).getTime()
+      );
     });
   }
 
@@ -134,6 +145,8 @@ export class MessagesService {
       orderId: resolvedOrderId,
     });
 
+    await this.repo.clearHiddenForThread(thread.id);
+
     const senderName =
       message.sender.arabicName ||
       message.sender.displayName ||
@@ -191,8 +204,7 @@ export class MessagesService {
     const { userId } = user;
     const { cursor } = query;
 
-    const thread = await this.repo.findThreadForUser(threadId, userId);
-    if (!thread) throwApi(404, 'not_found', 'المحادثة غير موجودة');
+    const thread = await this.requireThreadForUser(userId, threadId);
 
     if (thread.type === 'BUTCHER' && thread.butcherId) {
       const otherId =
@@ -242,5 +254,30 @@ export class MessagesService {
       type: thread.type,
       butcherId: thread.butcherId,
     };
+  }
+
+  async hideThread(user: JwtPayload, threadId: string) {
+    await this.requireThreadForUser(user.userId, threadId);
+    await this.repo.upsertThreadState(threadId, user.userId, {
+      hiddenAt: new Date(),
+    });
+    return { hidden: true };
+  }
+
+  async pinThread(user: JwtPayload, threadId: string, pinned: boolean) {
+    await this.requireThreadForUser(user.userId, threadId);
+    const state = await this.repo.upsertThreadState(threadId, user.userId, {
+      pinnedAt: pinned ? new Date() : null,
+    });
+    return {
+      pinned: Boolean(state.pinnedAt),
+      pinnedAt: state.pinnedAt,
+    };
+  }
+
+  private async requireThreadForUser(userId: string, threadId: string) {
+    const thread = await this.repo.findThreadForUser(threadId, userId);
+    if (!thread) throwApi(404, 'not_found', 'المحادثة غير موجودة');
+    return thread;
   }
 }
