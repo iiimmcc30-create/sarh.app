@@ -99,7 +99,7 @@ describe('home launch layout', () => {
     expect(settings).toContain("route: '/settings/blocked'");
     expect(settings).not.toContain("route: '/settings/info'");
     expect(settings).not.toContain("label: 'مركز المعلومات'");
-    expect(src('app/profile/edit.tsx')).toContain('export default function EditProfileScreen');
+    expect(src('app/profile/edit/index.tsx')).toContain('export default function EditProfileScreen');
     expect(src('app/profile/settings/index.tsx')).toContain('export default function ProfileSettingsScreen');
     expect(src('app/profile/settings/password.tsx')).toContain('currentPassword');
     expect(src('app/profile/settings/password.tsx')).toContain('newPassword');

@@ -464,7 +464,8 @@ describe('Architecture V2 — permanent guardrails', () => {
 const WAVE_2_SHELLS = [
   'components/feature/ProfileScreenLayout.tsx',
   'components/feature/ProfileSettingsMenuScreen.tsx',
-  'app/profile/edit.tsx',
+  'components/feature/ProfileFieldEditScreen.tsx',
+  'app/profile/edit/index.tsx',
   'app/profile/connections.tsx',
   'app/profile/settings/account.tsx',
   'app/profile/settings/password.tsx',
@@ -561,17 +562,19 @@ describe('Architecture V2 — Wave 2 profile screens', () => {
 
   it('routes profile forms through the responsive form cap and DS inputs', () => {
     for (const file of [
-      'app/profile/edit.tsx',
+      'app/profile/edit/index.tsx',
+      'components/feature/ProfileFieldEditScreen.tsx',
       'app/profile/settings/account.tsx',
       'app/profile/settings/password.tsx',
       'app/profile/settings/change-phone.tsx',
     ]) {
-      const text = src(file);
-      expect(text).toContain('width="form"');
-      expect(text).toContain('SarhInput');
+      expect(src(file)).toContain('width="form"');
     }
-    expect(src('app/profile/edit.tsx')).toContain('<BottomAction');
-    expect(src('app/profile/edit.tsx')).toContain('bottomInset="action"');
+    expect(src('components/feature/ProfileFieldEditScreen.tsx')).toContain('SarhInput');
+    expect(src('app/profile/edit/index.tsx')).toContain('updateMe');
+    expect(src('app/profile/edit/index.tsx')).toContain('sarhProfileShareUrl');
+    expect(src('app/profile/edit/index.tsx')).toContain('copyToClipboard');
+    expect(src('app/profile/edit/[field].tsx')).toContain('ProfileFieldEditScreen');
   });
 
   it('keeps profile chrome and its business logic untouched by the migration', () => {
@@ -593,7 +596,7 @@ describe('Architecture V2 — Wave 2 profile screens', () => {
 
     expect(src('app/profile/settings/privacy.tsx')).toContain('updatePrivacySettings');
     expect(src('app/profile/settings/change-phone.tsx')).toContain('changeAccountPhone');
-    expect(src('app/profile/edit.tsx')).toContain('updateMe');
+    expect(src('app/profile/edit/index.tsx')).toContain('updateMe');
   });
 
   it('leaves the frozen feature components out of the profile migration', () => {
