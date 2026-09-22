@@ -91,7 +91,7 @@ export default function EditProfileScreen() {
           <ProfileInfoRow
             label="الاسم"
             value={displayName}
-            inline
+            valueAlign="center"
             onPress={() => openField('name')}
             styles={styles}
             colors={colors}
@@ -128,7 +128,7 @@ export default function EditProfileScreen() {
             label="السيرة الذاتية"
             value={bio}
             placeholder=""
-            inline
+            valueAlign="center"
             onPress={() => openField('bio')}
             styles={styles}
             colors={colors}
@@ -153,6 +153,7 @@ function ProfileInfoRow({
   placeholder,
   ltr,
   inline,
+  valueAlign = 'start',
   trailing = 'chevron',
   onPress,
   styles,
@@ -163,6 +164,7 @@ function ProfileInfoRow({
   placeholder?: string;
   ltr?: boolean;
   inline?: boolean;
+  valueAlign?: 'start' | 'center';
   trailing?: 'chevron' | 'copy';
   onPress?: () => void;
   styles: ReturnType<typeof createStyles>;
@@ -170,10 +172,12 @@ function ProfileInfoRow({
 }) {
   const shown = value || placeholder || '';
   const muted = !value;
+  const centered = valueAlign === 'center';
   const valueText = shown ? (
     <AppText
       variant="label"
       color={muted ? 'textMuted' : 'textPrimary'}
+      align={centered ? 'center' : 'auto'}
       numberOfLines={1}
       style={[styles.infoValue, ltr ? styles.latin : null]}
     >
@@ -189,7 +193,15 @@ function ProfileInfoRow({
       color={colors.textMuted}
     />
   );
-  const body = inline ? (
+  const body = centered ? (
+    <Row align="center" style={styles.infoRow} gap="sm">
+      <AppText variant="caption" color="textMuted">
+        {label}
+      </AppText>
+      <View style={styles.infoValueCenter}>{valueText}</View>
+      {chevron}
+    </Row>
+  ) : inline ? (
     <Row align="center" style={styles.infoRow} gap="sm">
       <AppText variant="caption" color="textMuted">
         {label}
@@ -270,6 +282,11 @@ function createStyles(colors: ThemeColors) {
     infoRowSpacer: {
       flex: 1,
       minWidth: 8,
+    },
+    infoValueCenter: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: 'center',
     },
     infoValue: {
       flexShrink: 1,

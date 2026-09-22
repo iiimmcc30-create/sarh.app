@@ -24,6 +24,8 @@ describe('profile edit redesign', () => {
     expect(hub).toContain('معلومات أساسية');
     expect(hub).toContain('inline');
     expect(hub).toContain('infoRowSpacer');
+    expect(hub).toContain('valueAlign="center"');
+    expect(hub).toContain('infoValueCenter');
     expect(hub).not.toContain('SarhInput');
     expect(hub).not.toContain('BottomAction');
   });
