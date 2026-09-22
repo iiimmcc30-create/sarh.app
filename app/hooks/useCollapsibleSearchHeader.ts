@@ -10,9 +10,22 @@ export function useCollapsibleSearchHeader(range: number) {
   const scrollY = useRef(new Animated.Value(0)).current;
   const safeRange = Math.max(1, Math.round(range));
 
+  // Overscroll reports negative y. Feeding that into diffClamp treats the
+  // bounce-back as a positive delta and the header appears to reverse 1–2px.
+  const nonNegativeY = useMemo(
+    () =>
+      scrollY.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'extend',
+      }),
+    [scrollY],
+  );
+
   const clamped = useMemo(
-    () => Animated.diffClamp(scrollY, 0, safeRange),
-    [scrollY, safeRange],
+    () => Animated.diffClamp(nonNegativeY, 0, safeRange),
+    [nonNegativeY, safeRange],
   );
 
   const translateY = useMemo(
