@@ -371,7 +371,7 @@ export default function ListingDetailScreen() {
     }
   };
 
-  const galleryImageHeight = screenWidth * 0.65;
+  const galleryImageHeight = screenWidth * 0.72;
 
   // Owner management actions — single horizontal row
   const ownerActions = [
@@ -666,7 +666,7 @@ export default function ListingDetailScreen() {
               >
                 <Image
                   source={uriSource(uri)}
-                  style={{ width: screenWidth, height: galleryImageHeight }}
+                  style={{ width: '100%', height: galleryImageHeight }}
                   contentFit="cover"
                   transition={250}
                 />
@@ -825,6 +825,7 @@ function createStyles(colors: ThemeColors) {
     },
     mediaPlayer: {
       borderRadius: 0,
+      width: '100%',
     },
     priceSection: {
       gap: spacing.sm,

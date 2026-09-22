@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import path from 'path';
 import {
   cloudinaryFitUrl,
   cloudinaryListThumbUrl,
@@ -14,6 +16,8 @@ import {
   postFeedImageWidth,
   POST_FEED_CHROME_PX,
 } from '../lib/listingMedia';
+
+const root = path.join(__dirname, '..');
 
 describe('listingMedia', () => {
   it('uses dedicated videoUrl instead of image files', () => {
@@ -234,5 +238,32 @@ describe('post feed Cloudinary delivery', () => {
     expect(postFeedImageUrl('file:///data/photo.jpg', 390, 2)).toBe('file:///data/photo.jpg');
     expect(postFeedImageUrl('/uploads/post.jpg', 390, 2)).toBe('/uploads/post.jpg');
     expect(postFeedImageUrl('content://media/1', 390, 2)).toBe('content://media/1');
+  });
+});
+
+describe('listing detail media presentation', () => {
+  const detail = readFileSync(path.join(root, 'app/listing/[id].tsx'), 'utf8');
+  const player = readFileSync(
+    path.join(root, 'components/listing/ListingVideoPlayer.tsx'),
+    'utf8',
+  );
+
+  it('renders listing images and video at the same full width and a slightly taller media area', () => {
+    expect(detail).toContain('screenWidth * 0.72');
+    expect(detail).toContain("style={{ width: '100%', height: galleryImageHeight }}");
+    expect(detail).toContain('height={galleryImageHeight}');
+    expect(detail).toContain('styles.mediaBleed');
+    expect(player).toContain("width: '100%'");
+    expect(player).toContain('alignSelf: \'stretch\'');
+  });
+
+  it('fills the landscape media box without native video chrome', () => {
+    expect(player).toContain('contentFit="cover"');
+    expect(player).toContain('nativeControls={false}');
+    expect(player).toContain('allowsFullscreen={false}');
+    expect(player).toContain('controls: false');
+    expect(player).toContain("objectFit: 'cover'");
+    expect(player).not.toContain('nativeControls={!loadFailed}');
+    expect(player).not.toContain('controls: true');
   });
 });

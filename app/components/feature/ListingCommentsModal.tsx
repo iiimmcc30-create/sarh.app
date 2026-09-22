@@ -3,7 +3,6 @@ import { Image, uriSource } from '@/components/ui/AppImage';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Modal,
   Pressable,
   ScrollView,
@@ -13,6 +12,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ComposerKeyboardView } from '@/components/ui/ComposerKeyboardView';
+import { useComposerKeyboardPad } from '@/hooks/useComposerKeyboardPad';
 import { radius, spacing, typography, type ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
@@ -55,6 +56,7 @@ export function ListingCommentsModal({
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
+  const { keyboardVisible, restingBottom } = useComposerKeyboardPad();
   const inputRef = useRef<TextInput>(null);
 
   const [text, setText] = useState('');
@@ -112,16 +114,12 @@ export function ListingCommentsModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior="padding"
-      >
+      <ComposerKeyboardView style={styles.root}>
         <View
           style={[
             styles.container,
             {
               paddingTop: Math.max(insets.top, spacing.sm),
-              paddingBottom: Math.max(insets.bottom, spacing.sm),
             },
           ]}
         >
@@ -209,7 +207,17 @@ export function ListingCommentsModal({
             </ScrollView>
           )}
 
-          <View style={[styles.inputRow, getRtlRow()]}>
+          <View
+            style={[
+              styles.inputRow,
+              getRtlRow(),
+              {
+                paddingBottom: keyboardVisible
+                  ? spacing.sm
+                  : Math.max(restingBottom, spacing.sm),
+              },
+            ]}
+          >
             <TextInput
               ref={inputRef}
               style={styles.input}
@@ -238,7 +246,7 @@ export function ListingCommentsModal({
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </ComposerKeyboardView>
     </Modal>
   );
 }

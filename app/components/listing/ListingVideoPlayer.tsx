@@ -48,21 +48,7 @@ function ListingVideoPlayerInner({
 
   if (Platform.OS === 'web') {
     return (
-      <View style={containerStyle}>
-        {createElement('video', {
-          src: videoUri,
-          poster,
-          controls: true,
-          playsInline: true,
-          preload: 'metadata',
-          style: {
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            backgroundColor: MEDIA_SURFACE,
-          },
-        })}
-      </View>
+      <WebListingVideo uri={videoUri} poster={poster} containerStyle={containerStyle} />
     );
   }
 
@@ -71,6 +57,52 @@ function ListingVideoPlayerInner({
   }
 
   return <VideoOpenFallback uri={videoUri} posterUri={poster} style={containerStyle} />;
+}
+
+function WebListingVideo({
+  uri,
+  poster,
+  containerStyle,
+}: {
+  uri: string;
+  poster?: string;
+  containerStyle: StyleProp<ViewStyle>;
+}) {
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <View style={containerStyle}>
+      {createElement('video', {
+        src: uri,
+        poster,
+        controls: false,
+        playsInline: true,
+        preload: 'metadata',
+        autoPlay: false,
+        onPlay: () => setPlaying(true),
+        onPause: () => setPlaying(false),
+        onEnded: () => setPlaying(false),
+        style: {
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          backgroundColor: MEDIA_SURFACE,
+        },
+        onClick: (event: { currentTarget: { paused: boolean; play: () => void; pause: () => void } }) => {
+          const node = event.currentTarget;
+          if (node.paused) node.play();
+          else node.pause();
+        },
+      })}
+      {playing ? null : (
+        <View pointerEvents="none" style={styles.playBtn}>
+          <View style={styles.playBtnCircle}>
+            <AppIcon name="play" size={24} color="#fff" />
+          </View>
+        </View>
+      )}
+    </View>
+  );
 }
 
 function NativeListingVideo({
@@ -85,6 +117,7 @@ function NativeListingVideo({
   const { useVideoPlayer, VideoView } = getExpoVideoModule()!;
   const [showPoster, setShowPoster] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   const player = useVideoPlayer({ uri }, (p) => {
     p.loop = false;
@@ -97,12 +130,13 @@ function NativeListingVideo({
   useEffect(() => {
     setShowPoster(true);
     setLoadFailed(false);
+    setPlaying(false);
     const statusSub = player.addListener('statusChange', ({ status }) => {
       if (status === 'readyToPlay') hidePoster();
-      // Keep poster visible on error — otherwise the black surface shows alone.
       if (status === 'error') setLoadFailed(true);
     });
     const playingSub = player.addListener('playingChange', ({ isPlaying }) => {
+      setPlaying(Boolean(isPlaying));
       if (isPlaying) hidePoster();
     });
     return () => {
@@ -123,21 +157,39 @@ function NativeListingVideo({
       <VideoView
         player={player}
         style={StyleSheet.absoluteFillObject}
-        contentFit="contain"
-        nativeControls={!loadFailed}
-        allowsFullscreen
+        contentFit="cover"
+        nativeControls={false}
+        allowsFullscreen={false}
+        allowsPictureInPicture={false}
         useExoShutter={false}
         surfaceType={Platform.OS === 'android' ? 'textureView' : undefined}
         onFirstFrameRender={hidePoster}
       />
       {posterVisible ? (
-        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFillObject} contentFit="contain" />
+        <Image source={{ uri: posterUri }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
       ) : null}
       {loadFailed && !posterUri ? (
         <View style={styles.missingMedia}>
           <AppIcon name="videocam-off" size={28} color="rgba(255,255,255,0.55)" />
         </View>
       ) : null}
+      {loadFailed ? null : (
+        <Pressable
+          style={styles.playBtn}
+          onPress={() => {
+            if (playing) player.pause();
+            else player.play();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={playing ? 'إيقاف فيديو الإعلان' : 'تشغيل فيديو الإعلان'}
+        >
+          {playing ? null : (
+            <View style={styles.playBtnCircle}>
+              <AppIcon name="play" size={24} color="#fff" />
+            </View>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -160,7 +212,7 @@ function VideoOpenFallback({
   return (
     <View style={containerStyle}>
       {poster ? (
-        <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="contain" />
+        <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" />
       ) : (
         <View style={styles.missingMedia}>
           <AppIcon name="videocam-off" size={28} color="rgba(255,255,255,0.55)" />
@@ -195,9 +247,8 @@ class VideoErrorBoundary extends Component<{ children: ReactNode; fallback: Reac
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    alignSelf: 'stretch',
     backgroundColor: MEDIA_SURFACE,
-    alignItems: 'center',
-    justifyContent: 'center',
     overflow: 'hidden',
   },
   missingMedia: {
