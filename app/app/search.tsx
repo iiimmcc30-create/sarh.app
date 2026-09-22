@@ -109,6 +109,10 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const insets = useSafeAreaInsets();
   const isTab = variant === 'tab';
   const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top) + 48);
+  const headerHRef = useRef(headerH);
+  headerHRef.current = headerH;
+  const headerMeasuredRef = useRef(false);
+  const scrollingRef = useRef(false);
   const {
     scrollY,
     translateY,
@@ -483,10 +487,25 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     return () => sub.remove();
   }, [goHome, isTab, phase]);
 
+  useEffect(() => {
+    headerMeasuredRef.current = false;
+  }, [phase]);
+
   const onChromeLayout = useCallback((height: number) => {
     const next = Math.round(height);
     if (!next) return;
-    setHeaderH((prev) => (Math.abs(prev - next) < 1 ? prev : next));
+    // Overlay height is animated. Measuring inside the clip during scroll
+    // feeds headerH back into paddingFor and makes the header jitter.
+    if (scrollingRef.current && headerMeasuredRef.current) return;
+    if (headerMeasuredRef.current && next <= headerHRef.current) return;
+    if (headerMeasuredRef.current && Math.abs(headerHRef.current - next) < 2) return;
+    headerMeasuredRef.current = true;
+    headerHRef.current = next;
+    setHeaderH(next);
+  }, []);
+
+  const onScrollIdle = useCallback(() => {
+    scrollingRef.current = false;
   }, []);
 
   const visibleGroups = useMemo(() => {
@@ -520,19 +539,23 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     runSearch(next, true);
   }, [canSearch, hasMore, loading, runSearch]);
 
+  const loadMoreRef = useRef(loadMore);
+  loadMoreRef.current = loadMore;
+
   const onBodyScroll = useMemo(
     () =>
       Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: false,
         listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-          if (phase !== 'results') return;
+          scrollingRef.current = true;
+          if (phaseRef.current !== 'results') return;
           const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
           if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 180) {
-            loadMore();
+            loadMoreRef.current();
           }
         },
       }),
-    [loadMore, phase, scrollY],
+    [scrollY],
   );
 
   const retrySearch = useCallback(() => {
@@ -1093,8 +1116,8 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const resultItems =
     filter === 'all' ? latestItems : visibleGroups.flatMap((group) => group.items);
 
-  const collapseStyle = { transform: [{ translateY }] };
-  const identityStyle = { opacity: identityOpacity };
+  const collapseStyle = useMemo(() => ({ transform: [{ translateY }] }), [translateY]);
+  const identityStyle = useMemo(() => ({ opacity: identityOpacity }), [identityOpacity]);
 
   const sessionBack = (
     <SarhBackButton
@@ -1117,6 +1140,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
       >
         <View style={styles.chromeClip} pointerEvents="box-none">
           <View
+            collapsable={false}
             pointerEvents="box-none"
             onLayout={(event) => onChromeLayout(event.nativeEvent.layout.height)}
           >
@@ -1147,6 +1171,8 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
         bottomInset={isTab && phase === 'home' ? 'tabBar' : 'none'}
         bindChromeScroll={false}
         onScroll={onBodyScroll}
+        onScrollEndDrag={onScrollIdle}
+        onMomentumScrollEnd={onScrollIdle}
         scrollEventThrottle={16}
       >
         {phase === 'home' ? (

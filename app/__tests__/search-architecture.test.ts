@@ -101,7 +101,9 @@ describe('search architecture', () => {
     expect(search).toContain("tabBarStyle: hideTabBar");
     expect(search).toContain('BackHandler.addEventListener');
     expect(search).toContain('hardwareBackPress');
-    expect(search).toContain("if (phase !== 'results')");
+    expect(search).toContain("if (phaseRef.current !== 'results')");
+    expect(search).toContain('headerMeasuredRef');
+    expect(search).toContain('scrollingRef.current');
     expect(search).toContain('{ height: bodyPaddingTop }');
     expect(search).toContain('styles.chromeClip');
     expect(search).not.toContain('react-native-reanimated');
