@@ -20,20 +20,20 @@ function bytesToBase64Url(bytes: Uint8Array): string {
 }
 
 async function hmacSha256(secret: string, data: string): Promise<Uint8Array> {
-  const encoded = new TextEncoder().encode(data);
-  if (globalThis.crypto?.subtle) {
-    const key = await globalThis.crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign'],
-    );
-    const sig = await globalThis.crypto.subtle.sign('HMAC', key, encoded);
-    return new Uint8Array(sig);
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error('Web Crypto subtle is required to verify butcher JWTs');
   }
-  const { createHmac } = await import('crypto');
-  return new Uint8Array(createHmac('sha256', secret).update(data).digest());
+  const encoded = new TextEncoder().encode(data);
+  const key = await subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await subtle.sign('HMAC', key, encoded);
+  return new Uint8Array(sig);
 }
 
 function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {

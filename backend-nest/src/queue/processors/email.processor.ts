@@ -5,10 +5,21 @@ import nodemailer from 'nodemailer';
 import { LoggerService } from '../../common/services/logger.service';
 import { QUEUE_NAMES } from '../constants';
 import type { EmailJob } from '../types/queue.types';
+import {
+  isAllowedEmailTemplate,
+  isSafeEmailAddress,
+  sanitizeEmailVariable,
+  sanitizeHeaderValue,
+  sanitizeHttpUrl,
+  sanitizeMultilineHtml,
+} from './email.sanitize';
+
+const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587', 10),
+  port: smtpPort,
+  secure: smtpPort === 465,
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   pool: true,
   maxConnections: 3,
@@ -44,20 +55,30 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
     }
 
     const { to, subject, template, variables } = job.data;
+    if (!isSafeEmailAddress(to)) {
+      this.logger.warn({ to }, 'Skipping email — invalid recipient');
+      return;
+    }
+    if (!isAllowedEmailTemplate(template)) {
+      this.logger.warn({ template }, 'Skipping email — unknown template');
+      return;
+    }
+
+    const vars = variables ?? {};
     const templates: Record<string, string> = {
-      welcome: `مرحباً بك في سرح، ${variables.name}! حسابك جاهز.`,
-      fee_reminder: `تذكير: لديك رسوم معلقة ${variables.amount} ريال مستحقة بتاريخ ${variables.dueDate}.`,
-      order_update: `تحديث طلبك: ${variables.status}`,
-      subscription_renew: `تجديد اشتراكك: ${variables.plan} - ${variables.amount} ريال`,
-      email_verification: `رمز التحقق: <strong>${variables.code}</strong> (صالح 10 دقائق)`,
-      butcher_daftra_ready: `مرحباً، تم تجهيز حساب دفترة الخاص بملحمتك على منصة سرح.<br/><br/>رابط الدخول: <a href="${variables.loginUrl}">${variables.loginUrl}</a><br/>البريد: ${variables.loginEmail}${variables.passwordLine ? `<br/>${variables.passwordLine}` : ''}<br/><br/>لا يحتوي هذا البريد على مفاتيح التكامل. أدِر المنتجات والمخزون من دفترة.`,
+      welcome: `مرحباً بك في سرح، ${sanitizeEmailVariable(vars.name)}! حسابك جاهز.`,
+      fee_reminder: `تذكير: لديك رسوم معلقة ${sanitizeEmailVariable(vars.amount)} ريال مستحقة بتاريخ ${sanitizeEmailVariable(vars.dueDate)}.`,
+      order_update: `تحديث طلبك: ${sanitizeEmailVariable(vars.status)}`,
+      subscription_renew: `تجديد اشتراكك: ${sanitizeEmailVariable(vars.plan)} - ${sanitizeEmailVariable(vars.amount)} ريال`,
+      email_verification: `رمز التحقق: <strong>${sanitizeEmailVariable(vars.code)}</strong> (صالح 10 دقائق)`,
+      butcher_daftra_ready: `مرحباً، تم تجهيز حساب دفترة الخاص بملحمتك على منصة سرح.<br/><br/>رابط الدخول: <a href="${sanitizeHttpUrl(vars.loginUrl)}">${sanitizeHttpUrl(vars.loginUrl)}</a><br/>البريد: ${sanitizeEmailVariable(vars.loginEmail)}${vars.passwordLine ? `<br/>${sanitizeMultilineHtml(vars.passwordLine)}` : ''}<br/><br/>لا يحتوي هذا البريد على مفاتيح التكامل. أدِر المنتجات والمخزون من دفترة.`,
     };
 
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || 'sarh@sarhsa.online',
-      to,
-      subject,
-      html: `<div dir="rtl" style="font-family:sans-serif;max-width:600px;margin:0 auto">${templates[template] || variables.body || subject}</div>`,
+      to: sanitizeHeaderValue(to),
+      subject: sanitizeHeaderValue(subject),
+      html: `<div dir="rtl" style="font-family:sans-serif;max-width:600px;margin:0 auto">${templates[template]}</div>`,
     });
   }
 }

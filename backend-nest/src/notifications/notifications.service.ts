@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { NotificationsRepository } from './repositories/notifications.repository';
 import { throwApi } from '../common/exceptions/api.exception';
+import { NOTIFICATION_LIST_TAKE } from '../common/utils/query-limits';
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = NOTIFICATION_LIST_TAKE;
 
 const markReadSchema = z
   .object({
