@@ -35,6 +35,9 @@ export class MessagesRepository {
       where: {
         OR: [{ participant1: userId }, { participant2: userId }],
         ...(type ? { type } : {}),
+        states: {
+          none: { userId, hiddenAt: { not: null } },
+        },
       },
       orderBy: { lastMessageAt: 'desc' },
       take: 50,
@@ -46,6 +49,10 @@ export class MessagesRepository {
             nameEn: true,
             logo: true,
           },
+        },
+        states: {
+          where: { userId },
+          select: { pinnedAt: true, hiddenAt: true },
         },
         messages: {
           orderBy: { createdAt: 'desc' },
@@ -207,6 +214,31 @@ export class MessagesRepository {
     return this.prisma.message.updateMany({
       where: { threadId, receiverId, isRead: false },
       data: { isRead: true, readAt: new Date() },
+    });
+  }
+
+  upsertThreadState(
+    threadId: string,
+    userId: string,
+    data: { pinnedAt?: Date | null; hiddenAt?: Date | null },
+  ) {
+    return this.prisma.messageThreadState.upsert({
+      where: { threadId_userId: { threadId, userId } },
+      create: {
+        threadId,
+        userId,
+        pinnedAt: data.pinnedAt ?? null,
+        hiddenAt: data.hiddenAt ?? null,
+      },
+      update: data,
+      select: { pinnedAt: true, hiddenAt: true },
+    });
+  }
+
+  clearHiddenForThread(threadId: string) {
+    return this.prisma.messageThreadState.updateMany({
+      where: { threadId, hiddenAt: { not: null } },
+      data: { hiddenAt: null },
     });
   }
 }

@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsOptional,
   IsString,
@@ -52,4 +53,9 @@ export class ThreadMessagesQueryDto {
   @IsOptional()
   @IsString()
   cursor?: string;
+}
+
+export class PinThreadDto {
+  @IsBoolean()
+  pinned!: boolean;
 }

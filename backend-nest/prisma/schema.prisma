@@ -91,6 +91,7 @@ model User {
   accountActionsReceived              AdminAccountAction[]              @relation("AccountActionTarget")
   accountActionsTaken                 AdminAccountAction[]              @relation("AccountActionActor")
   deviceTokens                        UserDeviceToken[]
+  messageThreadStates                 MessageThreadState[]
 
   @@index([username])
   @@index([email])
@@ -713,6 +714,7 @@ model MessageThread {
   lastMessageAt DateTime          @default(now())
   createdAt     DateTime          @default(now())
   messages      Message[]
+  states        MessageThreadState[]
   butcher       Butcher?          @relation(fields: [butcherId], references: [id], onDelete: SetNull)
 
   @@unique([participant1, participant2, scopeKey])
@@ -721,6 +723,20 @@ model MessageThread {
   @@index([lastMessageAt])
   @@index([type])
   @@index([butcherId])
+}
+
+model MessageThreadState {
+  id       String         @id @default(uuid())
+  threadId String
+  userId   String
+  pinnedAt DateTime?
+  hiddenAt DateTime?
+  thread   MessageThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@index([threadId])
 }
 
 model Notification {

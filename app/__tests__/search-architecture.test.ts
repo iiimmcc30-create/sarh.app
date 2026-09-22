@@ -97,6 +97,7 @@ describe('search architecture', () => {
     expect(search).toContain('<View style={styles.searchSlot}>{chromeTabs}</View>');
     expect(search).toContain("bottomInset={isTab && phase === 'home' ? 'tabBar' : 'none'}");
     expect(search).toContain('bindChromeScroll={false}');
+    expect(search).toContain('onChromeScroll(event)');
     expect(search).toContain('setTabBarForceHidden');
     expect(search).toContain("tabBarStyle: hideTabBar");
     expect(search).toContain('BackHandler.addEventListener');
