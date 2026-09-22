@@ -40,6 +40,7 @@ export class PaidServicesService {
     await this.ensureDefaults();
     const keys = Object.values(PAID_SERVICE_SETTING_KEYS);
     const rows = await this.prisma.appSetting.findMany({
+      take: Math.max(keys.length, 1),
       where: { key: { in: keys } },
       select: { key: true, value: true },
     });

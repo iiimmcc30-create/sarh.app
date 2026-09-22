@@ -12,6 +12,7 @@ export class ExploreSarhBannersService {
 
   async listPublic() {
     const rows = await this.prisma.exploreSarhBanner.findMany({
+      take: 50,
       where: { isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {
@@ -30,6 +31,7 @@ export class ExploreSarhBannersService {
 
   listAll() {
     return this.prisma.exploreSarhBanner.findMany({
+      take: 200,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
@@ -76,6 +78,7 @@ export class ExploreSarhBannersService {
 
   async reorder(orderedIds: string[]) {
     const existing = await this.prisma.exploreSarhBanner.findMany({
+      take: 200,
       select: { id: true },
     });
     const byId = new Set(existing.map((row) => row.id));

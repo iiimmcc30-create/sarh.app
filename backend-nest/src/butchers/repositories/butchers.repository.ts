@@ -134,6 +134,7 @@ export class ButchersRepository {
   }) {
     const { where, cursor, take, lat, lng } = params;
     const ids = await this.prisma.butcher.findMany({
+      take: 2000,
       where,
       select: { id: true },
     });
@@ -180,6 +181,7 @@ export class ButchersRepository {
     const pageIds = orderedIds.slice(startIdx, startIdx + take + 1);
 
     const butchers = await this.prisma.butcher.findMany({
+      take: Math.max(pageIds.length, 1),
       where: { id: { in: pageIds } },
       include: BUTCHER_LIST_INCLUDE,
     });
@@ -244,6 +246,7 @@ export class ButchersRepository {
 
   findOrdersInRange(butcherId: string, from: Date, to?: Date) {
     return this.prisma.butcherOrder.findMany({
+      take: 2000,
       where: {
         butcherId,
         createdAt: to ? { gte: from, lt: to } : { gte: from },
@@ -254,6 +257,7 @@ export class ButchersRepository {
 
   findProducts(butcherId: string) {
     return this.prisma.butcherProduct.findMany({
+      take: 200,
       where: { butcherId, ...notDeleted },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -293,6 +297,7 @@ export class ButchersRepository {
 
   findActiveOffers(butcherId: string) {
     return this.prisma.butcherOffer.findMany({
+      take: 100,
       where: { butcherId, validUntil: { gte: new Date() }, ...notDeleted },
       orderBy: { createdAt: 'desc' },
     });
@@ -322,6 +327,7 @@ export class ButchersRepository {
 
   findOrdersForButcher(butcherId: string) {
     return this.prisma.butcherOrder.findMany({
+      take: 200,
       where: { butcherId },
       orderBy: { createdAt: 'desc' },
       include: BUTCHER_ORDER_LIST_INCLUDE,
@@ -330,6 +336,7 @@ export class ButchersRepository {
 
   findOrdersForCustomer(customerId: string) {
     return this.prisma.butcherOrder.findMany({
+      take: 200,
       where: { customerId },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -418,6 +425,7 @@ export class ButchersRepository {
 
   findProductsInventory(butcherId: string) {
     return this.prisma.butcherProduct.findMany({
+      take: 500,
       where: { butcherId, ...notDeleted },
       select: {
         id: true,
@@ -488,6 +496,7 @@ export class ButchersRepository {
 
   findOrderAudits(orderId: string) {
     return this.prisma.orderStatusAudit.findMany({
+      take: 200,
       where: { orderId },
       orderBy: { changedAt: 'asc' },
     });
@@ -495,6 +504,7 @@ export class ButchersRepository {
 
   findActiveStories() {
     return this.prisma.butcherStory.findMany({
+      take: 100,
       where: { expiresAt: { gt: new Date() }, ...notDeleted },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -656,6 +666,7 @@ export class ButchersRepository {
 
   findOrdersForReports(butcherId: string, from: Date, to: Date) {
     return this.prisma.butcherOrder.findMany({
+      take: 2000,
       where: {
         butcherId,
         createdAt: { gte: from, lte: to },

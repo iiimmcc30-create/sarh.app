@@ -569,7 +569,10 @@ export class AdminRepository {
   }
 
   listSettings() {
-    return this.prisma.appSetting.findMany({ orderBy: { key: 'asc' } });
+    return this.prisma.appSetting.findMany({
+      take: 200,
+      orderBy: { key: 'asc' },
+    });
   }
 
   upsertSetting(
@@ -653,6 +656,7 @@ export class AdminRepository {
 
   listSectionVersions(sectionId: string) {
     return this.prisma.contentSectionVersion.findMany({
+      take: 200,
       where: { sectionId },
       orderBy: { version: 'desc' },
     });
@@ -894,14 +898,17 @@ export class AdminRepository {
         _count: { _all: true },
       }),
       this.prisma.user.findMany({
+        take: 5000,
         where: { ...notDeleted, createdAt: { gte: thirtyDaysAgo } },
         select: { createdAt: true },
       }),
       this.prisma.butcherOrder.findMany({
+        take: 5000,
         where: { createdAt: { gte: thirtyDaysAgo }, status: 'delivered' },
         select: { createdAt: true, totalPrice: true },
       }),
       this.prisma.payment.findMany({
+        take: 5000,
         where: {
           createdAt: { gte: thirtyDaysAgo },
           OR: [
@@ -912,6 +919,7 @@ export class AdminRepository {
         select: { createdAt: true, status: true },
       }),
       this.prisma.supportTicket.findMany({
+        take: 5000,
         where: {
           ...notDeleted,
           type: 'REPORT',
@@ -1408,6 +1416,7 @@ export class AdminRepository {
 
   async listListingFeeCompliance() {
     const unpaidOnDeleted = await this.prisma.listingFee.findMany({
+      take: 1000,
       where: {
         status: { in: ['pending', 'overdue'] },
         listing: { deletedAt: { not: null } },

@@ -8,6 +8,7 @@ export class ContentService {
 
   listPublicSections() {
     return this.prisma.contentSection.findMany({
+      take: 100,
       where: { deletedAt: null, isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {

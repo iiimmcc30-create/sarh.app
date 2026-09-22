@@ -5,6 +5,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BATCH_ID_TAKE } from '../../common/utils/query-limits';
 
 export const KNOWLEDGE_AUTHOR_USERNAME = 'knowledge_center';
 
@@ -106,12 +107,14 @@ export class KnowledgeRepository {
 
   listSources() {
     return this.prisma.knowledgeSource.findMany({
+      take: 200,
       orderBy: { createdAt: 'desc' },
     });
   }
 
   listEnabledSources() {
     return this.prisma.knowledgeSource.findMany({
+      take: 200,
       where: { enabled: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -250,6 +253,7 @@ export class KnowledgeRepository {
 
   findFollowerIds(userId: string) {
     return this.prisma.follow.findMany({
+      take: 2000,
       where: { followingId: userId },
       select: { followerId: true },
     });
@@ -268,34 +272,52 @@ export class KnowledgeRepository {
    * so published posts appear in Following and are interactable in-app.
    */
   async ensureFollowedByAllActiveUsers(knowledgeUserId: string) {
-    const users = await this.prisma.user.findMany({
-      where: {
-        deletedAt: null,
-        isActive: true,
-        isAI: false,
-        id: { not: knowledgeUserId },
-      },
-      select: { id: true },
-    });
+    let users = 0;
+    let followsCreated = 0;
+    let cursor: string | undefined;
 
-    const existing = await this.prisma.follow.findMany({
-      where: { followingId: knowledgeUserId },
-      select: { followerId: true },
-    });
-    const already = new Set(existing.map((f) => f.followerId));
-    const missing = users.filter((u) => !already.has(u.id));
-
-    if (missing.length > 0) {
-      await this.prisma.follow.createMany({
-        data: missing.map((u) => ({
-          followerId: u.id,
-          followingId: knowledgeUserId,
-        })),
-        skipDuplicates: true,
+    for (;;) {
+      const page = await this.prisma.user.findMany({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          isAI: false,
+          id: { not: knowledgeUserId },
+        },
+        select: { id: true },
+        orderBy: { id: 'asc' },
+        take: BATCH_ID_TAKE,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       });
+      if (page.length === 0) break;
+      users += page.length;
+
+      const existing = await this.prisma.follow.findMany({
+        where: {
+          followingId: knowledgeUserId,
+          followerId: { in: page.map((row) => row.id) },
+        },
+        select: { followerId: true },
+        take: page.length,
+      });
+      const already = new Set(existing.map((row) => row.followerId));
+      const missing = page.filter((row) => !already.has(row.id));
+      if (missing.length > 0) {
+        await this.prisma.follow.createMany({
+          data: missing.map((row) => ({
+            followerId: row.id,
+            followingId: knowledgeUserId,
+          })),
+          skipDuplicates: true,
+        });
+        followsCreated += missing.length;
+      }
+
+      if (page.length < BATCH_ID_TAKE) break;
+      cursor = page[page.length - 1].id;
     }
 
-    return { users: users.length, followsCreated: missing.length };
+    return { users, followsCreated };
   }
 
   async ensureFollowedByUser(userId: string, knowledgeUserId: string) {

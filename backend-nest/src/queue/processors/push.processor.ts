@@ -1,7 +1,8 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Job } from 'bullmq';
-import admin from 'firebase-admin';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QUEUE_NAMES } from '../constants';
 import type { PushJob } from '../types/queue.types';
@@ -11,10 +12,10 @@ import type { PushJob } from '../types/queue.types';
 export class PushProcessor extends WorkerHost {
   constructor(private readonly prisma: PrismaService) {
     super();
-    if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
+    if (!getApps().length && process.env.FIREBASE_PROJECT_ID) {
       try {
-        admin.initializeApp({
-          credential: admin.credential.cert({
+        initializeApp({
+          credential: cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
@@ -32,12 +33,12 @@ export class PushProcessor extends WorkerHost {
 
   async process(job: Job<PushJob>): Promise<void> {
     if (job.name !== 'send') return;
-    if (!admin.apps.length) return;
+    if (!getApps().length) return;
 
     const { fcmToken, titleAr, bodyAr, data } = job.data;
 
     try {
-      await admin.messaging().send({
+      await getMessaging().send({
         token: fcmToken,
         notification: { title: titleAr, body: bodyAr },
         data: data || {},

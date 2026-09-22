@@ -56,6 +56,7 @@ export class ButcherBannersService {
   async listAll() {
     await this.ensureDefaults();
     return this.prisma.butcherMarketBanner.findMany({
+      take: 20,
       orderBy: { slot: 'asc' },
     });
   }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BATCH_ID_TAKE } from '../../common/utils/query-limits';
 import { RedisService } from '../../redis/redis.service';
 import { logger } from '../../shared/lib/logger';
 import {
@@ -112,18 +113,103 @@ export class ButcherRankingService {
   }
 
   async recalculateAll(): Promise<number> {
-    const ids = await this.prisma.butcher.findMany({
+    const butchers = await this.prisma.butcher.findMany({
       where: { deletedAt: null },
-      select: { id: true },
+      select: {
+        id: true,
+        createdAt: true,
+        lat: true,
+        lng: true,
+        completedOrdersCount: true,
+        favoritesCount: true,
+        rating: true,
+        reviewCount: true,
+        avgAcceptMinutes: true,
+        avgPrepMinutes: true,
+        avgCompleteMinutes: true,
+      },
+      take: BATCH_ID_TAKE,
     });
-    for (const { id } of ids) {
-      await this.refreshButcherOperationalMetrics(id);
+    if (butchers.length === 0) return 0;
+
+    const ids = butchers.map((row) => row.id);
+    const grouped = await this.prisma.butcherOrder.groupBy({
+      by: ['butcherId', 'status'],
+      where: {
+        butcherId: { in: ids },
+        status: { in: ['delivered', 'cancelled'] },
+      },
+      _count: { _all: true },
+    });
+    const delivered = new Map<string, number>();
+    const cancelled = new Map<string, number>();
+    for (const row of grouped) {
+      const count = row._count._all;
+      if (row.status === 'delivered') delivered.set(row.butcherId, count);
+      if (row.status === 'cancelled') cancelled.set(row.butcherId, count);
     }
+
+    const speedByButcher = new Map<
+      string,
+      Awaited<ReturnType<ButcherRankingService['computeSpeedAverages']>>
+    >();
+    for (let i = 0; i < ids.length; i += 25) {
+      const chunk = ids.slice(i, i + 25);
+      const speeds = await Promise.all(
+        chunk.map(async (id) => ({
+          id,
+          speed: await this.computeSpeedAverages(id),
+        })),
+      );
+      for (const row of speeds) speedByButcher.set(row.id, row.speed);
+    }
+
+    const refreshed = butchers.map((butcher) => {
+      const deliveredCount = delivered.get(butcher.id) ?? 0;
+      const cancelledCount = cancelled.get(butcher.id) ?? 0;
+      const total = deliveredCount + cancelledCount;
+      const orderCompletionRate =
+        total > 0 ? Math.round((deliveredCount / total) * 1000) / 10 : 100;
+      return {
+        ...butcher,
+        completedOrdersCount: deliveredCount,
+        favoritesCount: butcher.favoritesCount,
+        orderCompletionRate,
+        ...(speedByButcher.get(butcher.id) ?? {}),
+      };
+    });
+
     await this.redis.cacheDel(BOUNDS_CACHE_KEY);
-    for (const { id } of ids) {
-      await this.recalculateButcher(id);
-    }
-    return ids.length;
+    const bounds = this.boundsFromRows(refreshed);
+    await this.redis.cacheSet(BOUNDS_CACHE_KEY, bounds, BOUNDS_TTL_SEC);
+    const now = new Date();
+    await this.prisma.$transaction(
+      refreshed.map((butcher) => {
+        const normalized = this.normalizeButcher(butcher, bounds);
+        const newButcherBoost = computeNewButcherBoost(butcher.createdAt);
+        const rankingScore = computeRankingScore({
+          ...normalized,
+          newButcherBoost,
+        });
+        return this.prisma.butcher.update({
+          where: { id: butcher.id },
+          data: {
+            completedOrdersCount: butcher.completedOrdersCount,
+            totalOrders: butcher.completedOrdersCount,
+            orderCompletionRate: butcher.orderCompletionRate,
+            avgAcceptMinutes: butcher.avgAcceptMinutes,
+            avgPrepMinutes: butcher.avgPrepMinutes,
+            avgCompleteMinutes: butcher.avgCompleteMinutes,
+            ...normalized,
+            newButcherBoost,
+            rankingScore,
+            lastRankingUpdate: now,
+          },
+        });
+      }),
+    );
+    await this.redis.cacheDelPattern('butchers:v4:*');
+    return butchers.length;
   }
 
   private normalizeButcher(butcher: ButcherMetrics, bounds: PlatformBounds) {
@@ -183,6 +269,7 @@ export class ButcherRankingService {
 
     const butchers = await this.prisma.butcher.findMany({
       where: { deletedAt: null },
+      take: BATCH_ID_TAKE,
       select: {
         completedOrdersCount: true,
         favoritesCount: true,
@@ -196,6 +283,25 @@ export class ButcherRankingService {
       },
     });
 
+    const bounds = this.boundsFromRows(butchers);
+
+    await this.redis.cacheSet(BOUNDS_CACHE_KEY, bounds, BOUNDS_TTL_SEC);
+    return bounds;
+  }
+
+  private boundsFromRows(
+    butchers: Array<{
+      completedOrdersCount: number;
+      favoritesCount: number;
+      rating: number;
+      reviewCount: number;
+      avgAcceptMinutes: number | null;
+      avgPrepMinutes: number | null;
+      avgCompleteMinutes: number | null;
+      lat: number | null;
+      lng: number | null;
+    }>,
+  ): PlatformBounds {
     const orders = butchers.map((b) => b.completedOrdersCount);
     const favorites = butchers.map((b) => b.favoritesCount);
     const ratings = butchers
@@ -218,7 +324,7 @@ export class ButcherRankingService {
         ),
       );
 
-    const bounds: PlatformBounds = {
+    return {
       minOrders: orders.length ? Math.min(...orders) : 0,
       maxOrders: orders.length ? Math.max(...orders) : 0,
       minRating: ratings.length ? Math.min(...ratings) : 0,
@@ -230,9 +336,6 @@ export class ButcherRankingService {
       minDistanceKm: distances.length ? Math.min(...distances) : 0,
       maxDistanceKm: distances.length ? Math.max(...distances) : 100,
     };
-
-    await this.redis.cacheSet(BOUNDS_CACHE_KEY, bounds, BOUNDS_TTL_SEC);
-    return bounds;
   }
 
   async refreshButcherOperationalMetrics(butcherId: string): Promise<void> {

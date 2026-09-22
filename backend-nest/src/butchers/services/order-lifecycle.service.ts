@@ -83,6 +83,7 @@ export class OrderLifecycleService {
 
   private async staffUserIds(): Promise<string[]> {
     const staff = await this.prisma.user.findMany({
+      take: 200,
       where: {
         role: { in: ['ADMIN', 'MODERATOR'] },
         isActive: true,
@@ -269,6 +270,7 @@ export class OrderLifecycleService {
     locked: LockedOrderRow,
   ): Promise<OrderInventoryLine[]> {
     const items = await tx.butcherOrderItem.findMany({
+      take: 200,
       where: { orderId },
       select: { productId: true, reservedQuantity: true },
     });

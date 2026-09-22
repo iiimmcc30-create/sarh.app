@@ -29,6 +29,7 @@ export class MarketCategoriesRepository {
 
   findRoots(opts: { activeOnly: boolean }) {
     return this.prisma.marketCategory.findMany({
+      take: 200,
       where: {
         parentId: null,
         ...notDeleted,
@@ -69,6 +70,7 @@ export class MarketCategoriesRepository {
 
   findChildren(parentId: string, opts: { activeOnly: boolean }) {
     return this.prisma.marketCategory.findMany({
+      take: 200,
       where: {
         parentId,
         ...notDeleted,

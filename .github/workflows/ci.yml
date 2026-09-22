@@ -123,5 +123,5 @@ jobs:
       - run: npm run lint
       - run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: https://sarh-new4.onrender.com
-          NEXT_PUBLIC_SOCKET_URL: https://sarh-socket.onrender.com
+          NEXT_PUBLIC_API_URL: https://sarhsa.online
+          NEXT_PUBLIC_SOCKET_URL: https://sarhsa.online

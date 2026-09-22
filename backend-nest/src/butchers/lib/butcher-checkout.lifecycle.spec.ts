@@ -225,12 +225,19 @@ function createStore() {
           where,
           data,
         }: {
-          where: { checkoutId: string; status?: string; userId?: string };
+          where: {
+            checkoutId?: string;
+            status?: string;
+            userId?: string;
+            id?: { in: string[] };
+          };
           data: Partial<ReservationRow>;
         }) => {
           let count = 0;
           for (const row of reservations) {
-            if (row.checkoutId !== where.checkoutId) continue;
+            if (where.checkoutId && row.checkoutId !== where.checkoutId)
+              continue;
+            if (where.id?.in && !where.id.in.includes(row.id)) continue;
             if (where.status && row.status !== where.status) continue;
             if (where.userId && row.userId !== where.userId) continue;
             Object.assign(row, data);

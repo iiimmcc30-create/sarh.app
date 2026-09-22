@@ -42,6 +42,7 @@ export class PostsRepository {
 
   findLikesByUser(userId: string, postIds: string[]) {
     return this.prisma.postLike.findMany({
+      take: Math.max(postIds.length, 1),
       where: { userId, postId: { in: postIds } },
       select: { postId: true },
     });
@@ -49,6 +50,7 @@ export class PostsRepository {
 
   findRepostsByUser(userId: string, postIds: string[]) {
     return this.prisma.postRepost.findMany({
+      take: Math.max(postIds.length, 1),
       where: { userId, postId: { in: postIds } },
       select: { postId: true },
     });

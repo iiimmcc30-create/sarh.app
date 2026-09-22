@@ -32,6 +32,7 @@ export class StoryViewRepository {
     if (storyIds.length === 0)
       return Promise.resolve([] as { storyId: string }[]);
     return this.prisma.storyView.findMany({
+      take: Math.max(storyIds.length, 1),
       where: { viewerId, storyId: { in: storyIds } },
       select: { storyId: true },
     });

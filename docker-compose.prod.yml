@@ -15,6 +15,8 @@ services:
   postgres:
     image: postgres:18-alpine
     restart: unless-stopped
+    mem_limit: 768m
+    cpus: "1.0"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
@@ -33,6 +35,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    mem_limit: 384m
+    cpus: "0.50"
     # Cap memory so noeviction is meaningful for BullMQ/session keys on a small VPS.
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
     volumes:
@@ -51,6 +55,8 @@ services:
       dockerfile: Dockerfile
     image: sarh-backend:latest
     restart: unless-stopped
+    mem_limit: 768m
+    cpus: "1.0"
     env_file:
       - .env.production
     environment:
@@ -87,6 +93,8 @@ services:
   worker:
     image: sarh-backend:latest
     restart: unless-stopped
+    mem_limit: 512m
+    cpus: "0.75"
     env_file:
       - .env.production
     environment:
@@ -123,6 +131,8 @@ services:
   socket:
     image: sarh-backend:latest
     restart: unless-stopped
+    mem_limit: 384m
+    cpus: "0.50"
     env_file:
       - .env.production
     environment:
@@ -171,6 +181,8 @@ services:
         NEXT_PUBLIC_ADMIN_BASE_PATH: /admin
     image: sarh-admin:latest
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: "0.25"
     environment:
       NODE_ENV: production
       PORT: '3000'
@@ -205,6 +217,8 @@ services:
         NEXT_PUBLIC_BUTCHER_BASE_PATH: /butcher
     image: sarh-butcher:latest
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: "0.25"
     environment:
       NODE_ENV: production
       PORT: '3003'
@@ -238,6 +252,8 @@ services:
         EXPO_PUBLIC_AGORA_ENABLED: 'false'
     image: sarh-web:latest
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: "0.50"
     networks:
       - sarh_internal
     healthcheck:
@@ -250,6 +266,8 @@ services:
   nginx:
     image: nginx:1.27-alpine
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: "0.25"
     depends_on:
       - api
       - socket

@@ -233,6 +233,7 @@ export class UsersRepository {
 
   listDeviceTokens(userId: string) {
     return this.prisma.userDeviceToken.findMany({
+      take: 50,
       where: { userId },
       select: { token: true },
     });
@@ -303,6 +304,7 @@ export class UsersRepository {
 
   findFollowsByViewer(viewerId: string, followingIds: string[]) {
     return this.prisma.follow.findMany({
+      take: Math.max(followingIds.length, 1),
       where: {
         followerId: viewerId,
         followingId: { in: followingIds },

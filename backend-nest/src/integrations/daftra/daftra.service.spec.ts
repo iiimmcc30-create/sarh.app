@@ -414,6 +414,7 @@ describe('DaftraService', () => {
     const ids = await service.listConnectedButcherIds();
     expect(ids).toEqual(['butcher-connected']);
     expect(prisma.butcherDaftraIntegration.findMany).toHaveBeenCalledWith({
+      take: 500,
       where: { status: 'CONNECTED' },
       select: { butcherId: true },
     });
