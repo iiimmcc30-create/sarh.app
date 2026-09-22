@@ -59,6 +59,17 @@ export class UnifiedSearchService {
       region: dto.region,
     };
 
+    const cacheKey = `search:unified:v1:${type}:${query}:${page}:${limit}:${filters.categoryId ?? ''}:${filters.subcategoryId ?? ''}:${filters.country ?? ''}:${filters.region ?? ''}:${filters.minPrice ?? ''}:${filters.maxPrice ?? ''}`;
+    if (this.cache.isEnabled()) {
+      const cached = await this.cache.get<{
+        query: string;
+        type: SearchType;
+        groups: SearchGroup[];
+        durationMs?: number;
+      }>(cacheKey);
+      if (cached) return { ...cached, durationMs: Date.now() - started };
+    }
+
     const typesToSearch: Array<Exclude<SearchType, 'all'>> =
       type === 'all'
         ? ['listings', 'posts', 'users', 'news', 'services']
@@ -85,12 +96,16 @@ export class UnifiedSearchService {
       'Unified search completed',
     );
 
-    return {
+    const payload = {
       query,
       type,
       groups,
       durationMs,
     };
+    if (this.cache.isEnabled()) {
+      await this.cache.set(cacheKey, payload, 45).catch(() => {});
+    }
+    return payload;
   }
 
   async suggest(q: string, limit = 8) {

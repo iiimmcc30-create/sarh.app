@@ -291,9 +291,10 @@ export async function fetchSearchSuggestions(
 }
 
 export async function fetchTrendingTags(): Promise<Array<{ tag: string; count: number }>> {
-  return dedupeInflight('GET:/api/search/trending', async () => {
+  return dedupeInflight('GET:/api/search/trending:24h:16', async () => {
     const base = await ensureApiReachable();
-    const res = await fetch(`${base}/api/search/trending`);
+    const qs = new URLSearchParams({ window: '24h', limit: '16' });
+    const res = await fetch(`${base}/api/search/trending?${qs.toString()}`);
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.success) return [];
     return json.data?.trending ?? [];
