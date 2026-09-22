@@ -86,6 +86,7 @@ export class ListingsRepository {
       where: { id },
       select: {
         sellerId: true,
+        origin: true,
         category: true,
         categoryId: true,
         subcategoryId: true,
@@ -103,7 +104,7 @@ export class ListingsRepository {
   findSellerId(id: string) {
     return this.prisma.listing.findUnique({
       where: { id },
-      select: { sellerId: true },
+      select: { sellerId: true, origin: true },
     });
   }
 

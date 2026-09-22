@@ -313,7 +313,14 @@ model MarketCategory {
 
 model Listing {
   id                String          @id @default(uuid())
-  sellerId          String
+  /// Null only for ADMIN_MANAGED listings. Real listings always have a user.
+  sellerId          String?
+  origin            ListingOrigin   @default(USER)
+  /// Display-only identity. Never a User login, id, or foreign key.
+  displayUsername   String?
+  displaySellerName String?
+  displayPhone      String?
+  displayRegion     String?
   title             String
   arabicTitle       String
   description       String
@@ -360,7 +367,7 @@ model Listing {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   deletedAt         DateTime?
-  seller            User            @relation(fields: [sellerId], references: [id])
+  seller            User?           @relation(fields: [sellerId], references: [id])
   marketCategory    MarketCategory? @relation("ListingMarketCategory", fields: [categoryId], references: [id])
   marketSubcategory MarketCategory? @relation("ListingMarketSubcategory", fields: [subcategoryId], references: [id])
   fee               ListingFee?
@@ -371,6 +378,7 @@ model Listing {
   comments          ListingComment[]
 
   @@index([sellerId])
+  @@index([origin])
   @@index([category])
   @@index([categoryId])
   @@index([subcategoryId])
@@ -1231,6 +1239,12 @@ enum ListingStatus {
   expired
   pending_fee
   suspended
+}
+
+/// USER listings belong to a real account. ADMIN_MANAGED listings have display identity only.
+enum ListingOrigin {
+  USER
+  ADMIN_MANAGED
 }
 
 enum OrderStatus {

@@ -97,6 +97,12 @@ export interface Listing {
   thumbnailUrl?: string;
   description: string;
   arabicDescription: string;
+  /** USER listings keep a real seller. ADMIN_MANAGED has display identity and an empty seller id. */
+  origin?: 'USER' | 'ADMIN_MANAGED';
+  displayUsername?: string;
+  displaySellerName?: string;
+  displayPhone?: string;
+  displayRegion?: string;
   seller: User;
   featured: boolean;
   pinned: boolean;

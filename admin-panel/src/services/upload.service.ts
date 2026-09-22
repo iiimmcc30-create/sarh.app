@@ -1,6 +1,6 @@
 import { apiClient, unwrap, type ApiEnvelope } from './api.client';
 
-type UploadFolder = 'posts' | 'stories' | 'temp';
+type UploadFolder = 'posts' | 'stories' | 'temp' | 'listings';
 
 type S3UploadSlot = {
   provider?: 's3';
@@ -162,5 +162,40 @@ export async function uploadEditorialStoryImage(file: File): Promise<string> {
   if (!slot.cdnUrl) {
     throw new Error('تعذّر تجهيز رفع الصورة');
   }
+  return uploadToS3(slot, file);
+}
+
+/** Listing image or video via the existing presign/Cloudinary path. */
+export async function uploadListingMedia(file: File): Promise<string> {
+  const isImage = file.type.startsWith('image/');
+  const isVideo = file.type.startsWith('video/');
+  if (!isImage && !isVideo) {
+    throw new Error('اختر صورة أو فيديو');
+  }
+
+  const presignRes = await apiClient.post<
+    ApiEnvelope<{ urls: UploadSlot[]; maxSizeMb?: number }>
+  >('/upload/presign', {
+    mimetype: file.type,
+    folder: 'listings',
+    count: 1,
+  });
+
+  const { urls, maxSizeMb = 20 } = unwrap(presignRes);
+  const slot = urls[0];
+  if (!slot?.uploadUrl) {
+    throw new Error('تعذّر تجهيز الرفع');
+  }
+
+  const maxBytes = maxSizeMb * 1024 * 1024;
+  if (file.size > maxBytes) {
+    throw new Error(`حجم الملف يتجاوز ${maxSizeMb} ميجابايت`);
+  }
+
+  if (slot.provider === 'local') return uploadToLocal(slot, file);
+  if (slot.provider === 'cloudinary' || 'signature' in slot) {
+    return uploadToCloudinary(slot as CloudinaryUploadSlot, file);
+  }
+  if (!slot.cdnUrl) throw new Error('تعذّر تجهيز الرفع');
   return uploadToS3(slot, file);
 }

@@ -13,6 +13,7 @@ type ListingContactSheetProps = {
   onMessage: () => void;
   onCall: () => void;
   canCall: boolean;
+  allowMessage?: boolean;
 };
 
 /**
@@ -25,6 +26,7 @@ export function ListingContactSheet({
   onMessage,
   onCall,
   canCall,
+  allowMessage = true,
 }: ListingContactSheetProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
@@ -54,6 +56,7 @@ export function ListingContactSheet({
           </View>
 
           <View style={styles.actions}>
+            {allowMessage ? (
             <Pressable
               onPress={() => {
                 onClose();
@@ -72,6 +75,7 @@ export function ListingContactSheet({
                 </AppText>
               </View>
             </Pressable>
+            ) : null}
 
             <Pressable
               onPress={() => {

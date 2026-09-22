@@ -21,6 +21,7 @@ describe('AdminService.updateUser role authorization', () => {
       {} as never,
       {} as never,
       {} as never,
+      { del: jest.fn(), delPattern: jest.fn() } as never,
     );
   });
 

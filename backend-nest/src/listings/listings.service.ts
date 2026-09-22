@@ -489,6 +489,9 @@ export class ListingsService {
   async update(user: JwtPayload, id: string, dto: UpdateListingDto) {
     const listing = await this.repo.findOwnerMeta(id);
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+    if (listing.origin === 'ADMIN_MANAGED') {
+      throwApi(403, 'forbidden', 'يُعدَّل هذا الإعلان من لوحة الإدارة');
+    }
     if (listing.sellerId !== user.userId && user.role !== 'ADMIN') {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
@@ -607,6 +610,9 @@ export class ListingsService {
   ) {
     const listing = await this.repo.findOwnerMeta(id);
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+    if (listing.origin === 'ADMIN_MANAGED') {
+      throwApi(403, 'forbidden', 'يُعدَّل هذا الإعلان من لوحة الإدارة');
+    }
     if (listing.sellerId !== user.userId && user.role !== 'ADMIN') {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
@@ -674,6 +680,9 @@ export class ListingsService {
   async remove(user: JwtPayload, id: string, dto: DeleteListingDto) {
     const listing = await this.repo.findSellerId(id);
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
+    if (listing.origin === 'ADMIN_MANAGED') {
+      throwApi(403, 'forbidden', 'يُعدَّل هذا الإعلان من لوحة الإدارة');
+    }
     if (listing.sellerId !== user.userId && user.role !== 'ADMIN') {
       throwApi(403, 'forbidden', 'غير مسموح');
     }
@@ -727,7 +736,7 @@ export class ListingsService {
     const listing = await this.repo.findActiveListingMeta(listingId);
     if (!listing) throwApi(404, 'not_found', 'الإعلان غير موجود');
 
-    if (listing.sellerId !== user.userId) {
+    if (listing.sellerId && listing.sellerId !== user.userId) {
       const owner = await this.usersRepo.findUserCommentsAudience(
         listing.sellerId,
       );
@@ -752,7 +761,7 @@ export class ListingsService {
       dto.content,
     );
 
-    if (listing.sellerId !== user.userId) {
+    if (listing.sellerId && listing.sellerId !== user.userId) {
       void this.notifications
         .notifyUser({
           userId: listing.sellerId,
