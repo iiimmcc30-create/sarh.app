@@ -22,11 +22,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   StyleSheet,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ComposerKeyboardView } from '@/components/ui/ComposerKeyboardView';
+import { useComposerKeyboardPad } from '@/hooks/useComposerKeyboardPad';
 
 function mapBackendPost(p: any): Post | null {
   if (!p?.id || !p?.author) return null;
@@ -70,7 +70,7 @@ export default function PostDetailScreen() {
     : params.focusComment;
   const postId = id ? decodeURIComponent(id) : '';
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { keyboardVisible, restingBottom } = useComposerKeyboardPad();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const { isAuthenticated } = useAuth();
@@ -167,11 +167,7 @@ export default function PostDetailScreen() {
           setPost((prev) => (prev ? { ...prev, comments: prev.comments + 1 } : prev));
         }}
       >
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior="padding"
-          keyboardVerticalOffset={0}
-        >
+        <ComposerKeyboardView style={styles.flex}>
           <ScreenBody gutter={false} padBottom="xl">
             <PostItem
               post={enrichedPost}
@@ -188,10 +184,14 @@ export default function PostDetailScreen() {
             />
             <PostCommentsList />
           </ScreenBody>
-          <View style={{ paddingBottom: insets.bottom }}>
+          <View
+            style={{
+              paddingBottom: keyboardVisible ? 0 : restingBottom,
+            }}
+          >
             <PostCommentsComposer />
           </View>
-        </KeyboardAvoidingView>
+        </ComposerKeyboardView>
       </PostCommentsProvider>
     </Screen>
   );

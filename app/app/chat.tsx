@@ -8,7 +8,6 @@ import { useCallback, useEffect, useRef, useState, memo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -16,7 +15,6 @@ import {
   View,
   Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { sarhListingShareUrl } from '@/constants/sarhOfficial';
 import { radius, spacing, type ThemeColors } from '@/constants/theme';
@@ -28,6 +26,8 @@ import { rtlForwardIcon, rtlInputText } from '@/lib/rtl';
 import { ChatThreadWallpaper } from '@/components/feature/ChatThreadWallpaper';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
+import { ComposerKeyboardView } from '@/components/ui/ComposerKeyboardView';
+import { useComposerKeyboardPad } from '@/hooks/useComposerKeyboardPad';
 import type { ChatMessage } from '@/services/chatMessages';
 import { API_BASE } from '@/services/api';
 import { resolveMediaUrl } from '@/services/media';
@@ -394,7 +394,7 @@ export default function ChatScreen() {
     listingLocation?: string;
   }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { keyboardVisible, restingBottom } = useComposerKeyboardPad();
   const { colors } = useTheme();
   const styles = useThemedStyles(({ colors }) => createStyles(colors));
   const messageStyles = useThemedStyles(({ colors }) => createMessageStyles(colors));
@@ -934,11 +934,7 @@ export default function ChatScreen() {
 
   return (
     <Screen edges={['top']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 12}
-      >
+      <ComposerKeyboardView>
         {/* Header */}
         <Row style={styles.header} gap="sm">
           <SarhBackButton onPress={() => router.back()} color={colors.textPrimary} style={styles.backBtn} />
@@ -1095,7 +1091,11 @@ export default function ChatScreen() {
             gap="sm"
             style={[
               styles.inputBar,
-              { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.sm },
+              {
+                paddingBottom: keyboardVisible
+                  ? spacing.sm
+                  : Math.max(restingBottom, spacing.sm) + spacing.sm,
+              },
             ]}
           >
             <AppText variant="caption" color="textMuted" style={{ flex: 1 }}>
@@ -1117,10 +1117,14 @@ export default function ChatScreen() {
           styles={styles}
           colors={colors}
           composerTextStyle={composerTextStyle}
-          bottomPad={Math.max(insets.bottom, spacing.sm) + spacing.sm}
+          bottomPad={
+            keyboardVisible
+              ? spacing.sm
+              : Math.max(restingBottom, spacing.sm) + spacing.sm
+          }
         />
         )}
-      </KeyboardAvoidingView>
+      </ComposerKeyboardView>
     </Screen>
   );
 }

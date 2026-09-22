@@ -772,13 +772,27 @@ describe('Architecture V2 — Wave 4A community and messages inbox', () => {
     });
   }
 
-  it('keeps KeyboardAvoidingView on post detail because Screen.keyboard has no offset', () => {
+  it('keeps composer keyboard avoidance on post detail because Screen.keyboard has no offset', () => {
     const detail = src('app/post/[id].tsx');
-    expect(detail).toContain('KeyboardAvoidingView');
+    expect(detail).toContain('ComposerKeyboardView');
+    expect(detail).toContain('useComposerKeyboardPad');
     expect(detail).toContain('PostCommentsComposer');
+    expect(src('components/ui/ComposerKeyboardView.tsx')).toContain('KeyboardAvoidingView');
+    expect(src('components/ui/ComposerKeyboardView.tsx')).toContain("behavior=\"padding\"");
     expect(code('app/(tabs)/posts.tsx')).not.toContain('KeyboardAvoidingView');
     expect(code('app/(tabs)/messages.tsx')).not.toContain('KeyboardAvoidingView');
     expect(code(WAVE_4A_PANEL)).not.toContain('KeyboardAvoidingView');
+  });
+
+  it('shares resting composer insets across listing comments, post comments, and chat', () => {
+    expect(src('components/feature/ListingCommentsModal.tsx')).toContain('ComposerKeyboardView');
+    expect(src('components/feature/ListingCommentsModal.tsx')).toContain('useComposerKeyboardPad');
+    expect(src('app/post/[id].tsx')).toContain('useComposerKeyboardPad');
+    expect(src('app/chat.tsx')).toContain('useComposerKeyboardPad');
+    const hook = src('hooks/useComposerKeyboardPad.ts');
+    expect(hook).toContain('keyboardDidHide');
+    expect(hook).toContain('restingBottom');
+    expect(src('components/ui/ComposerKeyboardView.tsx')).toContain('enabled={Platform.OS === \'ios\' || keyboardVisible}');
   });
 
   it('wraps PostItem without taking ownership of the card', () => {
@@ -821,7 +835,8 @@ describe('Architecture V2 — Wave 4B chat after malahem removal', () => {
     const text = src(WAVE_4B_CHAT);
     expect(text).toContain("from '@/design-system/layout'");
     expect(text).toContain('<Screen');
-    expect(text).toContain('KeyboardAvoidingView');
+    expect(text).toContain('ComposerKeyboardView');
+    expect(text).toContain('useComposerKeyboardPad');
     expect(text).toContain('useChatThreadSocket');
     expect(text).toContain('applyChatSocketEvent');
     expect(text).toContain('mergeChatMessages');
