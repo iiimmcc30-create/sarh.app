@@ -1,7 +1,12 @@
 import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { Public, RateLimit } from '../common/decorators/auth.decorators';
 import { successResponse } from '../common/utils/response.util';
-import { SearchSuggestQueryDto, UnifiedSearchQueryDto } from './dto/search.dto';
+import {
+  SearchSuggestQueryDto,
+  TrendingSearchQueryDto,
+  UnifiedSearchQueryDto,
+} from './dto/search.dto';
+import { ExploreSearchService } from './explore-search.service';
 import { SearchService } from './search.service';
 import { UnifiedSearchService } from './unified-search.service';
 
@@ -10,14 +15,28 @@ export class SearchController {
   constructor(
     private readonly search: SearchService,
     private readonly unified: UnifiedSearchService,
+    private readonly explore: ExploreSearchService,
   ) {}
+
+  @Public()
+  @RateLimit('api')
+  @Get('explore')
+  @HttpCode(HttpStatus.OK)
+  async exploreFeed() {
+    return successResponse(await this.explore.getExploreFeed());
+  }
 
   @Public()
   @RateLimit('api')
   @Get('trending')
   @HttpCode(HttpStatus.OK)
-  async trending() {
-    return successResponse(await this.search.getTrending());
+  async trending(@Query() query: TrendingSearchQueryDto) {
+    return successResponse(
+      await this.search.getTrending({
+        window: query.window,
+        limit: query.limit,
+      }),
+    );
   }
 
   @Public()

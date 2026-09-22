@@ -22,7 +22,6 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { ensureApiReachable } from '@/services/api';
 import { fetchEditorialStories, type EditorialStory } from '@/services/editorialStories';
 import {
   fetchOfficialServices,
@@ -30,8 +29,17 @@ import {
   type OfficialService,
 } from '@/services/officialServices';
 import {
+  fetchSearchExplore,
+  fetchSearchTrending,
+  type ExploreAccountItem,
+  type ExploreCategoryItem,
+  type ExploreNewsItem,
+  type ExploreSection as ExploreFeedSection,
+  type ExploreSupplierItem,
+  type ExploreTrendingItem,
+} from '@/services/searchDiscovery';
+import {
   fetchSearchSuggestions,
-  fetchTrendingTags,
   mapListingFromSearch,
   mapPostFromSearch,
   unifiedSearch,
@@ -119,17 +127,19 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     setSection(next);
   }, []);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [trendingTags, setTrendingTags] = useState<Array<{ tag: string; count: number }>>([]);
   const [suggestions, setSuggestions] = useState<Array<{ text: string; kind: string }>>([]);
   const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [featuredUsers, setFeaturedUsers] = useState<
-    Array<{ id: string; username: string; arabicName?: string; displayName?: string; avatar?: string; verified?: boolean }>
-  >([]);
+  const [exploreSections, setExploreSections] = useState<ExploreFeedSection[]>([]);
+  const [exploreLoading, setExploreLoading] = useState(false);
+  const [trendingItems, setTrendingItems] = useState<ExploreTrendingItem[]>([]);
+  const [trendingLoaded, setTrendingLoaded] = useState(false);
   const [stories, setStories] = useState<EditorialStory[]>([]);
+  const [newsLoaded, setNewsLoaded] = useState(false);
   const [services, setServices] = useState<OfficialService[]>([]);
+  const [servicesLoaded, setServicesLoaded] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const searchSeq = useRef(0);
@@ -150,30 +160,90 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   }, []);
 
   useEffect(() => {
-    fetchTrendingTags().then(setTrendingTags).catch(() => {});
     AsyncStorage.getItem(RECENT_KEY)
       .then((val) => {
         if (val) setRecentSearches(JSON.parse(val));
       })
       .catch(() => {});
-    fetchEditorialStories().then(setStories).catch(() => {});
-    fetchOfficialServices()
-      .then((result) => setServices(previewOfficialServices(result.services, 8)))
-      .catch(() => {});
-
-    (async () => {
-      try {
-        const base = await ensureApiReachable();
-        const res = await fetch(`${base}/api/users`);
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          setFeaturedUsers(json.data.slice(0, 4));
-        }
-      } catch {
-        /* optional idle content */
-      }
-    })();
   }, []);
+
+  // Idle Explore: one aggregated request (no users-list / trending / news / services storm)
+  useEffect(() => {
+    let cancelled = false;
+    setExploreLoading(true);
+    void fetchSearchExplore()
+      .then((data) => {
+        if (!cancelled) setExploreSections(data.sections ?? []);
+      })
+      .finally(() => {
+        if (!cancelled) setExploreLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Lazy-load discovery tabs on first visit
+  useEffect(() => {
+    let cancelled = false;
+    if (section === 'trending' && !trendingLoaded) {
+      void fetchSearchTrending()
+        .then((data) => {
+          if (cancelled) return;
+          setTrendingItems(data.trending ?? []);
+          setTrendingLoaded(true);
+        })
+        .catch(() => {
+          if (!cancelled) setTrendingLoaded(true);
+        });
+    }
+    if (section === 'news' && !newsLoaded) {
+      void fetchEditorialStories()
+        .then((data) => {
+          if (cancelled) return;
+          setStories(data);
+          setNewsLoaded(true);
+        })
+        .catch(() => {
+          if (!cancelled) setNewsLoaded(true);
+        });
+    }
+    if (section === 'services' && !servicesLoaded) {
+      void fetchOfficialServices()
+        .then((result) => {
+          if (cancelled) return;
+          setServices(previewOfficialServices(result.services, 8));
+          setServicesLoaded(true);
+        })
+        .catch(() => {
+          if (!cancelled) setServicesLoaded(true);
+        });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [section, trendingLoaded, newsLoaded, servicesLoaded]);
+
+  // Ensure editorial stories exist for news result viewer (without mounting storm)
+  useEffect(() => {
+    if (newsLoaded) return;
+    if (filter !== 'news' && !groups.some((g) => g.type === 'news' && g.items.length > 0)) {
+      return;
+    }
+    let cancelled = false;
+    void fetchEditorialStories()
+      .then((data) => {
+        if (cancelled) return;
+        setStories(data);
+        setNewsLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) setNewsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filter, groups, newsLoaded]);
 
   useEffect(() => {
     if (debouncedQuery.length < MIN_QUERY) {
@@ -551,13 +621,18 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
   const trendingBlock = (
     <Stack gap="md">
       <AppText variant="heading3">الأكثر تداولاً</AppText>
-      {trendingTags.length === 0 ? (
+      {!trendingLoaded ? (
+        <ActivityIndicator color={colors.electricBright} />
+      ) : trendingItems.length === 0 ? (
         <AppText variant="caption" color="textMuted">لا توجد موضوعات رائجة حالياً</AppText>
       ) : (
         <Row gap="sm" wrap>
-          {trendingTags.map((item) => (
+          {trendingItems.map((item) => (
             <Pressable key={item.tag} style={styles.trendingChip} onPress={() => applyQuery(item.tag)}>
-              <AppText variant="caption" color="textSecondary">{item.tag}</AppText>
+              <AppText variant="caption" color="textSecondary">
+                {item.tag}
+                {typeof item.count === 'number' ? ` · ${item.count}` : ''}
+              </AppText>
             </Pressable>
           ))}
         </Row>
@@ -565,65 +640,221 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
     </Stack>
   );
 
-  const exploreIdle = (
-    <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
-      {recentSearches.length > 0 ? (
-        <Stack gap="sm">
-          <Row justify="between" align="center">
-            <AppText variant="heading3">البحث الأخير</AppText>
-            <Pressable onPress={() => saveRecent([])} accessibilityRole="button" accessibilityLabel="مسح الكل">
-              <AppText variant="caption" color="primary">مسح الكل</AppText>
-            </Pressable>
-          </Row>
-          {recentSearches.map((term) => (
-            <Pressable key={term} onPress={() => applyQuery(term)}>
-              <Row gap="md" align="center" style={styles.recentRow}>
-                <AppIcon name="time-outline" size={16} color={colors.textMuted} />
-                <AppText variant="body" color="textSecondary" style={styles.flex}>
-                  {term}
-                </AppText>
-                <Pressable
-                  onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel="حذف"
-                >
-                  <AppIcon name="close" size={14} color={colors.textMuted} />
-                </Pressable>
-              </Row>
-            </Pressable>
-          ))}
+  const renderExploreFeed = () => {
+    if (exploreLoading && exploreSections.length === 0) {
+      return (
+        <Stack gap="md" align="center" style={[styles.hintBox, { paddingHorizontal: gutter }]}>
+          <ActivityIndicator color={colors.electricBright} />
         </Stack>
-      ) : null}
+      );
+    }
 
-      {trendingBlock}
+    return (
+      <Stack gap="lg" style={{ paddingHorizontal: gutter }}>
+        {recentSearches.length > 0 ? (
+          <Stack gap="sm">
+            <Row justify="between" align="center">
+              <AppText variant="heading3">البحث الأخير</AppText>
+              <Pressable onPress={() => saveRecent([])} accessibilityRole="button" accessibilityLabel="مسح الكل">
+                <AppText variant="caption" color="primary">مسح الكل</AppText>
+              </Pressable>
+            </Row>
+            {recentSearches.map((term) => (
+              <Pressable key={term} onPress={() => applyQuery(term)}>
+                <Row gap="md" align="center" style={styles.recentRow}>
+                  <AppIcon name="time-outline" size={16} color={colors.textMuted} />
+                  <AppText variant="body" color="textSecondary" style={styles.flex}>
+                    {term}
+                  </AppText>
+                  <Pressable
+                    onPress={() => saveRecent(recentSearches.filter((r) => r !== term))}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="حذف"
+                  >
+                    <AppIcon name="close" size={14} color={colors.textMuted} />
+                  </Pressable>
+                </Row>
+              </Pressable>
+            ))}
+          </Stack>
+        ) : null}
 
-      {featuredUsers.length > 0 ? (
-        <Stack gap="sm">
-          <AppText variant="heading3">أبرز المربّين</AppText>
-          {featuredUsers.map((user) => (
-            <UserIdentityRow
-              key={user.id}
-              avatarUri={user.avatar}
-              displayName={user.arabicName || user.displayName || user.username}
-              username={user.username}
-              verified={user.verified}
-              avatarSize={USER_IDENTITY.listAvatarSize}
-              avatarRadius={USER_IDENTITY.listAvatarRadius}
-              avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
-              nameLines={2}
-              onPress={() => router.push({ pathname: '/users/[id]', params: { id: user.id } } as never)}
-              style={styles.userRow}
-            />
-          ))}
-        </Stack>
-      ) : null}
-    </Stack>
-  );
+        {exploreSections.map((sec) => {
+          if (sec.type === 'trending_topics') {
+            const items = sec.items as ExploreTrendingItem[];
+            if (!items.length) return null;
+            return (
+              <Stack key={sec.type} gap="sm">
+                <AppText variant="heading3">{sec.title}</AppText>
+                <Row gap="sm" wrap>
+                  {items.map((item) => (
+                    <Pressable
+                      key={item.tag}
+                      style={styles.trendingChip}
+                      onPress={() => applyQuery(item.tag)}
+                    >
+                      <AppText variant="caption" color="textSecondary">
+                        {item.tag}
+                      </AppText>
+                    </Pressable>
+                  ))}
+                </Row>
+              </Stack>
+            );
+          }
+          if (sec.type === 'accounts') {
+            const items = sec.items as ExploreAccountItem[];
+            if (!items.length) return null;
+            return (
+              <Stack key={sec.type} gap="sm">
+                <AppText variant="heading3">{sec.title}</AppText>
+                {items.map((user) => (
+                  <UserIdentityRow
+                    key={user.id}
+                    avatarUri={user.avatar}
+                    displayName={user.arabicName || user.displayName || user.username}
+                    username={user.username}
+                    verified={user.verified}
+                    avatarSize={USER_IDENTITY.listAvatarSize}
+                    avatarRadius={USER_IDENTITY.listAvatarRadius}
+                    avatarBorderWidth={USER_IDENTITY.listAvatarBorder}
+                    nameLines={2}
+                    onPress={() =>
+                      router.push({ pathname: '/users/[id]', params: { id: user.id } } as never)
+                    }
+                    style={styles.userRow}
+                  />
+                ))}
+              </Stack>
+            );
+          }
+          if (sec.type === 'listings') {
+            const items = sec.items as Record<string, unknown>[];
+            if (!items.length) return null;
+            return (
+              <Stack key={sec.type} gap="md">
+                <AppText variant="heading3">{sec.title}</AppText>
+                {items.map((raw) => {
+                  const listing = mapListingFromSearch(raw);
+                  if (!listing) return null;
+                  return (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      variant="list"
+                      listMode="market"
+                      onPress={() =>
+                        router.push({ pathname: '/listing/[id]', params: { id: listing.id } })
+                      }
+                    />
+                  );
+                })}
+              </Stack>
+            );
+          }
+          if (sec.type === 'news') {
+            const items = sec.items as ExploreNewsItem[];
+            if (!items.length) return null;
+            return (
+              <Stack key={sec.type} gap="sm">
+                <AppText variant="heading3">{sec.title}</AppText>
+                {items.map((n) => (
+                  <Pressable
+                    key={n.id}
+                    style={styles.resultRow}
+                    onPress={() => router.push('/news' as never)}
+                  >
+                    <Row gap="md" align="center">
+                      {n.imageUrl ? (
+                        <Image
+                          source={uriSource(cloudinaryFitUrl(n.imageUrl, 'row'))}
+                          style={styles.resultThumb}
+                          contentFit="cover"
+                        />
+                      ) : null}
+                      <AppText variant="body" numberOfLines={2} style={styles.flex}>
+                        {n.titleAr}
+                      </AppText>
+                    </Row>
+                  </Pressable>
+                ))}
+              </Stack>
+            );
+          }
+          if (sec.type === 'feed_categories') {
+            const items = sec.items as ExploreCategoryItem[];
+            if (!items.length) return null;
+            return (
+              <Stack key={sec.type} gap="sm">
+                <AppText variant="heading3">{sec.title}</AppText>
+                {items.map((cat) => (
+                  <Pressable
+                    key={cat.id}
+                    style={styles.resultRow}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/market/categories/[id]',
+                        params: { id: cat.id },
+                      } as never)
+                    }
+                  >
+                    <AppText variant="body">
+                      {cat.emoji ? `${cat.emoji} ` : ''}
+                      {cat.nameAr}
+                    </AppText>
+                  </Pressable>
+                ))}
+              </Stack>
+            );
+          }
+          if (sec.type === 'feed_suppliers') {
+            const items = sec.items as ExploreSupplierItem[];
+            if (!items.length) return null;
+            return (
+              <Stack key={sec.type} gap="sm">
+                <AppText variant="heading3">{sec.title}</AppText>
+                {items.map((s) => (
+                  <Pressable
+                    key={s.id}
+                    style={styles.resultRow}
+                    onPress={() =>
+                      router.push({ pathname: '/feed-suppliers/[id]', params: { id: s.id } } as never)
+                    }
+                  >
+                    <Row gap="md" align="center">
+                      {s.logo ? (
+                        <Image source={uriSource(s.logo)} style={styles.resultThumb} contentFit="cover" />
+                      ) : (
+                        <View style={[styles.resultThumb, styles.resultThumbPlaceholder]}>
+                          <AppIcon name="store" size={18} color={colors.textMuted} />
+                        </View>
+                      )}
+                      <Stack gap="xs" style={styles.resultBody}>
+                        <AppText variant="body">{s.nameAr}</AppText>
+                        {s.cityAr ? (
+                          <AppText variant="caption" color="textMuted">
+                            {s.cityAr}
+                          </AppText>
+                        ) : null}
+                      </Stack>
+                    </Row>
+                  </Pressable>
+                ))}
+              </Stack>
+            );
+          }
+          return null;
+        })}
+      </Stack>
+    );
+  };
 
   const newsIdle = (
     <Stack gap="sm" style={{ paddingHorizontal: gutter }}>
-      {stories.length === 0 ? (
+      {!newsLoaded ? (
+        <ActivityIndicator color={colors.electricBright} />
+      ) : stories.length === 0 ? (
         <AppText variant="caption" color="textMuted" align="center">
           لا توجد أخبار حالياً
         </AppText>
@@ -644,7 +875,9 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
   const servicesIdle = (
     <Stack gap="md" style={{ paddingHorizontal: gutter }}>
-      {services.length === 0 ? (
+      {!servicesLoaded ? (
+        <ActivityIndicator color={colors.electricBright} />
+      ) : services.length === 0 ? (
         <AppText variant="caption" color="textMuted" align="center">
           لا توجد خدمات حالياً
         </AppText>
@@ -664,7 +897,7 @@ export default function SearchScreen({ variant = 'stack' }: SearchScreenProps) {
 
   const idleForSection =
     section === 'explore'
-      ? exploreIdle
+      ? renderExploreFeed()
       : section === 'trending'
         ? (
           <Stack gap="lg" style={{ paddingHorizontal: gutter }}>

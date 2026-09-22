@@ -90,3 +90,16 @@ export class SearchSuggestQueryDto {
   @Max(12)
   limit?: number;
 }
+
+export class TrendingSearchQueryDto {
+  @IsOptional()
+  @IsEnum(['6h', '24h', '7d'] as const)
+  window?: '6h' | '24h' | '7d';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(30)
+  limit?: number;
+}
