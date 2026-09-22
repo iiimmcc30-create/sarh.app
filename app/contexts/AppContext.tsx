@@ -198,6 +198,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       reviewCount: u.reviewCount ?? 0,
       country: u.country || 'SA',
       bio: u.bio || '',
+      nameChangedAt: u.nameChangedAt ?? null,
+      usernameChangedAt: u.usernameChangedAt ?? null,
+      nameNextAllowedAt: u.nameNextAllowedAt ?? null,
+      usernameNextAllowedAt: u.usernameNextAllowedAt ?? null,
     };
   }, []);
 

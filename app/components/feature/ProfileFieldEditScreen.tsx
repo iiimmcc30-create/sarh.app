@@ -1,13 +1,17 @@
 import { AppText, SarhBackButton, SarhInput } from '@/design-system/components';
 import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useAppUser } from '@/hooks/useApp';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { profileNameHint, profileUsernameHint } from '@/lib/profileChangeCooldown';
 import { showToast } from '@/lib/toast';
 import { type ThemeColors } from '@/constants/theme';
 import { spacing } from '@/constants/theme';
+import { createRequestGeneration } from '@/services/requestCoordination';
+import { checkUsernameAvailable } from '@/services/users';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet } from 'react-native';
 import type { User } from '@/services/types';
 
@@ -75,6 +79,39 @@ export function ProfileFieldEditScreen({ field }: Props) {
   const initial = useMemo(() => config.read(me), [config, me]);
   const [value, setValue] = useState(initial);
   const [saving, setSaving] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] = useState<
+    'idle' | 'available' | 'taken'
+  >('idle');
+  const availabilityGeneration = useRef(createRequestGeneration());
+  const debouncedUsername = useDebouncedValue(field === 'username' ? value : '', 350);
+
+  const nameCooldownAt = field === 'name' ? me.nameNextAllowedAt : null;
+  const usernameCooldownAt = field === 'username' ? me.usernameNextAllowedAt : null;
+  const cooldownActive = Boolean(nameCooldownAt || usernameCooldownAt);
+  const usernameTaken =
+    field === 'username' && usernameAvailability === 'taken' && value !== initial;
+  const saveBlocked = cooldownActive || usernameTaken;
+
+  useEffect(() => {
+    if (field !== 'username') return;
+    if (!debouncedUsername || debouncedUsername === initial) {
+      setUsernameAvailability('idle');
+      return;
+    }
+    const token = availabilityGeneration.current.next();
+    void checkUsernameAvailable(debouncedUsername)
+      .then((available) => {
+        if (!availabilityGeneration.current.isCurrent(token)) return;
+        if (available === true) setUsernameAvailability('available');
+        else if (available === false) setUsernameAvailability('taken');
+        else setUsernameAvailability('idle');
+      })
+      .catch(() => {
+        if (availabilityGeneration.current.isCurrent(token)) {
+          setUsernameAvailability('idle');
+        }
+      });
+  }, [debouncedUsername, field, initial]);
 
   const onChangeText = (next: string) => {
     setValue(config.transform ? config.transform(next) : next);
@@ -86,6 +123,7 @@ export function ProfileFieldEditScreen({ field }: Props) {
   };
 
   const handleSave = async () => {
+    if (saveBlocked) return;
     const error = config.validate(value);
     if (error) {
       void showToast(error, 'warning');
@@ -111,23 +149,30 @@ export function ProfileFieldEditScreen({ field }: Props) {
     void showToast(result.error || 'فشل حفظ التغييرات، يرجى المحاولة مجدداً.', 'error');
   };
 
+  const hint =
+    field === 'name'
+      ? profileNameHint(nameCooldownAt)
+      : field === 'username'
+        ? profileUsernameHint(usernameCooldownAt)
+        : null;
+
   return (
     <Screen edges={['top']} keyboard>
       <Row justify="between" align="center" style={styles.header}>
         <SarhBackButton onPress={handleBack} color={colors.textPrimary} accessibilityLabel="رجوع" />
         <Pressable
           onPress={() => void handleSave()}
-          disabled={saving}
+          disabled={saving || saveBlocked}
           accessibilityRole="button"
           accessibilityLabel="حفظ"
-          accessibilityState={{ disabled: saving, busy: saving }}
+          accessibilityState={{ disabled: saving || saveBlocked, busy: saving }}
           hitSlop={12}
           style={styles.saveBtn}
         >
           {saving ? (
             <ActivityIndicator color={colors.electricBright} />
           ) : (
-            <AppText variant="button" color="primary">
+            <AppText variant="button" color={saveBlocked ? 'textMuted' : 'primary'}>
               حفظ
             </AppText>
           )}
@@ -138,6 +183,11 @@ export function ProfileFieldEditScreen({ field }: Props) {
           <AppText variant="label" color="textSecondary">
             {config.title}
           </AppText>
+          {hint ? (
+            <AppText variant="meta" color="textMuted">
+              {hint}
+            </AppText>
+          ) : null}
           <SarhInput
             appearance="theme"
             value={value}
@@ -159,6 +209,16 @@ export function ProfileFieldEditScreen({ field }: Props) {
             }
             style={config.multiline ? styles.bioInput : undefined}
           />
+          {field === 'username' && usernameAvailability === 'available' ? (
+            <AppText variant="meta" color="success">
+              اسم المستخدم متاح
+            </AppText>
+          ) : null}
+          {field === 'username' && usernameAvailability === 'taken' ? (
+            <AppText variant="meta" color="danger">
+              اسم المستخدم محجوز
+            </AppText>
+          ) : null}
           {config.maxLength ? (
             <AppText variant="meta" color="textMuted">
               {value.length}/{config.maxLength}

@@ -16,6 +16,11 @@ import {
   UpdatePrivacySettingsDto,
   UpdateUserDto,
 } from '../dto/users.dto';
+import {
+  PROFILE_CHANGE_ERRORS,
+  cooldownPayload,
+  planProfileIdentityUpdate,
+} from '../lib/profile-change-cooldown';
 
 const MIN_RATING = 1;
 const MAX_RATING = 5;
@@ -110,24 +115,18 @@ export class UsersService {
       isFollowing,
       myRating,
       isBlocked,
-      ...(viewer?.userId === id
-        ? await this.repo
-            .findPrivacySettings(id)
-            .then((privacy) => privacy ?? {})
-        : {}),
+      ...(viewer?.userId === id ? await this.ownProfileExtras(id) : {}),
     };
+  }
+
+  async isUsernameAvailable(username: string, userId: string) {
+    const conflict = await this.repo.findByUsername(username, userId);
+    return { available: !conflict };
   }
 
   async updateUser(id: string, user: JwtPayload, dto: UpdateUserDto) {
     if (id !== user.userId && user.role !== 'ADMIN') {
       throwApi(403, 'forbidden', 'غير مسموح');
-    }
-
-    if (dto.username) {
-      const conflict = await this.repo.findByUsername(dto.username, id);
-      if (conflict) {
-        throwApi(409, 'username_taken', 'اسم المستخدم مستخدم بالفعل');
-      }
     }
 
     if (dto.email) {
@@ -159,7 +158,7 @@ export class UsersService {
         email,
         ...profileData
       } = dto;
-      const updated = await this.repo.updateUser(id, {
+      const baseData = {
         ...profileData,
         ...(email !== undefined ? { email } : {}),
         ...(birthDate !== undefined ? { birthDate } : {}),
@@ -167,7 +166,15 @@ export class UsersService {
           ? { allowPrivateMessages: true }
           : {}),
         ...(fcmToken !== undefined && !unregisterFcm ? { fcmToken } : {}),
-      });
+      };
+      const identityPatch =
+        dto.username !== undefined ||
+        dto.displayName !== undefined ||
+        dto.arabicName !== undefined;
+
+      const updated = identityPatch
+        ? await this.applyIdentityUpdate(id, dto, baseData)
+        : await this.repo.updateUser(id, baseData);
 
       if (unregisterFcm && typeof fcmToken === 'string' && fcmToken.trim()) {
         await this.repo.deleteDeviceToken(id, fcmToken.trim());
@@ -182,33 +189,16 @@ export class UsersService {
       await this.redis.cacheDel(`user:${id}`, `user:${id}:base`);
       this.logger.info({ userId: id }, 'User profile updated');
 
-      return {
-        id: updated.id,
-        username: updated.username,
-        displayName: updated.displayName,
-        arabicName: updated.arabicName,
-        avatar: updated.avatar,
-        coverImage: updated.coverImage,
-        bio: updated.bio,
-        verified: updated.verified,
-        country: updated.country,
-        rating: updated.reviewCount > 0 ? updated.rating : null,
-        reviewCount: updated.reviewCount,
-        followersCount: updated._count.followers,
-        followingCount: updated._count.following,
-        showInSearch: updated.showInSearch,
-        allowPrivateMessages: updated.allowPrivateMessages,
-        showFollowingList: updated.showFollowingList,
-        commentsAudience: updated.commentsAudience,
-        privateMessagesAudience: updated.privateMessagesAudience,
-        notificationsEnabled: updated.notificationsEnabled,
-        email: updated.email,
-        birthDate: updated.birthDate?.toISOString().slice(0, 10) ?? null,
-      };
+      return this.formatUpdateResult(updated);
     } catch (err: unknown) {
+      if (err instanceof ApiException) throw err;
       const prismaErr = err as { code?: string };
       if (prismaErr.code === 'P2002') {
-        throwApi(409, 'username_taken', 'اسم المستخدم مستخدم بالفعل');
+        throwApi(
+          409,
+          PROFILE_CHANGE_ERRORS.USERNAME_TAKEN,
+          'اسم المستخدم محجوز',
+        );
       }
       throw err;
     }
@@ -544,6 +534,113 @@ export class UsersService {
     if (user.role === 'BUTCHER' || user.butcherProfile) return 'BUTCHER';
     if (user._count.listings > 0) return 'LIVESTOCK_TRADER';
     return 'USER';
+  }
+
+  private async ownProfileExtras(id: string) {
+    const [privacy, change] = await Promise.all([
+      this.repo.findPrivacySettings(id),
+      this.repo.findUserChangeState(id),
+    ]);
+    return {
+      ...(privacy ?? {}),
+      ...cooldownPayload(change?.nameChangedAt, change?.usernameChangedAt),
+    };
+  }
+
+  private async applyIdentityUpdate(
+    id: string,
+    dto: UpdateUserDto,
+    baseData: Record<string, unknown>,
+  ) {
+    const updated = await this.repo.updateUserLocked(
+      id,
+      async (current, tx) => {
+        const planned = planProfileIdentityUpdate(
+          current,
+          {
+            username: dto.username,
+            displayName: dto.displayName,
+            arabicName: dto.arabicName,
+          },
+          new Date(),
+        );
+        if (!planned.ok) {
+          throwApi(
+            planned.status,
+            planned.error,
+            planned.messageAr,
+            planned.details,
+          );
+        }
+
+        if (planned.data.username) {
+          const conflict = await tx.user.findFirst({
+            where: {
+              username: { equals: planned.data.username, mode: 'insensitive' },
+              isActive: true,
+              id: { not: id },
+            },
+            select: { id: true },
+          });
+          if (conflict) {
+            throwApi(
+              409,
+              PROFILE_CHANGE_ERRORS.USERNAME_TAKEN,
+              'اسم المستخدم محجوز',
+            );
+          }
+        }
+
+        const {
+          username: _ignoreUsername,
+          displayName: _ignoreDisplayName,
+          arabicName: _ignoreArabicName,
+          ...rest
+        } = baseData as {
+          username?: string;
+          displayName?: string;
+          arabicName?: string;
+          [key: string]: unknown;
+        };
+
+        return {
+          ...rest,
+          ...planned.data,
+        };
+      },
+    );
+
+    if (!updated) throwApi(404, 'not_found', 'المستخدم غير موجود');
+    return updated;
+  }
+
+  private formatUpdateResult(
+    updated: Awaited<ReturnType<UsersRepository['updateUser']>>,
+  ) {
+    return {
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.displayName,
+      arabicName: updated.arabicName,
+      avatar: updated.avatar,
+      coverImage: updated.coverImage,
+      bio: updated.bio,
+      verified: updated.verified,
+      country: updated.country,
+      rating: updated.reviewCount > 0 ? updated.rating : null,
+      reviewCount: updated.reviewCount,
+      followersCount: updated._count.followers,
+      followingCount: updated._count.following,
+      showInSearch: updated.showInSearch,
+      allowPrivateMessages: updated.allowPrivateMessages,
+      showFollowingList: updated.showFollowingList,
+      commentsAudience: updated.commentsAudience,
+      privateMessagesAudience: updated.privateMessagesAudience,
+      notificationsEnabled: updated.notificationsEnabled,
+      email: updated.email,
+      birthDate: updated.birthDate?.toISOString().slice(0, 10) ?? null,
+      ...cooldownPayload(updated.nameChangedAt, updated.usernameChangedAt),
+    };
   }
 
   private formatProfile(user: ProfileUser) {

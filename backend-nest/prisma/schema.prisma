@@ -44,6 +44,8 @@ model User {
   notificationsEnabled                Boolean                           @default(true)
   createdAt                           DateTime                          @default(now())
   updatedAt                           DateTime                          @updatedAt
+  nameChangedAt                       DateTime?
+  usernameChangedAt                   DateTime?
   deletedAt                           DateTime?
   activities                          Activity[]                        @relation("ActivityActor")
   activityTargets                     Activity[]                        @relation("ActivityTarget")

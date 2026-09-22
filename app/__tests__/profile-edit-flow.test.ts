@@ -49,4 +49,35 @@ describe('profile edit redesign', () => {
     expect(field).toContain('accessibilityLabel="رجوع"');
     expect(field).not.toContain('authFetch');
   });
+
+  it('shows name and username cooldown copy above SarhInput', () => {
+    expect(field).toContain('profileNameHint');
+    expect(field).toContain('profileUsernameHint');
+    expect(field).toContain('nameNextAllowedAt');
+    expect(field).toContain('usernameNextAllowedAt');
+    expect(field.indexOf('{hint ?')).toBeLessThan(field.indexOf('<SarhInput'));
+  });
+
+  it('disables save during cooldown or a taken username and skips the update', () => {
+    expect(field).toContain('saveBlocked');
+    expect(field).toContain('if (saveBlocked) return;');
+    expect(field).toContain('disabled={saving || saveBlocked}');
+    expect(field).toContain("usernameAvailability === 'taken'");
+  });
+
+  it('checks username availability without racing older responses', () => {
+    expect(field).toContain('useDebouncedValue');
+    expect(field).toContain('createRequestGeneration');
+    expect(field).toContain('checkUsernameAvailable');
+    expect(field).toContain('اسم المستخدم متاح');
+    expect(field).toContain('اسم المستخدم محجوز');
+    expect(field).toContain('isCurrent(token)');
+  });
+
+  it('returns to the hub after a successful field save', () => {
+    expect(field).toContain('router.back()');
+    expect(hub).toContain('me.arabicName || me.displayName');
+    expect(hub).toContain('me.username');
+    expect(hub).toContain('me.bio');
+  });
 });

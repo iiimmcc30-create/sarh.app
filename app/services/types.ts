@@ -34,6 +34,10 @@ export interface User {
   reviewCount?: number;
   country: Country;
   bio: string;
+  nameChangedAt?: string | null;
+  usernameChangedAt?: string | null;
+  nameNextAllowedAt?: string | null;
+  usernameNextAllowedAt?: string | null;
 }
 
 export interface LiveStream {

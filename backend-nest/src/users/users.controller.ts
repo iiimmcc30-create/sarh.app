@@ -31,6 +31,7 @@ import {
   UpdateAccountSettingsDto,
   UpdatePrivacySettingsDto,
   UpdateUserDto,
+  UsernameAvailableQueryDto,
 } from './dto/users.dto';
 
 @Controller('users')
@@ -97,6 +98,18 @@ export class UsersController {
   ) {
     return successResponse(
       await this.users.updatePrivacySettings(user.userId, dto),
+    );
+  }
+
+  @RateLimit('api')
+  @Get('username-available')
+  @HttpCode(HttpStatus.OK)
+  async usernameAvailable(
+    @Query() query: UsernameAvailableQueryDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return successResponse(
+      await this.users.isUsernameAvailable(query.username, user.userId),
     );
   }
 
