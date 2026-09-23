@@ -25,8 +25,9 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/contexts/AuthContext';
 import { PostItem } from '@/components/feature/PostItem';
 import { CreatePostFab } from '@/components/feature/CreatePostFab';
-import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
+import { requireAuth } from '@/lib/postInteractions';
 import { openPostDetail } from '@/lib/openPost';
+import { usePostFeedActions } from '@/lib/usePostFeedActions';
 import { safePush } from '@/lib/safeNavigate';
 import type { Post } from '@/services/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,13 +47,19 @@ export default function PostsScreen() {
   const {
     me,
     posts,
-    likedPosts,
-    bookmarkedPosts,
-    toggleLike,
-    toggleBookmark,
-    deletePost,
     fetchPosts,
   } = useApp();
+  const { enrich, bind, observe } = usePostFeedActions();
+  const observeRef = useRef(observe);
+  observeRef.current = observe;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60, minimumViewTime: 800 }).current;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ item?: Post }> }) => {
+      for (const token of viewableItems) {
+        if (token.item?.id) observeRef.current(token.item.id);
+      }
+    },
+  ).current;
   const [feedTab, setFeedTab] = useState<FeedTab>('for_you');
   const [headerH, setHeaderH] = useState(() => shellIdentityStackH(insets.top) + space[32]);
   const [loadingFeed, setLoadingFeed] = useState(false);
@@ -134,33 +141,11 @@ export default function PostsScreen() {
     : 'ضيف';
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<Post>) => (
-      <PostItem
-        post={{
-          ...item,
-          liked: likedPosts.has(item.id),
-          bookmarked: bookmarkedPosts.has(item.id),
-        }}
-        onPress={() => openPostDetail(router, item.id)}
-        onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(item.id)}
-        onComment={() => openPostDetail(router, item.id, { focusComment: isAuthenticated })}
-        onBookmark={() =>
-          requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(item.id)
-        }
-        onShare={() => sharePost(item)}
-        onMenu={() => showPostMenu(item, me, router, deletePost, isAuthenticated)}
-      />
-    ),
-    [
-      likedPosts,
-      bookmarkedPosts,
-      isAuthenticated,
-      toggleLike,
-      toggleBookmark,
-      deletePost,
-      me,
-      router,
-    ],
+    ({ item }: ListRenderItemInfo<Post>) => {
+      const post = enrich(item);
+      return <PostItem post={post} {...bind(post)} />;
+    },
+    [enrich, bind],
   );
 
   const keyExtractor = useCallback((item: Post) => item.id, []);
@@ -234,6 +219,8 @@ export default function PostsScreen() {
             initialNumToRender={6}
             maxToRenderPerBatch={4}
             windowSize={7}
+            viewabilityConfig={viewabilityConfig}
+            onViewableItemsChanged={onViewableItemsChanged}
           />
         )}
       </ScreenBody>

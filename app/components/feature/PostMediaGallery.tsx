@@ -1,7 +1,5 @@
-// SAFAT — Post media gallery: single image, swipeable multi-image carousel,
-// or video. Each image lazily fades in once loaded, with a shimmer skeleton
-// shown while it downloads. Tap any image to open full-screen viewer.
-import { useCallback, useEffect, useRef, useState } from 'react';
+// SAFAT — Post media gallery: images + videos in one swipeable row.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -12,18 +10,18 @@ import {
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
-  type ViewStyle,
 } from 'react-native';
 import { ScrollView } from 'react-native';
 import { Image, uriSource } from '@/components/ui/AppImage';
-import { StoryVideoPlayer } from '@/components/feature/StoryVideoPlayer';
-import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
+import { FeedVideoTile } from '@/components/feature/FeedVideoTile';
+import { MediaViewerModal } from '@/components/ui/MediaViewerModal';
 import { radius, typography, type ThemeColors } from '@/constants/theme';
+import { measureMediaOrigin, type MediaOriginRect } from '@/lib/mediaOrigin';
+import { collectPostMedia, type FeedMediaItem } from '@/lib/postMedia';
 import { postFeedImageUrl } from '@/lib/listingMedia';
+import { recordPostView } from '@/lib/postEngagement';
 
 const ASPECT_RATIO = 16 / 11;
-
-const ABS_FILL: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
 
 function postFeedDeliveryUri(uri: string): string {
   const screenW = Dimensions.get('window').width;
@@ -36,6 +34,8 @@ interface PostMediaGalleryProps {
   video?: string | null;
   colors: ThemeColors;
   scheme: 'light' | 'dark';
+  postId?: string;
+  onViewRecorded?: (views: number) => void;
 }
 
 function MediaSkeleton({ colors }: { colors: ThemeColors }) {
@@ -95,16 +95,65 @@ function GalleryImage({
   );
 }
 
-export function PostMediaGallery({ images, video, colors, scheme }: PostMediaGalleryProps) {
+function MediaPage({
+  item,
+  colors,
+  active,
+  onOpen,
+}: {
+  item: FeedMediaItem;
+  colors: ThemeColors;
+  active: boolean;
+  onOpen: () => void;
+}) {
+  if (item.kind === 'video') {
+    return (
+      <FeedVideoTile
+        uri={item.uri}
+        posterUri={item.posterUri}
+        colors={colors}
+        active={active}
+        onOpen={onOpen}
+      />
+    );
+  }
+  return <GalleryImage uri={item.uri} colors={colors} onPress={onOpen} />;
+}
+
+export function PostMediaGallery({
+  images,
+  video,
+  colors,
+  scheme,
+  postId,
+  onViewRecorded,
+}: PostMediaGalleryProps) {
+  const items = useMemo(() => collectPostMedia(images, video), [images, video]);
   const [width, setWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [viewerOrigin, setViewerOrigin] = useState<MediaOriginRect | null>(null);
+  const frameRef = useRef<View>(null);
 
-  const openViewer = useCallback((idx: number) => {
-    setViewerIndex(idx);
-    setViewerVisible(true);
-  }, []);
+  const markViewed = useCallback(() => {
+    if (!postId) return;
+    void recordPostView(postId).then((count) => {
+      if (typeof count === 'number') onViewRecorded?.(count);
+    });
+  }, [postId, onViewRecorded]);
+
+  const openViewer = useCallback(
+    (idx: number) => {
+      void measureMediaOrigin(frameRef.current).then((origin) => {
+        setViewerOrigin(origin);
+        setViewerIndex(idx);
+        setViewerVisible(true);
+        markViewed();
+      });
+    },
+    [markViewed],
+  );
 
   const onLayout = useCallback(
     (e: { nativeEvent: { layout: { width: number } } }) => setWidth(e.nativeEvent.layout.width),
@@ -120,6 +169,8 @@ export function PostMediaGallery({ images, video, colors, scheme }: PostMediaGal
     [width],
   );
 
+  if (items.length === 0) return null;
+
   const containerStyle = [
     styles.container,
     {
@@ -127,86 +178,67 @@ export function PostMediaGallery({ images, video, colors, scheme }: PostMediaGal
     },
   ];
 
-  if (video) {
-    return (
-      <View style={containerStyle} onLayout={onLayout}>
-        <StoryVideoPlayer
-          uri={video}
-          posterUri={images[0] ? postFeedDeliveryUri(images[0]) : images[0]}
-          style={ABS_FILL}
-          autoPlay={false}
-          muted={false}
-          nativeControls
-        />
-      </View>
-    );
-  }
-
-  if (images.length === 0) return null;
-
-  if (images.length === 1) {
-    return (
-      <>
-        <View style={containerStyle} onLayout={onLayout}>
-          <GalleryImage uri={images[0]} colors={colors} onPress={() => openViewer(0)} />
-        </View>
-        <ImageViewerModal
-          visible={viewerVisible}
-          images={images}
-          initialIndex={0}
-          onClose={() => setViewerVisible(false)}
-        />
-      </>
-    );
-  }
-
   const pageWidth = width || Dimensions.get('window').width;
 
   return (
     <>
-      <View style={containerStyle} onLayout={onLayout}>
-        <ScrollView
-          style={StyleSheet.absoluteFill}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          decelerationRate="fast"
-        >
-          {images.map((uri, idx) => (
-            <View key={`${uri}-${idx}`} style={{ width: pageWidth }}>
-              <GalleryImage uri={uri} colors={colors} onPress={() => openViewer(idx)} />
+      <View ref={frameRef} collapsable={false} style={containerStyle} onLayout={onLayout}>
+        {items.length === 1 ? (
+          <MediaPage
+            item={items[0]}
+            colors={colors}
+            active
+            onOpen={() => openViewer(0)}
+          />
+        ) : (
+          <>
+            <ScrollView
+              style={StyleSheet.absoluteFill}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+              decelerationRate="fast"
+            >
+              {items.map((item, idx) => (
+                <View key={`${item.kind}-${item.uri}-${idx}`} style={{ width: pageWidth }}>
+                  <MediaPage
+                    item={item}
+                    colors={colors}
+                    active={idx === activeIndex}
+                    onOpen={() => openViewer(idx)}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.countBadge} pointerEvents="none">
+              <Text style={styles.countText}>
+                {activeIndex + 1}/{items.length}
+              </Text>
             </View>
-          ))}
-        </ScrollView>
-
-        <View style={styles.countBadge} pointerEvents="none">
-          <Text style={styles.countText}>
-            {activeIndex + 1}/{images.length}
-          </Text>
-        </View>
-
-        <View style={styles.dotsRow} pointerEvents="none">
-          {images.map((_, idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.dot,
-                idx === activeIndex && {
-                  backgroundColor: '#fff',
-                  width: 7,
-                },
-              ]}
-            />
-          ))}
-        </View>
+            <View style={styles.dotsRow} pointerEvents="none">
+              {items.map((_, idx) => (
+                <View
+                  key={idx}
+                  style={[
+                    styles.dot,
+                    idx === activeIndex && {
+                      backgroundColor: '#fff',
+                      width: 7,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </View>
-
-      <ImageViewerModal
+      <MediaViewerModal
         visible={viewerVisible}
-        images={images}
+        items={items}
         initialIndex={viewerIndex}
+        origin={viewerOrigin}
         onClose={() => setViewerVisible(false)}
       />
     </>

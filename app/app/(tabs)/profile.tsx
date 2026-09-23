@@ -39,7 +39,9 @@ export default function ProfileScreen() {
     posts,
     likedPosts,
     bookmarkedPosts,
+    repostedPosts,
     toggleLike,
+    toggleRepost,
     toggleBookmark,
     deletePost,
     refetchData,
@@ -190,11 +192,13 @@ export default function ProfileScreen() {
           ...post,
           liked: likedPosts.has(post.id),
           bookmarked: bookmarkedPosts.has(post.id),
+          reposted: repostedPosts.has(post.id),
         }}
         onPress={() => openPostDetail(router, post.id)}
-        onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(post.id)}
+        onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && void toggleLike(post.id)}
+        onRepost={() => requireAuth(isAuthenticated, 'إعادة النشر') && void toggleRepost(post.id)}
         onComment={() => openPostDetail(router, post.id, { focusComment: isAuthenticated })}
-        onBookmark={() => requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(post.id)}
+        onBookmark={() => requireAuth(isAuthenticated, 'الحفظ') && void toggleBookmark(post.id)}
         onShare={() => sharePost(post)}
         onMenu={() => showPostMenu(post, me, router, deletePost, isAuthenticated)}
       />

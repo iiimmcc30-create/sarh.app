@@ -27,7 +27,12 @@ export class PostsService {
     private readonly notifications: AppNotificationsService,
   ) {}
 
-  private mapPost(post: PostWithCount, liked: boolean, reposted: boolean) {
+  private mapPost(
+    post: PostWithCount,
+    liked: boolean,
+    reposted: boolean,
+    bookmarked = false,
+  ) {
     const { _count, ...rest } = post;
     return {
       ...rest,
@@ -36,6 +41,7 @@ export class PostsService {
       commentsCount: _count.comments,
       liked,
       reposted,
+      bookmarked,
     };
   }
 
@@ -123,19 +129,27 @@ export class PostsService {
 
     let likedPostIds = new Set<string>();
     let repostedPostIds = new Set<string>();
+    let bookmarkedPostIds = new Set<string>();
     if (user?.userId && visible.length > 0) {
       const postIds = visible.map((p) => p.id);
-      const [likes, reposts] = await Promise.all([
+      const [likes, reposts, bookmarks] = await Promise.all([
         this.repo.findLikesByUser(user.userId, postIds),
         this.repo.findRepostsByUser(user.userId, postIds),
+        this.repo.findBookmarksByUser(user.userId, postIds),
       ]);
       likedPostIds = new Set(likes.map((l) => l.postId));
       repostedPostIds = new Set(reposts.map((r) => r.postId));
+      bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
     }
 
     return {
       posts: visible.map((p) =>
-        this.mapPost(p, likedPostIds.has(p.id), repostedPostIds.has(p.id)),
+        this.mapPost(
+          p,
+          likedPostIds.has(p.id),
+          repostedPostIds.has(p.id),
+          bookmarkedPostIds.has(p.id),
+        ),
       ),
       nextCursor,
       hasMore,
@@ -195,19 +209,23 @@ export class PostsService {
 
     let liked = false;
     let reposted = false;
+    let bookmarked = false;
     if (user?.userId) {
-      const [likeRow, repostRow] = await Promise.all([
+      const [likeRow, repostRow, bookmarkRow] = await Promise.all([
         this.repo.findLike(id, user.userId),
         this.repo.findRepost(id, user.userId),
+        this.repo.findBookmark(id, user.userId),
       ]);
       liked = !!likeRow;
       reposted = !!repostRow;
+      bookmarked = !!bookmarkRow;
     }
 
     return this.mapPost(
       { ...post, viewsCount: (post.viewsCount ?? 0) + 1 },
       liked,
       reposted,
+      bookmarked,
     );
   }
 
@@ -317,6 +335,51 @@ export class PostsService {
     await this.cache.del(this.cache.keys.post(postId));
     await this.cache.del('posts:feed:first');
     return { reposted };
+  }
+
+  async toggleBookmark(user: JwtPayload, postId: string) {
+    if (!postId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+
+    const post = await this.repo.findOwnerMeta(postId);
+    if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+    await this.assertNotBlockedWithAuthor(user.userId, post.authorId);
+
+    const existing = await this.repo.findBookmark(postId, user.userId);
+    const bookmarked = await this.repo.toggleBookmark(
+      postId,
+      user.userId,
+      !!existing,
+    );
+
+    await this.cache.del(this.cache.keys.post(postId));
+    return { bookmarked };
+  }
+
+  async recordView(postId: string, user?: JwtPayload) {
+    if (!postId) throwApi(400, 'invalid_id', 'معرّف غير صالح');
+
+    const post = await this.repo.findOwnerMeta(postId);
+    if (!post) throwApi(404, 'not_found', 'المنشور غير موجود');
+
+    if (user?.userId && user.userId !== post.authorId) {
+      const blockedIds = await this.usersRepo.findBlockedRelationshipIds(
+        user.userId,
+      );
+      if (blockedIds.includes(post.authorId)) {
+        throwApi(403, 'blocked', 'لا يمكنك عرض هذا المنشور');
+      }
+    }
+
+    if (user?.userId && user.userId === post.authorId) {
+      const current = await this.repo.findById(postId);
+      return {
+        recorded: false,
+        viewsCount: current?.viewsCount ?? 0,
+      };
+    }
+
+    const updated = await this.repo.incrementViewsCount(postId);
+    return { recorded: true, viewsCount: updated.viewsCount };
   }
 
   async listComments(postId: string) {

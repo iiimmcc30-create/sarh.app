@@ -59,6 +59,7 @@ function mapBackendPost(p: any): Post | null {
     createdAt: p.createdAt,
     liked: p.liked ?? false,
     reposted: p.reposted ?? false,
+    bookmarked: p.bookmarked ?? false,
   };
 }
 
@@ -79,8 +80,11 @@ export default function PostDetailScreen() {
     posts,
     likedPosts,
     bookmarkedPosts,
+    repostedPosts,
     toggleLike,
+    toggleRepost,
     toggleBookmark,
+    setPostViews,
     deletePost,
     addComment,
   } = useApp();
@@ -137,6 +141,7 @@ export default function PostDetailScreen() {
         ...post,
         liked: likedPosts.has(post.id) || post.liked,
         bookmarked: bookmarkedPosts.has(post.id) || post.bookmarked,
+        reposted: repostedPosts.has(post.id) || post.reposted,
       }
     : null;
 
@@ -172,12 +177,16 @@ export default function PostDetailScreen() {
             <PostItem
               post={enrichedPost}
               variant="detail"
-              onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(enrichedPost.id)}
+              onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && void toggleLike(enrichedPost.id)}
+              onRepost={() =>
+                requireAuth(isAuthenticated, 'إعادة النشر') && void toggleRepost(enrichedPost.id)
+              }
               onComment={() => commentsRef.current?.focusInput()}
               onBookmark={() =>
-                requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(enrichedPost.id)
+                requireAuth(isAuthenticated, 'الحفظ') && void toggleBookmark(enrichedPost.id)
               }
               onShare={() => sharePost(enrichedPost)}
+              onViewsChange={(views) => setPostViews(enrichedPost.id, views)}
               onMenu={() =>
                 showPostMenu(enrichedPost, me, router, deletePost, isAuthenticated)
               }

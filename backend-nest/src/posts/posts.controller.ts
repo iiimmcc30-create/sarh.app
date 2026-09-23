@@ -88,6 +88,24 @@ export class PostsController {
     return successResponse(await this.posts.toggleRepost(user, id));
   }
 
+  @RateLimit('api')
+  @Post(':id/bookmark')
+  @HttpCode(HttpStatus.OK)
+  async toggleBookmark(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return successResponse(await this.posts.toggleBookmark(user, id));
+  }
+
+  @OptionalAuth()
+  @RateLimit('api')
+  @Post(':id/view')
+  @HttpCode(HttpStatus.OK)
+  async recordView(@Param('id') id: string, @CurrentUser() user?: JwtPayload) {
+    return successResponse(await this.posts.recordView(id, user));
+  }
+
   @OptionalAuth()
   @RateLimit('api')
   @Get(':id')

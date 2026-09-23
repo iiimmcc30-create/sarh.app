@@ -45,7 +45,9 @@ export default function UserProfileScreen() {
     me,
     likedPosts,
     bookmarkedPosts,
+    repostedPosts,
     toggleLike,
+    toggleRepost,
     toggleBookmark,
     deletePost,
   } = useApp();
@@ -222,9 +224,11 @@ export default function UserProfileScreen() {
           ...post,
           liked: likedPosts.has(post.id),
           bookmarked: bookmarkedPosts.has(post.id),
+          reposted: repostedPosts.has(post.id),
         }}
         onPress={() => openPostDetail(router, post.id)}
-        onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(post.id)}
+        onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && void toggleLike(post.id)}
+        onRepost={() => requireAuth(isAuthenticated, 'إعادة النشر') && void toggleRepost(post.id)}
         onComment={() => openPostDetail(router, post.id, { focusComment: isAuthenticated })}
         onBookmark={() => requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(post.id)}
         onShare={() => sharePost(post)}

@@ -5,6 +5,7 @@
  */
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { AppText } from '@/design-system/components';
+import { useHeroMediaTransition, type MediaOriginRect } from '@/lib/mediaOrigin';
 import { resolveMediaUrl } from '@/services/media';
 import React, {
   useCallback,
@@ -21,8 +22,6 @@ import {
   StatusBar,
   StyleSheet,
   View,
-  Image,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -205,6 +204,7 @@ interface ImageViewerModalProps {
   visible: boolean;
   images: string[];
   initialIndex?: number;
+  origin?: MediaOriginRect | null;
   onClose: () => void;
 }
 
@@ -212,11 +212,17 @@ export function ImageViewerModal({
   visible,
   images,
   initialIndex = 0,
+  origin,
   onClose,
 }: ImageViewerModalProps) {
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const scrollX = useRef(new Animated.Value(initialIndex * SCREEN_W)).current;
+  const { mounted, progress, heroStyle, requestClose } = useHeroMediaTransition(
+    visible,
+    origin,
+    onClose,
+  );
 
   useEffect(() => {
     if (visible) {
@@ -238,72 +244,72 @@ export function ImageViewerModal({
     },
   );
 
-  if (!images.length) return null;
+  if (!images.length || !mounted) return null;
 
   return (
     <Modal
-      visible={visible}
+      visible={mounted}
       transparent
-      animationType="fade"
+      animationType="none"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={requestClose}
     >
       <StatusBar hidden />
-      <View style={styles.backdrop}>
-        {/* Close button */}
-        <Pressable
-          onPress={onClose}
-          style={[styles.closeBtn, { top: insets.top + 12 }]}
-          hitSlop={12}
-        >
-          <AppIcon name="close" size={22} color="#fff" />
-        </Pressable>
-
-        {/* Counter */}
-        {images.length > 1 && (
-          <View style={[styles.counter, { top: insets.top + 16 }]}>
-            <AppText variant="micro" style={styles.counterText}>
-              {currentIndex + 1} / {images.length}
-            </AppText>
-          </View>
-        )}
-
-        {/* Swipeable image gallery */}
-        <Animated.ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          scrollEnabled={images.length > 1}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          contentOffset={{ x: initialIndex * SCREEN_W, y: 0 }}
-          style={styles.scrollView}
-        >
-          {images.map((uri, idx) => (
-            <ZoomableImage key={`${uri}-${idx}`} uri={uri} />
-          ))}
-        </Animated.ScrollView>
-
-        {/* Dot indicators */}
-        {images.length > 1 && (
-          <View style={[styles.dotsRow, { bottom: insets.bottom + 16 }]}>
-            {images.map((_, idx) => (
-              <View
-                key={idx}
-                style={[styles.dot, idx === currentIndex && styles.dotActive]}
-              />
+      <View style={styles.shell}>
+        <Animated.View style={[styles.backdropFill, { opacity: progress }]} />
+        <Animated.View style={[styles.heroLayer, heroStyle]}>
+          <Animated.ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEnabled={images.length > 1}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            contentOffset={{ x: initialIndex * SCREEN_W, y: 0 }}
+            style={styles.scrollView}
+          >
+            {images.map((uri, idx) => (
+              <ZoomableImage key={`${uri}-${idx}`} uri={uri} />
             ))}
-          </View>
-        )}
+          </Animated.ScrollView>
+        </Animated.View>
 
-        {/* Hint */}
-        <AppText
-          variant="caption"
-          align="center"
-          style={[styles.hint, { bottom: insets.bottom + (images.length > 1 ? 40 : 16) }]}
-        >
-          اضغط مرتين للتكبير · اسحب للإغلاق
-        </AppText>
+        <Animated.View style={[styles.chrome, { opacity: progress }]} pointerEvents="box-none">
+          <Pressable
+            onPress={requestClose}
+            style={[styles.closeBtn, { top: insets.top + 12 }]}
+            hitSlop={12}
+          >
+            <AppIcon name="close" size={22} color="#fff" />
+          </Pressable>
+
+          {images.length > 1 && (
+            <View style={[styles.counter, { top: insets.top + 16 }]}>
+              <AppText variant="micro" style={styles.counterText}>
+                {currentIndex + 1} / {images.length}
+              </AppText>
+            </View>
+          )}
+
+          {images.length > 1 && (
+            <View style={[styles.dotsRow, { bottom: insets.bottom + 16 }]}>
+              {images.map((_, idx) => (
+                <View
+                  key={idx}
+                  style={[styles.dot, idx === currentIndex && styles.dotActive]}
+                />
+              ))}
+            </View>
+          )}
+
+          <AppText
+            variant="caption"
+            align="center"
+            style={[styles.hint, { bottom: insets.bottom + (images.length > 1 ? 40 : 16) }]}
+          >
+            اضغط مرتين للتكبير · اسحب للإغلاق
+          </AppText>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -326,11 +332,20 @@ export function useImageViewer() {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  backdrop: {
+  shell: {
     flex: 1,
-    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  backdropFill: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000',
+  },
+  heroLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  chrome: {
+    ...StyleSheet.absoluteFillObject,
   },
   scrollView: {
     width: SCREEN_W,

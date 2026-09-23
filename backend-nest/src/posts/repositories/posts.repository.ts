@@ -56,6 +56,14 @@ export class PostsRepository {
     });
   }
 
+  findBookmarksByUser(userId: string, postIds: string[]) {
+    return this.prisma.postBookmark.findMany({
+      take: Math.max(postIds.length, 1),
+      where: { userId, postId: { in: postIds } },
+      select: { postId: true },
+    });
+  }
+
   create(data: Prisma.PostCreateInput) {
     return this.prisma.post.create({
       data,
@@ -132,6 +140,13 @@ export class PostsRepository {
     });
   }
 
+  findBookmark(postId: string, userId: string) {
+    return this.prisma.postBookmark.findUnique({
+      where: { postId_userId: { postId, userId } },
+      select: { id: true },
+    });
+  }
+
   toggleLike(postId: string, userId: string, existing: boolean) {
     return this.prisma.$transaction(async (tx) => {
       if (existing) {
@@ -170,6 +185,19 @@ export class PostsRepository {
         where: { id: postId },
         data: { repostsCount: { increment: 1 } },
       });
+      return true;
+    });
+  }
+
+  toggleBookmark(postId: string, userId: string, existing: boolean) {
+    return this.prisma.$transaction(async (tx) => {
+      if (existing) {
+        await tx.postBookmark.delete({
+          where: { postId_userId: { postId, userId } },
+        });
+        return false;
+      }
+      await tx.postBookmark.create({ data: { postId, userId } });
       return true;
     });
   }
