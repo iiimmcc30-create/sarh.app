@@ -31,6 +31,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal';
+import { measureMediaOrigin, type MediaOriginRect } from '@/lib/mediaOrigin';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 import { ListingCommentsSection } from '@/components/feature/ListingCommentsSection';
 import { ListingContactSheet } from '@/components/listing/ListingContactSheet';
@@ -83,6 +84,8 @@ export default function ListingDetailScreen() {
   const [followLoading, setFollowLoading] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
+  const [imageViewerOrigin, setImageViewerOrigin] = useState<MediaOriginRect | null>(null);
+  const imageRefs = useRef<Array<View | null>>([]);
   const [isFavorited, setIsFavorited] = useState(false);
 
   // Load local favorite state
@@ -592,6 +595,7 @@ export default function ListingDetailScreen() {
           visible={imageViewerVisible}
           images={images}
           initialIndex={imageViewerIndex}
+          origin={imageViewerOrigin}
           onClose={() => setImageViewerVisible(false)}
         />
 
@@ -658,9 +662,16 @@ export default function ListingDetailScreen() {
             {images.map((uri, index) => (
               <Pressable
                 key={`${uri}-${index}`}
+                ref={(node) => {
+                  imageRefs.current[index] = node;
+                }}
+                collapsable={false}
                 onPress={() => {
-                  setImageViewerIndex(index);
-                  setImageViewerVisible(true);
+                  void measureMediaOrigin(imageRefs.current[index]).then((origin) => {
+                    setImageViewerOrigin(origin);
+                    setImageViewerIndex(index);
+                    setImageViewerVisible(true);
+                  });
                 }}
                 style={styles.mediaBleed}
               >

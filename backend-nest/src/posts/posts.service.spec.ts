@@ -17,13 +17,16 @@ describe('PostsService feed cache isolation', () => {
     findFollowingIds: jest.fn(),
     findLikesByUser: jest.fn(),
     findRepostsByUser: jest.fn(),
+    findBookmarksByUser: jest.fn(),
     findById: jest.fn(),
     incrementViewsCount: jest.fn().mockResolvedValue({ viewsCount: 1 }),
     findLike: jest.fn(),
     findRepost: jest.fn(),
+    findBookmark: jest.fn(),
     findOwnerMeta: jest.fn(),
     toggleLike: jest.fn(),
     toggleRepost: jest.fn(),
+    toggleBookmark: jest.fn(),
     createComment: jest.fn(),
   };
   const usersRepo = {
@@ -61,6 +64,7 @@ describe('PostsService feed cache isolation', () => {
     usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
     repo.findLikesByUser.mockResolvedValue([]);
     repo.findRepostsByUser.mockResolvedValue([]);
+    repo.findBookmarksByUser.mockResolvedValue([]);
 
     const result = await service.getFeed(
       {},
@@ -84,6 +88,7 @@ describe('PostsService feed cache isolation', () => {
     usersRepo.findBlockedRelationshipIds.mockResolvedValue(['blocked-user']);
     repo.findLikesByUser.mockResolvedValue([]);
     repo.findRepostsByUser.mockResolvedValue([]);
+    repo.findBookmarksByUser.mockResolvedValue([]);
 
     const result = await service.getFeed(
       {},
@@ -103,6 +108,7 @@ describe('PostsService feed cache isolation', () => {
     usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
     repo.findLikesByUser.mockResolvedValue([{ postId: 'p1' }]);
     repo.findRepostsByUser.mockResolvedValue([]);
+    repo.findBookmarksByUser.mockResolvedValue([]);
 
     await service.getFeed(
       {},
@@ -142,6 +148,7 @@ describe('PostsService feed cache isolation', () => {
     usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
     repo.findLike.mockResolvedValue(null);
     repo.findRepost.mockResolvedValue(null);
+    repo.findBookmark.mockResolvedValue(null);
 
     const result = await service.getPost('p1', {
       userId: 'viewer-a',
@@ -159,8 +166,12 @@ describe('PostsService block enforcement on mutations (H5)', () => {
     findOwnerMeta: jest.fn(),
     findLike: jest.fn(),
     findRepost: jest.fn(),
+    findBookmark: jest.fn(),
     toggleLike: jest.fn(),
     toggleRepost: jest.fn(),
+    toggleBookmark: jest.fn(),
+    incrementViewsCount: jest.fn().mockResolvedValue({ viewsCount: 8 }),
+    findById: jest.fn(),
     createComment: jest.fn(),
   };
   const usersRepo = {
@@ -246,6 +257,38 @@ describe('PostsService block enforcement on mutations (H5)', () => {
     await expect(service.toggleRepost(viewer, 'p1')).resolves.toEqual({
       reposted: true,
     });
+    repo.findBookmark.mockResolvedValue(null);
+    repo.toggleBookmark.mockResolvedValue(true);
+    await expect(service.toggleBookmark(viewer, 'p1')).resolves.toEqual({
+      bookmarked: true,
+    });
+  });
+
+  it('rejects bookmark when blocked', async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue(['user-a']);
+    await expect(service.toggleBookmark(viewer, 'p1')).rejects.toMatchObject({
+      status: 403,
+      error: 'blocked',
+    });
+    expect(repo.toggleBookmark).not.toHaveBeenCalled();
+  });
+
+  it('records a view via incrementViewsCount and skips the author', async () => {
+    usersRepo.findBlockedRelationshipIds.mockResolvedValue([]);
+    await expect(service.recordView('p1', viewer)).resolves.toEqual({
+      recorded: true,
+      viewsCount: 8,
+    });
+    expect(repo.incrementViewsCount).toHaveBeenCalledWith('p1');
+
+    repo.findById.mockResolvedValue({ viewsCount: 8 });
+    await expect(
+      service.recordView('p1', {
+        userId: 'user-a',
+        username: 'a',
+        role: 'USER',
+      }),
+    ).resolves.toEqual({ recorded: false, viewsCount: 8 });
   });
 
   it('does not delete existing likes or comments when a later block rejects a mutation', async () => {

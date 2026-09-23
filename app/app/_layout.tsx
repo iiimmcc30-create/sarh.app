@@ -21,7 +21,9 @@ import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { SarhPatternBackground } from '@/components/ui/SarhPatternBackground';
 import { NavigationPathTracker } from '@/components/navigation/NavigationPathTracker';
-import { setupRtl, getRtlDirection, stackSlideAnimation, setupRtlFromStorage } from '@/lib/rtl';
+import { fadeScaleScreenLayout } from '@/components/navigation/FadeScaleAppear';
+import { fadeScaleStackScreenOptions } from '@/lib/screenTransition';
+import { setupRtl, getRtlDirection, setupRtlFromStorage } from '@/lib/rtl';
 import { resolveBootNavigation } from '@/lib/bootRouting';
 
 import { bootstrapTheme } from '@/constants/themeBootstrap';
@@ -75,18 +77,24 @@ function RootNavigator() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
-        screenOptions={{
+        screenLayout={fadeScaleScreenLayout}
+        screenOptions={fadeScaleStackScreenOptions({
           headerShown: false,
           freezeOnBlur: true,
           contentStyle: {
-            backgroundColor: themeColors.screenRoot,
             // RTL policy: root direction from I18nManager — never force 'ltr' here.
             ...getRtlDirection(),
           },
-          animation: stackSlideAnimation(),
-        }}
+        })}
       >
-        <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            animation: 'none',
+            presentation: 'card',
+            contentStyle: { backgroundColor: themeColors.screenRoot, ...getRtlDirection() },
+          }}
+        />
         <Stack.Screen name="chat" />
         <Stack.Screen name="feed-suppliers/index" />
         <Stack.Screen name="feed-suppliers/[id]" />
@@ -125,7 +133,7 @@ function RootNavigator() {
         <Stack.Screen name="profile/connections" />
         <Stack.Screen name="create/listing" />
         <Stack.Screen name="create/post" />
-        <Stack.Screen name="create/story" options={{ animation: stackSlideAnimation() }} />
+        <Stack.Screen name="create/story" />
         <Stack.Screen name="stories/view" options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
         <Stack.Screen name="info/about" />
         <Stack.Screen name="info/privacy" />
@@ -160,12 +168,12 @@ function RootNavigator() {
             headerShown: false,
           }}
         />
-        <Stack.Screen name="onboarding/index" options={{ animation: 'fade', gestureEnabled: false }} />
-        <Stack.Screen name="auth/welcome" options={{ animation: 'fade' }} />
-        <Stack.Screen name="auth/phone" options={{ animation: 'fade' }} />
-        <Stack.Screen name="auth/otp" options={{ animation: stackSlideAnimation() }} />
-        <Stack.Screen name="auth/register" options={{ animation: 'fade' }} />
-        <Stack.Screen name="auth/forgot-password" options={{ animation: stackSlideAnimation() }} />
+        <Stack.Screen name="onboarding/index" options={{ animation: 'fade', presentation: 'card', gestureEnabled: false }} />
+        <Stack.Screen name="auth/welcome" options={{ animation: 'fade', presentation: 'card' }} />
+        <Stack.Screen name="auth/phone" options={{ animation: 'fade', presentation: 'card' }} />
+        <Stack.Screen name="auth/otp" options={{ animation: 'fade', presentation: 'card' }} />
+        <Stack.Screen name="auth/register" options={{ animation: 'fade', presentation: 'card' }} />
+        <Stack.Screen name="auth/forgot-password" options={{ animation: 'fade', presentation: 'card' }} />
         <Stack.Screen name="expo-auth-session" options={{ animation: 'none', headerShown: false }} />
         <Stack.Screen name="live/create" options={{ freezeOnBlur: false }} />
         <Stack.Screen name="live/broadcast" options={{ freezeOnBlur: false }} />

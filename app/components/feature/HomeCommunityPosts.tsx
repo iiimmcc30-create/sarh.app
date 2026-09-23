@@ -3,12 +3,11 @@ import { AppText } from '@/design-system/components';
 import { Row } from '@/design-system/layout';
 import { space } from '@/design-system';
 import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLayout } from '@/hooks/useLayout';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { openPostDetail } from '@/lib/openPost';
 import { pickHomeCommunityPosts } from '@/lib/homeCommunityPosts';
-import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
+import { usePostFeedActions } from '@/lib/usePostFeedActions';
 import { safePush } from '@/lib/safeNavigate';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef } from 'react';
@@ -18,17 +17,11 @@ export function HomeCommunityPosts() {
   const router = useRouter();
   const { gutter } = useLayout();
   const styles = useThemedStyles(() => createStyles());
-  const { isAuthenticated } = useAuth();
   const {
-    me,
     posts,
-    likedPosts,
-    bookmarkedPosts,
-    toggleLike,
-    toggleBookmark,
-    deletePost,
     fetchPosts,
   } = useApp();
+  const { enrich, bind } = usePostFeedActions();
   const postsLenRef = useRef(posts.length);
   const inflightRef = useRef(false);
   const needsFailureRecoveryRef = useRef(false);
@@ -75,17 +68,8 @@ export function HomeCommunityPosts() {
       {featured.map((item) => (
         <PostItem
           key={item.id}
-          post={{
-            ...item,
-            liked: likedPosts.has(item.id),
-            bookmarked: bookmarkedPosts.has(item.id),
-          }}
-          onPress={() => openPostDetail(router, item.id)}
-          onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(item.id)}
-          onComment={() => openPostDetail(router, item.id, { focusComment: isAuthenticated })}
-          onBookmark={() => requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(item.id)}
-          onShare={() => sharePost(item)}
-          onMenu={() => showPostMenu(item, me, router, deletePost, isAuthenticated)}
+          post={enrich(item)}
+          {...bind(item)}
         />
       ))}
     </View>

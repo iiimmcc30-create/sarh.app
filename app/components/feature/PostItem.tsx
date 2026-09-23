@@ -28,15 +28,21 @@ import { PostMediaGallery } from '@/components/feature/PostMediaGallery';
 
 const HASHTAG_BLUE = '#1D9BF0';
 
+const LIKE_RED = '#F91880';
+const REPOST_GREEN = '#00BA7C';
+const BOOKMARK_BLUE = '#1D9BF0';
+
 interface PostItemProps {
   post: Post;
   variant?: 'feed' | 'detail' | 'profile';
   onPress?: () => void;
   onLike: () => void;
+  onRepost?: () => void;
   onComment: () => void;
   onShare: () => void;
   onMenu: () => void;
   onBookmark?: () => void;
+  onViewsChange?: (views: number) => void;
 }
 
 const TEXT_COLLAPSE_LINES = 8;
@@ -100,6 +106,8 @@ function ActionBtn({
   style,
   countStyle,
   size = 18,
+  filled = false,
+  accessibilityLabel,
 }: {
   icon: string;
   iconColor: string;
@@ -109,6 +117,8 @@ function ActionBtn({
   style: ViewStyle;
   countStyle: TextStyle;
   size?: number;
+  filled?: boolean;
+  accessibilityLabel?: string;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(1)).current;
@@ -128,9 +138,17 @@ function ActionBtn({
   }, [scale, opacity]);
 
   return (
-    <Pressable style={style} onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} hitSlop={10}>
-      <Animated.View style={[{ transform: [{ scale }], opacity }, getRtlRow(), { alignItems: 'center', gap: 4 }]}>
-        <AppIcon name={icon} size={size} color={iconColor} />
+    <Pressable
+      style={style}
+      onPress={onPress}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+      hitSlop={10}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Animated.View style={[{ transform: [{ scale }], opacity }, getRtlRow(), { alignItems: 'center', gap: 5 }]}>
+        <AppIcon name={icon} size={size} color={iconColor} variant={filled ? 'sr' : 'rr'} />
         {count !== undefined && count > 0 ? (
           <AppText style={[countStyle, { color: textColor }]}>{formatCount(count)}</AppText>
         ) : null}
@@ -144,10 +162,12 @@ function PostItemComponent({
   variant = 'feed',
   onPress,
   onLike,
+  onRepost,
   onComment,
   onShare,
   onMenu,
   onBookmark,
+  onViewsChange,
 }: PostItemProps) {
   const { styles, colors, scheme } = useThemedStyles((theme) => ({
     styles: createStyles(theme.colors, theme.scheme),
@@ -257,7 +277,14 @@ function PostItemComponent({
 
             {images.length > 0 || post.video ? (
               <View style={styles.mediaWrap}>
-                <PostMediaGallery images={images} video={post.video} colors={colors} scheme={scheme} />
+                <PostMediaGallery
+                  images={images}
+                  video={post.video}
+                  colors={colors}
+                  scheme={scheme}
+                  postId={post.id}
+                  onViewRecorded={onViewsChange}
+                />
               </View>
             ) : null}
           </Pressable>
@@ -285,23 +312,28 @@ function PostItemComponent({
               onPress={onComment}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
+              accessibilityLabel="تعليق"
+            />
+            <ActionBtn
+              icon="repeat-2"
+              iconColor={post.reposted ? REPOST_GREEN : colors.textMuted}
+              textColor={post.reposted ? REPOST_GREEN : colors.textMuted}
+              count={post.reposts}
+              onPress={onRepost ?? (() => {})}
+              style={styles.actionSlot}
+              countStyle={styles.actionCount}
+              accessibilityLabel="إعادة نشر"
             />
             <ActionBtn
               icon={post.liked ? 'heart' : 'heart-outline'}
-              iconColor={post.liked ? colors.rose : colors.textMuted}
-              textColor={post.liked ? colors.rose : colors.textMuted}
+              iconColor={post.liked ? LIKE_RED : colors.textMuted}
+              textColor={post.liked ? LIKE_RED : colors.textMuted}
               count={post.likes}
               onPress={onLike}
               style={styles.actionSlot}
               countStyle={styles.actionCount}
-            />
-            <ActionBtn
-              icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}
-              iconColor={post.bookmarked ? colors.electric : colors.textMuted}
-              textColor={colors.textMuted}
-              onPress={onBookmark ?? (() => {})}
-              style={styles.actionSlot}
-              countStyle={styles.actionCount}
+              filled={!!post.liked}
+              accessibilityLabel="إعجاب"
             />
             {variant !== 'detail' ? (
               <View
@@ -309,19 +341,30 @@ function PostItemComponent({
                 accessibilityRole="text"
                 accessibilityLabel={`مشاهدات ${formatCount(post.views ?? 0)}`}
               >
-                <AppIcon name="eye-outline" size={18} color={colors.textMuted} />
+                <AppIcon name="bar-chart-2" size={18} color={colors.textMuted} />
                 <AppText style={[styles.actionCount, { color: colors.textMuted }]}>
                   {formatCount(post.views ?? 0)}
                 </AppText>
               </View>
             ) : null}
             <ActionBtn
-              icon="paper-plane-outline"
+              icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}
+              iconColor={post.bookmarked ? BOOKMARK_BLUE : colors.textMuted}
+              textColor={colors.textMuted}
+              onPress={onBookmark ?? (() => {})}
+              style={styles.actionEndSlot}
+              countStyle={styles.actionCount}
+              filled={!!post.bookmarked}
+              accessibilityLabel="حفظ"
+            />
+            <ActionBtn
+              icon="share-up"
               iconColor={colors.textMuted}
               textColor={colors.textMuted}
               onPress={onShare}
-              style={styles.actionSlot}
+              style={styles.actionEndSlot}
               countStyle={styles.actionCount}
+              accessibilityLabel="مشاركة"
             />
           </View>
         </View>
@@ -341,6 +384,7 @@ function arePropsEqual(prev: PostItemProps, next: PostItemProps): boolean {
     a.comments === b.comments &&
     a.views === b.views &&
     a.liked === b.liked &&
+    a.reposted === b.reposted &&
     a.bookmarked === b.bookmarked &&
     a.arabicContent === b.arabicContent &&
     a.content === b.content &&
@@ -488,10 +532,17 @@ function createStyles(colors: ThemeColors, scheme: 'light' | 'dark') {
     },
     actionSlot: {
       flex: 1,
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'center',
       minHeight: 36,
       paddingHorizontal: 2,
+    },
+    actionEndSlot: {
+      width: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 36,
+      flexShrink: 0,
     },
     actionCount: {
       ...typography.caption,

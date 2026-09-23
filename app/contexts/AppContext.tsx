@@ -38,6 +38,7 @@ import {
   planFeedSnapshotHydration,
   readFeedSnapshot,
 } from '@/lib/feedSnapshot';
+import { runExclusive } from '@/lib/postEngagement';
 
 const BOOKMARKS_STORAGE_KEY = 'sarouh:bookmarked_posts';
 const REFETCH_TTL_MS = 60_000;
@@ -117,7 +118,8 @@ interface AppContextValue {
   bookmarkedPosts: Set<string>;
   toggleLike: (postId: string) => Promise<void>;
   toggleRepost: (postId: string) => Promise<void>;
-  toggleBookmark: (postId: string) => void;
+  toggleBookmark: (postId: string) => Promise<void>;
+  setPostViews: (postId: string, views: number) => void;
   addComment: (postId: string, content: string) => Promise<boolean>;
   removeListing: (
     listingId: string,
@@ -169,15 +171,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  const toggleBookmark = useCallback((postId: string) => {
-    setBookmarkedPosts((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) next.delete(postId);
-      else next.add(postId);
-      AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify([...next])).catch(() => {});
-      return next;
+  const persistBookmarks = useCallback((ids: Set<string>) => {
+    AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify([...ids])).catch(() => {});
+  }, []);
+
+  const patchPost = useCallback((postId: string, patch: Partial<Post>) => {
+    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, ...patch } : p)));
+    postsCacheByFeed.forEach((list, key) => {
+      postsCacheByFeed.set(
+        key,
+        list.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
+      );
     });
   }, []);
+
+  const setPostViews = useCallback((postId: string, views: number) => {
+    patchPost(postId, { views });
+  }, [patchPost]);
 
   // Helper mapping functions
   const mapBackendUser = useCallback((u: any): User => {
@@ -223,6 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: p.createdAt,
       liked: p.liked ?? false,
       reposted: p.reposted ?? false,
+      bookmarked: typeof p.bookmarked === 'boolean' ? p.bookmarked : undefined,
     };
   }, [mapBackendUser]);
 
@@ -408,6 +419,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     setLikedPosts(liked);
     setRepostedPosts(reposted);
+    setBookmarkedPosts((prev) => {
+      const next = new Set(prev);
+      nextPosts.forEach((p: Post) => {
+        if (typeof p.bookmarked !== 'boolean') return;
+        if (p.bookmarked) next.add(p.id);
+        else next.delete(p.id);
+      });
+      AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify([...next])).catch(() => {});
+      return next;
+    });
   }, []);
 
   const applyPostsFeed = useCallback((
@@ -916,75 +937,145 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleLike = useCallback(async (postId: string) => {
     if (!isAuthenticated || !accessToken) return;
-    try {
-      const res = await authFetch(`${API_BASE}/api/posts/${postId}/like`, {
-        method: 'POST',
+    await runExclusive(`like:${postId}`, async () => {
+      let wasLiked = false;
+      let previousLikes = 0;
+      setLikedPosts((prev) => {
+        wasLiked = prev.has(postId);
+        const next = new Set(prev);
+        if (wasLiked) next.delete(postId);
+        else next.add(postId);
+        return next;
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          const isLikedNow = Boolean(json.data?.liked);
-          setLikedPosts((prev) => {
-            const next = new Set(prev);
-            if (isLikedNow) {
-              next.add(postId);
-            } else {
-              next.delete(postId);
-            }
-            return next;
-          });
-
-          setPosts((prev) =>
-            prev.map((p) => {
-              if (p.id === postId) {
-                return {
-                  ...p,
-                  likes: isLikedNow ? p.likes + 1 : Math.max(0, p.likes - 1),
-                  liked: isLikedNow,
-                };
-              }
-              return p;
-            }),
-          );
-        }
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          previousLikes = p.likes;
+          return {
+            ...p,
+            liked: !wasLiked,
+            likes: wasLiked ? Math.max(0, p.likes - 1) : p.likes + 1,
+          };
+        }),
+      );
+      try {
+        const res = await authFetch(`${API_BASE}/api/posts/${postId}/like`, {
+          method: 'POST',
+        });
+        const json = res.ok ? await res.json() : null;
+        if (!res.ok || !json?.success) throw new Error('like_failed');
+        const isLikedNow = Boolean(json.data?.liked);
+        setLikedPosts((prev) => {
+          const next = new Set(prev);
+          if (isLikedNow) next.add(postId);
+          else next.delete(postId);
+          return next;
+        });
+        patchPost(postId, { liked: isLikedNow });
+      } catch (err) {
+        console.warn('[AppContext] Toggle like failed:', err);
+        setLikedPosts((prev) => {
+          const next = new Set(prev);
+          if (wasLiked) next.add(postId);
+          else next.delete(postId);
+          return next;
+        });
+        patchPost(postId, { liked: wasLiked, likes: previousLikes });
       }
-    } catch (err) {
-      console.warn('[AppContext] Toggle like failed:', err);
-    }
-  }, [isAuthenticated, accessToken]);
+    });
+  }, [isAuthenticated, accessToken, patchPost]);
 
   const toggleRepost = useCallback(async (postId: string) => {
     if (!isAuthenticated || !accessToken) return;
-    try {
-      const res = await authFetch(`${API_BASE}/api/posts/${postId}/repost`, {
-        method: 'POST',
+    await runExclusive(`repost:${postId}`, async () => {
+      let wasReposted = false;
+      let previousReposts = 0;
+      setRepostedPosts((prev) => {
+        wasReposted = prev.has(postId);
+        const next = new Set(prev);
+        if (wasReposted) next.delete(postId);
+        else next.add(postId);
+        return next;
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          const isRepostedNow = Boolean(json.data?.reposted);
-          setRepostedPosts((prev) => {
-            const next = new Set(prev);
-            if (isRepostedNow) next.add(postId);
-            else next.delete(postId);
-            return next;
-          });
-          setPosts((prev) =>
-            prev.map((p) => {
-              if (p.id !== postId) return p;
-              return {
-                ...p,
-                reposts: isRepostedNow ? p.reposts + 1 : Math.max(0, p.reposts - 1),
-                reposted: isRepostedNow,
-              };
-            }),
-          );
-        }
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          previousReposts = p.reposts;
+          return {
+            ...p,
+            reposted: !wasReposted,
+            reposts: wasReposted ? Math.max(0, p.reposts - 1) : p.reposts + 1,
+          };
+        }),
+      );
+      try {
+        const res = await authFetch(`${API_BASE}/api/posts/${postId}/repost`, {
+          method: 'POST',
+        });
+        const json = res.ok ? await res.json() : null;
+        if (!res.ok || !json?.success) throw new Error('repost_failed');
+        const isRepostedNow = Boolean(json.data?.reposted);
+        setRepostedPosts((prev) => {
+          const next = new Set(prev);
+          if (isRepostedNow) next.add(postId);
+          else next.delete(postId);
+          return next;
+        });
+        patchPost(postId, { reposted: isRepostedNow });
+      } catch (err) {
+        console.warn('[AppContext] Toggle repost failed:', err);
+        setRepostedPosts((prev) => {
+          const next = new Set(prev);
+          if (wasReposted) next.add(postId);
+          else next.delete(postId);
+          return next;
+        });
+        patchPost(postId, { reposted: wasReposted, reposts: previousReposts });
       }
-    } catch (err) {
-      console.warn('[AppContext] Toggle repost failed:', err);
-    }
-  }, [isAuthenticated, accessToken]);
+    });
+  }, [isAuthenticated, accessToken, patchPost]);
+
+  const toggleBookmark = useCallback(async (postId: string) => {
+    if (!isAuthenticated || !accessToken) return;
+    await runExclusive(`bookmark:${postId}`, async () => {
+      let wasBookmarked = false;
+      setBookmarkedPosts((prev) => {
+        wasBookmarked = prev.has(postId);
+        const next = new Set(prev);
+        if (wasBookmarked) next.delete(postId);
+        else next.add(postId);
+        persistBookmarks(next);
+        return next;
+      });
+      patchPost(postId, { bookmarked: !wasBookmarked });
+      try {
+        const res = await authFetch(`${API_BASE}/api/posts/${postId}/bookmark`, {
+          method: 'POST',
+        });
+        const json = res.ok ? await res.json() : null;
+        if (!res.ok || !json?.success) throw new Error('bookmark_failed');
+        const isBookmarkedNow = Boolean(json.data?.bookmarked);
+        setBookmarkedPosts((prev) => {
+          const next = new Set(prev);
+          if (isBookmarkedNow) next.add(postId);
+          else next.delete(postId);
+          persistBookmarks(next);
+          return next;
+        });
+        patchPost(postId, { bookmarked: isBookmarkedNow });
+      } catch (err) {
+        console.warn('[AppContext] Toggle bookmark failed:', err);
+        setBookmarkedPosts((prev) => {
+          const next = new Set(prev);
+          if (wasBookmarked) next.add(postId);
+          else next.delete(postId);
+          persistBookmarks(next);
+          return next;
+        });
+        patchPost(postId, { bookmarked: wasBookmarked });
+      }
+    });
+  }, [isAuthenticated, accessToken, patchPost, persistBookmarks]);
 
   const addComment = useCallback(async (postId: string, content: string): Promise<boolean> => {
     if (!isAuthenticated || !accessToken || !content.trim()) return false;
@@ -1106,6 +1197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleLike,
       toggleRepost,
       toggleBookmark,
+      setPostViews,
       addComment,
       removeListing,
       refetchData,
@@ -1129,6 +1221,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleLike,
       toggleRepost,
       toggleBookmark,
+      setPostViews,
       addComment,
       removeListing,
       refetchData,

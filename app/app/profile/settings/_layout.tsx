@@ -1,12 +1,14 @@
 import { Stack } from 'expo-router';
+import { fadeScaleScreenLayout } from '@/components/navigation/FadeScaleAppear';
+import { fadeScaleStackScreenOptions } from '@/lib/screenTransition';
 
 export default function ProfileSettingsLayout() {
   return (
     <Stack
-      screenOptions={{
+      screenLayout={fadeScaleScreenLayout}
+      screenOptions={fadeScaleStackScreenOptions({
         headerShown: false,
-        animation: 'slide_from_right',
-      }}
+      })}
     />
   );
 }

@@ -39,6 +39,7 @@ export function mapPostFromApi(p: Record<string, unknown> | null | undefined): P
     createdAt: String(p.createdAt),
     liked: Boolean(p.liked),
     reposted: Boolean(p.reposted),
+    bookmarked: Boolean(p.bookmarked),
   };
 }
 

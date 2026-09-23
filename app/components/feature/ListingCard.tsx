@@ -2,8 +2,10 @@
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { LinearGradient } from '@/components/ui/AppLinearGradient';
-import { memo } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MediaViewerModal } from '@/components/ui/MediaViewerModal';
+import { measureMediaOrigin, type MediaOriginRect } from '@/lib/mediaOrigin';
 import { ambientShadow } from '@/constants/designSystem';
 import {
   imageCardOverlay,
@@ -19,6 +21,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { formatRelativeTimeAr } from '@/lib/formatRelativeTime';
 import { getRtlText, getRtlDirection, getRtlRow } from '@/lib/rtl';
 import { listingHasVideo, listingPhotoUris, listingThumbUri } from '@/lib/listingMedia';
+import { collectListingMedia } from '@/lib/postMedia';
 import { Listing, getCountryInfo } from '@/services/types';
 import { UserProfileLink } from '@/components/feature/UserProfileLink';
 import { isManagedListing, listingAdvertiserName } from '@/lib/managedListing';
@@ -87,6 +90,10 @@ function ListingCardInner({
   const thumbUri = listingThumbUri(listing);
   const { scheme, colors } = useTheme();
   const styles = useThemedStyles(({ colors: c, scheme: s }) => createStyles(c, s));
+  const mediaItems = useMemo(() => collectListingMedia(listing), [listing]);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerOrigin, setViewerOrigin] = useState<MediaOriginRect | null>(null);
+  const thumbRef = useRef<View>(null);
   const cardOverlay = imageCardOverlay(scheme);
   const cardOverlayStrong = imageCardOverlayStrong(scheme);
   const desc = listing.arabicDescription || listing.description;
@@ -103,8 +110,8 @@ function ListingCardInner({
     const showNew = isNewListing(listing);
     const hasVideo = listingHasVideo(listing);
     const displayTime = toWesternDigits(timeLabel || 'الآن');
-
     return (
+      <>
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [
@@ -165,7 +172,7 @@ function ListingCardInner({
           </View>
         </View>
 
-        <View style={styles.listThumbWrap}>
+        <View ref={thumbRef} collapsable={false} style={styles.listThumbWrap}>
           {thumbUri ? (
             <Image
               source={uriSource(thumbUri)}
@@ -180,9 +187,20 @@ function ListingCardInner({
             </View>
           )}
           {hasVideo ? (
-            <View style={styles.listVideoBadge}>
+            <Pressable
+              style={styles.listVideoBadge}
+              onPress={() => {
+                void measureMediaOrigin(thumbRef.current).then((origin) => {
+                  setViewerOrigin(origin);
+                  setViewerVisible(true);
+                });
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="عرض الفيديو"
+            >
               <AppIcon name="play" size={10} color="#fff" variant="sr" />
-            </View>
+            </Pressable>
           ) : null}
           {photoCount > 1 ? (
             <View style={styles.listPhotoCountBadge}>
@@ -192,6 +210,13 @@ function ListingCardInner({
           ) : null}
         </View>
       </Pressable>
+      <MediaViewerModal
+        visible={viewerVisible}
+        items={mediaItems}
+        origin={viewerOrigin}
+        onClose={() => setViewerVisible(false)}
+      />
+      </>
     );
   }
 

@@ -36,15 +36,22 @@ describe('Posts feed — X-style structure', () => {
     expect(postItem).toContain('formatCount(post.views ?? 0)');
   });
 
-  it('places share, views, then save from the RTL end (left) with an eye views icon', () => {
+  it('places comment, repost, like, analytics, bookmark, then share', () => {
     const actions = postItem.slice(postItem.indexOf('styles.actions'));
+    const comment = actions.indexOf('icon="chatbubble-ellipses-outline"');
+    const repost = actions.indexOf('icon="repeat-2"');
+    const like = actions.indexOf("icon={post.liked ? 'heart' : 'heart-outline'}");
+    const views = actions.indexOf('name="bar-chart-2"');
     const bookmark = actions.indexOf("icon={post.bookmarked ? 'bookmark' : 'bookmark-outline'}");
-    const views = actions.indexOf('name="eye-outline"');
-    const share = actions.indexOf('icon="paper-plane-outline"');
-    expect(bookmark).toBeGreaterThan(-1);
-    expect(views).toBeGreaterThan(bookmark);
-    expect(share).toBeGreaterThan(views);
+    const share = actions.indexOf('icon="share-up"');
+    expect(comment).toBeGreaterThan(-1);
+    expect(repost).toBeGreaterThan(comment);
+    expect(like).toBeGreaterThan(repost);
+    expect(views).toBeGreaterThan(like);
+    expect(bookmark).toBeGreaterThan(views);
+    expect(share).toBeGreaterThan(bookmark);
     expect(actions).toContain('getRtlRow()');
+    expect(actions).toContain('LIKE_RED');
     expect(actions).toContain('accessibilityLabel={`مشاهدات ${formatCount(post.views ?? 0)}`}');
   });
 
@@ -94,11 +101,12 @@ describe('Posts feed — X-style structure', () => {
     expect(gallery).toContain('postFeedDeliveryUri(uri)');
     expect(gallery).toContain('contentFit="cover"');
     expect(gallery).toContain('aspectRatio: ASPECT_RATIO');
-    expect(gallery).toContain('images={images}');
+    expect(gallery).toContain('collectPostMedia');
+    expect(gallery).toContain('MediaViewerModal');
     expect(gallery).not.toContain('cloudinaryFitUrl');
     expect(postItem).not.toContain('postFeedImageUrl');
     expect(postItem).not.toContain('cloudinaryFitUrl');
     expect(postItem).toContain('uriSource(post.author.avatar)');
-    expect(postItem).toContain('<PostMediaGallery images={images}');
+    expect(postItem).toContain('<PostMediaGallery');
   });
 });

@@ -7,8 +7,7 @@ import { Screen, ScreenBody, Stack } from '@/design-system/layout';
 import { useApp } from '@/hooks/useApp';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
-import { openPostDetail } from '@/lib/openPost';
-import { requireAuth, sharePost, showPostMenu } from '@/lib/postInteractions';
+import { usePostFeedActions } from '@/lib/usePostFeedActions';
 import { safePush } from '@/lib/safeNavigate';
 import type { Post } from '@/services/types';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -27,15 +26,11 @@ export default function FavoritesScreen() {
   const styles = useThemedStyles(({ colors: c }) => createStyles(c));
   const { isAuthenticated } = useAuth();
   const {
-    me,
     posts,
-    likedPosts,
     bookmarkedPosts,
-    toggleLike,
-    toggleBookmark,
-    deletePost,
     fetchPosts,
   } = useApp();
+  const { enrich, bind } = usePostFeedActions();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -67,30 +62,11 @@ export default function FavoritesScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<Post>) => (
-      <PostItem
-        post={{
-          ...item,
-          liked: likedPosts.has(item.id),
-          bookmarked: true,
-        }}
-        onPress={() => openPostDetail(router, item.id)}
-        onLike={() => requireAuth(isAuthenticated, 'الإعجاب') && toggleLike(item.id)}
-        onComment={() => openPostDetail(router, item.id, { focusComment: isAuthenticated })}
-        onBookmark={() => requireAuth(isAuthenticated, 'الحفظ') && toggleBookmark(item.id)}
-        onShare={() => sharePost(item)}
-        onMenu={() => showPostMenu(item, me, router, deletePost, isAuthenticated)}
-      />
-    ),
-    [
-      likedPosts,
-      isAuthenticated,
-      toggleLike,
-      toggleBookmark,
-      deletePost,
-      me,
-      router,
-    ],
+    ({ item }: ListRenderItemInfo<Post>) => {
+      const post = { ...enrich(item), bookmarked: true };
+      return <PostItem post={post} {...bind(item)} />;
+    },
+    [enrich, bind],
   );
 
   return (

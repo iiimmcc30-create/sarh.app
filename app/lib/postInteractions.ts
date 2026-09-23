@@ -4,11 +4,16 @@ import { Share } from 'react-native';
 import { Router } from 'expo-router';
 import { Post, User } from '@/services/types';
 import { promptReport } from '@/services/reports';
+import { SARH_OFFICIAL_SITE } from '@/constants/sarhOfficial';
 import {
   alertMessage,
   confirmDestructive,
   presentActionSheet,
 } from '@/lib/actionSheet';
+
+export function postShareUrl(postId: string): string {
+  return `${SARH_OFFICIAL_SITE}/post/${encodeURIComponent(postId)}`;
+}
 
 export type DeletePostResult = { ok: boolean; error?: string };
 
@@ -19,9 +24,11 @@ export function requireAuth(isAuthenticated: boolean, action: string): boolean {
 }
 
 export async function sharePost(post: Post) {
+  const url = postShareUrl(post.id);
   try {
     await Share.share({
-      message: `${post.arabicContent}\n\n— ${post.author.arabicName} (@${post.author.username}) عبر تطبيق سرح 🐪`,
+      message: `${post.arabicContent}\n\n${url}\n\n— ${post.author.arabicName} (@${post.author.username}) عبر تطبيق سرح`,
+      url,
       title: 'مشاركة منشور',
     });
   } catch {
