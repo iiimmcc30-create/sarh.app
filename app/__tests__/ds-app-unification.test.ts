@@ -15,7 +15,8 @@ describe('design-system unification — allowed redesigns only', () => {
     expect(feed).toContain("from '@/design-system/components'");
     expect(feed).not.toContain('>المنشورات<');
     expect(feed).not.toContain('screenTitle');
-    expect(feed).toContain("tab === 'for_you' ? 'لك' : 'متابعة'");
+    expect(feed).toContain("label: 'لك'");
+    expect(feed).toContain("label: 'متابعة'");
     expect(feed).not.toContain('PostItem layout');
     expect(post).toContain("from '@/components/ui/AppText'");
     expect(post).toContain('ellipsis-vertical');

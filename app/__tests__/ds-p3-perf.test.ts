@@ -152,7 +152,7 @@ describe('Wave 5B loading and skeleton consistency', () => {
   it('refetches connections without wiping the current tab', () => {
     const connections = src('app/profile/connections.tsx');
     expect(connections).toContain('isBackground');
-    expect(connections).toContain('loading && users.length === 0');
+    expect(connections).toContain('loading && tab === activeTab && data.length === 0');
   });
 
   it('keeps comments visible while a later reload is in flight', () => {
