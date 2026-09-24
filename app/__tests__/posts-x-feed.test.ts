@@ -16,6 +16,18 @@ function daysAgo(d: number, now = Date.now()) {
   return new Date(now - d * 24 * 60 * 60 * 1000).toISOString();
 }
 
+describe('create post media upload', () => {
+  it('picks images and videos and uploads video via uploadMediaFromUri', () => {
+    const create = src('app/create/post.tsx');
+    expect(create).toContain("mediaTypes: ['images', 'videos']");
+    expect(create).toContain("uploadMediaFromUri");
+    expect(create).toContain("'posts',");
+    expect(create).toContain("'video'");
+    expect(create).not.toContain('uploadImageFromUri');
+    expect(create).toContain('media: uploaded');
+  });
+});
+
 describe('Posts feed — X-style structure', () => {
   const postItem = src('components/feature/PostItem.tsx');
   const comments = src('components/feature/PostCommentsSection.tsx');
@@ -99,14 +111,28 @@ describe('Posts feed — X-style structure', () => {
     const gallery = src('components/feature/PostMediaGallery.tsx');
     expect(gallery).toContain('postFeedImageUrl');
     expect(gallery).toContain('postFeedDeliveryUri(uri)');
-    expect(gallery).toContain('contentFit="cover"');
+    expect(gallery).toContain("contentFit: 'cover'");
     expect(gallery).toContain('aspectRatio: ASPECT_RATIO');
     expect(gallery).toContain('collectPostMedia');
+    expect(gallery).toContain('collectPostMedia(images, video, media)');
     expect(gallery).toContain('MediaViewerModal');
     expect(gallery).not.toContain('cloudinaryFitUrl');
     expect(postItem).not.toContain('postFeedImageUrl');
     expect(postItem).not.toContain('cloudinaryFitUrl');
     expect(postItem).toContain('uriSource(post.author.avatar)');
     expect(postItem).toContain('<PostMediaGallery');
+  });
+
+  it('keeps the outer feed card cropped and reserves contain for internal detail', () => {
+    const gallery = src('components/feature/PostMediaGallery.tsx');
+    expect(gallery).toContain("variant === 'detail'");
+    expect(gallery).toContain("const contentFit = isDetail ? 'contain' : 'cover'");
+    expect(gallery).toContain('detailMediaHeight');
+    expect(gallery).toContain('postDetailImageUrl');
+    expect(postItem).toContain("variant={variant === 'detail' ? 'detail' : 'feed'}");
+    expect(postItem).toContain('styles.detailBody');
+    expect(postItem).toContain('متابعة');
+    expect(postItem).toContain('setFollowUser');
+    expect(postItem).toContain('styles.detailMedia');
   });
 });
