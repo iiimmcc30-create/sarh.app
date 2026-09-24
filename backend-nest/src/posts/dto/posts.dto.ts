@@ -24,6 +24,14 @@ export class ListPostsQueryDto {
   @IsOptional()
   @IsString()
   feed?: 'for_you' | 'following';
+
+  /**
+   * Profile activity lists on the existing feed route.
+   * Requires `userId`. `likes` is returned only to that same viewer.
+   */
+  @IsOptional()
+  @IsIn(['replies', 'reposts', 'likes'])
+  activity?: 'replies' | 'reposts' | 'likes';
 }
 
 export class CreatePostDto {
