@@ -547,16 +547,18 @@ describe('Architecture V2 — Wave 2 profile screens', () => {
     expect(menu).toContain('gutter={false}');
     expect(menu).not.toContain('SarhCard');
 
-    for (const file of [
-      'app/profile/settings/account.tsx',
-      'app/profile/settings/privacy.tsx',
-      'app/settings/blocked.tsx',
-    ]) {
+    for (const file of ['app/profile/settings/account.tsx', 'app/settings/blocked.tsx']) {
       const text = code(file);
       expect(text).not.toContain('SarhCard');
       expect(text).not.toContain('LinearGradient');
       expect(text).toContain('SarhDivider');
     }
+    const privacy = src('app/profile/settings/privacy.tsx');
+    expect(privacy).toContain('SarhSettingsSection');
+    expect(privacy).toContain('SarhSettingsRow');
+    expect(privacy).toContain('gutter={false}');
+    expect(privacy).not.toContain('SarhCard');
+    expect(privacy).not.toContain('LinearGradient');
     expect(src('app/profile/settings/account.tsx')).toContain('<Section');
   });
 

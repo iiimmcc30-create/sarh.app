@@ -34,7 +34,7 @@ function formatAccountSubtitle(account: AccountSettings | null, userPhone?: stri
     email ? `بريد: ${email}` : null,
     account?.birthDate ? `ميلاد: ${account.birthDate}` : null,
   ].filter(Boolean);
-  return parts.length > 0 ? parts.join(' · ') : 'الهاتف، البريد، تاريخ الميلاد';
+  return parts.length > 0 ? parts.join(' · ') : '';
 }
 export default function ProfileSettingsScreen() {
   const router = useRouter();

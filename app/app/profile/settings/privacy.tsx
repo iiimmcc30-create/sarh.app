@@ -4,54 +4,58 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { alertMessage } from '@/lib/actionSheet';
 import {
-  DEFAULT_PRIVACY_SETTINGS,
   fetchPrivacySettings,
   updatePrivacySettings,
   type PrivacySettings,
 } from '@/services/users';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Switch } from 'react-native';
-import { AppText, SarhButton, SarhDivider } from '@/design-system/components';
-import { Row, Screen, ScreenBody, Stack } from '@/design-system/layout';
-import { space } from '@/design-system/tokens';
+import { ActivityIndicator, StyleSheet } from 'react-native';
+import { AppText, SarhButton, SarhSettingsRow, SarhSettingsSection } from '@/design-system/components';
+import { Screen, ScreenBody, Stack } from '@/design-system/layout';
+import { colors, space } from '@/design-system';
 
 type PrivacyToggleKey = {
   [Key in keyof PrivacySettings]: PrivacySettings[Key] extends boolean ? Key : never;
 }[keyof PrivacySettings];
 
-const TOGGLES: Array<{
+const TOGGLES: {
   key: PrivacyToggleKey;
   label: string;
-  description: string;
-}> = [
+  icon: string;
+  section: 'الظهور' | 'التواصل';
+}[] = [
   {
     key: 'showInSearch',
     label: 'إظهار الحساب في نتائج البحث',
-    description: 'عند الإيقاف لن يظهر حسابك عند البحث عن المستخدمين.',
-  },
-  {
-    key: 'allowPrivateMessages',
-    label: 'السماح بالرسائل الخاصة',
-    description: 'عند الإيقاف لن يتمكن الآخرون من بدء محادثة معك.',
+    icon: 'search',
+    section: 'الظهور',
   },
   {
     key: 'showFollowingList',
     label: 'السماح برؤية الأشخاص الذين أتابعهم',
-    description: 'عند الإيقاف ستكون قائمة «يتابع» خاصة بك فقط.',
+    icon: 'people-outline',
+    section: 'الظهور',
+  },
+  {
+    key: 'allowPrivateMessages',
+    label: 'السماح بالرسائل الخاصة',
+    icon: 'chatbubble-ellipses-outline',
+    section: 'التواصل',
   },
 ];
+
+const SECTIONS = ['الظهور', 'التواصل'] as const;
 
 /** Layout only — theme colors are read at render. */
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
-  row: { paddingVertical: space[16] },
-  description: { lineHeight: 20 },
+  notice: { paddingHorizontal: space[16], paddingTop: space[16] },
 });
 
 export default function PrivacySettingsScreen() {
   const { me } = useAppUser();
   const { accessToken, isLoading: authLoading } = useAuth();
-  const { colors } = useTheme();
+  useTheme();
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -76,7 +80,15 @@ export default function PrivacySettingsScreen() {
   }, [accessToken, authLoading, me.id]);
 
   useEffect(() => {
-    void loadSettings();
+    let cancelled = false;
+    void (async () => {
+      // Yield once so the fetch is not a synchronous setState inside the effect.
+      await Promise.resolve();
+      if (!cancelled) await loadSettings();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [loadSettings]);
 
   const handleToggle = async (key: PrivacyToggleKey, value: boolean) => {
@@ -110,7 +122,7 @@ export default function PrivacySettingsScreen() {
       <Screen edges={['top', 'bottom']}>
         {header}
         <ScreenBody scroll={false} style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.electricBright} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </ScreenBody>
       </Screen>
     );
@@ -139,9 +151,9 @@ export default function PrivacySettingsScreen() {
   return (
     <Screen edges={['top', 'bottom']}>
       {header}
-      <ScreenBody padTop="lg" gap="section" width="form" padBottom="xxl">
+      <ScreenBody gutter={false} padBottom="xxl">
         {loadError ? (
-          <Stack gap="sm">
+          <Stack gap="sm" style={styles.notice}>
             <AppText variant="caption" color="warning">
               عُرضت الإعدادات الافتراضية. قد تحتاج تحديث التطبيق أو الخادم لمزامنة تفضيلاتك.
             </AppText>
@@ -153,38 +165,24 @@ export default function PrivacySettingsScreen() {
           </Stack>
         ) : null}
 
-        <AppText variant="bodySmall" color="textSecondary">
-          اختر ما تريد مشاركته مع الآخرين في سرح. يمكنك تغيير هذه الإعدادات في أي وقت.
-        </AppText>
-
-        <Stack gap="none">
-          {TOGGLES.map((item, index) => (
-            <Stack key={item.key} gap="none">
-              <Row gap="md" align="center" style={styles.row}>
-                <Stack gap="xs" fill>
-                  <AppText variant="bodyMedium" color="textPrimary">
-                    {item.label}
-                  </AppText>
-                  <AppText variant="caption" color="textMuted" style={styles.description}>
-                    {item.description}
-                  </AppText>
-                </Stack>
-                <Switch
-                  value={settings[item.key]}
-                  onValueChange={(value) => void handleToggle(item.key, value)}
+        {SECTIONS.map((section) => {
+          const items = TOGGLES.filter((item) => item.section === section);
+          return (
+            <SarhSettingsSection key={section} title={section}>
+              {items.map((item, index) => (
+                <SarhSettingsRow
+                  key={item.key}
+                  icon={item.icon}
+                  title={item.label}
+                  switchValue={settings[item.key]}
+                  onSwitchChange={(value) => void handleToggle(item.key, value)}
                   disabled={savingKey === item.key}
-                  trackColor={{
-                    false: colors.bgDeep,
-                    true: colors.electric,
-                  }}
-                  thumbColor="#fff"
-                  ios_backgroundColor={colors.bgDeep}
+                  showDivider={index < items.length - 1}
                 />
-              </Row>
-              {index < TOGGLES.length - 1 ? <SarhDivider /> : null}
-            </Stack>
-          ))}
-        </Stack>
+              ))}
+            </SarhSettingsSection>
+          );
+        })}
       </ScreenBody>
     </Screen>
   );
