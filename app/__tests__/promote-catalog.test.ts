@@ -96,8 +96,10 @@ describe('promote catalog SSOT', () => {
     );
     expect(screen).toContain('displayPrice = selectedDuration?.amount');
     expect(screen).toContain('formatPromoteAmount');
-    expect(screen).toContain('ملخص التعزيز');
-    expect(screen).toContain('المتابعة للدفع');
+    expect(screen).toContain('عزّز إعلانك');
+    expect(screen).toContain('خل إعلانك يوصل لعدد أكبر من المهتمين');
+    expect(screen).toContain('متابعة الدفع ·');
+    expect(screen).toContain('resolveSarhChipColors');
     expect(screen).toContain('<BottomAction>');
     expect(screen).not.toContain('quotedAmount');
     expect(screen).not.toContain('ر.س');

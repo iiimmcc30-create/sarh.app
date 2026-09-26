@@ -2,9 +2,7 @@ import { ListingBoostTitleIcons } from '@/components/listing/ListingBoostTitleIc
 import { Image, uriSource } from '@/components/ui/AppImage';
 import { AppIcon } from '@/components/ui/FlaticonIcon';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { radius, spacing, type ThemeColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useTheme } from '@/hooks/useTheme';
 import { launchPaymentCheckout } from '@/services/payments';
 import { API_BASE } from '@/services/api';
@@ -20,14 +18,11 @@ import {
 } from '@/services/listingPromote';
 import { listPromoteCatalogOptions } from '@/services/promoteCatalog';
 import { usePaidServices } from '@/hooks/usePaidServices';
-import {
-  firstEnabledPromoteGoal,
-  isPromoteGoalEnabled,
-} from '@/services/paidServices';
+import { isPromoteGoalEnabled } from '@/services/paidServices';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import { AppText, SarhButton, SarhCard, SarhDivider } from '@/design-system/components';
+import { AppText, SarhButton, SarhDivider, resolveSarhChipColors } from '@/design-system/components';
 import {
   BottomAction,
   Row,
@@ -36,6 +31,7 @@ import {
   Section,
   Stack,
 } from '@/design-system/layout';
+import { colors, motion, radius, space } from '@/design-system';
 
 type ServiceCopy = {
   goal: PromotionGoal;
@@ -65,39 +61,79 @@ const SERVICE_COPY: ServiceCopy[] = [
   },
 ];
 
+const BOOST_SUBTITLE = 'خل إعلانك يوصل لعدد أكبر من المهتمين';
+
+/** Layout only — theme colors are read at render from design-system tokens. */
+const styles = StyleSheet.create({
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  fill: { flex: 1, minWidth: 0 },
+  action: { flex: 1, minWidth: 0 },
+  thumb: {
+    width: space[64],
+    height: space[64],
+    borderRadius: radius[12],
+    overflow: 'hidden',
+  },
+  thumbFill: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  radio: {
+    width: space[20],
+    height: space[20],
+    borderRadius: radius[999],
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: {
+    width: space[8],
+    height: space[8],
+    borderRadius: radius[999],
+  },
+  duration: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: radius[16],
+    paddingVertical: space[16],
+    paddingHorizontal: space[12],
+    gap: space[4],
+  },
+});
+
 export default function ListingPromoteScreen() {
   const { id, goal: goalParam } = useLocalSearchParams<{ id: string; goal?: string }>();
   const { accessToken } = useAuth();
-  const { colors } = useTheme();
-  const styles = useThemedStyles(({ colors }) => createStyles(colors));
+  useTheme();
 
   const { flags: paidFlags, hasAnyBoostService } = usePaidServices();
   const initialGoal = goalFromBoostType(goalParam ?? null);
 
   const [goal, setGoal] = useState<PromotionGoal | null>(initialGoal);
-  const [selectedDurationIndex, setSelectedDurationIndex] = useState(0);
+  const [durationPick, setDurationPick] = useState<{ goal: PromotionGoal; index: number } | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [listingLoading, setListingLoading] = useState(true);
 
-  useEffect(() => {
-    if (!hasAnyBoostService) return;
-    if (goal && isPromoteGoalEnabled(goal, paidFlags)) return;
-    setGoal(firstEnabledPromoteGoal(paidFlags));
-  }, [goal, hasAnyBoostService, paidFlags]);
+  const goalEnabled = Boolean(goal && hasAnyBoostService && isPromoteGoalEnabled(goal, paidFlags));
+  const activeGoal = goalEnabled ? goal : null;
+  const selectedDurationIndex =
+    durationPick && durationPick.goal === activeGoal ? durationPick.index : null;
 
-  useEffect(() => {
-    setSelectedDurationIndex(0);
-    setError(null);
-  }, [goal]);
+  const selectGoal = (next: PromotionGoal) => {
+    setGoal(next);
+    if (next !== goal) setError(null);
+  };
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setListingLoading(true);
     void (async () => {
+      // Yield once so the loading flag is not set synchronously inside the effect.
+      await Promise.resolve();
+      if (cancelled) return;
+      setListingLoading(true);
       try {
         const res = await (accessToken
           ? authFetch(`${API_BASE}/api/listings/${id}`)
@@ -140,7 +176,7 @@ export default function ListingPromoteScreen() {
     };
   }, [accessToken, id]);
 
-  const listingTitle = listing?.arabicTitle || listing?.title || 'إعلانك';
+  const listingTitle = listing?.arabicTitle || listing?.title || '';
   const listingThumb = listing?.images?.[0];
 
   const enabledServices = useMemo(
@@ -153,27 +189,32 @@ export default function ListingPromoteScreen() {
   );
 
   const selectedService = useMemo(
-    () => enabledServices.find((s) => s.goal === goal) ?? null,
-    [enabledServices, goal],
+    () => enabledServices.find((s) => s.goal === activeGoal) ?? null,
+    [enabledServices, activeGoal],
   );
 
-  const selectedDuration = selectedService?.durations[selectedDurationIndex] ?? null;
+  const selectedDuration =
+    selectedService && selectedDurationIndex != null
+      ? selectedService.durations[selectedDurationIndex] ?? null
+      : null;
 
   useEffect(() => {
-    if (!goal || !selectedDuration) return;
-    void fetchPromoteQuote(goal, selectedDuration.durationHours).catch(() => {
+    if (!activeGoal || !selectedDuration) return;
+    void fetchPromoteQuote(activeGoal, selectedDuration.durationHours).catch(() => {
       /* Catalog amount stays on screen; backend initiate also uses the catalog. */
     });
-  }, [goal, selectedDuration]);
+  }, [activeGoal, selectedDuration]);
 
   const displayPrice = selectedDuration?.amount ?? null;
 
   const checkoutPayload = useMemo(() => {
-    if (!id || !goal || !selectedDuration) return null;
-    return buildPromoteCheckoutPayload(id, goal, selectedDuration.durationHours);
-  }, [id, goal, selectedDuration]);
+    if (!id || !activeGoal || !selectedDuration) return null;
+    return buildPromoteCheckoutPayload(id, activeGoal, selectedDuration.durationHours);
+  }, [id, activeGoal, selectedDuration]);
 
-  const canPay = Boolean(accessToken && checkoutPayload && !processing && hasAnyBoostService && goal);
+  const canPay = Boolean(
+    accessToken && checkoutPayload && !processing && hasAnyBoostService && activeGoal,
+  );
 
   const handlePay = useCallback(async () => {
     if (!accessToken || !checkoutPayload) return;
@@ -201,10 +242,13 @@ export default function ListingPromoteScreen() {
     }
   }, [accessToken, checkoutPayload]);
 
+  const payTitle =
+    displayPrice != null ? `متابعة الدفع · ${formatPromoteAmount(displayPrice)}` : 'متابعة الدفع';
+
   if (!id) {
     return (
       <Screen>
-        <ScreenHeader variant="screen" title="تعزيز سرح" showBack />
+        <ScreenHeader variant="screen" title="عزّز إعلانك" showBack />
         <ScreenBody scroll={false} padTop="lg" style={styles.centered}>
           <AppText variant="body" color="textMuted">معرّف الإعلان غير متوفر</AppText>
         </ScreenBody>
@@ -214,75 +258,89 @@ export default function ListingPromoteScreen() {
 
   return (
     <Screen keyboard>
-      <ScreenHeader variant="screen" title="تعزيز سرح" showBack />
+      <ScreenHeader variant="screen" title="عزّز إعلانك" showBack />
 
       <ScreenBody padTop="lg" gap="section" bottomInset="action">
-        <SarhCard level="card" padding="md">
-          <Row gap="md">
-            <View style={styles.thumbWrap}>
-              {listingThumb ? (
-                <Image source={uriSource(listingThumb)} style={styles.thumbImg} contentFit="cover" />
-              ) : (
-                <View style={styles.thumbPlaceholder}>
-                  <AppIcon name="image-outline" size={22} color={colors.textMuted} />
-                </View>
-              )}
-            </View>
-            <Stack gap="xs" style={styles.listingBody}>
-              {listingLoading ? (
-                <ActivityIndicator color={colors.electricBright} size="small" />
-              ) : (
-                <>
-                  <Row gap="xs" align="start">
-                    <AppText variant="bodyMedium" color="textPrimary" numberOfLines={2} style={styles.fill}>
-                      {listingTitle}
-                    </AppText>
-                    <ListingBoostTitleIcons pinned={listing?.pinned} featured={listing?.featured} />
-                  </Row>
-                  {listing?.price && listing.price > 0 ? (
-                    <AppText variant="caption" style={styles.listingPrice}>
-                      {listing.price.toLocaleString('ar-SA')} {listing.currency || 'SAR'}
-                    </AppText>
-                  ) : null}
-                </>
-              )}
-            </Stack>
-          </Row>
-        </SarhCard>
+        <Stack gap="sm">
+          <AppText variant="bodySmall" color="textSecondary">
+            {BOOST_SUBTITLE}
+          </AppText>
+
+          {listingLoading ? (
+            <ActivityIndicator color={colors.primary} size="small" />
+          ) : listing && listingTitle ? (
+            <Row gap="md" align="center">
+              <View style={styles.thumb}>
+                {listingThumb ? (
+                  <Image source={uriSource(listingThumb)} style={styles.thumbFill} contentFit="cover" />
+                ) : (
+                  <View style={[styles.thumbFill, { backgroundColor: colors.surface }]}>
+                    <AppIcon name="image-outline" size={space[20]} color={colors.textMuted} />
+                  </View>
+                )}
+              </View>
+              <Stack gap="xs" style={styles.fill}>
+                <Row gap="xs" align="center">
+                  <AppText variant="bodyMedium" color="textPrimary" numberOfLines={2} style={styles.fill}>
+                    {listingTitle}
+                  </AppText>
+                  <ListingBoostTitleIcons pinned={listing.pinned} featured={listing.featured} />
+                </Row>
+                {listing.price > 0 ? (
+                  <AppText variant="caption" color="primary">
+                    {listing.price.toLocaleString('ar-SA')} {listing.currency || 'SAR'}
+                  </AppText>
+                ) : null}
+              </Stack>
+            </Row>
+          ) : (
+            <AppText variant="body" color="textMuted">
+              تعذّر تحميل بيانات الإعلان
+            </AppText>
+          )}
+        </Stack>
 
         {!hasAnyBoostService ? (
-          <Row gap="sm" style={styles.disabledBanner}>
-            <AppIcon name="information-outline" size={18} color={colors.textMuted} />
+          <Row gap="sm" align="start">
+            <AppIcon name="information-outline" size={space[16]} color={colors.textMuted} />
             <AppText variant="caption" color="textMuted" style={styles.fill}>
               خدمات التعزيز غير مفعّلة حالياً. تواصل مع الإدارة إن لزم.
             </AppText>
           </Row>
         ) : null}
 
-        <Section title="اختر الخدمة">
-          <Stack gap="sm">
+        <Section title="الخدمة">
+          <View accessibilityRole="radiogroup" accessibilityLabel="الخدمة">
             {enabledServices.map((svc, idx) => {
-              const selected = goal === svc.goal;
+              const selected = activeGoal === svc.goal;
               return (
                 <View key={svc.goal}>
                   <Pressable
                     accessibilityRole="radio"
+                    accessibilityLabel={svc.title}
+                    accessibilityHint={svc.desc}
                     accessibilityState={{ selected }}
-                    onPress={() => setGoal(svc.goal)}
-                    style={({ pressed }) => [
-                      styles.serviceRow,
-                      selected && styles.serviceRowSelected,
-                      { opacity: pressed ? 0.75 : 1 },
-                    ]}
+                    onPress={() => selectGoal(svc.goal)}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? motion.opacity.pressed : 1,
+                      transform: [{ scale: pressed ? motion.pressScale : 1 }],
+                    })}
                   >
-                    <Row gap="md" fill>
-                      <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
-                        {selected ? <View style={styles.radioInner} /> : null}
+                    <Row gap="md" align="center" style={{ minHeight: space[48] + space[8], paddingVertical: space[8] }}>
+                      <View
+                        style={[
+                          styles.radio,
+                          { borderColor: selected ? colors.primary : colors.border },
+                        ]}
+                      >
+                        {selected ? (
+                          <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />
+                        ) : null}
                       </View>
                       <AppIcon
                         name={svc.icon}
-                        size={18}
-                        color={selected ? colors.electricBright : colors.textMuted}
+                        size={space[20]}
+                        color={selected ? colors.primary : colors.textMuted}
                       />
                       <Stack gap="none" style={styles.fill}>
                         <AppText variant="bodyMedium" color={selected ? 'textPrimary' : 'textSecondary'}>
@@ -294,178 +352,98 @@ export default function ListingPromoteScreen() {
                       </Stack>
                     </Row>
                   </Pressable>
-                  {idx < enabledServices.length - 1 ? <SarhDivider inset /> : null}
+                  {idx < enabledServices.length - 1 ? <SarhDivider /> : null}
                 </View>
               );
             })}
-          </Stack>
+          </View>
         </Section>
 
         {selectedService ? (
-          <Section title="اختر المدة">
-            <Row gap="sm" align="stretch">
+          <Section title="المدة">
+            <View accessibilityRole="radiogroup" accessibilityLabel="المدة">
+              <Row gap="sm" align="stretch">
               {selectedService.durations.map((dur, i) => {
                 const active = selectedDurationIndex === i;
+                const palette = resolveSarhChipColors(active);
                 return (
                   <Pressable
                     key={dur.durationHours}
-                    accessibilityRole="button"
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${dur.labelAr} ${formatPromoteAmount(dur.amount)}`}
                     accessibilityState={{ selected: active }}
-                    onPress={() => setSelectedDurationIndex(i)}
+                    onPress={() => {
+                      if (!activeGoal) return;
+                      setDurationPick({ goal: activeGoal, index: i });
+                    }}
                     style={({ pressed }) => [
-                      styles.durationChip,
-                      active && styles.durationChipActive,
-                      { opacity: pressed ? 0.75 : 1 },
+                      styles.duration,
+                      {
+                        backgroundColor: palette.backgroundColor,
+                        borderColor: palette.borderColor,
+                        opacity: pressed ? motion.opacity.pressed : 1,
+                        transform: [{ scale: pressed ? motion.pressScale : 1 }],
+                      },
                     ]}
                   >
                     <AppText
                       variant="bodyMedium"
-                      color={active ? 'textPrimary' : 'textSecondary'}
+                      color={palette.text}
                       align="center"
+                      style={palette.textOverride ? { color: palette.textOverride } : undefined}
                     >
                       {dur.labelAr}
                     </AppText>
                     <AppText
                       variant="price"
-                      color={active ? 'textPrimary' : 'textMuted'}
+                      color={palette.text}
                       align="center"
+                      style={palette.textOverride ? { color: palette.textOverride } : undefined}
                     >
                       {formatPromoteAmount(dur.amount)}
                     </AppText>
                   </Pressable>
                 );
               })}
-            </Row>
-          </Section>
-        ) : null}
-
-        {selectedService && selectedDuration && displayPrice != null ? (
-          <Section title="ملخص التعزيز">
-            <Stack gap="md">
-              <Stack gap="xs">
-                <AppText variant="caption" color="textMuted">
-                  الخدمة
-                </AppText>
-                <AppText variant="bodyMedium" color="textPrimary">
-                  {selectedService.title}
-                </AppText>
-                <AppText variant="caption" color="textSecondary">
-                  {formatPromoteAmount(displayPrice)} / {selectedDuration.labelAr}
-                </AppText>
-              </Stack>
-              <Stack gap="xs">
-                <AppText variant="caption" color="textMuted">
-                  المدة
-                </AppText>
-                <AppText variant="bodyMedium" color="textPrimary">
-                  {selectedDuration.labelAr}
-                </AppText>
-              </Stack>
-              <SarhDivider />
-              <Row justify="between" align="end">
-                <AppText variant="bodyMedium" color="textPrimary">
-                  الإجمالي
-                </AppText>
-                <AppText variant="price" color="textPrimary">
-                  {formatPromoteAmount(displayPrice)}
-                </AppText>
               </Row>
-            </Stack>
+            </View>
           </Section>
         ) : null}
 
         {error ? (
-          <Row gap="sm" align="start" style={styles.errorRow}>
-            <AppIcon name="alert-circle-outline" size={16} color={colors.danger} />
+          <Row gap="sm" align="start">
+            <AppIcon name="alert-circle-outline" size={space[16]} color={colors.danger} />
             <AppText variant="caption" color="danger" style={styles.fill}>{error}</AppText>
           </Row>
         ) : null}
       </ScreenBody>
 
       <BottomAction>
-        <SarhButton
-          title="المتابعة للدفع"
-          onPress={handlePay}
-          disabled={!canPay}
-          loading={processing}
-          fullWidth
-        />
+        <Stack gap="sm" style={styles.action}>
+          {selectedService && selectedDuration && displayPrice != null ? (
+            <Row justify="between" align="center">
+              <Stack gap="none" fill>
+                <AppText variant="bodyMedium" color="textPrimary" numberOfLines={1}>
+                  {selectedService.title}
+                </AppText>
+                <AppText variant="caption" color="textMuted" numberOfLines={1}>
+                  {selectedDuration.labelAr}
+                </AppText>
+              </Stack>
+              <AppText variant="price" color="textPrimary">
+                {formatPromoteAmount(displayPrice)}
+              </AppText>
+            </Row>
+          ) : null}
+          <SarhButton
+            title={payTitle}
+            onPress={handlePay}
+            disabled={!canPay}
+            loading={processing}
+            fullWidth
+          />
+        </Stack>
       </BottomAction>
     </Screen>
   );
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    centered: { alignItems: 'center', justifyContent: 'center' },
-    fill: { flex: 1, minWidth: 0 },
-    thumbWrap: { width: 64, height: 64, borderRadius: radius.lg, overflow: 'hidden', flexShrink: 0 },
-    thumbImg: { width: '100%', height: '100%' },
-    thumbPlaceholder: {
-      flex: 1,
-      backgroundColor: colors.bgDeep,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    listingBody: { flex: 1, minWidth: 0 },
-    listingPrice: { color: colors.textBrandStrong },
-    disabledBanner: {
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    serviceRow: {
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.bgSurface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSoft,
-    },
-    serviceRowSelected: {
-      borderColor: colors.electricBright,
-      backgroundColor: colors.bgElevated,
-    },
-    radioOuter: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      borderWidth: 1.5,
-      borderColor: colors.borderMid,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
-    radioOuterSelected: { borderColor: colors.electricBright },
-    radioInner: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: colors.electricBright,
-    },
-    durationChip: {
-      flex: 1,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.sm,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: colors.borderSoft,
-      backgroundColor: colors.bgSurface,
-      alignItems: 'center',
-      gap: spacing.xs,
-    },
-    durationChipActive: {
-      borderColor: colors.electricBright,
-      backgroundColor: colors.bgElevated,
-    },
-    errorRow: {
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: `${colors.danger}12`,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: `${colors.danger}40`,
-    },
-  });
 }
